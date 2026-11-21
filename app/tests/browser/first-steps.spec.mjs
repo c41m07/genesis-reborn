@@ -18,12 +18,13 @@ async function register(page) {
     await page.getByRole('button', { name: /Connexion/ }).click();
     await page.locator('.universe-card').filter({ has: page.getByRole('heading', { name: /Omega/ }) }).getByRole('button').click();
     await expect(page).toHaveURL(/planetes\/\d+$/);
-    const dailyPrompt = page.locator('[data-daily-reward-ui-auto-open-value="true"]');
-    if (await dailyPrompt.count()) {
-        const dialog = page.getByRole('dialog', { name: 'Récompense quotidienne' });
-        await dialog.getByRole('button', { name: 'Plus tard', exact: true }).click();
-        await expect(dialog).toBeHidden();
-    }
+    // Les comptes neufs de cette fixture ont tous un lot quotidien disponible.
+    const dialog = page.getByRole('dialog', { name: 'Récompense quotidienne' });
+    const popup = page.locator('.first-steps-popup');
+    await expect(dialog).toBeVisible();
+    await expect(popup).not.toHaveAttribute('open', '');
+    await dialog.getByRole('button', { name: 'Plus tard', exact: true }).click();
+    await expect(dialog).toBeHidden();
 
     return email;
 }
@@ -205,6 +206,96 @@ test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', a
         await expect(view.getByRole('progressbar', { name: 'Progression des premiers pas' })).toHaveAttribute('value', '0');
         await view.goto(route);
         await expect(view.getByRole('heading', { name: 'Rapport d’exercice', exact: true })).toHaveCount(0);
+    } finally {
+        await native.close();
+    }
+});
+
+
+test('Premiers pas : panneau non modal, images à la demande et reprise par Préférences', async ({ page, browser, baseURL }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await register(page);
+    const overview = page.url();
+    const popup = page.locator('.first-steps-popup');
+    const summary = popup.locator('summary');
+    await expect(popup).toHaveAttribute('open', '');
+    await expect(popup.getByText('Validation :')).toBeVisible();
+    const first = popup.locator('figure').nth(0).locator('img');
+    const second = popup.locator('figure').nth(1).locator('img');
+    await expect(first).toHaveAttribute('src', /mine_metal/);
+    await expect.poll(() => first.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+    await expect(popup.getByRole('button', { name: 'Désactiver le guide', exact: true })).toBeInViewport({ ratio: 1 });
+    const captures = process.env.FIRST_STEPS_CAPTURES;
+    if (captures) {
+        await page.screenshot({ path: captures + '/GENESIS_PREMIERS_PAS_FENETRE_PC.png', animations: 'disabled' });
+        await page.setViewportSize({ width: 390, height: 844 });
+        await expect(popup.getByRole('button', { name: 'Désactiver le guide', exact: true })).toBeInViewport({ ratio: 1 });
+        await expect(popup.getByRole('button', { name: 'Suivant', exact: true })).toBeInViewport({ ratio: 1 });
+        await page.screenshot({ path: captures + '/GENESIS_PREMIERS_PAS_FENETRE_MOBILE.png', animations: 'disabled' });
+        await page.setViewportSize({ width: 1440, height: 900 });
+    }
+
+    await expect(second).not.toHaveAttribute('src', /.+/);
+    await popup.getByRole('button', { name: 'Suivant', exact: true }).click();
+    await expect(second).toHaveAttribute('src', /ui-preview-colony/);
+    await expect(popup.locator('output')).toHaveText('2 sur 2');
+    await page.keyboard.press('Escape');
+    await expect(popup).not.toHaveAttribute('open', '');
+    await expect(summary).toBeFocused();
+    await page.reload();
+    await expect(popup).not.toHaveAttribute('open', '');
+    await summary.click();
+    await expect(popup.locator('output')).toHaveText('2 sur 2');
+    await expect(page.locator('dialog[open]')).toHaveCount(0);
+
+    // Une vraie navigation reste possible alors que le panneau est ouvert.
+    await page.locator('#command-navigation').getByRole('link', { name: 'Bâtiments', exact: true }).click();
+    await expect(page).toHaveURL(/section=buildings/);
+    await page.goto(overview);
+    await summary.click();
+    await popup.getByRole('button', { name: 'Désactiver le guide', exact: true }).click();
+    await expect(page).toHaveURL(/profil\/preferences/);
+    const setting = page.getByRole('checkbox', { name: 'Afficher le guide Premiers pas' });
+    await expect(setting).not.toBeChecked();
+    await page.goto(overview);
+    await expect(popup).toHaveCount(0);
+    await expect(page.getByText('Guide désactivé.')).toBeVisible();
+    await page.getByRole('link', { name: 'Réactiver dans Préférences' }).click();
+    await setting.check();
+    await page.getByRole('button', { name: 'Enregistrer les paramètres' }).click();
+    await page.goto(overview);
+    await expect(popup).not.toHaveAttribute('open', '');
+    await summary.click();
+    await expect(popup.locator('output')).toHaveText('2 sur 2');
+    await popup.getByRole('link', { name: 'Guide complet et remboursements' }).click();
+
+    const grid = page.locator('.first-steps-grid');
+    for (const [width, columns] of [[1440, 4], [850, 2], [390, 1]]) {
+        await page.setViewportSize({ width, height: 900 });
+        expect(await grid.evaluate(node => getComputedStyle(node).gridTemplateColumns.split(' ').length)).toBe(columns);
+        if (captures && width === 1440) {
+            const visibleImages = grid.locator('img').and(page.locator('.first-steps-grid > li:nth-child(-n+4) img'));
+            await visibleImages.evaluateAll(async images => {
+                await Promise.all(images.map(image => image.decode()));
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            });
+            expect(await visibleImages.evaluateAll(images => images.every(image => {
+                const rect = image.getBoundingClientRect();
+                return getComputedStyle(image).visibility === 'visible' && rect.width > 0
+                    && document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) === image;
+            }))).toBe(true);
+            await page.screenshot({ path: captures + '/GENESIS_PREMIERS_PAS_GRILLE_PC.png', animations: 'disabled' });
+        }
+        await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    }
+    await expect(grid.locator('li').first().getByRole('heading')).toHaveText('Mine à ciel ouvert');
+
+    const native = await browser.newContext({ baseURL, storageState: await page.context().storageState(), javaScriptEnabled: false });
+    try {
+        const fallback = await native.newPage();
+        await fallback.goto(overview);
+        await fallback.locator('.first-steps-popup summary').click();
+        await expect(fallback.getByRole('link', { name: 'Ouvrir le visuel de cette étape' })).toHaveAttribute('href', /mine_metal/);
     } finally {
         await native.close();
     }

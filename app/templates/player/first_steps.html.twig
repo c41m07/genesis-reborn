@@ -3,6 +3,7 @@
 
 {% block body %}
 {% set colony = trainingPlanet %}
+{% set guideEnabled = app.user.preferences.firstStepsGuide ?? true %}
 <div class="page-heading">
     <div>
         <h1>Premiers pas</h1>
@@ -12,12 +13,15 @@
         <a class="quiet-button" href="{{ path('app_colony', {id: colony.id}) }}">Retour à la vue générale</a>
     {% endif %}
 </div>
+{% if not guideEnabled %}
+    <p class="first-steps-paused">Le panneau d’aide est désactivé. <a href="{{ path('app_preferences') }}">Le réactiver dans Préférences</a>. Le guide et les remboursements restent disponibles ici.</p>
+{% endif %}
 {% if colony and trainingRewards is not empty %}
     <section class="panel account-panel" aria-labelledby="training-reward-title">
         <h2 id="training-reward-title">Remboursements disponibles</h2>
         <p>Destination : <strong>{{ colony.name }}</strong>. Si les stocks sont pleins, les remboursements restent en attente. Vous pouvez choisir une autre colonie de cet empire puis revenir ici.</p>
         {% for reward in trainingRewards %}
-            <form method="post" action="{{ path('app_first_steps_claim') }}" data-turbo="false">
+            <form id="first-step-refund-{{ reward.step_key }}" method="post" action="{{ path('app_first_steps_claim') }}" data-turbo="false">
                 <input type="hidden" name="_token" value="{{ csrf_token('first-steps-reward-'~trainingMembership.id~'-'~colony.id~'-'~reward.step_key) }}">
                 <input type="hidden" name="planet" value="{{ colony.id }}">
                 <input type="hidden" name="step" value="{{ reward.step_key }}">
@@ -36,14 +40,21 @@
         <p>N’attendez pas le Dépôt de minerais pour poursuivre le guide.</p>
         {% include 'player/_first_steps_action.html.twig' with {step: training.parallel, guide: training.hints[training.parallel], colony: colony} only %}
     {% endif %}
-    <ol class="first-steps-list">
+    <ol class="first-steps-list first-steps-grid" role="list">
         {% for step, guide in training.hints %}
             {% set done = training.completed[step]|default(false) %}
             <li class="first-step{{ step == training.next ? ' first-step--next' : '' }}">
+                {% set example = training.examples[step] %}
+                <img class="first-steps-card-art" src="{{ asset(example[0]) }}" alt="" loading="lazy" decoding="async">
+                <span class="first-steps-card-index">Étape {{ loop.index }}</span>
                 <h3>{{ guide.title }}</h3>
                 <p class="first-step-status"><strong>{{ training.existing[step]|default(false) ? 'Déjà en place' : (done ? 'Terminé' : (step == training.next ? 'Prochaine étape conseillée' : 'À faire')) }}</strong></p>
                 <p>{{ guide.explanation }}</p>
-                <p>{{ guide.action }}</p>
+                <p><strong>À faire :</strong> {{ guide.action }}</p>
+                <p><strong>Validation :</strong> {{ example[2] }}</p>
+                {% if trainingRewards|filter(reward => reward.step_key == step) is not empty %}
+                    <a href="#first-step-refund-{{ step }}">Remboursement disponible · Voir comment le récupérer</a>
+                {% endif %}
                 {% if step == 'pirate_exercise' or (colony and (not done or step == 'espionage')) %}
                     {% include 'player/_first_steps_action.html.twig' with {step: step, guide: guide, colony: colony, done: done, actionStyle: step == training.next ? 'primary' : 'secondary'} only %}
                 {% endif %}

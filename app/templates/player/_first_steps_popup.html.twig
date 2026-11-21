@@ -1,0 +1,51 @@
+{% import 'ui/macros.html.twig' as ui %}
+{% set step = training.next %}
+{% set guide = training.hints[step] %}
+{% set example = training.examples[step] %}
+<details class="first-steps-popup" data-controller="first-steps-guide"
+         data-first-steps-guide-key-value="{{ planet.owner.id }}:{{ step }}"
+         data-first-steps-guide-scope-value="{{ planet.owner.id }}"
+         data-first-steps-guide-defer-value="{{ deferDaily ? 'true' : 'false' }}"
+         data-action="toggle->first-steps-guide#rememberOpened keydown.esc->first-steps-guide#closeFromKeyboard">
+    <summary class="quiet-button" data-first-steps-guide-target="summary">{{ ui.icon('overview') }} Premiers pas · Aide</summary>
+    <section class="panel first-steps-popup-panel" aria-labelledby="first-steps-popup-title">
+        <header class="first-steps-popup-heading">
+            <div>
+                <p class="first-steps-popup-eyebrow">PREMIERS PAS · {{ training.completed|length }}/{{ training.hints|length }}</p>
+                <h2 id="first-steps-popup-title">{{ guide.title }}</h2>
+            </div>
+            <button type="button" hidden class="quiet-button" data-first-steps-guide-target="closeButton" data-action="first-steps-guide#close">Fermer</button>
+        </header>
+        <div class="first-steps-popup-content">
+            <p>{{ guide.explanation }}</p>
+            <p><strong>À faire :</strong> {{ guide.action }}</p>
+            <p><strong>Validation :</strong> {{ example[2] }}</p>
+            <div class="first-steps-gallery" aria-label="Illustrations">
+                <figure hidden data-first-steps-guide-target="slide">
+                    <img alt="" data-src="{{ asset(example[0]) }}" data-first-steps-guide-target="illustration" width="432" height="220">
+                    <figcaption>{{ example[1] }}</figcaption>
+                </figure>
+                <figure hidden data-first-steps-guide-target="slide">
+                    <img alt="" data-src="{{ asset('art/ui-preview-colony-432.webp') }}" data-first-steps-guide-target="illustration" width="432" height="220">
+                    <figcaption>Exemple de Vue générale : les ressources et les files se trouvent dans le haut de l’interface.</figcaption>
+                </figure>
+                <noscript><p>Les instructions ci-dessus restent disponibles sans JavaScript. <a href="{{ asset(example[0]) }}">Ouvrir le visuel de cette étape</a>.</p></noscript>
+            </div>
+        </div>
+        <footer class="first-steps-popup-footer">
+            <div class="first-steps-gallery-controls" hidden data-first-steps-guide-target="controls">
+                <button type="button" class="quiet-button" data-first-steps-guide-target="previous" data-action="first-steps-guide#previousSlide">Précédent</button>
+                <output aria-live="polite" data-first-steps-guide-target="position">1 sur 2</output>
+                <button type="button" class="quiet-button" data-first-steps-guide-target="next" data-action="first-steps-guide#nextSlide">Suivant</button>
+            </div>
+            {% include 'player/_first_steps_action.html.twig' with {step: step, guide: guide, colony: planet, actionStyle: 'primary'} only %}
+            <div class="first-steps-popup-actions">
+                <a href="{{ path('app_first_steps') }}">Guide complet et remboursements</a>
+                <form method="post" action="{{ path('app_first_steps_disable') }}" data-turbo="false">
+                    <input type="hidden" name="_token" value="{{ csrf_token('first-steps-disable') }}">
+                    <button type="submit" class="quiet-button">Désactiver le guide</button>
+                </form>
+            </div>
+        </footer>
+    </section>
+</details>

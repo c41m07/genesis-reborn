@@ -22,6 +22,8 @@
             <div class="preference-toggle">{{ form_widget(form.reducedMotion) }}{{ form_label(form.reducedMotion) }}{{ form_errors(form.reducedMotion) }}</div>
             <div class="preference-toggle">{{ form_widget(form.realtimeNotifications) }}{{ form_label(form.realtimeNotifications) }}{{ form_errors(form.realtimeNotifications) }}</div>
             <div class="preference-toggle">{{ form_widget(form.showLockedItems) }}{{ form_label(form.showLockedItems) }}{{ form_errors(form.showLockedItems) }}</div>
+            <div class="preference-toggle">{{ form_widget(form.firstStepsGuide) }}{{ form_label(form.firstStepsGuide) }}{{ form_errors(form.firstStepsGuide) }}</div>
+            {{ form_help(form.firstStepsGuide) }}
         </fieldset>
     </section>
     <button class="primary account-preferences-save">Enregistrer les paramètres</button>

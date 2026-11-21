@@ -20,6 +20,9 @@
 {% if section=='overview' %}
 {% include 'colony/_overview_attention.html.twig' %}
 {% include 'player/_first_steps_overview.html.twig' %}
+{% if (preferences.firstStepsGuide ?? true) and training.next %}
+    {% include 'player/_first_steps_popup.html.twig' with {training: training, planet: planet, deferDaily: rewardHeader.autoOpen} only %}
+{% endif %}
 <section class="colony-banner panel empire-banner" aria-labelledby="overview-colony-title">
     <picture><source type="image/webp" srcset="{{ asset('art/colony-overview.webp') }}"><img class="colony-scene" src="{{ asset('art/colony-overview.png') }}" alt="" aria-hidden="true"></picture>
     <div class="hero-content">

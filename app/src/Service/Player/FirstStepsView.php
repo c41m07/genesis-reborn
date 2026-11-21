@@ -104,6 +104,23 @@ final class FirstStepsView
         ],
     ];
 
+    // Documents d’interface et visuels officiels déjà fournis avec le jeu.
+    // Les exemples expliquent l’étape : seuls les événements métier peuvent la valider.
+    private const EXAMPLES = [
+        'metal_mine' => ['images/catalog/buildings/mine_metal__basic.webp', 'Mine à ciel ouvert du catalogue', 'La mine basique atteint le niveau 1. La mise en file seule ne compte pas.'],
+        'power_plant' => ['images/catalog/buildings/power_plant__basic.webp', 'Centrale nucléaire du catalogue', 'La centrale basique atteint le niveau 1.'],
+        'nano_workshop' => ['images/catalog/buildings/mine_nano__basic.webp', 'Atelier de nanofabrication du catalogue', 'L’atelier basique atteint le niveau 1.'],
+        'metal_storage' => ['images/catalog/buildings/storage_metal__basic.webp', 'Dépôt de minerais du catalogue', 'Le dépôt basique atteint le niveau 1.'],
+        'laboratory' => ['images/catalog/buildings/lab__basic.webp', 'Laboratoire colonial du catalogue', 'Le laboratoire basique atteint le niveau 1.'],
+        'research' => ['images/catalog/technologies/engineering_foundations__basic.webp', 'Génie civil colonial dans le catalogue', 'Une recherche basique est terminée.'],
+        'assembly_yard' => ['images/catalog/buildings/shipyard__basic.webp', 'Chantier d’assemblage du catalogue', 'Le chantier basique atteint le niveau 1.'],
+        'ship' => ['images/catalog/ships/probe__basic.webp', 'Sonde de reconnaissance du catalogue', 'Une sonde basique est réellement construite.'],
+        'exploration' => ['art/ui-preview-galaxy.webp', 'Aperçu de l’interface Galaxie', 'La mission révèle un système encore inconnu de votre empire.'],
+        'espionage' => ['images/catalog/ships/probe__basic.webp', 'Sonde basique utilisée pendant l’espionnage guidé', 'La mission guidée vers un PNJ produit un rapport, même si la sonde est détectée.'],
+        'pirate_exercise' => ['art/ui-preview-colony-432.webp', 'Aperçu de la Vue générale dans le jeu', 'Lancez la simulation et affichez le rapport de l’exercice.'],
+        'colonization' => ['images/catalog/ships/colony_ship__basic.webp', 'Vaisseau colonisateur du catalogue', 'La mission colonise une planète et vous en obtenez le contrôle.'],
+    ];
+
     public function __construct(private FirstSteps $firstSteps, private ResourceService $resources)
     {
     }
@@ -156,6 +173,7 @@ final class FirstStepsView
 
         return [
             'hints' => self::HINTS,
+            'examples' => self::EXAMPLES,
             'completed' => $done,
             'existing' => $existing,
             'next' => $next,

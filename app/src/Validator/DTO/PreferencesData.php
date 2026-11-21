@@ -10,4 +10,5 @@ final class PreferencesData
     public bool $reducedMotion = false;
     public bool $realtimeNotifications = true;
     public bool $showLockedItems = false;
+    public bool $firstStepsGuide = true;
 }

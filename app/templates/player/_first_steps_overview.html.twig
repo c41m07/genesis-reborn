@@ -1,3 +1,4 @@
+{% if preferences.firstStepsGuide ?? true %}
 <section class="panel account-panel" aria-labelledby="overview-first-steps-title" data-live-region="first-steps-overview">
     <h2 id="overview-first-steps-title">Premiers pas</h2>
     <p><strong>{{ training.completed|length }} sur {{ training.hints|length }}</strong> étapes dans cet univers. Le parcours est facultatif.</p>
@@ -14,3 +15,10 @@
     {% endif %}
     <a class="quiet-button first-steps-overview-guide" href="{{ path('app_first_steps') }}">Voir le guide Premiers pas et les remboursements</a>
 </section>
+{% else %}
+<section class="panel account-panel" aria-labelledby="overview-first-steps-title" data-live-region="first-steps-overview">
+    <h2 id="overview-first-steps-title">Premiers pas</h2>
+    <p>Guide désactivé. <a href="{{ path('app_preferences') }}">Réactiver dans Préférences</a>.</p>
+    <a class="quiet-button" href="{{ path('app_first_steps') }}">Voir le guide et les remboursements</a>
+</section>
+{% endif %}

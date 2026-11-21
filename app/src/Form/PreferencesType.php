@@ -16,6 +16,7 @@ final class PreferencesType extends AbstractType
           ->add('transportReception',ChoiceType::class,['label'=>'Accepter les ressources envoyées par','empty_data'=>'allies','choices'=>['Tout le monde'=>'all','Mes alliés uniquement'=>'allies','Personne'=>'none'],'help'=>'Vos propres colonies restent autorisées. Le réglage est vérifié au départ et à l’arrivée.'])
           ->add('reducedMotion',CheckboxType::class,['label'=>'Réduire les animations de l’interface','required'=>false])
           ->add('realtimeNotifications',CheckboxType::class,['label'=>'Afficher les alertes de jeu en temps réel','required'=>false])
+          ->add('firstStepsGuide', CheckboxType::class, ['label' => 'Afficher le guide Premiers pas', 'required' => false, 'help' => 'Vous retrouverez les étapes et remboursements déjà obtenus en le réactivant.'])
           ->add('showLockedItems',CheckboxType::class,['label'=>'Afficher les bâtiments, technologies, vaisseaux et défenses verrouillés','required'=>false]);
     }
     private function speedChoices(): array

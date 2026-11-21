@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\{Planet, PlanetBuilding, PlayerTechnology};
+use App\Entity\{Planet, PlanetBuilding, Player, PlayerTechnology};
 use App\Repository\GameRepository;
 use App\Service\Player\FirstStep;
 use App\Service\Player\FirstSteps;
 use App\Service\Player\FirstStepsView;
 use App\Service\Player\FirstStepRewards;
 use App\Service\Player\PirateExercise;
+use App\Service\Player\PreferencesService;
 use App\Service\Universe\UniverseContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -41,6 +42,20 @@ final class FirstStepsController extends AbstractController
             'trainingPlanet' => $planet,
             'trainingRewards' => $rewards->available($membership),
         ], new Response(headers: ['Cache-Control' => 'private, no-store']));
+    }
+
+    #[Route('/premiers-pas/desactiver', name: 'app_first_steps_disable', methods: ['POST'])]
+    public function disable(Request $request, PreferencesService $preferences): Response
+    {
+        $player = $this->getUser();
+        if (!$player instanceof Player || !$this->isCsrfTokenValid('first-steps-disable', $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le guide.');
+        }
+
+        $preferences->setFirstStepsGuide($player, false);
+        $this->addFlash('success', 'Guide désactivé. Vous pouvez le réactiver dans Préférences sans perdre votre progression.');
+
+        return $this->redirectToRoute('app_preferences', status: Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/premiers-pas/recuperer', name: 'app_first_steps_claim', methods: ['POST'])]
