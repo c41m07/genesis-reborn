@@ -706,3 +706,41 @@ JSON lors d’un rollback simulé, le refus d’un numéro ou d’un checkpoint
 invalide et la consommation unique du résultat. Ils ne prouvent aucune
 nouvelle intégration DB, RabbitMQ ni modification du moteur : les vrais
 workers, échéances et lectures fonctionnent encore comme précédemment.
+
+## Raccordement privé V2 : arrivée et dernier round
+
+Le nouveau point d’entrée interne est explicite ; aucune route ne l’appelle.
+Un départ V2 planifie d’abord l’arrivée, tout en figeant profil, graine et
+cadence native (60 secondes, au plus dix rounds). Les tentatives V1
+gardent leur échéance et leur fonctionnement au retour. Il est impossible
+de changer de mode ou cadence lors d’une nouvelle tentative du même combat.
+
+Le worker atteste l’arrivée à l’horloge réelle de traitement. L’ETA
+persistée reste l’origine du calendrier **nominal**, avec un jeton et un
+checkpoint opaques atomiquement créés sous verrou. Un dernier round déjà
+dû est rattrapé sans antidater le rapport : même si l’arrivée est reçue
+tard, le résultat ne devient durable qu’avec la seconde transaction,
+et le retour est programmé à partir de cette application effective.
+Le `next_at` privé n’est pas exposé tant que le rapport est absent ;
+le dossier n’affiche que le constat d’arrivée et « Combat en cours »,
+sans date de résultat, perte, retour ou indice issu du checkpoint.
+
+Quand le second jeton est dû, le worker relit le même checkpoint,
+applique pertes/rapport/ordre de retour et retire la donnée opaque
+dans la même transaction. En cas d’échec, rien n’est publié et le
+checkpoint reste disponible sous le même jeton. L’identifiant en
+vigueur change à chaque phase; une redélivrance ancienne est sans effet.
+Rien n’est ajouté au schéma : la donnée transitoire est incorporée au JSON
+de la tentative V2 et éliminée lors de la publication. Aucun changement
+aux flottes publiques, carburant, convoi, droits ni autres règles.
+
+Recette synthétique sur ce code : deux campagnes V2 à deux rounds,
+dont une livraison d’arrivée précoce reprise et une retardée ; ancienne
+campagne V1 comme témoin. Avec le vrai transport RabbitMQ, 20 réceptions,
+3 reprises, 17 acquittements et trois retours uniques ; aucun effet
+public et aucun changement de réserve avant application. MariaDB isolée :
+132 tests, dont clôture à dix rounds à +600 s et échec injecté du nouvel
+ordre de retour après une arrivée traitée tardivement ; le rapport,
+le stock et le checkpoint initial sont restés intacts avant rejeu.
+La borne de dix rounds et l’échec d’écriture sont testés sur MariaDB
+avec une horloge contrôlée, pas en temps réel sur RabbitMQ.
