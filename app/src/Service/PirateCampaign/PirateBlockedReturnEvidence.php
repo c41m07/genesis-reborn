@@ -13,9 +13,12 @@ use Symfony\Component\DependencyInjection\Attribute\Exclude;
 #[Exclude]
 final readonly class PirateBlockedReturnEvidence
 {
+    public const BLOCKED_ARRIVAL = 'blocked_arrival';
+    public const HELD_BEFORE_RETURN = 'held_before_return';
+
     public array $position;
 
-    /** @param array{int,int,int,int,int} $position Coordonnées figées au départ de la colonie d'origine (case obligatoire). */
+    /** @param array{int,int,int,int,int|null} $position Case lors d'une arrivée réelle ou ancre attestée d'un retour jamais parti. */
     public function __construct(
         public int $campaignId,
         public int $attempt,
@@ -25,6 +28,7 @@ final readonly class PirateBlockedReturnEvidence
         public \DateTimeImmutable $arrivedAt,
         array $position,
         public float $remainingHydrogen,
+        public string $phase = self::BLOCKED_ARRIVAL,
     ) {
         // Détacher les valeurs du conteneur d’hydratation, y compris ses références éventuelles.
         $this->position = array_map(static fn (mixed $value): mixed => $value, $position);

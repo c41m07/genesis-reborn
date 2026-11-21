@@ -6,7 +6,7 @@ namespace App\Tests\Unit;
 
 use App\Entity\{Galaxy, PirateAttackCampaign, PirateReconnaissance, Planet, Player, PlayerUniverse, SolarSystem, Universe};
 use App\Service\Fleet\MovementCalculator;
-use App\Service\PirateCampaign\{PirateBlockedReturnEvidence, PirateEncounterSnapshot, PirateSurvivorFallbackQuote};
+use App\Service\PirateCampaign\{PirateBlockedReturnEvidence, PirateCampaignFuel, PirateEncounterSnapshot, PirateFlightQuote, PirateReturnAttestation, PirateSurvivorFallbackQuote};
 use PHPUnit\Framework\TestCase;
 
 final class PirateSurvivorFallbackQuoteTest extends TestCase
@@ -107,6 +107,121 @@ final class PirateSurvivorFallbackQuoteTest extends TestCase
         $evidence = $this->evidence(0.1, [4, 3, 0, 0, &$slot]);
         $slot = 9;
         self::assertSame([4, 3, 0, 0, 5], $evidence->position);
+    }
+
+    public function testScoutForfeitsTheFullNativeRoundTripWithoutAnOrbitalBudget(): void
+    {
+        [, , , , $ships] = $this->fixture();
+        $flight = new PirateFlightQuote(new MovementCalculator());
+        $quote = $flight->compare([4, 3, 0, 0, 9], [4, 3, 0, 0], $ships, 1.0, 1.0, 'proportional');
+        $fuel = PirateCampaignFuel::scout($quote);
+        self::assertSame(30, $fuel->legSeconds);
+        self::assertSame(0.1, $fuel->legHydrogen);
+        self::assertSame(0.2, $fuel->amountForDeparture());
+        self::assertSame(0.2, $fuel->scoutsForfeitedHydrogen());
+        self::assertNull($fuel->arrivalHydrogen(0.1));
+    }
+
+    public function testDepartureAndSurvivorBudgetUseNativeFullOrbitAndActualCarriers(): void
+    {
+        [, , , , $ships] = $this->fixture();
+        $ships[0] = array_replace($ships[0], ['slug' => 'fighter', 'fuel_orbit' => 0.03]);
+        $flight = new PirateFlightQuote(new MovementCalculator());
+        $quote = $flight->compare([4, 3, 0, 0, 5], [4, 3, 0, 0], $ships, 1.0, 1.0, 'proportional', 600 / 3600);
+        $fuel = PirateCampaignFuel::expedition($quote);
+        self::assertGreaterThan(0, $quote['orbit_hydrogen']);
+        self::assertSame($quote['orbit_hydrogen'], $fuel->orbitHydrogen);
+        self::assertSame($quote['round_trip_with_orbit_hydrogen'], $fuel->amountForDeparture());
+        self::assertSame(0.5, $fuel->afterCombat(['fighter' => ['basic' => 1]], $ships));
+        self::assertSame(0.0, $fuel->afterCombat([], []));
+        $ships[0]['fuel_capacity'] = 0.125;
+        $ships[0]['cargo_capacity'] = 0.125;
+        self::assertSame(0.25, $fuel->afterCombat(['fighter' => ['basic' => 1]], $ships));
+        self::assertNull($fuel->arrivalHydrogen(0.25)); // Ne pas atteindre l’arrivée par un retour insuffisamment financé.
+        self::assertNull($fuel->arrivalHydrogen(0.50001)); // Pas de « réserve volontaire » dans ce contrat.
+        self::assertSame(0.0, $fuel->arrivalHydrogen(0.5));
+        $this->expectException(\DomainException::class);
+        $fuel->afterCombat(['fighter' => ['basic' => 2]], $ships);
+    }
+
+    public function testNativeBudgetCannotBeReservedInFreightOrWithInsufficientCarriers(): void
+    {
+        [, , , , $ships] = $this->fixture();
+        $ships[0]['cargo_capacity'] = 0.1;
+        $quote = (new PirateFlightQuote(new MovementCalculator()))->compare(
+            [4, 3, 0, 0, 9], [4, 3, 0, 0], $ships, 1.0, 1.0, 'proportional',
+        );
+        $this->expectException(\DomainException::class);
+        PirateCampaignFuel::scout($quote + ['freight_hydrogen' => 10000]);
+    }
+
+    public function testHeldAtBattlefieldKeepsReturnFuelAndUsesOnlyVerifiedAnchorGeometry(): void
+    {
+        [$campaign, $player, $origin, $target, $ships, $at] = $this->fixture();
+        $ships[0]['slug'] = 'fighter';
+        $campaign->reservedShips = ['fighter' => ['basic' => 1]];
+        $site = [8, 3, 3, 0, null];
+        $target->solarSystem = clone $target->solarSystem;
+        $target->solarSystem->coordX = 3;
+        $target->solarSystem->id = 8;
+        $movement = new MovementCalculator();
+        $flight = new PirateFlightQuote($movement);
+        $budget = PirateCampaignFuel::expedition($flight->compare([4, 3, 0, 0, 5], array_slice($site, 0, 4), $ships, 1.0, 1.0, 'proportional', 600 / 3600));
+        $route = new PirateReturnAttestation(31, 2, 15, 1, [4, 3, 0, 0, 5], $site, $budget);
+        $processed = new \DateTimeImmutable($campaign->timeline['settled']);
+        self::assertNull($route->heldAtBattlefield($campaign, 2, 12, $processed, false, $ships)); // Toujours un retour planifié.
+        $campaign->timeline['returnDue'] = null;
+        $campaign->timeline['resolved'] = $processed->format(DATE_ATOM);
+        $campaign->nextAt = $at;
+        self::assertNull($route->heldAtBattlefield($campaign, 2, 12, $processed, false, $ships));
+        $campaign->nextAt = null;
+        self::assertNull($route->heldAtBattlefield($campaign, 2, 12, $processed, true, $ships));
+        $other = clone $campaign;
+        $other->id++;
+        self::assertNull($route->heldAtBattlefield($other, 2, 12, $processed, false, $ships));
+        self::assertNull($route->heldAtBattlefield($campaign, 3, 12, $processed, false, $ships));
+        $evidence = $route->heldAtBattlefield($campaign, 2, 12, $processed, false, $ships);
+        self::assertNotNull($evidence);
+        self::assertSame($budget->legHydrogen, $evidence->remainingHydrogen);
+        self::assertSame($site, $evidence->position);
+        $proposal = (new PirateSurvivorFallbackQuote($movement))->propose(
+            $campaign, $player, $origin, $target, $evidence, 12, $ships, $at, 1.0, 1.0, 'proportional',
+        );
+        $native = $movement->quote([8, 3, 3, 0, 6], $site, $ships, 1.0, 1.0, 'proportional');
+        self::assertNotNull($proposal);
+        self::assertSame($native['one_way_fuel'], $proposal['hydrogen']);
+        self::assertSame($native['seconds'], $proposal['seconds']);
+        self::assertNull($campaign->nextAt); // Le devis n’ordonne aucun nouveau départ.
+    }
+
+    public function testACompletedBlockedArrivalHasNoPhantomFuelOrHistoricalAttestation(): void
+    {
+        [$campaign, $player, $origin, $target, $ships] = $this->fixture();
+        $ships[0]['slug'] = 'fighter';
+        $campaign->reservedShips = ['fighter' => ['basic' => 1]];
+        $site = [8, 3, 3, 0, null];
+        $home = [4, 3, 0, 0, 5];
+        $movement = new MovementCalculator();
+        $budget = PirateCampaignFuel::expedition((new PirateFlightQuote($movement))->compare($home, array_slice($site, 0, 4),
+            $ships, 1.0, 1.0, 'proportional', 600 / 3600));
+        $route = new PirateReturnAttestation(31, 2, 15, 1, $home, $site, $budget);
+        $resolved = new \DateTimeImmutable('2026-10-25T00:59:00Z');
+        $due = $resolved->setTimestamp($resolved->getTimestamp() + $budget->legSeconds);
+        $processed = $due->modify('+12 seconds');
+        $campaign->timeline['settled'] = $processed->format(DATE_ATOM);
+        $campaign->timeline['returnDue'] = $due->format(DATE_ATOM);
+        self::assertNull($route->blockedAtArrival($campaign, 2, 12, $processed, false, $budget->legHydrogen, $ships));
+        $campaign->timeline['resolved'] = $resolved->format(DATE_ATOM);
+        self::assertNull($route->blockedAtArrival($campaign, 2, 12, $processed, true, $budget->legHydrogen, $ships));
+        self::assertNull($route->blockedAtArrival($campaign, 2, 12, $processed, false, 0.0, $ships));
+        $evidence = $route->blockedAtArrival($campaign, 2, 12, $processed, false, $budget->legHydrogen, $ships);
+        self::assertNotNull($evidence);
+        self::assertSame($home, $evidence->position);
+        self::assertSame(0.0, $evidence->remainingHydrogen);
+        self::assertSame(PirateBlockedReturnEvidence::BLOCKED_ARRIVAL, $evidence->phase);
+        self::assertNull((new PirateSurvivorFallbackQuote($movement))->propose(
+            $campaign, $player, $origin, $target, $evidence, 12, $ships, $processed, 1.0, 1.0, 'proportional',
+        ));
     }
 
     private function evidence(float $reserve = 0.1, array $position = [4, 3, 0, 0, 5]): PirateBlockedReturnEvidence

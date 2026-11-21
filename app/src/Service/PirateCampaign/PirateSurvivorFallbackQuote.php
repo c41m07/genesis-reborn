@@ -64,7 +64,8 @@ final readonly class PirateSurvivorFallbackQuote
         $from = $evidence->position;
         $system = $target->solarSystem;
         $to = [$system->id, $system->galaxy->id, $system->coordX, $system->coordY, $target->position];
-        if (!$this->validPosition($from) || !$this->validPosition($to) || $from[1] !== $to[1]
+        $held = $evidence->phase === PirateBlockedReturnEvidence::HELD_BEFORE_RETURN;
+        if (!PirateReturnAttestation::validEndpoint($from, $held) || !PirateReturnAttestation::validEndpoint($to, false) || $from[1] !== $to[1]
             || ($from[0] === $to[0] && $from[4] === $to[4])
             || (($from[0] === $to[0]) !== ([$from[2], $from[3]] === [$to[2], $to[3]]))
             || !is_finite($ratio) || $ratio < 0.1 || $ratio > 1
@@ -73,7 +74,9 @@ final readonly class PirateSurvivorFallbackQuote
             return null;
         }
 
-        $distance = $this->movement->distances($from, $to);
+        // MovementCalculator ne traite l’ancre sans case que côté destination. Les distances
+        // natives de la vraie colonie vers l'ancre sont symétriques, puis le devis est bien un aller simple.
+        $distance = $held ? $this->movement->distances($to, $from) : $this->movement->distances($from, $to);
         $systemSpeed = min(array_column($ships, 'speed_system')) * $ratio;
         $galaxySpeed = min(array_column($ships, 'speed_galaxy')) * $ratio;
         if ($systemSpeed <= 0 || $galaxySpeed <= 0 || ($distance['normal'] === 0 && $distance['hyper'] == 0)) {
@@ -86,7 +89,8 @@ final readonly class PirateSurvivorFallbackQuote
         if (!is_finite($rawSeconds) || $rawSeconds > self::MAX_SECONDS) {
             return null;
         }
-        $quote = $this->movement->quote($from, $to, $ships, $ratio, $timeMultiplier, $fuelPolicy);
+        $quote = $this->movement->quoteDistances($distance['normal'], $distance['hyper'], $distance['same'],
+            $ships, $ratio, $timeMultiplier, $fuelPolicy);
         $seconds = $quote['seconds'];
         $hydrogen = (float) $quote['one_way_fuel'];
         $capacity = $quote['capacity'];
@@ -111,23 +115,22 @@ final readonly class PirateSurvivorFallbackQuote
 
     private function matchesArrival(PirateAttackCampaign $campaign, PirateBlockedReturnEvidence $evidence): bool
     {
-        // Le drapeau seul ne localise rien : l'attestation doit correspondre au traitement terminal exact.
-        $settled = $campaign->timeline['settled'] ?? null;
-        $due = $campaign->timeline['returnDue'] ?? null;
-        $settledAt = is_string($settled) ? \DateTimeImmutable::createFromFormat(DATE_ATOM, $settled) : false;
-        $dueAt = is_string($due) ? \DateTimeImmutable::createFromFormat(DATE_ATOM, $due) : false;
+        // Le drapeau seul ne localise rien : le point doit correspondre au dernier traitement exact.
+        $settledAt = PirateReturnAttestation::checkpointDate($campaign, 'settled');
+        if ($settledAt === null || $evidence->arrivedAt->getTimestamp() !== $settledAt->getTimestamp()) {
+            return false;
+        }
+        if ($evidence->phase === PirateBlockedReturnEvidence::HELD_BEFORE_RETURN) {
+            $resolved = PirateReturnAttestation::checkpointDate($campaign, 'resolved');
 
-        return $settledAt !== false && $settledAt->format(DATE_ATOM) === $settled
-            && $dueAt !== false && $dueAt->format(DATE_ATOM) === $due
-            && $evidence->arrivedAt->getTimestamp() === $settledAt->getTimestamp()
+            return ($campaign->timeline['returnDue'] ?? null) === null && $resolved !== null
+                && $resolved->getTimestamp() === $settledAt->getTimestamp() && $resolved >= $campaign->arrivalAt;
+        }
+
+        $dueAt = PirateReturnAttestation::checkpointDate($campaign, 'returnDue');
+
+        return $evidence->phase === PirateBlockedReturnEvidence::BLOCKED_ARRIVAL && $dueAt !== null
             && $settledAt >= $dueAt && $dueAt > $campaign->arrivalAt;
-    }
-
-    private function validPosition(array $coordinates): bool
-    {
-        return count($coordinates) === 5 && array_is_list($coordinates)
-            && count(array_filter($coordinates, 'is_int')) === 5
-            && $coordinates[0] > 0 && $coordinates[1] > 0 && $coordinates[4] >= 1 && $coordinates[4] <= 9;
     }
 
     private function matchesSurvivors(array $survivors, array $ships): bool
