@@ -575,3 +575,48 @@ Ordre de grandeur : 1–2 jours pour raccorder et recetter le parcours
 privé hors décisions, puis 2–4 jours indicatifs après décisions pour
 carburant, chronologie/retour et vérifications d'ouverture selon les
 options. Le convoi reste à estimer séparément. Ce plan n’active rien.
+
+## Devis comparatif H₂ et calendrier théorique (sans effets)
+
+Complexité 2/5. Deux petits calculateurs internes, sans lecture de stock,
+transaction, nouvelle règle ni raccordement. Pour comparer des trajets,
+le profil réel des coques et de leurs recherches, la politique de
+carburant courante et le multiplicateur de l’univers doivent être fournis
+par le serveur. L’origine est une véritable position 1–9. Le poste est
+l’entrée du système, notée cible sans position dans le moteur et traitée
+comme l’ancre géométrique 10. C’est une distance interne, pas une 10e case.
+Le moteur garde les limites natives : pas de trajet inter-galaxies,
+arrondi à la seconde supérieure, minimum 30 s pour sonde seule dans son
+système et 60 s dans les autres cas.
+
+Référence catalogue Omega ×1, Basique sans recherche, vitesse 100 %, même
+système, aucun stationnement sauf la colonne d’illustration :
+
+| Départ et lot | Durée aller | H₂ aller seul | H₂ aller-retour | H₂ AR avec 10 min d’orbite |
+| --- | ---: | ---: | ---: | ---: |
+| Orbite 9, une Sonde | 30 s | 0,1 | 0,2 | non envisagé |
+| Orbite 5, une Sonde | 38 s | 0,5 | 1 | non envisagé |
+| Orbite 5, deux Chasseurs de patrouille | 19 min 45 s | 5 | 10 | 10,01 |
+
+Le premier exemple est le plus proche dans ce catalogue à vitesse 100 %,
+pas un minimum de H₂ imposé au jeu. Le coût natif n’est pas arrondi à
+l’unité ; la sonde coûte donc bien une fraction au départ, selon l’option
+retenue. Le devis reprend l’aller natif, deux jambes symétriques et le
+supplément éventuel d’orbite en séparant leurs montants. La capacité de
+réservoir + soute est informative, pas un débit ou une vérification de
+stock. En comportement normal, le hangar peut fournir une part du
+carburant et le stock paie le solde (FleetHold / ResourceService). Le
+calculateur ne tranche pas entre l’aller seul et la réserve aller-retour
+pour la sonde, ni le stationnement, le carburant non utilisé et
+les pertes de la flotte d’attaque. Aucun changement aux flottes normales.
+
+Le calendrier de combat reprend seulement un résultat natif terminal
+déjà calculé **après l’arrivée** : le premier round échoit à +60 s, le
+dernier à +60 s × nombre de rounds joués, borné à +600 s. Pour un résultat
+en trois rounds, +60, +120 puis +180 s ; un résultat en dix rounds clôt
+à la borne +600 s. Le calcul ne décide ni du vainqueur ni de l’heure
+effectivement traitée par un worker. Les échéances restent internes :
+aucune date d’issue anticipée, aucun résultat visible au joueur avant
+l’arrivée, ni dans ce lot à aucun moment. Le moteur pirate continue de
+fonctionner à sa borne actuelle ; ni les jetons, ni le traitement des
+rounds et retours, ni la chronologie des combats ordinaires ne sont changés.
