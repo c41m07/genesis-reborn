@@ -44,16 +44,21 @@ final class FirstStepsController extends AbstractController
         ], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
-    #[Route('/premiers-pas/desactiver', name: 'app_first_steps_disable', methods: ['POST'])]
-    public function disable(Request $request, PreferencesService $preferences): Response
+    #[Route('/premiers-pas/preference', name: 'app_first_steps_preference', methods: ['POST'])]
+    public function guidePreference(Request $request, PreferencesService $preferences): Response
     {
         $player = $this->getUser();
-        if (!$player instanceof Player || !$this->isCsrfTokenValid('first-steps-disable', $request->request->getString('_token'))) {
+        $setting = $request->request->getString('guide_enabled');
+        if (!$player instanceof Player || !in_array($setting, ['0', '1'], true)
+            || !$this->isCsrfTokenValid('first-steps-preference', $request->request->getString('_token'))) {
             throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le guide.');
         }
 
-        $preferences->setFirstStepsGuide($player, false);
-        $this->addFlash('success', 'Guide désactivé. Vous pouvez le réactiver dans Préférences sans perdre votre progression.');
+        $enabled = $setting === '1';
+        $preferences->setFirstStepsGuide($player, $enabled);
+        $this->addFlash('success', $enabled
+            ? 'Guide réactivé. Vous retrouverez vos étapes déjà acquises.'
+            : 'Guide désactivé. Vous pouvez le réactiver dans Préférences sans perdre votre progression.');
 
         return $this->redirectToRoute('app_preferences', status: Response::HTTP_SEE_OTHER);
     }

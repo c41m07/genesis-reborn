@@ -116,7 +116,7 @@ final class FirstStepsView
         'assembly_yard' => ['images/catalog/buildings/shipyard__basic.webp', 'Chantier d’assemblage du catalogue', 'Le chantier basique atteint le niveau 1.'],
         'ship' => ['images/catalog/ships/probe__basic.webp', 'Sonde de reconnaissance du catalogue', 'Une sonde basique est réellement construite.'],
         'exploration' => ['art/ui-preview-galaxy.webp', 'Aperçu de l’interface Galaxie', 'La mission révèle un système encore inconnu de votre empire.'],
-        'espionage' => ['images/catalog/ships/probe__basic.webp', 'Sonde basique utilisée pendant l’espionnage guidé', 'La mission guidée vers un PNJ produit un rapport, même si la sonde est détectée.'],
+        'espionage' => ['images/catalog/ships/probe__basic.webp', 'Sonde basique utilisée pendant l’espionnage guidé', 'Un rapport d’espionnage sur PNJ réussi ou détecté valide l’étape. Seule la mission du guide peut donner droit au remplacement de la sonde.'],
         'pirate_exercise' => ['art/ui-preview-colony-432.webp', 'Aperçu de la Vue générale dans le jeu', 'Lancez la simulation et affichez le rapport de l’exercice.'],
         'colonization' => ['images/catalog/ships/colony_ship__basic.webp', 'Vaisseau colonisateur du catalogue', 'La mission colonise une planète et vous en obtenez le contrôle.'],
     ];

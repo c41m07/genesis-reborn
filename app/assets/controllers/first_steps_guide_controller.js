@@ -13,14 +13,15 @@ export default class extends Controller {
         if (this.element.open) {
             this.rememberOpened();
         } else if (!this.read(this.openKey())) {
-            if (this.deferValue) {
-                // Le premier aperçu attend la fenêtre quotidienne si celle-ci a priorité.
+            const daily = document.querySelector('[data-controller~="daily-reward-ui"]');
+            if (this.deferValue && daily && daily.dataset.dailyRewardUiInitialPrompt !== 'finished') {
+                // Attendre la fin de l’essai, même si aucune fenêtre n’a pu être ouverte.
                 this.afterDaily = (event) => {
-                    if (event.target.id !== 'daily-reward-dialog') return;
-                    document.removeEventListener('close', this.afterDaily, true);
+                    if (event.target !== daily) return;
+                    document.removeEventListener('genesis:daily-reward-prompt-finished', this.afterDaily);
                     this.showFirstVisit();
                 };
-                document.addEventListener('close', this.afterDaily, true);
+                document.addEventListener('genesis:daily-reward-prompt-finished', this.afterDaily);
             } else {
                 this.showFirstVisit();
             }
@@ -28,12 +29,12 @@ export default class extends Controller {
     }
 
     disconnect() {
-        if (this.afterDaily) document.removeEventListener('close', this.afterDaily, true);
+        if (this.afterDaily) document.removeEventListener('genesis:daily-reward-prompt-finished', this.afterDaily);
         this.afterDaily = null;
     }
 
     showFirstVisit() {
-        if (!this.element.isConnected || this.read(this.openKey())) return;
+        if (!this.element.isConnected || this.read(this.openKey()) || document.getElementById('daily-reward-dialog')?.open) return;
         // Ne jamais déplacer le focus lors d’une ouverture proposée.
         this.element.open = true;
         this.rememberOpened();

@@ -53,7 +53,11 @@
                 <p><strong>À faire :</strong> {{ guide.action }}</p>
                 <p><strong>Validation :</strong> {{ example[2] }}</p>
                 {% if trainingRewards|filter(reward => reward.step_key == step) is not empty %}
-                    <a href="#first-step-refund-{{ step }}">Remboursement disponible · Voir comment le récupérer</a>
+                    {% if colony %}
+                        <a href="#first-step-refund-{{ step }}">Remboursement disponible · Voir comment le récupérer</a>
+                    {% else %}
+                        <p>Récompense disponible dès que vous avez une colonie.</p>
+                    {% endif %}
                 {% endif %}
                 {% if step == 'pirate_exercise' or (colony and (not done or step == 'espionage')) %}
                     {% include 'player/_first_steps_action.html.twig' with {step: step, guide: guide, colony: colony, done: done, actionStyle: step == training.next ? 'primary' : 'secondary'} only %}

@@ -3,7 +3,7 @@ import { accelerateQueuedItem, queryIsolatedSql } from './support/game-fixtures.
 
 test.use({ keepDailyRewardPrompt: true });
 
-async function register(page) {
+async function register(page, { closeDaily = true } = {}) {
     const id = crypto.randomUUID().slice(0, 8);
     const email = 'first-steps-' + id + '@example.test';
     const password = crypto.randomUUID() + 'Aa1!';
@@ -19,12 +19,14 @@ async function register(page) {
     await page.locator('.universe-card').filter({ has: page.getByRole('heading', { name: /Omega/ }) }).getByRole('button').click();
     await expect(page).toHaveURL(/planetes\/\d+$/);
     // Les comptes neufs de cette fixture ont tous un lot quotidien disponible.
-    const dialog = page.getByRole('dialog', { name: 'Récompense quotidienne' });
-    const popup = page.locator('.first-steps-popup');
-    await expect(dialog).toBeVisible();
-    await expect(popup).not.toHaveAttribute('open', '');
-    await dialog.getByRole('button', { name: 'Plus tard', exact: true }).click();
-    await expect(dialog).toBeHidden();
+    if (closeDaily) {
+        const dialog = page.getByRole('dialog', { name: 'Récompense quotidienne' });
+        const popup = page.locator('.first-steps-popup');
+        await expect(dialog).toBeVisible();
+        await expect(popup).not.toHaveAttribute('open', '');
+        await dialog.getByRole('button', { name: 'Plus tard', exact: true }).click();
+        await expect(dialog).toBeHidden();
+    }
 
     return email;
 }
@@ -251,10 +253,23 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
     // Une vraie navigation reste possible alors que le panneau est ouvert.
     await page.locator('#command-navigation').getByRole('link', { name: 'Bâtiments', exact: true }).click();
     await expect(page).toHaveURL(/section=buildings/);
-    await page.goto(overview);
-    await summary.click();
-    await popup.getByRole('button', { name: 'Désactiver le guide', exact: true }).click();
-    await expect(page).toHaveURL(/profil\/preferences/);
+    const staleSettings = await page.context().newPage();
+    try {
+        await staleSettings.goto('/profil/preferences');
+        await expect(staleSettings.getByRole('checkbox', { name: 'Afficher le guide Premiers pas' })).toBeChecked();
+        await page.goto(overview);
+        await summary.click();
+        await popup.getByRole('button', { name: 'Désactiver le guide', exact: true }).click();
+        await expect(page).toHaveURL(/profil\/preferences/);
+        // Enregistrer un autre réglage depuis la page devenue ancienne ne réactive pas l’aide.
+        await staleSettings.getByRole('checkbox', { name: 'Réduire les animations de l’interface' }).check();
+        await staleSettings.getByRole('button', { name: 'Enregistrer les paramètres' }).click();
+        await expect(staleSettings.getByRole('status').filter({ hasText: 'Préférences enregistrées' })).toBeVisible();
+        await expect(staleSettings.getByRole('checkbox', { name: 'Afficher le guide Premiers pas' })).not.toBeChecked();
+        await expect(staleSettings.getByRole('checkbox', { name: 'Réduire les animations de l’interface' })).toBeChecked();
+    } finally {
+        await staleSettings.close();
+    }
     const setting = page.getByRole('checkbox', { name: 'Afficher le guide Premiers pas' });
     await expect(setting).not.toBeChecked();
     await page.goto(overview);
@@ -262,7 +277,8 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
     await expect(page.getByText('Guide désactivé.')).toBeVisible();
     await page.getByRole('link', { name: 'Réactiver dans Préférences' }).click();
     await setting.check();
-    await page.getByRole('button', { name: 'Enregistrer les paramètres' }).click();
+    await page.getByRole('button', { name: 'Enregistrer le réglage du guide' }).click();
+    await expect(setting).toBeChecked();
     await page.goto(overview);
     await expect(popup).not.toHaveAttribute('open', '');
     await summary.click();
@@ -300,3 +316,26 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
         await native.close();
     }
 });
+
+
+for (const exit of ['refus temporaire', 'lot déjà retiré', 'aucun dialogue natif']) {
+    test('Premiers pas reprend quand Quotidiennes ne s’ouvre pas : ' + exit, async ({ page }) => {
+        if (exit === 'aucun dialogue natif') {
+            await page.addInitScript(() => { HTMLDialogElement.prototype.showModal = undefined; });
+        } else {
+            await page.route('**/recompense-quotidienne/panneau?*', route => route.fulfill(exit === 'refus temporaire'
+                ? { status: 503, body: 'Indisponible pour la recette' }
+                : { status: 200, contentType: 'text/html', body:
+                    '<dialog id="daily-reward-dialog" data-daily-reward-ui-target="dialog">Lot déjà récupéré</dialog>' }));
+        }
+        await register(page, { closeDaily: false });
+        await expect(page.locator('.first-steps-popup')).toHaveAttribute('open', '');
+        await expect(page.locator('dialog[open]')).toHaveCount(0);
+        const gift = page.locator('.topbar').getByRole('link', { name: 'Quotidiennes', exact: true });
+        if (exit === 'lot déjà retiré') {
+            await expect(gift).toBeHidden();
+        } else {
+            await expect(gift).toBeVisible();
+        }
+    });
+}

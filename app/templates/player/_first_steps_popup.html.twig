@@ -41,8 +41,9 @@
             {% include 'player/_first_steps_action.html.twig' with {step: step, guide: guide, colony: planet, actionStyle: 'primary'} only %}
             <div class="first-steps-popup-actions">
                 <a href="{{ path('app_first_steps') }}">Guide complet et remboursements</a>
-                <form method="post" action="{{ path('app_first_steps_disable') }}" data-turbo="false">
-                    <input type="hidden" name="_token" value="{{ csrf_token('first-steps-disable') }}">
+                <form method="post" action="{{ path('app_first_steps_preference') }}" data-turbo="false">
+                    <input type="hidden" name="_token" value="{{ csrf_token('first-steps-preference') }}">
+                    <input type="hidden" name="guide_enabled" value="0">
                     <button type="submit" class="quiet-button">Désactiver le guide</button>
                 </form>
             </div>
