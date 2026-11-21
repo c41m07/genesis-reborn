@@ -1047,6 +1047,7 @@ final class GameRepository
             \App\Message\PirateReconnaissanceDue::KIND,
             \App\Message\PirateAttackDue::KIND,
             \App\Message\PirateConvoyDue::KIND,
+            \App\Message\PirateSurvivorsDue::KIND,
         ])->orderBy('o.id', 'ASC')->setMaxResults(100)->getQuery()->getResult();
     }
 

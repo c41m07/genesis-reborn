@@ -378,6 +378,16 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame($survivors, (int) $db->fetchOne("SELECT quantity FROM fleet_ship WHERE fleet_id = ? AND slug = 'fighter'", [(int) $idle['id']]));
         self::assertSame(0.0, $this->resourceStock($target->id, 'hydrogen'));
         self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM fleet WHERE status <> 'idle'"));
+
+        // Passer aussi par le filtre SQL et le relay, pas seulement par l’invocation directe du handler.
+        self::getContainer()->get(OutboxRelay::class)->run();
+        $sent = self::getContainer()->get('messenger.transport.async')->getSent();
+        $recoveryMessages = array_values(array_filter(array_map(static fn ($envelope) => $envelope->getMessage(), $sent),
+            static fn ($item) => $item instanceof PirateSurvivorsDue));
+        self::assertCount(1, $recoveryMessages);
+        self::assertSame($id, $recoveryMessages[0]->campaignId);
+        self::assertSame($saved['token'], $recoveryMessages[0]->dispatchToken);
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_survivors'"));
     }
 
     public function testPrivateRecoveryRecordsLostDestinationWithoutDepositingOrRenewingOldProof(): void

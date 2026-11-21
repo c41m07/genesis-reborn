@@ -67,16 +67,18 @@ final readonly class PirateSurvivorRecoveryService
 
     private function plan(PlayerUniverse $owner, int $campaignId, int $attempt, int $revision, int $targetId): ?array
     {
-        if ($campaignId < 1 || $attempt < 1 || $targetId < 1 || $revision < 1 || $owner->universe->slug !== 'omega-1'
-            || $owner->id === null || $owner->player?->id === null) {
+        if ($campaignId < 1 || $attempt < 1 || $targetId < 1 || $revision < 1 || $owner->id === null) {
             return null;
         }
+        // Tant que la participation commune n'est pas verrouillée, ne pas déréférencer
+        // une relation paresseuse : MariaDB pourrait figer son instantané avant le premier départ.
         $this->guard->lockMembership($owner, true);
-        if ($owner->player->lockedAt !== null || $owner->player->emailVerifiedAt === null) {
+        if ($owner->universe->slug !== 'omega-1' || $owner->player?->id === null
+            || $owner->player->lockedAt !== null || $owner->player->emailVerifiedAt === null) {
             return null;
         }
-        $this->vacations->assertCanSendFleet($owner);
         $campaign = $this->repository->lockPirateAttack($campaignId, $owner);
+        $this->vacations->assertCanSendFleet($owner);
         if ($campaign === null || isset($campaign->timeline['pilot_recovery']) || $campaign->originId === $targetId) {
             return null;
         }
