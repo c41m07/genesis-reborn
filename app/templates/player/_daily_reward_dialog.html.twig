@@ -1,0 +1,54 @@
+{% import 'ui/macros.html.twig' as ui %}
+{% set available = planet and not status.claimed %}
+<dialog class="daily-reward-dialog" id="daily-reward-dialog" aria-labelledby="daily-reward-title"
+        data-daily-reward-ui-target="dialog" data-action="close->daily-reward-ui#restoreFocus">
+    <header class="daily-reward-heading">
+        <div>
+            <p class="daily-reward-eyebrow">DOTATION DE COMMANDEMENT</p>
+            <h2 id="daily-reward-title">Récompense quotidienne</h2>
+            <p>Jour {{ status.slot }} sur 7{% if available %} · Votre lot est disponible{% elseif status.claimed %} · Lot déjà récupéré{% endif %}</p>
+        </div>
+        <button type="button" aria-label="Fermer la fenêtre de récompense" class="quiet-button daily-reward-close"
+                data-action="daily-reward-ui#close" autofocus>{{ ui.icon('close') }}</button>
+    </header>
+
+    <ol class="daily-reward-track" aria-label="Progression des sept jours">
+        {% for reward in schedule %}
+            {% set slot = loop.index %}
+            {% set received = slot < status.slot or slot == status.slot and status.claimed %}
+            {% set active = slot == status.slot %}
+            <li class="daily-reward-card{{ active ? ' is-current' : '' }}{{ received ? ' is-received' : '' }}" {% if active %}aria-current="step"{% endif %}>
+                <span class="daily-reward-step">Jour {{ slot }}</span>
+                <span class="daily-reward-state">
+                    {% if received %}{{ ui.icon('check') }} Récupéré
+                    {% elseif active and available %}Disponible
+                    {% elseif active %}En cours
+                    {% else %}À venir{% endif %}
+                </span>
+                <dl>
+                    <div><dt>{{ ui.icon('metal') }} Métal</dt><dd>{{ reward.metal|quantity(0) }}</dd></div>
+                    <div><dt>{{ ui.icon('nano') }} Nano</dt><dd>{{ reward.nano|quantity(0) }}</dd></div>
+                </dl>
+            </li>
+        {% endfor %}
+    </ol>
+
+    <footer class="daily-reward-footer">
+        <div>
+            {% if planet %}<p>Destination : <strong>{{ planet.name }}</strong> · {{ planet.coordinates() }}</p>{% endif %}
+            <p id="daily-reward-dialog-rules">Un lot par compte et par jour, à l’heure de Paris. Un jour manqué ne remet pas le cycle à zéro.</p>
+        </div>
+        <div class="daily-reward-actions">
+            <button type="button" class="quiet-button" data-action="daily-reward-ui#close">{{ available ? 'Plus tard' : 'Fermer' }}</button>
+            {% if available %}
+            {% include 'player/_daily_reward_claim_form.html.twig' with {
+                planet: planet,
+                status: status,
+                tokenId: tokenId,
+                submitLabel: 'Récupérer le lot',
+                rulesId: 'daily-reward-dialog-rules'
+            } only %}
+        {% endif %}
+        </div>
+    </footer>
+</dialog>
