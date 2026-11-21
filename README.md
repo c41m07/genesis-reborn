@@ -533,9 +533,9 @@ messages non lus ; la messagerie reste accessible dans le menu. Les raccourcis
 du haut affichent leur nom au survol ou au clavier ; Admin reste réservé aux
 comptes autorisés.
 
-Sans JavaScript, le cadeau ouvre le formulaire natif. Depuis la Vue générale,
-**Récompense quotidienne** présente aussi le lot et la planète
-qui le recevra dans l’univers actif. Le bouton **Récupérer** retire au maximum un
+La Vue générale n’affiche pas de bouton séparé. Sans JavaScript, le cadeau
+ouvre le formulaire natif et indique la colonie de l’univers actif qui reçoit
+le lot. Le bouton **Récupérer** retire au maximum un
 lot par compte et par date civile de Paris, sans nouvelle connexion. Un jour
 manqué laisse le cycle en pause ; après J7, le retrait suivant reprend à J1.
 Si le métal ou le nano ne tient pas dans les stocks, le lot n’est ni retiré ni

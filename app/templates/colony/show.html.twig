@@ -10,9 +10,7 @@
             <p>Agir sur la colonie active, suivre tout l’empire.</p>
         {% endif %}
     </div>
-    {% if section == 'overview' %}
-        <a class="quiet-button" href="{{ path('app_daily_reward', {colony: planet.id}) }}">Récompense quotidienne</a>
-    {% else %}
+    {% if section != 'overview' %}
         {% include 'ui/development_navigation.html.twig' %}
     {% endif %}
 </div>

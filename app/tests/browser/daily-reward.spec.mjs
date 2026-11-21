@@ -28,7 +28,11 @@ test('Récompense quotidienne : kit T1, manque de place, retrait clavier et un s
     expect(stock('electricity')).toBe(0);
 
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.getByRole('link', { name: 'Récompense quotidienne', exact: true }).click();
+    await expect(page.locator('main').getByRole('link', { name: 'Récompense quotidienne', exact: true })).toHaveCount(0);
+    const gift = page.locator('.topbar').getByRole('link', { name: 'Quotidiennes', exact: true });
+    await expect(gift).toHaveAttribute('href', '/recompense-quotidienne?colony=' + planetId);
+    // Exercer aussi la page dédiée utilisée sans JavaScript, sans réintroduire le bouton doublon.
+    await page.goto(await gift.getAttribute('href'));
     await expect(page.getByRole('heading', { name: 'Jour 1 sur 7' })).toBeVisible();
     await expect(page.getByText('Univers actif :', { exact: false })).toContainText('Omega');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
