@@ -131,25 +131,58 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
         expect(new Set(costs).size).toBe(1);
         expect(await family.evaluate(card => card.scrollWidth <= card.clientWidth)).toBe(true);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-        const misalignedRows = await page.locator('.building-card:visible').evaluateAll(cards => {
+        const layout = await page.locator('.building-card:visible').evaluateAll(cards => {
             const rows = new Map();
+            const missingActions = [];
+            let measured = 0;
             cards.forEach(card => {
-                const button = card.querySelector('.building-rank:not([hidden]) .card-body > form > button');
-                if (!button) return;
+                const form = card.querySelector('.building-rank:not([hidden]) .card-body > form');
+                if (!form) return; // Les rangs verrouillés n’ont pas de formulaire.
+                const payment = form.querySelector(':scope > .catalog-payment');
+                const button = payment?.querySelector(':scope > button.catalog-build-action');
+                if (!button || button.getClientRects().length === 0) {
+                    missingActions.push(card.dataset.slug);
+                    return;
+                }
+                measured++;
                 const row = Math.round(card.getBoundingClientRect().top);
                 const positions = rows.get(row) ?? [];
-                positions.push({ slug: card.dataset.slug, bottom: button.getBoundingClientRect().bottom, cardBottom: card.getBoundingClientRect().bottom, panelBottom: button.closest('.building-rank').getBoundingClientRect().bottom, bodyBottom: button.closest('.card-body').getBoundingClientRect().bottom, height: button.getBoundingClientRect().height });
+                const wait = payment.querySelector(':scope > .catalog-wait:not([hidden])');
+                positions.push({
+                    slug: card.dataset.slug,
+                    paymentBottom: payment.getBoundingClientRect().bottom,
+                    buttonBottom: button.getBoundingClientRect().bottom,
+                    hasWait: Boolean(wait),
+                });
                 rows.set(row, positions);
             });
-            return [...rows.values()].filter(positions => Math.max(...positions.map(position => position.bottom)) - Math.min(...positions.map(position => position.bottom)) > 1);
+            const misaligned = values => values.length > 1 && Math.max(...values) - Math.min(...values) > 1;
+            return {
+                missingActions,
+                measured,
+                // Aligner les blocs complets, et toujours les vrais boutons
+                // entre eux lorsqu’aucun détail n’ajoute une ligne dessous.
+                misalignedRows: [...rows.values()].filter(positions =>
+                    misaligned(positions.map(position => position.paymentBottom))
+                    || misaligned(positions.filter(position => !position.hasWait).map(position => position.buttonBottom)),
+                ),
+            };
         });
-        expect(misalignedRows, `Boutons alignés à ${width} px`).toEqual([]);
+        expect(layout.missingActions, `Actions visibles à ${width} px`).toEqual([]);
+        expect(layout.measured, `Contrôle d’alignement actif à ${width} px`).toBeGreaterThan(0);
+        expect(layout.misalignedRows, `Panneaux et boutons alignés à ${width} px`).toEqual([]);
     }
     await page.screenshot({ path: 'output/playwright/building-tabs-mobile.png', fullPage: true });
     await page.setViewportSize({ width: 1920, height: 1000 });
     await page.locator('#item-mine_metal-basic .card-benefits summary').click();
     const rowButtons = page.locator('.building-card').filter({ has: page.locator('#item-mine_metal-basic, #item-mine_nano-basic, #item-mine_hydrogen-basic') });
-    const buttonBottoms = await rowButtons.evaluateAll(cards => cards.map(card => card.querySelector('.building-rank:not([hidden]) .card-body > form > button').getBoundingClientRect().bottom));
+    const mineActions = rowButtons.locator('.building-rank:not([hidden]) .card-body > form > .catalog-payment > button.catalog-build-action');
+    await expect(mineActions).toHaveCount(3);
+    for (const button of await mineActions.all()) {
+        await expect(button).toBeVisible();
+        await expect(button).toBeEnabled();
+    }
+    const buttonBottoms = await mineActions.evaluateAll(buttons => buttons.map(button => button.getBoundingClientRect().bottom));
     expect(Math.max(...buttonBottoms) - Math.min(...buttonBottoms)).toBeLessThanOrEqual(1);
     await page.screenshot({ path: 'output/playwright/building-tabs-desktop.png', fullPage: true });
     await page.goto(`${path}?section=buildings&showLockedItems=0#item-power_plant-superior`);
