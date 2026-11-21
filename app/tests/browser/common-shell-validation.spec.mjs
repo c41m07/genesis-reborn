@@ -23,6 +23,8 @@ async function enter(page) {
 test('Socle commun : menus et panneau événement au clavier, deux thèmes et parcours natif', async ({ page, browser, baseURL }, info) => {
   test.setTimeout(150000);
   const { email, home } = await enter(page);
+  // La recette du tiroir ne dépend ni d’une rotation active ni d’un scénario précédent.
+  runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO game_event(name,description,type,status,starts_at,ends_at,parameters,visible_to_players) VALUES('Annonce fictive du socle','','announcement','active',UTC_TIMESTAMP()-INTERVAL 1 HOUR,UTC_TIMESTAMP()+INTERVAL 1 HOUR,'{}',1)`);
   for (const theme of ['dark', 'light']) {
     runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
     for (const width of [1440, 768, 390, 320]) {
@@ -35,7 +37,7 @@ test('Socle commun : menus et panneau événement au clavier, deux thèmes et pa
       await page.keyboard.press('Enter');
       await expect(drawer).toHaveAttribute('open', '');
       await expect(drawer.getByRole('link', { name: 'Voir les événements', exact: true })).toBeVisible();
-      expect((await new AxeBuilder({ page }).include('.event-drawer-wrap').analyze()).violations).toEqual([]);
+      expect((await new AxeBuilder({ page }).include('.header-context-rail').analyze()).violations).toEqual([]);
       await page.screenshot({ path: info.outputPath(`evenements-${theme}-${width}.png`), animations: 'disabled' });
       await page.keyboard.press('Escape');
       await expect(drawer).not.toHaveAttribute('open');
@@ -80,6 +82,8 @@ test('Socle commun : menus et panneau événement au clavier, deux thèmes et pa
           await native.goto(home);
           await expect(native.locator('body')).toHaveAttribute('data-theme', theme);
           await expect(native.locator('#command-navigation')).toBeVisible();
+          await expect(native.locator('.header-technology-goal')).toHaveAttribute('href', '/technologies');
+          await expect(native.locator('.header-technology-goal')).toContainText('Choisir un objectif');
           await native.screenshot({ path: info.outputPath(`menu-natif-${theme}-${width}.png`), animations: 'disabled' });
           await native.locator('.event-drawer > summary').click();
           await native.locator('.event-drawer').getByRole('link', { name: 'Voir les événements', exact: true }).click();

@@ -2131,3 +2131,22 @@ d’inventaire. L’ancien formulaire reçoit un refus explicite et les commande
 actives, objets, récompenses en attente et attributions restent inchangés.
 Pour les vols déjà accélérés, échéance, réserves, historique et règles de rappel
 sont conservés. Ni migration ni changement du calcul de trajet.
+
+### Guide techno et événements au-dessus des ressources
+
+Le rail de la coque connectée affiche le nom et le rang de l’objectif suivi
+dans le Guide pour l’empire et la colonie actifs, ou un lien pour en choisir
+un. La clé locale du Guide ne change pas. Hors du Guide, seul un objectif
+enregistré déclenche une lecture privée de son libellé dans le catalogue
+de l’univers : pas de graphe dans le bandeau ni d’interrogation périodique.
+Sans JavaScript, stockage local ou objectif valide, le lien reste utilisable.
+
+Le tiroir Événements conserve ses conditions et ses actions ; il reste
+disponible sans planète si l’univers fournit des événements. Son ouverture
+native ne déplace ni les ressources ni la page. Une seule mesure de hauteur
+couvre le rail et la bande ; l’actualisation des ressources ne remplace pas
+le rail. Aucune règle économique, aucun déblocage ni aucune migration ne change.
+
+Parcours concernés : bandeau de ressources et navigation directe des catalogues,
+coque commune claire/sombre et sans JavaScript, tiroir des événements, suivi
+des objectifs du Guide et pages sans empire.
