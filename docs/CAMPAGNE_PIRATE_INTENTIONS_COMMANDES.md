@@ -9,3 +9,22 @@ Aucune route, action, mutation ou configuration d’activation n’est ajoutée 
 Le serveur garde l’instantané des options : escortes triées par coque/rang avec disponibilités et limite, colonies triées par leurs ID internes uniques. L’interface énumère exactement cet ordre sans afficher ces identifiants dans les valeurs de formulaire. L’ID *interne* du jeton Symfony lie compte, participation, origine active, numéro canonique, action, version/tentative visible et empreinte canonique des options. La version du devis est une empreinte de faits serveur actualisés (coût, état, règle et disponibilité selon l’action), ni un secret ni une valeur renvoyée par le client. Toute nouvelle option qui déplacerait un ordinal, perte de propriété, changement d’origine ou devis révisé invalide l’intention : demander de rouvrir le dossier, ne jamais appliquer l’ancien ordinal au nouveau modèle.
 
 À raccorder seulement après les contrôles de provenance, côté serveur. Le même contexte et la même version doivent être relus sous les verrous natifs de la commande, à côté des permissions, du rapport/droit et du stock ; un jeton valide avant le verrou ne suffit pas. N’émettre ces jetons que pour un formulaire prêt et réellement affiché. Le CSRF Symfony normal n’est pas un reçu de mutation : réutiliser l’unicité du scout, la tentative attendue de l’escorte et la transition persistée/reçu durable du dépôt ; si une nouvelle commande a besoin d’un reçu, reprendre la primitive ActionGuard existante dans la même transaction, sans jeton aléatoire d’idempotence concurrent. Lever un refus neutre, sans loguer les jetons ni l’identité interne. Les tests purs ne prétendent pas couvrir la concurrence ou l’intégration HTTP future.
+
+### Intention finale d’attaque
+
+L’aperçu d’attaque résout les ordinaux dans la liste serveur d’escortes,
+trie les familles et rangs, puis prépare la sélection exacte. Le futur
+adaptateur ne transmet pas de slug ou de réserve choisie côté client.
+La confirmation finale doit sceller cette composition dans le même
+identifiant CSRF que le devis natif (durée, H₂ total, orbite, réserve
+embarquée et complément du stock), l’origine et la tentative précédente.
+Une seconde composition de coût et de durée identiques ne réutilise pas
+le même jeton. Deux ordres de champs représentant la même sélection ne
+doivent en revanche pas faire expirer un aperçu valide.
+
+Le serveur devra resceller la preuve propriétaire, la position, le
+rapport, l’état de progression et les profils natifs depuis les données
+sous verrou avant paiement ; une empreinte envoyée par le client n’est
+jamais cette preuve. L’empreinte ne dépend pas de l’heure d’affichage.
+Aucune action, route, formulaire ou écriture n’est activé par le modèle
+de sélection.
