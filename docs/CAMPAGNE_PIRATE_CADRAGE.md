@@ -287,3 +287,86 @@ sans exposer leur destination ou présence dans les vues publiques.
 Vérifier aussi le cycle de fermeture/suppression de l’univers et
 l’interruption définitive du compte, faute de quoi la suppression en
 cascade de la campagne pourrait effacer une réserve encore ouverte.
+
+## Convoi protégé : devis exact et chronologie, sans paiement
+
+Complexité 3/5 pour ce modèle pur, 5/5 pour la persistance, la livraison et
+la gestion des interruptions. Rien ne crée une mission, une récompense
+ou un crédit aujourd’hui. Le futur droit est lié à une seule rencontre
+privée et à sa victoire effectivement enregistrée, pas à une tentative
+défaite, un retour de flotte ou un clic de page.
+
+### Prix et trajet examinés
+
+1. Figer les coûts de la flotte pirate **avant la révélation du rapport**,
+   pour pouvoir afficher le prix de la récompense dès le renseignement
+   complet, avant un combat réel. Le futur générateur appelle une fois
+   le lecteur pur `PirateConvoyQuote::captureCatalogue` sur sa composition
+   serveur : pour chaque famille et rang, `GameCatalog::getTierForUniverse`
+   puis `GameCatalog::costs(..., 1, effectif, 'ships')`. Additionner métal,
+   nano, antimatière et hydrogène. Pas de consommation électrique,
+   de remises de recherche, de bonus de coût d’opération, de conversion
+   entre ressources ni de recalcul à la victoire, après défaite ou à la
+   livraison. La composition et le prix figés vont dans le même rapport
+   interne ; l’adaptateur doit transmettre cet instantané à la
+   reconnaissance, il ne le fait pas encore ici.
+2. Le devis calcule exactement **50 % de chaque ressource** : entier et
+   reste d’une demi-unité. Par exemple, 83 métal catalogue donne 41,5 métal
+   de devis, et 1 nano donne 0,5 nano. Aucun arrondi de paiement n’est
+   appliqué. Les options sont de conserver les demi-unités (vérifier
+   lisibilité et capacité dans l’UI), d’arrondir chaque ressource vers le
+   bas (41 et 0) ou de l’arrondir vers le haut (42 et 1). Si un arrondi
+   est retenu, l’appliquer une seule fois sur le total figé par ressource,
+   pas par classe ou vaisseau, et annoncer le montant qui sera réellement
+   délivré. À trancher avant l’ouverture.
+3. Le convoi part du poste civil dans le système, jamais d’une planète
+   pirate. En inversant le trajet, ne pas passer une position d’origine
+   `null` directement à `MovementCalculator::quote` (qui modélise un départ
+   planétaire). `FleetNavigation::point` transforme le système en point
+   géométrique privé à la bordure, de position nominale 10.
+   `FleetNavigation::distances(point, colonie)` puis
+   `MovementCalculator::quoteDistances` donnent la même distance et durée
+   que le trajet inverse vers le relais, à profils et vitesse égaux.
+   Vérifié avec une autre case du même système et un système séparé.
+   La durée effective du futur convoi sera calculée avec son profil
+   validé, pas celle de l’escorte précédente ni un transport instantané.
+   Aucun marqueur 10 n’est publié ni rendu colonisable. Un univers ou
+   une galaxie incompatible ne donne pas de route de repli par défaut.
+
+### Contrat du futur traitement transactionnel
+
+- Une contrainte unique sur l’identifiant de rencontre et l’identité de
+  la victoire garantit au plus un droit. Relire propriétaire, participation
+  et univers sous verrou. Décider séparément s’il part automatiquement ou
+  si le joueur choisit sa colonie de destination ; dans les deux cas
+  enregistrer vrai départ/échéance et outbox privée dans la même transaction.
+  Aucun accès autre joueur, flotte publique à intercepter ou interaction
+  avec le transport classique.
+- La preuve d’arrivée vérifie le jeton courant, le délai et le même
+  propriétaire ; pas de crédit avant. Le modèle laisse explicitement l’état
+  « arrivé, droit non consommé » tant que rien n’est crédité. Quand la
+  politique de livraison est choisie, verrouiller la colonie et ses stocks
+  actuels, créditer et marquer le droit consommé **dans le même commit**.
+  `ResourceService::deposit(..., allOrNothing: true)` offre une primitive
+  de capacité indivisible, à utiliser uniquement si ce mode est retenu.
+- **Stock plein :** proposition à arbitrer, conserver le convoi entier en
+  attente et montrer la capacité manquante par ressource. Un dépôt partiel
+  exigerait un registre de reliquat et davantage de décisions ; ne rien
+  perdre, ne rien déplacer, ne pas clore le droit par défaut.
+- **Colonie perdue :** en attente privée sans dépôt sur une ancienne
+  propriété. Option à valider : choisir explicitement une colonie du même
+  empire encore autorisée, avec un nouveau calcul d’itinéraire et un
+  délai si nécessaire, sans recréer le droit ni démarrer un second convoi.
+- **Empire parti / univers clos :** ne pas créditer un autre empire,
+  univers ou joueur. Décider séparément de la conservation, de la reprise
+  possible et de la fin de droit, ainsi que du sort en cas de suppression
+  de compte/univers ; ne pas traiter l’effacement en cascade comme une
+  livraison. Aucun retour d’excédent vers un relais volatil n’est choisi.
+
+Le modèle couvre victoire, départ unique, token obsolète, arrivée à
+échéance et consommation unique après preuve de crédit future. Recette
+requise plus tard : deux workers vraiment concurrents, rollback après
+débit/crédit conditionnel, démarrage et rattrapage via RabbitMQ, détection
+d’un ancien jeton, valeur exacte d’un cas impair, stockage à capacité
+exacte, colonie transférée, fermeture puis rejeu. Carburant, cadence
+publique, difficulté et nombre de missions restent distincts.
