@@ -121,8 +121,85 @@ final class FirstStepsView
         'colonization' => ['images/catalog/ships/colony_ship__basic.webp', 'Vaisseau colonisateur du catalogue', 'La mission colonise une planète et vous en obtenez le contrôle.'],
     ];
 
+    // Captures Chromium de contrôles réels : compte, stocks et cibles fictifs en base de recette.
+    // Les dimensions intrinsèques évitent un saut de mise en page au chargement de la diapositive.
+    private const GESTURES = [
+        'metal_mine' => [
+            ['mine-commande', 305, 45, 'Bouton Améliorer au niveau 1', 'Sur la fiche Mine à ciel ouvert, cliquez sur « Améliorer au niveau 1 ».'],
+            ['mine-niveau', 305, 25, 'Niveau actuel 1 sur la fiche de la mine', 'Après la file, revenez à cette fiche : « Niveau actuel 1 » confirme la construction.'],
+        ],
+        'power_plant' => [
+            ['mine-commande', 305, 45, 'Bouton Améliorer au niveau 1 du catalogue', 'Sur la fiche Centrale nucléaire, lancez le niveau 1 avec ce bouton.'],
+            ['centrale-energie', 305, 218, 'Conseil sur la production et la consommation d’électricité', 'Comparez production et consommation dans le bilan ; le jalon attend la fin de la centrale.'],
+        ],
+        'nano_workshop' => [
+            ['mine-commande', 305, 45, 'Bouton Améliorer au niveau 1 du catalogue', 'Sur la fiche Atelier de nanofabrication, utilisez ce bouton.'],
+            ['nano-niveau', 305, 25, 'Niveau affiché sur la fiche de l’atelier', 'Le niveau affiché après la file doit être au moins 1 ; cet exemple montre un atelier déjà amélioré.'],
+        ],
+        'metal_storage' => [
+            ['depot-prerequis', 305, 84, 'Prérequis du dépôt : Mine à ciel ouvert basique niveau 5', 'Tant que le bouton est verrouillé, le lien « Mine à ciel ouvert » indique le niveau à atteindre.'],
+            ['depot-capacite', 305, 258, 'Aide du dépôt : capacité totale et capacité protégée affichées séparément', 'Comparez les deux limites. Une fois le dépôt terminé, la fiche indique son nouveau niveau.'],
+        ],
+        'laboratory' => [
+            ['mine-commande', 305, 45, 'Bouton Améliorer au niveau 1 du catalogue', 'Ouvrez le Laboratoire colonial basique et lancez le niveau 1.'],
+            ['laboratoire-niveau', 305, 24, 'Niveau actuel 1 sur la fiche du laboratoire', 'Quand le niveau 1 est en place, vous pouvez passer à Recherche sur cette colonie.'],
+        ],
+        'research' => [
+            ['recherche-commande', 305, 45, 'Bouton Rechercher le niveau 1', 'Dans Recherche, sur Génie civil colonial basique, cliquez sur « Rechercher le niveau 1 ».'],
+        ],
+        'assembly_yard' => [
+            ['mine-commande', 305, 45, 'Bouton Améliorer au niveau 1 du catalogue', 'Lorsque les niveaux de mine et d’atelier requis sont atteints, lancez le niveau 1 du Chantier d’assemblage.'],
+            ['chantier-niveau', 305, 25, 'Niveau actuel 1 sur la fiche du chantier', 'Quand le niveau 1 est affiché, ouvrez le Chantier spatial pour commander une sonde.'],
+        ],
+        'ship' => [
+            ['sonde-quantite', 305, 130, 'Commande de chantier : quantité 1 et bouton Construire', 'Sur la Sonde de reconnaissance basique, laissez 1 en quantité et cliquez sur « Construire ».'],
+            ['exploration-composition', 370, 115, 'Composition d’une flotte : Sonde de reconnaissance disponible', 'Après construction, une Sonde de reconnaissance doit être disponible dans la composition de mission.'],
+        ],
+        'exploration' => [
+            ['exploration-destination', 420, 445, 'Mission Exploration et choix d’un système non exploré', 'Après avoir mis une sonde dans la composition, choisissez « Systèmes non explorés » et un système, puis vérifiez la mission.'],
+            ['exploration-composition', 370, 115, 'Quantité 1 à côté de la Sonde de reconnaissance', 'Vérifiez la composition avant envoi : cette sonde est consommée lorsque le nouveau système est révélé.'],
+        ],
+        'espionage' => [
+            ['espionnage-destination', 420, 501, 'Type de destination PNJ sélectionné pour l’Espionnage', 'Sur l’écran de destination, sélectionnez « PNJ », choisissez une cible connue et vérifiez la mission.'],
+            ['espionnage-composition', 370, 115, 'Une Sonde de reconnaissance basique saisie dans la composition', 'Pour le parcours guidé, vérifiez que seule cette sonde part, puis consultez le rapport à l’arrivée.'],
+        ],
+        'pirate_exercise' => [
+            ['exercice-simulation', 146, 46, 'Bouton Lancer la simulation', 'Dans le briefing privé, cliquez sur « Lancer la simulation » sans engager de flotte réelle.'],
+            ['exercice-rapport', 500, 235, 'Rapport affichant le résultat, les survivants et les pertes', 'Dès que le rapport s’affiche, l’exercice compte, même si les pirates l’emportent.'],
+        ],
+        'colonization' => [
+            ['colonisation-destination', 420, 445, 'Colonisation : type de destination Planètes neutres et planète découverte', 'Après avoir sélectionné un colonisateur, choisissez une planète neutre découverte et vérifiez la mission.'],
+            ['colonisation-composition', 370, 115, 'Vaisseau colonisateur basique sélectionné dans la composition', 'Vérifiez le colonisateur avant de partir. À l’arrivée réussie, la nouvelle colonie apparaît dans Planètes.'],
+        ],
+    ];
+
     public function __construct(private FirstSteps $firstSteps, private ResourceService $resources)
     {
+    }
+
+    public function hasPending(PlayerUniverse $membership, Planet $planet, bool $exerciseInResponse = false): bool
+    {
+        return count($this->firstSteps->guideEvidence($membership, $planet, $exerciseInResponse)) < count(FirstStep::cases());
+    }
+
+    /** @return array{next:string,guide:array,count:int,total:int,slides:list<array{string,int,int,string,string}>,validation:string}|null */
+    public function panel(PlayerUniverse $membership, Planet $planet): ?array
+    {
+        $done = $this->firstSteps->guideEvidence($membership, $planet);
+        foreach (FirstStep::cases() as $step) {
+            if (!isset($done[$step->value])) {
+                return [
+                    'next' => $step->value,
+                    'guide' => self::HINTS[$step->value],
+                    'count' => count($done),
+                    'total' => count(FirstStep::cases()),
+                    'slides' => self::GESTURES[$step->value],
+                    'validation' => self::EXAMPLES[$step->value][2],
+                ];
+            }
+        }
+
+        return null;
     }
 
     /** @param array<string, array<string, int>> $buildings @param array<string, array<string, int>> $technologies */
@@ -149,6 +226,7 @@ final class FirstStepsView
                 $existing[$step->value] = true;
             }
         }
+        $existing += $this->firstSteps->heritageAtCompletion($membership, $completed, $completed + $existing);
         $done = $completed + $existing;
         $next = null;
         foreach (FirstStep::cases() as $step) {

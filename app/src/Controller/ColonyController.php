@@ -116,10 +116,6 @@ final class ColonyController extends AbstractController
         }
         $isLiveJson = $request->headers->get('X-Genesis-Live') === '1' && $request->getPreferredFormat() === 'json';
         if ($section === 'overview') {
-            if (!$isLiveJson && ($this->getUser()->preferences['firstStepsGuide'] ?? true)) {
-                // Le panneau est rendu sur la page complète, plus dans les fragments actualisés.
-                $data['training'] = $firstSteps->progress($m, $data['building_levels'], $data['technology_levels']);
-            }
             if ($request->headers->get('X-Genesis-Live') !== '1') {
                 $journal->open($m);
             }

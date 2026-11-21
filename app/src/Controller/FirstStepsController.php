@@ -44,6 +44,28 @@ final class FirstStepsController extends AbstractController
         ], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
+    #[Route('/premiers-pas/panneau', name: 'app_first_steps_panel', methods: ['GET'])]
+    public function panel(Request $request, UniverseContext $context, FirstStepsView $view, GameRepository $repo): Response
+    {
+        $membership = $context->membership();
+        $player = $membership->player;
+        $planet = $repo->find(Planet::class, $request->query->getInt('colony'));
+        if ($player->lockedAt !== null || $player->emailVerifiedAt === null || !$planet instanceof Planet
+            || $planet->owner?->id !== $membership->id
+            || $planet->solarSystem->galaxy->universe->id !== $membership->universe->id) {
+            throw $this->createNotFoundException('Planète inaccessible.');
+        }
+
+        $response = new Response(headers: ['Cache-Control' => 'private, no-store']);
+        // Une page restée ouverte peut viser un guide désactivé ou maintenant terminé.
+        $panel = ($player->preferences['firstStepsGuide'] ?? true) ? $view->panel($membership, $planet) : null;
+        if ($panel === null) {
+            return $response->setStatusCode(Response::HTTP_NO_CONTENT);
+        }
+
+        return $this->render('player/_first_steps_panel.html.twig', ['panel' => $panel, 'planet' => $planet], $response);
+    }
+
     #[Route('/premiers-pas/preference', name: 'app_first_steps_preference', methods: ['POST'])]
     public function guidePreference(Request $request, PreferencesService $preferences): Response
     {
@@ -107,9 +129,11 @@ final class FirstStepsController extends AbstractController
             'membership' => $membership,
             'exerciseTokenId' => $tokenId,
             'report' => $report,
+            'firstStepsExerciseInResponse' => $report !== null,
         ], new Response(headers: ['Cache-Control' => 'private, no-store']));
 
         if ($report !== null) {
+            // Ne pas accorder le jalon si le rapport n'a pas pu être rendu.
             $firstSteps->recordPirateExercise($membership);
         }
 

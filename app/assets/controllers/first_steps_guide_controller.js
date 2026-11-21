@@ -2,18 +2,15 @@ import { Controller } from '@hotwired/stimulus';
 import '../styles/first-steps-guide.css';
 
 export default class extends Controller {
-    static targets = ['summary', 'closeButton', 'slide', 'illustration', 'controls', 'previous', 'next', 'position'];
-    static values = { key: String, scope: String, defer: Boolean };
+    static targets = ['summary', 'mount', 'status', 'closeButton', 'slide', 'illustration', 'controls', 'previous', 'next', 'position'];
+    static values = { scope: String, url: String, autoOpen: Boolean, defer: Boolean };
 
     connect() {
         this.element.classList.add('first-steps-popup-enhanced');
-        this.closeButtonTarget.hidden = false;
-        this.controlsTarget.hidden = false;
         this.reflectDisclosure();
-        this.index = Math.max(0, Math.min(this.slideTargets.length - 1, Number(this.read(this.slideKey())) || 0));
         if (this.element.open) {
             this.rememberOpened();
-        } else if (!this.read(this.openKey())) {
+        } else if (this.autoOpenValue && !this.read(this.openKey())) {
             const daily = document.querySelector('[data-controller~="daily-reward-ui"]');
             if (this.deferValue && daily && daily.dataset.dailyRewardUiInitialPrompt !== 'finished') {
                 // Attendre la fin de l’essai, même si aucune fenêtre n’a pu être ouverte.
@@ -32,6 +29,7 @@ export default class extends Controller {
     disconnect() {
         if (this.afterDaily) document.removeEventListener('genesis:daily-reward-prompt-finished', this.afterDaily);
         this.afterDaily = null;
+        this.cancelPending();
     }
 
     showFirstVisit() {
@@ -50,13 +48,71 @@ export default class extends Controller {
 
     rememberOpened() {
         this.reflectDisclosure();
-        if (!this.element.open) return;
+        if (!this.element.open) {
+            this.cancelPending();
+            return;
+        }
+
         this.write(this.openKey(), '1');
-        this.switchSlide(this.index);
+        if (!this.step && !this.pending) this.loadPanel();
+    }
+
+    async loadPanel() {
+        const request = new AbortController();
+        this.pending = request;
+        this.setStatus('Chargement de l’étape…');
+
+        try {
+            const response = await fetch(this.urlValue, {
+                signal: request.signal,
+                credentials: 'same-origin',
+                redirect: 'error',
+                cache: 'no-store',
+            });
+            if (request.signal.aborted || !this.element.open) return;
+            if (response.status === 204) {
+                this.setStatus('Aucune étape à afficher. Le guide complet reste accessible.');
+                return;
+            }
+            if (!response.ok) throw new Error('Guide indisponible');
+
+            const template = document.createElement('template');
+            template.innerHTML = await response.text();
+            const panel = template.content.querySelector('[data-first-steps-guide-fragment]');
+            if (request.signal.aborted || !this.element.open) return;
+            if (!panel?.dataset.firstStepsGuideStep) throw new Error('Étape indisponible');
+
+            this.step = panel.dataset.firstStepsGuideStep;
+            const fallbackHadFocus = this.mountTarget.contains(document.activeElement);
+            this.mountTarget.replaceChildren(panel);
+            // Le lien natif reste le même choix si le joueur l’a déjà atteint au clavier.
+            if (fallbackHadFocus) panel.querySelector('[data-first-steps-guide-return]')?.focus();
+            this.closeButtonTarget.hidden = false;
+            const count = this.slideTargets.length;
+            if (this.hasControlsTarget) this.controlsTarget.hidden = count < 2;
+            // Le stockage est distinct par empire et par étape, jamais d’un univers à l’autre.
+            this.switchSlide(Math.max(0, Math.min(count - 1, Number(this.read(this.slideKey())) || 0)));
+        } catch (error) {
+            if (!request.signal.aborted) this.setStatus('Impossible de charger l’étape. Vous pouvez réessayer ou ouvrir le guide complet.');
+        } finally {
+            if (this.pending === request) this.pending = null;
+        }
+    }
+
+    setStatus(message) {
+        if (!this.hasStatusTarget) return;
+        this.statusTarget.hidden = false;
+        this.statusTarget.textContent = message;
+    }
+
+    cancelPending() {
+        this.pending?.abort();
+        this.pending = null;
     }
 
     close() {
         this.element.open = false;
+        this.cancelPending();
         this.reflectDisclosure();
         this.summaryTarget.focus();
     }
@@ -82,9 +138,9 @@ export default class extends Controller {
         const illustration = this.illustrationTargets[index];
         // Les autres images restent sans source jusqu’à une demande du joueur.
         if (!illustration.hasAttribute('src')) illustration.src = illustration.dataset.src;
-        this.positionTarget.textContent = index + 1 + ' sur ' + this.slideTargets.length;
-        this.previousTarget.setAttribute('aria-disabled', String(index === 0));
-        this.nextTarget.setAttribute('aria-disabled', String(index === this.slideTargets.length - 1));
+        if (this.hasPositionTarget) this.positionTarget.textContent = index + 1 + ' sur ' + this.slideTargets.length;
+        if (this.hasPreviousTarget) this.previousTarget.setAttribute('aria-disabled', String(index === 0));
+        if (this.hasNextTarget) this.nextTarget.setAttribute('aria-disabled', String(index === this.slideTargets.length - 1));
         this.write(this.slideKey(), String(index));
     }
 
@@ -93,7 +149,7 @@ export default class extends Controller {
     }
 
     slideKey() {
-        return 'genesis:first-steps:slide:' + this.keyValue;
+        return 'genesis:first-steps:slide:' + this.scopeValue + ':' + this.step;
     }
 
     read(key) {

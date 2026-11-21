@@ -20,6 +20,9 @@
 {# Ne pas ouvrir la dotation dans le sélecteur d’univers, le compte ni les formulaires de confirmation. #}
 {% set rewardGamePage = presentationPage not in ['', 'accueil-public', 'profil', 'preferences', 'vacances', 'suppression-compte', 'wiki', 'feedback', 'documents-legaux', 'erreurs', 'annuler-file', 'rappeler-flotte', 'abandon-colonie', 'signaler-commandant'] %}
 {% set rewardHeader = daily_reward_header(app.user, chrome.planet, rewardGamePage) %}
+{# Les confirmations et certaines pages autonomes restent des écrans de jeu, sans déclencher d’auto-ouverture. #}
+{% set firstStepsGamePage = rewardGamePage or route in ['app_first_steps', 'app_first_steps_exercise', 'app_daily_reward', 'app_queue_cancel_preview', 'app_fleet_recall', 'app_fleet_station_resume', 'app_planet_abandon', 'app_player_report'] %}
+{% set firstStepsAvailable = firstStepsGamePage and first_steps_available(app.user, chrome.membership, chrome.planet, route == 'app_first_steps_exercise' and firstStepsExerciseInResponse|default(false)) %}
 {% set entryPublicPage = not app.user and route in ['app_home','app_login','app_register','app_password_reset_request','app_password_reset','app_email_verify_request','app_email_verify','app_access_denied','app_legal_mentions','app_legal_terms','app_legal_privacy','app_legal_cookies'] %}
 
 {% set unreadPatchNote = app.user and latest_patch_note_id() > (app.user.preferences.last_patch_note_read_id|default(0)) %}
@@ -93,6 +96,13 @@
 </div>
 {% endif %}
 <main id="main" class="shell {{ route=='app_map_v2'?'shell--galaxy-v2':'' }}">{% if chrome.membership and route != 'app_universes' %}{% include 'universe/_closing.html.twig' with {universe: chrome.membership.universe} %}{% endif %}{% for type,messages in app.flashes %}{% for message in messages %}<div class="flash {{ type }}" role="{{ type=='error'?'alert':'status' }}">{{ message }}</div>{% endfor %}{% endfor %}{% block incoming_fleets %}{% if chrome.membership %}{% include 'ui/incoming_attacks.html.twig' with {incoming_panel:false} %}{% endif %}{% endblock %}{% block body %}{% endblock %}</main>
+{% if firstStepsAvailable %}
+    {% include 'player/_first_steps_popup.html.twig' with {
+        planet: chrome.planet,
+        autoOpen: route == 'app_colony' and section == 'overview',
+        deferDaily: rewardHeader.autoOpen,
+    } only %}
+{% endif %}
 <footer class="footer {{ route=='app_map_v2'?'footer--galaxy-v2':'' }}"><span>GENESIS REBORN</span><span>Explorez. Développez. Écrivez votre histoire.</span>{% include 'legal/_navigation.html.twig' %}</footer>
 {% if app.user %}<nav class="mobile-bottom-nav" aria-label="Navigation mobile"><a href="{{ chrome.planet ? path('app_colony',{id:chrome.planet.id}) : path('app_home') }}" class="{{ route=='app_colony' or route=='app_home' ? 'active' : '' }}" {{ route=='app_colony' or route=='app_home' ? 'aria-current="page"' : '' }}>{{ ui.icon('overview') }}<span>Accueil</span></a><a href="{{ path('app_planets') }}" class="{{ route=='app_planets'?'active':'' }}">{{ ui.icon('galaxy') }}<span>Planètes</span></a><a href="{{ path('app_map_v2') }}" class="{{ route in ['app_map','app_map_v2'] ? 'active' : '' }}" {{ route in ['app_map','app_map_v2'] ? 'aria-current="page"' : '' }}>{{ ui.icon('galaxy') }}<span>Galaxie</span></a><a href="{{ path('app_fleets') }}" class="{{ (route=='app_fleets' or route starts with 'app_fleet_') ? 'active' : '' }}" {{ (route=='app_fleets' or route starts with 'app_fleet_') ? 'aria-current="page"' : '' }}>{{ ui.icon('fleet') }}<span>Flottes</span></a><button type="button" data-navigation-target="toggle" data-action="navigation#toggle" aria-controls="command-navigation" aria-expanded="false">{{ ui.icon('menu') }}<span class="menu-unread-dot" data-menu-notifications-target="badge" role="img" aria-label="Notifications à consulter dans le menu" {% if not chrome.unreadMessages|default(0) and not unreadPatchNote and not chrome.journal.unreadCount|default(0) %}hidden{% endif %}></span><span>Plus</span></button></nav>{% endif %}
 </div>

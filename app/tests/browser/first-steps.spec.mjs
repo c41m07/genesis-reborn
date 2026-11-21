@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from './support/isolated-test.mjs';
-import { accelerateQueuedItem, queryIsolatedSql } from './support/game-fixtures.mjs';
+import { accelerateQueuedItem, queryIsolatedSql, revealVirginPlanet, runIsolatedSql } from './support/game-fixtures.mjs';
 
 test.use({ keepDailyRewardPrompt: true });
 
@@ -256,7 +256,7 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
     await page.setViewportSize({ width: 1440, height: 900 });
     const first = popup.locator('figure').nth(0).locator('img');
     const second = popup.locator('figure').nth(1).locator('img');
-    await expect(first).toHaveAttribute('src', /mine_metal/);
+    await expect(first).toHaveAttribute('src', /mine-commande[.]webp$/);
     await expect.poll(() => first.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
     await expect(popup.getByRole('button', { name: 'Désactiver le guide', exact: true })).toBeInViewport({ ratio: 1 });
     const captures = process.env.FIRST_STEPS_CAPTURES;
@@ -271,7 +271,7 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
 
     await expect(second).not.toHaveAttribute('src', /.+/);
     await popup.getByRole('button', { name: 'Suivant', exact: true }).click();
-    await expect(second).toHaveAttribute('src', /ui-preview-colony/);
+    await expect(second).toHaveAttribute('src', /mine-niveau[.]webp$/);
     await expect(popup.locator('output')).toHaveText('2 sur 2');
     await page.keyboard.press('Escape');
     await expect(popup).not.toHaveAttribute('open', '');
@@ -353,7 +353,7 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
         const fallback = await native.newPage();
         await fallback.goto(overview);
         await fallback.locator('.first-steps-popup summary').click();
-        await expect(fallback.getByRole('link', { name: 'Ouvrir le visuel de cette étape' })).toHaveAttribute('href', /mine_metal/);
+        await expect(fallback.getByRole('link', { name: 'Guide complet et remboursements' })).toHaveAttribute('href', '/premiers-pas');
     } finally {
         await native.close();
     }
@@ -381,3 +381,107 @@ for (const exit of ['refus temporaire', 'lot déjà retiré', 'aucun dialogue na
         }
     });
 }
+
+test('La languette de jeu ne charge ni étape ni image avant son ouverture hors Vue générale', async ({ page }) => {
+    await register(page);
+    // Vue générale conserve sa première ouverture : l’isoler des mesures des pages fermées.
+    const autoImage = page.locator('.first-steps-popup figure:visible img');
+    await expect(autoImage).toBeVisible();
+    await expect.poll(() => autoImage.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+    const requests = [];
+    page.on('request', request => {
+        const path = new URL(request.url()).pathname;
+        if (path === '/premiers-pas/panneau' || path.startsWith('/art/first-steps/')) requests.push(path);
+    });
+    const overview = new URL(page.url());
+    const pages = [
+        overview.pathname + '?section=buildings',
+        overview.pathname + '?section=technologies',
+        '/flottes',
+        '/planetes',
+        '/rapports',
+        '/carte-v2',
+    ];
+    const popup = page.locator('.first-steps-popup');
+    const arrow = popup.locator('summary');
+    for (const [index, location] of pages.entries()) {
+        await page.setViewportSize(index % 2 ? { width: 390, height: 844 } : { width: 1440, height: 900 });
+        const before = requests.length;
+        await page.goto(location);
+        await expect(arrow).toBeVisible();
+        await expect(popup).not.toHaveAttribute('open', '');
+        await expect(popup.locator('figure')).toHaveCount(0);
+
+        expect(requests).toHaveLength(before);
+        await arrow.press('Enter');
+        await expect(popup.getByRole('heading', { name: 'Mine à ciel ouvert' })).toBeVisible();
+        // Attendre aussi la demande d’image de cette ouverture avant de compter les suivantes.
+        await expect.poll(() => popup.locator('figure:visible img').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+        expect(requests.slice(before).filter(path => path === '/premiers-pas/panneau')).toHaveLength(1);
+        await page.keyboard.press('Escape');
+        await expect(popup).not.toHaveAttribute('open', '');
+        await expect(arrow).toBeFocused();
+    }
+
+    // Un réglage de compte, le sélecteur et une page publique ne sont pas des écrans de jeu.
+    const before = requests.length;
+    for (const location of ['/profil/preferences', '/univers', '/mentions-legales']) {
+        await page.goto(location);
+        await expect(popup).toHaveCount(0);
+    }
+    expect(requests).toHaveLength(before);
+});
+
+test('Le dernier vrai jalon masque la languette dans cet empire, sans retirer le remboursement', async ({ page }) => {
+    test.setTimeout(120000);
+    const email = await register(page);
+    const origin = new URL(page.url()).pathname;
+    const project = process.env.BROWSER_ROUTER;
+    const colony = Number(origin.split('/').pop());
+    const member = Number(queryIsolatedSql(project, "SELECT owner_id FROM planet WHERE id=" + colony));
+    expect(member).toBeGreaterThan(0);
+
+    // Acquérir la mine et son remboursement par le même parcours que le joueur.
+    await page.goto(origin + '?section=buildings&focusItem=1&tutorial=mine_metal#item-mine_metal-basic');
+    const mine = page.locator('#item-mine_metal-basic');
+    await mine.getByRole('button', { name: 'Améliorer au niveau 1', exact: true }).click();
+    accelerateQueuedItem(project, email, 'building', 'mine_metal');
+    await page.goto(origin + '?section=buildings');
+    await expect(page.locator('#building-tab-mine_metal-basic .building-rank-level')).toHaveText('1');
+
+    // Les dix autres jalons du passé sont préparés en DB jetable. L’exercice manquant est lancé dans le vrai formulaire.
+    const past = ['power_plant', 'nano_workshop', 'metal_storage', 'laboratory', 'research', 'assembly_yard',
+        'ship', 'exploration', 'espionage', 'colonization'];
+    runIsolatedSql(project, 'INSERT INTO first_step_completion (player_universe_id,step_key,completed_at) VALUES '
+        + past.map(step => '(' + member + ",'" + step + "',UTC_TIMESTAMP())").join(','));
+    const second = revealVirginPlanet(project, email);
+    runIsolatedSql(project, "UPDATE planet SET owner_id=" + member + ", acquired_at=UTC_TIMESTAMP(), name='Colonie exemple' WHERE id=" + second.id);
+
+    await page.goto('/premiers-pas/exercice-pirate');
+    const popup = page.locator('.first-steps-popup');
+    await expect(popup.locator('summary')).toBeVisible();
+    const panelUrl = await popup.getAttribute('data-first-steps-guide-url-value');
+    await page.getByRole('button', { name: 'Lancer la simulation' }).click();
+    await expect(page.getByRole('heading', { name: 'Rapport d’exercice' })).toBeVisible();
+    await expect(popup).toHaveCount(0);
+    expect(await page.evaluate(async url => (await fetch(url)).status, panelUrl)).toBe(204);
+
+    for (const href of ['/flottes', origin, '/planetes/' + second.id, '/rapports']) {
+        await page.goto(href);
+        await expect(popup).toHaveCount(0);
+    }
+    await page.goto(origin);
+    await page.goto('/profil/preferences');
+    await page.getByRole('link', { name: 'Voir le guide complet et les remboursements' }).click();
+    await expect(page.getByRole('progressbar', { name: 'Progression des premiers pas' })).toHaveAttribute('value', '12');
+    const claim = page.getByRole('button', { name: 'Récupérer : Mine à ciel ouvert' });
+    await expect(claim).toBeVisible();
+    await claim.click();
+    await expect(page.getByRole('status').filter({ hasText: 'Remboursement ajouté aux stocks' })).toBeVisible();
+
+    await page.goto('/univers');
+    await page.locator('.universe-card').filter({ has: page.getByRole('heading', { name: /Turbo/ }) }).getByRole('button').click();
+    await expect(popup.locator('summary')).toBeVisible();
+    // Le fragment d’un onglet de l’ancien univers ne réutilise pas sa colonie dans le nouveau.
+    expect(await page.evaluate(async url => (await fetch(url, { redirect: 'manual' })).status, panelUrl)).toBe(404);
+});

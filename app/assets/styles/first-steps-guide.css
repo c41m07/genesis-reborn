@@ -51,8 +51,8 @@
     border-end-end-radius: 0;
 }
 .first-steps-popup[open] > summary span { transform: rotate(180deg); }
-.first-steps-popup-enhanced > summary, .first-steps-popup-enhanced > section { pointer-events: auto; }
-.first-steps-popup-enhanced > section { margin-inline-end: 48px; }
+.first-steps-popup-enhanced > summary, .first-steps-popup-enhanced > .first-steps-popup-mount { pointer-events: auto; }
+.first-steps-popup-enhanced > .first-steps-popup-mount { margin-inline-end: 48px; }
 .first-steps-popup-panel {
     max-height: min(62dvh, 580px);
     display: flex;
@@ -84,13 +84,14 @@
 .first-steps-gallery figure { margin: 0 0 5px; }
 .first-steps-gallery img {
     display: block;
-    width: 100%;
-    height: min(140px, 20dvh);
-    object-fit: contain;
+    width: auto;
+    max-width: 100%;
+    height: auto;
     border-radius: 7px;
     background: var(--bg);
+    margin-bottom: 6px;
 }
-.first-steps-gallery figcaption { color: var(--muted); font-size: .9rem; }
+.first-steps-gallery figcaption { color: var(--muted); font-size: .9rem; line-height: 1.42; }
 .first-steps-popup-panel button { min-height: 42px; }
 .first-steps-popup-panel button[aria-disabled=true] { opacity: .65; cursor: default; }
 .first-steps-popup-panel form { margin: 0; }
@@ -101,7 +102,6 @@
 @media(max-width: 740px) {
     .first-steps-popup-enhanced { bottom: calc(78px + env(safe-area-inset-bottom)); width: min(468px, calc(100vw - 8px)); }
     .first-steps-popup-panel { max-height: 62dvh; padding: 12px; }
-    .first-steps-gallery img { height: min(110px, 17dvh); }
     .first-steps-popup-actions a { font-size: .87rem; }
 }
 @media(max-width: 600px) {
