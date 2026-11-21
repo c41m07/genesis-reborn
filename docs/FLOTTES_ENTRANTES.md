@@ -83,6 +83,36 @@ L’espionnage demeure privé pendant le trajet, même entre alliés ; la détec
 des attaques et des conquêtes conserve ses règles. La carte, les détails privés,
 les relations, les autorisations d’envoi et le calcul du transport ne changent pas.
 
+## Composition et fret des flottes entrantes
+
+Complexité **4/5** : réutilisation du popover des vols personnels sans
+réutiliser leurs données privées. Un volet de consultation local garde le
+lien vers le rapport de transport, sans ajouter une nouvelle page. Les règles
+ci-dessous remplacent la colonne de visibilité détaillée du tableau précédent.
+
+| Arrivée en cours | Quand le joueur voit les quantités au départ |
+|---|---|
+| Transport | Rapport du destinataire enregistré et réception encore autorisée |
+| Défense | Trace du destinataire au départ, hors renfort d’un occupant |
+| Orbite | Demande actuelle reconnue et liée au destinataire et à la planète |
+| Autres missions, retours ou historiques sans preuve | Aucun détail supplémentaire |
+
+Dans tous les cas : même univers, colonie toujours possédée par le destinataire
+au départ, origine déjà découverte, deux joueurs actifs et non ennemis. Le
+fret utilisé est le fret déclaré au départ ; il ne compte jamais l’hydrogène
+réservé au vol, mais affiche l’hydrogène réellement expédié. La défense et
+l’orbite n’acceptent pas de fret et l’indiquent dans la fiche. Ni la trace
+d’administration ni le supplément ne sont exportés dans les données de carte.
+Une actualisation retirant ce droit retire aussi la fiche ouverte.
+
+Recette locale : 57 tests PHP (438 assertions, un avis de dépréciation) et
+quatre parcours Chromium réussis sur bases jetables. Le détail a été exercé
+au survol, au clavier (dont Échap) et au toucher à 390 px, avec retrait de la
+fiche et report du focus sur le lien de colonie à l’actualisation. Le rapport
+reste accessible ; l’absence de détail hors périmètre est vérifiée sur HTML
+initial, fragment actualisé et données de carte. Compose, assets, PHP/Twig,
+conteneur Symfony, JavaScript et diff validés. Aucun déploiement.
+
 ## Vérifications de l’extension initiale
 
 - 32 tests PHP ciblés / 1 113 assertions réussis : arrivées neutres et alliées,

@@ -260,3 +260,75 @@ test('Flottes entrantes : transport neutre, propre retour séparé et demande d�
   await expect(page).toHaveURL(new RegExp('/flottes/orbites[?]colony='+data.defender.planetId+'$'));
   expect(errors).toEqual([]);
 });
+
+
+test('Le destinataire consulte le fret au clavier et au toucher sans perdre le lien du rapport', async ({ browser }) => {
+  test.setTimeout(90000);
+  const context = await browser.newContext({ hasTouch: true, viewport: { width: 1440, height: 900 } });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  try {
+    const data = await prepareThreat(page, browser);
+    await page.goto('/flottes');
+    const row = page.locator('[data-incoming-attack="' + data.fleet + '"]');
+    const detail = row.getByRole('region', { name: 'Composition et fret' });
+    const trigger = row.getByRole('button', { name: /^Composition et fret/ });
+    const report = row.getByRole('link', { name: 'Consulter le récapitulatif du transport', exact: true });
+    const colonyLink = row.getByRole('link', { name: 'Ouvrir la colonie ' + data.target, exact: true });
+
+    const statements = [
+      "UPDATE fleet SET mission='transport',cargo=JSON_OBJECT('hydrogen',987654366),reserved_fuel=987654321 WHERE id="+data.fleet,
+      "UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.transportReception','all') WHERE id="+data.defender.playerId,
+      "INSERT INTO transport_report (fleet_id,sender_id,recipient_id,status,snapshot,created_at) VALUES ("+
+        data.fleet+","+data.attacker.memberId+","+data.defender.memberId+",'traveling',JSON_OBJECT('sent',JSON_OBJECT('metal',123,'hydrogen',45)),UTC_TIMESTAMP())",
+      "INSERT INTO fleet_mission_trace (fleet_id,universe_id,sender_id,recipient_id,mission,target_was_player,departed_at,snapshot) VALUES ("+
+        data.fleet+","+data.defender.universeId+","+data.attacker.memberId+","+data.defender.memberId+",'transport',1,UTC_TIMESTAMP(),"+
+        "JSON_OBJECT('ships',JSON_ARRAY(JSON_OBJECT('slug','fighter','tier','basic','quantity',3)), 'freight',JSON_OBJECT('metal',123,'hydrogen',45),'fuel',987654321))",
+    ];
+    for (const statement of statements) runIsolatedSql(data.project, statement);
+    await expect(report).toBeVisible({ timeout: 15000 });
+    await expect(trigger).toHaveCount(0);
+    runIsolatedSql(data.project,
+      'INSERT IGNORE INTO player_discovery (player_universe_id,solar_system_id) SELECT '+
+      data.defender.memberId+',p.solar_system_id FROM fleet f JOIN planet p ON p.id=f.home_planet_id WHERE f.id='+data.fleet,
+    );
+    await expect(trigger).toBeVisible({ timeout: 15000 });
+    await row.hover();
+    await expect(detail).toBeVisible();
+    await expect(detail).toContainText('Basique');
+    await expect(detail).toContainText('Métal');
+    await expect(detail).toContainText('123');
+    await expect(detail).toContainText('Hydrogène');
+    await expect(detail).toContainText('45');
+    await expect(detail).not.toContainText('987654');
+    await page.mouse.move(3, 3);
+    await expect(detail).toBeHidden();
+
+    await report.focus();
+    await page.keyboard.press('Tab');
+    await expect(trigger).toBeFocused();
+    await expect(detail).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(detail).toBeHidden();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await trigger.tap();
+    await expect(detail).toBeVisible();
+    const rect = await detail.boundingBox();
+    expect(rect.x).toBeGreaterThanOrEqual(0);
+    expect(rect.x + rect.width).toBeLessThanOrEqual(390);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+
+    // Une arrivée reste connue après la suppression de la preuve synthétique,
+    // mais le focus ne doit pas prolonger la présence du popover.
+    await trigger.focus();
+    runIsolatedSql(data.project,'DELETE FROM fleet_mission_trace WHERE fleet_id='+data.fleet);
+    await expect(trigger).toHaveCount(0, { timeout: 15000 });
+    await expect(detail).toHaveCount(0);
+    await expect(colonyLink).toBeFocused();
+    await expect(report).toBeVisible();
+    expect(errors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});

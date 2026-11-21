@@ -518,7 +518,7 @@ L’expéditeur fournit ressources, vaisseaux et carburant aller-retour. L’aut
 
 Les dons entre joueurs ne donnent aucun boost et ne font progresser aucun objectif. La protection débutant reste inchangée. Aucun plafond de dons, taxe ou sanction automatique sur une adresse IP n’est ajouté. Les deux participants disposent du rapport économique ; l’administration dispose de l’historique paginé des transports pour une vérification humaine.
 
-Le destinataire enregistré peut ouvrir ce rapport depuis le transport en cours dans « Flottes entrantes ». Le panneau ne montre ni le fret ni la composition détaillée de la flotte ; un transport ancien sans rapport ne propose pas de lien.
+Le destinataire enregistré peut ouvrir ce rapport depuis le transport en cours dans « Flottes entrantes ». Le survol ou le bouton « Composition et fret » affiche les quantités au départ d’un transport, d’une défense ou d’une orbite admissibles : destinataire enregistré et encore propriétaire, origine découverte, émetteur non ennemi et départ vérifiable. Les quantités de carburant restent privées. Un transport ancien sans rapport ne propose pas de lien.
 
 Installation ou mise à jour : la migration `Version20261107150000` crée l’historique des transports ; son application sur chaque base active nécessite une validation explicite. Elle a été appliquée à la base locale le 7 novembre 2026 après sauvegarde vérifiée. Les anciens transports déjà en vol restent limités au propriétaire initial (l’expéditeur).
 

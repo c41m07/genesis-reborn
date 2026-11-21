@@ -40,27 +40,21 @@ export default class extends Controller {
             const response = await fetch(url, { signal: this.abort.signal, headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' });
             if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) { this.unavailable(); return; }
             const data = await response.json();
-            if (!this.active || data.membership !== this.membershipValue) return;
+            if (!this.active) return;
+            if (data.membership !== this.membershipValue) {
+                this.removeUnavailableDetails();
+                return;
+            }
             if (this.failed) { this.statusTarget.textContent = ''; this.statusTarget.classList.add('visually-hidden'); this.failed = false; }
             this.offset = Date.parse(data.serverNow) - Date.now();
-            if (data.html !== this.lastHtml && !this.contentTarget.contains(document.activeElement)) {
-                // Hors des vues de vol, lire les alertes sans insérer un cadre qui décalerait la page.
-                const content = this.panelValue ? this.contentTarget : document.createElement('div');
-                content.innerHTML = data.html;
-                this.lastHtml = data.html;
-                const count = content.querySelectorAll('[data-incoming-attack]').length;
-                if (this.hasCountTarget) {
-                    const threats = content.querySelectorAll('[data-incoming-kind="attack"][data-incoming-attack]').length;
-                    this.countTarget.textContent = `Entrants · ${count}`;
-                    this.previewTarget.textContent = threats ? `${threats} attaque(s) détectée(s) ⌄` : 'Détails des arrivées ⌄';
-                    this.countTarget.closest('details').classList.toggle('has-hostile', threats > 0);
+            if (data.html !== this.lastHtml) {
+                const next = document.createElement('template');
+                next.innerHTML = data.html;
+                this.removeUnavailableDetails(next.content);
+                if (!this.contentTarget.contains(document.activeElement)
+                    && !this.hasOpenDetails()) {
+                    this.updatePanel(next.content, data.html);
                 }
-                const signature = [...content.querySelectorAll('[data-incoming-attack]')].map(row => row.dataset.incomingAttack).join(',');
-                if (this.signature !== undefined && signature !== this.signature) {
-                    const threats = content.querySelectorAll('[data-incoming-attack][data-incoming-kind="attack"]').length;
-                    this.statusTarget.textContent = count ? count + ' flotte(s) entrante(s).' + (threats ? ' Dont ' + threats + ' attaque(s) détectée(s).' : '') : 'Aucune flotte entrante visible en trajet.';
-                }
-                this.signature = signature;
             }
             this.tick();
             if (data.orbitHtml !== undefined) window.dispatchEvent(new CustomEvent('genesis:orbit-requests', { detail: data }));
@@ -69,7 +63,48 @@ export default class extends Controller {
         finally { clearTimeout(timeout); this.pending = false; }
     }
 
+    hasOpenDetails() {
+        return typeof HTMLElement.prototype.showPopover === 'function'
+            && this.contentTarget.querySelector('[data-incoming-detail] [popover]:popover-open') !== null;
+    }
+
+    removeUnavailableDetails(next = null) {
+        const authorized = new Set(Array.from(next?.querySelectorAll('[data-incoming-detail]') ?? [], node => node.closest('[data-incoming-attack]').dataset.incomingAttack));
+        for (const detail of this.contentTarget.querySelectorAll('[data-incoming-detail]')) {
+            const row = detail.closest('[data-incoming-attack]');
+            if (authorized.has(row.dataset.incomingAttack)) continue;
+            // Le rafraîchissement général protège le focus. Si les droits
+            // changent, retirer la fiche sans attendre que l’utilisateur en sorte.
+            if (detail.contains(document.activeElement)) row.querySelector('.incoming-fleet-actions a')?.focus();
+            row.removeAttribute('data-controller');
+            row.removeAttribute('data-action');
+            detail.remove();
+            this.lastHtml = null;
+        }
+    }
+
+    updatePanel(next, html) {
+        // Hors des vues de vol, compter les alertes sans insérer de cadre.
+        const content = this.panelValue ? this.contentTarget : next;
+        if (this.panelValue) content.replaceChildren(next);
+        this.lastHtml = html;
+        const count = content.querySelectorAll('[data-incoming-attack]').length;
+        if (this.hasCountTarget) {
+            const threats = content.querySelectorAll('[data-incoming-kind="attack"][data-incoming-attack]').length;
+            this.countTarget.textContent = `Entrants · ${count}`;
+            this.previewTarget.textContent = threats ? `${threats} attaque(s) détectée(s) ⌄` : 'Détails des arrivées ⌄';
+            this.countTarget.closest('details').classList.toggle('has-hostile', threats > 0);
+        }
+        const signature = [...content.querySelectorAll('[data-incoming-attack]')].map(row => row.dataset.incomingAttack).join(',');
+        if (this.signature !== undefined && signature !== this.signature) {
+            const threats = content.querySelectorAll('[data-incoming-attack][data-incoming-kind="attack"]').length;
+            this.statusTarget.textContent = count ? count + ' flotte(s) entrante(s).' + (threats ? ' Dont ' + threats + ' attaque(s) détectée(s).' : '') : 'Aucune flotte entrante visible en trajet.';
+        }
+        this.signature = signature;
+    }
+
     unavailable() {
+        this.removeUnavailableDetails();
         this.failed = true;
         this.statusTarget.classList.remove('visually-hidden');
         this.statusTarget.textContent = 'Surveillance temporairement indisponible. Actualisez la page pour vérifier les flottes entrantes.';
