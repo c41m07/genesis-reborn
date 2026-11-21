@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
-use App\Service\PirateCampaign\{PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter};
+use App\Service\PirateCampaign\{PirateConvoyQuote, PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter};
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -72,7 +72,7 @@ class PirateReconnaissance
     /** Renseignement effectivement remis. Réservé à la commande privée, jamais à une vue. */
     public function battleProofFor(PlayerUniverse $membership, \DateTimeImmutable $at): ?array
     {
-        if (!$this->belongsTo($membership, $at) || $this->reportedAt === null || $this->reportedAt > $at || $at < $this->dueAt) {
+        if (!$this->belongsTo($membership, $at) || !$this->hasReportedAt($at)) {
             return null;
         }
 
@@ -86,6 +86,21 @@ class PirateReconnaissance
             'system' => $this->system,
             'prepared' => PiratePreparedEncounter::restore($encounter, $this->preparedEncounter),
         ];
+    }
+
+    /** Le devis n'est visible qu'avec le rapport effectivement remis, jamais par simple échéance. */
+    public function convoyQuoteFor(PlayerUniverse $viewer, \DateTimeImmutable $at): ?PirateConvoyQuote
+    {
+        if (!$this->belongsTo($viewer, $at) || !$this->hasReportedAt($at) || $this->preparedEncounter === null) {
+            return null;
+        }
+
+        return PirateConvoyQuote::halfOfFrozenCatalogue(PirateEncounterSnapshot::freeze($this->composition, $this->buildCosts));
+    }
+
+    private function hasReportedAt(\DateTimeImmutable $at): bool
+    {
+        return $this->reportedAt !== null && $at >= $this->dueAt && $at >= $this->reportedAt;
     }
 
     /** @return array{key: string, site: PirateDistressSite}|null Récit interne, sans effectifs, coût ou coordonnées. */
@@ -129,7 +144,7 @@ class PirateReconnaissance
             return null;
         }
 
-        $reported = $this->reportedAt !== null && $at >= $this->dueAt && $at >= $this->reportedAt;
+        $reported = $this->hasReportedAt($at);
 
         return [
             'status' => $reported ? 'reported' : 'traveling',

@@ -471,3 +471,38 @@ Les délais de déblocage des itinéraires avancés n’ont pas été simulés.
 Aucun point de passage ne rend obligatoire de construire son propre
 capital. On n’ajoute ni calendrier, ni sélection automatique,
 ni politique de remise de convoyage par ce catalogue.
+
+## Dossier privé : présentation non publiée
+
+Complexité 3/5 : projection et gabarit sans écriture, avec une séparation
+stricte entre texte du catalogue et preuves privées. La future campagne
+méritera une page dédiée : on y prépare un trajet et on consulte ses
+rapports. Ce lot prépare seulement la fiche de la mission sélectionnée
+côté serveur et un sommaire dépliable des cinq chapitres. Le sommaire
+indique un ordre narratif, pas un état de déblocage ou de progression.
+Aucun lien, formulaire, contrôleur, route ni inclusion dans un écran actif.
+
+- Avant reconnaissance : texte civil et avertissement qu’une seule sonde
+  basique sera perdue. Ni nom ni coordonnées du système, ni formation,
+  ni devis ou indice tactique issu du catalogue. Cette première fiche
+  reste privée à la participation, au compte et à l’univers accessibles.
+- Après remise réelle du rapport : la formation figée, les conseils
+  qualitatifs et le devis nominal exact (50 %, y compris un demi, sans
+  électricité) deviennent lisibles. Pas de déduction numérique d’un taux
+  de réussite ou d’une flotte idéale. Réserve de coques, électricité
+  pour reconstruire et capacité du stockage servent de conseils, pas
+  de conditions pour combattre.
+- Les dates persistées distinguent départ, échéance prévue et traitement
+  confirmé, sans transformer un retard en résultat. Le résultat de
+  combat et les pertes de l’escorte ne sont visibles qu’après traitement.
+  Défaite/nul conservent le renseignement ; un retour non confirmé ne
+  prétend pas avoir rempli le hangar. La victoire ne marque rien comme
+  expédié ou versé. Une future fiche doit lire la nouvelle preuve effective
+  de convoi plutôt que prolonger ce texte si un crédit a eu lieu.
+
+Le test rend le fragment Twig avec des variables strictes sur des preuves
+synthétiques : signal des vingt missions, isolement compte/participation/
+univers et tentative disjointe, dates et retards, rapport, défaites/nul/
+victoire, pertes réelles projetées et devis. Ce test n’est pas une recette
+d’un écran actif : l’intégration, l’accessibilité visuelle et le parcours
+mobile restent à vérifier lors d’un montage autorisé.

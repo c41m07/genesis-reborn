@@ -246,7 +246,7 @@ final class PirateCampaignCatalogue
 
         $content = $this->definition($key);
         [$message, $guidance] = match ($moment) {
-            PirateCampaignMoment::Signal => [$content['signal'], 'Envoyez une sonde basique vers le poste civil. Elle sera perdue, mais son rapport révélera la flotte pirate à l’arrivée, même si la sonde est détectée.'],
+            PirateCampaignMoment::Signal => [$content['signal'], 'Envoyez une seule sonde basique vers le poste civil. Elle sera perdue, mais son rapport révélera la flotte pirate à l’arrivée, même si la sonde est détectée.'],
             PirateCampaignMoment::ReconnaissanceEnRoute => ['La sonde est en route vers le poste civil.', 'Le renseignement sera disponible après son arrivée.'],
             PirateCampaignMoment::RenseignementRecu => ['La sonde a cessé d’émettre, mais son relevé est complet.', $content['intel_tip'] ?? 'Consultez le rapport pour préparer votre escorte.'],
             PirateCampaignMoment::AttaqueEngagee => ['Votre escorte est engagée. Le relais attend l’issue du combat.', null],

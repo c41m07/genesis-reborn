@@ -1,0 +1,64 @@
+{# Fragment de présentation privé, non inclus par une route. Pas de contrôle de jeu sans parcours autorisé. #}
+<section class="panel account-panel" aria-labelledby="pirate-campaign-title">
+    <h2 id="pirate-campaign-title">Campagne pirate</h2>
+    <details>
+        <summary>Les chapitres de la campagne</summary>
+        <ol>
+            {% for chapter in briefing.chapters %}
+                <li{% if chapter.current %} aria-current="step"{% endif %}>
+                    {{ chapter.title }} ({{ chapter.count }} missions)
+                </li>
+            {% endfor %}
+        </ol>
+    </details>
+    <h3>Mission {{ briefing.mission_number }} : {{ briefing.narrative.title }}</h3>
+    <p><strong>{{ briefing.status }}</strong> : {{ briefing.narrative.message }}</p>
+    {% if briefing.narrative.guidance %}
+        <p>{{ briefing.narrative.guidance }}</p>
+    {% endif %}
+    {% if briefing.dates %}
+        <dl>
+            {% for event in briefing.dates %}
+                <dt>{{ event.label }}</dt>
+                <dd><time datetime="{{ event.at }}">{{ event.at|date('d/m/Y à H:i:s', 'UTC') }} UTC</time></dd>
+            {% endfor %}
+        </dl>
+    {% endif %}
+    {% if briefing.formation is not null %}
+        <h4>Flotte pirate révélée</h4>
+        <ul>
+            {% for ship in briefing.formation %}
+                <li>{{ ship.label }} ({{ ship.tier }}) : {{ ship.quantity }}</li>
+            {% endfor %}
+        </ul>
+        <p>{{ briefing.tactical_guidance }}</p>
+        <p>Gardez si possible des vaisseaux en réserve. Remplacer des pertes peut demander de l’électricité en plus des matériaux.</p>
+    {% endif %}
+    {% if briefing.losses is not null %}
+        <h4>Vaisseaux perdus par votre escorte</h4>
+        {% if briefing.losses %}
+            <ul>
+                {% for ship in briefing.losses %}
+                    <li>{{ ship.label }} ({{ ship.tier }}) : {{ ship.quantity }}</li>
+                {% endfor %}
+            </ul>
+            <p>Ces pertes sont définitives.</p>
+        {% else %}
+            <p>Aucun vaisseau perdu.</p>
+        {% endif %}
+    {% endif %}
+    {% if briefing.return %}
+        <p>{{ briefing.return }}</p>
+    {% endif %}
+    {% if briefing.quote is not null %}
+        <h4>Estimation du convoi de remerciement</h4>
+        <p>Estimation : 50 % du coût catalogue de construction de la flotte révélée, hors électricité. Le convoi est prévu après une victoire. Ce montant n’a pas été versé.</p>
+        <dl>
+            {% for resource in briefing.quote %}
+                <dt>{{ resource.label }}</dt>
+                <dd>{{ resource.amount }}</dd>
+            {% endfor %}
+        </dl>
+        <p>Vérifiez la place libre et la capacité totale du stockage avant une future livraison. Ce n’est pas une condition pour combattre.</p>
+    {% endif %}
+</section>

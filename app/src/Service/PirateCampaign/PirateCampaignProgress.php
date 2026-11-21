@@ -16,7 +16,10 @@ final class PirateCampaignProgress
     /**
      * L'appelant lit la reconnaissance propriétaire. Ne jamais remplacer ces preuves par une phase client.
      *
-     * @return array{phase: string, narrative: array, composition: ?array, return_narrative: ?array}|null
+     * @return array{
+     *   key: string, phase: string, narrative: array, composition: ?array, return_narrative: ?array,
+     *   tactical_guidance: ?string, dates: array<string,string>, own_losses: ?array<string,array<string,int>>, returning: ?string
+     * }|null
      */
     public function forViewer(
         PlayerUniverse $viewer,
@@ -32,13 +35,38 @@ final class PirateCampaignProgress
 
         $phase = PirateCampaignMoment::ReconnaissanceEnRoute;
         $returnNarrative = null;
+        $losses = null;
+        $returning = null;
+        $dates = ['scout_departure' => $scout['departed_at'], 'scout_due' => $scout['due_at']];
         if ($scout['status'] === 'reported') {
             $phase = PirateCampaignMoment::RenseignementRecu;
+            $dates['scout_reported'] = $scout['reported_at'];
             if ($attack !== null && $this->sameReconnaissance($reconnaissance, $attack) && $attack->departedAt <= $at) {
                 $phase = $this->attackMoment($attack, $at);
-                if ($phase !== PirateCampaignMoment::AttaqueEngagee && ($attack->timeline['state'] ?? null) === 'returning'
-                    && !$attack->returnBlocked && $attack->reservedShips !== []) {
-                    $returnNarrative = $this->catalogue->narrativeFor($context['key'], $context['site'], $viewer, PirateCampaignMoment::RetourDesSurvivants);
+                $dates['attack_departure'] = $attack->departedAt->format(DATE_ATOM);
+                if (isset($attack->arrivalAt)) {
+                    // Le trajet donne une heure prévue, sans affirmer qu'un worker a traité l'arrivée.
+                    $dates['attack_arrival_due'] = $attack->arrivalAt->format(DATE_ATOM);
+                }
+                if ($phase === PirateCampaignMoment::AttaqueEngagee && isset($attack->timeline['combatDue'])) {
+                    $dates['combat_due'] = $attack->timeline['combatDue'];
+                } elseif ($phase !== PirateCampaignMoment::AttaqueEngagee) {
+                    $dates['combat_reported'] = $attack->timeline['resolved'];
+                    $losses = $this->escortLosses($attack->report['losses'] ?? null);
+                    if (($attack->timeline['state'] ?? null) === 'returning' && $attack->reservedShips !== []) {
+                        $returning = $attack->returnBlocked ? 'blocked' : 'scheduled';
+                        if (!$attack->returnBlocked) {
+                            $returnNarrative = $this->catalogue->narrativeFor($context['key'], $context['site'], $viewer, PirateCampaignMoment::RetourDesSurvivants);
+                            if (isset($attack->timeline['returnDue'])) {
+                                $dates['return_due'] = $attack->timeline['returnDue'];
+                            }
+                        }
+                    } elseif (isset($attack->timeline['returnDue'], $attack->timeline['settled'])
+                        && new \DateTimeImmutable($attack->timeline['settled']) <= $at) {
+                        // Sans échéance de retour, la clôture de combat n'est pas une arrivée de survivants.
+                        $returning = 'returned';
+                        $dates['return_settled'] = $attack->timeline['settled'];
+                    }
                 }
             }
         }
@@ -48,12 +76,37 @@ final class PirateCampaignProgress
         }
 
         return [
+            'key' => $context['key'],
             'phase' => $phase->name,
             'narrative' => $narrative,
             // Le catalogue ne constitue jamais une preuve de reconnaissance remise.
             'composition' => $scout['composition'],
             'return_narrative' => $returnNarrative,
+            'tactical_guidance' => $scout['composition'] !== null
+                ? $this->catalogue->narrativeFor($context['key'], $context['site'], $viewer, PirateCampaignMoment::RenseignementRecu)['guidance']
+                : null,
+            'dates' => $dates,
+            'own_losses' => $losses,
+            'returning' => $returning,
         ];
+    }
+
+    /** Le rapport natif encode le camp avant le type et omet le rang Basique. */
+    private function escortLosses(?array $losses): ?array
+    {
+        if ($losses === null) {
+            return null;
+        }
+
+        $result = [];
+        foreach ($losses as $key => $quantity) {
+            $parts = explode(':', $key);
+            if (count($parts) >= 2 && count($parts) <= 3 && $parts[0] === 'escort') {
+                $result[$parts[1]][$parts[2] ?? 'basic'] = $quantity;
+            }
+        }
+
+        return $result;
     }
 
     private function sameReconnaissance(PirateReconnaissance $reconnaissance, PirateAttackCampaign $attack): bool
