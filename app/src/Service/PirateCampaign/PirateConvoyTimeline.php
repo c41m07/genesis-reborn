@@ -8,6 +8,7 @@ namespace App\Service\PirateCampaign;
 final class PirateConvoyTimeline
 {
     private string $state = 'eligible';
+    private int $generation = 0;
     private ?int $destination = null;
     /** @var array{int,int,int,int,int}|null */
     private ?array $destinationPoint = null;
@@ -77,6 +78,10 @@ final class PirateConvoyTimeline
             || $departedAt < $this->lastTransitionAt || $dueAt <= $departedAt) {
             throw new \DomainException('Le convoi exige un trajet protégé daté et joignable.');
         }
+        if ($this->generation >= 2147483647) {
+            throw new \DomainException('La génération du trajet de convoi ne peut plus avancer.');
+        }
+        ++$this->generation;
         $this->dispatchToken = $token;
         $this->destination = $destinationId;
         $this->destinationPoint = $to;
@@ -146,6 +151,121 @@ final class PirateConvoyTimeline
         $this->state = 'settled';
 
         return true;
+    }
+
+    /** Tentative/participation/victoire et montant sont portés séparément par le droit SQL. */
+    public function checkpoint(): array
+    {
+        return [
+            'version' => 1,
+            'state' => $this->state,
+            'generation' => $this->generation,
+            'token' => $this->dispatchToken,
+            'position' => $this->position,
+            'destination' => $this->destination,
+            'destination_point' => $this->destinationPoint,
+            'departed_at' => $this->departedAt?->format(DATE_ATOM),
+            'due_at' => $this->dueAt?->format(DATE_ATOM),
+            'arrived_at' => $this->arrivedAt?->format(DATE_ATOM),
+            'settled_at' => $this->settledAt?->format(DATE_ATOM),
+            'transition_at' => $this->lastTransitionAt->format(DATE_ATOM),
+        ];
+    }
+
+    public static function fromCheckpoint(
+        int $attempt,
+        \DateTimeImmutable $victoryAt,
+        PirateConvoyQuote $quote,
+        int $membershipId,
+        int $universeId,
+        array $checkpoint,
+    ): self {
+        if (count($checkpoint) !== 12 || ($checkpoint['version'] ?? null) !== 1
+            || (isset($checkpoint['destination']) && !is_int($checkpoint['destination']))
+            || (isset($checkpoint['token']) && !is_string($checkpoint['token']))
+            || !is_int($generation = $checkpoint['generation'] ?? null) || $generation < 0 || $generation > 2147483647
+            || !in_array($state = $checkpoint['state'] ?? null, ['eligible', 'traveling', 'arrived', 'waiting_capacity', 'destination_lost', 'settled'], true)) {
+            throw new \DomainException('Version ou état du droit de convoi invalide.');
+        }
+
+        $timeline = self::afterVictory($attempt, $victoryAt, $quote, $membershipId, $universeId, null);
+        // Ne jamais inventer la géométrie d'une jambe dont le checkpoint a été perdu ou corrompu.
+        $timeline->position = self::readPoint($checkpoint['position'] ?? null);
+        $timeline->destinationPoint = self::readPoint($checkpoint['destination_point'] ?? null, false);
+        $timeline->destination = $checkpoint['destination'] ?? null;
+        $timeline->dispatchToken = $checkpoint['token'] ?? null;
+        $timeline->departedAt = self::readTime($checkpoint['departed_at'] ?? null);
+        $timeline->dueAt = self::readTime($checkpoint['due_at'] ?? null);
+        $timeline->arrivedAt = self::readTime($checkpoint['arrived_at'] ?? null);
+        $timeline->settledAt = self::readTime($checkpoint['settled_at'] ?? null);
+        $timeline->lastTransitionAt = self::readTime($checkpoint['transition_at'] ?? null)
+            ?? throw new \DomainException('Le droit ne possède pas de dernière transition.');
+        $timeline->generation = $generation;
+        $timeline->state = $state;
+        $timeline->assertCheckpoint();
+
+        return $timeline;
+    }
+
+    private function assertCheckpoint(): void
+    {
+        if ($this->state === 'eligible') {
+            if ($this->generation !== 0 || $this->lastTransitionAt != $this->victoryAt
+                || $this->departedAt !== null || $this->dueAt !== null || $this->arrivedAt !== null
+                || $this->destination !== null || $this->destinationPoint !== null
+                || $this->settledAt !== null || $this->dispatchToken !== null
+                || ($this->position !== null && $this->position[4] !== null)) {
+                throw new \DomainException('Un droit non expédié contient une preuve de trajet incompatible.');
+            }
+
+            return;
+        }
+        if ($this->generation < 1 || ($this->destination ?? 0) < 1 || $this->destinationPoint === null
+            || $this->position === null || $this->position[1] !== $this->destinationPoint[1]
+            || $this->dispatchToken === null || $this->dispatchToken === ''
+            || $this->departedAt === null || $this->dueAt === null
+            || $this->departedAt < $this->victoryAt || $this->dueAt <= $this->departedAt) {
+            throw new \DomainException('Le droit ne possède pas de trajet complet.');
+        }
+        if ($this->state === 'traveling') {
+            if ($this->arrivedAt !== null || $this->settledAt !== null || $this->lastTransitionAt != $this->departedAt) {
+                throw new \DomainException('Un trajet en cours ne peut pas attester une arrivée.');
+            }
+
+            return;
+        }
+
+        if ($this->arrivedAt === null || $this->arrivedAt < $this->dueAt || $this->position !== $this->destinationPoint
+            || $this->lastTransitionAt < $this->arrivedAt
+            || ($this->state === 'settled' && ($this->settledAt === null || $this->settledAt != $this->lastTransitionAt))
+            || ($this->state !== 'settled' && $this->settledAt !== null)) {
+            throw new \DomainException('L’arrivée ou le reçu du convoi ne correspond pas au trajet.');
+        }
+    }
+
+    private static function readTime(mixed $value): ?\DateTimeImmutable
+    {
+        if ($value === null) {
+            return null;
+        }
+        $date = is_string($value) ? \DateTimeImmutable::createFromFormat(DATE_ATOM, $value) : false;
+        if ($date === false || $date->format(DATE_ATOM) !== $value) {
+            throw new \DomainException('Date du droit de convoi invalide.');
+        }
+
+        return $date;
+    }
+
+    private static function readPoint(mixed $value, ?bool $civil = null): ?array
+    {
+        if ($value === null) {
+            return null;
+        }
+        if (!is_array($value) || !self::validPoint($value, $civil ?? (($value[4] ?? null) === null))) {
+            throw new \DomainException('Position du convoi invalide.');
+        }
+
+        return $value;
     }
 
     private function belongsTo(int $membership, int $universe): bool

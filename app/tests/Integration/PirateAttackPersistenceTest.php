@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration;
 
-use App\Entity\{Fleet, FleetShip, Galaxy, PirateAttackCampaign, PirateReconnaissance, Planet, Player, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
+use App\Entity\{Fleet, FleetShip, Galaxy, PirateAttackCampaign, PirateConvoyDelivery, PirateReconnaissance, Planet, Player, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
 use App\Message\PirateAttackDue;
 use App\MessageHandler\PirateAttackDueHandler;
 use App\Service\Combat\CombatSimulator;
 use App\Service\Notification\OutboxRelay;
-use App\Service\PirateCampaign\{PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignProgress, PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter, PirateReconnaissanceService};
+use App\Service\PirateCampaign\{PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignProgress, PirateConvoyDispatchToken, PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter, PirateReconnaissanceService};
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -451,6 +451,62 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame(10, $this->campaign()->report['rounds_played']);
         self::assertSame('defender_wins', $this->campaign()->report['outcome']);
         self::assertSame(1, $this->stock($ship->id));
+    }
+
+    public function testConvoyRightHydratesUnderLockAndUniquenessDoesNotDependOnAttemptNumber(): void
+    {
+        [$member, $home, $stock] = $this->fixture($this->scenario(enemyHp: 1, rounds: 10));
+        $this->finishRecon();
+        self::assertTrue($this->service->launchWithPrivateArrival($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]]));
+        $attack = $this->campaign();
+        $this->advanceTo($attack->nextAt);
+        $this->service->processDue($attack->id, $attack->dispatchToken);
+        $attack = $this->campaign();
+        $this->advanceTo($attack->nextAt);
+        $this->service->processDue($attack->id, $attack->dispatchToken);
+        $attack = $this->campaign();
+        self::assertSame('attacker_wins', $attack->report['outcome']);
+        $convoy = PirateConvoyDelivery::forVictory($attack, $member, $this->clock->now());
+        $this->em->persist($convoy);
+        $timeline = $convoy->timeline();
+        self::assertSame(21.0, $timeline->quote->depositAmounts()['metal']);
+        $token = PirateConvoyDispatchToken::generate(1);
+        $system = $home->solarSystem;
+        self::assertTrue($timeline->dispatch($member->id, $member->universe->id, $home->id,
+            $timeline->attestedPositionForDeparture(), [$system->id, $system->galaxy->id, $system->coordX, $system->coordY, $home->position],
+            $token, $this->clock->now(), $this->clock->now()->modify('+60 seconds')));
+        $convoy->replaceState($timeline);
+        $this->em->flush();
+        $rightId = $convoy->id;
+        $attackId = $attack->id;
+        $memberId = $member->id;
+        $stockId = $stock->id;
+        $this->em->clear();
+
+        $manager = self::getContainer()->get(\App\Manager\GameManager::class);
+        $manager->transaction(function () use ($manager, $rightId, $token, $memberId): void {
+            $fresh = $this->em->find(PirateConvoyDelivery::class, $rightId);
+            $manager->lockCurrent($fresh);
+            self::assertSame($memberId, $fresh->membershipId);
+            self::assertSame($token, $fresh->timeline()->checkpoint()['token']);
+            self::assertSame('traveling', $fresh->timeline()->state());
+        });
+        self::assertSame(1, $this->stock($stockId), 'Le droit et son état ne déposent rien au départ.');
+
+        // Même progression, faux autre numéro d'essai : le SGBD doit rejeter un second droit.
+        $attack = $this->em->find(PirateAttackCampaign::class, $attackId);
+        $member = $this->em->find(PlayerUniverse::class, $memberId);
+        ++$attack->timeline['attempt'];
+        $second = PirateConvoyDelivery::forVictory($attack, $member, $this->clock->now());
+        self::assertNotSame($convoy->winningAttempt, $second->winningAttempt);
+        $db = $this->em->getConnection();
+        try {
+            $this->em->persist($second);
+            $this->em->flush();
+            self::fail('Un même combat gagné ne peut produire un second droit.');
+        } catch (\Doctrine\DBAL\Exception\UniqueConstraintViolationException) {
+            self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_convoy_delivery'));
+        }
     }
 
     private function campaign(): PirateAttackCampaign

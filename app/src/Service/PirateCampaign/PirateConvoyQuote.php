@@ -60,6 +60,26 @@ final readonly class PirateConvoyQuote
         return new self($parts);
     }
 
+    /** @param array<string,array{whole:int,extra_half:bool}> $parts Format durable du droit. */
+    public static function fromFrozenParts(array $parts): self
+    {
+        if (count($parts) !== count(self::RESOURCES)) {
+            throw new \DomainException('Ressources du droit de convoi invalides.');
+        }
+
+        $ordered = [];
+        foreach (self::RESOURCES as $resource) {
+            $part = $parts[$resource] ?? null;
+            if (!is_array($part) || !is_int($part['whole'] ?? null) || $part['whole'] < 0
+                || !is_bool($part['extra_half'] ?? null) || count($part) !== 2) {
+                throw new \DomainException('Montant durable du convoi invalide.');
+            }
+            $ordered[$resource] = ['whole' => $part['whole'], 'extra_half' => $part['extra_half']];
+        }
+
+        return new self($ordered);
+    }
+
     /** @return array<string,array{whole:int,extra_half:bool}> Proposition, jamais un ordre de crédit. */
     public function exactParts(): array
     {
