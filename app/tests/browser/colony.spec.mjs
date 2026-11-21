@@ -49,6 +49,10 @@ async function expectStickyGameHeader(page, scrollTop) {
 
 test('Inscription, connexion, menus, ressources fixes et rendu responsive', async ({page}) => {
   const errors=[];page.on('pageerror',e=>errors.push(e.message));await enter(page);
+  // Le rail ne contient plus le Guide : créer un événement visible pour tester toutes les jonctions sticky.
+  runIsolatedSql(process.env.BROWSER_ROUTER, "INSERT INTO game_event (name,description,type,status,starts_at,ends_at,parameters,visible_to_players) VALUES ('Annonce de recette sticky','','announcement','active',UTC_TIMESTAMP()-INTERVAL 1 HOUR,UTC_TIMESTAMP()+INTERVAL 1 HOUR,'{}',1)");
+  await page.reload();
+  await expect(page.getByRole('region', { name: 'Événements de l’univers' })).toBeVisible();
   await expect(page.locator('.dashboard-metrics .metric-card')).toHaveCount(4);await expect(page.getByRole('heading',{name:'Mes planètes',exact:true})).toHaveCount(0);await expect(page.locator('.dashboard-activity')).toBeVisible();await expect(page.locator('.dashboard-secondary [data-live-region="active-flights"]')).toBeVisible();await expect(page.locator('.dashboard-journal')).toBeVisible();
   await expect(page.locator('[data-resource-target="stock"]')).toHaveCount(5);
   await page.getByRole('navigation',{name:'Navigation principale',exact:true}).getByRole('link',{name:'Recherche',exact:true}).click();await expect(page.locator('#panel-technologies')).toBeVisible();await expect(page.locator('#panel-buildings')).toHaveCount(0);
