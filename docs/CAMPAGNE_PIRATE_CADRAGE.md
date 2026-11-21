@@ -162,3 +162,65 @@ Combat, gestion du nouvel essai après une défaite, convoi, économie et accès
 demeurent hors de cette tranche. Le catalogue et l'espionnage normal ne
 sont pas modifiés. Les migrations ne sont vérifiées que sur des bases
 synthétiques jetables.
+
+## Attaque : modèle pur, avant le vrai inventaire et les workers
+
+Complexité 3/5 pour le modèle sans effets ; 5/5 dès que la réservation,
+les pertes et le retour touchent le jeu. Aucun chemin du modèle n'est
+appelé par un contrôleur, l'outbox, le tutoriel ou la flotte standard.
+
+- **Adversaire immuable.** `GameCatalog::getTierForUniverse` et
+  `CombatUnitFactory::ships` préparent le catalogue et les modificateurs
+  technologiques. À la génération de la rencontre, le serveur doit figer
+  les profils complets pirates et les paramètres de résolution ensemble
+  (famille, rang, effectif, stats appliquées, coefficients de contre et
+  options du moteur). `PirateBattleScenario` refuse une composition
+  différente de celle révélée ; ce contrôle d'effectifs ne suffit pas à
+  reconstituer les anciennes statistiques. Les profils figés eux-mêmes
+  devront être stockés, jamais régénérés à chaque retour ou nouvel essai.
+  Les neuf classes, coûts et règles de jeu générales restent inchangés.
+- **Une tentative, une flotte.** Sous les verrous participation, univers,
+  origine et hangar, réserver les vaisseaux payés et prendre les profils
+  joueur après application des technologies courantes au départ. Deux
+  départs simultanés ne peuvent pas prendre la même réserve. Enregistrer
+  un numéro monotone par rencontre, la graine serveur, la composition,
+  l'identité du joueur d'origine et des jetons de phase. Le départ d'une
+  nouvelle tentative permet une flotte reconstruite et des technologies
+  progressées, mais ne repasse jamais par la case sonde.
+- **Trajet privé.** Réutiliser le calcul natif depuis la colonie vers le
+  système du poste civil ; ne pas créer de `Fleet` standard visible, de
+  faux objet `Planet`, de case colonisable ou d'arrivée PvP. Pour le retour
+  le calcul doit respecter la géométrie privée du relais (le calcul normal
+  attend une position de départ, voir le piège au-dessus), les données
+  figées et les règles de destination à valider. Ne pas détourner
+  `FleetRecallPlanner` ni le mécanisme d'occupation.
+- **Résultat à échéance.** `CombatSimulator::simulate` est pur et reproductible
+  avec une graine et des entrées conservées. Le modèle lance exactement deux
+  camps fermés, sans files/victimes planétaires, stationnaires ou renforts ;
+  il utilise directement ses pertes et survivants sans réimplémenter le
+  moteur. Amener par une horloge et un signal de phase l'échéance autorisée
+  de résolution ; aucune publication à l'arrivée si le combat doit encore
+  durer. L'argument d'échéance du modèle n'invente pas une cadence pour la
+  campagne : le futur worker devra formaliser la cadence des rounds et la
+  cohérence des clôtures anticipées avant de montrer un résultat.
+- **Pertes et retour séparés.** La future transaction de résultat doit
+  consommer le reçu de cette phase, persister le rapport, retrancher
+  exactement les pertes des vaisseaux réservés, et pour les survivants
+  programmer un retour dans la même transaction. Ne pas utiliser
+  `CombatEventService::persistLosses` tel quel : il touche une planète
+  réelle et ses défenses ; ne pas tenter d'installer prématurément une
+  flotte. Même en cas de retard du worker, le retour ne peut pas être
+  accepté avant son échéance ni avant le résultat effectivement enregistré.
+  Il installe les survivants de manière idempotente après relecture de la destination et du
+  propriétaire. L'échec ou le nul garde la reconnaissance et permet un
+  nouvel essai après règlement de la tentative. La victoire est terminale
+  pour le combat, même avec un retour en vol : elle n'accorde encore
+  ni droit, ni convoi, ni versement.
+- **Durabilité préalable à l'ouverture.** Le modèle en mémoire n'est jamais
+  une preuve persistante. L'adaptateur devra lire un rapport réellement
+  remis pour cette participation et ce scénario, verrouiller l'agrégat,
+  et enregistrer le résultat natif d'un seul traitement avec les reçus
+  et l'outbox. Vérifier le rattrapage des événements précoces sur un vrai
+  broker, les expirations/rejets de destination, le rejeu après rollback,
+  et deux workers concurrents. Aucun secours ne rend une sonde ni ne
+  notifie un autre joueur par défaut déjà dans ce modèle.
