@@ -377,3 +377,35 @@ débit/crédit conditionnel, démarrage et rattrapage via RabbitMQ, détection
 d’un ancien jeton, valeur exacte d’un cas impair, stockage à capacité
 exacte, colonie transférée, fermeture puis rejeu. Carburant, cadence
 publique, difficulté et nombre de missions restent distincts.
+
+## V1 : trois vraies rencontres, après l’exercice distinct de Premiers pas
+
+Le catalogue privé fournit trois définitions éditoriales immuables.
+`PirateCampaignCatalogue::prepareForServer` assemble un instantané prix/
+effectifs et un scénario de combat assorti à l'aide de la fabrique native.
+Il reprend les contres, la recharge et le nombre de rounds du catalogue,
+sans bonus pirates supplémentaire. Cela ne fixe aucune cadence publique,
+ne choisit aucun système et ne crée aucune mission ou vague automatique.
+
+| Ordre narratif uniquement | Signal civil | Formation pirate Basique (serveur) | Référence de test, pas un prérequis joueur |
+| --- | --- | --- | --- |
+| Le silence de Balise 17 | Le poste bloqué émet encore avec sa balise de secours. | 1 chasseur de patrouille | 2 chasseurs contre 1 constituent l’ouverture d’apprentissage. |
+| L’escorte interceptée | La route de ravitaillement reste coupée et l’escorte ne répond plus. | 2 chasseurs de patrouille, 1 intercepteur | 4 chasseurs : premiers risques de pertes même si le combat est gagné. |
+| La dernière liaison | Le dernier relais civil est brouillé et les escortes ne se coordonnent plus. | 1 chasseur lourd, 1 bombardier | Les intercepteurs sont un contre utile ; ne pas envoyer des patrouilleurs seuls à l’aveugle. |
+
+Le futur orchestrateur devra conserver le même scénario préparé pour la
+même rencontre et toutes ses tentatives. La composition, son coût
+catalogue et les profils figés restent internes. La projection de
+narration renvoie uniquement le texte au détenteur du poste privé ; le
+futur écran devra s'appuyer sur les preuves réelles de mission et le
+rapport autorisé pour afficher composition, prix, dates et disponibilité.
+Le conseil sur les intercepteurs n'apparaît qu'après remise de l'intel.
+Les phrases de défaite/nul ne déduisent pas qu'un vaisseau a survécu :
+le retour a sa propre phrase et exige un trajet de survivants réel.
+Victoire et livraison restent deux preuves distinctes, sans montant,
+date ni crédit inventé. La phase d’entraînement antérieure reste à part :
+ni mission réelle, ni équivalent de la première rencontre.
+
+Aucun déclencheur, emplacement, règle de déblocage, qualification de
+l'univers, génération adaptative ou procédure de refus de convoi
+n'est ajouté. Le catalogue et ses textes sont préparés, pas jouables.
