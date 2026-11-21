@@ -5,7 +5,7 @@ namespace App\Controller;
 use App\Entity\{Planet, PlanetBuilding, PlayerTechnology, PlayerDiscovery, Fleet, FleetShip};
 use App\Repository\GameRepository;
 use App\Service\Universe\UniverseContext;
-use App\Service\Colony\{CatalogueInsights, CatalogueItemLink, ColonyView, GameShell, ResourceService, LiveRegionResponse};
+use App\Service\Colony\{CatalogueInsights, CatalogueItemLink, ColonyComparisonActivities, ColonyView, GameShell, ResourceService, LiveRegionResponse};
 use App\Service\Queue\QueueService;
 use App\Service\Player\{FirstStepsView, LeaderboardService, PreferencesService, RelationResolver};
 use App\Service\Catalog\GameCatalog;
@@ -66,24 +66,27 @@ final class ColonyController extends AbstractController
         return $planet ? $this->redirectToRoute('app_colony', array_filter(['id' => $planet->id, 'section' => $section === 'overview' ? null : $section])) : $this->redirectToRoute('app_universes');
     }
     #[Route('/planetes', name: 'app_planets', methods: ['GET'])]
-    public function planets(Request $request, ResourceService $resources, \App\Service\Colony\EmpireDetails $details): Response
-    {
+    public function planets(
+        Request $request,
+        ResourceService $resources,
+        \App\Service\Colony\EmpireDetails $details,
+        ColonyComparisonActivities $comparison,
+    ): Response {
         $membership = $this->context->membership();
         $planets = $this->repo->planets($membership->universe, $membership);
+        $tableView = $request->query->get('view') === 'table';
         $positionModifiers = [];
-        $activities = $this->repo->queueCounts($membership, $planets);
-        foreach ($planets as $planet) {
-            $activities[$planet->id] ??= 0;
-        }
-        foreach ($planets as $planet) {
-            $positionModifiers[$planet->id] = $resources->positionProductionModifiers($planet);
+        if (!$tableView) {
+            foreach ($planets as $planet) {
+                $positionModifiers[$planet->id] = $resources->positionProductionModifiers($planet);
+            }
         }
         return $this->render('colony/planets.html.twig', [
             'membership' => $membership,
             'planets' => $planets,
             'position_modifiers' => $positionModifiers,
-            'activities' => $activities,
-            'table_view' => $request->query->get('view') === 'table',
+            'comparison_activities' => $tableView ? $comparison->forPlanets($membership, $planets) : null,
+            'table_view' => $tableView,
             'comparison_resource' => in_array($request->query->getString('resource'), [
                 'metal',
                 'nano',

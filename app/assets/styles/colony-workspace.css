@@ -431,3 +431,39 @@ body.authenticated.ui-refined .colony-redesign .abandon-actions > * {
         padding: 20px 5px;
     }
 }
+
+.colony-redesign .colony-comparison-panel {
+    min-width: 0;
+}
+
+.colony-redesign .colony-comparison-panel .table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.colony-redesign .colony-comparison-activity > span {
+    display: block;
+}
+
+.colony-redesign .colony-comparison-common-research {
+    margin-block: 0 16px;
+}
+
+body.authenticated.ui-refined .colony-redesign .colony-comparison th[data-comparison-queue] {
+    width: 13%;
+}
+
+@media (max-width: 1200px) {
+    /* Conserver le filtre d’une ressource et le défilement dans le tableau, pas dans la page. */
+    body.authenticated.ui-refined .colony-redesign .colony-comparison {
+        min-width: 650px;
+    }
+
+    body.authenticated.ui-refined .colony-redesign .colony-comparison th:is(:first-child, [data-resource]) {
+        width: 130px;
+    }
+
+    body.authenticated.ui-refined .colony-redesign .colony-comparison th[data-comparison-queue] {
+        width: 125px;
+    }
+}

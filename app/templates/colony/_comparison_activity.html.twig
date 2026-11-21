@@ -1,0 +1,12 @@
+{% if activity %}
+    <div class="colony-comparison-activity">
+        <strong>{{ activity.label }}</strong>
+        {% if activity.level is not null %}<span>Niveau {{ activity.level }}</span>{% elseif activity.quantity is not null %}<span>× {{ activity.quantity|quantity }}</span>{% endif %}
+        <span>{{ {running: 'En cours', waiting: 'En attente', paused: 'Suspendue', due: 'À finaliser'}[activity.status] }}</span>
+        {% if activity.finish %}<span>Fin prévue : <time datetime="{{ activity.finish|date('c') }}">{{ activity.finish|date('d/m à H:i', timezone) }}</time></span>{% endif %}
+        {% if activity.waiting > 0 %}<span>+{{ activity.waiting }} en attente</span>{% endif %}
+        {% if activity.additionalActive > 0 %}<span>+{{ activity.additionalActive }} déjà en cours</span>{% endif %}
+    </div>
+{% else %}
+    <span class="muted">Aucune commande en file</span>
+{% endif %}
