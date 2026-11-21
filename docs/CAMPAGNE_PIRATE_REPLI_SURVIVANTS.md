@@ -16,3 +16,23 @@ Pour une intégration ultérieure : conserver le barème et les réglages natifs
 - **Origine perdue après le départ retour** : une fois le tronçon intégral effectivement traité, attester l'ancienne case figée même si l'entité planète a disparu. Le trajet a consommé le budget retour, le solde attesté est zéro. La disparition de la colonie ne remet pas ce carburant dans les réservoirs. Une simple échéance échue, un changement d'hôte constaté hors traitement, ou un ancien `returnBlocked` ne suffisent pour aucun des deux certificats.
 - **À dire avant départ** : l'estimation montre l'aller-retour, l'orbite, la réserve et le complément au sol séparément. « Le repli ne sera proposé que si vos survivants sont encore localisables et portent assez de H₂. Si le retour est déjà parcouru, son carburant est dépensé. » Le moteur natif ne propose pas de réserve volontaire supplémentaire : la part de H₂ demandée au-delà de la réserve de navigation est du fret, pas un moyen de financer le repli. Ne pas afficher dans la future UI une possibilité garantie de récupérer toute flotte dont la colonie disparaît.
 - **À raccorder plus tard** : sceller campagne et tentative avec les deux extrémités et le budget de lancement ; après pertes, reconstituer depuis ce lot les seuls profils survivants, enregistrer la révision et la phase effectivement consommée au même commit que le traitement réel ; seul cet écrivain peut hydrater l'attestation. Les futures commandes relisent la même preuve, la propriété et la réserve sous verrou avant le départ et à l'arrivée. Aucun autre service, stock, message, route, schéma ou règle d'escale n'est modifié par le présent lot.
+
+## Modèle d’une première étape de repli volontaire
+
+Le modèle pur de trajet ne crée ni commande joueur ni outbox. Un futur service
+doit consommer la preuve initiale et sa révision sous verrou, puis ajouter
+atomiquement un ordre avec un nouveau jeton et une génération supérieure,
+une destination possédée figée et la durée du devis natif. Les événements
+précoces, étrangers à la tentative, déjà joués ou dont le jeton est périmé
+n’installent aucun vaisseau.
+
+À l’arrivée observée, trois résultats sont distincts : installation si la
+colonie est toujours au même empire et si l’ensemble du lot est installable ;
+destination perdue ; capacité de portage insuffisante. Le carburant non consommé
+par un trajet plus court est le vrai reliquat du lot. À l’installation il doit
+rejoindre uniquement la réserve du hangar avec les vaisseaux, jamais le stock
+ou le fret, dans la même transaction. Après un échec d’installation, conserver
+vaisseaux et reliquat au dernier point atteint. Ne jamais réutiliser l’ancienne
+preuve pour imaginer une seconde commande : elle est consommée et tout futur
+nouveau départ exige une attestation distincte du worker. Le présent incrément
+ne crée ni cette commande, ni cette attestation renouvelable.
