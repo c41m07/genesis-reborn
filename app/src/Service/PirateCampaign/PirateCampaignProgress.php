@@ -91,6 +91,35 @@ final class PirateCampaignProgress
         ];
     }
 
+    /**
+     * Preuve minimale de lecture pour l'ordre de campagne, sans charger de texte ou révéler la flotte.
+     * L'appelant fournit des lignes propriétaires lues en base, jamais des preuves envoyées par le client.
+     * @return array{key:string, won:bool}|null
+     */
+    public function orderingProofFor(
+        PlayerUniverse $viewer,
+        PirateReconnaissance $reconnaissance,
+        ?PirateAttackCampaign $attack,
+        \DateTimeImmutable $at,
+    ): ?array {
+        if ($reconnaissance->id === null) {
+            return null;
+        }
+        $context = $reconnaissance->narrativeContextFor($viewer, $at);
+        $scout = $reconnaissance->projectFor($viewer, $at);
+        if ($context === null || $scout === null) {
+            return null;
+        }
+
+        // Le retour des survivants n'annule pas une victoire déjà résolue.
+        $won = $scout['status'] === 'reported' && $attack?->id !== null
+            && $this->sameReconnaissance($reconnaissance, $attack)
+            && $attack->departedAt <= $at
+            && $this->attackMoment($attack, $at) === PirateCampaignMoment::Victoire;
+
+        return ['key' => $context['key'], 'won' => $won];
+    }
+
     /** Le rapport natif encode le camp avant le type et omet le rang Basique. */
     private function escortLosses(?array $losses): ?array
     {

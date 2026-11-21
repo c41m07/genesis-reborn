@@ -506,3 +506,72 @@ univers et tentative disjointe, dates et retards, rapport, défaites/nul/
 victoire, pertes réelles projetées et devis. Ce test n’est pas une recette
 d’un écran actif : l’intégration, l’accessibilité visuelle et le parcours
 mobile restent à vérifier lors d’un montage autorisé.
+
+## Ordre canonique privé et plan de raccordement
+
+Complexité 2/5 pour la lecture pure livrée ici. Le catalogue fixe les
+vingt clés. Le serveur ne lit comme courante que la première mission
+sans victoire établie, et n’annonce son signal que si sa reconnaissance
+n’existe pas encore. Les fiches déjà reconnues de la suite contiguë
+restent consultables, y compris après la dernière victoire. Une victoire
+est établie par le rapport de combat résolu d’une tentative persistée
+liée à la reconnaissance du même empire : un départ, une échéance
+dépassée, un nul ou une défaite ne suffisent pas. Ni retour en cours ni
+convoi ne retardent la lecture du prochain signal. Une preuve plus loin
+ne fait pas sauter d’étape ; deux lignes propriétaires portant la même
+définition rendent l’ensemble ambigu, sans choisir arbitrairement.
+
+La lecture n’autorise aucun départ. Au raccordement, employer les clés
+de définition canonique aussi comme clés de mission pour le parcours
+normal et charger leurs preuves propriétaires par une seule lecture
+bornée de la participation active, puis revérifier l’ordre sous le
+verrou de participation avant chaque écriture. Aucun compteur à
+synchroniser, aucune table de progression supplémentaire. Les fixtures
+vérifient le préfixe, les retards, le retour non terminé, le refus de
+preuve étrangère et la consultation des vingt fiches après la finale.
+
+### Étapes à exécuter après les décisions de mise en jeu
+
+1. **Balise 17, proposition de placement.** Partir du système de la
+   colonie active, à condition qu’il soit déjà découvert par cet empire :
+   l’inscription normale enregistre déjà la découverte du système natal
+   (`UniverseService`). Poser le poste à l’entrée du système via l’ancre
+   privée existante, sans `Planet`, sans case et sans mutation au GET.
+   Avant un POST, choisir et revérifier cette ancre côté serveur. Le
+   joueur ne découvre pas artificiellement le système et n’a pas à
+   dépenser une autre sonde avant le premier rapport. S’il n’existe pas
+   de système natal utilisable, le repli proposé est un autre système
+   découvert et joignable dans la galaxie de la colonie de départ ;
+   sans candidat, informer sans fabriquer de découverte. Le placement
+   des autres sites reste une décision, pas une règle codée.
+2. **Entrée et commandes.** Proposer l’accès depuis le compte rendu de
+   l’exercice « Premiers pas », sans en faire une condition : c’est un
+   entraînement fictif, la campagne a des pertes réelles. Page privée
+   authentifiée `UniverseContext`, sans cache partagé. Deux POST
+   distincts, reconnaissance / attaque, avec CSRF lié à l’action, à la
+   participation, à la mission et à l’origine ; redirection 303 vers le
+   dossier. Ne pas accepter de cible, de flotte ennemie, de cadence ou de
+   phase venant du client. L’attaque prend seulement les choix valides
+   du hangar et un numéro de tentative précédente revérifié sous verrou.
+   Ne pas publier de trajet, coordonnées, gains ou messages dans les
+   listes des flottes, la carte ou les événements de tiers.
+3. **Portes avant publication.** Arrêter et annoncer le vrai coût H₂
+   (les services privés actuels ne le débitent pas) : piste aller seul
+   de la sonde, aller-retour de l’escorte, débit atomique et réserve à
+   clarifier avec les pertes. Réconcilier la règle native de 60 secondes
+   par round et clôture anticipée avec la résolution actuelle du socle
+   à sa borne calculée. Choisir quoi faire si la colonie d’origine
+   disparaît, si l’empire sort, et vérifier l’effet des réserves privées
+   sur abandon, protection et visibilité. Le convoi (destination, stock,
+   reprise, disparition, arrondi et crédit) est un lot de décision
+   distinct ; ne pas remplacer une preuve de livraison par un texte.
+4. **Recette d’ouverture.** Vérifier les refus d’une autre participation
+   ou d’un ancien contexte, sans effets GET ni après échec CSRF, le
+   double POST concurrent, une tentative périmée et les vaisseaux survivants
+   restitués au retour. Tester worker et relais réels pour attaque et
+   retour, échéance et rejeu, puis le dossier sans JS, clavier et mobile.
+
+Ordre de grandeur : 1–2 jours pour raccorder et recetter le parcours
+privé hors décisions, puis 2–4 jours indicatifs après décisions pour
+carburant, chronologie/retour et vérifications d'ouverture selon les
+options. Le convoi reste à estimer séparément. Ce plan n’active rien.
