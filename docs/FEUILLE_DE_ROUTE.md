@@ -2153,7 +2153,8 @@ JavaScript, stockage local ou objectif valide, le lien reste utilisable.
 Le tiroir Événements suit le Guide et précède les raccourcis dans la topbar. Il
 reste disponible sans planète si l’univers fournit des événements. L’ouverture
 native superpose le panneau aux ressources sans déplacer la barre ni la page.
-Sur petit mobile les outils occupent une deuxième rangée réservée. La bande des
+Sur tablette et sur mobile, ainsi que lorsque le menu latéral réduit la largeur
+disponible sur petit écran, les outils occupent une deuxième rangée réservée. La bande des
 ressources reste un élément fixe distinct, mesuré et actualisé séparément.
 Aucune règle économique, aucun déblocage ni aucune migration ne change.
 

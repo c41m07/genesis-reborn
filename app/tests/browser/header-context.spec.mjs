@@ -87,7 +87,7 @@ test('Barre haute : suit le prochain prérequis, garde le contexte et ne déplac
     expect(resolvedGoal.recommendation.requirement).toMatchObject({ current: 2, level: 3, slug: 'nanomaterial_synthesis', tier: 'basic' });
     expect(requests).toBe(1);
     await page.evaluate(() => window.dispatchEvent(new CustomEvent('genesis:refresh')));
-    for (const width of [1440, 390, 360, 320]) {
+    for (const width of [1440, 1024, 768, 390, 360, 320]) {
         await page.setViewportSize({ width, height: 900 });
         await expect(summary).toBeVisible();
         await expect(goal).toBeVisible();

@@ -186,7 +186,7 @@ test('Barre du jeu : encarts, cinq raccourcis, droits, focus et infobulles', asy
         const hit = document.elementFromPoint(rect.left + rect.width / 2, y);
         return tooltip.content === '"Wiki"' && tooltip.display === 'block' && hit === node;
     });
-    for (const width of [1440, 390, 360]) {
+    for (const width of [1440, 1280, 1024, 768, 390, 360]) {
         await page.setViewportSize({ width, height: 844 });
         for (const control of [guide, events, ...(await order.all())]) {
             await expect(control).toBeInViewport({ ratio: 1 });
@@ -213,6 +213,7 @@ test('Barre du jeu : encarts, cinq raccourcis, droits, focus et infobulles', asy
         await expect(wiki).toBeFocused();
         await expect.poll(visibleTooltip).toBe(false);
         expect(await header.evaluate(node => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     }
     await expect(gift).toBeVisible();
     await mail.focus();
