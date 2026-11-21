@@ -199,6 +199,18 @@ final class FleetDestinationTest extends WebTestCase
     {
         $oldColony = $this->home;
         $selectedColony = $this->own;
+        // La préparation n’affiche un formulaire de départ que s’il existe un vaisseau disponible.
+        $stationaryFleet = new Fleet();
+        $stationaryFleet->playerUniverse = $this->player->currentPlayerUniverse;
+        $stationaryFleet->homePlanet = $selectedColony;
+        $probe = new FleetShip();
+        $probe->fleet = $stationaryFleet;
+        $probe->slug = 'probe';
+        $probe->quantity = 1;
+        $this->em->persist($stationaryFleet);
+        $this->em->persist($probe);
+        $this->em->flush();
+
         $this->client->request('GET', '/planetes/'.$oldColony->id);
         self::assertResponseIsSuccessful();
 
