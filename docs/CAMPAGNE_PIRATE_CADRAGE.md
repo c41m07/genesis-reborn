@@ -108,3 +108,57 @@ l’indépendance de l’instantané face aux modifications de ses sources.
 La future recette devra couvrir deux départs concurrents, rollback/rejeu
 du worker et du reçu, interception impossible, plein, changement de
 propriétaire et livraison unique sur une base synthétique et isolée.
+
+## Socle persistant de reconnaissance : parcours uniquement interne
+
+Complexité 4/5 : écriture d'inventaire, ordre des verrous, confidentialité,
+horloge et asynchronisme. La migration additive crée une table vide, sans
+reprise d'historique ni modification des hangars et des flottes existantes.
+Aucune route, ouverture de campagne, génération de rencontre ou planification
+automatique depuis une page, une connexion ou un ancien univers.
+
+- Clé de mission préparée côté serveur, unique dans sa participation.
+  Ce n'est ni une limite d'une seule campagne à vie ni une règle d'un compte
+  pour plusieurs univers. Le compte propriétaire enregistré est contrôlé
+  avec la participation et l'univers. Le poste est dans un système
+  préexistant, découvert par cet empire ; la lecture n'expose pas sa
+  destination, ses coordonnées, le jeton, les coûts ni l'ennemi en vol.
+- Le départ explicite verrouille participation → univers → planète →
+  hangar → stock précis, refuse une sonde d'un autre rang, et retire une
+  seule sonde disponible en échange d'un vol privé. Un second départ de
+  la même mission ne retire rien. Si la transaction échoue, aucun départ,
+  retrait ou message isolé n'est conservé. Le vol ne restitue pas la sonde
+  et ne déclenche jamais le remboursement de « Premiers pas ». La
+  réservation la rend indisponible dès le départ ; le rapport atteste sa
+  perte lorsque l'arrivée est exécutée.
+- La durée est figée par le calculateur natif avec la Sonde basique,
+  les bonus de mobilité de l'empire et le multiplicateur de l'univers.
+  La destination privée est le niveau système, jamais une planète
+  colonisable ; le calcul interne utilise 100 % de la vitesse comme
+  référence sans ajouter de réglage joueur. Le traitement n'engage pas
+  de débit de carburant dans cette fondation non publique : avant
+  ouverture la facture et le parcours de confirmation seront explicités.
+- L'outbox du départ utilise un nouveau type privé et le relais habituel.
+  À réception le worker relit participation, univers puis mission sous
+  verrou et vérifie le jeton, l'échéance et l'absence de rapport. Un
+  message trop tôt ou obsolète n'écrit rien ; un message arrivé trop tôt
+  n'est pas replanifié dans ce socle et le relais normal porte le délai.
+  Avant mise en jeu, un événement valide reçu trop tôt doit être replanifié
+  ou rattrapable à l'échéance avec le même jeton, sans remise anticipée :
+  vérifier transport et worker sur horloges décalées. La date du rapport est la date réelle du traitement. Après remise, le rapport est le même au
+  rejeu. La composition figée est identique détecté, non détecté, ou
+  lorsqu'aucune détection n'a été renseignée. La donnée de détection
+  existe pour les scénarios internes, sans nouveau calcul ni jet global.
+- Une participation détachée ou un univers fermé ne reçoit pas de
+  rapport ni de projection. La migration rattache la mission au compte,
+  à la participation et au système avec effacement référentiel. Le
+  traitement ne relit ni ne réserve une planète à l'arrivée, y compris
+  si la planète d'origine a été perdue. Il ne recrée jamais de hangar
+  ni de monde. Aucune restitution/compensation n'est introduite ; avant
+  ouverture, fixer le traitement d'une interruption puis réouverture
+  d'univers ou d'un détachement suivi d'une réactivation.
+
+Combat, gestion du nouvel essai après une défaite, convoi, économie et accès joueur
+demeurent hors de cette tranche. Le catalogue et l'espionnage normal ne
+sont pas modifiés. Les migrations ne sont vérifiées que sur des bases
+synthétiques jetables.
