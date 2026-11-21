@@ -1749,9 +1749,9 @@ demande un instantané serveur pour actualiser le fonctionnement des usines.
 Un lien direct vers un bâtiment, une recherche, un vaisseau ou une défense doit
 révéler le bon rang et le repérer par un cadre jaune pendant cinq secondes.
 L’animation est désactivée avec la préférence de mouvements réduits ; le repère
-reste fixe. Le tiroir Événements reste au-dessus des ressources : son ouverture
-ne déplace ni la bande de ressources ni les activités. Le raccourci du Guide
-techno, juste à droite du sélecteur d’univers, met en avant le prochain
+reste fixe. La barre supérieure affiche dans l’ordre : univers, Guide techno,
+Événements, raccourcis. Le tiroir se superpose aux ressources : son ouverture
+ne déplace ni la bande de ressources ni les activités. Le Guide met en avant le prochain
 prérequis manquant dont la progression est possible sur la colonie active.
 Entre deux prérequis directs, le moins de niveaux acquis manquants l’emporte ;
 à égalité, l’ordre du catalogue est conservé. Ce conseil ne confirme ni le

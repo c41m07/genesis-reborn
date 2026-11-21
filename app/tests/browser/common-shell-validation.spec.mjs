@@ -37,7 +37,7 @@ test('Socle commun : menus et panneau événement au clavier, deux thèmes et pa
       await page.keyboard.press('Enter');
       await expect(drawer).toHaveAttribute('open', '');
       await expect(drawer.getByRole('link', { name: 'Voir les événements', exact: true })).toBeVisible();
-      expect((await new AxeBuilder({ page }).include('.header-context-rail').analyze()).violations).toEqual([]);
+      expect((await new AxeBuilder({ page }).include('.topbar .event-drawer-wrap').include('.topbar .header-technology-goal').analyze()).violations).toEqual([]);
       await page.screenshot({ path: info.outputPath(`evenements-${theme}-${width}.png`), animations: 'disabled' });
       await page.keyboard.press('Escape');
       await expect(drawer).not.toHaveAttribute('open');

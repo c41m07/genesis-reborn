@@ -2150,11 +2150,12 @@ utiles, sans graphe complet ou lecture sur l’actualisation générale. Dans le
 Guide, le raccourci réutilise la recommandation préparée sur la page. Sans
 JavaScript, stockage local ou objectif valide, le lien reste utilisable.
 
-Le tiroir Événements conserve ses conditions et ses actions ; il reste
-disponible sans planète si l’univers fournit des événements. Son ouverture
-native ne déplace ni les ressources ni la page. Une seule mesure de hauteur
-couvre le rail et la bande ; l’actualisation des ressources ne remplace pas
-le rail. Aucune règle économique, aucun déblocage ni aucune migration ne change.
+Le tiroir Événements suit le Guide et précède les raccourcis dans la topbar. Il
+reste disponible sans planète si l’univers fournit des événements. L’ouverture
+native superpose le panneau aux ressources sans déplacer la barre ni la page.
+Sur petit mobile les outils occupent une deuxième rangée réservée. La bande des
+ressources reste un élément fixe distinct, mesuré et actualisé séparément.
+Aucune règle économique, aucun déblocage ni aucune migration ne change.
 
 Parcours concernés : bandeau de ressources et navigation directe des catalogues,
 coque commune claire/sombre et sans JavaScript, tiroir des événements, suivi

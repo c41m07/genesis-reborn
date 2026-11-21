@@ -25,13 +25,14 @@ async function expectStickyGameHeader(page, scrollTop) {
   const geometry = () => page.evaluate(() => {
     const bounds = selector => document.querySelector(selector).getBoundingClientRect();
     const topbar = bounds('.topbar'), stack = bounds('.resource-event-stack');
-    const rail = bounds('.header-context-rail'), resources = bounds('.resource-strip');
-    const edges = [topbar.top, topbar.bottom, stack.top, rail.top, rail.bottom, resources.top, resources.bottom, stack.bottom];
+    const trigger = bounds('.topbar .event-drawer summary'), resources = bounds('.resource-strip');
+    const edges = [topbar.top, topbar.bottom, stack.top, trigger.top, trigger.bottom, resources.top, resources.bottom, stack.bottom];
     return {
       moved: window.scrollY > 0,
       edges: edges.map(Math.round),
-      gaps: [stack.top - topbar.bottom, rail.top - stack.top, resources.top - rail.bottom, stack.bottom - resources.bottom].map(Math.round),
-      railHeight: Math.round(rail.height),
+      gaps: [stack.top - topbar.bottom, resources.top - stack.top, stack.bottom - resources.bottom].map(Math.round),
+      triggerHeight: Math.round(trigger.height),
+      triggerWithinTopbar: trigger.top >= topbar.top && trigger.bottom <= topbar.bottom,
     };
   });
   await page.evaluate(async () => {
@@ -40,8 +41,9 @@ async function expectStickyGameHeader(page, scrollTop) {
   });
   const initial = await geometry();
   expect(initial.moved).toBe(false);
-  expect(initial.gaps).toEqual([0, 0, 0, 0]);
-  expect(initial.railHeight).toBeGreaterThanOrEqual(44);
+  expect(initial.gaps).toEqual([0, 0, 0]);
+  expect(initial.triggerHeight).toBeGreaterThanOrEqual(44);
+  expect(initial.triggerWithinTopbar).toBe(true);
   await page.evaluate(top => window.scrollTo({ top, behavior: 'instant' }), scrollTop);
   // Le défilement doit être réel et toutes les jonctions de l’en-tête rester fixes.
   await expect.poll(geometry).toEqual({ ...initial, moved: true });
