@@ -2201,3 +2201,15 @@ et la première preuve partagent la transaction d’arrivée ; une annulation
 annule la preuve. Aucun suivi supplémentaire des autres missions, aucune
 nouvelle lecture du graphe et aucune migration supplémentaire. Les primes
 et l’entraînement pirate restent hors de ce lot.
+
+### Premiers pas : exercice pirate facultatif
+
+Un convoi civil fictif sert de briefing. Le formulaire natif utilise
+l’empire actif et n’accepte aucune cible ni force réelle. Un seul appel
+borné au simulateur de combat produit un rapport privé et non archivé,
+avec issue, survivants, pertes et effets des tirs. Ni victoire ni défaite
+ne change l’apprentissage : après le rendu, seule la première preuve est
+inscrite dans la table existante, séparément pour chaque empire.
+Le briefing seul ne valide rien. Aucun vaisseau, carburant, stock, butin,
+journal de bataille réel, récompense ni progression de campagne. Refaire
+l’exercice n’ajoute pas de preuve et ne débloque rien dans le jeu.

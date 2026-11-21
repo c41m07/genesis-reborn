@@ -51,6 +51,12 @@
         explanation: 'Une planète libre agrandit votre empire. Vous pouvez la coloniser sans avoir validé les autres étapes du guide.',
         action: 'Vérifiez la place disponible et les prérequis du Vaisseau colonisateur. Une fois le vaisseau construit, préparez Colonisation. Choisissez dans Planètes neutres une planète découverte indiquée « Inhabitée », ni occupée ni PNJ. Vérifiez le trajet avant l’envoi : le colonisateur est consommé si la colonie est fondée.',
         label: 'Préparer une colonisation', mission: 'colonize'
+    },
+    pirate_exercise: {
+        title: 'Exercice pirate',
+        explanation: 'Familiarisez-vous avec un rapport de combat dans un scénario fictif d’alerte civile.',
+        action: 'Lisez le briefing puis lancez la simulation. Aucun de vos vaisseaux n’est utilisé : pas de perte réelle, de carburant consommé ni de butin. L’exercice ne bloque pas la colonisation.',
+        label: 'Ouvrir le briefing de l’exercice'
     }
 } %}
 <div class="page-heading">
@@ -78,7 +84,9 @@
                 <p class="first-step-status"><strong>{{ done ? 'Terminé' : (step == next ? 'Prochaine étape conseillée' : 'À faire') }}</strong></p>
                 <p>{{ guide.explanation }}</p>
                 <p>{{ guide.action }}</p>
-                {% if colony and (not done or step.value == 'espionage') %}
+                {% if step.value == 'pirate_exercise' %}
+                    <a class="{{ step == next ? 'primary' : 'secondary' }}" href="{{ path('app_first_steps_exercise') }}">{{ done ? 'Rouvrir le briefing de l’exercice' : guide.label }}</a>
+                {% elseif colony and (not done or step.value == 'espionage') %}
                     {% set actionClass = step == next ? 'primary' : 'secondary' %}
                     {% if guide.mission is defined %}
                         <a class="{{ actionClass }}" href="{{ path('app_fleet_prepare', {mission: guide.mission, origin: colony.id}) }}">{{ guide.label }}</a>
@@ -100,7 +108,7 @@
             </li>
         {% endfor %}
     </ol>
-    <p>Les étapes se valident à la fin réelle d’une construction ou d’une recherche, lors d’une nouvelle découverte, à la réception du rapport PNJ ou lors de la fondation d’une colonie. Une mise en file, un départ ou une tentative de colonisation ratée ne compte pas. La progression déjà présente dans le jeu n’est pas automatiquement reprise.</p>
+    <p>Les étapes se valident à la fin réelle d’une construction ou d’une recherche, lors d’une nouvelle découverte, à la réception du rapport PNJ lors de la fondation d’une colonie ou après génération du rapport d’exercice. Une mise en file, un départ ou une tentative de colonisation ratée ne compte pas. La progression déjà présente dans le jeu n’est pas automatiquement reprise.</p>
     {% if next is null %}<p><strong>Ces premiers objectifs sont terminés.</strong> Vous pouvez poursuivre librement votre découverte du jeu.</p>{% endif %}
 </section>
 {% endblock %}

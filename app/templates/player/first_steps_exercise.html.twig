@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+{% block title %}Exercice pirate · Genesis Reborn{% endblock %}
+
+{% block body %}
+<div class="page-heading">
+    <div>
+        <h1>Exercice pirate</h1>
+        <p>Entraînement facultatif · {{ membership.universe.name }}</p>
+    </div>
+    <a class="quiet-button" href="{{ path('app_first_steps') }}">Retour aux Premiers pas</a>
+</div>
+
+{% if report is not null %}
+    <section class="panel account-panel" aria-labelledby="training-report-title">
+        <h2 id="training-report-title">Rapport d’exercice</h2>
+        {% if report.outcome == 'defender_wins' %}
+            <p><strong>L’escorte a tenu.</strong> Le convoi civil passe dans ce scénario.</p>
+        {% elseif report.outcome == 'attacker_wins' %}
+            <p><strong>L’escorte a été battue.</strong> Les pirates l’emportent dans ce scénario.</p>
+        {% else %}
+            <p><strong>Pas de vainqueur.</strong> Aucun camp ne prend l’avantage dans ce scénario.</p>
+        {% endif %}
+        <p>Le jalon d’apprentissage est validé quel que soit le résultat : l’objectif est de savoir lire le rapport.</p>
+        <h3>Comparer les survivants et les pertes</h3>
+        <p>Le résultat résume le sort du convoi. Les pertes indiquent combien d’unités n’ont pas survécu, même dans le camp vainqueur.</p>
+        <ul>
+            <li>Escorte : {{ report.escortSurvivors }} sur 2 en service, {{ report.escortLosses }} perdues dans la simulation.</li>
+            <li>Pirates : {{ report.pirateSurvivors }} sur 2 en service, {{ report.pirateLosses }} perdues dans la simulation.</li>
+        </ul>
+        <details>
+            <summary>Comprendre les tirs manche par manche</summary>
+            <p>Les tirs qui touchent entament d’abord le bouclier. Les dégâts qui passent atteignent la structure : c’est ce qui peut faire perdre une unité.</p>
+            <ol>
+                {% for round in report.rounds %}
+                    <li>Manche {{ round.number }} : {{ round.hits }} tirs au but sur {{ round.shots }}.
+                        Dégâts aux boucliers : {{ round.shieldDamage|quantity(1) }} ; à la structure : {{ round.structureDamage|quantity(1) }}.</li>
+                {% endfor %}
+            </ol>
+        </details>
+    </section>
+{% endif %}
+
+<section class="panel account-panel" aria-labelledby="training-brief-title">
+    <h2 id="training-brief-title">Briefing : alerte civile</h2>
+    <p>Dans ce scénario, un convoi civil signale une présence pirate. Deux appareils d’exercice l’escortent face à deux raiders fictifs. Observez les effets des tirs avant de commander une flotte réelle.</p>
+    <p id="training-rules"><strong>Simulation sans perte réelle, sans carburant et sans butin.</strong> Aucun de vos vaisseaux n’est mobilisé. L’exercice reste privé et ne déclenche ni mission ni campagne. Vous pouvez le refaire ou l’ignorer.</p>
+    <form method="post" action="{{ path('app_first_steps_exercise') }}" data-turbo="false">
+        <input type="hidden" name="_token" value="{{ csrf_token(exerciseTokenId) }}">
+        <button type="submit" class="primary" aria-describedby="training-rules">{{ report is null ? 'Lancer la simulation' : 'Rejouer la simulation' }}</button>
+    </form>
+</section>
+{% endblock %}

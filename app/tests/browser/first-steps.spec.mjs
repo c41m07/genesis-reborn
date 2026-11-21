@@ -1,5 +1,5 @@
 import { test, expect } from './support/isolated-test.mjs';
-import { accelerateQueuedItem } from './support/game-fixtures.mjs';
+import { accelerateQueuedItem, queryIsolatedSql } from './support/game-fixtures.mjs';
 
 async function register(page) {
     const id = crypto.randomUUID().slice(0, 8);
@@ -33,7 +33,7 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     await expect(progress).toHaveAttribute('value', '0');
     await expect(next.getByRole('heading', { name: 'Mine à ciel ouvert', exact: true })).toBeVisible();
     await expect(guide.getByRole('heading', { name: 'Première recherche', exact: true })).toBeVisible();
-    await expect(progress).toHaveAttribute('max', '8');
+    await expect(progress).toHaveAttribute('max', '9');
     await expect(guide.getByRole('link', { name: 'Ouvrir la fiche de la sonde', exact: true })).toHaveAttribute('href', /section=ships.*#item-probe-basic$/);
     const explore = guide.getByRole('listitem').filter({ has: page.getByRole('heading', { name: 'Premier système exploré', exact: true }) });
     await expect(explore).toContainText('consomme une sonde à l’arrivée');
@@ -85,6 +85,91 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
         await expect(fallback.getByRole('progressbar', { name: 'Progression des premiers pas', exact: true })).toHaveAttribute('value', '1');
         await fallback.getByRole('link', { name: 'Ouvrir la Centrale nucléaire', exact: true }).click();
         await expect(fallback).toHaveURL(/section=buildings.*#item-power_plant-basic$/);
+    } finally {
+        await native.close();
+    }
+});
+
+test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', async ({ page, browser, baseURL }) => {
+    test.setTimeout(120000);
+    const route = '/premiers-pas/exercice-pirate';
+    const guest = await page.goto(route);
+    expect(guest?.ok()).toBeTruthy();
+    await expect(page).toHaveURL(/connexion/);
+    const email = await register(page);
+    const project = process.env.BROWSER_ROUTER;
+    expect(email).toMatch(/^first-steps-[a-f0-9]{8}@example[.]test$/);
+    const member = Number(queryIsolatedSql(project, "SELECT p.current_player_universe_id FROM player p WHERE p.email = '" + email + "'"));
+    expect(member).toBeGreaterThan(0);
+    const assets = () => queryIsolatedSql(project, [
+        'SELECT planet.id, planet.owner_id, pr.resource_type, pr.current_stock, pr.last_updated_at FROM planet JOIN planet_resource pr ON planet.id = pr.planet_id WHERE planet.owner_id = ' + member + ' ORDER BY planet.id, pr.resource_type',
+        'SELECT id, status, reserved_fuel, cargo FROM fleet WHERE player_universe_id = ' + member + ' ORDER BY id',
+        'SELECT f.id, s.slug, s.tier, s.quantity FROM fleet f JOIN fleet_ship s ON f.id = s.fleet_id WHERE f.player_universe_id = ' + member + ' ORDER BY s.id',
+    ].join('; '));
+    const completed = () => queryIsolatedSql(project, "SELECT completed_at FROM first_step_completion WHERE step_key = 'pirate_exercise' AND player_universe_id = " + member);
+    const before = assets();
+    const native = await browser.newContext({ baseURL, storageState: await page.context().storageState(), javaScriptEnabled: false });
+    try {
+        const view = await native.newPage();
+        await view.setViewportSize({ width: 390, height: 844 });
+        await view.goto('/premiers-pas');
+        await view.getByRole('link', { name: 'Ouvrir le briefing de l’exercice', exact: true }).click();
+        await expect(view).toHaveURL(new RegExp(route + '$'));
+        await expect(view.getByRole('heading', { name: 'Briefing : alerte civile', exact: true })).toBeVisible();
+        await expect(view.getByText('Simulation sans perte réelle, sans carburant et sans butin.', { exact: true })).toBeVisible();
+        await expect(view.getByRole('heading', { name: 'Rapport d’exercice', exact: true })).toHaveCount(0);
+        expect(completed()).toBe('');
+        const submitWithToken = async (token) => {
+            const form = view.getByRole('region', { name: 'Briefing : alerte civile' }).locator('form');
+            await form.locator('input[name="_token"]').evaluate((field, value) => { field.value = value; }, token);
+            const response = view.waitForResponse(result => new URL(result.url()).pathname === route && result.request().method() === 'POST');
+            await form.getByRole('button', { name: 'Lancer la simulation', exact: true }).click();
+            return response;
+        };
+        const formToken = await view.getByRole('region', { name: 'Briefing : alerte civile' }).locator('input[name="_token"]').getAttribute('value');
+        expect(formToken).toBeTruthy();
+        const rejected = await submitWithToken('');
+        expect(rejected.status()).toBe(403);
+        expect(completed()).toBe('');
+        await view.goto(route);
+
+        const post = view.waitForResponse(response => new URL(response.url()).pathname === route && response.request().method() === 'POST');
+        await view.getByRole('button', { name: 'Lancer la simulation', exact: true }).click();
+        const result = await post;
+        expect(result.status()).toBe(200);
+        expect(result.headers()['cache-control']).toContain('no-store');
+        const report = view.getByRole('region', { name: 'Rapport d’exercice', exact: true });
+        await expect(report).toBeVisible();
+        await expect(report).toContainText('Le jalon d’apprentissage est validé quel que soit le résultat');
+        await expect(report).toContainText(/Escorte : [0-2] sur 2 en service, [0-2] perdues dans la simulation/);
+        await report.getByText('Comprendre les tirs manche par manche', { exact: true }).click();
+        await expect(report.getByText(/Manche 1 :/)).toBeVisible();
+        await expect.poll(() => view.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+
+        const first = completed();
+        expect(first).toMatch(/^\d{4}-\d{2}-\d{2} /);
+        await view.getByRole('button', { name: 'Rejouer la simulation', exact: true }).click();
+        await expect(report).toBeVisible();
+        expect(completed()).toBe(first);
+        expect(assets()).toBe(before);
+        await view.getByRole('link', { name: 'Retour aux Premiers pas', exact: true }).click();
+        const exercise = view.getByRole('listitem').filter({ has: view.getByRole('heading', { name: 'Exercice pirate', exact: true }) });
+        await expect(exercise).toContainText('Terminé');
+        await expect(view.getByRole('link', { name: 'Préparer une colonisation', exact: true })).toBeVisible();
+        await view.getByRole('link', { name: 'Rouvrir le briefing de l’exercice', exact: true }).click();
+        await expect(view.getByRole('heading', { name: 'Rapport d’exercice', exact: true })).toHaveCount(0);
+
+        // Un autre univers ne reçoit ni le rapport ni le jalon ; l’ancien formulaire ne peut pas y écrire.
+        await view.goto('/univers');
+        await view.locator('.universe-card').filter({ has: view.getByRole('heading', { name: /Turbo/ }) }).getByRole('button').click();
+        await expect(view).toHaveURL(/planetes\/\d+$/);
+        await view.goto(route);
+        const oldForm = await submitWithToken(formToken);
+        expect(oldForm.status()).toBe(403);
+        await view.goto('/premiers-pas');
+        await expect(view.getByRole('progressbar', { name: 'Progression des premiers pas' })).toHaveAttribute('value', '0');
+        await view.goto(route);
+        await expect(view.getByRole('heading', { name: 'Rapport d’exercice', exact: true })).toHaveCount(0);
     } finally {
         await native.close();
     }

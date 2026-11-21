@@ -16,6 +16,7 @@ enum FirstStep: string
     case Exploration = 'exploration';
     case Espionage = 'espionage';
     case Colonization = 'colonization';
+    case PirateExercise = 'pirate_exercise';
 
     /** Ce filtre est réservé au chemin où la file a effectivement appliqué le résultat. */
     public static function forCompletedQueue(QueueItem $item, bool $shipConstructed = false): ?self

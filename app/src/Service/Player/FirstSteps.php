@@ -10,12 +10,19 @@ use App\Entity\Planet;
 use App\Entity\PlayerDiscovery;
 use App\Entity\PlayerUniverse;
 use App\Entity\QueueItem;
+use App\Manager\GameManager;
+use App\Service\Colony\ActionGuard;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Clock\ClockInterface;
 
 final class FirstSteps
 {
-    public function __construct(private EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private GameManager $manager,
+        private ActionGuard $guard,
+        private ClockInterface $clock,
+    ) {
     }
 
     /** @return array<string, true> */
@@ -81,6 +88,16 @@ final class FirstSteps
         }
 
         $this->record($membership, FirstStep::Colonization, $acquiredAt);
+    }
+
+    /** Appelé après rendu effectif du rapport, sans autre écriture de jeu ni rapport archivé. */
+    public function recordPirateExercise(PlayerUniverse $membership): void
+    {
+        $this->manager->transaction(function () use ($membership): void {
+            // La participation peut avoir changé pendant le calcul : valider de nouveau sous son verrou.
+            $this->guard->lockMembership($membership);
+            $this->record($membership, FirstStep::PirateExercise, $this->clock->now());
+        });
     }
 
     private function record(PlayerUniverse $membership, FirstStep $step, \DateTimeImmutable $finishedAt): void

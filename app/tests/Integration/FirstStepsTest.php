@@ -19,6 +19,7 @@ use App\Entity\PlayerUniverse;
 use App\Entity\QueueItem;
 use App\Entity\Universe;
 use App\Service\Player\FirstSteps;
+use App\Service\Player\PirateExercise;
 use App\Service\Player\RegistrationService;
 use App\Service\Queue\QueueService;
 use App\Service\Universe\UniverseImporter;
@@ -325,6 +326,46 @@ final class FirstStepsTest extends KernelTestCase
         self::assertSame(['colonization' => true], $this->guide->completed($membership), 'La colonisation ne nécessite pas les autres jalons.');
         [$other] = $this->select($membership->player, 'turbo-1');
         self::assertSame([], $this->guide->completed($other));
+    }
+
+    public function testPirateExerciseRecordsOnlyTheFirstCompletionOfThisEmpire(): void
+    {
+        $player = $this->player();
+        [$membership, $origin] = $this->select($player, 'omega-1');
+        $this->seedShips($membership, $origin, 'probe', 2);
+        $connection = $this->entityManager->getConnection();
+        $fleetSnapshot = static fn (): array => $connection->fetchAllAssociative(
+            'SELECT f.id, f.status, s.slug, s.quantity FROM fleet f INNER JOIN fleet_ship s ON f.id = s.fleet_id WHERE f.player_universe_id = ? ORDER BY s.id',
+            [$membership->id],
+        );
+        $stockSnapshot = static fn (): array => $connection->fetchAllAssociative(
+            'SELECT resource_type, current_stock, last_updated_at FROM planet_resource WHERE planet_id = ? ORDER BY resource_type',
+            [$origin->id],
+        );
+        $fleets = $fleetSnapshot();
+        $stocks = $stockSnapshot();
+        $proofTime = $this->clock->now()->format('Y-m-d H:i:s');
+        $exercise = self::getContainer()->get(PirateExercise::class);
+
+        self::assertSame('attacker_wins', $exercise->report(1)['outcome']);
+        self::assertSame([], $this->guide->completed($membership), 'Produire le calcul seul ne décide pas du jalon.');
+        $this->guide->recordPirateExercise($membership);
+        self::assertSame(['pirate_exercise' => true], $this->guide->completed($membership));
+        self::assertSame($proofTime, $this->proofTime($membership, 'pirate_exercise'));
+
+        $this->clock->sleep(60);
+        self::assertSame('defender_wins', $exercise->report(0)['outcome']);
+        $this->guide->recordPirateExercise($membership);
+        self::assertSame($proofTime, $this->proofTime($membership, 'pirate_exercise'));
+        self::assertNotEmpty($fleets);
+        self::assertNotEmpty($stocks);
+        self::assertSame($fleets, $fleetSnapshot());
+        self::assertSame($stocks, $stockSnapshot());
+        self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM combat_log'));
+
+        [$other] = $this->select($player, 'turbo-1');
+        self::assertSame([], $this->guide->completed($other));
+        self::assertSame(['pirate_exercise' => true], $this->guide->completed($membership));
     }
 
     private function pickFreeKnownPlanet(Planet $origin, ?Planet $excluded = null): Planet
