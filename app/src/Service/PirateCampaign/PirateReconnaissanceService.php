@@ -9,9 +9,9 @@ use App\Manager\GameManager;
 use App\Message\PirateReconnaissanceDue;
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
-use App\Service\Colony\ActionGuard;
+use App\Service\Colony\{ActionGuard, ResourceService};
 use App\Service\Combat\TechnologyEffectCalculator;
-use App\Service\Fleet\{FleetHold, MovementCalculator};
+use App\Service\Fleet\FleetHold;
 use App\Service\Player\VacationCalendar;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
@@ -24,11 +24,12 @@ final class PirateReconnaissanceService
         private ActionGuard $guard,
         private GameCatalog $catalog,
         private TechnologyEffectCalculator $technologyEffects,
-        private MovementCalculator $movement,
+        private PirateFlightQuote $flight,
         private FleetHold $hold,
         private VacationCalendar $vacations,
         private ClockInterface $clock,
         private PirateCampaignCatalogue $campaign,
+        private ResourceService $resources,
     ) {
     }
 
@@ -46,6 +47,24 @@ final class PirateReconnaissanceService
             $membership, $origin, $system, $site, $missionKey,
             fn (): PiratePreparedEncounter => $this->campaign->prepareForServer($definitionKey, $membership->universe),
             $detected,
+        );
+    }
+
+    /** Réservé au futur pilote local, après contrôle de son accès côté serveur. */
+    public function launchDefinedWithOmegaPilotFuel(
+        PlayerUniverse $membership,
+        Planet $origin,
+        SolarSystem $system,
+        PirateDistressSite $site,
+        string $missionKey,
+        string $definitionKey,
+        ?bool $detected = null,
+    ): bool {
+        return $this->start(
+            $membership, $origin, $system, $site, $missionKey,
+            fn (): PiratePreparedEncounter => $this->campaign->prepareForServer($definitionKey, $membership->universe),
+            $detected,
+            pilotFuel: true,
         );
     }
 
@@ -71,14 +90,18 @@ final class PirateReconnaissanceService
         string $missionKey,
         \Closure $capture,
         ?bool $detected,
+        bool $pilotFuel = false,
     ): bool {
         if (!preg_match('/^[a-z0-9][a-z0-9_-]{0,63}$/D', $missionKey)) {
             throw new \DomainException('Identifiant de mission pirate invalide.');
         }
 
-        return $this->manager->transaction(function () use ($membership, $origin, $system, $site, $missionKey, $capture, $detected): bool {
+        return $this->manager->transaction(function () use ($membership, $origin, $system, $site, $missionKey, $capture, $detected, $pilotFuel): bool {
             // Même ordre que les commandes de flotte ; la participation sérialise aussi deux origines différentes.
             $this->guard->lock($membership, $origin, true);
+            if ($pilotFuel && $membership->universe->slug !== 'omega-1') {
+                throw new \DomainException('Le départ avec carburant pilote est réservé à Omega.');
+            }
             if ($membership->player->lockedAt !== null || $site->signalFor($membership) === null || !$site->matchesSystem($system)) {
                 throw new \DomainException('Mission de reconnaissance privée inaccessible.');
             }
@@ -94,24 +117,34 @@ final class PirateReconnaissanceService
 
             $probe = $this->lockProbe($membership, $origin);
             $idle = $probe->fleet;
-            // Ne jamais libérer un vaisseau qui porte déjà une réserve ou du fret du hangar.
-            // Le futur parcours public devra définir et afficher le carburant de ce vol sans retour.
-            $this->hold->departure($idle, ['probe' => ['basic' => 1]], 0.0);
+            $flight = $this->flightQuote($membership, $origin, $system);
+            $budget = $pilotFuel ? PirateCampaignFuel::scout($flight) : null;
+            // Comme un départ courant : au besoin prendre la réserve du hangar, jamais son fret,
+            // et vérifier que les coques restantes portent ce qui reste à quai.
+            $paid = $this->hold->departure($idle, ['probe' => ['basic' => 1]], $budget?->amountForDeparture() ?? 0.0);
             $now = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
             // Doctrine et le relais travaillent à la seconde ; ne pas créer deux échéances différentes.
             $departedAt = $now->setTimestamp($now->getTimestamp());
-            $seconds = $this->flightSeconds($membership, $origin, $system);
+            $seconds = $flight['leg_seconds'];
             $dueAt = $departedAt->modify('+'.$seconds.' seconds');
             $token = Uuid::v4()->toRfc4122();
 
             // Le prix, l'ennemi et le profil de combat prennent le même contexte d'univers
             // et sont persistés ensemble, avant toute modification du hangar ou remise du rapport.
             $encounter = $capture();
+            $fuelReceipt = null;
+            if ($budget !== null) {
+                $fuelReceipt = PirateScoutFuelReceipt::forDeparture($origin->id, $budget, $paid['stored_fuel_used'], $paid['planet_fuel']);
+                if ($fuelReceipt->fromPlanet > 0.0) {
+                    $this->resources->consume($origin, ['hydrogen' => $fuelReceipt->fromPlanet]);
+                }
+                $idle->storedFuel -= $fuelReceipt->fromHold;
+            }
 
             // Le hangar n'a plus la sonde durant le vol. Sa perte est actée par le rapport, sans retour ni restitution.
             --$probe->quantity;
             $mission = new PirateReconnaissance(
-                $membership, $membership->player, $system, $missionKey, $departedAt, $dueAt, $token, $detected, $encounter,
+                $membership, $membership->player, $system, $missionKey, $departedAt, $dueAt, $token, $detected, $encounter, $fuelReceipt,
             );
             $this->manager->save($mission);
             $this->manager->flush();
@@ -147,7 +180,7 @@ final class PirateReconnaissanceService
         return $probe;
     }
 
-    private function flightSeconds(PlayerUniverse $membership, Planet $origin, SolarSystem $system): int
+    private function flightQuote(PlayerUniverse $membership, Planet $origin, SolarSystem $system): array
     {
         $universe = $membership->universe;
         $config = $this->catalog->forUniverse($universe);
@@ -158,16 +191,14 @@ final class PirateReconnaissanceService
         $ships = $this->technologyEffects->applyToShips([$ship], $levels, $universe);
 
         $home = $origin->solarSystem;
-        $quote = $this->movement->quote(
+        return $this->flight->compare(
             [$home->id, $home->galaxy->id, $home->coordX, $home->coordY, $origin->position],
-            [$system->id, $system->galaxy->id, $system->coordX, $system->coordY, null],
+            [$system->id, $system->galaxy->id, $system->coordX, $system->coordY],
             $ships,
             1.0,
             $config['multipliers']['travel_time'],
             $this->catalog->rules()['fuel_ratio_policy'],
         );
-
-        return $quote['seconds'];
     }
 
     /** Retourne des millisecondes seulement si Messenger doit reprendre ce même jeton. */

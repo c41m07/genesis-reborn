@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
-use App\Service\PirateCampaign\{PirateConvoyQuote, PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter};
+use App\Service\PirateCampaign\{PirateConvoyQuote, PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter, PirateScoutFuelReceipt};
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -47,10 +47,18 @@ class PirateReconnaissance
         #[ORM\Column(nullable: true)]
         private ?bool $detected,
         PirateEncounterSnapshot|PiratePreparedEncounter $encounter,
+        ?PirateScoutFuelReceipt $scoutFuel = null,
     ) {
         if ($encounter instanceof PiratePreparedEncounter) {
             $this->preparedEncounter = $encounter->checkpoint();
             $encounter = $encounter->encounterForServer();
+        }
+        if ($scoutFuel !== null) {
+            if ($this->preparedEncounter === null || $dueAt->getTimestamp() - $departedAt->getTimestamp() !== $scoutFuel->seconds) {
+                throw new \DomainException('La preuve de carburant ne correspond pas au trajet privé.');
+            }
+            // Extension additive du JSON : les rapports plus anciens restent lisibles, mais ne deviennent pas des départs payés.
+            $this->preparedEncounter['pilot_scout_fuel'] = $scoutFuel->checkpoint();
         }
         $this->composition = $encounter->composition();
         $this->buildCosts = $encounter->buildCosts();
@@ -86,6 +94,21 @@ class PirateReconnaissance
             'system' => $this->system,
             'prepared' => PiratePreparedEncounter::restore($encounter, $this->preparedEncounter),
         ];
+    }
+
+    /** Preuve serveur, utile au prochain départ pilote, jamais incluse dans la projection de renseignement. */
+    public function pilotScoutFuelFor(PlayerUniverse $membership, \DateTimeImmutable $at): ?PirateScoutFuelReceipt
+    {
+        if (!$this->belongsTo($membership, $at) || !$this->hasReportedAt($at)
+            || !isset($this->preparedEncounter['pilot_scout_fuel'])) {
+            return null;
+        }
+        $receipt = PirateScoutFuelReceipt::read($this->preparedEncounter['pilot_scout_fuel']);
+        if ($this->dueAt->getTimestamp() - $this->departedAt->getTimestamp() !== $receipt->seconds) {
+            throw new \DomainException('La durée du prélèvement pilote est devenue incohérente.');
+        }
+
+        return $receipt;
     }
 
     /** Le devis n'est visible qu'avec le rapport effectivement remis, jamais par simple échéance. */
