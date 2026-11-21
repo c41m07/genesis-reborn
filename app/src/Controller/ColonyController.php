@@ -151,7 +151,7 @@ final class ColonyController extends AbstractController
 
     private function liveRegions(Request $request, array $data): JsonResponse
     {
-        $data['chrome'] = $this->shell->get($this->getUser(), $data['planet']);
+        $data['chrome'] = $this->shell->get($this->getUser(), $data['planet'], rememberSelection: false);
         $data['preferences'] = array_replace(PreferencesService::DEFAULTS, $this->getUser()->preferences);
         $templates = [
             'colony-selector' => 'ui/colony_selector.html.twig',

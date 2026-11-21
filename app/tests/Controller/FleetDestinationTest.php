@@ -195,6 +195,50 @@ final class FleetDestinationTest extends WebTestCase
         }
     }
 
+    public function testLiveFragmentsKeepTheirColonyWithoutReplacingTheSessionSelection(): void
+    {
+        $oldColony = $this->home;
+        $selectedColony = $this->own;
+        $this->client->request('GET', '/planetes/'.$oldColony->id);
+        self::assertResponseIsSuccessful();
+
+        // Le sélecteur natif choisit B, même sans JavaScript.
+        $this->client->request('GET', '/?colony='.$selectedColony->id);
+        self::assertResponseRedirects('/planetes/'.$selectedColony->id);
+        $this->client->followRedirect();
+        self::assertSelectorExists('#sidebar-colony option[value="'.$selectedColony->id.'"][selected]');
+
+        $live = ['HTTP_ACCEPT' => 'application/json', 'HTTP_X_GENESIS_LIVE' => '1'];
+        foreach (['/planetes/'.$oldColony->id, '/flottes/preparer?origin='.$oldColony->id] as $oldUrl) {
+            $this->client->request('GET', $oldUrl, server: $live);
+            self::assertResponseIsSuccessful();
+            $regions = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR)['regions'];
+            $selector = new \Symfony\Component\DomCrawler\Crawler($regions['colony-selector']);
+            self::assertCount(1, $selector->filter('#sidebar-colony option[value="'.$oldColony->id.'"][selected]'));
+            self::assertStringContainsString('/planetes/'.$oldColony->id.'/ressources', $regions['resources']);
+
+            $this->client->request('GET', '/');
+            self::assertResponseRedirects('/planetes/'.$selectedColony->id);
+            $this->client->request('GET', '/technologies');
+            self::assertResponseIsSuccessful();
+            self::assertSelectorExists('#sidebar-colony option[value="'.$selectedColony->id.'"][selected]');
+            $this->client->request('GET', '/flottes/preparer');
+            self::assertResponseIsSuccessful();
+            self::assertSelectorExists('input[name="origin"][value="'.$selectedColony->id.'"]');
+        }
+
+        $this->client->request('GET', '/planetes/'.$this->ally->id, server: $live);
+        self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET', '/');
+        self::assertResponseRedirects('/planetes/'.$selectedColony->id);
+
+        // À l’inverse, une navigation HTML explicite vers A garde la mémorisation normale.
+        $this->client->request('GET', '/flottes/preparer?origin='.$oldColony->id);
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', '/');
+        self::assertResponseRedirects('/planetes/'.$oldColony->id);
+    }
+
     public function testFleetPageShowsOnlyTheActiveColonyAndScopedOrbitRequests(): void
     {
         $member=$this->player->currentPlayerUniverse;
