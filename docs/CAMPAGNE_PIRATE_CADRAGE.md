@@ -744,3 +744,72 @@ ordre de retour après une arrivée traitée tardivement ; le rapport,
 le stock et le checkpoint initial sont restés intacts avant rejeu.
 La borne de dix rounds et l’échec d’écriture sont testés sur MariaDB
 avec une horloge contrôlée, pas en temps réel sur RabbitMQ.
+
+## Espace joueur prévu : une page dédiée, deux accès cohérents
+
+Complexité 2/5 pour la projection, 4/5 avant ouverture des commandes.
+La campagne est permanente et se poursuit sur vingt missions ; elle
+n’est ni un événement qui expire, ni une étape à cocher du tutoriel.
+Proposition : page dédiée reliée par une entrée secondaire sous
+« Événements », placée hors des listes « en cours / à venir » et du
+tiroir horaire. Le joueur régulier peut y reprendre une mission sans
+rouvrir le tutoriel. Un second lien depuis le résultat de l’exercice
+« Premiers pas » fait découvrir le parcours, en rappelant que les
+vaisseaux y sont réels et peuvent être perdus. Ne pas demander la
+validation de l’exercice pour ouvrir la campagne. Ne pas ajouter un
+lien au menu principal ou changer la coque des pages actuelles.
+
+La projection pure `PirateCampaignWorkspace` reçoit le contexte
+courant et au plus vingt lignes du serveur. Elle donne la mission
+courante, la sélection par numéro et les dossiers antérieurs
+consultables. Un numéro futur ou inconnu est refusé sans distinction.
+Le signal non encore matérialisé reste un état neutre sans cible,
+briefing mensonger, composition, crédit ni autorisation de lancer.
+Une fiche déjà reconnue est rendue par le présentateur privé existant.
+Après la finale, la dernière fiche s’ouvre par défaut et les vingt
+restent consultables. Aucun contrôleur ou fragment actif ne consomme
+la projection ; aucune route, entrée ni action n’est enregistrée.
+
+### Raccordement à ouvrir seulement après arbitrages
+
+- GET privé d’une page dédiée, par exemple sous `/evenements`,
+  éventuellement avec numéro de mission. Partir de `UniverseContext` ;
+  relire en base le propriétaire courant, le même univers ouvert et la
+  participation non détachée. Charger par lot les reconnaissances des
+  vingt clés, puis les tentatives rattachées à ces seules reconnaissances.
+  Ne pas interroger par carte ni lire l’outbox de la page. Répondre sans
+  cache partagé ; aucun GET ne débite, ne crée une reconnaissance ou
+  ne génère un site. Sans contexte ou pour une fiche non autorisée,
+  utiliser les réponses neutres du jeu, sans préciser le propriétaire.
+- Afficher une mission à la fois, avec une liste historique légère et
+  le bouton Retour du navigateur naturel. Préserver la navigation sans
+  JavaScript, les libellés accessibles et l’état du numéro de mission.
+  En recette : autre compte / allié / ancien univers, sortie de l’empire,
+  lien direct vers mission future, historique et retour arrière, clavier
+  et petite largeur, aucune fuite d’horaires calculés ou de composition.
+- Plus tard uniquement : les deux POST distincts, CSRF et relecture
+  sous verrou prévus dans le plan précédent. Afficher au joueur la sonde
+  vraiment perdue, le coût exact, la durée et les pertes possibles
+  avant l’envoi ; pas de faux bouton ou de prix inventé d’ici là.
+
+### Ce qui est cadré et ce qu’il faut choisir
+
+Cadré : vingt missions privées, exercice fictif séparé, une vraie
+sonde perdue par reconnaissance, même renseignement après échec et
+pertes réelles des attaques, résultat réel avant le signal suivant,
+sans attendre une livraison. La base du devis du convoi vaut 50 %
+des coûts catalogue figés, hors électricité. Le trajet et l’issue ne
+sont pas publics. La cadence native et la preuve d’arrivée sont déjà
+testées en V2 privée ; elles ne suffisent pas à ouvrir des commandes.
+
+À arrêter avec Kévin avant ouverture : (1) quels univers/participations
+admettent le pilote et comment placer les signaux après Balise 17
+(système natal déjà connu proposé pour la première, repli si aucun
+système joignable) ; (2) H₂ de la sonde aller seul ou aller-retour,
+réservation aller-retour de l’escorte avec ou sans orbite, restitution
+du reliquat après destruction et source du carburant ; (3) traitement
+des survivants si la colonie d’origine ou l’empire ne peuvent plus les
+recevoir ; (4) destination et reprise du convoi, stock plein ou
+capacité totale trop petite, disparition de l’origine/empire,
+arrondi éventuel et moment du crédit. Présenter ces options séparément :
+le coût ou le plein ne constituent pas un nouveau verrou de progression.
