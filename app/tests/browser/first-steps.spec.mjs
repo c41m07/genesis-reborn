@@ -256,7 +256,7 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
     await page.setViewportSize({ width: 1440, height: 900 });
     const first = popup.locator('figure').nth(0).locator('img');
     const second = popup.locator('figure').nth(1).locator('img');
-    await expect(first).toHaveAttribute('src', /mine-commande[.]webp$/);
+    await expect(first).toHaveAttribute('src', /mine-fiche[.]webp$/);
     await expect.poll(() => first.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
     await expect(popup.getByRole('button', { name: 'Désactiver le guide', exact: true })).toBeInViewport({ ratio: 1 });
     const captures = process.env.FIRST_STEPS_CAPTURES;
@@ -271,7 +271,7 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
 
     await expect(second).not.toHaveAttribute('src', /.+/);
     await popup.getByRole('button', { name: 'Suivant', exact: true }).click();
-    await expect(second).toHaveAttribute('src', /mine-niveau[.]webp$/);
+    await expect(second).toHaveAttribute('src', /mine-resultat[.]webp$/);
     await expect(popup.locator('output')).toHaveText('2 sur 2');
     await page.keyboard.press('Escape');
     await expect(popup).not.toHaveAttribute('open', '');
@@ -562,5 +562,75 @@ test('Le guide qui échoue reste réessayable et un 204 tardif ne déplace pas u
         expect(requests).toBe(2);
     } finally {
         release();
+    }
+});
+
+test('Les douze gestes ont leur carte annotée ; l’agrandissement reste dans le panneau', async ({ page }) => {
+    test.setTimeout(120000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await register(page);
+    const popup = page.locator('.first-steps-popup');
+    const arrow = popup.locator('summary');
+    const project = process.env.BROWSER_ROUTER;
+    const colony = Number(new URL(page.url()).pathname.split('/').pop());
+    const member = Number(queryIsolatedSql(project, 'SELECT owner_id FROM planet WHERE id=' + colony));
+    expect(member).toBeGreaterThan(0);
+    const examples = [
+        ['metal_mine', 'mine-fiche', 'Améliorer au niveau 1'],
+        ['power_plant', 'centrale-fiche', 'Améliorer au niveau 1'],
+        ['nano_workshop', 'nano-fiche', 'Améliorer au niveau 1'],
+        ['metal_storage', 'depot-fiche', 'Mine à ciel ouvert'],
+        ['laboratory', 'laboratoire-fiche', 'Améliorer au niveau 1'],
+        ['research', 'recherche-fiche', 'Rechercher le niveau 1'],
+        ['assembly_yard', 'chantier-fiche', 'Améliorer au niveau 1'],
+        ['ship', 'sonde-fiche', 'Construire'],
+        ['exploration', 'exploration-fiche', 'Vérifier la mission'],
+        ['espionage', 'espionnage-fiche', 'Vérifier la mission'],
+        ['pirate_exercise', 'exercice-fiche', 'Lancer la simulation'],
+        ['colonization', 'colonisation-fiche', 'Vérifier la mission'],
+    ];
+
+    for (const [step, image, exactControl] of examples) {
+        const active = popup.locator('figure:visible');
+        await expect(active.locator('figcaption')).toContainText(exactControl);
+        const picture = active.locator('img');
+        await expect(picture).toHaveAttribute('src', new RegExp('/' + image + '[.]webp$'));
+        await expect(picture).toHaveAttribute('alt', /.+/);
+        await expect.poll(() => picture.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+        await expect(active.locator('.first-steps-gesture-arrow')).toHaveAttribute('aria-hidden', 'true');
+        // Le repère reste visible dans l’aperçu, avant tout défilement ou agrandissement.
+        await expect(active.locator('.first-steps-gesture-arrow')).toBeInViewport({ ratio: 0.8 });
+        const zoom = active.getByRole('button', { name: 'Voir en grand', exact: true });
+        await expect(zoom).toHaveAttribute('aria-expanded', 'false');
+
+        if (step === 'metal_mine') {
+            const normalWidth = (await picture.boundingBox()).width;
+            const ownImageUrl = await picture.getAttribute('src');
+            await zoom.press('Enter');
+            const collapse = active.getByRole('button', { name: 'Réduire l’image', exact: true });
+            await expect(collapse).toBeFocused();
+            await expect(collapse).toHaveAttribute('aria-expanded', 'true');
+            await expect.poll(async () => (await picture.boundingBox()).width).toBeGreaterThan(normalWidth + 20);
+            await expect(picture).toHaveAttribute('src', ownImageUrl);
+            await expect(page.locator('dialog[open]')).toHaveCount(0);
+            if (process.env.FIRST_STEPS_CAPTURES) {
+                await active.locator('.first-steps-gesture-arrow').scrollIntoViewIfNeeded();
+                await expect(active.locator('.first-steps-gesture-arrow')).toBeInViewport();
+                await page.screenshot({ path: process.env.FIRST_STEPS_CAPTURES + '/GENESIS_PREMIERS_PAS_MINE_ZOOM_MOBILE.png', animations: 'disabled' });
+            }
+            await page.keyboard.press('Escape');
+            await expect(zoom).toBeFocused();
+            await expect(popup).toHaveAttribute('open', '');
+            await expect(zoom).toHaveAttribute('aria-expanded', 'false');
+        }
+
+        await expect(popup.getByRole('button', { name: 'Suivant', exact: true })).toBeInViewport();
+        if (step !== 'colonization') {
+            await popup.getByRole('button', { name: 'Fermer', exact: true }).click();
+            // Fixtures de présentation seulement : la validation métier réelle est couverte séparément.
+            runIsolatedSql(project, "INSERT IGNORE INTO first_step_completion (player_universe_id,step_key,completed_at) VALUES ("
+                + member + ",'" + step + "',UTC_TIMESTAMP())");
+            await arrow.press('Enter');
+        }
     }
 });

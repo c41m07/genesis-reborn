@@ -11,10 +11,27 @@
         <div class="first-steps-popup-content" role="region" aria-label="Instructions et illustrations" tabindex="0">
             <div class="first-steps-gallery" aria-label="Gestes dans l’interface">
                 {% for slide in panel.slides %}
-                    <figure hidden data-first-steps-guide-target="slide">
-                        <img alt="{{ slide[3] }}" data-src="{{ asset('art/first-steps/'~slide[0]~'.webp') }}"
-                             data-first-steps-guide-target="illustration" width="{{ slide[1] }}" height="{{ slide[2] }}" decoding="async">
-                        <figcaption><strong>{{ loop.first ? 'Le geste' : 'Le repère' }} :</strong> {{ slide[4] }}</figcaption>
+                    {% set visualId = 'first-steps-visual-'~loop.index %}
+                    <figure{% if slide.image is defined %} class="first-steps-figure--visual"{% endif %} hidden data-first-steps-guide-target="slide">
+                        <figcaption><strong>{{ loop.first ? 'Le geste' : 'Le repère' }} :</strong> {{ slide.caption }}</figcaption>
+                        {% if slide.image is defined %}
+                            {% set image = slide.image %}
+                            <button type="button" class="quiet-button first-steps-zoom" aria-expanded="false"
+                                    aria-controls="{{ visualId }}" data-first-steps-zoom
+                                    data-action="first-steps-guide#toggleZoom">Voir en grand</button>
+                            <span id="{{ visualId }}" class="first-steps-gesture-frame" data-first-steps-visual
+                                  style="--guide-fit-width:{{ (image.width * 208 / image.height)|round }}px;--guide-mobile-fit-width:{{ (image.width * 133 / image.height)|round }}px;--guide-native-width:{{ image.width }}px;">
+                                <img alt="{{ image.alt }}" data-src="{{ asset('art/first-steps/'~image.file~'.webp') }}"
+                                     width="{{ image.width }}" height="{{ image.height }}" decoding="async">
+                                {% if image.x is defined %}
+                                    <svg class="first-steps-gesture-arrow" aria-hidden="true" viewBox="0 0 50 34"
+                                         style="--guide-tip-x:{{ image.x }}%;--guide-tip-y:{{ image.y }}%;">
+                                        <path d="M45 4 C36 6 19 12 6 26 M7 17 L5 27 L15 27" class="first-steps-gesture-arrow-outline"/>
+                                        <path d="M45 4 C36 6 19 12 6 26 M7 17 L5 27 L15 27"/>
+                                    </svg>
+                                {% endif %}
+                            </span>
+                        {% endif %}
                     </figure>
                 {% endfor %}
             </div>

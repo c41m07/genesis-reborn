@@ -78,20 +78,53 @@
     align-items: center;
     gap: 8px;
 }
+/* Un titre long ne doit pas repousser Fermer sur une deuxième rangée : cela couperait la pointe. */
+.first-steps-popup-heading { flex-wrap: nowrap; align-items: flex-start; }
+.first-steps-popup-heading > div { flex: 1 1 0; min-width: 0; }
+.first-steps-popup-heading h2 { overflow-wrap: anywhere; }
 .first-steps-popup-eyebrow { color: var(--accent); font-size: .78rem; margin: 0; font-weight: 750; letter-spacing: .06em; }
 .first-steps-popup-panel [hidden] { display: none !important; }
 .first-steps-gallery { margin-bottom: 12px; }
 .first-steps-gallery figure { margin: 0 0 5px; }
-.first-steps-gallery img {
+.first-steps-figure--visual:not([hidden]) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 8px;
+}
+.first-steps-figure--visual figcaption { text-align: start; }
+.first-steps-figure--visual .first-steps-gesture-frame { grid-column: 1 / -1; }
+.first-steps-gesture-frame {
     display: block;
-    width: auto;
-    max-width: 100%;
+    position: relative;
+    width: min(100%, var(--guide-fit-width));
+    margin: 5px auto 8px;
+}
+.first-steps-gesture-frame--expanded { width: min(100%, var(--guide-native-width)); }
+.first-steps-gesture-frame img {
+    display: block;
+    width: 100%;
     height: auto;
     border-radius: 7px;
     background: var(--bg);
-    margin-bottom: 6px;
 }
-.first-steps-gallery figcaption { color: var(--muted); font-size: .9rem; line-height: 1.42; }
+.first-steps-gesture-arrow {
+    position: absolute;
+    left: var(--guide-tip-x);
+    top: var(--guide-tip-y);
+    width: clamp(22px, 19%, 50px);
+    transform: translate(-10%, -79%);
+    pointer-events: none;
+    overflow: visible;
+    fill: none;
+    stroke: #ffc768;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.first-steps-gesture-arrow .first-steps-gesture-arrow-outline { stroke: #101928; stroke-width: 8; }
+.first-steps-gallery figcaption { color: var(--muted); font-size: .9rem; line-height: 1.42; text-align: center; }
+.first-steps-popup-panel .first-steps-zoom { display: block; min-height: 44px; margin: 0; }
 .first-steps-popup-panel button { min-height: 42px; }
 .first-steps-popup-panel button[aria-disabled=true] { opacity: .65; cursor: default; }
 .first-steps-popup-panel form { margin: 0; }
@@ -102,6 +135,7 @@
 @media(max-width: 740px) {
     .first-steps-popup-enhanced { bottom: calc(78px + env(safe-area-inset-bottom)); width: min(468px, calc(100vw - 8px)); }
     .first-steps-popup-panel { max-height: 62dvh; padding: 12px; }
+    .first-steps-gesture-frame:not(.first-steps-gesture-frame--expanded) { width: min(100%, var(--guide-mobile-fit-width)); }
     .first-steps-popup-actions a { font-size: .87rem; }
 }
 @media(max-width: 600px) {

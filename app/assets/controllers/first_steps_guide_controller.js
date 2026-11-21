@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 import '../styles/first-steps-guide.css';
 
 export default class extends Controller {
-    static targets = ['summary', 'fallback', 'content', 'status', 'closeButton', 'slide', 'illustration', 'controls', 'previous', 'next', 'position'];
+    static targets = ['summary', 'fallback', 'content', 'status', 'closeButton', 'slide', 'controls', 'previous', 'next', 'position'];
     static values = { scope: String, url: String, autoOpen: Boolean, defer: Boolean };
 
     connect() {
@@ -151,7 +151,29 @@ export default class extends Controller {
     closeFromKeyboard(event) {
         if (!this.element.open) return;
         event.stopPropagation();
+        const slide = this.slideTargets[this.index];
+        if (slide?.querySelector('[data-first-steps-zoom][aria-expanded="true"]')) {
+            this.setZoom(slide, false)?.focus();
+            return;
+        }
         this.close();
+    }
+
+    toggleZoom(event) {
+        const slide = this.slideTargets[this.index];
+        if (!slide?.contains(event.currentTarget)) return;
+        this.setZoom(slide, event.currentTarget.getAttribute('aria-expanded') !== 'true');
+    }
+
+    setZoom(slide, expanded) {
+        const button = slide.querySelector('[data-first-steps-zoom]');
+        const visual = slide.querySelector('[data-first-steps-visual]');
+        if (!button || !visual) return null;
+        // Le même visuel grandit dans la zone défilante : aucun dialogue ni nouvelle requête.
+        visual.classList.toggle('first-steps-gesture-frame--expanded', expanded);
+        button.setAttribute('aria-expanded', String(expanded));
+        button.textContent = expanded ? 'Réduire l’image' : 'Voir en grand';
+        return button;
     }
 
     previousSlide() {
@@ -165,10 +187,13 @@ export default class extends Controller {
     switchSlide(index) {
         if (index < 0 || index >= this.slideTargets.length) return;
         this.index = index;
-        for (const [item, slide] of this.slideTargets.entries()) slide.hidden = item !== index;
-        const illustration = this.illustrationTargets[index];
+        for (const [item, slide] of this.slideTargets.entries()) {
+            slide.hidden = item !== index;
+            if (slide.hidden) this.setZoom(slide, false);
+        }
+        const illustration = this.slideTargets[index].querySelector('img[data-src]');
         // Les autres images restent sans source jusqu’à une demande du joueur.
-        if (!illustration.hasAttribute('src')) illustration.src = illustration.dataset.src;
+        if (illustration && !illustration.hasAttribute('src')) illustration.src = illustration.dataset.src;
         if (this.hasPositionTarget) this.positionTarget.textContent = index + 1 + ' sur ' + this.slideTargets.length;
         if (this.hasPreviousTarget) this.previousTarget.setAttribute('aria-disabled', String(index === 0));
         if (this.hasNextTarget) this.nextTarget.setAttribute('aria-disabled', String(index === this.slideTargets.length - 1));

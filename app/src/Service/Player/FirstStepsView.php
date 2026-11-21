@@ -121,55 +121,118 @@ final class FirstStepsView
         'colonization' => ['images/catalog/ships/colony_ship__basic.webp', 'Vaisseau colonisateur du catalogue', 'La mission colonise une planète et vous en obtenez le contrôle.'],
     ];
 
-    // Captures Chromium de contrôles réels : compte, stocks et cibles fictifs en base de recette.
-    // Les dimensions intrinsèques évitent un saut de mise en page au chargement de la diapositive.
+    // Les fiches et formulaires proviennent des parcours guidés sur une base synthétique.
+    // x/y (en %) repèrent le vrai contrôle mesuré : le même point est conservé en agrandissant l’image.
     private const GESTURES = [
         'metal_mine' => [
-            ['mine-commande', 305, 45, 'Bouton Améliorer au niveau 1', 'Sur la fiche Mine à ciel ouvert, cliquez sur « Améliorer au niveau 1 ».'],
-            ['mine-niveau', 305, 25, 'Niveau actuel 1 sur la fiche de la mine', 'Après la file, revenez à cette fiche : « Niveau actuel 1 » confirme la construction.'],
+            [
+                'caption' => 'Ouvrez la Mine à ciel ouvert depuis le guide, puis cliquez sur « Améliorer au niveau 1 ».',
+                'image' => ['file' => 'mine-fiche', 'width' => 300, 'height' => 907, 'alt' => 'Fiche Mine à ciel ouvert : rang basique, coûts, aperçu des gains et bouton Améliorer au niveau 1.', 'x' => 69.8, 'y' => 96.5],
+            ],
+            [
+                'caption' => 'Revenez à la fiche : « Niveau actuel 1 » confirme que la construction est terminée.',
+                'image' => ['file' => 'mine-resultat', 'width' => 300, 'height' => 666, 'alt' => 'Fiche Mine à ciel ouvert après construction avec le niveau actuel 1.'],
+            ],
         ],
         'power_plant' => [
-            ['mine-commande', 305, 45, 'Bouton Améliorer au niveau 1 du catalogue', 'Sur la fiche Centrale nucléaire, lancez le niveau 1 avec ce bouton.'],
-            ['centrale-energie', 305, 218, 'Conseil sur la production et la consommation d’électricité', 'Comparez production et consommation dans le bilan ; le jalon attend la fin de la centrale.'],
+            [
+                'caption' => 'Ouvrez la Centrale nucléaire et cliquez sur « Améliorer au niveau 1 ».',
+                'image' => ['file' => 'centrale-fiche', 'width' => 300, 'height' => 861, 'alt' => 'Fiche Centrale nucléaire avec son bilan énergétique et le bouton Améliorer au niveau 1.', 'x' => 69.8, 'y' => 96],
+            ],
+            [
+                'caption' => 'Une fois la centrale au niveau 1, comparez production et consommation d’électricité dans la barre de ressources.',
+            ],
         ],
         'nano_workshop' => [
-            ['mine-commande', 305, 45, 'Bouton Améliorer au niveau 1 du catalogue', 'Sur la fiche Atelier de nanofabrication, utilisez ce bouton.'],
-            ['nano-niveau', 305, 25, 'Niveau affiché sur la fiche de l’atelier', 'Le niveau affiché après la file doit être au moins 1 ; cet exemple montre un atelier déjà amélioré.'],
+            [
+                'caption' => 'Ouvrez l’Atelier de nanofabrication et cliquez sur « Améliorer au niveau 1 ».',
+                'image' => ['file' => 'nano-fiche', 'width' => 300, 'height' => 793, 'alt' => 'Fiche Atelier de nanofabrication, rang basique et bouton Améliorer au niveau 1.', 'x' => 69.8, 'y' => 95.6],
+            ],
+            [
+                'caption' => 'Revenez à la fiche après la file : le niveau actuel de l’atelier doit être au moins 1.',
+            ],
         ],
         'metal_storage' => [
-            ['depot-prerequis', 305, 84, 'Prérequis du dépôt : Mine à ciel ouvert basique niveau 5', 'Tant que le bouton est verrouillé, le lien « Mine à ciel ouvert » indique le niveau à atteindre.'],
-            ['depot-capacite', 305, 258, 'Aide du dépôt : capacité totale et capacité protégée affichées séparément', 'Comparez les deux limites. Une fois le dépôt terminé, la fiche indique son nouveau niveau.'],
+            [
+                'caption' => 'Ouvrez le Dépôt de minerais. Si sa commande est verrouillée, ouvrez « Mine à ciel ouvert », le prérequis de niveau 5.',
+                'image' => ['file' => 'depot-fiche', 'width' => 300, 'height' => 949, 'alt' => 'Fiche Dépôt de minerais : capacité totale, capacité protégée et lien du prérequis Mine à ciel ouvert.', 'x' => 75.4, 'y' => 91.6],
+            ],
+            [
+                'caption' => 'Une fois le dépôt construit, revenez à sa fiche. La capacité totale ne correspond pas à la quantité protégée du pillage.',
+            ],
         ],
         'laboratory' => [
-            ['mine-commande', 305, 45, 'Bouton Améliorer au niveau 1 du catalogue', 'Ouvrez le Laboratoire colonial basique et lancez le niveau 1.'],
-            ['laboratoire-niveau', 305, 24, 'Niveau actuel 1 sur la fiche du laboratoire', 'Quand le niveau 1 est en place, vous pouvez passer à Recherche sur cette colonie.'],
+            [
+                'caption' => 'Ouvrez le Laboratoire colonial et cliquez sur « Améliorer au niveau 1 ».',
+                'image' => ['file' => 'laboratoire-fiche', 'width' => 300, 'height' => 787, 'alt' => 'Fiche Laboratoire colonial, rang basique et commande Améliorer au niveau 1.', 'x' => 69.8, 'y' => 96.2],
+            ],
+            [
+                'caption' => 'Le niveau 1 du Laboratoire colonial permet de lancer une recherche de base depuis cette colonie.',
+            ],
         ],
         'research' => [
-            ['recherche-commande', 305, 45, 'Bouton Rechercher le niveau 1', 'Dans Recherche, sur Génie civil colonial basique, cliquez sur « Rechercher le niveau 1 ».'],
+            [
+                'caption' => 'Ouvrez la fiche Génie civil colonial et cliquez sur « Rechercher le niveau 1 ».',
+                'image' => ['file' => 'recherche-fiche', 'width' => 300, 'height' => 894, 'alt' => 'Fiche Génie civil colonial avec les prérequis et la commande Rechercher le niveau 1.', 'x' => 69.8, 'y' => 96.1],
+            ],
+            [
+                'caption' => 'Après la file, la fiche de la technologie de base indique le niveau effectivement atteint.',
+            ],
         ],
         'assembly_yard' => [
-            ['mine-commande', 305, 45, 'Bouton Améliorer au niveau 1 du catalogue', 'Lorsque les niveaux de mine et d’atelier requis sont atteints, lancez le niveau 1 du Chantier d’assemblage.'],
-            ['chantier-niveau', 305, 25, 'Niveau actuel 1 sur la fiche du chantier', 'Quand le niveau 1 est affiché, ouvrez le Chantier spatial pour commander une sonde.'],
+            [
+                'caption' => 'Ouvrez le Chantier d’assemblage. Lorsque ses prérequis sont prêts, cliquez sur « Améliorer au niveau 1 ».',
+                'image' => ['file' => 'chantier-fiche', 'width' => 300, 'height' => 820, 'alt' => 'Fiche Chantier d’assemblage, rang basique et bouton Améliorer au niveau 1.', 'x' => 69.8, 'y' => 95.8],
+            ],
+            [
+                'caption' => 'Quand le rang basique est au niveau 1, passez au Chantier spatial pour commander la sonde.',
+            ],
         ],
         'ship' => [
-            ['sonde-quantite', 305, 130, 'Commande de chantier : quantité 1 et bouton Construire', 'Sur la Sonde de reconnaissance basique, laissez 1 en quantité et cliquez sur « Construire ».'],
-            ['exploration-composition', 370, 115, 'Composition d’une flotte : Sonde de reconnaissance disponible', 'Après construction, une Sonde de reconnaissance doit être disponible dans la composition de mission.'],
+            [
+                'caption' => 'Ouvrez la fiche de la sonde, laissez la quantité à 1, puis cliquez sur « Construire ».',
+                'image' => ['file' => 'sonde-fiche', 'width' => 300, 'height' => 1374, 'alt' => 'Fiche Sonde de reconnaissance au Chantier spatial avec quantité 1 et bouton Construire.', 'x' => 69.8, 'y' => 97.5],
+            ],
+            [
+                'caption' => 'Après la fin de sa construction, la sonde apparaît parmi les vaisseaux disponibles pour composer une mission.',
+            ],
         ],
         'exploration' => [
-            ['exploration-destination', 420, 445, 'Mission Exploration et choix d’un système non exploré', 'Après avoir mis une sonde dans la composition, choisissez « Systèmes non explorés » et un système, puis vérifiez la mission.'],
-            ['exploration-composition', 370, 115, 'Quantité 1 à côté de la Sonde de reconnaissance', 'Vérifiez la composition avant envoi : cette sonde est consommée lorsque le nouveau système est révélé.'],
+            [
+                'caption' => 'Préparez une exploration avec une sonde, choisissez un système non exploré et cliquez sur « Vérifier la mission ».',
+                'image' => ['file' => 'exploration-fiche', 'width' => 640, 'height' => 294, 'alt' => 'Étape Destination de la mission Exploration, choix Systèmes non explorés et bouton Vérifier la mission.', 'x' => 39.4, 'y' => 89.8],
+            ],
+            [
+                'caption' => 'Lorsque la mission arrive, retournez dans Galaxie : le système révélé fait maintenant partie de vos découvertes.',
+            ],
         ],
         'espionage' => [
-            ['espionnage-destination', 420, 501, 'Type de destination PNJ sélectionné pour l’Espionnage', 'Sur l’écran de destination, sélectionnez « PNJ », choisissez une cible connue et vérifiez la mission.'],
-            ['espionnage-composition', 370, 115, 'Une Sonde de reconnaissance basique saisie dans la composition', 'Pour le parcours guidé, vérifiez que seule cette sonde part, puis consultez le rapport à l’arrivée.'],
+            [
+                'caption' => 'Préparez un espionnage PNJ avec une seule sonde basique, choisissez un PNJ connu puis cliquez sur « Vérifier la mission ».',
+                'image' => ['file' => 'espionnage-fiche', 'width' => 640, 'height' => 294, 'alt' => 'Étape Destination de la mission Espionnage, catégorie PNJ sélectionnée et bouton Vérifier la mission.', 'x' => 39.4, 'y' => 89.8],
+            ],
+            [
+                'caption' => 'À l’arrivée, ouvrez Rapports puis Espionnage. Un résultat détecté compte pour le jalon, sans fournir d’informations sur la cible.',
+            ],
         ],
         'pirate_exercise' => [
-            ['exercice-simulation', 146, 46, 'Bouton Lancer la simulation', 'Dans le briefing privé, cliquez sur « Lancer la simulation » sans engager de flotte réelle.'],
-            ['exercice-rapport', 500, 235, 'Rapport affichant le résultat, les survivants et les pertes', 'Dès que le rapport s’affiche, l’exercice compte, même si les pirates l’emportent.'],
+            [
+                'caption' => 'Ouvrez le briefing de l’exercice et cliquez sur « Lancer la simulation ».',
+                'image' => ['file' => 'exercice-fiche', 'width' => 640, 'height' => 177, 'alt' => 'Briefing de l’exercice pirate expliquant la simulation et bouton Lancer la simulation.', 'x' => 14.4, 'y' => 81.8],
+            ],
+            [
+                'caption' => 'Lisez le rapport de l’exercice. Sa présence confirme que l’exercice a été effectué, quel que soit le résultat.',
+                'image' => ['file' => 'exercice-resultat', 'width' => 640, 'height' => 214, 'alt' => 'Rapport d’exercice affichant le sort du convoi, les survivants et les pertes fictives.'],
+            ],
         ],
         'colonization' => [
-            ['colonisation-destination', 420, 445, 'Colonisation : type de destination Planètes neutres et planète découverte', 'Après avoir sélectionné un colonisateur, choisissez une planète neutre découverte et vérifiez la mission.'],
-            ['colonisation-composition', 370, 115, 'Vaisseau colonisateur basique sélectionné dans la composition', 'Vérifiez le colonisateur avant de partir. À l’arrivée réussie, la nouvelle colonie apparaît dans Planètes.'],
+            [
+                'caption' => 'Préparez une colonisation avec un colonisateur, choisissez une planète neutre découverte puis cliquez sur « Vérifier la mission ».',
+                'image' => ['file' => 'colonisation-fiche', 'width' => 640, 'height' => 294, 'alt' => 'Étape Destination de la mission Colonisation, planète neutre découverte et bouton Vérifier la mission.', 'x' => 39.4, 'y' => 89.8],
+            ],
+            [
+                'caption' => 'À l’arrivée réussie, cherchez la nouvelle colonie dans Planètes. Vérifier le trajet ou envoyer la flotte ne valide pas encore le jalon.',
+            ],
         ],
     ];
 
@@ -182,7 +245,7 @@ final class FirstStepsView
         return count($this->firstSteps->guideEvidence($membership, $planet, $exerciseInResponse)) < count(FirstStep::cases());
     }
 
-    /** @return array{next:string,guide:array,count:int,total:int,slides:list<array{string,int,int,string,string}>,validation:string}|null */
+    /** @return array{next:string,guide:array,count:int,total:int,slides:list<array{caption:string,image?:array{file:string,width:int,height:int,alt:string,x?:float,y?:float}}>,validation:string}|null */
     public function panel(PlayerUniverse $membership, Planet $planet): ?array
     {
         $done = $this->firstSteps->guideEvidence($membership, $planet);
