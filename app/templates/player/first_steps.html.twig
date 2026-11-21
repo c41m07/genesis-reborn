@@ -1,0 +1,65 @@
+{% extends 'base.html.twig' %}
+{% block title %}Premiers pas · Genesis Reborn{% endblock %}
+
+{% block body %}
+{% set colony = trainingPlanet %}
+<div class="page-heading">
+    <div>
+        <h1>Premiers pas</h1>
+        <p>Un ordre conseillé pour apprendre le jeu, pas des conditions supplémentaires. Jouez dans l’ordre qui vous convient.</p>
+    </div>
+    {% if colony %}
+        <a class="quiet-button" href="{{ path('app_colony', {id: colony.id}) }}">Retour à la vue générale</a>
+    {% endif %}
+</div>
+{% if colony and trainingRewards is not empty %}
+    <section class="panel account-panel" aria-labelledby="training-reward-title">
+        <h2 id="training-reward-title">Remboursements disponibles</h2>
+        <p>Destination : <strong>{{ colony.name }}</strong>. Si les stocks sont pleins, les remboursements restent en attente. Vous pouvez choisir une autre colonie de cet empire puis revenir ici.</p>
+        {% for reward in trainingRewards %}
+            <form method="post" action="{{ path('app_first_steps_claim') }}" data-turbo="false">
+                <input type="hidden" name="_token" value="{{ csrf_token('first-steps-reward-'~trainingMembership.id~'-'~colony.id~'-'~reward.step_key) }}">
+                <input type="hidden" name="planet" value="{{ colony.id }}">
+                <input type="hidden" name="step" value="{{ reward.step_key }}">
+                <p>{{ training.hints[reward.step_key].title }} : {{ reward.metal|quantity(0) }} métal et {{ reward.nano|quantity(0) }} nanos.</p>
+                <button class="primary" type="submit">Récupérer : {{ training.hints[reward.step_key].title }}</button>
+            </form>
+        {% endfor %}
+    </section>
+{% endif %}
+<section class="panel account-panel first-steps" aria-labelledby="first-steps-heading">
+    <h2 id="first-steps-heading">Développer sa colonie et explorer</h2>
+    <p><strong>{{ training.completed|length }} sur {{ training.hints|length }}</strong> étapes terminées dans <strong>{{ trainingMembership.universe.name }}</strong>.</p>
+    <progress value="{{ training.completed|length }}" max="{{ training.hints|length }}" aria-label="Progression des premiers pas">{{ training.completed|length }} sur {{ training.hints|length }}</progress>
+    {% if not colony %}<p>Vous n’avez pas de colonie active. Vous pouvez tout de même consulter le guide.</p>{% endif %}
+    {% if training.parallel and colony %}
+        <p>N’attendez pas le Dépôt de minerais pour poursuivre le guide.</p>
+        {% include 'player/_first_steps_action.html.twig' with {step: training.parallel, guide: training.hints[training.parallel], colony: colony} only %}
+    {% endif %}
+    <ol class="first-steps-list">
+        {% for step, guide in training.hints %}
+            {% set done = training.completed[step]|default(false) %}
+            <li class="first-step{{ step == training.next ? ' first-step--next' : '' }}">
+                <h3>{{ guide.title }}</h3>
+                <p class="first-step-status"><strong>{{ training.existing[step]|default(false) ? 'Déjà en place' : (done ? 'Terminé' : (step == training.next ? 'Prochaine étape conseillée' : 'À faire')) }}</strong></p>
+                <p>{{ guide.explanation }}</p>
+                <p>{{ guide.action }}</p>
+                {% if step == 'pirate_exercise' or (colony and (not done or step == 'espionage')) %}
+                    {% include 'player/_first_steps_action.html.twig' with {step: step, guide: guide, colony: colony, done: done, actionStyle: step == training.next ? 'primary' : 'secondary'} only %}
+                {% endif %}
+                {% if colony and not done and step == 'exploration' %}
+                    <a class="secondary" href="{{ path('app_map_v2') }}">Repérer un système dans Galaxie</a>
+                {% elseif step == 'espionage' %}
+                    <a class="secondary" href="{{ path('app_combat_reports', {type: 'espionage'}) }}">Consulter les rapports d’espionnage</a>
+                {% elseif colony and not done and step == 'colonization' %}
+                    <a class="secondary" href="{{ path('app_colony', {id: colony.id, section: 'ships', showLockedItems: 1, focusItem: 1, _fragment: 'item-colony_ship-basic'}) }}">Ouvrir la fiche du Vaisseau colonisateur</a>
+                    <a class="secondary" href="{{ path('app_colony', {id: colony.id, section: 'technologies', showLockedItems: 1, focusItem: 1, _fragment: 'item-colonial_expansion-basic'}) }}">Voir les Protocoles de colonisation</a>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ol>
+    <p>Les demandes en file, les départs et les missions interrompues ne comptent pas. Les bâtiments de base déjà en place sur la colonie active et vos recherches basiques sont reconnus, sans paiement rétroactif.</p>
+    <p>Le pilote rembourse une seule Mine à ciel ouvert basique niveau 1 et un seul Génie civil colonial basique niveau 1 lancés depuis les fiches guidées. Le taux est de 25 % du prix en métal et nanos réellement payé, arrondi vers le bas, dans la limite de 96 métal et 52 nanos pour la mine, 240 métal et 130 nanos pour la recherche. Les autres étapes ne donnent aucun lot, hors remplacement de la sonde d’espionnage.</p>
+    {% if training.next is null %}<p><strong>Ces premiers objectifs sont terminés.</strong> Vous pouvez poursuivre librement votre découverte du jeu.</p>{% endif %}
+</section>
+{% endblock %}
