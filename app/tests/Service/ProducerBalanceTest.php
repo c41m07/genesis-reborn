@@ -63,6 +63,24 @@ final class ProducerBalanceTest extends TestCase
         }
         $rules=$this->catalog->rules();
         self::assertSame(4,$rules['antimatter_hydrogen_per_unit']);
+        // La référence historique reste figée ; les deux ajouts approuvés ont chacun une attente stricte.
+        self::assertSame([
+            'metal' => 5000,
+            'electricity' => 0,
+            'antimatter' => 5000,
+            'hydrogen' => 5000,
+            'nano' => 5000,
+        ], $rules['new_account_first_planet_stock']);
+        self::assertSame([
+            ['metal' => 500, 'nano' => 250],
+            ['metal' => 750, 'nano' => 400],
+            ['metal' => 1000, 'nano' => 500],
+            ['metal' => 1250, 'nano' => 650],
+            ['metal' => 1500, 'nano' => 750],
+            ['metal' => 1750, 'nano' => 900],
+            ['metal' => 2500, 'nano' => 1250],
+        ], $rules['daily_reward_experiment']);
+        unset($rules['new_account_first_planet_stock'], $rules['daily_reward_experiment']);
         $old=$fixture['historical_rules'];
         foreach(['antimatter_hydrogen_per_unit','initial_stock','colony_initial_stock','base_production','base_storage_capacity'] as $field)unset($rules[$field],$old[$field]);
         self::assertSame($old,$rules);
