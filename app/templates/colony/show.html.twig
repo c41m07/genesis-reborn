@@ -6,7 +6,9 @@
 <div class="page-heading">
     <div>
         <h1>{{ {overview:'Vue générale',buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[section] }}<span>.</span></h1>
-        {% if section == 'overview' %}<p>Agir sur la colonie active, suivre tout l’empire.</p>{% endif %}
+        {% if section == 'overview' %}
+            <p>Agir sur la colonie active, suivre tout l’empire.</p>
+        {% endif %}
     </div>
     {% if section == 'overview' %}
         <a class="quiet-button" href="{{ path('app_daily_reward', {colony: planet.id}) }}">Récompense quotidienne</a>
@@ -17,6 +19,7 @@
 <div class="colony-layout colony-layout--integrated"><div class="colony-content">
 {% if section=='overview' %}
 {% include 'colony/_overview_attention.html.twig' %}
+{% include 'player/_first_steps_overview.html.twig' %}
 <section class="colony-banner panel empire-banner" aria-labelledby="overview-colony-title">
     <picture><source type="image/webp" srcset="{{ asset('art/colony-overview.webp') }}"><img class="colony-scene" src="{{ asset('art/colony-overview.png') }}" alt="" aria-hidden="true"></picture>
     <div class="hero-content">
