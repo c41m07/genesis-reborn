@@ -4,27 +4,150 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Service\PirateCampaign\PiratePilotLocalReader;
+use App\Entity\Planet;
+use App\Service\PirateCampaign\{PiratePilotActiveColony, PiratePilotAttackCommand, PiratePilotEncounterForms, PiratePilotLocalReader, PiratePilotScoutCommand};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\When;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\{Request, Response};
 use Symfony\Component\Routing\Attribute\Route;
 
 #[When(env: 'dev')]
 final class PiratePilotLocalController extends AbstractController
 {
+    private const PRIVATE_HEADERS = ['Cache-Control' => 'private, no-store'];
+
     #[Route('/evenements/campagne-pirate/{missionNumber}', name: 'app_dev_pirate_pilot',
         requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['GET'], env: 'dev')]
-    public function dossier(PiratePilotLocalReader $reader, ?int $missionNumber = null): Response
-    {
+    public function dossier(
+        Request $request, PiratePilotLocalReader $reader, PiratePilotActiveColony $colonies,
+        PiratePilotEncounterForms $forms, ?int $missionNumber = null,
+    ): Response {
         $dossier = $reader->dossier($missionNumber);
-        $headers = ['Cache-Control' => 'private, no-store'];
         if ($dossier === null) {
-            return new Response('Page introuvable.', Response::HTTP_NOT_FOUND, $headers);
+            return $this->missing();
+        }
+        // L'historique reste consultable : il n'instancie aucun aperçu ni jeton de commande.
+        $current = $dossier['current'] !== null && $dossier['selected'] === $dossier['current'];
+        $origin = $current ? $colonies->forRequest($request) : null;
+        $form = $origin === null ? null : ($forms->scoutConfirmation($origin, $dossier['selected'])
+            ?? $forms->attackChoices($origin, $dossier['selected']));
+
+        return $this->page($dossier, $form, $origin, $current && $origin === null);
+    }
+
+    #[Route('/evenements/campagne-pirate/{missionNumber}/sonde', name: 'app_dev_pirate_pilot_scout',
+        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: 'dev')]
+    public function scout(
+        Request $request, int $missionNumber, PiratePilotLocalReader $reader, PiratePilotActiveColony $colonies,
+        PiratePilotScoutCommand $scout,
+    ): Response {
+        $scope = $this->scope($request, $missionNumber, $reader, $colonies);
+        if ($scope instanceof Response) {
+            return $scope;
+        }
+        $body = $this->body($request);
+        try {
+            if ($body === null || !$scout->execute($scope[1], $missionNumber, $body[0], $body[1])) {
+                return $this->stale();
+            }
+        } catch (\DomainException) {
+            return $this->stale();
         }
 
+        return $this->afterCommand($missionNumber);
+    }
+
+    #[Route('/evenements/campagne-pirate/{missionNumber}/attaque/apercu', name: 'app_dev_pirate_pilot_attack_preview',
+        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: 'dev')]
+    public function attackPreview(
+        Request $request, int $missionNumber, PiratePilotLocalReader $reader, PiratePilotActiveColony $colonies,
+        PiratePilotEncounterForms $forms,
+    ): Response {
+        $scope = $this->scope($request, $missionNumber, $reader, $colonies);
+        if ($scope instanceof Response) {
+            return $scope;
+        }
+        $body = $this->body($request);
+        $card = $body === null ? null : $forms->attackConfirmation($scope[1], $missionNumber, $body[0], $body[1]);
+        if ($card === null) {
+            return $this->stale();
+        }
+
+        return $this->page($scope[0], $card, $scope[1], false);
+    }
+
+    #[Route('/evenements/campagne-pirate/{missionNumber}/attaque', name: 'app_dev_pirate_pilot_attack',
+        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: 'dev')]
+    public function attack(
+        Request $request, int $missionNumber, PiratePilotLocalReader $reader, PiratePilotActiveColony $colonies,
+        PiratePilotAttackCommand $attack,
+    ): Response {
+        $scope = $this->scope($request, $missionNumber, $reader, $colonies);
+        if ($scope instanceof Response) {
+            return $scope;
+        }
+        $body = $this->body($request);
+        try {
+            if ($body === null || !$attack->execute($scope[1], $missionNumber, $body[0], $body[1])) {
+                return $this->stale();
+            }
+        } catch (\DomainException) {
+            return $this->stale();
+        }
+
+        return $this->afterCommand($missionNumber);
+    }
+
+    private function scope(Request $request, int $mission, PiratePilotLocalReader $reader, PiratePilotActiveColony $colonies): array|Response
+    {
+        $dossier = $reader->dossier($mission);
+        if ($dossier === null) {
+            return $this->missing();
+        }
+        if ($dossier['current'] !== $mission || $dossier['selected'] !== $mission) {
+            return $this->stale();
+        }
+        $origin = $colonies->forRequest($request);
+
+        return $origin === null ? $this->stale() : [$dossier, $origin];
+    }
+
+    /** Extraction volontaire d'un formulaire HTML normal ; le service vérifie le contenu restant. */
+    private function body(Request $request): ?array
+    {
+        $post = $request->request->all();
+        $token = $post['_token'] ?? null;
+        if (!is_string($token) || $token === '' || strlen($token) > 512) {
+            return null;
+        }
+        unset($post['_token']);
+
+        return [$post, $token];
+    }
+
+    private function page(array $dossier, ?array $form, ?Planet $origin, bool $needsColony): Response
+    {
         return $this->render('player/pirate_campaign/pilot_local.html.twig', [
-            'dossier' => $dossier,
-        ], new Response(headers: $headers));
+            'dossier' => $dossier, 'encounter_form' => $form,
+            'origin_label' => $origin?->name, 'needs_colony' => $needsColony,
+        ], new Response(headers: self::PRIVATE_HEADERS));
+    }
+
+    private function missing(): Response
+    {
+        return new Response('Page introuvable.', Response::HTTP_NOT_FOUND, self::PRIVATE_HEADERS);
+    }
+
+    private function stale(): Response
+    {
+        return new Response('Cette commande n’est plus disponible. Rouvrez le dossier de campagne.', Response::HTTP_CONFLICT, self::PRIVATE_HEADERS);
+    }
+
+    private function afterCommand(int $mission): Response
+    {
+        $result = $this->redirectToRoute('app_dev_pirate_pilot', ['missionNumber' => $mission], Response::HTTP_SEE_OTHER);
+        $result->headers->add(self::PRIVATE_HEADERS);
+
+        return $result;
     }
 }

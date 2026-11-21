@@ -1,0 +1,49 @@
+<section class="panel account-panel" aria-labelledby="pirate-command-title">
+    <h2 id="pirate-command-title">
+        {% if form.action == 'reconnaissance' %}Préparer la reconnaissance
+        {% elseif form.kind == 'selection' %}Choisir l’escorte
+        {% else %}Confirmer l’attaque{% endif %}
+    </h2>
+    <p>Colonie de départ : <strong>{{ origin }}</strong></p>
+    {% if form.kind == 'selection' %}
+        <p>Choisissez jusqu’à {{ form.total_limit }} vaisseaux au total. L’aperçu ne déclenche aucun départ.</p>
+        <form method="post" action="{{ path('app_dev_pirate_pilot_attack_preview', {missionNumber: mission}) }}">
+            <input type="hidden" name="_token" value="{{ form.token }}">
+            <fieldset>
+                <legend>Vaisseaux disponibles</legend>
+                {% for row in form.rows %}
+                    <div>
+                        <label for="pirate-escort-{{ row.ordinal }}">{{ row.label }} ({{ row.maximum }} max.)</label>
+                        <input id="pirate-escort-{{ row.ordinal }}" name="escort[{{ row.ordinal }}]" type="number"
+                            min="0" max="{{ row.maximum }}" step="1" value="0" required>
+                    </div>
+                {% endfor %}
+            </fieldset>
+            <button type="submit">Vérifier le devis d’attaque</button>
+        </form>
+    {% else %}
+        {% if form.notice is defined %}<p>{{ form.notice }}</p>{% endif %}
+        {% if form.selected is defined %}
+            <ul aria-label="Escorte choisie">
+                {% for ship in form.selected %}<li>{{ ship.label }} : {{ ship.quantity }}</li>{% endfor %}
+            </ul>
+        {% endif %}
+        <dl>
+            <dt>Durée du trajet aller</dt><dd>{{ form.quote.seconds }} s</dd>
+            <dt>Hydrogène réservé</dt><dd>{{ form.quote.hydrogen|replace({'.': ','}) }} H₂</dd>
+            {% if form.quote.orbit is defined %}
+                <dt>Dont réserve d’orbite</dt><dd>{{ form.quote.orbit|replace({'.': ','}) }} H₂</dd>
+            {% endif %}
+            <dt>Pris dans la réserve embarquée</dt><dd>{{ form.quote.hold|replace({'.': ','}) }} H₂</dd>
+            <dt>Pris dans le stock de la colonie</dt><dd>{{ form.quote.planet|replace({'.': ','}) }} H₂</dd>
+        </dl>
+        <form method="post" action="{{ path(form.action == 'reconnaissance' ? 'app_dev_pirate_pilot_scout' : 'app_dev_pirate_pilot_attack', {missionNumber: mission}) }}">
+            <input type="hidden" name="_token" value="{{ form.token }}">
+            {% for ordinal, quantity in form.hidden_escort %}
+                <input type="hidden" name="escort[{{ ordinal }}]" value="{{ quantity }}">
+            {% endfor %}
+            <button type="submit">{{ form.action == 'reconnaissance' ? 'Envoyer la sonde' : 'Confirmer et envoyer l’escorte' }}</button>
+        </form>
+        {% if form.action == 'attack' %}<p><a href="{{ path('app_dev_pirate_pilot', {missionNumber: mission}) }}">Modifier l’escorte</a></p>{% endif %}
+    {% endif %}
+</section>

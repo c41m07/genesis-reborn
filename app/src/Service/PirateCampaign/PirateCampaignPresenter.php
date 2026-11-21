@@ -111,7 +111,7 @@ final readonly class PirateCampaignPresenter
             $progress['key'],
             $status,
             $narrative,
-            $this->dateRows($progress['dates']),
+            $this->dateRows($progress['dates'], $progress['phase'], $progress['returning']),
             $formation,
             $losses,
             $return,
@@ -165,11 +165,17 @@ final readonly class PirateCampaignPresenter
         ];
     }
 
-    private function dateRows(array $dates): array
+    private function dateRows(array $dates, string $phase, ?string $returning): array
     {
         $rows = [];
         foreach ($dates as $key => $at) {
-            $rows[] = ['label' => self::DATE_LABELS[$key], 'at' => $at];
+            $countdown = match ($key) {
+                'scout_due' => $phase === PirateCampaignMoment::ReconnaissanceEnRoute->name,
+                'attack_arrival_due' => $phase === PirateCampaignMoment::AttaqueEngagee->name && !isset($dates['attack_arrival_observed']),
+                'return_due' => $returning === 'scheduled',
+                default => false, // Ne pas déduire une issue, un crédit ou une clôture d'un chronomètre.
+            };
+            $rows[] = ['label' => self::DATE_LABELS[$key], 'at' => $at, 'countdown' => $countdown];
         }
 
         return $rows;

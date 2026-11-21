@@ -20,7 +20,11 @@
         <dl>
             {% for event in briefing.dates %}
                 <dt>{{ event.label }}</dt>
-                <dd><time datetime="{{ event.at }}">{{ event.at|date('d/m/Y à H:i:s', 'UTC') }} UTC</time></dd>
+                <dd{% if event.countdown %} data-controller="pirate-countdown" data-pirate-countdown-deadline-value="{{ event.at }}"
+                    data-pirate-countdown-server-value="{{ date()|date('c','UTC') }}"{% endif %}>
+                    <time datetime="{{ event.at }}">{{ event.at|date('d/m/Y à H:i:s', 'UTC') }} UTC</time>
+                    {% if event.countdown %}<span data-pirate-countdown-target="remaining" hidden></span>{% endif %}
+                </dd>
             {% endfor %}
         </dl>
     {% endif %}

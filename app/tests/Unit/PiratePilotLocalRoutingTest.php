@@ -6,15 +6,16 @@ namespace App\Tests\Unit;
 
 use App\Controller\PiratePilotLocalController;
 use App\Repository\{PirateCampaignReadRepository, PirateConvoyReadRepository};
-use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignWorkspace, PirateConvoyDossierProjection, PiratePilotLocalReader};
+use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignWorkspace, PirateConvoyDossierProjection, PiratePilotActiveColony, PiratePilotAttackCommand, PiratePilotEncounterForms, PiratePilotLocalReader, PiratePilotScoutCommand};
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Routing\AttributeRouteControllerLoader;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpFoundation\Request;
 
 final class PiratePilotLocalRoutingTest extends TestCase
 {
-    public function testNativeRoutingOnlyImportsTheGetInDev(): void
+    public function testNativeRoutingOnlyImportsTheGetAndExactPostActionsInDev(): void
     {
         $controller = PiratePilotLocalController::class;
         $name = 'app_dev_pirate_pilot';
@@ -24,8 +25,19 @@ final class PiratePilotLocalRoutingTest extends TestCase
         self::assertTrue($route->hasDefault('missionNumber'));
         self::assertNull($route->getDefault('missionNumber'));
 
+        $expected = [
+            $name => ['GET'],
+            'app_dev_pirate_pilot_scout' => ['POST'],
+            'app_dev_pirate_pilot_attack_preview' => ['POST'],
+            'app_dev_pirate_pilot_attack' => ['POST'],
+        ];
+        $devRoutes = (new AttributeRouteControllerLoader('dev'))->load($controller);
+        self::assertCount(4, $devRoutes);
+        foreach ($expected as $routeName => $methods) {
+            self::assertSame($methods, $devRoutes->get($routeName)?->getMethods(), $routeName);
+        }
         foreach (['prod', 'alpha', 'test'] as $env) {
-            self::assertNull((new AttributeRouteControllerLoader($env))->load($controller)->get($name), $env);
+            self::assertCount(0, (new AttributeRouteControllerLoader($env))->load($controller), $env);
         }
     }
 
@@ -43,11 +55,25 @@ final class PiratePilotLocalRoutingTest extends TestCase
         $reader = new PiratePilotLocalReader($security, $clock, PiratePilotLocalReader::configuredGate('dev', '0', '0'),
             $repository, $catalogue, $workspace, $convoys, new PirateConvoyDossierProjection());
 
-        $response = (new PiratePilotLocalController())->dossier($reader, 123);
-        self::assertSame(404, $response->getStatusCode());
-        self::assertTrue($response->headers->hasCacheControlDirective('private'));
-        self::assertTrue($response->headers->hasCacheControlDirective('no-store'));
-        self::assertSame('Page introuvable.', $response->getContent());
+        $colonies = (new \ReflectionClass(PiratePilotActiveColony::class))->newInstanceWithoutConstructor();
+        $forms = (new \ReflectionClass(PiratePilotEncounterForms::class))->newInstanceWithoutConstructor();
+        $scout = (new \ReflectionClass(PiratePilotScoutCommand::class))->newInstanceWithoutConstructor();
+        $attack = (new \ReflectionClass(PiratePilotAttackCommand::class))->newInstanceWithoutConstructor();
+        $controller = new PiratePilotLocalController();
+        $get = Request::create('/evenements/campagne-pirate/1');
+        $post = Request::create('/evenements/campagne-pirate/1', 'POST');
+        $responses = [
+            $controller->dossier($get, $reader, $colonies, $forms, 1),
+            $controller->scout($post, 1, $reader, $colonies, $scout),
+            $controller->attackPreview($post, 1, $reader, $colonies, $forms),
+            $controller->attack($post, 1, $reader, $colonies, $attack),
+        ];
+        foreach ($responses as $response) {
+            self::assertSame(404, $response->getStatusCode());
+            self::assertTrue($response->headers->hasCacheControlDirective('private'));
+            self::assertTrue($response->headers->hasCacheControlDirective('no-store'));
+            self::assertSame('Page introuvable.', $response->getContent());
+        }
     }
 
     public function testAbsentOrMalformedLocalOptInKeepsTheReadGateClosed(): void

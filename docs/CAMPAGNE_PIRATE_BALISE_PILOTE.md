@@ -57,3 +57,35 @@ mission. Le CSRF contient l’ordinal, la clé canonique et la preuve de progres
 en plus du contexte, du devis et, pour l’attaque, de la composition précise.
 Après la vingtième victoire, aucune nouvelle commande de rencontre n’est proposée.
 Aucune lecture ne crédite un convoi ni ne modifie un retour.
+
+## Premier circuit HTTP local : reconnaissance et attaque
+
+Le dossier et ses trois POST n’existent que dans le routeur Symfony dev ;
+l’opt-in local reste fermé par défaut. Aucun menu du jeu ne les publie.
+La colonie et le compte viennent de la session serveur, de la participation
+active relue et de la propriété courante. Sans sélection explicite, le
+premier choix initial du jeu est visible avant le clic ; si une sélection
+explicite est devenue invalide, aucun changement d’origine n’est inventé.
+
+Le GET et l’aperçu ne règlent jamais de convoi ni ne déclenchent d’ordre
+ou de suivi de présence. Le POST de scout confirme son devis. Le POST
+d’aperçu d’attaque ne prépare qu’une confirmation distincte, que le POST
+final relit à nouveau sous verrou. Les formulaires ne transportent ni
+coordonnées, ni colonie, ni coûts et aucun résultat brut du moteur. Seuls
+le jeton Symfony et, pour l’attaque, les ordinaux et quantités choisis
+sont acceptés. Après réussite : retour 303 au dossier. Un refus reste
+neutre (404 hors accès, 409 pour une intention désormais indisponible).
+Toutes les réponses du contrôleur sont privées et non mises en cache.
+
+Le compte à rebours est seulement une aide d’affichage, calculée à partir
+d’une échéance persistée et de l’horloge monotone du navigateur. Il ne
+modifie pas l’heure absolue, n’appelle pas de serveur et n’affiche ni
+arrivée ni victoire au moment zéro. Les heures absolues restent utilisables
+sans JavaScript ; seul le vrai rapport ou le vrai retour confirmé déclenche
+l’étape suivante lors d’une lecture explicite. Les dossiers passés et le
+dossier terminé demeurent lisibles sans formulaire.
+
+Les actions de récupération de convoi et de repli des survivants ne sont
+pas encore routées par ce raccordement. Le circuit n’est pas annoncé
+jouable avant une recette privée comprenant session Symfony authentique,
+transport Messenger réellement relayé et workers, sans compte ni donnée réelle.
