@@ -68,6 +68,36 @@ final class PirateReconnaissanceService
         );
     }
 
+    /**
+     * Devis interne sans effet, appelé sous les mêmes verrous que le futur départ.
+     * Les chiffres viennent du moteur, pas d'une requête ou du jeton d'interface.
+     * @return array{seconds:int,hydrogen:float,hold:float,planet:float}|null
+     */
+    public function pilotScoutQuoteLocked(PlayerUniverse $membership, Planet $origin, SolarSystem $system): ?array
+    {
+        if ($membership->universe->slug !== 'omega-1') {
+            return null;
+        }
+        try {
+            $this->vacations->assertCanSendFleet($membership);
+            $probe = $this->lockProbe($membership, $origin);
+            $fuel = PirateCampaignFuel::scout($this->flightQuote($membership, $origin, $system));
+            $paid = $this->hold->departure($probe->fleet, ['probe' => ['basic' => 1]], $fuel->amountForDeparture());
+        } catch (\DomainException) {
+            return null;
+        }
+        if ($paid['planet_fuel'] > 0.0) {
+            $this->repository->lockedPlanetResources($origin);
+            $stocks = $this->resources->snapshot($origin);
+            if (($stocks['hydrogen']['stock'] ?? 0.0) < $paid['planet_fuel']) {
+                return null;
+            }
+        }
+
+        return ['seconds' => $fuel->legSeconds, 'hydrogen' => $fuel->amountForDeparture(),
+            'hold' => $paid['stored_fuel_used'], 'planet' => $paid['planet_fuel']];
+    }
+
     /** Source interne synthétique ; une preuve ancienne sans profil ne permet qu'un rapport. */
     public function launch(
         PlayerUniverse $membership,
