@@ -36,9 +36,21 @@
     },
     exploration: {
         title: 'Premier système exploré',
-        explanation: 'Explorer révèle un système jusque-là inconnu dans cet univers. La mission consomme une sonde à l’arrivée : prévoyez d’en construire une autre au chantier pour le futur espionnage.',
+        explanation: 'Explorer révèle un système jusque-là inconnu dans cet univers. La mission consomme une sonde à l’arrivée : prévoyez d’en construire une autre au chantier pour l’espionnage.',
         action: 'Repérez un système non cartographié dans Galaxie. Dans Flottes, préparez une mission Explorer avec une sonde, choisissez ce système, puis vérifiez le trajet et le carburant avant l’envoi.',
-        label: 'Préparer une exploration', route: 'app_fleet_prepare'
+        label: 'Préparer une exploration', mission: 'explore'
+    },
+    espionage: {
+        title: 'Premier rapport d’espionnage PNJ',
+        explanation: 'Un premier rapport vous montre comment lire le résultat. « Détecté » signifie qu’aucun renseignement n’a été obtenu. Même sans détection, la quantité d’informations dépend de la mission.',
+        action: 'Préparez Espionnage avec une seule sonde, sans escorte. Dans le groupe PNJ, choisissez une planète découverte dont le propriétaire est affiché « PNJ », pas un empire nommé ni un autre joueur. La sonde envoyée est consommée à l’arrivée. Après un rapport « Détecté », vous pouvez retenter avec une autre sonde.',
+        label: 'Préparer un espionnage PNJ', mission: 'spy'
+    },
+    colonization: {
+        title: 'Première colonisation',
+        explanation: 'Une planète libre agrandit votre empire. Vous pouvez la coloniser sans avoir validé les autres étapes du guide.',
+        action: 'Vérifiez la place disponible et les prérequis du Vaisseau colonisateur. Une fois le vaisseau construit, préparez Colonisation. Choisissez dans Planètes neutres une planète découverte indiquée « Inhabitée », ni occupée ni PNJ. Vérifiez le trajet avant l’envoi : le colonisateur est consommé si la colonie est fondée.',
+        label: 'Préparer une colonisation', mission: 'colonize'
     }
 } %}
 <div class="page-heading">
@@ -66,10 +78,10 @@
                 <p class="first-step-status"><strong>{{ done ? 'Terminé' : (step == next ? 'Prochaine étape conseillée' : 'À faire') }}</strong></p>
                 <p>{{ guide.explanation }}</p>
                 <p>{{ guide.action }}</p>
-                {% if colony and not done %}
+                {% if colony and (not done or step.value == 'espionage') %}
                     {% set actionClass = step == next ? 'primary' : 'secondary' %}
-                    {% if guide.route is defined %}
-                        <a class="{{ actionClass }}" href="{{ path(guide.route, {mission: 'explore', origin: colony.id}) }}">{{ guide.label }}</a>
+                    {% if guide.mission is defined %}
+                        <a class="{{ actionClass }}" href="{{ path('app_fleet_prepare', {mission: guide.mission, origin: colony.id}) }}">{{ guide.label }}</a>
                     {% else %}
                         <a class="{{ actionClass }}" href="{{ path('app_colony', {id: colony.id, section: guide.section, showLockedItems: 1, focusItem: 1}) }}#item-{{ guide.item }}-basic">{{ guide.label }}</a>
                     {% endif %}
@@ -79,12 +91,16 @@
                         <a class="secondary" href="{{ path('app_colony', {id: colony.id, section: 'buildings', showLockedItems: 1, focusItem: 1}) }}#item-shipyard-basic">Ouvrir le Chantier spatial</a>
                     {% elseif step.value == 'exploration' %}
                         <a class="secondary" href="{{ path('app_map_v2') }}">Repérer un système dans Galaxie</a>
+                    {% elseif step.value == 'espionage' %}
+                        <a class="secondary" href="{{ path('app_combat_reports', {type: 'espionage'}) }}">Consulter les rapports d’espionnage</a>
+                    {% elseif step.value == 'colonization' %}
+                        <a class="secondary" href="{{ path('app_colony', {id: colony.id, section: 'ships', showLockedItems: 1, focusItem: 1}) }}#item-colony_ship-basic">Ouvrir la fiche du Vaisseau colonisateur</a>
                     {% endif %}
                 {% endif %}
             </li>
         {% endfor %}
     </ol>
-    <p>Une étape se valide à la fin réelle d’une construction, d’une recherche ou à l’arrivée d’une exploration qui découvre un système. Une mise en file, un départ ou une découverte déjà connue ne compte pas. La progression déjà présente dans le jeu n’est pas automatiquement reprise.</p>
+    <p>Les étapes se valident à la fin réelle d’une construction ou d’une recherche, lors d’une nouvelle découverte, à la réception du rapport PNJ ou lors de la fondation d’une colonie. Une mise en file, un départ ou une tentative de colonisation ratée ne compte pas. La progression déjà présente dans le jeu n’est pas automatiquement reprise.</p>
     {% if next is null %}<p><strong>Ces premiers objectifs sont terminés.</strong> Vous pouvez poursuivre librement votre découverte du jeu.</p>{% endif %}
 </section>
 {% endblock %}

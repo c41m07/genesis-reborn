@@ -294,6 +294,8 @@ final class FleetService
                 if($probeCount<1) throw new \LogicException('Sondes d’espionnage absentes à l’arrivée.');
                 $report = $this->espionage->resolve($f,$probeCount);
                 foreach($probes as $probe)$probe->quantity=0;
+                // Le rapport vient d'être enregistré, mais un échec de l'arrivée doit annuler aussi le jalon.
+                $this->firstSteps->recordNpcEspionageReport($f, $report);
                 if ($report->result === 'success' && $report->intelCategories > 0) $this->boostGrants->awardRiskMission($m,$f);
             } elseif($f->mission==='explore') {
                 $d=$this->repo->one(PlayerDiscovery::class,['playerUniverse'=>$m,'solarSystem'=>$f->destinationSystem]);
@@ -309,8 +311,18 @@ final class FleetService
             } elseif($f->mission==='colonize') {
                 $target=$f->destination;$this->manager->lock($target);
                 $limit=$this->planetLimit($m,$this->catalog->forUniverse($m->universe));
-                if(!$target->owner && !$target->npcPlanet && count($this->repo->planets($m->universe,$m))<$limit) { $target->name=$this->planetNames->generate($m);$target->acquireBy($m,$this->clock->now());$colonyTier=$this->consumeShip($f,'colony_ship');$this->resources->initialize($target,true,stockMultiplier:GameCatalog::tierFactor($colonyTier)*$this->colonizationKits->multiplier($m,$target));$this->notifications->enqueue($m,'Nouvelle colonie : '.$target->name.'.',journalKind:'arrival'); }
-                else $this->notifications->enqueue($m,'Colonisation impossible à l’arrivée. Votre flotte revient.',journalKind:'arrival');
+                if (!$target->owner && !$target->npcPlanet && count($this->repo->planets($m->universe, $m)) < $limit) {
+                    $target->name = $this->planetNames->generate($m);
+                    $acquiredAt = $this->clock->now();
+                    $target->acquireBy($m, $acquiredAt);
+                    $colonyTier = $this->consumeShip($f, 'colony_ship');
+                    $this->resources->initialize($target, true, stockMultiplier: GameCatalog::tierFactor($colonyTier) * $this->colonizationKits->multiplier($m, $target));
+                    // Enregistrer ici, sous le verrou de la planète : ni la planète de départ ni une conquête n'empruntent ce chemin.
+                    $this->firstSteps->recordColonization($f, $target, $acquiredAt);
+                    $this->notifications->enqueue($m, 'Nouvelle colonie : '.$target->name.'.', journalKind: 'arrival');
+                } else {
+                    $this->notifications->enqueue($m, 'Colonisation impossible à l’arrivée. Votre flotte revient.', journalKind: 'arrival');
+                }
             } elseif($f->mission==='transport') {
                 $this->transports->deliver($f);
             }

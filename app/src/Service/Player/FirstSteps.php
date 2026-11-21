@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Service\Player;
 
+use App\Entity\EspionageReport;
 use App\Entity\Fleet;
+use App\Entity\Planet;
 use App\Entity\PlayerDiscovery;
 use App\Entity\PlayerUniverse;
 use App\Entity\QueueItem;
@@ -49,6 +51,36 @@ final class FirstSteps
 
         // La preuve accompagne la nouvelle découverte, pas un système déjà connu ni le départ.
         $this->record($membership, FirstStep::Exploration, $fleet->arrivalAt);
+    }
+
+    public function recordNpcEspionageReport(Fleet $fleet, EspionageReport $report): void
+    {
+        $target = $fleet->destination;
+        $membership = $fleet->playerUniverse;
+        if ($fleet->mission !== 'spy' || $fleet->status !== 'traveling' || $fleet->arrivalAt === null
+            || $target === null || !$target->npcPlanet || $target->owner !== null
+            || $target->solarSystem->galaxy->universe->id !== $membership->universe->id
+            || $report->id === null || $report->target !== $target || $report->sender !== $membership
+            || $report->probesSent < 1 || !in_array($report->result, ['detected', 'success'], true)) {
+            return;
+        }
+
+        // Un rapport « détecté » confirme le parcours d'apprentissage, pas l'obtention de renseignements.
+        $this->record($membership, FirstStep::Espionage, $report->createdAt);
+    }
+
+    /** Appelé uniquement après l'acquisition d'une planète encore libre, dans la transaction d'arrivée. */
+    public function recordColonization(Fleet $fleet, Planet $planet, \DateTimeImmutable $acquiredAt): void
+    {
+        $membership = $fleet->playerUniverse;
+        if ($fleet->mission !== 'colonize' || $fleet->status !== 'traveling' || $fleet->arrivalAt === null
+            || $fleet->destination !== $planet || $planet->npcPlanet || $planet->owner !== $membership
+            || $planet->acquiredAt === null || $planet->acquiredAt != $acquiredAt
+            || $planet->solarSystem->galaxy->universe->id !== $membership->universe->id) {
+            return;
+        }
+
+        $this->record($membership, FirstStep::Colonization, $acquiredAt);
     }
 
     private function record(PlayerUniverse $membership, FirstStep $step, \DateTimeImmutable $finishedAt): void

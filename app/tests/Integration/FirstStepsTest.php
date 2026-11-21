@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration;
 
+use App\Entity\EspionageReport;
 use App\Entity\Fleet;
 use App\Entity\FleetShip;
 use App\Entity\Planet;
@@ -11,6 +12,7 @@ use App\Entity\PlayerDiscovery;
 use App\Entity\SolarSystem;
 use App\Service\Fleet\FleetService;
 use App\Entity\PlanetBuilding;
+use App\Entity\PlanetResource;
 use App\Entity\Player;
 use App\Entity\PlayerTechnology;
 use App\Entity\PlayerUniverse;
@@ -173,6 +175,200 @@ final class FirstStepsTest extends KernelTestCase
         [$other] = $this->select($player, 'turbo-1');
         self::assertSame([], $this->guide->completed($other));
         self::assertEquals(['ship' => true, 'exploration' => true], $this->guide->completed($membership));
+    }
+
+    public function testNpcEspionageCountsDetectedReportAndCanBeRetriedWithoutAnotherMilestone(): void
+    {
+        [$membership, $origin] = $this->select($this->player(), 'omega-1');
+        $target = $this->pickFreeKnownPlanet($origin);
+        $target->npcPlanet = true;
+        $target->conquestLevel = 5;
+        $this->seedShips($membership, $origin, 'probe', 3);
+        // Uniquement la fixture : le tirage déterministe rend le cas « détecté » reproductible.
+        self::getContainer()->set(\Random\Randomizer::class, new \Random\Randomizer(new \Random\Engine\Mt19937(50)));
+        $service = self::getContainer()->get(FleetService::class);
+        $reports = $this->entityManager->getRepository(EspionageReport::class);
+
+        $flight = $this->launchPlanetMission($service, $membership, $origin, $target, 'spy', 'probe', 'a');
+        $token = $flight->dispatchToken;
+        $service->arrive($flight->id, $token);
+        self::assertSame(0, $reports->count(['sender' => $membership]));
+        self::assertSame([], $this->guide->completed($membership));
+
+        $this->clock->sleep($flight->travelSeconds + 1);
+        $service->arrive($flight->id, $token);
+        $service->arrive($flight->id, $token);
+        $report = $reports->findOneBy(['sender' => $membership, 'target' => $target]);
+        self::assertNotNull($report);
+        self::assertSame('detected', $report->result);
+        self::assertSame(0, $report->intelCategories);
+        self::assertSame([], $report->snapshot);
+        self::assertSame(1, $report->probesSent);
+        self::assertSame(0, $this->entityManager->getRepository(FleetShip::class)->findOneBy(['fleet' => $flight, 'slug' => 'probe'])?->quantity);
+        self::assertSame(['espionage' => true], $this->guide->completed($membership));
+        self::assertSame(1, $reports->count(['sender' => $membership]));
+        $firstProof = $this->proofTime($membership, 'espionage');
+        self::assertSame($report->createdAt->format('Y-m-d H:i:s'), $firstProof);
+
+        // Une nouvelle vraie mission reste disponible et livre son propre rapport, sans remplacer la preuve.
+        $later = $this->launchPlanetMission($service, $membership, $origin, $target, 'spy', 'probe', 'b');
+        $this->clock->sleep($later->travelSeconds + 1);
+        $service->arrive($later->id, $later->dispatchToken);
+        self::assertSame(2, $reports->count(['sender' => $membership, 'target' => $target]));
+        self::assertSame($firstProof, $this->proofTime($membership, 'espionage'));
+        [$other] = $this->select($membership->player, 'turbo-1');
+        self::assertSame([], $this->guide->completed($other));
+    }
+
+    public function testEspionageReportAndProofRollbackTogetherWhileNonNpcReportCannotCount(): void
+    {
+        [$membership, $origin] = $this->select($this->player(), 'omega-1');
+        $neutral = $this->pickFreeKnownPlanet($origin);
+        $npc = $this->pickFreeKnownPlanet($origin, $neutral);
+        $npc->npcPlanet = true;
+        $this->seedShips($membership, $origin, 'probe', 2);
+        $service = self::getContainer()->get(FleetService::class);
+        $reports = $this->entityManager->getRepository(EspionageReport::class);
+
+        $nonNpc = $this->launchPlanetMission($service, $membership, $origin, $neutral, 'spy', 'probe', 'c');
+        $this->clock->sleep($nonNpc->travelSeconds + 1);
+        $service->arrive($nonNpc->id, $nonNpc->dispatchToken);
+        self::assertSame(1, $reports->count(['sender' => $membership, 'target' => $neutral]));
+        self::assertSame([], $this->guide->completed($membership));
+
+        $flight = $this->launchPlanetMission($service, $membership, $origin, $npc, 'spy', 'probe', 'd');
+        $flightId = $flight->id;
+        $token = $flight->dispatchToken;
+        $membershipId = $membership->id;
+        $npcId = $npc->id;
+        $this->clock->sleep($flight->travelSeconds + 1);
+        $connection = $this->entityManager->getConnection();
+        $connection->beginTransaction();
+        try {
+            $service->arrive($flightId, $token);
+            self::assertSame(1, $reports->count(['sender' => $membership, 'target' => $npc]));
+            self::assertSame(['espionage' => true], $this->guide->completed($membership));
+        } finally {
+            $connection->rollBack();
+            $this->entityManager->clear();
+        }
+
+        $membership = $this->entityManager->find(PlayerUniverse::class, $membershipId);
+        $npc = $this->entityManager->find(Planet::class, $npcId);
+        self::assertSame(0, $reports->count(['sender' => $membership, 'target' => $npc]));
+        self::assertSame('traveling', $this->entityManager->find(Fleet::class, $flightId)?->status);
+        self::assertSame([], $this->guide->completed($membership));
+        $service->arrive($flightId, $token);
+        self::assertSame(1, $reports->count(['sender' => $membership, 'target' => $npc]));
+        self::assertSame(['espionage' => true], $this->guide->completed($membership));
+    }
+
+    public function testColonizationCountsOnlyFreePlanetTransferAndRollsBackWithIt(): void
+    {
+        [$membership, $origin] = $this->select($this->player(), 'omega-1');
+        $blocked = $this->pickFreeKnownPlanet($origin);
+        $available = $this->pickFreeKnownPlanet($origin, $blocked);
+        $technology = new PlayerTechnology();
+        $technology->playerUniverse = $membership;
+        $technology->slug = 'colonial_expansion';
+        $technology->level = 1;
+        $this->entityManager->persist($technology);
+        $this->seedShips($membership, $origin, 'colony_ship', 2);
+        $service = self::getContainer()->get(FleetService::class);
+        self::assertNotNull($origin->acquiredAt);
+        self::assertSame([], $this->guide->completed($membership), 'La planète de départ n’est pas une colonisation.');
+
+        $unavailable = $this->launchPlanetMission($service, $membership, $origin, $blocked, 'colonize', 'colony_ship', 'e');
+        $blocked->npcPlanet = true;
+        $this->entityManager->flush();
+        $this->clock->sleep($unavailable->travelSeconds + 1);
+        $service->arrive($unavailable->id, $unavailable->dispatchToken);
+        self::assertSame('returning', $unavailable->status);
+        $this->clock->sleep($unavailable->travelSeconds + 1);
+        $service->arrive($unavailable->id, $unavailable->dispatchToken);
+        self::assertSame('completed', $unavailable->status);
+        self::assertNull($blocked->owner);
+        self::assertSame([], $this->guide->completed($membership));
+
+        $flight = $this->launchPlanetMission($service, $membership, $origin, $available, 'colonize', 'colony_ship', 'f');
+        $token = $flight->dispatchToken;
+        $flightId = $flight->id;
+        $membershipId = $membership->id;
+        $targetId = $available->id;
+        self::assertNull($available->owner);
+        self::assertSame([], $this->guide->completed($membership));
+        $this->clock->sleep($flight->travelSeconds + 1);
+        $connection = $this->entityManager->getConnection();
+        $connection->beginTransaction();
+        try {
+            $service->arrive($flightId, $token);
+            self::assertSame($membership, $available->owner);
+            self::assertSame(['colonization' => true], $this->guide->completed($membership));
+        } finally {
+            $connection->rollBack();
+            $this->entityManager->clear();
+        }
+
+        $membership = $this->entityManager->find(PlayerUniverse::class, $membershipId);
+        $available = $this->entityManager->find(Planet::class, $targetId);
+        self::assertNull($available->owner);
+        self::assertNull($available->acquiredAt);
+        self::assertSame([], $this->guide->completed($membership));
+        $service->arrive($flightId, $token);
+        $firstProof = $this->proofTime($membership, 'colonization');
+        $this->clock->sleep(60);
+        $service->arrive($flightId, $token);
+        self::assertSame($membership, $available->owner);
+        self::assertSame($available->acquiredAt?->format('Y-m-d H:i:s'), $firstProof);
+        self::assertSame($firstProof, $this->proofTime($membership, 'colonization'));
+        self::assertSame(5, $this->entityManager->getRepository(PlanetResource::class)->count(['planet' => $available]));
+        self::assertSame(['colonization' => true], $this->guide->completed($membership), 'La colonisation ne nécessite pas les autres jalons.');
+        [$other] = $this->select($membership->player, 'turbo-1');
+        self::assertSame([], $this->guide->completed($other));
+    }
+
+    private function pickFreeKnownPlanet(Planet $origin, ?Planet $excluded = null): Planet
+    {
+        $planets = $this->entityManager->getRepository(Planet::class)->findBy(['solarSystem' => $origin->solarSystem, 'owner' => null], ['id' => 'ASC']);
+        foreach ($planets as $planet) {
+            if ($planet !== $excluded) {
+                // Indépendant de la génération de la fixture, même quand un monde est initialement PNJ.
+                $planet->npcPlanet = false;
+
+                return $planet;
+            }
+        }
+
+        self::fail('Deux destinations libres sont nécessaires dans le système natal de test.');
+    }
+
+    private function seedShips(PlayerUniverse $membership, Planet $origin, string $slug, int $count): void
+    {
+        $idle = new Fleet();
+        $idle->playerUniverse = $membership;
+        $idle->homePlanet = $origin;
+        $ships = new FleetShip();
+        $ships->fleet = $idle;
+        $ships->slug = $slug;
+        $ships->quantity = $count;
+        $this->entityManager->persist($idle);
+        $this->entityManager->persist($ships);
+        $this->entityManager->flush();
+    }
+
+    private function launchPlanetMission(FleetService $service, PlayerUniverse $membership, Planet $origin, Planet $target, string $mission, string $ship, string $key): Fleet
+    {
+        self::assertFalse($service->send($membership, $origin, $mission, $target->id, [$ship => 1], .5, [], str_repeat($key, 32), requireExactComposition: true));
+        $flight = $this->entityManager->getRepository(Fleet::class)->findOneBy([
+            'playerUniverse' => $membership,
+            'destination' => $target,
+            'mission' => $mission,
+            'status' => 'traveling',
+        ]);
+        self::assertNotNull($flight);
+        self::assertNotNull($flight->arrivalAt);
+
+        return $flight;
     }
 
     private function launchProbe(FleetService $service, PlayerUniverse $membership, Planet $planet, SolarSystem $system, string $key): Fleet

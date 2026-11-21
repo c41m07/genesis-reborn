@@ -2181,3 +2181,23 @@ autre en vue d’un futur espionnage, sans en promettre ni en attribuer.
 La transaction de chaque action conserve la première preuve. Même table,
 aucune migration supplémentaire, aucun ajustement de coût, de durée ni
 de récompense. Espionnage, colonisation et entraînement restent hors lot.
+
+### Premiers pas : rapport d’espionnage PNJ et première colonisation
+
+Le premier rapport d’une vraie mission d’espionnage arrivée sur un monde PNJ
+natif sans propriétaire valide la découverte du parcours. Un rapport
+« détecté » ne fournit aucun renseignement ; même sans détection, les
+informations peuvent être partielles ou absentes. Le guide explique de viser
+une planète connue, de prévoir une sonde consommée, et de retenter avec une
+nouvelle sonde si nécessaire. Il ne présélectionne aucune destination et ne
+lance aucune mission.
+
+La colonisation ne dépend pas des autres étapes. La preuve est inscrite
+uniquement après le transfert d’une planète encore libre et non PNJ,
+l’application du stock d’arrivée existant et la consommation du
+colonisateur. Ni la planète initiale, ni la conquête, ni une arrivée où la
+planète n’est plus libre ne valident ce jalon. Le rapport ou le transfert
+et la première preuve partagent la transaction d’arrivée ; une annulation
+annule la preuve. Aucun suivi supplémentaire des autres missions, aucune
+nouvelle lecture du graphe et aucune migration supplémentaire. Les primes
+et l’entraînement pirate restent hors de ce lot.
