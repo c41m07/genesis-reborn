@@ -174,6 +174,21 @@ test('Barre haute : suit le prochain prérequis, garde le contexte et ne déplac
     await expect(label).toHaveText('Laboratoire colonial');
     await expect(progress).toHaveText('5/7');
 
+    // Une même session peut entrer dans un autre empire sans réutiliser l’objectif d’Omega.
+    await topbar.locator('.universe-context').click();
+    await page.locator('.universe-card').filter({ has: page.getByRole('heading', { name: /Turbo/ }) }).getByRole('button').click();
+    await expect(page).toHaveURL(/planetes\/\d+$/);
+    const otherEmpireKey = await goal.getAttribute('data-header-technology-goal-storage-key-value');
+    expect(otherEmpireKey.split(':')[1]).not.toBe(storageKey.split(':')[1]);
+    await expect(label).toHaveText('Choisir un objectif');
+    await expect(progress).toBeHidden();
+    await topbar.locator('.universe-context').click();
+    await page.locator('.universe-card').filter({ has: page.getByRole('heading', { name: /Omega/ }) }).getByRole('button').click();
+    await page.goto(overview);
+    await expect(goal).toHaveAttribute('data-header-technology-goal-storage-key-value', storageKey);
+    await expect(label).toHaveText('Laboratoire colonial');
+    await expect(progress).toHaveText('5/7');
+
     const native = await browser.newContext({ baseURL, javaScriptEnabled: false, storageState: await page.context().storageState(), viewport: { width: 390, height: 844 } });
     try {
         const fallback = await native.newPage();
