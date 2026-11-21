@@ -112,7 +112,10 @@ final readonly class PiratePilotScoutCommand
             return null;
         }
         $at = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
-        if (!$locked || $locked['locked_at'] !== null || $locked['email_verified_at'] === null
+        $verified = is_string($locked['email_verified_at'] ?? null)
+            ? \DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $locked['email_verified_at'], new \DateTimeZone('UTC'))
+            : false;
+        if (!$locked || $locked['locked_at'] !== null || $verified === false || $verified > $at
             || (int) $locked['current_player_universe_id'] !== $member->id
             || $origin->npcPlanet || !$this->gate->admits($account, $member, $at)) {
             return null;

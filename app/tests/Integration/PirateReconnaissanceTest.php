@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace App\Tests\Integration;
 
 use App\Entity\{Fleet, FleetShip, Galaxy, Guild, GuildMember, PirateReconnaissance, Planet, PlanetResource, Player, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
+use App\Manager\GameManager;
 use App\Message\PirateReconnaissanceDue;
+use App\Repository\GameRepository;
+use App\Service\Colony\ActionGuard;
 use App\MessageHandler\PirateReconnaissanceDueHandler;
 use App\Service\Fleet\{FleetService, FleetVisibility};
 use App\Service\Notification\OutboxRelay;
-use App\Service\PirateCampaign\{PirateDistressSite, PirateEncounterSnapshot, PirateReconnaissanceService};
+use App\Service\PirateCampaign\{PirateDistressSite, PirateEncounterSnapshot, PiratePilotGate, PiratePilotScoutCommand, PiratePilotSignalResolver, PirateReconnaissanceService};
+use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,10 +21,16 @@ use Doctrine\ORM\Tools\{SchemaTool, SchemaValidator};
 use Psr\Log\NullLogger;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Clock\MockClock;
+use Symfony\Component\HttpFoundation\{Request, RequestStack};
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\Messenger\Exception\RecoverableMessageHandlingException;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
 use Symfony\Component\Process\Process;
+use Symfony\Component\Security\Csrf\CsrfTokenManager;
+use Symfony\Component\Security\Csrf\TokenStorage\SessionTokenStorage;
 
 final class PirateReconnaissanceTest extends KernelTestCase
 {
@@ -43,6 +53,96 @@ final class PirateReconnaissanceTest extends KernelTestCase
         $this->clock = new MockClock('2026-11-21T08:00:00Z');
         self::getContainer()->set('clock', $this->clock);
         $this->service = self::getContainer()->get(PirateReconnaissanceService::class);
+    }
+
+    public function testScoutCommandChecksRealCsrfCurrentSelectionAndOnlyScoutsTheKnownHome(): void
+    {
+        [$member, $home, $otherSystem, $stock] = $this->fixture(omega: true);
+        $this->preparePilotFuel($home, $stock, 100.0);
+        [$disabled] = $this->pilotScoutCommand($member, false);
+        self::assertNull($disabled->preview($home, 1));
+        [$command, $csrf] = $this->pilotScoutCommand($member);
+        $db = $this->em->getConnection();
+        $discoveries = (int) $db->fetchOne('SELECT COUNT(*) FROM player_discovery');
+        $planets = (int) $db->fetchOne('SELECT COUNT(*) FROM planet');
+        $first = $command->preview($home, 1);
+        self::assertNotNull($first);
+        self::assertSame(100.0, $this->pilotGroundStock($home->id));
+        self::assertSame(3, (int) $db->fetchOne('SELECT quantity FROM fleet_ship WHERE id = ?', [$stock->id]));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
+        $token = $csrf->getToken($first['intent']->csrfId())->getValue();
+        self::assertFalse($command->execute($home, 1, ['system' => (string) $otherSystem->id], $token));
+        self::assertFalse($command->execute($home, 1, null, $token));
+        self::assertFalse($command->execute($home, 2, [], $token));
+        // La sélection en base change alors que Security conserve l'objet initial.
+        $db->executeStatement('UPDATE player SET current_player_universe_id = NULL WHERE id = ?', [$member->player->id]);
+        self::assertFalse($command->execute($home, 1, [], $token));
+        $db->executeStatement('UPDATE player SET current_player_universe_id = ? WHERE id = ?', [$member->id, $member->player->id]);
+
+        $member->universe->gameSettings['multipliers']['travel_time'] = 8.0;
+        $this->em->flush();
+        self::assertFalse($command->execute($home, 1, [], $token));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_reconnaissance'));
+        $changed = $command->preview($home, 1);
+        self::assertNotNull($changed);
+        self::assertGreaterThan($first['quote']['seconds'], $changed['quote']['seconds']);
+        $confirmed = $csrf->getToken($changed['intent']->csrfId())->getValue();
+        self::assertTrue($command->execute($home, 1, [], $confirmed));
+        self::assertFalse($command->execute($home, 1, [], $confirmed));
+        self::assertNull($command->preview($home, 1));
+        self::assertSame($home->solarSystem->id, (int) $db->fetchOne('SELECT system_id FROM pirate_reconnaissance'));
+        self::assertSame(2, (int) $db->fetchOne('SELECT quantity FROM fleet_ship WHERE id = ?', [$stock->id]));
+        self::assertEqualsWithDelta(100.0 - $changed['quote']['planet'], $this->pilotGroundStock($home->id), 1e-9);
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
+        self::assertSame($discoveries, (int) $db->fetchOne('SELECT COUNT(*) FROM player_discovery'));
+        self::assertSame($planets, (int) $db->fetchOne('SELECT COUNT(*) FROM planet'));
+    }
+
+    public function testScoutCommandLeavesAccountLockOrMissingDiscoveryWithoutAnyOrder(): void
+    {
+        [$member, $home, , $stock] = $this->fixture(omega: true);
+        $this->preparePilotFuel($home, $stock, 100.0);
+        [$command, $csrf] = $this->pilotScoutCommand($member);
+        $quote = $command->preview($home, 1);
+        self::assertNotNull($quote);
+        $token = $csrf->getToken($quote['intent']->csrfId())->getValue();
+        $db = $this->em->getConnection();
+        $other = DriverManager::getConnection($db->getParams());
+        $other->beginTransaction();
+        try {
+            self::assertEquals($member->player->id, $other->fetchOne('SELECT id FROM player WHERE id = ? FOR UPDATE', [$member->player->id]));
+            self::assertFalse($command->execute($home, 1, [], $token));
+            self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
+        } finally {
+            $other->rollBack();
+            $other->close();
+        }
+        self::assertNotNull($command->preview($home, 1));
+        $db->executeStatement('DELETE FROM player_discovery WHERE player_universe_id = ? AND solar_system_id = ?', [$member->id, $home->solarSystem->id]);
+        self::assertNull($command->preview($home, 1));
+        self::assertFalse($command->execute($home, 1, [], $token));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
+        self::assertSame(100.0, $this->pilotGroundStock($home->id));
+    }
+
+    private function pilotScoutCommand(PlayerUniverse $member, bool $enabled = true): array
+    {
+        $member->player->currentPlayerUniverse = $member;
+        $this->em->flush();
+        $security = $this->createStub(Security::class);
+        $security->method('getUser')->willReturn($member->player);
+        $requests = new RequestStack();
+        $request = new Request();
+        $request->setSession(new Session(new MockArraySessionStorage()));
+        $requests->push($request);
+        $csrf = new CsrfTokenManager(null, new SessionTokenStorage($requests));
+        $manager = self::getContainer()->get(GameManager::class);
+        $resolver = new PiratePilotSignalResolver(self::getContainer()->get(GameRepository::class), $manager);
+
+        return [new PiratePilotScoutCommand(
+            new PiratePilotGate('dev', $enabled, $member->universe->id), $security, $this->clock, $csrf,
+            $this->em, $manager, self::getContainer()->get(ActionGuard::class), $resolver, $this->service,
+        ), $csrf];
     }
 
     #[DataProvider('outcomes')]
