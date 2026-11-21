@@ -36,10 +36,11 @@ test('Rail : suit le véritable objectif, garde le contexte et ne déplace pas l
     const eventName = createEvent(project);
     await page.reload();
     const rail = page.getByRole('region', { name: 'Suivi du commandement', exact: true });
-    const goal = rail.locator('.header-technology-goal');
+    const goal = page.locator('.topbar .universe-context + .header-technology-goal:has(+ .header-tools)');
     const drawer = rail.locator('.event-drawer');
     const summary = drawer.locator('summary');
     const label = goal.locator('strong');
+    const progress = goal.locator('small');
     const strip = page.locator('[data-live-region="resources"]');
     const stack = page.locator('.resource-event-stack');
     const main = page.locator('main');
@@ -51,6 +52,10 @@ test('Rail : suit le véritable objectif, garde le contexte et ne déplace pas l
         `/planetes/${target.id}/objectif-technologique?goal=technologies%3Avector_propulsion-basic`);
     expect(foreignStatus).toBe(404);
 
+    runIsolatedSql(project, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planetId},'lab','basic',5) ON DUPLICATE KEY UPDATE level=5`);
+    for (const [slug, level] of [['signature_masking', 2], ['nanomaterial_synthesis', 2], ['engineering_foundations', 3]]) {
+        runIsolatedSql(project, `INSERT INTO player_technology (player_universe_id,slug,tier,level) SELECT owner_id,'${slug}','basic',${level} FROM planet WHERE id=${planetId} ON DUPLICATE KEY UPDATE level=${level}`);
+    }
     let requests = 0;
     page.on('request', request => {
         if (new URL(request.url()).pathname === lookupUrl) requests++;
@@ -59,26 +64,36 @@ test('Rail : suit le véritable objectif, garde le contexte et ne déplace pas l
     await goal.click();
     await expect(page).toHaveURL(/\/technologies$/);
     expect(requests).toBe(0);
-    await page.getByLabel('Rechercher un élément').fill('vector_propulsion');
-    const node = page.locator('#tech-vector_propulsion-basic');
+    await page.getByLabel('Rechercher un élément').fill('signature_reduction');
+    const node = page.locator('#tech-signature_reduction-basic');
     await node.locator('summary').click();
-    const displayed = (await node.getAttribute('data-label')) + ' · ' + (await node.getAttribute('data-tier-label'));
+    const displayed = 'Métallurgie des nanomatériaux';
+    await expect(page.getByText(`${displayed} → niveau 3 (actuel : 2)`, { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Suivre cet objectif', exact: true }).click();
     await expect(label).toHaveText(displayed);
+    await expect(progress).toHaveText('2/3');
     await page.reload();
     await expect(label).toHaveText(displayed);
+    await expect(progress).toHaveText('2/3');
     expect(requests).toBe(0);
 
     const resolved = page.waitForResponse(response => new URL(response.url()).pathname === lookupUrl);
     await page.goto(overview);
     await expect(label).toHaveText(displayed);
+    await expect(progress).toHaveText('2/3');
     const result = await resolved;
     expect(result.headers()['cache-control']).toContain('no-store');
+    const { goal: resolvedGoal } = await result.json();
+    expect(resolvedGoal.recommendation.requirement).toMatchObject({ current: 2, level: 3, slug: 'nanomaterial_synthesis', tier: 'basic' });
     expect(requests).toBe(1);
-    for (const width of [1440, 390, 320]) {
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('genesis:refresh')));
+    for (const width of [1440, 390, 360, 320]) {
         await page.setViewportSize({ width, height: 900 });
         await expect(summary).toBeVisible();
-        await expect.poll(() => label.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+        await expect(goal).toBeVisible();
+        await expect(goal).toHaveAccessibleName(/Guide techno · Métallurgie des nanomatériaux · niveau 2 sur 3/);
+        await expect(progress).toBeVisible();
+        expect(await goal.evaluate(el => el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
         const measured = async () => Promise.all([stack.boundingBox(), strip.boundingBox(), main.boundingBox()]);
         const railBox = await rail.boundingBox();
         const [stackBefore, stripBefore, mainBefore] = await measured();
@@ -107,6 +122,8 @@ test('Rail : suit le véritable objectif, garde le contexte et ne déplace pas l
         await expect(drawer).not.toHaveAttribute('open');
         if (width !== 320) await page.screenshot({ path: info.outputPath(`rail-objectif-${width}.png`), animations: 'disabled' });
     }
+
+    expect(requests).toBe(1);
 
     // Une réponse retardée de l’ancienne clé ne doit pas réafficher un objectif retiré.
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -137,12 +154,18 @@ test('Rail : suit le véritable objectif, garde le contexte et ne déplace pas l
 
     // Ajouter une seconde colonie uniquement dans la base jetable.
     runIsolatedSql(project, `UPDATE planet SET owner_id=(SELECT owner_id FROM (SELECT owner_id FROM planet WHERE id=${planetId}) origin), name='Colonie témoin du rail' WHERE id=${target.id}`);
-    await page.evaluate(key => localStorage.setItem(key, 'technologies:vector_propulsion-basic'), storageKey);
+    await page.evaluate(key => localStorage.setItem(key, 'technologies:signature_reduction-basic'), storageKey);
     await page.goto(`/planetes/${target.id}`);
     await expect(goal).not.toHaveAttribute('data-header-technology-goal-storage-key-value', storageKey);
     await expect(label).toHaveText('Choisir un objectif');
     await page.goto(overview);
     await expect(label).toHaveText(displayed);
+    await expect(progress).toHaveText('2/3');
+
+    runIsolatedSql(project, `UPDATE player_technology SET level=3 WHERE slug='nanomaterial_synthesis' AND tier='basic' AND player_universe_id=(SELECT owner_id FROM planet WHERE id=${planetId})`);
+    await page.reload();
+    await expect(label).toHaveText('Laboratoire colonial');
+    await expect(progress).toHaveText('5/7');
 
     const native = await browser.newContext({ baseURL, javaScriptEnabled: false, storageState: await page.context().storageState(), viewport: { width: 390, height: 844 } });
     try {
@@ -151,7 +174,10 @@ test('Rail : suit le véritable objectif, garde le contexte et ne déplace pas l
         await expect(fallback.locator('.header-technology-goal')).toContainText('Choisir un objectif');
         await fallback.locator('.event-drawer summary').click();
         await expect(fallback.getByRole('link', { name: 'Voir les événements', exact: true })).toBeVisible();
-        await fallback.locator('.header-technology-goal').click();
+        await fallback.locator('.topbar .universe-context').focus();
+        await fallback.keyboard.press('Tab');
+        await expect(fallback.getByRole('link', { name: 'Guide techno : choisir un objectif' })).toBeFocused();
+        await fallback.keyboard.press('Enter');
         await expect(fallback).toHaveURL(/\/technologies$/);
         await fallback.setViewportSize({ width: 1440, height: 900 });
         await fallback.goto(overview + '?section=buildings');

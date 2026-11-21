@@ -2132,14 +2132,23 @@ actives, objets, récompenses en attente et attributions restent inchangés.
 Pour les vols déjà accélérés, échéance, réserves, historique et règles de rappel
 sont conservés. Ni migration ni changement du calcul de trajet.
 
-### Guide techno et événements au-dessus des ressources
+### Guide techno et événements
 
-Le rail de la coque connectée affiche le nom et le rang de l’objectif suivi
-dans le Guide pour l’empire et la colonie actifs, ou un lien pour en choisir
-un. La clé locale du Guide ne change pas. Hors du Guide, seul un objectif
-enregistré déclenche une lecture privée de son libellé dans le catalogue
-de l’univers : pas de graphe dans le bandeau ni d’interrogation périodique.
-Sans JavaScript, stockage local ou objectif valide, le lien reste utilisable.
+Le raccourci du Guide suit immédiatement le sélecteur d’univers dans la barre
+supérieure. L’objectif reste enregistré par empire et colonie dans ce navigateur.
+Le Guide et le raccourci emploient les mêmes recommandations : écarter les
+prérequis atteints, privilégier l’écart le plus faible entre niveau acquis et
+requis parmi les jalons directs que les déblocages et le labo local permettent
+d’avancer, puis chercher un jalon plus en amont si aucun direct ne convient.
+Les stocks et les files ne servent pas à calculer le conseil : il ne valide
+pas un lancement. Un accès déjà acquis, des prérequis remplis et l’absence
+d’étape disponible sont distingués.
+
+Hors Guide, seule une clé d’objectif enregistrée déclenche la lecture privée :
+deux lectures de niveaux acquis, résolution du seul objectif et de ses étapes
+utiles, sans graphe complet ou lecture sur l’actualisation générale. Dans le
+Guide, le raccourci réutilise la recommandation préparée sur la page. Sans
+JavaScript, stockage local ou objectif valide, le lien reste utilisable.
 
 Le tiroir Événements conserve ses conditions et ses actions ; il reste
 disponible sans planète si l’univers fournit des événements. Son ouverture

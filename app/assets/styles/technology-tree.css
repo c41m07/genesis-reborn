@@ -1,3 +1,23 @@
+/* Garder le Guide près de l’univers, sans lier sa hauteur au tiroir des événements. */
+.topbar .header-technology-goal{display:flex;align-items:center;gap:8px;min-width:0;min-height:44px;max-width:310px;padding:3px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--text);text-decoration:none}
+.header-technology-goal>.icon{flex:none;color:var(--accent)}
+.header-technology-goal-label{display:grid;min-width:0;gap:1px;font-size:11px}
+.header-technology-goal-step{display:flex;align-items:baseline;gap:4px;min-width:0}
+.header-technology-goal-step strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.header-technology-goal-step small{flex:none;font-weight:700;font-variant-numeric:tabular-nums;font-size:11px;color:var(--text)}
+.header-technology-goal-step small[hidden]{display:none}
+.header-technology-goal:hover strong{text-decoration:underline}
+.header-technology-goal:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:740px){
+    .topbar:has(>.header-technology-goal){gap:6px}
+    .topbar:has(>.header-technology-goal)>.universe-context{flex:0 1 auto;min-width:34px;gap:4px}
+    .topbar:has(>.header-technology-goal)>.header-tools{gap:8px}
+    .topbar .header-technology-goal{flex:1 0 94px;max-width:190px;padding-inline:5px;gap:4px}
+    .header-technology-goal>.icon{width:15px;height:15px}
+    .header-technology-goal-label>span:first-child{display:none}
+    .header-technology-goal-step{align-items:start;flex-direction:column;gap:0;line-height:1.15}
+    .header-technology-goal-step strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;white-space:normal;overflow-wrap:anywhere;font-size:11px}
+}
 .technology-tree{--tech-met:var(--green);--tech-missing:var(--gold)}
 body[data-theme=light] .technology-tree{--tech-met:#376647;--tech-missing:#795624}
 .technology-tree [hidden]{display:none!important}
