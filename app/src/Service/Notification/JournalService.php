@@ -1,76 +1,128 @@
 <?php
+
 namespace App\Service\Notification;
 
-use App\Entity\{Notification,PlayerUniverse};
+use App\Entity\{Notification, PlayerUniverse};
 use App\Manager\GameManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Psr\Clock\ClockInterface;
+use Symfony\Component\HttpFoundation\UriSigner;
 
 final class JournalService
 {
-    public const KINDS=['queue','arrival','combat','transport','spy','conquest'];
-    public const PAGE_SIZE=50;
+    public const KINDS = ['queue', 'arrival', 'combat', 'transport', 'spy', 'conquest'];
+    private const VISIBLE_LIMIT = 5;
+    private const TICKET_PATH = '/journal-snapshot-v1';
 
-    public function __construct(private EntityManagerInterface $em,private GameManager $manager,private ClockInterface $clock) {}
+    public function __construct(
+        private EntityManagerInterface $em,
+        private GameManager $manager,
+        private ClockInterface $clock,
+        private UriSigner $signer,
+    ) {
+    }
 
     public function open(PlayerUniverse $membership): void
     {
-        $this->manager->transaction(function()use($membership): void {
-            $this->manager->lock($membership);
+        $this->manager->transaction(function () use ($membership): void {
+            $this->manager->lockCurrent($membership);
             $this->assertAccessible($membership);
-            $now=$this->clock->now();
-            if($membership->journalStartedAt!==null) {
-                $this->em->createQueryBuilder()->update(Notification::class,'n')->set('n.journalAvailableAt',':now')
-                    ->where('n.recipient = :member')->andWhere('n.journalKind IN (:kinds)')
-                    ->andWhere('n.consultedAt IS NULL')->andWhere('n.journalAvailableAt IS NULL')
-                    ->setParameter('member',$membership)->setParameter('kinds',self::KINDS)->setParameter('now',$now)->getQuery()->execute();
+            $now = $this->clock->now();
+            if ($membership->journalStartedAt !== null) {
+                $unavailable = $this->pending($membership)->andWhere('n.journalAvailableAt IS NULL');
+                $waiting = (int) (clone $unavailable)->select('COUNT(n.id)')->getQuery()->getSingleScalarResult();
+                if ($waiting > 0) {
+                    // Sous le verrou du journal, chaque nouveau lot reçoit une borne strictement
+                    // supérieure aux précédents, même si la seconde ou les IDs se recouvrent.
+                    $last = $this->em->createQueryBuilder()
+                        ->select('MAX(n.journalAvailableAt)')->from(Notification::class, 'n')
+                        ->where('n.recipient = :member')->setParameter('member', $membership)
+                        ->getQuery()->getSingleScalarResult();
+                    $batchAt = new \DateTimeImmutable($now->format('Y-m-d H:i:s'), new \DateTimeZone('UTC'));
+                    if (is_string($last) && $last >= $batchAt->format('Y-m-d H:i:s')) {
+                        $batchAt = (new \DateTimeImmutable($last, new \DateTimeZone('UTC')))->modify('+1 second');
+                    }
+                    $unavailable->update(Notification::class, 'n')->set('n.journalAvailableAt', ':batch')
+                        ->setParameter('batch', $batchAt)->getQuery()->execute();
+                }
             } else {
                 // La reprise exclut les notifications déjà présentes, sans les consulter ni les supprimer.
-                $this->em->createQueryBuilder()->update(Notification::class,'n')->set('n.journalKind','NULL')
+                $this->em->createQueryBuilder()->update(Notification::class, 'n')->set('n.journalKind', 'NULL')
                     ->where('n.recipient = :member')->andWhere('n.journalAvailableAt IS NULL')
-                    ->setParameter('member',$membership)->getQuery()->execute();
-                $membership->journalStartedAt=$now;
+                    ->setParameter('member', $membership)->getQuery()->execute();
+                $membership->journalStartedAt = $now;
             }
-            $membership->overviewVisitedAt=$now;
+            $membership->overviewVisitedAt = $now;
         });
     }
 
-    public function data(PlayerUniverse $membership): array
+    public function unreadCount(PlayerUniverse $membership): int
     {
-        if($membership->journalStartedAt===null) return ['notifications'=>[],'unreadCount'=>0,'availableCount'=>0,'startedAt'=>null];
-        $unread=(int)$this->pending($membership)->select('COUNT(n.id)')->getQuery()->getSingleScalarResult();
-        $available=$this->pending($membership)->andWhere('n.journalAvailableAt IS NOT NULL');
-        $count=(int)(clone $available)->select('COUNT(n.id)')->getQuery()->getSingleScalarResult();
-        $notifications=$available->orderBy('n.id','DESC')->setMaxResults(self::PAGE_SIZE)->getQuery()->getResult();
-        return ['notifications'=>$notifications,'unreadCount'=>$unread,'availableCount'=>$count,'startedAt'=>$membership->journalStartedAt];
+        return $membership->journalStartedAt === null ? 0
+            : (int) $this->pending($membership)->select('COUNT(n.id)')->getQuery()->getSingleScalarResult();
     }
 
-    public function consult(PlayerUniverse $membership,array $ids): void
+    /** @return array{notifications: list<Notification>, availableCount: int, ticket: ?string} */
+    public function data(PlayerUniverse $membership, int $planetId): array
     {
-        if(!$ids || count($ids)>self::PAGE_SIZE) throw new \DomainException('Sélection de journal invalide.');
-        $ids=array_values(array_unique($ids));
-        $this->manager->transaction(function()use($membership,$ids): void {
-            $this->manager->lock($membership);$this->assertAccessible($membership);
-            $query=$this->em->createQueryBuilder()->select('COUNT(n.id)')->from(Notification::class,'n')
-                ->where('n.recipient = :member')->andWhere('n.id IN (:ids)')->andWhere('n.journalAvailableAt IS NOT NULL')
-                ->andWhere('n.journalKind IN (:kinds)')->setParameter('member',$membership)->setParameter('ids',$ids)->setParameter('kinds',self::KINDS);
-            if((int)$query->getQuery()->getSingleScalarResult()!==count($ids)) throw new \DomainException('Événements indisponibles dans ce journal.');
-            $this->em->createQueryBuilder()->update(Notification::class,'n')->set('n.consultedAt',':now')
-                ->where('n.recipient = :member')->andWhere('n.id IN (:ids)')->andWhere('n.consultedAt IS NULL')
-                ->setParameter('member',$membership)->setParameter('ids',$ids)->setParameter('now',$this->clock->now())->getQuery()->execute();
+        if ($membership->journalStartedAt === null) {
+            return ['notifications' => [], 'availableCount' => 0, 'ticket' => null];
+        }
+
+        $available = $this->pending($membership)->andWhere('n.journalAvailableAt IS NOT NULL');
+        $snapshot = (clone $available)->select('COUNT(n.id) AS total', 'MAX(n.journalAvailableAt) AS through')
+            ->getQuery()->getSingleResult();
+        if ($snapshot['through'] === null) {
+            return ['notifications' => [], 'availableCount' => 0, 'ticket' => null];
+        }
+
+        $notifications = $available->andWhere('n.journalAvailableAt <= :through')
+            ->setParameter('through', $snapshot['through'])->orderBy('n.id', 'DESC')
+            ->setMaxResults(self::VISIBLE_LIMIT)->getQuery()->getResult();
+        // Le navigateur ne reçoit ni les IDs masqués ni le droit d’élargir cette borne.
+        $ticket = $this->signer->sign(self::TICKET_PATH . '?' . http_build_query([
+            'member' => $membership->id,
+            'planet' => $planetId,
+            'through' => $snapshot['through'],
+        ]), new \DateInterval('PT30M'));
+
+        return ['notifications' => $notifications, 'availableCount' => (int) $snapshot['total'], 'ticket' => $ticket];
+    }
+
+    public function consult(PlayerUniverse $membership, int $planetId, string $ticket): int
+    {
+        if (strlen($ticket) > 300 || !str_starts_with($ticket, self::TICKET_PATH . '?') || !$this->signer->check($ticket)) {
+            throw new \DomainException('Consultation expirée. Rouvrez la Vue générale.');
+        }
+        parse_str((string) parse_url($ticket, PHP_URL_QUERY), $claims);
+        if (($claims['member'] ?? null) !== (string) $membership->id || ($claims['planet'] ?? null) !== (string) $planetId) {
+            throw new \DomainException('Consultation inaccessible.');
+        }
+
+        return $this->manager->transaction(function () use ($membership, $claims): int {
+            $this->manager->lockCurrent($membership);
+            $this->assertAccessible($membership);
+            // Les écritures portent sur le lot affiché, pas sur ce qui est arrivé depuis.
+            $this->pending($membership)->update(Notification::class, 'n')->set('n.consultedAt', ':now')
+                ->andWhere('n.journalAvailableAt <= :through')->setParameter('through', $claims['through'])
+                ->setParameter('now', $this->clock->now())->getQuery()->execute();
+
+            return $this->unreadCount($membership);
         });
     }
 
     private function pending(PlayerUniverse $membership): QueryBuilder
     {
-        return $this->em->createQueryBuilder()->select('n')->from(Notification::class,'n')
+        return $this->em->createQueryBuilder()->select('n')->from(Notification::class, 'n')
             ->where('n.recipient = :member')->andWhere('n.journalKind IN (:kinds)')->andWhere('n.consultedAt IS NULL')
-            ->setParameter('member',$membership)->setParameter('kinds',self::KINDS);
+            ->setParameter('member', $membership)->setParameter('kinds', self::KINDS);
     }
 
     private function assertAccessible(PlayerUniverse $membership): void
     {
-        if(!$membership->isPlayerControlled() || !$membership->universe->isAccessible($this->clock->now())) throw new \DomainException('Journal inaccessible.');
+        if (!$membership->isPlayerControlled() || !$membership->universe->isAccessible($this->clock->now())) {
+            throw new \DomainException('Journal inaccessible.');
+        }
     }
 }

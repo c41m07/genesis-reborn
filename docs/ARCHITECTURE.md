@@ -394,13 +394,16 @@ ensuite les absences. Cette reprise évite une lecture d’état de suivi périm
 dans une transaction métier ancienne et n’ajoute aucun verrou à ces traitements.
 Les autres catégories restent conservées hors du journal.
 
-À l’ouverture, les notifications suivies deviennent disponibles dans le journal ;
-journalAvailableAt les maintient lors des visites suivantes. L’état consultedAt
-n’est défini qu’au POST protégé par CSRF et participation, après vérification
-des identifiants disponibles du destinataire. UPDATE conditionnel, verrou de
-participation et sélection bornée à 50 rendent les répétitions sans double effet.
-Les événements non affichés ne sont pas consultés. Le témoin mobile repose sur
-cet état serveur et ne valide plus le journal par un stockage local automatique.
+À l’ouverture, les notifications suivies deviennent disponibles. Sous le verrou
+de la participation, journalAvailableAt ordonne strictement les nouveaux lots,
+même pour deux ouvertures dans une seconde. Le ticket signé à durée courte lie
+la borne du lot à la participation et à la planète ; les cinq lignes affichées
+ne constituent pas une liste d’identifiants transmise au serveur. Le POST protégé
+par CSRF ne marque que les lignes non consultées jusqu’à cette borne, sans retirer
+l’historique. Le contrôleur Stimulus ne lance l’action qu’à l’apparition de la
+première ligne dans l’onglet actif ; un formulaire natif reste disponible.
+Le contenu acquitté reste lisible sur la page courante. La réponse met à jour
+le témoin mobile sans effacer une arrivée signalée pendant la consultation.
 
 EmpireDetails ne produit que les données des planètes et flottes du propriétaire
 dans son univers. Les snapshots de stocks restent calculés en lecture seule.

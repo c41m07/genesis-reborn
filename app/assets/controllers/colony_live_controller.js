@@ -46,6 +46,8 @@ export default class extends Controller {
             let deferred = false;
             // Préserver les formulaires modifiés et différer les zones portant le focus pour ne pas interrompre la saisie.
             for (const region of document.querySelectorAll('[data-live-region]')) {
+                // Garder les événements affichés lisibles pendant cette visite, même après leur acquittement.
+                if (region.dataset.liveRegion === 'journal' && region.dataset.journalConsultation) continue;
                 if (region.querySelector('form[data-dirty="true"]')) continue;
                 if (region.contains(document.activeElement)) {
                     deferred = true;

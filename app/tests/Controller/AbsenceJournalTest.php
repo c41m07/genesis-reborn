@@ -35,7 +35,7 @@ final class AbsenceJournalTest extends WebTestCase
 
     private function player(string $name): array
     {
-        $data=new RegistrationData();$data->email=strtolower($name).'@example.test';$data->username=$name;$data->plainPassword='A-test-password-2026';
+        $data=new RegistrationData();$data->email=strtolower($name).'@example.test';$data->username=$name;$data->plainPassword=bin2hex(random_bytes(18));
         $player=static::getContainer()->get(RegistrationService::class)->register($data);
         $universe=$this->em->getRepository(Universe::class)->findOneBy(['slug'=>'omega-1']);
         static::getContainer()->get(UniverseService::class)->select($player,$universe->id);
@@ -58,7 +58,7 @@ final class AbsenceJournalTest extends WebTestCase
     {
         $old=$this->notice('Ancien événement');
         self::assertSame('queue',$old->journalKind);
-        self::assertSame(0,static::getContainer()->get(JournalService::class)->data($this->player->currentPlayerUniverse)['unreadCount']);
+        self::assertSame(0,static::getContainer()->get(JournalService::class)->unreadCount($this->player->currentPlayerUniverse));
         self::assertEquals($this->clock->now(),$this->home->acquiredAt);
         $this->overview();
         self::assertSelectorNotExists('[data-journal-notice]');
@@ -81,19 +81,45 @@ final class AbsenceJournalTest extends WebTestCase
         self::assertSame(2,$this->em->getRepository(Notification::class)->count([]));
     }
 
-    public function testConsultationOnlyMarksSubmittedVisibleEventsAndIsIdempotent(): void
+    public function testConsultationMarksTheWholeSnapshotAndKeepsLaterSameSecondArrivals(): void
     {
-        $this->overview();$first=$this->notice('À consulter');$this->overview();
-        $form=$this->client->getCrawler()->filter('form[action$="/journal/consulter"]')->form();
-        $values=$form->getPhpValues();$url=$form->getUri();
-        $late=$this->notice('Arrivée après affichage','arrival');
-        $this->client->submit($form);self::assertResponseRedirects();
-        $read=$this->em->getConnection()->fetchOne('SELECT consulted_at FROM notification WHERE id = ?',[$first->id]);
-        self::assertNotNull($read);self::assertNull($this->em->getConnection()->fetchOne('SELECT consulted_at FROM notification WHERE id = ?',[$late->id]));
-        $this->clock->sleep(10);$this->client->request('POST',$url,$values);self::assertResponseRedirects();
-        self::assertSame($read,$this->em->getConnection()->fetchOne('SELECT consulted_at FROM notification WHERE id = ?',[$first->id]));
-        $this->overview();self::assertSelectorCount(1,'[data-journal-notice]');self::assertSelectorTextContains('[data-journal-notice]','Arrivée après affichage');
-        self::assertSame(2,$this->em->getRepository(Notification::class)->count([]));
+        $this->overview();
+        $snapshot = [];
+        for ($i = 0; $i < 8; ++$i) {
+            $snapshot[] = $this->notice('Événement initial '.$i);
+        }
+        $this->overview();
+        self::assertSelectorCount(5, '[data-journal-notice]');
+        self::assertSelectorTextContains('.dashboard-journal', '5 des 8 événements');
+        self::assertSelectorNotExists('[name="notice_ids[]"]');
+        $form = $this->client->getCrawler()->filter('form[action$="/journal/consulter"]')->form();
+        $initial = $form->getPhpValues();
+        $url = $form->getUri();
+        $oldest = $snapshot[0];
+        $late = $this->notice('Arrivée après affichage', 'arrival');
+        // Une autre ouverture rend le nouvel événement disponible sans changer la seconde.
+        $this->overview();
+        self::assertSelectorTextContains('[data-journal-notice]', 'Arrivée après affichage');
+        $connection = $this->em->getConnection();
+        self::assertNotNull($connection->fetchOne('SELECT journal_available_at FROM notification WHERE id = ?', [$late->id]));
+
+        $this->client->request('POST', $url, $initial, [], ['HTTP_ACCEPT' => 'application/json']);
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
+        self::assertSame(['unread' => true], json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR));
+        $read = $connection->fetchOne('SELECT consulted_at FROM notification WHERE id = ?', [$oldest->id]);
+        self::assertNotNull($read);
+        self::assertSame(8, (int) $connection->fetchOne('SELECT COUNT(*) FROM notification WHERE consulted_at IS NOT NULL'));
+        self::assertNull($connection->fetchOne('SELECT consulted_at FROM notification WHERE id = ?', [$late->id]));
+
+        $this->clock->sleep(10);
+        $this->client->request('POST', $url, $initial);
+        self::assertResponseRedirects(null, 303);
+        self::assertSame($read, $connection->fetchOne('SELECT consulted_at FROM notification WHERE id = ?', [$oldest->id]));
+        $this->overview();
+        self::assertSelectorCount(1, '[data-journal-notice]');
+        self::assertSelectorTextContains('[data-journal-notice]', 'Arrivée après affichage');
+        self::assertSame(9, $this->em->getRepository(Notification::class)->count([]));
     }
 
     public function testJsonRefreshReturnsOnlyRegionsAndNeverOpensTheJournal(): void
@@ -135,35 +161,72 @@ final class AbsenceJournalTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
-    public function testInvalidCsrfMembershipAndForeignNotificationsAreRejected(): void
-    {
-        $this->overview();$own=$this->notice('Propre');$this->overview();
-        $form=$this->client->getCrawler()->filter('form[action$="/journal/consulter"]')->form();$values=$form->getPhpValues();$url=$form->getUri();
-        $this->client->request('POST',$url,array_replace($values,['_token'=>'invalid']));self::assertResponseStatusCodeSame(403);
-        $this->client->request('POST',$url,array_replace($values,['membership'=>999999]));self::assertResponseStatusCodeSame(403);
-        [$other,$planet]=$this->player('JournalOther');
-        $foreign=new Notification();$foreign->recipient=$other->currentPlayerUniverse;$foreign->message='Privé';$foreign->createdAt=$this->clock->now();$foreign->journalKind='combat';$foreign->journalAvailableAt=$this->clock->now();
-        $this->em->persist($foreign);$this->em->flush();
-        $this->client->request('GET','/planetes/'.$planet->id);self::assertResponseStatusCodeSame(404);
-        $this->client->request('POST',$url,array_replace($values,['notice_ids'=>[$foreign->id]]));self::assertResponseStatusCodeSame(404);
-        self::assertNull($this->em->getConnection()->fetchOne('SELECT consulted_at FROM notification WHERE id = ?',[$own->id]));
-    }
-
-    public function testCategoriesPaginationAndCrossUniverseFormsPreserveAllEvents(): void
+    public function testJournalTicketIsPrivateBoundToPlanetAndExpires(): void
     {
         $this->overview();
-        for($i=0;$i<55;++$i) $this->notice('Événement '.$i,JournalService::KINDS[$i%count(JournalService::KINDS)]);
-        $this->notice('Message hors journal',null);$this->overview();
-        self::assertSelectorCount(50,'[data-journal-notice]');
-        self::assertSelectorTextNotContains('.dashboard-journal','Message hors journal');
-        $form=$this->client->getCrawler()->filter('form[action$="/journal/consulter"]')->form();
-        $this->client->submit($form);self::assertResponseRedirects();$this->overview();self::assertSelectorCount(5,'[data-journal-notice]');
-        self::assertSame(56,$this->em->getRepository(Notification::class)->count([]));
-        $form=$this->client->getCrawler()->filter('form[action$="/journal/consulter"]')->form();$url=$form->getUri();$values=$form->getPhpValues();
-        $turbo=$this->em->getRepository(Universe::class)->findOneBy(['slug'=>'turbo-1']);
-        static::getContainer()->get(UniverseService::class)->select($this->em->find(Player::class,$this->player->id),$turbo->id);
-        $this->client->request('POST',$url,$values);self::assertResponseStatusCodeSame(404);
-        self::assertSame(50,(int)$this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM notification WHERE consulted_at IS NOT NULL'));
+        $own = $this->notice('Événement propre');
+        $this->overview();
+        $form = $this->client->getCrawler()->filter('form[action$="/journal/consulter"]')->form();
+        $values = $form->getPhpValues();
+        $url = $form->getUri();
+        $this->client->request('POST', $url, array_replace($values, ['_token' => 'invalid']));
+        self::assertResponseStatusCodeSame(403);
+        $this->client->request('POST', $url, array_replace($values, ['membership' => 999999]));
+        self::assertResponseStatusCodeSame(403);
+        $this->client->request('POST', $url, array_replace($values, ['journal_ticket' => $values['journal_ticket'].'&through=other']));
+        self::assertResponseStatusCodeSame(404);
+
+        [, $foreign] = $this->player('JournalOther');
+        $this->client->request('POST', '/planetes/'.$foreign->id.'/journal/consulter', $values);
+        self::assertResponseStatusCodeSame(404);
+        $clock = $this->clock;
+        $clock->sleep(31 * 60);
+        $this->client->request('POST', $url, $values);
+        self::assertResponseStatusCodeSame(404);
+        self::assertNull($this->em->getConnection()->fetchOne('SELECT consulted_at FROM notification WHERE id = ?', [$own->id]));
+    }
+
+    public function testNativeFallbackPreservesHistoryNonJournalAndAnotherTabSelection(): void
+    {
+        $this->overview();
+        foreach (JournalService::KINDS as $kind) {
+            $this->notice('Événement '.$kind, $kind);
+        }
+        $nonJournal = $this->notice('Message hors journal', null);
+        $this->overview();
+        self::assertSelectorCount(5, '[data-journal-notice]');
+        self::assertSelectorTextNotContains('.dashboard-journal', 'Message hors journal');
+        $form = $this->client->getCrawler()->filter('form[action$="/journal/consulter"]')->form();
+
+        $membership = $this->player->currentPlayerUniverse;
+        $repo = static::getContainer()->get(GameRepository::class);
+        $other = array_values(array_filter($repo->planets($membership->universe, null, true), static fn (Planet $p): bool => !$p->npcPlanet))[0];
+        $other->owner = $membership;
+        $this->em->flush();
+        $this->client->request('GET', '/planetes/'.$other->id);
+        self::assertResponseIsSuccessful();
+        $this->client->request('POST', '/planetes/'.$other->id.'/journal/consulter', $form->getPhpValues());
+        self::assertResponseStatusCodeSame(404);
+        $this->client->submit($form);
+        self::assertResponseRedirects('/', 303);
+        $this->client->followRedirect();
+        self::assertResponseRedirects('/planetes/'.$other->id);
+        $this->client->followRedirect();
+        self::assertSelectorCount(0, '[data-journal-notice]');
+
+        $this->overview();
+        $this->notice('Encore non consulté');
+        $this->overview();
+        $form = $this->client->getCrawler()->filter('form[action$="/journal/consulter"]')->form();
+        $turbo = $this->em->getRepository(Universe::class)->findOneBy(['slug' => 'turbo-1']);
+        static::getContainer()->get(UniverseService::class)->select($this->em->find(Player::class, $this->player->id), $turbo->id);
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(404);
+
+        $connection = $this->em->getConnection();
+        self::assertSame(6, (int) $connection->fetchOne('SELECT COUNT(*) FROM notification WHERE consulted_at IS NOT NULL'));
+        self::assertNull($connection->fetchOne('SELECT consulted_at FROM notification WHERE id = ?', [$nonJournal->id]));
+        self::assertSame(8, $this->em->getRepository(Notification::class)->count([]));
     }
 
     public function testAllColonyListsUseTheSameAcquisitionOrderWithoutInventingLegacyDates(): void

@@ -169,7 +169,9 @@ test('Conversations : dernier message, bulles distinctes et témoin mobile', asy
   await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeVisible();
   await page.goto('/');
   await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeVisible();
-  await page.getByRole('button', { name: 'Marquer ces événements comme consultés' }).click();
+  await page.bringToFront();
+  await page.locator('[data-journal-notice]').first().scrollIntoViewIfNeeded();
+  await expect(page.locator('.dashboard-journal [role="status"]')).toHaveText('Journal consulté.');
   await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeHidden();
   await page.goto(`/messages?with=${peerId}`);
   await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeHidden();
