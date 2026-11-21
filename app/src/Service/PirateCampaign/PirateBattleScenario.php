@@ -102,6 +102,24 @@ final readonly class PirateBattleScenario
         return $copy;
     }
 
+    /** @return array{units: array, modifiers: array, rounds: int, recharge: float} Persistance serveur uniquement. */
+    public function snapshot(): array
+    {
+        return ['units' => $this->pirateUnits, 'modifiers' => $this->modifiers, 'rounds' => $this->maxRounds, 'recharge' => $this->shieldRechargePercent];
+    }
+
+    public static function fromSnapshot(PirateEncounterSnapshot $encounter, array $data): self
+    {
+        return self::freeze($encounter, $data['units'], $data['modifiers'], $data['rounds'], $data['recharge']);
+    }
+
+    public function assertNativeUnitLimit(array $playerUnits): void
+    {
+        if (array_sum(array_column($this->pirateUnits, 'quantity')) + array_sum(array_column($playerUnits, 'quantity')) > CombatSimulator::MAX_UNITS) {
+            throw new \DomainException('La rencontre dépasse la capacité du moteur de combat.');
+        }
+    }
+
     /** Calcul pur : des identifiants abstraits empêchent d'introduire un autre joueur ou une défense planétaire. */
     public function resolve(CombatSimulator $simulator, array $playerUnits, int $seed): array
     {

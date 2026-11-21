@@ -2,8 +2,8 @@
 
 namespace App\Repository;
 
-use App\Entity\{Player, PlayerUniverse, Universe, Galaxy, SolarSystem, Planet, PlanetResource, PlanetBuilding, PlayerTechnology, Fleet, FleetShip, PlayerDiscovery, QueueItem, OutboxMessage, PirateReconnaissance, CombatLog, CombatParticipant, PlayerBoost, BoostEvent, BoostEventContribution, GameEvent, Guild, GuildProject, GuildProjectDefinition, GuildProjectContribution};
-use Doctrine\DBAL\{ArrayParameterType, Query\QueryBuilder};
+use App\Entity\{Player, PlayerUniverse, Universe, Galaxy, SolarSystem, Planet, PlanetResource, PlanetBuilding, PlayerTechnology, Fleet, FleetShip, PlayerDiscovery, QueueItem, OutboxMessage, PirateAttackCampaign, PirateReconnaissance, CombatLog, CombatParticipant, PlayerBoost, BoostEvent, BoostEventContribution, GameEvent, Guild, GuildProject, GuildProjectDefinition, GuildProjectContribution};
+use Doctrine\DBAL\{ArrayParameterType, LockMode, Query\QueryBuilder};
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
@@ -988,6 +988,21 @@ final class GameRepository
             ->getOneOrNullResult();
     }
 
+    /** Traiter seulement l'agrégat encore présent et rattaché à la participation verrouillée. */
+    public function lockPirateAttack(int $id, PlayerUniverse $membership): ?PirateAttackCampaign
+    {
+        return $this->em->createQueryBuilder()
+            ->select('campaign')->from(PirateAttackCampaign::class, 'campaign')
+            ->join('campaign.reconnaissance', 'recon')
+            ->where('campaign.id = :id AND recon.membership = :membership')
+            ->setParameter('id', $id)
+            ->setParameter('membership', $membership)
+            ->getQuery()
+            ->setLockMode(LockMode::PESSIMISTIC_WRITE)
+            ->setHint(Query::HINT_REFRESH, true)
+            ->getOneOrNullResult();
+    }
+
     public function outbox(bool $notifications): array
     {
         return $this->em->createQueryBuilder()->select('o')->from(OutboxMessage::class, 'o')->where($notifications ? 'o.kind = :kind' : 'o.kind IN (:kind)')->setParameter('kind', $notifications ? 'notification' : [
@@ -999,6 +1014,7 @@ final class GameRepository
             'guild_project',
             'reconstruction',
             \App\Message\PirateReconnaissanceDue::KIND,
+            \App\Message\PirateAttackDue::KIND,
         ])->orderBy('o.id', 'ASC')->setMaxResults(100)->getQuery()->getResult();
     }
 

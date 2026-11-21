@@ -13,7 +13,7 @@ use App\Service\PirateCampaign\{PirateDistressSite, PirateEncounterSnapshot, Pir
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Tools\SchemaTool;
+use Doctrine\ORM\Tools\{SchemaTool, SchemaValidator};
 use Psr\Log\NullLogger;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -305,13 +305,20 @@ final class PirateReconnaissanceTest extends KernelTestCase
     {
         [$member, $home, $system, $stock] = $this->fixture();
         $db = $this->em->getConnection();
+        // Rejouer les deux migrations de campagne depuis le schéma historique, sans toucher aux tables métier.
+        $db->executeStatement('DROP TABLE pirate_attack_campaign');
         $db->executeStatement('DROP TABLE pirate_reconnaissance');
         require_once dirname(__DIR__, 2).'/migrations/Version20261120000900.php';
-        $migration = new \DoctrineMigrations\Version20261120000900($db, new NullLogger());
-        $migration->up(new Schema());
-        foreach ($migration->getSql() as $query) {
-            $db->executeStatement($query->getStatement(), $query->getParameters(), $query->getTypes());
+        require_once dirname(__DIR__, 2).'/migrations/Version20261120000930.php';
+        foreach ([\DoctrineMigrations\Version20261120000900::class, \DoctrineMigrations\Version20261120000930::class] as $class) {
+            $migration = new $class($db, new NullLogger());
+            $migration->up(new Schema());
+            foreach ($migration->getSql() as $query) {
+                $db->executeStatement($query->getStatement(), $query->getParameters(), $query->getTypes());
+            }
         }
+        self::assertTrue((new SchemaValidator($this->em))->schemaInSyncWithMetadata());
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_attack_campaign'));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_reconnaissance'));
         self::assertSame(3, (int) $db->fetchOne('SELECT quantity FROM fleet_ship WHERE id = ?', [$stock->id]));
         self::assertTrue($this->service->launch($member, $home, $system, PirateDistressSite::inExistingSystem($member, $system), 'test-migration', $this->encounter()));

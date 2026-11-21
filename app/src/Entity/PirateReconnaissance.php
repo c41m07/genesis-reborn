@@ -61,6 +61,20 @@ class PirateReconnaissance
             && $viewer->universe->isAccessible($at);
     }
 
+    /** Renseignement effectivement remis. Réservé à la commande privée, jamais à une vue. */
+    public function battleProofFor(PlayerUniverse $membership, \DateTimeImmutable $at): ?array
+    {
+        if (!$this->belongsTo($membership, $at) || $this->reportedAt === null || $this->reportedAt > $at) {
+            return null;
+        }
+
+        return [
+            'reportedAt' => $this->reportedAt,
+            'system' => $this->system,
+            'encounter' => PirateEncounterSnapshot::freeze($this->composition, $this->buildCosts),
+        ];
+    }
+
     /** Sous le verrou de l'entité : l'unique rapport clôt aussi la réservation de sonde. */
     public function reportWhenDue(PlayerUniverse $membership, string $token, \DateTimeImmutable $at): void
     {

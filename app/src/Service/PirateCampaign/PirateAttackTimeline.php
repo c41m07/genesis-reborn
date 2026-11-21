@@ -56,6 +56,7 @@ final class PirateAttackTimeline
         }
 
         $units = PirateBattleScenario::freezeUnits($playerUnits);
+        $this->scenario->assertNativeUnitLimit($units);
         ++$this->attemptNumber;
         $this->playerUnits = $units;
         $this->seed = $seed;
@@ -117,6 +118,39 @@ final class PirateAttackTimeline
     {
         $this->lastSettledAt = $at;
         $this->state = $this->won ? 'won' : 'retryable';
+    }
+
+    /** État interne de l'agrégat verrouillé, jamais fourni ou produit par un client HTTP. */
+    public function checkpoint(): array
+    {
+        return [
+            'attempt' => $this->attemptNumber,
+            'state' => $this->state,
+            'settled' => $this->lastSettledAt?->format(DATE_ATOM),
+            'combatDue' => $this->combatDueAt?->format(DATE_ATOM),
+            'resolved' => $this->combatResolvedAt?->format(DATE_ATOM),
+            'returnDue' => $this->returnDueAt?->format(DATE_ATOM),
+            'units' => $this->playerUnits,
+            'seed' => $this->seed,
+            'won' => $this->won,
+        ];
+    }
+
+    public static function fromCheckpoint(PirateBattleScenario $scenario, \DateTimeImmutable $reportedAt, array $data): self
+    {
+        $timeline = self::afterReport($scenario, $reportedAt);
+        $timeline->attemptNumber = $data['attempt'];
+        $timeline->state = $data['state'];
+        $date = static fn (?string $value): ?\DateTimeImmutable => $value !== null ? new \DateTimeImmutable($value) : null;
+        $timeline->lastSettledAt = $date($data['settled']);
+        $timeline->combatDueAt = $date($data['combatDue']);
+        $timeline->combatResolvedAt = $date($data['resolved']);
+        $timeline->returnDueAt = $date($data['returnDue']);
+        $timeline->playerUnits = PirateBattleScenario::freezeUnits($data['units']);
+        $timeline->seed = $data['seed'];
+        $timeline->won = $data['won'];
+
+        return $timeline;
     }
 
     public function returnDueAt(): ?\DateTimeImmutable

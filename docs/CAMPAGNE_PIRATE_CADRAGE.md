@@ -224,3 +224,66 @@ appelé par un contrôleur, l'outbox, le tutoriel ou la flotte standard.
   broker, les expirations/rejets de destination, le rejeu après rollback,
   et deux workers concurrents. Aucun secours ne rend une sonde ni ne
   notifie un autre joueur par défaut déjà dans ce modèle.
+
+## Attaque persistée : orchestration interne, sans ouverture de campagne
+
+Complexité 5/5. La migration ajoute une table vide attachée à la
+reconnaissance, sans reprendre d’historique ni modifier les stocks
+existants. Aucune route, politique universelle, prime ou convoi.
+
+1. **Départ.** Vérifier en base, sous les verrous de participation, univers
+   et colonie, une vraie reconnaissance remise au propriétaire. Le premier
+   départ associe le scénario préparé par le serveur, dont les unités doivent
+   correspondre exactement au renseignement figé. Les essais suivants
+   relisent ce même scénario et doivent annoncer le numéro de tentative
+   précédent : une requête obsolète ne peut pas démarrer un nouvel essai
+   après une défaite. Verrouiller le hangar et ses rangs concernés, vérifier
+   la composition exacte, figer les statistiques des vaisseaux payés avec
+   leurs technologies, déduire ces effectifs et écrire le message de
+   transaction au même commit. Aucun appel ne crée de flotte volante,
+   n’envoie une sonde ou n’altère les stocks d’un autre joueur.
+2. **Aller et combat.** Durée calculée par le moteur natif jusqu’à l’entrée du
+   système du poste ; la résolution n'intervient qu'après cet aller et la
+   fenêtre interne fournie par le scénario. Le délai utilise la borne max
+   du scénario dans cette tranche ; il faut valider une vraie cadence et
+   une éventuelle clôture anticipée avant mise en jeu. Le calcul de combat
+   à échéance consomme la réservation survivante de la tentative et
+   stocke les pertes/résultat dans la même transaction que l’outbox de
+   retour ; le PvP et les combats planétaires ordinaires ne sont pas appelés.
+   Les vaisseaux détruits ne reviennent pas. Sans survivant, il n’existe
+   pas de trajet retour.
+3. **Retour.** Les survivants ont une durée complète de trajet, égale à
+   l’aller figé, à partir du résultat produit. Seule la phase de retour
+   due les réinstalle sous verrou dans le hangar de la colonie d’origine
+   encore possédée. Si elle a disparu ou changé de mains, conserver la
+   réserve dans un état interne bloqué : ni remise à un tiers, ni
+   disparition, ni redirection automatique. Avant ouverture, décider
+   avec un cas de reprise explicite comment traiter ce blocage et les
+   départs d’empire, fermetures et suppressions. Une victoire est
+   terminale immédiatement pour cette rencontre ; un résultat défavorable
+   permet de retenter après le retour éventuel, sans renouveler l’intel.
+4. **Rejeu.** L'outbox attaque et retour transporte un jeton distinct par
+   phase. Un jeton obsolète ou déjà consommé ne modifie rien. Un message
+   valide d'attaque/retour reçu trop tôt demande à Messenger de rejouer
+   le même jeton après le temps restant, sans résultat anticipé. Le
+   rattrapage de la reconnaissance reste séparé. Tester transport et worker
+   avec un vrai broker et des horloges décalées avant toute ouverture.
+
+La projection interne est réservée au compte propriétaire dans sa
+participation accessible et ne renvoie ni coordonnées, jetons, graine, coût
+ou profils d’ennemi avant résultat. L’agrégat conserve l’état courant et son
+dernier rapport, pas encore un historique de toutes les défaites ni une
+archive d’utilisateur. Les clés de tentative persistent assez pour clôturer
+l’ordre actif ; prévoir un historique durable séparé si produit retenu.
+Le carburant n’est pas débité par ce chemin interne ; le contrôle du fret du
+hangar ne constitue pas un prix. Ne pas ouvrir le lancement aux joueurs avant
+la validation des conditions de départ, de la durée publique, de la politique
+de retour bloqué et de la génération/difficulté réelle du scénario.
+
+Avant activation, auditer les scores et protections qui lisent
+uniquement le hangar et les flottes ordinaires : compter correctement
+les vaisseaux privés immobilisés (jusqu’à une perte réellement validée)
+sans exposer leur destination ou présence dans les vues publiques.
+Vérifier aussi le cycle de fermeture/suppression de l’univers et
+l’interruption définitive du compte, faute de quoi la suppression en
+cascade de la campagne pourrait effacer une réserve encore ouverte.
