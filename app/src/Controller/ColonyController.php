@@ -208,6 +208,27 @@ final class ColonyController extends AbstractController
         $planet ??= $planets[0];
         return $this->render('player/technology_tree.html.twig', $view->data($membership, $planet, section: 'tree') + ['tree_standalone' => true]);
     }
+    #[Route('/planetes/{id}/objectif-technologique', name: 'app_technology_goal_summary', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function technologyGoalSummary(int $id, Request $request, GameCatalog $catalog): JsonResponse
+    {
+        // Le navigateur choisit la clé, mais le catalogue et la colonie restent vérifiés côté serveur.
+        $planet = $this->owned($id);
+        $key = $request->query->all()['goal'] ?? null;
+        $headers = ['Cache-Control' => 'private, no-store'];
+        if (!is_string($key) || strlen($key) > 160 || !preg_match('/^(buildings|technologies|ships|defenses):([a-z0-9_]+)-(basic|intermediate|superior)$/D', $key, $parts)) {
+            return $this->json(['goal' => null], 200, $headers);
+        }
+        [, $group, $slug, $tier] = $parts;
+        if (!isset($catalog->all($group)[$slug])) {
+            return $this->json(['goal' => null], 200, $headers);
+        }
+
+        // La même variante de catalogue que le Guide fournit le nom et le rang, sans calculer le graphe.
+        $definition = $catalog->getTierForUniverse($planet->solarSystem->galaxy->universe, $group, $slug, $tier);
+
+        return $this->json(['goal' => ['label' => $definition['label'], 'tier' => $definition['_tier_label']]], 200, $headers);
+    }
+
     #[Route('/planetes/{id}/renommer', name: 'app_planet_rename', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function rename(int $id, Request $request, GameManager $manager): Response
     {

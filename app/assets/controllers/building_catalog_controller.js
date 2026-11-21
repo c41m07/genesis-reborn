@@ -99,7 +99,7 @@ export default class extends Controller {
             this.restoreHighlight();
             requestAnimationFrame(() => {
                 if (!panel.isConnected) return;
-                const bars = [...document.querySelectorAll('.topbar, .resource-event-stack, .event-drawer-wrap, .catalog-operations-rail')].filter(bar => ['fixed','sticky'].includes(getComputedStyle(bar).position));
+                const bars = [...document.querySelectorAll('.topbar, .resource-event-stack, .catalog-operations-rail')].filter(bar => ['fixed','sticky'].includes(getComputedStyle(bar).position));
                 const top = Math.max(0, ...bars.map(bar => bar.getBoundingClientRect().bottom));
                 const family = panel.closest('[data-slug]');
                 window.scrollTo({ top: window.scrollY + family.getBoundingClientRect().top - top - 16, behavior: 'instant' });

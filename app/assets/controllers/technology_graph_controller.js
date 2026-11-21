@@ -270,6 +270,13 @@ export default class extends Controller {
             if (this.goalKey) localStorage.setItem(this.storageKeyValue, this.goalKey);
             else localStorage.removeItem(this.storageKeyValue);
         } catch { /* Une restriction du navigateur ne bloque pas la consultation. */ }
+        const node = this.byKey.get(this.goalKey);
+        window.dispatchEvent(new CustomEvent('technology-goal:changed', {
+            detail: {
+                storageKey: this.storageKeyValue,
+                goal: node ? { label: node.dataset.label, tier: node.dataset.tierLabel } : null,
+            },
+        }));
     }
 
     updateGoal() {

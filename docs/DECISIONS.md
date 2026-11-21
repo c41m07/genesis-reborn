@@ -1749,8 +1749,11 @@ demande un instantané serveur pour actualiser le fonctionnement des usines.
 Un lien direct vers un bâtiment, une recherche, un vaisseau ou une défense doit
 révéler le bon rang et le repérer par un cadre jaune pendant cinq secondes.
 L’animation est désactivée avec la préférence de mouvements réduits ; le repère
-reste fixe. Les événements restent visibles au défilement sur ordinateur, sous
-les ressources, sans superposer les activités et flottes des catalogues.
+reste fixe. Depuis la décision du 21 novembre, le raccourci du Guide techno et
+le tiroir Événements occupent un rail au-dessus des ressources. Le rail et les
+ressources restent solidaires au défilement ; ouvrir le tiroir ne déplace pas
+la bande de ressources ni les activités et flottes des catalogues. Voir la
+[recette du rail](FEUILLE_DE_ROUTE.md#guide-techno-et-événements-au-dessus-des-ressources).
 Le signalement des messages reçus conserve son formulaire et ses permissions ;
 son triangle est placé à droite, hors du cadre de la bulle.
 
