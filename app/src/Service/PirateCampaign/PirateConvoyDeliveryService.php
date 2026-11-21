@@ -38,14 +38,59 @@ final readonly class PirateConvoyDeliveryService
         $right = PirateConvoyDelivery::forVictory($attack, $owner, $at);
         $this->manager->save($right);
         $planet = $this->ownedPlanetLocked($owner, $attack->originId);
-        $timeline = $right->timeline();
+        if ($planet !== null) {
+            $this->dispatchProtectedLeg($right, $right->timeline(), $owner, $planet, $at);
+        }
+    }
+
+    /**
+     * Réaffectation éventuelle au terme d'un trajet dont la destination fut réellement perdue,
+     * ou premier choix quand l'origine n'était déjà plus possédée à la victoire.
+     * Ce service ne signe aucun formulaire et ne crédite aucun stock.
+     */
+    public function chooseOwnedDestination(PlayerUniverse $owner, int $deliveryId, int $newDestinationId): ?string
+    {
+        $scope = $this->readScope($owner);
+        if ($scope === null) {
+            return null;
+        }
+
+        return $this->manager->transaction(function () use ($owner, $scope, $deliveryId, $newDestinationId): ?string {
+            $now = $this->now();
+            $right = $this->lockForOwner($owner, $scope, $deliveryId, $now);
+            if ($right === null || $owner->player?->lockedAt !== null) {
+                return null;
+            }
+            $timeline = $right->timeline();
+            if (!in_array($timeline->state(), ['eligible', 'destination_lost'], true)) {
+                // Notamment pas de détournement en vol ou pour un dépôt simplement plein.
+                return $timeline->state();
+            }
+            $planet = $this->ownedPlanetLocked($owner, $newDestinationId);
+            if ($planet === null) {
+                return null;
+            }
+            $this->dispatchProtectedLeg($right, $timeline, $owner, $planet, $now);
+
+            return $timeline->state();
+        });
+    }
+
+    private function dispatchProtectedLeg(
+        PirateConvoyDelivery $right,
+        PirateConvoyTimeline $timeline,
+        PlayerUniverse $owner,
+        Planet $planet,
+        \DateTimeImmutable $at,
+    ): void {
         $source = $timeline->attestedPositionForDeparture();
-        if ($planet === null || $source === null || $source[1] !== $planet->solarSystem->galaxy->id) {
-            // Le droit subsiste sans destination joignable ; on ne suppose pas de voyage de remplacement.
+        if ($source === null || $source[1] !== $planet->solarSystem->galaxy->id
+            || $timeline->checkpoint()['destination'] === $planet->id) {
+            // Le droit subsiste, même sans position ou destination joignable ; jamais de téléportation.
             return;
         }
         $destination = $this->coordinates($planet);
-        // Le profil de transport sert de référence de vitesse, sans créer de vaisseau ni débiter le joueur.
+        // Le profil civil est une référence de vitesse, sans véritable Fleet et sans débit au joueur.
         try {
             $profile = $this->catalog->getTierForUniverse($owner->universe, 'ships', 'transport', 'basic') + ['quantity' => 1];
             $distances = $this->navigation->distances($this->navigation->point($source), $destination);
@@ -55,13 +100,16 @@ final readonly class PirateConvoyDeliveryService
             // Un devis impossible ne doit pas effacer la victoire ni forcer une destination inventée.
             return;
         }
-        $token = PirateConvoyDispatchToken::generate(1);
+        $token = PirateConvoyDispatchToken::generate($timeline->checkpoint()['generation'] + 1);
         $due = $at->modify('+'.$quote['seconds'].' seconds');
         if (!$timeline->dispatch($owner->id, $owner->universe->id, $planet->id, $source, $destination, $token, $at, $due)) {
             throw new \LogicException('L’ancre du droit de convoi ne correspond pas au trajet.');
         }
         $right->replaceState($timeline);
-        $this->manager->flush();
+        // Premier droit non flushé : il faut son ID pour l'outbox. La transaction reste ouverte.
+        if ($right->id === null) {
+            $this->manager->flush();
+        }
 
         $event = new OutboxMessage();
         $event->kind = PirateConvoyDue::KIND;
@@ -83,9 +131,14 @@ final readonly class PirateConvoyDeliveryService
             return null;
         }
 
-        return $this->manager->transaction(function () use ($owner, $deliveryId, $token): ?int {
+        $scope = $this->readScope($owner);
+        if ($scope === null) {
+            return null;
+        }
+
+        return $this->manager->transaction(function () use ($owner, $scope, $deliveryId, $token): ?int {
             $now = $this->now();
-            $right = $this->lockForOwner($owner, $deliveryId, $now);
+            $right = $this->lockForOwner($owner, $scope, $deliveryId, $now);
             if ($right === null) {
                 return null;
             }
@@ -111,9 +164,14 @@ final readonly class PirateConvoyDeliveryService
     /** Reprise privée au même dépôt seulement. Aucun trajet ni destination ne vient du demandeur. */
     public function retryDeposit(PlayerUniverse $owner, int $deliveryId): ?string
     {
-        return $this->manager->transaction(function () use ($owner, $deliveryId): ?string {
+        $scope = $this->readScope($owner);
+        if ($scope === null) {
+            return null;
+        }
+
+        return $this->manager->transaction(function () use ($owner, $scope, $deliveryId): ?string {
             $now = $this->now();
-            $right = $this->lockForOwner($owner, $deliveryId, $now);
+            $right = $this->lockForOwner($owner, $scope, $deliveryId, $now);
             if ($right === null || $owner->player?->lockedAt !== null) {
                 return null;
             }
@@ -156,15 +214,25 @@ final readonly class PirateConvoyDeliveryService
         $right->replaceState($timeline);
     }
 
-    private function lockForOwner(PlayerUniverse $owner, int $deliveryId, \DateTimeImmutable $at): ?PirateConvoyDelivery
+    /** @return array{account:int,universe:int}|null */
+    private function readScope(PlayerUniverse $owner): ?array
     {
-        if ($owner->id === null) {
-            return null;
-        }
-        // Résoudre l'association avant le premier verrou du droit ; un propriétaire détaché ne doit rien recevoir.
+        // Résoudre les associations avant la transaction : éviter un instantané MariaDB avant le verrou d'entrée.
+        $account = $owner->player?->id;
+        $universe = $owner->universe->id;
+
+        return $owner->id === null || $account === null || $universe === null
+            ? null : ['account' => $account, 'universe' => $universe];
+    }
+
+    /** @param array{account:int,universe:int} $scope */
+    private function lockForOwner(PlayerUniverse $owner, array $scope, int $deliveryId, \DateTimeImmutable $at): ?PirateConvoyDelivery
+    {
+        // Un changement d'identité ne requalifie pas une demande portée par l'ancien contexte.
         $this->manager->lockCurrent($owner);
         $this->manager->lockCurrent($owner->universe);
-        if (!$owner->isPlayerControlled() || !$owner->universe->isAccessible($at)) {
+        if (!$owner->isPlayerControlled() || !$owner->universe->isAccessible($at)
+            || $owner->player?->id !== $scope['account'] || $owner->universe->id !== $scope['universe']) {
             return null;
         }
 

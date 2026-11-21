@@ -610,8 +610,189 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertNull($service->retryDeposit($ally, $right->id));
     }
 
-    /** @return array{PlayerUniverse,Planet,PlayerUniverse,PirateAttackCampaign,array} */
-    private function pilotVictoryWithConvoy(): array
+    public function testConvoyArrivalAndManualClaimCompeteWithoutSecondCredit(): void
+    {
+        [$member, $home, , , $event] = $this->pilotVictoryWithConvoy();
+        $rightId = (int) $event['target_id'];
+        $right = $this->em->find(PirateConvoyDelivery::class, $rightId);
+        $this->advanceTo($right->timeline()->chronology()['due_at']);
+        $this->stampStocks($home->id, ['metal' => 0.0, 'nano' => 0.0, 'antimatter' => 0.0]);
+        $reply = $this->raceConvoy($member, $rightId, $event['token'], 'claim', $home->id);
+        self::assertContains($reply, ['traveling', 'settled']);
+        self::assertSame(41.5, $this->resourceStock($home->id, 'metal'));
+        self::assertSame(0.5, $this->resourceStock($home->id, 'nano'));
+        self::assertSame(3.5, $this->resourceStock($home->id, 'antimatter'));
+        $this->em->refresh($right);
+        self::assertSame('settled', $right->timeline()->state());
+    }
+
+    public function testConvoyRetargetCompetesWithLostArrivalAndOldTokenCannotSettleNewLeg(): void
+    {
+        [$member, $lost, $newOwner, , $event] = $this->pilotVictoryWithConvoy();
+        $next = $this->createReplacementColony($member, $lost);
+        $rightId = (int) $event['target_id'];
+        $right = $this->em->find(PirateConvoyDelivery::class, $rightId);
+        $departed = $right->timeline()->chronology()['departed_at'];
+        $service = self::getContainer()->get(PirateConvoyDeliveryService::class);
+        self::assertSame('traveling', $service->chooseOwnedDestination($member, $rightId, $next->id));
+        self::assertEquals($departed, $right->timeline()->chronology()['departed_at']);
+
+        $lost->owner = $newOwner;
+        $this->em->flush();
+        $this->advanceTo($right->timeline()->chronology()['due_at']);
+        $reply = $this->raceConvoy($member, $rightId, $event['token'], 'retarget', $next->id);
+        self::assertSame('traveling', $reply);
+        $this->em->refresh($right);
+        if ($right->timeline()->state() === 'destination_lost') {
+            // Si la commande a pris le verrou avant l'arrivée, elle n'a eu aucun effet : reprise explicite.
+            self::assertSame('traveling', $service->chooseOwnedDestination($member, $rightId, $next->id));
+        }
+        $after = $right->timeline()->checkpoint();
+        self::assertSame(2, $after['generation']);
+        self::assertSame($lost->position, $after['position'][4], 'Le devis repart du point réellement atteint.');
+        self::assertNotSame($event['token'], $after['token']);
+        self::assertTrue(PirateConvoyDispatchToken::matches($after['token'], 2));
+        // Positions 4→5 (10 UA) avec le cargo Basique exact (104 UA/h), pas depuis l’entrée 10.
+        self::assertSame(347, (new \DateTimeImmutable($after['due_at']))->getTimestamp() - $this->clock->now()->getTimestamp());
+        self::assertSame(0.0, $this->resourceStock($next->id, 'metal'));
+        $db = $this->em->getConnection();
+        self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_convoy' AND token = ?", [$after['token']]));
+        $this->advanceTo(new \DateTimeImmutable($after['due_at']));
+        $this->stampStocks($next->id, ['metal' => 0.0, 'nano' => 0.0, 'antimatter' => 0.0]);
+        $service->processDue($rightId, $event['token']);
+        self::assertSame(0.0, $this->resourceStock($next->id, 'metal'), 'Même après le nouveau terme, le jeton ancien reste muet.');
+        $service->processDue($rightId, $after['token']);
+        $service->processDue($rightId, $after['token']);
+        self::assertSame(41.5, $this->resourceStock($next->id, 'metal'));
+        self::assertSame(0.0, $this->resourceStock($lost->id, 'metal'));
+    }
+
+    public function testNoOriginAtVictoryMayStartFirstTripAndRollsBackWithTheOutbox(): void
+    {
+        [$member, $lost, , , $event] = $this->pilotVictoryWithConvoy(loseOriginBeforeVictory: true);
+        self::assertFalse($event);
+        $right = $this->em->getRepository(PirateConvoyDelivery::class)->findOneBy([]);
+        self::assertSame('eligible', $right->timeline()->state());
+        $rightId = $right->id;
+        $ownerId = $member->id;
+        $next = $this->createReplacementColony($member, $lost);
+        $nextId = $next->id;
+        $db = $this->em->getConnection();
+        $service = self::getContainer()->get(PirateConvoyDeliveryService::class);
+        self::assertNull($service->chooseOwnedDestination($member, $rightId, $lost->id));
+        $db->executeStatement("CREATE TRIGGER convoy_reject_new_trip BEFORE INSERT ON outbox_message FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'fixture refused new convoy trip'");
+        try {
+            $service->chooseOwnedDestination($member, $rightId, $nextId);
+            self::fail('Le premier trajet choisi doit échouer avec l’outbox.');
+        } catch (DriverException $error) {
+            self::assertStringContainsString('fixture refused new convoy trip', $error->getMessage());
+        } finally {
+            $db->executeStatement('DROP TRIGGER IF EXISTS convoy_reject_new_trip');
+        }
+        self::assertNull($db->fetchOne('SELECT dispatch_token FROM pirate_convoy_delivery WHERE id = ?', [$rightId]));
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_convoy'"));
+        self::ensureKernelShutdown();
+        self::bootKernel();
+        self::getContainer()->set('clock', $this->clock);
+        $this->em = self::getContainer()->get(EntityManagerInterface::class);
+        $owner = $this->em->find(PlayerUniverse::class, $ownerId);
+        $service = self::getContainer()->get(PirateConvoyDeliveryService::class);
+        self::assertSame('traveling', $service->chooseOwnedDestination($owner, $rightId, $nextId));
+        $planned = $this->em->find(PirateConvoyDelivery::class, $rightId)->timeline()->checkpoint();
+        self::assertSame(1, $planned['generation']);
+        self::assertNull($planned['position'][4], 'Sans ancien trajet, l’origine attestée est l’ancre civile.');
+        self::assertSame(0.0, $this->resourceStock($nextId, 'metal'));
+    }
+
+    /** Deux connexions réellement concurrentes et arrêtées sur le verrou d'entrée. */
+    private function raceConvoy(PlayerUniverse $owner, int $id, string $token, string $otherOperation, int $destination): string
+    {
+        $db = $this->em->getConnection();
+        $path = sys_get_temp_dir().'/ges-convoy-race-'.bin2hex(random_bytes(8));
+        mkdir($path, 0700);
+        $barrier = $path.'/go';
+        $workers = [];
+        $db->beginTransaction();
+        try {
+            $db->fetchOne('SELECT id FROM player_universe WHERE id = ? FOR UPDATE', [$owner->id]);
+            foreach (['worker', $otherOperation] as $i => $operation) {
+                $data = ['now' => $this->clock->now()->format(DATE_ATOM), 'owner' => $owner->id, 'right' => $id,
+                    'token' => $token, 'operation' => $operation, 'destination' => $destination, 'barrier' => $barrier, 'ready' => $path.'/'.$i];
+                $proc = new Process([PHP_BINARY, dirname(__DIR__).'/Support/concurrent_pirate_convoy.php',
+                    json_encode($data, JSON_THROW_ON_ERROR)]);
+                $proc->setTimeout(25);
+                $proc->start();
+                $workers[] = $proc;
+            }
+            $deadline = microtime(true) + 14;
+            do {
+                $ready = glob($path.'/[0-9]') ?: [];
+                if (count($ready) === 2) {
+                    break;
+                }
+                usleep(10000);
+            } while (microtime(true) < $deadline);
+            self::assertCount(2, $ready, implode('; ', array_map(static fn (Process $proc): string => $proc->getErrorOutput(), $workers)));
+            $ids = array_map(static fn (string $file): int => (int) file_get_contents($file), $ready);
+            touch($barrier);
+            do {
+                $blocked = 0;
+                foreach ($db->fetchAllAssociative('SHOW FULL PROCESSLIST') as $row) {
+                    if (in_array((int) $row['Id'], $ids, true) && str_contains(strtoupper($row['Info'] ?? ''), 'FOR UPDATE')) {
+                        ++$blocked;
+                    }
+                }
+                if ($blocked === 2) {
+                    break;
+                }
+                usleep(10000);
+            } while (microtime(true) < $deadline);
+            self::assertSame(2, $blocked, 'La recette exige deux attentes concomitantes du même verrou de participation.');
+            $db->commit();
+            foreach ($workers as $proc) {
+                self::assertSame(0, $proc->wait(), $proc->getOutput().$proc->getErrorOutput());
+            }
+            self::assertSame('processed', trim($workers[0]->getOutput()));
+
+            return json_decode(trim($workers[1]->getOutput()), true, flags: JSON_THROW_ON_ERROR);
+        } finally {
+            if ($db->isTransactionActive()) {
+                $db->rollBack();
+            }
+            foreach ($workers as $proc) {
+                if ($proc->isRunning()) {
+                    $proc->stop();
+                }
+            }
+            foreach (glob($path.'/*') ?: [] as $file) {
+                unlink($file);
+            }
+            rmdir($path);
+        }
+    }
+
+    private function createReplacementColony(PlayerUniverse $member, Planet $existing): Planet
+    {
+        $planet = new Planet();
+        $planet->name = 'Colonie de remplacement synthétique';
+        $planet->solarSystem = $existing->solarSystem;
+        $planet->position = $existing->position + 1;
+        $planet->owner = $member;
+        $this->em->persist($planet);
+        foreach (['metal', 'nano', 'antimatter', 'hydrogen', 'electricity'] as $name) {
+            $stock = new PlanetResource();
+            $stock->planet = $planet;
+            $stock->resourceType = $name;
+            $stock->lastUpdatedAt = $this->clock->now();
+            $this->em->persist($stock);
+        }
+        $this->em->flush();
+
+        return $planet;
+    }
+
+    /** @return array{PlayerUniverse,Planet,PlayerUniverse,PirateAttackCampaign,array|false} */
+    private function pilotVictoryWithConvoy(bool $loseOriginBeforeVictory = false): array
     {
         [$member, $home, , , $other] = $this->fixture($this->scenario(enemyHp: 1, rounds: 10), omega: true,
             frozenCosts: ['metal' => 83, 'nano' => 1, 'antimatter' => 7, 'electricity' => 100]);
@@ -630,6 +811,10 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->service->processDue($attack->id, $attack->dispatchToken);
         $db = $this->em->getConnection();
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_convoy_delivery'));
+        if ($loseOriginBeforeVictory) {
+            $home->owner = $other;
+            $this->em->flush();
+        }
         $attack = $this->campaign();
         $this->advanceTo($attack->nextAt);
         $token = $attack->dispatchToken;
@@ -638,7 +823,11 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $attack = $this->campaign();
         self::assertSame('attacker_wins', $attack->report['outcome']);
         $event = $db->fetchAssociative("SELECT target_id, token FROM outbox_message WHERE kind = 'pirate_convoy'");
-        self::assertIsArray($event);
+        if ($loseOriginBeforeVictory) {
+            self::assertFalse($event);
+        } else {
+            self::assertIsArray($event);
+        }
 
         return [$member, $home, $other, $attack, $event];
     }
