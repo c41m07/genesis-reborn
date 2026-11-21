@@ -69,6 +69,15 @@ class PirateReconnaissance
         return $this->membership;
     }
 
+    /**
+     * Preuve d’ancre interne ; le résolveur doit encore vérifier découverte, possession et trajet.
+     * Ne pas en sérialiser les coordonnées dans un dossier ou une réponse de commande.
+     */
+    public function existingSystemFor(PlayerUniverse $viewer, \DateTimeImmutable $at): ?SolarSystem
+    {
+        return $this->belongsTo($viewer, $at) ? $this->system : null;
+    }
+
     private function belongsTo(PlayerUniverse $viewer, \DateTimeImmutable $at): bool
     {
         return $viewer->id !== null && $viewer->id === $this->membership->id
