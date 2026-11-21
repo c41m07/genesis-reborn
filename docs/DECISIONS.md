@@ -2227,3 +2227,12 @@ selon leurs propres prérequis.
 La file reste commune. La colonie de lancement finance la commande et
 fournit les bonus de durée. Les commandes déjà payées poursuivent leur
 exécution avec leur coût et leur durée enregistrés.
+
+## Prérequis des producteurs d’antimatière — 21 novembre 2026
+
+L’antimatière suit la même grille entre rangs que le métal, les nanomatériaux,
+l’hydrogène et l’électricité : niveau 25 Basique pour débloquer l’Intermédiaire ;
+niveaux 50 Basique et 25 Intermédiaire pour débloquer le Supérieur.
+Le producteur d’hydrogène et la recherche industrielle restent requis au niveau
+5 du rang visé. La condition Basique reste inchangée. Il n’y a ni recalcul ou
+retrait des accès acquis, ni modification des commandes déjà payées.

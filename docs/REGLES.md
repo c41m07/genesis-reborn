@@ -99,6 +99,9 @@ dans le rang demandé. Pour les rangs avancés, le même bâtiment doit
 atteindre le niveau 20 (chantier) ou 8 (bunker) dans chaque rang précédent.
 Le Piège à antimatière exige le producteur d’hydrogène 5 sur la colonie et
 la recherche industrielle 5 dans l’univers, tous deux du rang demandé.
+Pour l’Intermédiaire, le producteur d’antimatière Basique doit aussi atteindre
+le niveau 25. Pour le Supérieur, ses rangs Basique et Intermédiaire doivent
+atteindre les niveaux 50 et 25, respectivement.
 Le laboratoire niveau 1 du même rang sert au déblocage initial de cette recherche.
 Les accès déjà acquis restent conservés ; cette révision ne change pas la version
 du registre et ne nécessite aucune nouvelle requalification. Coûts, durées,
