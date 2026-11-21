@@ -1,0 +1,43 @@
+{# Pas de chrome de jeu : ce dossier n'enregistre aucune présence. #}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Campagne pirate | Genesis Reborn</title>
+    {{ encore_entry_link_tags('app') }}
+</head>
+<body>
+<main class="shell" id="main">
+    <h1>Campagne pirate</h1>
+    <p>Pilote local · consultation uniquement</p>
+    <nav aria-label="Dossiers de la campagne">
+        <ul>
+            {% if dossier.current is not null and dossier.current != dossier.selected %}
+                <li><a href="{{ path('app_dev_pirate_pilot') }}">Mission courante</a></li>
+            {% endif %}
+            {% for entry in dossier.history %}
+                <li>
+                    {% if entry.number == dossier.selected %}
+                        <span aria-current="page">Mission {{ entry.number }}</span>
+                    {% else %}
+                        <a href="{{ path('app_dev_pirate_pilot', {missionNumber: entry.number}) }}">Mission {{ entry.number }}</a>
+                    {% endif %}
+                    {% if entry.won %} · réussie{% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </nav>
+    {% if dossier.signal_pending %}
+        <section class="panel" aria-labelledby="pirate-signal-title">
+            <h2 id="pirate-signal-title">Mission {{ dossier.selected }}</h2>
+            <p>Le signal n’est pas encore localisé.</p>
+        </section>
+    {% elseif dossier.briefing is not null %}
+        {# L’ancien devis suppose que rien n’a été versé ; la projection durable n’est pas branchée ici. #}
+        {% include 'player/pirate_campaign/_briefing.html.twig' with {briefing: dossier.briefing|merge({quote: null})} only %}
+    {% endif %}
+</main>
+</body>
+</html>

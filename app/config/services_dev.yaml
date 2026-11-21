@@ -1,0 +1,12 @@
+# Pas de clé effective dans le dépôt : seule une recette locale identifiée l'active.
+parameters:
+    env(PIRATE_PILOT_LOCAL_ENABLED): '0'
+    env(PIRATE_PILOT_LOCAL_OMEGA_ID): '0'
+
+services:
+    App\Service\PirateCampaign\PiratePilotGate:
+        factory: ['App\Service\PirateCampaign\PiratePilotLocalReader', 'configuredGate']
+        arguments:
+            - '%kernel.environment%'
+            - '%env(string:PIRATE_PILOT_LOCAL_ENABLED)%'
+            - '%env(string:PIRATE_PILOT_LOCAL_OMEGA_ID)%'
