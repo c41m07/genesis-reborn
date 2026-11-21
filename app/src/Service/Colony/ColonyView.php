@@ -278,6 +278,8 @@ final class ColonyView
             'planet' => $planet,
             'planets' => $this->repo->planets($membership->universe, $membership),
             'resources' => $resourceSnapshot,
+            'building_levels' => $buildings,
+            'technology_levels' => $technologies,
             'cards' => $cards,
             'queues' => $queues,
             'research_parallel_count' => count($researchActive),

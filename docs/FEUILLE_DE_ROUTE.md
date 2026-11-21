@@ -2161,3 +2161,104 @@ Aucune règle économique, aucun déblocage ni aucune migration ne change.
 Parcours concernés : bandeau de ressources et navigation directe des catalogues,
 coque commune claire/sombre et sans JavaScript, tiroir des événements, suivi
 des objectifs du Guide et pages sans empire.
+
+### Premiers pas : fondation économie et recherche
+
+Quatre étapes facultatives expliquent quoi faire, pourquoi et vers quelle fiche
+aller : mine de métal comme premier conseil, centrale, nanos et une première
+recherche au choix. Le lien est dans Vue générale ; aucune étape ne conditionne
+une autre action du jeu.
+
+La fin réellement appliquée d’une construction ou amélioration basique ciblée,
+ou d’une recherche, inscrit une preuve unique par participation et jalon dans
+la transaction de la file. Stock, propriété et date de fin des files ne
+changent pas. Pas de rattrapage depuis les niveaux déjà présents, ni de prime,
+ni de pseudo-événement. La migration ajoute uniquement la table vide.
+
+Les futurs chapitres de vaisseau, exploration, espionnage, colonisation et
+entraînement pirate restent séparés ; leurs preuves, règles et récompenses ne
+sont pas ajoutées ici.
+
+### Premiers pas : premier vaisseau et première exploration
+
+Le même suivi conserve l’achèvement d’un vrai ordre de chantier qui augmente
+un stock de vaisseau. Posséder un vaisseau, le recevoir, préparer un départ ou
+achever une défense ne suffit pas. L’exploration se valide à l’arrivée d’une
+mission qui crée une nouvelle découverte dans l’empire ; le système natal
+et une destination déjà connue ne comptent pas. La consommation existante
+d’une sonde à l’arrivée ne change pas. Le guide invite à en construire une
+autre en vue d’un futur espionnage, sans en promettre ni en attribuer.
+
+La transaction de chaque action conserve la première preuve. Même table,
+aucune migration supplémentaire, aucun ajustement de coût, de durée ni
+de récompense. Espionnage, colonisation et entraînement restent hors lot.
+
+### Premiers pas : rapport d’espionnage PNJ et première colonisation
+
+Le premier rapport d’une vraie mission d’espionnage arrivée sur un monde PNJ
+natif sans propriétaire valide la découverte du parcours. Un rapport
+« détecté » ne fournit aucun renseignement ; même sans détection, les
+informations peuvent être partielles ou absentes. Le guide explique de viser
+une planète connue, de prévoir une sonde consommée, et de retenter avec une
+nouvelle sonde si nécessaire. Il ne présélectionne aucune destination et ne
+lance aucune mission.
+
+La colonisation ne dépend pas des autres étapes. La preuve est inscrite
+uniquement après le transfert d’une planète encore libre et non PNJ,
+l’application du stock d’arrivée existant et la consommation du
+colonisateur. Ni la planète initiale, ni la conquête, ni une arrivée où la
+planète n’est plus libre ne valident ce jalon. Le rapport ou le transfert
+et la première preuve partagent la transaction d’arrivée ; une annulation
+annule la preuve. Aucun suivi supplémentaire des autres missions, aucune
+nouvelle lecture du graphe et aucune migration supplémentaire. Les primes
+et l’entraînement pirate restent hors de ce lot.
+
+### Premiers pas : exercice pirate facultatif
+
+Un convoi civil fictif sert de briefing. Le formulaire natif utilise
+l’empire actif et n’accepte aucune cible ni force réelle. Un seul appel
+borné au simulateur de combat produit un rapport privé et non archivé,
+avec issue, survivants, pertes et effets des tirs. Ni victoire ni défaite
+ne change l’apprentissage : après le rendu, seule la première preuve est
+inscrite dans la table existante, séparément pour chaque empire.
+Le briefing seul ne valide rien. Aucun vaisseau, carburant, stock, butin,
+journal de bataille réel, récompense ni progression de campagne. Refaire
+l’exercice n’ajoute pas de preuve et ne débloque rien dans le jeu.
+
+### Premiers pas : parcours guidé et pilote de remboursement
+
+Le guide et sa carte Vue générale proposent un ordre sans verrou :
+mine, énergie, nanos, Dépôt de minerais, laboratoire, recherche,
+chantier d’assemblage, sonde, exploration, espionnage PNJ, exercice pirate,
+puis première colonie. Les bâtiments basiques déjà présents sur la colonie
+active et les recherches basiques déjà apprises sont reconnus pour l’affichage
+sans écrire de preuve ni réserver de remboursement. Le Dépôt basique niveau 1
+demande une Mine à ciel ouvert basique niveau 5 dans la grille de base ; le
+laboratoire et le reste du parcours restent accessibles en parallèle. La fiche
+du Dépôt distingue la capacité totale et la part protégée du pillage en
+réutilisant la projection existante. La colonisation n’est jamais conditionnée
+par les étapes du guide.
+
+Une commande de la Mine à ciel ouvert ou de Génie civil colonial de niveau 1
+basique lancée dans la fiche guidée paie normalement le prix et attend la fin
+réelle. La preuve et la réservation suivent la même transaction. Le compte
+peut recevoir au plus un remboursement par étape, calculé sur son paiement
+en métal et nanos, à 25 % arrondis vers le bas, plafonnés à 96/52 pour la
+mine et à 240/130 pour la recherche, jamais rétroactivement. Le lot reste
+visible dans le guide de l’empire d’obtention et se récupère sur une colonie
+contrôlée de cet empire. Un stock plein ne consomme pas le droit et ne produit
+pas de versement partiel. Aucun autre remboursement de ressources.
+
+Le premier espionnage guidé s’envoie avec exactement une sonde basique vers
+un PNJ natif connu, jamais un joueur ni un empire oublié. Si la cible cesse
+d’être éligible avant l’arrivée, la mission guidée n’exécute pas l’espionnage.
+Un rapport effectivement produit avec perte réelle de la sonde restaure une
+sonde au hangar de départ, détectée ou non, une seule fois par compte.
+Un rapport « détecté » peut ne contenir aucun renseignement ; le pilote ne
+change pas les résultats tactiques, les sondes consommées en dehors du guide
+ni la campagne à venir. Aucun barème de progression cible n’est mesuré ici.
+
+Déploiement local futur : appliquer normalement en base dédiée la migration
+additive `Version20261120000830` (drapeaux à faux pour les actions existantes,
+registre des droits vide). Ne pas annuler une migration pour supprimer les
+preuves de crédits, même déjà consommés.

@@ -10,6 +10,8 @@ use App\Service\Requirement\RequirementChecker;
 use App\Service\Colony\{ResourceService, ActionGuard, ResourceWaitEstimate};
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
+use App\Service\Player\FirstStepRewardPolicy;
+use App\Service\Player\FirstSteps;
 use App\Service\Player\VacationCalendar;
 
 /**
@@ -33,6 +35,7 @@ final class QueueService
         private \App\Service\Player\EmpireReconstructionScheduler $reconstruction,
         private \App\Service\Colony\EconomicUnitCapacity $economicUnits,
         private \App\Service\Combat\LocalGarrison $garrison,
+        private FirstSteps $firstSteps,
     )
     {
     }
@@ -45,9 +48,10 @@ final class QueueService
         int $quantity,
         string $requestKey,
         string $tier = 'basic',
+        bool $guided = false,
     ): int
     {
-        return $this->manager->transaction(function () use ($membership, $planet, $group, $slug, $quantity, $requestKey, $tier) {
+        return $this->manager->transaction(function () use ($membership, $planet, $group, $slug, $quantity, $requestKey, $tier, $guided) {
             $this->guard->lock($membership, $planet);
             $this->vacations->assertCanManageQueues($membership);
             // Les niveaux et les stocks doivent tenir compte des commandes déjà échues avant tout nouvel achat.
@@ -133,6 +137,7 @@ final class QueueService
             $item->itemLevel = in_array($group, ['buildings', 'technologies'], true) ? $level : null;
             $item->quantity = $quantity;
             $item->paidCosts = $plan['costs'];
+            $item->firstStepsGuided = $guided && FirstStepRewardPolicy::queueStep($queueType, $slug, $tier, $item->itemLevel) !== null;
             $item->durationSeconds = $duration;
             $item->queuedAt = $this->clock->now();
             $item->dependsOn = $previousLevel;
@@ -404,6 +409,7 @@ final class QueueService
         $finish = $item->finishAt();
         $shipConstruction = $item->queueType === 'shipyard' && isset($this->catalog->all('ships')[$item->itemSlug]);
         $economic = $shipConstruction && isset($this->catalog->all('ships')[$item->itemSlug]['economic_unit']);
+        $shipCredited = false;
         if ($economic) {
             // Créditer uniquement l'ancien effectif jusqu'à la fin payée, même après une longue absence.
             $this->resources->materialize($planet, $finish);
@@ -448,6 +454,7 @@ final class QueueService
             $ship->tier = $item->tier;
             $ship->quantity += $item->quantity;
             $this->manager->save($ship);
+            $shipCredited = $shipConstruction;
         }
         foreach ($this->repo->all(QueueItem::class, ['dependsOn' => $item]) as $dependent) {
             $dependent->dependsOn = null;
@@ -458,6 +465,7 @@ final class QueueService
             default => isset($this->catalog->all('defenses')[$item->itemSlug]) ? 'defenses' : 'ships',
         };
         $this->notifications->enqueue($membership, 'Terminé : ' . $this->catalog->getTierForUniverse($membership->universe, $group, $item->itemSlug, $item->tier)['label'] . ' sur ' . $planet->name . '.', journalKind: 'queue');
+        $this->firstSteps->recordQueueCompletion($item, $finish, shipConstructed: $shipCredited);
         $this->reconstruction->afterCompletionLocked($item);
         $queueType = $item->queueType;
         $this->manager->remove($item);

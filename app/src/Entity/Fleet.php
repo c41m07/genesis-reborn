@@ -43,4 +43,6 @@ class Fleet
     public int $travelSeconds = 0;
     #[ORM\Column(length: 36)]
     public string $dispatchToken = '';
+    #[ORM\Column(options: ['default' => false])]
+    public bool $firstStepsSpy = false;
 }
