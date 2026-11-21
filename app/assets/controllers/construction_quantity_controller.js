@@ -43,7 +43,7 @@ export default class extends Controller {
             this.statusTarget.textContent = maximum === 0 ? data.reason :
                 (requested > maximum && !maximize ? 'Quantité ajustée. ' : '') + 'Maximum constructible : ' + exactNumber(maximum) + '.';
             this.renderPreview(data);
-            this.updateWait(data.paymentWait);
+            this.updateWait(data.paymentWait, data.paymentEstimate);
             this.submitTarget.disabled = maximum === 0;
             const missing = Object.values(data.missingResources ?? {});
             this.submitTarget.classList.toggle('has-missing-resources', missing.length > 0);
@@ -67,9 +67,24 @@ export default class extends Controller {
         }
     }
 
-    updateWait(text) {
-        this.waitTextTarget.textContent = text ?? '';
+    updateWait(text, estimate = null) {
+        const timer = this.waitTextTarget;
+        timer.textContent = text ?? '';
+        if (estimate) {
+            timer.dataset.observedAt = String(estimate.observedAt);
+            timer.dataset.deadline = String(estimate.deadline);
+            timer.dataset.limitingResource = estimate.resource;
+            timer.setAttribute('role', 'timer');
+            timer.setAttribute('aria-live', 'off');
+        } else {
+            delete timer.dataset.observedAt;
+            delete timer.dataset.deadline;
+            delete timer.dataset.limitingResource;
+            timer.removeAttribute('role');
+            timer.removeAttribute('aria-live');
+        }
         this.waitTarget.hidden = !text;
+        timer.dispatchEvent(new CustomEvent('resource-eta:change', { bubbles: true }));
         const panel = this.waitTarget.querySelector('[popover]');
         if (!text && typeof panel?.hidePopover === 'function' && panel.matches(':popover-open')) {
             panel.hidePopover();

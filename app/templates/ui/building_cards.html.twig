@@ -92,6 +92,7 @@
                     {% else %}
                         {% set missingResources = card.payment.missing %}
                         {% set wait = not queueFull ? card.payment.paymentWait : null %}
+                        {% set estimate = wait ? card.payment.paymentEstimate : null %}
                         {% set actionLabel = group=='buildings' ? 'Améliorer au niveau '~card.target : (group=='technologies' ? 'Rechercher le niveau '~card.target : 'Construire') %}
                         {% set blocked = missingResources is not empty or queueFull or card.capacity_full|default(false) %}
                         <form method="post" action="{{ path('app_queue_add', {id: planet.id}) }}"{% if not leveled %} data-construction-quantity-target="form"{% endif %}>
@@ -102,20 +103,22 @@
                             <input type="hidden" name="slug" value="{{ slug }}">
                             <input type="hidden" name="tier" value="{{ card.tier }}">
                             {% if not leveled %}<label for="quantity-{{ slug }}-{{ card.tier }}">Quantité</label><div class="quantity-input"><input id="quantity-{{ slug }}-{{ card.tier }}" name="quantity" type="number" min="1" value="1" required data-construction-quantity-target="input" data-action="input->construction-quantity#invalidate change->construction-quantity#change" aria-describedby="quantity-status-{{ slug }}-{{ card.tier }}"><button type="button" class="secondary quantity-max" data-construction-quantity-target="max" data-action="construction-quantity#maximum" aria-label="Max : quantité maximale de {{ d.label }}" hidden>Max</button></div><small id="quantity-status-{{ slug }}-{{ card.tier }}" class="quantity-status" role="status" data-construction-quantity-target="status"></small>{% endif %}
-                            <button class="secondary full catalog-build-action{{ missingResources and not queueFull ? ' has-missing-resources' : '' }}"{% if blocked %} disabled{% endif %}{% if not leveled %} data-construction-quantity-target="submit" data-action-label="{{ actionLabel }}"{% endif %}><span class="catalog-action-label"{% if not leveled %} data-construction-quantity-target="label"{% endif %}>{% if queueFull %}File pleine{% elseif missingResources %}Il manque :{% for missing in missingResources %}<span class="catalog-missing-resource">{{ missing.label }} : {{ missing.amount|number_format(0, ',', ' ') }}</span>{% endfor %}{% elseif card.capacity_full|default(false) %}Aucune place disponible{% else %}{{ actionLabel }}{% endif %}</span><span{% if blocked %} hidden{% endif %}{% if not leveled %} data-construction-quantity-target="arrow"{% endif %}>{{ ui.icon('arrow') }}</span></button>
-                        </form>
-                        {% if wait or not leveled %}
-                            {% set wait_id = 'catalog-wait-' ~ group ~ '-' ~ slug ~ '-' ~ card.tier %}
-                            <div class="catalog-wait"{% if not wait %} hidden{% endif %} data-construction-quantity-target="wait" data-controller="hover-details"
-                                 data-action="pointerenter->hover-details#enter pointerleave->hover-details#leave focusout->hover-details#blur keydown->hover-details#escape">
-                                <button type="button" class="secondary" popovertarget="{{ wait_id }}" aria-expanded="false" data-hover-details-target="trigger" data-action="focus->hover-details#focus click->hover-details#pin">
-                                    <span data-construction-quantity-target="waitText">{{ wait }}</span>
-                                </button>
-                                <p id="{{ wait_id }}" class="catalog-wait-info" popover data-hover-details-target="panel" data-action="toggle->hover-details#changed">
-                                    Estimation au rythme actuel de cette colonie, sans tenir compte des dépenses, opérations ou changements de production à venir.
-                                </p>
+                            <div class="catalog-payment">
+                                <button class="secondary full catalog-build-action{{ missingResources and not queueFull ? ' has-missing-resources' : '' }}"{% if blocked %} disabled{% endif %}{% if not leveled %} data-construction-quantity-target="submit" data-action-label="{{ actionLabel }}"{% endif %}><span class="catalog-action-label"{% if not leveled %} data-construction-quantity-target="label"{% endif %}>{% if queueFull %}File pleine{% elseif missingResources %}Il manque :{% for missing in missingResources %}<span class="catalog-missing-resource">{{ missing.label }} : {{ missing.amount|number_format(0, ',', ' ') }}</span>{% endfor %}{% elseif card.capacity_full|default(false) %}Aucune place disponible{% else %}{{ actionLabel }}{% endif %}</span><span{% if blocked %} hidden{% endif %}{% if not leveled %} data-construction-quantity-target="arrow"{% endif %}>{{ ui.icon('arrow') }}</span></button>
+                                {% if wait or not leveled %}
+                                    {% set wait_id = 'catalog-wait-' ~ group ~ '-' ~ slug ~ '-' ~ card.tier %}
+                                    <div class="catalog-wait"{% if not wait %} hidden{% endif %} data-construction-quantity-target="wait" data-controller="hover-details"
+                                         data-action="pointerenter->hover-details#enter pointerleave->hover-details#leave focusout->hover-details#blur keydown->hover-details#escape">
+                                        <span data-construction-quantity-target="waitText" data-resource-eta-target="timer"
+                                            {% if estimate %}role="timer" aria-live="off" data-observed-at="{{ estimate.observedAt }}" data-deadline="{{ estimate.deadline }}" data-limiting-resource="{{ estimate.resource }}"{% endif %}>{{ wait }}</span>
+                                        <button type="button" class="secondary" popovertarget="{{ wait_id }}" aria-label="Comprendre le délai de financement" aria-expanded="false" data-hover-details-target="trigger" data-action="focus->hover-details#focus click->hover-details#pin">i</button>
+                                        <p id="{{ wait_id }}" class="catalog-wait-info" popover data-hover-details-target="panel" data-action="toggle->hover-details#changed">
+                                            Estimation au rythme actuel de cette colonie, sans tenir compte des dépenses, opérations ou changements de production à venir. Le temps écoulé ne garantit pas de pouvoir commander.
+                                        </p>
+                                    </div>
+                                {% endif %}
                             </div>
-                        {% endif %}
+                        </form>
                     {% endif %}
                     {% if card.maximum or card.failures or vacation %}<button type="button" class="secondary full catalog-blocked-action" disabled>{{ card.maximum ? 'Niveau maximum atteint' : (card.failures ? 'Prérequis manquants' : 'Mode vacances') }}</button></div>{% endif %}
                 </div>
