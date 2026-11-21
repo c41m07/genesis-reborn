@@ -813,3 +813,53 @@ recevoir ; (4) destination et reprise du convoi, stock plein ou
 capacité totale trop petite, disparition de l’origine/empire,
 arrondi éventuel et moment du crédit. Présenter ces options séparément :
 le coût ou le plein ne constituent pas un nouveau verrou de progression.
+
+## Source authentifiée non routée et noyau du convoi autorisé
+
+Le lecteur part de l’identité authentifiée et de sa sélection courante.
+Il relit en base la participation exacte, son propriétaire actif et
+l’univers accessible ; un changement de sélection ou un détachement
+n’attend pas la fin d’une ancienne session. Les vingt clés catalogues
+bornent le batch reconnaissance + combat, avec ancre filtrée dans le
+même univers. Pas d’accès direct par compte, pas de scan des joueurs,
+pas de suivi d’activité, pas d’écriture. Le test MariaDB compare la
+lecture à froid de 1 et 20 preuves (budget inférieur ou égal à six
+requêtes, croissance au plus une), avec uniquement des SELECT et pas
+de fuite d’issue opaque. Aucun endpoint n’appelle ce lecteur.
+
+Décision du pilote qui supersède les anciennes pistes : convoi protégé
+à 50 % des coûts déjà figés, crédit automatique à l’arrivée si le lot
+entier tient ; sinon attente du lot complet, sans crédit partiel.
+Lorsque la destination reste possédée, même si elle est pleine, on
+réessaie sur cette colonie sans autre voyage. Lorsqu’elle est perdue,
+seule une autre colonie possédée du même empire peut être choisie ;
+aucun transfert à un tiers ou à un nouvel empire.
+
+Complexité 2–3/5 pour le noyau pur : `PirateConvoyTimeline` porte droit,
+participation, univers, jeton et position attestée. La perte signalée
+pendant le vol ne redéfinit ni l’ETA ni la position du convoi. Il faut
+l’attestation de l’arrivée avant de faire un autre trajet, et celui-ci
+part du point attesté, pas d’un retour fictif à l’ancre civile. Sans
+preuve initiale ou de départ, le droit reste en attente sans émission.
+Un dépôt plein n’autorise pas de changer de destination. La perte
+n’est constatée qu’après relecture effective des droits, le dépôt
+n’est marqué réglé qu’après le crédit intégral. `PirateConvoyQuote`
+préserve exactement les demi-unités, et refuse une représentation
+imprécise dans le type DOUBLE plutôt que d’arrondir le lot sans le dire.
+
+Raccordement 4–5/5, pas encore réalisé : prévoir une table privée,
+une contrainte de règlement unique par bataille gagnée et la cascade
+de la même participation. L’adaptateur devra créer un UUID de phase
+neuf à chaque trajet, lire une vraie victoire et sa preuve de destination,
+et ne rien créer rétroactivement au GET. Repère/vitesse du transport
+civil à figer au départ avec le calculateur natif, sans réutiliser la
+réserve H₂ des survivants ni une Fleet publique. Avant tout branchement,
+relire l’ordre commun des verrous en concurrence : empire → univers →
+droit → planète → stocks, réévaluer la réutilisation dans la transaction
+de fin de combat et ne pas effectuer d’écriture de ressource à ce moment.
+À l’arrivée, `ResourceService::deposit(..., allOrNothing: true)` et le
+droit consommé partagent la même transaction ; échec outbox/dépôt doit
+laisser le droit ou le prochain trajet rejouable. Restent à recetter :
+réaffectation en vol, origine supprimée ou perdue, ancien propriétaire,
+stock juste sous/au seuil et deux opérations concurrentes. Le contrat
+pur ne crée ni trajet réel, ni dépôt, ni commande ou route.

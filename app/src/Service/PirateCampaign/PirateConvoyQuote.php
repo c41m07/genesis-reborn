@@ -65,4 +65,21 @@ final readonly class PirateConvoyQuote
     {
         return $this->parts;
     }
+
+    /** @return array<string,float> Quantités représentables exactement dans les stocks réels (DOUBLE). */
+    public function depositAmounts(): array
+    {
+        $amounts = [];
+        foreach ($this->parts as $resource => $part) {
+            $whole = $part['whole'];
+            $half = $part['extra_half'];
+            // Au-delà de la précision du stockage, ne jamais arrondir discrètement le droit.
+            if ($whole > ($half ? 4503599627370495 : 9007199254740991)) {
+                throw new \DomainException('Le stock ne peut pas représenter exactement le montant du convoi.');
+            }
+            $amounts[$resource] = (float) $whole + ($half ? 0.5 : 0.0);
+        }
+
+        return $amounts;
+    }
 }

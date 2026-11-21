@@ -39,37 +39,108 @@ final class PirateConvoyTest extends TestCase
 
     public function testNeverDispatchBeforeVictoryOrSettleBeforeActualArrival(): void
     {
-        $convoy = PirateConvoyTimeline::afterVictory(4, $this->at(5), $this->quote());
+        $convoy = $this->convoy();
+        $from = [2, 1, 0, 0, null];
+        $to = [2, 1, 0, 0, 5];
         self::assertSame('eligible', $convoy->state());
-        self::assertFalse($convoy->recordSettlementAfterCredit($this->at(70)));
+        self::assertFalse($convoy->recordSettlementAfterCredit(7, 8, 9, $this->at(70)));
         try {
-            $convoy->dispatch('private-first', $this->at(4), $this->at(60));
+            $convoy->dispatch(7, 8, 9, $from, $to, 'private-first', $this->at(4), $this->at(60));
             self::fail('Un départ avant la victoire est invalide.');
         } catch (\DomainException) {
             self::assertSame('eligible', $convoy->state());
         }
-        self::assertTrue($convoy->dispatch('private-first', $this->at(8), $this->at(68)));
-        self::assertFalse($convoy->dispatch('private-second', $this->at(9), $this->at(69)));
+        self::assertTrue($convoy->dispatch(7, 8, 9, $from, $to, 'private-first', $this->at(8), $this->at(68)));
+        self::assertFalse($convoy->dispatch(7, 8, 10, $from, $to, 'private-second', $this->at(9), $this->at(69)));
         self::assertSame('traveling', $convoy->state());
+        self::assertNull($convoy->attestedPositionForDeparture());
         self::assertFalse($convoy->arriveWhenDue('private-first', $this->at(67)));
         self::assertFalse($convoy->arriveWhenDue('private-second', $this->at(68)));
-        self::assertFalse($convoy->recordSettlementAfterCredit($this->at(69)));
+        self::assertFalse($convoy->recordSettlementAfterCredit(7, 8, 9, $this->at(69)));
         self::assertTrue($convoy->arriveWhenDue('private-first', $this->at(70)));
         self::assertSame('arrived', $convoy->state());
-        self::assertFalse($convoy->recordSettlementAfterCredit($this->at(69)));
-        self::assertTrue($convoy->recordSettlementAfterCredit($this->at(80)));
+        self::assertFalse($convoy->recordSettlementAfterCredit(7, 8, 9, $this->at(69)));
+        self::assertTrue($convoy->recordSettlementAfterCredit(7, 8, 9, $this->at(80)));
         self::assertSame('settled', $convoy->state());
-        self::assertFalse($convoy->recordSettlementAfterCredit($this->at(81)));
+        self::assertFalse($convoy->recordSettlementAfterCredit(7, 8, 9, $this->at(81)));
         self::assertFalse($convoy->arriveWhenDue('private-first', $this->at(81)));
-        self::assertFalse($convoy->dispatch('private-third', $this->at(95), $this->at(156)));
+        self::assertFalse($convoy->dispatch(7, 8, 10, $from, $to, 'private-third', $this->at(95), $this->at(156)));
         self::assertEquals(['departed_at' => $this->at(8), 'due_at' => $this->at(68),
             'arrived_at' => $this->at(70), 'settled_at' => $this->at(80)], $convoy->chronology());
+    }
+
+    public function testFullWarehouseKeepsTheEntireLotAtTheSameColony(): void
+    {
+        $convoy = $this->convoy();
+        $from = [2, 1, 0, 0, null];
+        $to = [2, 1, 0, 0, 5];
+        self::assertTrue($convoy->dispatch(7, 8, 9, $from, $to, 'first', $this->at(8), $this->at(68)));
+        self::assertTrue($convoy->arriveWhenDue('first', $this->at(70)));
+        self::assertTrue($convoy->recordCapacityShortage(7, 8, 9, $this->at(70)));
+        self::assertSame('waiting_capacity', $convoy->state());
+        self::assertFalse($convoy->dispatch(7, 8, 10, $to, [3, 1, 4, 2, 8], 'second', $this->at(70), $this->at(130)));
+        self::assertFalse($convoy->mayTryDeposit(7, 8, 10, $this->at(72)));
+        self::assertFalse($convoy->mayTryDeposit(14, 8, 9, $this->at(72)));
+        self::assertFalse($convoy->mayTryDeposit(7, 14, 9, $this->at(72)));
+        self::assertSame(41.5, $convoy->quote->depositAmounts()['metal']);
+        self::assertTrue($convoy->recordSettlementAfterCredit(7, 8, 9, $this->at(75)));
+        self::assertFalse($convoy->recordCapacityShortage(7, 8, 9, $this->at(80)));
+    }
+
+    public function testLostColonyNeedsASecondRealTripFromTheAttestedEndOfFirstLeg(): void
+    {
+        $convoy = $this->convoy();
+        $relay = [2, 1, 0, 0, null];
+        $lost = [2, 1, 0, 0, 5];
+        $other = [3, 1, 4, 2, 8];
+        self::assertTrue($convoy->dispatch(7, 8, 9, $relay, $lost, 'first', $this->at(8), $this->at(68)));
+        self::assertFalse($convoy->recordDestinationLoss(7, 8, 9, $this->at(35)));
+        self::assertFalse($convoy->dispatch(7, 8, 10, $relay, $other, 'second', $this->at(35), $this->at(95)));
+        self::assertTrue($convoy->arriveWhenDue('first', $this->at(70)));
+        self::assertFalse($convoy->recordDestinationLoss(15, 8, 9, $this->at(70)));
+        self::assertTrue($convoy->recordDestinationLoss(7, 8, 9, $this->at(70)));
+        self::assertSame('destination_lost', $convoy->state());
+        self::assertSame($lost, $convoy->attestedPositionForDeparture());
+        self::assertFalse($convoy->dispatch(7, 8, 10, $relay, $other, 'second', $this->at(70), $this->at(130)));
+        self::assertFalse($convoy->dispatch(15, 8, 10, $lost, $other, 'second', $this->at(70), $this->at(130)));
+        self::assertFalse($convoy->dispatch(7, 8, 10, $lost, $other, 'first', $this->at(70), $this->at(130)));
+        self::assertTrue($convoy->dispatch(7, 8, 10, $lost, $other, 'second', $this->at(71), $this->at(131)));
+        self::assertFalse($convoy->arriveWhenDue('first', $this->at(132)));
+        self::assertFalse($convoy->arriveWhenDue('second', $this->at(130)));
+        self::assertTrue($convoy->arriveWhenDue('second', $this->at(132)));
+        self::assertFalse($convoy->recordSettlementAfterCredit(7, 8, 9, $this->at(132)));
+        self::assertTrue($convoy->recordSettlementAfterCredit(7, 8, 10, $this->at(132)));
+        self::assertSame(41.5, $convoy->quote->depositAmounts()['metal']);
+    }
+
+    public function testNoDepartureWhenVictoryIsProvedButTheSourceIsNot(): void
+    {
+        $convoy = PirateConvoyTimeline::afterVictory(4, $this->at(5), $this->quote(), 7, 8, null);
+        self::assertSame('eligible', $convoy->state());
+        self::assertNull($convoy->attestedPositionForDeparture());
+        self::assertFalse($convoy->dispatch(7, 8, 9, [2, 1, 0, 0, null], [2, 1, 0, 0, 5],
+            'first', $this->at(8), $this->at(68)));
     }
 
     public function testNoProductionRightCanBeModelledWithoutAVictory(): void
     {
         $this->expectException(\DomainException::class);
-        PirateConvoyTimeline::afterVictory(1, null, $this->quote());
+        PirateConvoyTimeline::afterVictory(1, null, $this->quote(), 7, 8, null);
+    }
+
+    public function testAQuoteBeyondTheStoragePrecisionIsNeverRoundedDownForDeposit(): void
+    {
+        $quote = PirateConvoyQuote::halfOfFrozenCatalogue(PirateEncounterSnapshot::freeze(
+            ['fighter' => ['basic' => 1]], ['metal' => PHP_INT_MAX],
+        ));
+        self::assertTrue($quote->exactParts()['metal']['extra_half']);
+        $this->expectException(\DomainException::class);
+        $quote->depositAmounts();
+    }
+
+    private function convoy(): PirateConvoyTimeline
+    {
+        return PirateConvoyTimeline::afterVictory(4, $this->at(5), $this->quote(), 7, 8, [2, 1, 0, 0, null]);
     }
 
     #[DataProvider('routes')]
