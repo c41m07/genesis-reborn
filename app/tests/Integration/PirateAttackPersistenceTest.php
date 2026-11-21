@@ -11,7 +11,7 @@ use App\Service\Catalog\GameCatalog;
 use App\Service\Combat\{CombatSimulator, CombatUnitFactory};
 use App\Service\Fleet\MovementCalculator;
 use App\Service\Notification\OutboxRelay;
-use App\Service\PirateCampaign\{PirateAttackFuelReceipt, PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignProgress, PirateCampaignSequence, PirateConvoyDeliveryService, PirateConvoyDispatchToken, PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter, PirateReconnaissanceService};
+use App\Service\PirateCampaign\{PirateAttackFuelReceipt, PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignPresenter, PirateCampaignProgress, PirateCampaignSequence, PirateConvoyDeliveryService, PirateConvoyDispatchToken, PirateDistressSite, PirateEncounterSnapshot, PiratePreparedEncounter, PirateReconnaissanceService};
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -180,6 +180,140 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame(0.5, (float) $db->fetchOne('SELECT stored_fuel FROM fleet WHERE id = ?', [$idle->id]));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_attack_campaign'));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
+    }
+
+    public function testFundedReturnUsesActualCombatClosureAndDepositsSurvivorsOnlyOnce(): void
+    {
+        [$owner, $origin, $stock, $other, $campaign] = $this->startFundedVictory();
+        $combatDue = $campaign->nextAt;
+        $this->advanceTo($combatDue->modify('+19 seconds'));
+        $this->service->processDue($campaign->id, $campaign->dispatchToken);
+        $return = $campaign->timeline['pilot_return'];
+        self::assertSame('traveling', $return['state']);
+        self::assertSame($this->clock->now()->format(DATE_ATOM), $return['observed_at']);
+        self::assertEquals($this->clock->now()->modify('+'.$campaign->travelSeconds.' seconds'), $campaign->nextAt);
+        self::assertGreaterThan(0, $return['carried']);
+        self::assertSame(1, $this->stock($stock->id));
+        $remaining = $campaign->reservedShips['fighter']['basic'];
+        $stockHydrogen = $this->resourceStock($origin->id, 'hydrogen');
+        $token = $campaign->dispatchToken;
+        $this->advanceTo($campaign->nextAt->modify('-1 second'));
+        self::assertSame(1000, $this->service->processDue($campaign->id, $token));
+        self::assertSame(1, $this->stock($stock->id));
+        $this->advanceTo($campaign->nextAt->modify('+10 seconds'));
+        $this->service->processDue($campaign->id, $token);
+        $this->service->processDue($campaign->id, $token);
+        self::assertSame(1 + $remaining, $this->stock($stock->id));
+        self::assertSame($stockHydrogen, $this->resourceStock($origin->id, 'hydrogen'));
+        self::assertSame('arrived', $campaign->timeline['pilot_return']['state']);
+        self::assertSame(0.0, $campaign->timeline['pilot_return']['carried']);
+        self::assertSame($this->clock->now()->format(DATE_ATOM), $campaign->timeline['settled']);
+        self::assertSame([], $campaign->reservedShips);
+        self::assertArrayNotHasKey('pilot_blocked_return', $campaign->timeline);
+        self::assertNull($this->service->statusFor($other, 'signal'));
+    }
+
+    public function testOriginLostBeforeReturnHoldsSurvivorsAtActualSiteWithTheUnusedLeg(): void
+    {
+        [$owner, $origin, $stock, $other, $campaign] = $this->startFundedVictory();
+        $origin->owner = $other;
+        $this->em->flush();
+        $this->advanceTo($campaign->nextAt->modify('+7 seconds'));
+        $token = $campaign->dispatchToken;
+        $this->service->processDue($campaign->id, $token);
+        $this->service->processDue($campaign->id, $token);
+        $evidence = $campaign->timeline['pilot_blocked_return'];
+        self::assertSame('origin_unavailable', $campaign->timeline['pilot_return']['state']);
+        self::assertSame('held_before_return', $evidence['phase']);
+        self::assertSame($owner->id, $evidence['membership']);
+        self::assertSame($owner->player->id, $evidence['account']);
+        self::assertSame($owner->universe->id, $evidence['universe']);
+        self::assertSame($this->clock->now()->format(DATE_ATOM), $evidence['observed_at']);
+        self::assertSame([...$campaign->timeline['pilot_attack_fuel']['site'], null], $evidence['position']);
+        self::assertEquals($campaign->timeline['pilot_attack_fuel']['leg'], $evidence['hydrogen']);
+        self::assertNull($campaign->timeline['returnDue']);
+        self::assertNull($campaign->nextAt);
+        self::assertNull($campaign->dispatchToken);
+        self::assertNotSame([], $campaign->reservedShips);
+        self::assertSame(1, $this->stock($stock->id));
+        self::assertNull($this->service->statusFor($other, 'signal'));
+        $ownerView = self::getContainer()->get(PirateCampaignPresenter::class)->forProgress($owner, $campaign->reconnaissance, $campaign, $this->clock->now());
+        self::assertStringNotContainsString('pilot_blocked_return', json_encode($ownerView, JSON_THROW_ON_ERROR));
+        self::assertStringNotContainsString('return_settled', json_encode($ownerView, JSON_THROW_ON_ERROR));
+        self::assertSame(1, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM pirate_convoy_delivery'));
+    }
+
+    public function testOriginLostAfterReturnStartsConsumesFullLegAndOnlyAttestsItsFrozenArrival(): void
+    {
+        [$owner, $origin, $stock, $other, $campaign] = $this->startFundedVictory();
+        $this->advanceTo($campaign->nextAt);
+        $this->service->processDue($campaign->id, $campaign->dispatchToken);
+        self::assertSame('traveling', $campaign->timeline['pilot_return']['state']);
+        $token = $campaign->dispatchToken;
+        $due = $campaign->nextAt;
+        $origin->owner = $other;
+        $this->em->flush();
+        $this->advanceTo($due->modify('-1 second'));
+        self::assertSame(1000, $this->service->processDue($campaign->id, $token));
+        self::assertArrayNotHasKey('pilot_blocked_return', $campaign->timeline);
+        $this->advanceTo($due->modify('+13 seconds'));
+        $this->service->processDue($campaign->id, $token);
+        $this->service->processDue($campaign->id, $token);
+        $evidence = $campaign->timeline['pilot_blocked_return'];
+        self::assertSame('blocked_arrival', $evidence['phase']);
+        self::assertSame(0.0, $evidence['hydrogen']);
+        self::assertSame($campaign->timeline['pilot_attack_fuel']['origin'], $evidence['position']);
+        self::assertSame($this->clock->now()->format(DATE_ATOM), $evidence['observed_at']);
+        self::assertSame('return_blocked', $this->service->statusFor($owner, 'signal')['state']);
+        $progress = self::getContainer()->get(PirateCampaignProgress::class)->forViewer($owner, $campaign->reconnaissance, $campaign, $this->clock->now());
+        self::assertSame('blocked', $progress['returning']);
+        self::assertArrayNotHasKey('return_settled', $progress['dates']);
+        self::assertNull($this->service->statusFor($other, 'signal'));
+        self::assertSame(1, $this->stock($stock->id));
+        self::assertNotSame([], $campaign->reservedShips);
+    }
+
+    public function testFundedReturnInstallRollbackDoesNotRecordArrivalOrLoseReservedShips(): void
+    {
+        [$owner, $origin, $stock, , $campaign] = $this->startFundedVictory();
+        $this->advanceTo($campaign->nextAt);
+        $this->service->processDue($campaign->id, $campaign->dispatchToken);
+        $this->advanceTo($campaign->nextAt);
+        $id = $campaign->id;
+        $token = $campaign->dispatchToken;
+        $db = $this->em->getConnection();
+        $db->executeStatement("CREATE TRIGGER pirate_attack_test_return_install BEFORE UPDATE ON fleet_ship FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'fixture funded return failure'");
+        try {
+            $this->service->processDue($id, $token);
+            self::fail('La remise et la preuve du retour doivent rester dans la même transaction.');
+        } catch (DriverException $error) {
+            self::assertStringContainsString('fixture funded return failure', $error->getMessage());
+        } finally {
+            $db->executeStatement('DROP TRIGGER IF EXISTS pirate_attack_test_return_install');
+        }
+        $row = $db->fetchAssociative('SELECT timeline, reserved_ships, dispatch_token FROM pirate_attack_campaign WHERE id = ?', [$id]);
+        $history = json_decode($row['timeline'], true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame('traveling', $history['pilot_return']['state']);
+        self::assertSame($token, $row['dispatch_token']);
+        self::assertNotSame([], json_decode($row['reserved_ships'], true, flags: JSON_THROW_ON_ERROR));
+        self::assertSame(1, $this->stock($stock->id));
+    }
+
+    private function startFundedVictory(): array
+    {
+        [$owner, $origin, $stock, , $other] = $this->fixture(omega: true, scoutPaid: true);
+        $this->finishRecon();
+        self::assertTrue($this->service->launchWithOmegaPilotFuel($owner, $origin, 'signal', 0, ['fighter' => ['basic' => 2]]));
+        $campaign = $this->campaign();
+        $reported = $campaign->reconnaissance->battleProofFor($owner, $this->clock->now());
+        $campaign->timeline['seed'] = $this->seedWithVictory($campaign, $reported['prepared']->battleForServer());
+        $this->em->flush();
+        $this->advanceTo($campaign->nextAt);
+        $this->service->processDue($campaign->id, $campaign->dispatchToken);
+        self::assertNull($campaign->report);
+        self::assertArrayNotHasKey('pilot_return', $campaign->timeline);
+
+        return [$owner, $origin, $stock, $other, $campaign];
     }
 
     public function testCatalogueProfileAndCostsSurviveChangesBeforeRevealAndFirstAttack(): void

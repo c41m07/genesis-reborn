@@ -128,6 +128,9 @@ final class PirateAttackService
                 if ($campaign->timeline['attempt'] !== $expectedPreviousAttempt) {
                     return false;
                 }
+                if ($fundedPilot && $campaign->returnBlocked && $campaign->reservedShips !== []) {
+                    throw new \DomainException('Le sort des survivants doit être réglé avant une nouvelle tentative.');
+                }
                 if ($initialRoundSeconds !== null || $arrivalFlow !== self::usesPrivateArrival($campaign)
                     || $convoyPilot !== (($campaign->timeline['convoy_pilot'] ?? null) === true)
                     || $fundedPilot !== isset($campaign->timeline['pilot_attack_fuel'])) {
@@ -321,7 +324,11 @@ final class PirateAttackService
             } elseif ($timeline->state() === 'scheduled') {
                 $this->resolveBattle($campaign, $timeline, $attempt, $now);
             } elseif ($timeline->state() === 'returning') {
-                $this->settleReturn($campaign, $timeline, $membership, $attempt, $now);
+                if (isset($campaign->timeline['pilot_attack_fuel'])) {
+                    $this->settleFundedReturn($campaign, $timeline, $membership, $attempt);
+                } else {
+                    $this->settleReturn($campaign, $timeline, $membership, $attempt, $now);
+                }
             }
 
             return null;
@@ -361,14 +368,136 @@ final class PirateAttackService
             throw new \LogicException('L’ordre de résolution ne correspond pas au résultat privé de cette tentative.');
         }
         $survivors = $result['survivors'];
-        $return = $survivors === [] ? null : $now->modify('+'.$campaign->travelSeconds.' seconds');
+        $funded = null;
+        $attestation = null;
+        if (isset($campaign->timeline['pilot_attack_fuel'])) {
+            [$receipt, $attestation] = $this->fundedProof($campaign, $membership, $attempt);
+            if ($survivors !== []) {
+                $origin = $this->lockFundedOrigin($campaign, $membership, $receipt);
+                $now = $this->now(); // Ne pas décompter la durée dans l'attente du verrou de la planète.
+                if (!$membership->universe->isAccessible($now)) {
+                    throw new \DomainException('Univers inaccessible lors de la résolution du retour.');
+                }
+                $funded = PirateFundedReturn::atResolution($receipt, $survivors, $now, $origin !== null);
+            }
+            $return = $funded?->dueAt;
+        } else {
+            $return = $survivors === [] ? null : $now->modify('+'.$campaign->travelSeconds.' seconds');
+        }
         $timeline->recordPreparedResolution($attempt, $now, $pending->workerDueAt(), $result['outcome'], $return);
         // Retirer le checkpoint ET changer de jeton dans la transaction du rapport.
         // Si l'outbox/stock échoue, le checkpoint initial reste intact et reprenable.
         $this->publishBattle($campaign, $timeline, $result, $survivors);
+        if ($funded !== null) {
+            $campaign->timeline['pilot_return'] = $funded->checkpoint($attempt, $now);
+            if ($funded->dueAt === null) {
+                $campaign->returnBlocked = true;
+                if ($funded->decision === PirateFundedReturn::ORIGIN_UNAVAILABLE) {
+                    $evidence = $attestation->heldAtBattlefield(
+                        $campaign, $attempt, $attempt, $now, false, $receipt->survivorPorters($survivors),
+                    );
+                    $this->recordBlockedEvidence($campaign, $membership, $evidence);
+                }
+            }
+        }
         if ($result['outcome'] === 'attacker_wins') {
             $this->convoys->awardInVictoryTransaction($campaign, $membership, $now);
         }
+    }
+
+    /** @return array{PirateAttackFuelReceipt,PirateReturnAttestation} */
+    private function fundedProof(PirateAttackCampaign $campaign, PlayerUniverse $membership, int $attempt): array
+    {
+        if (!self::usesPrivateArrival($campaign) || $membership->universe->slug !== 'omega-1') {
+            throw new \LogicException('Cette tentative n’utilise pas le retour du pilote privé.');
+        }
+        $receipt = PirateAttackFuelReceipt::read($campaign->timeline['pilot_attack_fuel']);
+        if ($receipt->attempt !== $attempt || $receipt->originId !== $campaign->originId
+            || $receipt->budget->legSeconds !== $campaign->travelSeconds
+            || $campaign->arrivalAt->getTimestamp() - $campaign->departedAt->getTimestamp() !== $receipt->budget->legSeconds) {
+            throw new \LogicException('Le trajet et la réserve de la tentative ne correspondent pas au départ.');
+        }
+
+        return [$receipt, new PirateReturnAttestation(
+            $campaign->id, $attempt, $campaign->originId, $membership->universe->id,
+            $receipt->origin, [...$receipt->site, null], $receipt->budget,
+        )];
+    }
+
+    private function lockFundedOrigin(PirateAttackCampaign $campaign, PlayerUniverse $membership, PirateAttackFuelReceipt $receipt): ?Planet
+    {
+        $origin = $this->repository->find(Planet::class, $campaign->originId);
+        if ($origin === null) {
+            return null;
+        }
+        $this->manager->lockCurrent($origin);
+        $system = $origin->solarSystem;
+
+        return $origin->owner?->id === $membership->id && $origin->owner->player?->id === $membership->player->id
+            && $system->galaxy->universe->id === $membership->universe->id
+            && [$system->id, $system->galaxy->id, $system->coordX, $system->coordY, $origin->position] === $receipt->origin
+            ? $origin : null;
+    }
+
+    private function settleFundedReturn(PirateAttackCampaign $campaign, PirateAttackTimeline $timeline, PlayerUniverse $membership, int $attempt): void
+    {
+        [$receipt, $attestation] = $this->fundedProof($campaign, $membership, $attempt);
+        $resolvedAt = PirateReturnAttestation::checkpointDate($campaign, 'resolved');
+        $due = $timeline->returnDueAt();
+        if ($resolvedAt === null || $due === null || $due != $campaign->nextAt) {
+            throw new \LogicException('L’échéance du retour privé est incohérente.');
+        }
+        $return = PirateFundedReturn::atResolution($receipt, $campaign->reservedShips, $resolvedAt, true);
+        $stored = $campaign->timeline['pilot_return'] ?? null;
+        // JSON n'impose ni l'ordre des clés ni un type distinct pour un montant entier.
+        if (!is_array($stored) || (!is_int($stored['carried'] ?? null) && !is_float($stored['carried'] ?? null))) {
+            throw new \LogicException('La preuve du retour prévu est absente.');
+        }
+        $stored['carried'] = (float) $stored['carried'];
+        $expected = $return->checkpoint($attempt, $resolvedAt);
+        ksort($stored);
+        ksort($expected);
+        if ($stored !== $expected || $return->dueAt != $due || $receipt->budget->arrivalHydrogen($return->hydrogen) !== 0.0) {
+            throw new \LogicException('Le solde figé ne prouve pas un trajet retour financé.');
+        }
+        $origin = $this->lockFundedOrigin($campaign, $membership, $receipt);
+        if ($origin !== null) {
+            // Attendre aussi le verrou hangar/coques avant la preuve d'arrivée effective.
+            $this->installSurvivors($campaign, $membership, $origin);
+        }
+        $now = $this->now();
+        if (!$membership->universe->isAccessible($now) || !$timeline->settleReturnWhenDue($attempt, $now)) {
+            throw new \DomainException('Le retour ne peut pas être attesté maintenant.');
+        }
+        $campaign->timeline = $timeline->checkpoint() + array_intersect_key($campaign->timeline,
+            ['arrival_flow' => true, 'arrival_observed' => true, 'convoy_pilot' => true, 'pilot_attack_fuel' => true]);
+        $campaign->timeline['pilot_return'] = [
+            'version' => 1, 'attempt' => $attempt, 'state' => $origin === null ? 'blocked_arrival' : 'arrived',
+            'observed_at' => $now->format(DATE_ATOM), 'due_at' => $due->format(DATE_ATOM), 'carried' => 0.0,
+        ];
+        $this->schedule($campaign, null);
+        if ($origin === null) {
+            $campaign->returnBlocked = true;
+            $evidence = $attestation->blockedAtArrival(
+                $campaign, $attempt, $attempt, $now, false, $return->hydrogen, $receipt->survivorPorters($campaign->reservedShips),
+            );
+            $this->recordBlockedEvidence($campaign, $membership, $evidence);
+        }
+    }
+
+    private function recordBlockedEvidence(PirateAttackCampaign $campaign, PlayerUniverse $membership, ?PirateBlockedReturnEvidence $evidence): void
+    {
+        if ($evidence === null) {
+            throw new \LogicException('Le worker ne peut pas attester la position des porteurs.');
+        }
+        // L'identité vient du rapport verrouillé, jamais d'un paramètre client. Aucun lecteur public.
+        $campaign->timeline['pilot_blocked_return'] = [
+            'version' => 1, 'campaign' => $evidence->campaignId, 'attempt' => $evidence->attempt,
+            'origin' => $evidence->originId, 'universe' => $evidence->universeId,
+            'membership' => $membership->id, 'account' => $membership->player->id,
+            'carrier_revision' => $evidence->carrierRevision, 'observed_at' => $evidence->arrivedAt->format(DATE_ATOM),
+            'position' => $evidence->position, 'hydrogen' => $evidence->remainingHydrogen, 'phase' => $evidence->phase,
+        ];
     }
 
     private static function usesPrivateArrival(PirateAttackCampaign $campaign): bool
@@ -438,6 +567,14 @@ final class PirateAttackService
 
             return;
         }
+        $this->installSurvivors($campaign, $membership, $origin);
+        $campaign->timeline = $timeline->checkpoint() + array_intersect_key($campaign->timeline,
+            ['arrival_flow' => true, 'arrival_observed' => true, 'convoy_pilot' => true, 'pilot_attack_fuel' => true]);
+        $this->schedule($campaign, null);
+    }
+
+    private function installSurvivors(PirateAttackCampaign $campaign, PlayerUniverse $membership, Planet $origin): void
+    {
         $idle = $this->idleFleet($membership, $origin);
         if ($idle === null) {
             // Ce hangar local est la seule flotte que la campagne peut créer, jamais une flotte active.
@@ -465,9 +602,6 @@ final class PirateAttackService
             }
         }
         $campaign->reservedShips = [];
-        $campaign->timeline = $timeline->checkpoint() + array_intersect_key($campaign->timeline,
-            ['arrival_flow' => true, 'arrival_observed' => true, 'convoy_pilot' => true, 'pilot_attack_fuel' => true]);
-        $this->schedule($campaign, null);
     }
 
     private function schedule(PirateAttackCampaign $campaign, ?\DateTimeImmutable $dueAt): void
@@ -510,7 +644,9 @@ final class PirateAttackService
 
         return [
             'attempt' => $campaign->timeline['attempt'],
-            'state' => $campaign->returnBlocked ? 'return_blocked'
+            'state' => $campaign->returnBlocked
+                ? (($campaign->timeline['pilot_return']['state'] ?? null) === PirateFundedReturn::INSUFFICIENT_HYDROGEN
+                    ? 'return_fuel_insufficient' : 'return_blocked')
                 : ($campaign->report === null && self::usesPrivateArrival($campaign) && isset($campaign->timeline['arrival_observed'])
                     ? 'combat_in_progress' : $campaign->timeline['state']),
             'arrival_at' => $campaign->arrivalAt->format(DATE_ATOM),

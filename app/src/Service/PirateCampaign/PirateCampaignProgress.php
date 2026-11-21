@@ -58,7 +58,10 @@ final class PirateCampaignProgress
                 } elseif ($phase !== PirateCampaignMoment::AttaqueEngagee) {
                     $dates['combat_reported'] = $attack->timeline['resolved'];
                     $losses = $this->escortLosses($attack->report['losses'] ?? null);
-                    if (($attack->timeline['state'] ?? null) === 'returning' && $attack->reservedShips !== []) {
+                    if ($attack->returnBlocked && $attack->reservedShips !== [] && isset($attack->timeline['pilot_return'])) {
+                        // Le statut privé ne peut pas être confondu avec un retour livré au hangar.
+                        $returning = 'blocked';
+                    } elseif (($attack->timeline['state'] ?? null) === 'returning' && $attack->reservedShips !== []) {
                         $returning = $attack->returnBlocked ? 'blocked' : 'scheduled';
                         if (!$attack->returnBlocked) {
                             $returnNarrative = $this->catalogue->narrativeFor($context['key'], $context['site'], $viewer, PirateCampaignMoment::RetourDesSurvivants);

@@ -93,6 +93,29 @@ final readonly class PirateAttackFuelReceipt
         ];
     }
 
+    /** @return list<array<string,mixed>> Capacités du départ, quantités réellement survivantes. */
+    public function survivorPorters(array $survivors): array
+    {
+        $matched = [];
+        $porters = [];
+        foreach ($this->porters as $ship) {
+            $quantity = $survivors[$ship['slug']][$ship['tier']] ?? null;
+            if ($quantity === null) {
+                continue;
+            }
+            if (!is_int($quantity) || $quantity < 1 || $quantity > $ship['quantity']) {
+                throw new \LogicException('Le lot survivant ne correspond pas à la réservation de départ.');
+            }
+            $matched[$ship['slug']][$ship['tier']] = $quantity;
+            $porters[] = array_replace($ship, ['quantity' => $quantity]);
+        }
+        if ($matched != $survivors) {
+            throw new \LogicException('Le lot survivant ne correspond pas aux porteurs figés.');
+        }
+
+        return $porters;
+    }
+
     private static function coords(mixed $value, int $size): bool
     {
         return is_array($value) && array_is_list($value) && count($value) === $size
