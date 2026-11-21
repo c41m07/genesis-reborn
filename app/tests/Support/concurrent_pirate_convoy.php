@@ -8,13 +8,26 @@ use App\Kernel;
 use App\Entity\PlayerUniverse;
 use App\Service\PirateCampaign\PirateConvoyDeliveryService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Clock\ClockInterface;
 use Symfony\Component\Clock\MockClock;
 
 $input = json_decode($argv[1], true, 512, JSON_THROW_ON_ERROR);
 $kernel = new Kernel('test', true);
 $kernel->boot();
 $container = $kernel->getContainer()->get('test.service_container');
-$container->set('clock', new MockClock($input['now']));
+$clock = isset($input['clock_file'])
+    ? new readonly class ($input['clock_file']) implements ClockInterface {
+        public function __construct(private string $path)
+        {
+        }
+
+        public function now(): DateTimeImmutable
+        {
+            return new DateTimeImmutable(trim(file_get_contents($this->path)));
+        }
+    }
+    : new MockClock($input['now']);
+$container->set('clock', $clock);
 $connection = $container->get(EntityManagerInterface::class)->getConnection();
 $params = $connection->getParams();
 if (($params['host'] ?? '') !== 'database-test' || ($params['dbname'] ?? '') !== 'genesis_v2_test') {

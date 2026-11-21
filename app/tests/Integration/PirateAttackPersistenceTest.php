@@ -704,6 +704,145 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame(0.0, $this->resourceStock($nextId, 'metal'));
     }
 
+    public function testConvoyRetargetKeepsItsFullTravelDurationAfterWaitingOnPlanet(): void
+    {
+        [$member, $lost, $other, , $event] = $this->pilotVictoryWithConvoy();
+        $next = $this->createReplacementColony($member, $lost);
+        $rightId = (int) $event['target_id'];
+        $right = $this->em->find(PirateConvoyDelivery::class, $rightId);
+        $lost->owner = $other;
+        $this->em->flush();
+        $this->advanceTo($right->timeline()->chronology()['due_at']);
+        $service = self::getContainer()->get(PirateConvoyDeliveryService::class);
+        $service->processDue($rightId, $event['token']);
+        self::assertSame('destination_lost', $right->timeline()->state());
+
+        $first = $this->clock->now();
+        $later = $first->modify('+45 seconds');
+        $reply = $this->advanceClockDuringConvoyLock('retarget', $member, $rightId, $event['token'], $next->id, lockStocks: false,
+            first: $first, later: $later);
+        self::assertSame('traveling', $reply);
+        $this->em->refresh($right);
+        $timeline = $right->timeline();
+        self::assertEquals($later, $timeline->chronology()['departed_at']);
+        self::assertEquals($later->modify('+347 seconds'), $timeline->chronology()['due_at']);
+        // À l'ancienne ETA (calculée avant l'attente), il manque encore 45 secondes : pas de dépôt anticipé.
+        $this->advanceTo($first->modify('+347 seconds'));
+        self::assertSame(45000, $service->processDue($rightId, $timeline->checkpoint()['token']));
+        self::assertSame(0.0, $this->resourceStock($next->id, 'metal'));
+    }
+
+    public function testConvoyArrivalAndReceiptAreObservedAfterWaitingOnStocks(): void
+    {
+        [$member, $home, , , $event] = $this->pilotVictoryWithConvoy();
+        $rightId = (int) $event['target_id'];
+        $right = $this->em->find(PirateConvoyDelivery::class, $rightId);
+        $first = $right->timeline()->chronology()['due_at'];
+        $later = $first->modify('+25 seconds');
+        $this->advanceTo($later);
+        $this->stampStocks($home->id, ['metal' => 0.0, 'nano' => 0.0, 'antimatter' => 0.0]);
+        self::assertSame('processed', $this->advanceClockDuringConvoyLock('worker', $member, $rightId, $event['token'],
+            $home->id, lockStocks: true, first: $first, later: $later));
+        $this->em->refresh($right);
+        self::assertEquals($later, $right->timeline()->chronology()['arrived_at']);
+        self::assertEquals($later, $right->timeline()->chronology()['settled_at']);
+        self::assertSame(41.5, $this->resourceStock($home->id, 'metal'));
+    }
+
+    public function testConvoyManualClaimDoesNotUseTheWindowThatClosedDuringStockWait(): void
+    {
+        [$member, $home, , , $event] = $this->pilotVictoryWithConvoy();
+        $rightId = (int) $event['target_id'];
+        $right = $this->em->find(PirateConvoyDelivery::class, $rightId);
+        $this->advanceTo($right->timeline()->chronology()['due_at']);
+        $capacity = self::getContainer()->get(\App\Service\Colony\ResourceService::class)->capacity($home, 'metal', []);
+        $this->stampStocks($home->id, ['metal' => $capacity]);
+        self::getContainer()->get(PirateConvoyDeliveryService::class)->processDue($rightId, $event['token']);
+        self::assertSame('waiting_capacity', $right->timeline()->state());
+        $first = $this->clock->now();
+        $later = $first->modify('+15 seconds');
+        $member->universe->endsAt = $first->modify('+5 seconds');
+        $this->em->flush();
+        $this->stampStocks($home->id, ['metal' => 0.0, 'nano' => 0.0, 'antimatter' => 0.0]);
+        self::assertNull($this->advanceClockDuringConvoyLock('claim', $member, $rightId, $event['token'],
+            $home->id, lockStocks: true, first: $first, later: $later));
+        $this->em->refresh($right);
+        self::assertSame('waiting_capacity', $right->timeline()->state());
+        self::assertSame(0.0, $this->resourceStock($home->id, 'metal'));
+        self::assertSame(0.0, $this->resourceStock($home->id, 'nano'));
+    }
+
+    /** Avance une vraie horloge de fixture entre l’attente SQL observée et la sortie du verrou. */
+    private function advanceClockDuringConvoyLock(
+        string $operation,
+        PlayerUniverse $member,
+        int $deliveryId,
+        string $token,
+        int $destination,
+        bool $lockStocks,
+        \DateTimeImmutable $first,
+        \DateTimeImmutable $later,
+    ): ?string {
+        $db = $this->em->getConnection();
+        $path = sys_get_temp_dir().'/ges-convoy-clock-'.bin2hex(random_bytes(8));
+        mkdir($path, 0700);
+        $barrier = $path.'/go';
+        $ready = $path.'/ready';
+        $clockFile = $path.'/clock';
+        file_put_contents($clockFile, $first->format(DATE_ATOM));
+        $data = ['now' => $first->format(DATE_ATOM), 'clock_file' => $clockFile, 'owner' => $member->id,
+            'right' => $deliveryId, 'token' => $token, 'operation' => $operation, 'destination' => $destination,
+            'barrier' => $barrier, 'ready' => $ready];
+        $proc = new Process([PHP_BINARY, dirname(__DIR__).'/Support/concurrent_pirate_convoy.php',
+            json_encode($data, JSON_THROW_ON_ERROR)]);
+        $proc->setTimeout(25);
+        $db->beginTransaction();
+        try {
+            $db->fetchOne($lockStocks
+                ? 'SELECT id FROM planet_resource WHERE planet_id = ? FOR UPDATE'
+                : 'SELECT id FROM planet WHERE id = ? FOR UPDATE', [$destination]);
+            $proc->start();
+            $deadline = microtime(true) + 14;
+            while (!is_file($ready) && microtime(true) < $deadline) {
+                usleep(10000);
+            }
+            self::assertFileExists($ready, $proc->getErrorOutput());
+            $connectionId = (int) file_get_contents($ready);
+            touch($barrier);
+            $blocked = false;
+            do {
+                foreach ($db->fetchAllAssociative('SHOW FULL PROCESSLIST') as $row) {
+                    $query = strtoupper($row['Info'] ?? '');
+                    if ((int) $row['Id'] === $connectionId && str_contains($query, 'FOR UPDATE')
+                        && str_contains($query, $lockStocks ? 'PLANET_RESOURCE' : 'FROM PLANET ')) {
+                        $blocked = true;
+                        break 2;
+                    }
+                }
+                usleep(10000);
+            } while (microtime(true) < $deadline);
+            self::assertTrue($blocked, 'L’horloge ne doit avancer qu’après l’attente réelle du dernier verrou.');
+            self::assertSame(0.0, $this->resourceStock($destination, 'metal'), 'Aucun gain pendant le blocage.');
+            file_put_contents($clockFile, $later->format(DATE_ATOM));
+            $db->commit();
+            self::assertSame(0, $proc->wait(), $proc->getOutput().$proc->getErrorOutput());
+            $reply = trim($proc->getOutput());
+
+            return $operation === 'worker' ? $reply : json_decode($reply, true, flags: JSON_THROW_ON_ERROR);
+        } finally {
+            if ($db->isTransactionActive()) {
+                $db->rollBack();
+            }
+            if ($proc->isRunning()) {
+                $proc->stop();
+            }
+            foreach (glob($path.'/*') ?: [] as $file) {
+                unlink($file);
+            }
+            rmdir($path);
+        }
+    }
+
     /** Deux connexions réellement concurrentes et arrêtées sur le verrou d'entrée. */
     private function raceConvoy(PlayerUniverse $owner, int $id, string $token, string $otherOperation, int $destination): string
     {

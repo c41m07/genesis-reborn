@@ -39,7 +39,7 @@ final readonly class PirateConvoyDeliveryService
         $this->manager->save($right);
         $planet = $this->ownedPlanetLocked($owner, $attack->originId);
         if ($planet !== null) {
-            $this->dispatchProtectedLeg($right, $right->timeline(), $owner, $planet, $at);
+            $this->dispatchProtectedLeg($right, $right->timeline(), $owner, $planet);
         }
     }
 
@@ -56,8 +56,7 @@ final readonly class PirateConvoyDeliveryService
         }
 
         return $this->manager->transaction(function () use ($owner, $scope, $deliveryId, $newDestinationId): ?string {
-            $now = $this->now();
-            $right = $this->lockForOwner($owner, $scope, $deliveryId, $now);
+            $right = $this->lockForOwner($owner, $scope, $deliveryId);
             if ($right === null || $owner->player?->lockedAt !== null) {
                 return null;
             }
@@ -70,7 +69,7 @@ final readonly class PirateConvoyDeliveryService
             if ($planet === null) {
                 return null;
             }
-            $this->dispatchProtectedLeg($right, $timeline, $owner, $planet, $now);
+            $this->dispatchProtectedLeg($right, $timeline, $owner, $planet);
 
             return $timeline->state();
         });
@@ -81,7 +80,6 @@ final readonly class PirateConvoyDeliveryService
         PirateConvoyTimeline $timeline,
         PlayerUniverse $owner,
         Planet $planet,
-        \DateTimeImmutable $at,
     ): void {
         $source = $timeline->attestedPositionForDeparture();
         if ($source === null || $source[1] !== $planet->solarSystem->galaxy->id
@@ -101,6 +99,11 @@ final readonly class PirateConvoyDeliveryService
             return;
         }
         $token = PirateConvoyDispatchToken::generate($timeline->checkpoint()['generation'] + 1);
+        // Ni l'attente du verrou, ni la préparation du devis ne comptent comme temps de trajet.
+        $at = $this->now();
+        if (!$owner->universe->isAccessible($at) || !$owner->isPlayerControlled() || $planet->owner?->id !== $owner->id) {
+            return;
+        }
         $due = $at->modify('+'.$quote['seconds'].' seconds');
         if (!$timeline->dispatch($owner->id, $owner->universe->id, $planet->id, $source, $destination, $token, $at, $due)) {
             throw new \LogicException('L’ancre du droit de convoi ne correspond pas au trajet.');
@@ -137,8 +140,7 @@ final readonly class PirateConvoyDeliveryService
         }
 
         return $this->manager->transaction(function () use ($owner, $scope, $deliveryId, $token): ?int {
-            $now = $this->now();
-            $right = $this->lockForOwner($owner, $scope, $deliveryId, $now);
+            $right = $this->lockForOwner($owner, $scope, $deliveryId);
             if ($right === null) {
                 return null;
             }
@@ -149,13 +151,22 @@ final readonly class PirateConvoyDeliveryService
                 return null;
             }
             $due = $timeline->chronology()['due_at'];
+            $now = $this->now();
+            if ($now < $due) {
+                return max(1000, ($due->getTimestamp() - $now->getTimestamp()) * 1000);
+            }
+            $planet = $this->lockDepositTarget($owner, $phase['destination']);
+            $now = $this->now();
+            if (!$owner->universe->isAccessible($now)) {
+                return null;
+            }
             if ($now < $due) {
                 return max(1000, ($due->getTimestamp() - $now->getTimestamp()) * 1000);
             }
             if (!$timeline->arriveWhenDue($token, $now)) {
                 throw new \LogicException('Le convoi ne peut pas attester cette arrivée.');
             }
-            $this->settleOrKeepEntire($right, $timeline, $owner, $phase['destination'], $now);
+            $this->settleOrKeepEntire($right, $timeline, $owner, $phase['destination'], $planet, $now);
 
             return null;
         });
@@ -170,14 +181,19 @@ final readonly class PirateConvoyDeliveryService
         }
 
         return $this->manager->transaction(function () use ($owner, $scope, $deliveryId): ?string {
-            $now = $this->now();
-            $right = $this->lockForOwner($owner, $scope, $deliveryId, $now);
+            $right = $this->lockForOwner($owner, $scope, $deliveryId);
             if ($right === null || $owner->player?->lockedAt !== null) {
                 return null;
             }
             $timeline = $right->timeline();
             if ($timeline->state() === 'waiting_capacity') {
-                $this->settleOrKeepEntire($right, $timeline, $owner, $timeline->checkpoint()['destination'], $now);
+                $destination = $timeline->checkpoint()['destination'];
+                $planet = $this->lockDepositTarget($owner, $destination);
+                $now = $this->now();
+                if (!$owner->universe->isAccessible($now)) {
+                    return null;
+                }
+                $this->settleOrKeepEntire($right, $timeline, $owner, $destination, $planet, $now);
             }
 
             return $timeline->state();
@@ -189,18 +205,22 @@ final readonly class PirateConvoyDeliveryService
         PirateConvoyTimeline $timeline,
         PlayerUniverse $owner,
         int $destinationId,
+        ?Planet $planet,
         \DateTimeImmutable $at,
     ): void {
         if (!$timeline->mayTryDeposit($owner->id, $owner->universe->id, $destinationId, $at)) {
             throw new \LogicException('Le dépôt du convoi exige une arrivée réelle à cette destination.');
         }
-        // Verrous dans l'ordre : participation, univers, droit, planète, puis stocks courants.
-        $planet = $this->ownedPlanetLocked($owner, $destinationId);
         if ($planet === null) {
             $timeline->recordDestinationLoss($owner->id, $owner->universe->id, $destinationId, $at);
         } else {
             $cargo = $timeline->quote->depositAmounts();
             $result = $this->resources->deposit($planet, $cargo, allOrNothing: true);
+            $at = $this->now();
+            if (!$owner->universe->isAccessible($at)) {
+                // Les écritures déjà préparées doivent repartir avec la transaction, même sans reçu.
+                throw new \DomainException('L’univers s’est fermé avant la finalisation du dépôt.');
+            }
             if (max([0.0, ...array_values($result['overflow'])]) > 0.0) {
                 $timeline->recordCapacityShortage($owner->id, $owner->universe->id, $destinationId, $at);
             } else {
@@ -226,17 +246,31 @@ final readonly class PirateConvoyDeliveryService
     }
 
     /** @param array{account:int,universe:int} $scope */
-    private function lockForOwner(PlayerUniverse $owner, array $scope, int $deliveryId, \DateTimeImmutable $at): ?PirateConvoyDelivery
+    private function lockForOwner(PlayerUniverse $owner, array $scope, int $deliveryId): ?PirateConvoyDelivery
     {
         // Un changement d'identité ne requalifie pas une demande portée par l'ancien contexte.
         $this->manager->lockCurrent($owner);
         $this->manager->lockCurrent($owner->universe);
-        if (!$owner->isPlayerControlled() || !$owner->universe->isAccessible($at)
+        if (!$owner->isPlayerControlled()
             || $owner->player?->id !== $scope['account'] || $owner->universe->id !== $scope['universe']) {
             return null;
         }
 
-        return $this->repository->lockPirateConvoy($deliveryId, $owner);
+        $right = $this->repository->lockPirateConvoy($deliveryId, $owner);
+
+        return $owner->universe->isAccessible($this->now()) ? $right : null;
+    }
+
+    private function lockDepositTarget(PlayerUniverse $owner, int $destination): ?Planet
+    {
+        // Après participation → univers → droit, verrouiller planète puis stocks avant d'attester
+        // une arrivée. ResourceService relira ces mêmes lignes déjà détenues à son heure native.
+        $planet = $this->ownedPlanetLocked($owner, $destination);
+        if ($planet !== null) {
+            $this->repository->lockedPlanetResources($planet);
+        }
+
+        return $planet;
     }
 
     private function ownedPlanetLocked(PlayerUniverse $owner, int $destinationId): ?Planet
