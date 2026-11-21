@@ -660,3 +660,49 @@ cas, prévoir reprise après retard sans avancer l’horloge, enregistrement
 atomique du rapport/pertes et du retour, et aucune lecture anticipant
 l’issue par sa durée. Le test broker est vert sur le comportement
 actuel ; aucun horaire ni migration de production n’est changé.
+
+## Contrat préparé : arrivée privée et calcul opaque
+
+Complexité 2/5 pour le contrat pur, 4/5 pour raccorder persistance et
+worker. `PiratePendingBattle` exige l’heure effective d’une arrivée
+attestée par l’appelant ; une simple ETA passée ne suffit pas. Avec
+les forces, le profil et la graine déjà figés, il utilise le simulateur
+natif puis garde seulement les totaux de pertes, le résultat et les
+survivants d’escorte regroupés. Pas d’historique par coque/round. Le
+dernier round effectivement joué fixe une échéance worker privée
+(60 s par round, plafond 10), distincte de l’heure d’application.
+Avant cette échéance, l’objet ne donne rien à appliquer. Retard du
+worker : l’heure effective fournie ne change pas, mais aucune
+application n’est antidatée. Ce contrat ne tranche pas quelle preuve
+d’arrivée conserver lors d’un retard de traitement de l’arrivée.
+
+Le futur câblage, encore absent, devra :
+
+1. Créer un ordre d’arrivée avec le jeton de phase lors du vrai départ.
+   Sous verrou empire → univers → tentative et vérification d’échéance,
+   recueillir la preuve d’arrivée, déposer le résultat privé et son
+   ordre différé **dans une seule transaction**. Relire les tentatives
+   déjà lancées avec leur contrat actuel. Étudier une clé JSON interne
+   versionnée dans `timeline` : aucune nouvelle colonne n’est utilisée
+   dans le modèle pur ni promise pour le raccordement.
+2. À l’ultime échéance, vérifier le jeton courant, le numéro de tentative
+   et la réservation, puis appliquer le résultat, son marqueur consommé,
+   les pertes et l’ordre de retour dans la même transaction. Un rollback
+   doit rendre le checkpoint non consommé et une copie déjà acquittée
+   ne doit jamais réappliquer les pertes. Tester les deux phases en
+   broker réel, en concurrence et avec faute injectée avant activation.
+3. Avant application, ne lire que « Combat en cours » et, au besoin,
+   la borne maximale indépendante du résultat, sans promettre l’heure
+   d’issue. Retirer de toute lecture publique ou propriétaire la vraie
+   valeur de `next_at`/du checkpoint pendant ce calcul : même sans
+   rapport, sa date pourrait révéler le nombre de rounds. Aucun rapport,
+   victoire, perte publiée, départ de retour ou nouvelle mission avant
+   l’écriture effective. Les lectures utilisent les champs durables
+   ordinaires, jamais le checkpoint privé ou le jeton.
+
+Les tests purs vérifient l’absence de preuve et l’arrivée précoce,
+l’issue en deux rounds et le plafond dix, le retard, la relecture du même
+JSON lors d’un rollback simulé, le refus d’un numéro ou d’un checkpoint
+invalide et la consommation unique du résultat. Ils ne prouvent aucune
+nouvelle intégration DB, RabbitMQ ni modification du moteur : les vrais
+workers, échéances et lectures fonctionnent encore comme précédemment.
