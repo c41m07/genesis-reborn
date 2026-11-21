@@ -13,10 +13,10 @@ final class PirateSurvivorFallbackQuoteTest extends TestCase
 {
     public function testSameSystemUsesNativeOneWayExactReserveAndRealElapsedTimeWithoutWriting(): void
     {
-        [$campaign, $player, $origin, $target, $ships, $at] = $this->fixture();
+        [$campaign, $player, $origin, $target, $ships, $at] = $this->fixture(heldBeforeReturn: true);
         $before = $campaign->timeline;
         $movement = new MovementCalculator();
-        $raw = $movement->quote([4, 3, 0, 0, 5], [4, 3, 0, 0, 6], $ships, 1.0, 1.0, 'proportional');
+        $raw = $movement->quote([4, 3, 0, 0, 9], [4, 3, 0, 0, null], $ships, 1.0, 1.0, 'proportional');
         $reserve = (float) $raw['one_way_fuel'];
         self::assertSame(0.1, $reserve);
         $proposal = (new PirateSurvivorFallbackQuote($movement))->propose($campaign, $player, $origin, $target, $this->evidence($reserve), 12, $ships, $at, 1.0, 1.0, 'proportional');
@@ -36,12 +36,12 @@ final class PirateSurvivorFallbackQuoteTest extends TestCase
 
     public function testInterSystemUsesNativeSpiralRatherThanASyntheticPointWhenTheColonyDisappeared(): void
     {
-        [$campaign, $player, , $target, $ships, $at] = $this->fixture();
+        [$campaign, $player, , $target, $ships, $at] = $this->fixture(heldBeforeReturn: true);
         $target->solarSystem = clone $target->solarSystem;
         $target->solarSystem->id = 5;
         $target->solarSystem->coordX = 3;
         $movement = new MovementCalculator();
-        $raw = $movement->quote([4, 3, 0, 0, 5], [5, 3, 3, 0, 6], $ships, 0.5, 1.2, 'inverse');
+        $raw = $movement->quote([5, 3, 3, 0, 9], [4, 3, 0, 0, null], $ships, 0.5, 1.2, 'inverse');
         $proposal = (new PirateSurvivorFallbackQuote($movement))->propose($campaign, $player, null, $target, $this->evidence((float) $raw['one_way_fuel']), 12, $ships, $at, 0.5, 1.2, 'inverse');
 
         self::assertNotNull($proposal);
@@ -53,10 +53,10 @@ final class PirateSurvivorFallbackQuoteTest extends TestCase
     public function testUnattestedInactiveOrMismatchedReturnsAndUnsafeTravelFailClosed(): void
     {
         foreach (['historique', 'reserve insuffisante', 'reserve non finie', 'reserve impossible', 'ancienne version',
-            'autre tentative', 'trace traitée un autre instant', 'ancre sans case', 'encore en route', 'arrivée future',
-            'origine toujours à soi', 'autre empire', 'autre univers', 'empire oublié', 'colonie au même point',
+            'autre tentative', 'trace traitée un autre instant', 'case illégitime avant le retour', 'encore en route', 'arrivée future',
+            'origine toujours à soi', 'autre empire', 'autre univers', 'empire oublié', 'ancienne colonie proposée',
             'autre galaxie', 'positions incohérentes', 'aucun survivant', 'effectifs différents', 'durée hors borne', 'date hors borne'] as $case) {
-            [$campaign, $player, $origin, $target, $ships, $at] = $this->fixture();
+            [$campaign, $player, $origin, $target, $ships, $at] = $this->fixture(heldBeforeReturn: true);
             $evidence = $this->evidence();
             $revision = 12;
             $multiplier = 1.0;
@@ -68,7 +68,7 @@ final class PirateSurvivorFallbackQuoteTest extends TestCase
                 case 'ancienne version': $revision--; break;
                 case 'autre tentative': $campaign->timeline['attempt']++; break;
                 case 'trace traitée un autre instant': $campaign->timeline['settled'] = $at->format(DATE_ATOM); break;
-                case 'ancre sans case': $evidence = $this->evidence(0.1, [4, 3, 0, 0, null]); break;
+                case 'case illégitime avant le retour': $evidence = $this->evidence(0.1, [4, 3, 0, 0, 5]); break;
                 case 'encore en route': $campaign->timeline['state'] = 'returning'; break;
                 case 'arrivée future': $at = $at->setTimestamp($at->getTimestamp() - 20); break;
                 case 'origine toujours à soi': $origin->owner = $player; break;
@@ -80,7 +80,7 @@ final class PirateSurvivorFallbackQuoteTest extends TestCase
                     $target->solarSystem->galaxy->universe->id = 99;
                     break;
                 case 'empire oublié': $player->forgottenAt = $at; break;
-                case 'colonie au même point': $target->position = 5; break;
+                case 'ancienne colonie proposée': $target->id = $origin->id; break;
                 case 'autre galaxie':
                     $target->solarSystem = clone $target->solarSystem;
                     $target->solarSystem->galaxy = clone $target->solarSystem->galaxy;
@@ -103,10 +103,10 @@ final class PirateSurvivorFallbackQuoteTest extends TestCase
 
     public function testEvidenceSavesCoordinatesIndependentlyOfTheHydrationArray(): void
     {
-        $slot = 5;
-        $evidence = $this->evidence(0.1, [4, 3, 0, 0, &$slot]);
-        $slot = 9;
-        self::assertSame([4, 3, 0, 0, 5], $evidence->position);
+        $coordinate = 0;
+        $evidence = $this->evidence(0.1, [4, 3, 0, &$coordinate, null]);
+        $coordinate = 3;
+        self::assertSame([4, 3, 0, 0, null], $evidence->position);
     }
 
     public function testScoutForfeitsTheFullNativeRoundTripWithoutAnOrbitalBudget(): void
@@ -224,12 +224,19 @@ final class PirateSurvivorFallbackQuoteTest extends TestCase
         ));
     }
 
-    private function evidence(float $reserve = 0.1, array $position = [4, 3, 0, 0, 5]): PirateBlockedReturnEvidence
+    public function testHydrationRefusesAFundedAlreadyCompletedReturn(): void
     {
-        return new PirateBlockedReturnEvidence(31, 2, 15, 1, 12, new \DateTimeImmutable('2026-10-25T00:59:40Z'), $position, $reserve);
+        $this->expectException(\DomainException::class);
+        new PirateBlockedReturnEvidence(31, 2, 15, 1, 12, new \DateTimeImmutable('2026-10-25T00:59:40Z'),
+            [4, 3, 0, 0, 5], 0.1, PirateBlockedReturnEvidence::BLOCKED_ARRIVAL);
     }
 
-    private function fixture(): array
+    private function evidence(float $reserve = 0.1, array $position = [4, 3, 0, 0, null]): PirateBlockedReturnEvidence
+    {
+        return new PirateBlockedReturnEvidence(31, 2, 15, 1, 12, new \DateTimeImmutable('2026-10-25T00:59:40Z'), $position, $reserve, PirateBlockedReturnEvidence::HELD_BEFORE_RETURN);
+    }
+
+    private function fixture(bool $heldBeforeReturn = false): array
     {
         $at = (new \DateTimeImmutable('2026-10-25T00:59:57Z'))->setTimezone(new \DateTimeZone('Europe/Paris'));
 
@@ -276,6 +283,12 @@ final class PirateSurvivorFallbackQuoteTest extends TestCase
         $campaign->timeline = ['attempt' => 2, 'state' => 'retryable', 'returnDue' => '2026-10-25T00:59:30+00:00', 'settled' => '2026-10-25T00:59:40+00:00'];
         $ships = [['slug' => 'probe', 'tier' => 'basic', 'quantity' => 1, 'speed_system' => 4800, 'speed_galaxy' => 5000,
             'fuel_travel_system' => 0.01, 'fuel_travel_galaxy' => 0.04, 'fuel_orbit' => 0, 'cargo_capacity' => 16000]];
+
+        if ($heldBeforeReturn) {
+            $target->position = 9;
+            $campaign->timeline['returnDue'] = null;
+            $campaign->timeline['resolved'] = $campaign->timeline['settled'];
+        }
 
         return [$campaign, $member, $origin, $target, $ships, $at];
     }

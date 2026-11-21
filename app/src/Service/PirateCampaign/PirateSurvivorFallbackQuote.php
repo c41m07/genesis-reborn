@@ -129,7 +129,7 @@ final readonly class PirateSurvivorFallbackQuote
 
         $dueAt = PirateReturnAttestation::checkpointDate($campaign, 'returnDue');
 
-        return $evidence->phase === PirateBlockedReturnEvidence::BLOCKED_ARRIVAL && $dueAt !== null
+        return $evidence->phase === PirateBlockedReturnEvidence::BLOCKED_ARRIVAL && $evidence->remainingHydrogen === 0.0 && $dueAt !== null
             && $settledAt >= $dueAt && $dueAt > $campaign->arrivalAt;
     }
 

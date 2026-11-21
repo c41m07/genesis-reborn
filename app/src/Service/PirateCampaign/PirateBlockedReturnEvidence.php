@@ -28,8 +28,14 @@ final readonly class PirateBlockedReturnEvidence
         public \DateTimeImmutable $arrivedAt,
         array $position,
         public float $remainingHydrogen,
-        public string $phase = self::BLOCKED_ARRIVAL,
+        public string $phase,
     ) {
+        if (!in_array($phase, [self::BLOCKED_ARRIVAL, self::HELD_BEFORE_RETURN], true)
+            || ($phase === self::BLOCKED_ARRIVAL && $remainingHydrogen !== 0.0)) {
+            // Un tronçon natif entièrement parcouru a dépensé sa réserve. Ne pas
+            // hydrater une preuve incompatible qui pourrait offrir un faux repli.
+            throw new \DomainException('La phase du retour et son solde de carburant sont incompatibles.');
+        }
         // Détacher les valeurs du conteneur d’hydratation, y compris ses références éventuelles.
         $this->position = array_map(static fn (mixed $value): mixed => $value, $position);
     }

@@ -95,7 +95,7 @@ final readonly class PirateReturnAttestation
 
         return new PirateBlockedReturnEvidence(
             $campaign->id, $attempt, $this->originId, $this->universeId, $carrierRevision, $processedAt,
-            $this->home, $remaining,
+            $this->home, $remaining, PirateBlockedReturnEvidence::BLOCKED_ARRIVAL,
         );
     }
 
