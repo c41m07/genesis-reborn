@@ -207,6 +207,7 @@ test('Comparateur : trois files privées lisibles au clavier et sans JavaScript'
     (${user.planet},${user.member},'building','mine_metal','basic',2,1,3600,UTC_TIMESTAMP(),UTC_TIMESTAMP(),'compare-build'),
     (${user.planet},${user.member},'building','mine_metal','basic',3,1,7200,NULL,UTC_TIMESTAMP(),'compare-wait'),
     (${other.id},${user.member},'research','engineering_foundations','basic',2,1,3600,UTC_TIMESTAMP(),UTC_TIMESTAMP(),'compare-research'),
+    (${user.planet},${user.member},'research','signature_reduction','basic',2,1,7200,UTC_TIMESTAMP(),UTC_TIMESTAMP(),'compare-research-parallel'),
     (${other.id},${user.member},'shipyard','ground_turret_anti_light','basic',NULL,7,600,NULL,UTC_TIMESTAMP(),'compare-defense')`);
   const plain = await browser.newContext({
     baseURL,
@@ -248,4 +249,11 @@ test('Comparateur : trois files privées lisibles au clavier et sans JavaScript'
   await page.goto('/planetes?view=table');
   await expect(page.locator('td[data-comparison-queue="research"] time')).toHaveCount(1);
   await expect(page.locator('th[data-resource]')).toHaveCount(5);
+  runIsolatedSql(user.project, `INSERT INTO vacation_period(membership_id,started_at,scheduled_end_at) VALUES
+    (${user.member},DATE_SUB(UTC_TIMESTAMP(),INTERVAL 1 MINUTE),DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 HOUR))`);
+  await page.reload();
+  const pausedResearch = page.locator('td[data-comparison-queue="research"]').filter({ hasText: 'départ de cette colonie' });
+  await expect(pausedResearch).toContainText('Suspendue');
+  await expect(pausedResearch).toContainText('+1 déjà lancée');
+  await expect(pausedResearch.locator('time')).toHaveCount(0);
 });

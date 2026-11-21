@@ -404,6 +404,19 @@ final class ColonyPreparationTest extends KernelTestCase
         self::assertSame(1, $view['research']['additionalActive']);
         self::assertEquals($now->modify('+15 seconds'), $view['research']['finish']);
 
+        $period = new \App\Entity\VacationPeriod();
+        $period->membership = $this->membership;
+        $period->startedAt = $now->modify('-1 second');
+        $period->scheduledEndAt = $now->modify('+1 hour');
+        $this->em->persist($period);
+        $this->em->flush();
+        $paused = $comparison->forPlanets($this->membership, [$this->planet, $other]);
+        self::assertSame('paused', $paused['research']['status']);
+        self::assertNull($paused['research']['finish']);
+        self::assertSame(1, $paused['research']['additionalActive']);
+        self::assertSame('paused', $paused['local'][$this->planet->id]['building']['status']);
+        self::assertNull($paused['local'][$this->planet->id]['building']['finish']);
+
         $other->owner = null;
         $this->em->flush();
         $withoutOrigin = $comparison->forPlanets($this->membership, [$this->planet]);
