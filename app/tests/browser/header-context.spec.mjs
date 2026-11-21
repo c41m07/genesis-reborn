@@ -225,7 +225,10 @@ test('Barre haute : suit le prochain prérequis, garde le contexte et ne déplac
         await native.close();
         await other.close();
     }
-    await goal.click();
+    const guide = page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link', { name: 'Guide technologique', exact: true });
+    await expect(guide).toHaveAttribute('href', '/technologies');
+    await guide.click();
+    await expect(page).toHaveURL(/\/technologies$/);
     await page.getByRole('button', { name: 'Retirer l’objectif' }).click();
     await expect(label).toHaveText('Choisir un objectif');
 });
