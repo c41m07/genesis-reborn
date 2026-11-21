@@ -18,7 +18,7 @@
         {% elseif reward.state == 'arrival_confirmed' %}
             <p>Arrivée confirmée, versement non confirmé.</p>
         {% elseif reward.state == 'full_pending' %}
-            <p>Lot entier en attente : stockage plein lors du dernier contrôle.</p>
+            <p>Lot entier en attente : espace insuffisant lors du dernier contrôle.</p>
         {% elseif reward.state == 'destination_lost' %}
             <p>Destination perdue. Aucun nouveau trajet n’est confirmé.</p>
         {% elseif reward.state == 'credited' %}

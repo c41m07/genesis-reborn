@@ -95,7 +95,7 @@ final class PirateConvoyDossierProjectionTest extends TestCase
         $valid = $this->right($viewer, self::KEYS[1], 85);
         $property = new \ReflectionProperty(PirateConvoyDelivery::class, 'checkpoint');
         $invalid = $broken['right']->timeline()->checkpoint();
-        $invalid['transition_at'] .= "\\0";
+        $invalid['transition_at'] .= chr(0);
         $property->setValue($broken['right'], $invalid);
 
         $result = (new PirateConvoyDossierProjection())->forDossier(
