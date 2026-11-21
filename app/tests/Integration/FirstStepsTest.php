@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration;
 
+use App\Entity\Fleet;
+use App\Entity\FleetShip;
 use App\Entity\Planet;
+use App\Entity\PlayerDiscovery;
+use App\Entity\SolarSystem;
+use App\Service\Fleet\FleetService;
 use App\Entity\PlanetBuilding;
 use App\Entity\Player;
 use App\Entity\PlayerTechnology;
@@ -74,13 +79,13 @@ final class FirstStepsTest extends KernelTestCase
         self::assertSame([], $this->guide->completed($membership));
         $this->queues->complete($first->id, $first->dispatchToken);
         self::assertSame(['metal_mine' => true], $this->guide->completed($membership));
-        self::assertSame($firstFinish, $this->firstMetalProof($membership));
+        self::assertSame($firstFinish, $this->proofTime($membership, 'metal_mine'));
 
         $upgrade = $this->order($membership, $planet, 'buildings', 'mine_metal', '4');
         $this->clock->sleep($upgrade->durationSeconds + 1);
         $this->queues->synchronize($membership);
         self::assertSame(['metal_mine' => true], $this->guide->completed($membership));
-        self::assertSame($firstFinish, $this->firstMetalProof($membership));
+        self::assertSame($firstFinish, $this->proofTime($membership, 'metal_mine'));
 
         [$other] = $this->select($player, 'turbo-1');
         self::assertNotSame($membership->id, $other->id);
@@ -102,6 +107,86 @@ final class FirstStepsTest extends KernelTestCase
             'slug' => 'engineering_foundations',
         ]);
         self::assertSame(1, $technology?->level);
+    }
+
+    public function testRealShipConstructionAndNewlyDiscoveredSystemAreIndependentProofs(): void
+    {
+        $player = $this->player();
+        [$membership, $planet] = $this->select($player, 'omega-1');
+        $this->seedBuilding($planet, 'shipyard');
+        $idle = new Fleet();
+        $idle->playerUniverse = $membership;
+        $idle->homePlanet = $planet;
+        $probeStock = new FleetShip();
+        $probeStock->fleet = $idle;
+        $probeStock->slug = 'probe';
+        $probeStock->quantity = 2;
+        $this->entityManager->persist($idle);
+        $this->entityManager->persist($probeStock);
+        $this->entityManager->flush();
+        $discovery = $this->entityManager->getRepository(PlayerDiscovery::class);
+        self::assertSame(1, $discovery->count(['playerUniverse' => $membership, 'solarSystem' => $planet->solarSystem]));
+        self::assertSame([], $this->guide->completed($membership), 'Ni système natal ni vaisseaux déjà possédés ne font preuve.');
+
+        $build = $this->order($membership, $planet, 'ships', 'probe', '6');
+        $this->queues->complete($build->id, $build->dispatchToken);
+        self::assertSame([], $this->guide->completed($membership));
+        $this->clock->sleep($build->durationSeconds + 1);
+        $this->queues->complete($build->id, $build->dispatchToken);
+        self::assertSame(3, $probeStock->quantity);
+        self::assertSame(['ship' => true], $this->guide->completed($membership));
+
+        $fleetService = self::getContainer()->get(FleetService::class);
+        $known = $this->launchProbe($fleetService, $membership, $planet, $planet->solarSystem, '7');
+        $this->clock->sleep($known->travelSeconds + 1);
+        $fleetService->arrive($known->id, $known->dispatchToken);
+        self::assertSame('completed', $known->status);
+        self::assertSame(['ship' => true], $this->guide->completed($membership));
+        self::assertSame(1, $discovery->count(['playerUniverse' => $membership, 'solarSystem' => $planet->solarSystem]));
+
+        $systems = $this->entityManager->getRepository(SolarSystem::class)->findBy(['galaxy' => $planet->solarSystem->galaxy], ['id' => 'ASC']);
+        $unknown = array_values(array_filter($systems, static fn (SolarSystem $system): bool => $system !== $planet->solarSystem));
+        self::assertGreaterThanOrEqual(2, count($unknown));
+        $first = $this->launchProbe($fleetService, $membership, $planet, $unknown[0], '8');
+        $firstToken = $first->dispatchToken;
+        $arrival = $first->arrivalAt->format('Y-m-d H:i:s');
+        $fleetService->arrive($first->id, $firstToken);
+        self::assertSame('traveling', $first->status);
+        self::assertSame(0, $discovery->count(['playerUniverse' => $membership, 'solarSystem' => $unknown[0]]));
+        self::assertSame(['ship' => true], $this->guide->completed($membership));
+        $this->clock->sleep($first->travelSeconds + 1);
+        $fleetService->arrive($first->id, $firstToken);
+        $fleetService->arrive($first->id, $firstToken);
+        self::assertSame('completed', $first->status);
+        self::assertSame(1, $discovery->count(['playerUniverse' => $membership, 'solarSystem' => $unknown[0]]));
+        self::assertSame(0, $this->entityManager->getRepository(FleetShip::class)->findOneBy(['fleet' => $first, 'slug' => 'probe'])?->quantity);
+        self::assertEquals(['ship' => true, 'exploration' => true], $this->guide->completed($membership));
+        self::assertSame($arrival, $this->proofTime($membership, 'exploration'));
+
+        $later = $this->launchProbe($fleetService, $membership, $planet, $unknown[1], '9');
+        $this->clock->sleep($later->travelSeconds + 1);
+        $fleetService->arrive($later->id, $later->dispatchToken);
+        self::assertSame('completed', $later->status);
+        self::assertSame(1, $discovery->count(['playerUniverse' => $membership, 'solarSystem' => $unknown[1]]));
+        self::assertSame($arrival, $this->proofTime($membership, 'exploration'));
+
+        [$other] = $this->select($player, 'turbo-1');
+        self::assertSame([], $this->guide->completed($other));
+        self::assertEquals(['ship' => true, 'exploration' => true], $this->guide->completed($membership));
+    }
+
+    private function launchProbe(FleetService $service, PlayerUniverse $membership, Planet $planet, SolarSystem $system, string $key): Fleet
+    {
+        self::assertFalse($service->send($membership, $planet, 'explore', $system->id, ['probe' => 1], .5, [], str_repeat($key, 32), requireExactComposition: true));
+        $flight = $this->entityManager->getRepository(Fleet::class)->findOneBy([
+            'playerUniverse' => $membership,
+            'destinationSystem' => $system,
+            'status' => 'traveling',
+        ]);
+        self::assertNotNull($flight);
+        self::assertNotNull($flight->arrivalAt);
+
+        return $flight;
     }
 
     private function player(): Player
@@ -151,11 +236,11 @@ final class FirstStepsTest extends KernelTestCase
         return $order;
     }
 
-    private function firstMetalProof(PlayerUniverse $membership): string
+    private function proofTime(PlayerUniverse $membership, string $step): string
     {
         return (string) $this->entityManager->getConnection()->fetchOne(
-            "SELECT completed_at FROM first_step_completion WHERE player_universe_id = ? AND step_key = 'metal_mine'",
-            [$membership->id],
+            'SELECT completed_at FROM first_step_completion WHERE player_universe_id = ? AND step_key = ?',
+            [$membership->id, $step],
         );
     }
 }

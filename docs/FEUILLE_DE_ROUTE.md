@@ -2167,3 +2167,17 @@ ni de pseudo-événement. La migration ajoute uniquement la table vide.
 Les futurs chapitres de vaisseau, exploration, espionnage, colonisation et
 entraînement pirate restent séparés ; leurs preuves, règles et récompenses ne
 sont pas ajoutées ici.
+
+### Premiers pas : premier vaisseau et première exploration
+
+Le même suivi conserve l’achèvement d’un vrai ordre de chantier qui augmente
+un stock de vaisseau. Posséder un vaisseau, le recevoir, préparer un départ ou
+achever une défense ne suffit pas. L’exploration se valide à l’arrivée d’une
+mission qui crée une nouvelle découverte dans l’empire ; le système natal
+et une destination déjà connue ne comptent pas. La consommation existante
+d’une sonde à l’arrivée ne change pas. Le guide invite à en construire une
+autre en vue d’un futur espionnage, sans en promettre ni en attribuer.
+
+La transaction de chaque action conserve la première preuve. Même table,
+aucune migration supplémentaire, aucun ajustement de coût, de durée ni
+de récompense. Espionnage, colonisation et entraînement restent hors lot.

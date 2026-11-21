@@ -10,10 +10,11 @@ use App\Service\Boost\BoostEventService;
 use App\Service\Notification\NotificationService;
 use Symfony\Component\Uid\Uuid;
 use Psr\Clock\ClockInterface;
+use App\Service\Player\FirstSteps;
 use App\Service\Player\VacationCalendar;
 final class FleetService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment, private FirstSteps $firstSteps) {}
     private function coords(SolarSystem $s,?int $position): array { return [$s->id,$s->galaxy->id,$s->coordX,$s->coordY,$position]; }
     public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0): array
     {
@@ -298,7 +299,12 @@ final class FleetService
                 $d=$this->repo->one(PlayerDiscovery::class,['playerUniverse'=>$m,'solarSystem'=>$f->destinationSystem]);
                 $newDiscovery = !$d;
                 if(!$d) { $d=new PlayerDiscovery();$d->playerUniverse=$m;$d->solarSystem=$f->destinationSystem;$this->manager->save($d); }
-                $this->consumeShip($f,'probe');$this->notifications->enqueue($m,'Système découvert : '.$f->destinationSystem->name.'.',journalKind:'arrival');
+                $this->consumeShip($f,'probe');
+                if ($newDiscovery) {
+                    // Observer la découverte avant le premier flush, sous le même verrou que l’arrivée.
+                    $this->firstSteps->recordExplorationDiscovery($f, $d);
+                }
+                $this->notifications->enqueue($m,'Système découvert : '.$f->destinationSystem->name.'.',journalKind:'arrival');
                 if ($newDiscovery) { $this->boostGrants->awardRiskMission($m,$f); $this->boostEvents->recordExplorationDiscovery($m,$f->destinationSystem); }
             } elseif($f->mission==='colonize') {
                 $target=$f->destination;$this->manager->lock($target);

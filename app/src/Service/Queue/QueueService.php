@@ -406,6 +406,7 @@ final class QueueService
         $finish = $item->finishAt();
         $shipConstruction = $item->queueType === 'shipyard' && isset($this->catalog->all('ships')[$item->itemSlug]);
         $economic = $shipConstruction && isset($this->catalog->all('ships')[$item->itemSlug]['economic_unit']);
+        $shipCredited = false;
         if ($economic) {
             // Créditer uniquement l'ancien effectif jusqu'à la fin payée, même après une longue absence.
             $this->resources->materialize($planet, $finish);
@@ -450,6 +451,7 @@ final class QueueService
             $ship->tier = $item->tier;
             $ship->quantity += $item->quantity;
             $this->manager->save($ship);
+            $shipCredited = $shipConstruction;
         }
         foreach ($this->repo->all(QueueItem::class, ['dependsOn' => $item]) as $dependent) {
             $dependent->dependsOn = null;
@@ -460,7 +462,7 @@ final class QueueService
             default => isset($this->catalog->all('defenses')[$item->itemSlug]) ? 'defenses' : 'ships',
         };
         $this->notifications->enqueue($membership, 'Terminé : ' . $this->catalog->getTierForUniverse($membership->universe, $group, $item->itemSlug, $item->tier)['label'] . ' sur ' . $planet->name . '.', journalKind: 'queue');
-        $this->firstSteps->recordQueueCompletion($item, $finish);
+        $this->firstSteps->recordQueueCompletion($item, $finish, shipConstructed: $shipCredited);
         $this->reconstruction->afterCompletionLocked($item);
         $queueType = $item->queueType;
         $this->manager->remove($item);

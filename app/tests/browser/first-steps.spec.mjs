@@ -27,12 +27,18 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.getByRole('link', { name: 'Premiers pas', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Premiers pas', exact: true })).toBeVisible();
-    const guide = page.getByRole('region', { name: 'Installer sa colonie', exact: true });
+    const guide = page.getByRole('region', { name: 'Développer sa colonie et explorer', exact: true });
     const progress = guide.getByRole('progressbar', { name: 'Progression des premiers pas', exact: true });
     const next = guide.locator('.first-step--next');
     await expect(progress).toHaveAttribute('value', '0');
     await expect(next.getByRole('heading', { name: 'Mine à ciel ouvert', exact: true })).toBeVisible();
     await expect(guide.getByRole('heading', { name: 'Première recherche', exact: true })).toBeVisible();
+    await expect(progress).toHaveAttribute('max', '6');
+    await expect(guide.getByRole('link', { name: 'Ouvrir la fiche de la sonde', exact: true })).toHaveAttribute('href', /section=ships.*#item-probe-basic$/);
+    const explore = guide.getByRole('listitem').filter({ has: page.getByRole('heading', { name: 'Premier système exploré', exact: true }) });
+    await expect(explore).toContainText('consomme une sonde à l’arrivée');
+    await expect(explore).toContainText('en construire une autre au chantier pour le futur espionnage');
+    await expect(explore.getByRole('link', { name: 'Préparer une exploration', exact: true })).toHaveAttribute('href', /\/flottes\/preparer\?mission=explore&origin=\d+$/);
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
     await page.screenshot({ path: info.outputPath('premiers-pas-mobile.png'), animations: 'disabled' });
 

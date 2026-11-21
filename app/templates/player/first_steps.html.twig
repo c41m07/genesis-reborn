@@ -27,6 +27,18 @@
         explanation: 'Les recherches améliorent votre empire ou ouvrent de nouvelles possibilités dans cet univers.',
         action: 'Choisissez une recherche accessible. Par exemple, Génie civil colonial demande d’abord un Laboratoire colonial de niveau 1.',
         label: 'Ouvrir la fiche Génie civil colonial', section: 'technologies', item: 'engineering_foundations'
+    },
+    ship: {
+        title: 'Premier vaisseau',
+        explanation: 'Une flotte ouvre les premiers trajets. La Sonde de reconnaissance est un bon premier choix pour explorer ensuite, mais tout vaisseau achevé au chantier valide cette étape.',
+        action: 'Construisez le Chantier spatial de niveau 1, puis ouvrez la fiche de la Sonde de reconnaissance. Vérifiez les prérequis et attendez que la construction se termine.',
+        label: 'Ouvrir la fiche de la sonde', section: 'ships', item: 'probe'
+    },
+    exploration: {
+        title: 'Premier système exploré',
+        explanation: 'Explorer révèle un système jusque-là inconnu dans cet univers. La mission consomme une sonde à l’arrivée : prévoyez d’en construire une autre au chantier pour le futur espionnage.',
+        action: 'Repérez un système non cartographié dans Galaxie. Dans Flottes, préparez une mission Explorer avec une sonde, choisissez ce système, puis vérifiez le trajet et le carburant avant l’envoi.',
+        label: 'Préparer une exploration', route: 'app_fleet_prepare'
     }
 } %}
 <div class="page-heading">
@@ -39,7 +51,7 @@
     {% endif %}
 </div>
 <section class="panel account-panel first-steps" aria-labelledby="first-steps-heading">
-    <h2 id="first-steps-heading">Installer sa colonie</h2>
+    <h2 id="first-steps-heading">Développer sa colonie et explorer</h2>
     <p><strong>{{ completed|length }} sur {{ steps|length }}</strong> étapes terminées dans <strong>{{ chrome.membership.universe.name }}</strong>.</p>
     <progress value="{{ completed|length }}" max="{{ steps|length }}" aria-label="Progression des premiers pas">{{ completed|length }} sur {{ steps|length }}</progress>
     {% if not colony %}
@@ -55,15 +67,24 @@
                 <p>{{ guide.explanation }}</p>
                 <p>{{ guide.action }}</p>
                 {% if colony and not done %}
-                    <a class="{{ step == next ? 'primary' : 'secondary' }}" href="{{ path('app_colony', {id: colony.id, section: guide.section, showLockedItems: 1, focusItem: 1}) }}#item-{{ guide.item }}-basic">{{ guide.label }}</a>
+                    {% set actionClass = step == next ? 'primary' : 'secondary' %}
+                    {% if guide.route is defined %}
+                        <a class="{{ actionClass }}" href="{{ path(guide.route, {mission: 'explore', origin: colony.id}) }}">{{ guide.label }}</a>
+                    {% else %}
+                        <a class="{{ actionClass }}" href="{{ path('app_colony', {id: colony.id, section: guide.section, showLockedItems: 1, focusItem: 1}) }}#item-{{ guide.item }}-basic">{{ guide.label }}</a>
+                    {% endif %}
                     {% if step.value == 'research' %}
                         <a class="secondary" href="{{ path('app_colony', {id: colony.id, section: 'buildings', showLockedItems: 1, focusItem: 1}) }}#item-lab-basic">Ouvrir le Laboratoire colonial</a>
+                    {% elseif step.value == 'ship' %}
+                        <a class="secondary" href="{{ path('app_colony', {id: colony.id, section: 'buildings', showLockedItems: 1, focusItem: 1}) }}#item-shipyard-basic">Ouvrir le Chantier spatial</a>
+                    {% elseif step.value == 'exploration' %}
+                        <a class="secondary" href="{{ path('app_map_v2') }}">Repérer un système dans Galaxie</a>
                     {% endif %}
                 {% endif %}
             </li>
         {% endfor %}
     </ol>
-    <p>Une étape se valide à la fin réelle de la construction, de l’amélioration ou de la recherche, pas à sa mise en file. Les niveaux déjà présents ne sont pas automatiquement repris.</p>
-    {% if next is null %}<p><strong>Installation terminée.</strong> Vous pouvez poursuivre librement votre découverte du jeu.</p>{% endif %}
+    <p>Une étape se valide à la fin réelle d’une construction, d’une recherche ou à l’arrivée d’une exploration qui découvre un système. Une mise en file, un départ ou une découverte déjà connue ne compte pas. La progression déjà présente dans le jeu n’est pas automatiquement reprise.</p>
+    {% if next is null %}<p><strong>Ces premiers objectifs sont terminés.</strong> Vous pouvez poursuivre librement votre découverte du jeu.</p>{% endif %}
 </section>
 {% endblock %}
