@@ -9,6 +9,7 @@ use App\Service\Fleet\FleetService;
 use App\Service\Player\{EmpireActivityService,EmpireConversionService,RegistrationService,RelationResolver,VacationCalendar,VacationPolicy};
 use App\Service\Queue\QueueService;
 use App\Service\Universe\{UniverseImporter,UniverseService};
+use App\Tests\Support\GuildHallFixture;
 use App\Validator\DTO\RegistrationData;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -172,7 +173,7 @@ final class EmpireConversionTest extends KernelTestCase
             $this->em->persist($discovery);
             $this->em->flush();
         }
-        $hall = self::getContainer()->get(\App\Service\Guild\GuildHallService::class);
+        $hall = GuildHallFixture::enable(self::getContainer());
         $planet = $this->em->getRepository(Planet::class)->findOneBy(['owner' => $inactive]);
         $funded = $hall->contribute($inactive, $nextGuild->id, $planet->id, 0, ['hydrogen' => 32]);
         self::assertSame($system->id, $hall->place($inactive, $nextGuild->id, $system->id, $funded->revision)->solarSystem->id);

@@ -6,10 +6,10 @@ namespace App\Tests\Integration;
 
 use App\Entity\{Guild, GuildHall, Planet, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
 use App\Repository\GuildHallRepository;
-use App\Service\Catalog\GameCatalog;
 use App\Service\Guild\{GuildHallFunding, GuildHallService};
-use App\Service\Player\{DiplomacyService, GuildProjectRules, RegistrationService, RelationResolver};
+use App\Service\Player\{DiplomacyService, RegistrationService, RelationResolver};
 use App\Service\Universe\{UniverseImporter, UniverseService};
+use App\Tests\Support\GuildHallFixture;
 use App\Validator\DTO\RegistrationData;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -36,6 +36,20 @@ final class GuildHallTest extends KernelTestCase
         self::getContainer()->get(UniverseImporter::class)->import();
     }
 
+    public function testFixtureDoesNotActivateHallOnFreshKernel(): void
+    {
+        self::assertNull(self::getContainer()->get(GuildHallFunding::class)->target());
+        self::ensureKernelShutdown();
+        self::bootKernel();
+
+        GuildHallFixture::enable(self::getContainer());
+        self::assertSame(32, self::getContainer()->get(GuildHallFunding::class)->target());
+        self::ensureKernelShutdown();
+        self::bootKernel();
+
+        self::assertNull(self::getContainer()->get(GuildHallFunding::class)->target());
+    }
+
     public function testGuildPoolsContributionsAndExposesOnlyDiscoveredCoordinate(): void
     {
         [$leader, $origin, $guild] = $this->guild('HallLeader', 'HLA');
@@ -43,7 +57,7 @@ final class GuildHallTest extends KernelTestCase
         [$neighbor] = $this->player('HallNeighbor');
         [$otherUniverse] = $this->player('HallVisitor', 'turbo-1');
         self::getContainer()->get(DiplomacyService::class)->join($member, $guild->id);
-        $service = self::getContainer()->get(GuildHallService::class);
+        $service = GuildHallFixture::enable(self::getContainer());
         $planetCount = $this->em->getRepository(Planet::class)->count();
         $halls = self::getContainer()->get(GuildHallRepository::class);
         $system = $this->unknownSystem($neighbor);
@@ -77,7 +91,7 @@ final class GuildHallTest extends KernelTestCase
     {
         [$first, $firstPlanet, $firstGuild] = $this->guild('HallRaceAlpha', 'HRA');
         [$second, $secondPlanet, $secondGuild] = $this->guild('HallRaceBeta', 'HRB');
-        $service = self::getContainer()->get(GuildHallService::class);
+        $service = GuildHallFixture::enable(self::getContainer());
         $service->contribute($first, $firstGuild->id, $firstPlanet->id, 0, ['antimatter' => 4]);
         $service->contribute($second, $secondGuild->id, $secondPlanet->id, 0, ['antimatter' => 4]);
         $this->discover($second, $firstPlanet->solarSystem);
@@ -116,7 +130,7 @@ final class GuildHallTest extends KernelTestCase
     {
         [$leader, $colony, $guild] = $this->guild('HallDisband', 'HDB');
         [$rival, $rivalPlanet, $rivalGuild] = $this->guild('HallSuccessor', 'HSU');
-        $service = self::getContainer()->get(GuildHallService::class);
+        $service = GuildHallFixture::enable(self::getContainer());
         $service->contribute($leader, $guild->id, $colony->id, 0, ['hydrogen' => 32]);
         $system = $colony->solarSystem;
         $service->place($leader, $guild->id, $system->id, 1);
@@ -292,12 +306,7 @@ final class GuildHallTest extends KernelTestCase
 
     private function officialService(): GuildHallService
     {
-        $container = self::getContainer();
-        $container->set(GuildHallFunding::class, new GuildHallFunding(
-            $container->get(GuildProjectRules::class), $container->get(GameCatalog::class), 500000, 3, 50000, true,
-        ));
-
-        return $container->get(GuildHallService::class);
+        return GuildHallFixture::enable(self::getContainer(), 500000, 3, 50000);
     }
 
     #[DataProvider('refusals')]
@@ -309,7 +318,7 @@ final class GuildHallTest extends KernelTestCase
         [, $otherWorldPlanet] = $this->player('HallOtherWorld', 'turbo-1');
         $diplomacy = self::getContainer()->get(DiplomacyService::class);
         $diplomacy->join($member, $guild->id);
-        $service = self::getContainer()->get(GuildHallService::class);
+        $service = GuildHallFixture::enable(self::getContainer());
         $hall = $service->contribute($leader, $guild->id, $origin->id, 0, ['metal' => $scenario === 'early' ? 1 : 16]);
         if ($scenario === 'taken') {
             $service->place($leader, $guild->id, $origin->solarSystem->id, 1);

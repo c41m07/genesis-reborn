@@ -6,7 +6,7 @@ require dirname(__DIR__).'/bootstrap.php';
 
 use App\Entity\PlayerUniverse;
 use App\Kernel;
-use App\Service\Guild\GuildHallService;
+use App\Tests\Support\GuildHallFixture;
 use Doctrine\ORM\EntityManagerInterface;
 
 $input = json_decode($argv[1], true, 512, JSON_THROW_ON_ERROR);
@@ -20,7 +20,7 @@ if (($params['host'] ?? '') !== 'database-test' || ($params['dbname'] ?? '') !==
     throw new RuntimeException('Base de recette non isolée.');
 }
 $actor = $em->find(PlayerUniverse::class, $input['member']);
-$hall = $container->get(GuildHallService::class);
+$hall = GuildHallFixture::enable($container);
 file_put_contents($input['ready'], (string) $connection->fetchOne('SELECT CONNECTION_ID()'));
 $deadline = microtime(true) + 15;
 while (!is_file($input['barrier'])) {

@@ -58,7 +58,6 @@ services:
 
 when@test:
     services:
-        # Le noyau Hall reste sans point d'entree joueur tant que le pilotage n'est pas valide.
         App\Service\Guild\GuildHallService:
             autowire: true
             public: true
@@ -67,11 +66,6 @@ when@test:
             public: true
         App\Service\Guild\GuildHallFunding:
             autowire: true
-            arguments:
-                $requiredStrength: 32
-                $requiredDonors: 1
-                $minimumDonorStrength: 1
-                $enabled: true
             public: true
         App\Service\Player\GuildImageStorage:
             arguments:
