@@ -15,6 +15,7 @@ parameters:
     env(MAILER_FROM): 'no-reply@genesis-reborn.local'
     env(EMPIRE_INACTIVITY_WARNINGS_ENABLED): '0'
     env(FORGOTTEN_EMPIRES_ENABLED): '0'
+    env(GUILD_HALL_REQUIRED_STRENGTH): '0'
     env(OPS_ALERT_ENABLED): '0'
     env(OPS_ALERT_TO): ''
     env(OPS_ALERT_SIGNAL_SECONDS): '120'
