@@ -619,13 +619,16 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertFalse($universe->pirateCampaignEnabled());
         self::assertTrue($other->pirateCampaignEnabled());
         self::assertFalse($catalogue->forUniverse($universe)['features']['guilds_enabled']);
-        unset($settings['features'][Universe::PIRATE_CAMPAIGN_FEATURE], $settings['features']['guilds_enabled']);
+        unset($settings['features'][Universe::PIRATE_CAMPAIGN_FEATURE], $settings['features']['guilds_enabled'], $settings['features']['planet_conquest']);
         $service->setUniverseSettings($admin, $universe->id, $settings);
         self::assertFalse($universe->pirateCampaignEnabled(), 'Un formulaire ancien ne réactive pas la campagne.');
         self::assertFalse($catalogue->forUniverse($universe)['features']['guilds_enabled']);
+        self::assertTrue($catalogue->forUniverse($universe)['features']['planet_conquest']);
         $settings['features'][Universe::PIRATE_CAMPAIGN_FEATURE] = '1';
+        $settings['features']['planet_conquest'] = '0';
         $service->setUniverseSettings($admin, $universe->id, $settings);
         self::assertTrue($universe->pirateCampaignEnabled());
+        self::assertFalse($catalogue->forUniverse($universe)['features']['planet_conquest']);
         $audit = $this->em->getRepository(\App\Entity\AdminAuditLog::class)->findOneBy(['action' => 'universe_settings_change'], ['id' => 'DESC']);
         self::assertTrue($audit->details['features'][Universe::PIRATE_CAMPAIGN_FEATURE]);
         self::assertSame((string) $universe->id, (string) $audit->targetId);

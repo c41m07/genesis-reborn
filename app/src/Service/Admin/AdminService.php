@@ -271,7 +271,8 @@ final class AdminService
             'features' => [
                 ...(array_key_exists('guilds_enabled', $features)
                     ? ['guilds_enabled' => filter_var($features['guilds_enabled'], FILTER_VALIDATE_BOOL)] : []),
-                'planet_conquest' => filter_var($features['planet_conquest'] ?? false, FILTER_VALIDATE_BOOL),
+                ...(array_key_exists('planet_conquest', $features)
+                    ? ['planet_conquest' => filter_var($features['planet_conquest'], FILTER_VALIDATE_BOOL)] : []),
             ],
         ];
         $this->manager->transaction(function () use ($admin, $universeId, $settings, $campaign): void {
