@@ -7,7 +7,6 @@ namespace App\Service\Guild;
 use App\Entity\{Guild, GuildHall, Planet, PlayerUniverse, SolarSystem};
 use App\Manager\GameManager;
 use App\Repository\GuildHallRepository;
-use App\Service\Catalog\GameCatalog;
 use App\Service\Colony\{ActionGuard, ResourceService};
 use App\Service\Player\{DiplomacyAccessPolicy, VacationCalendar};
 use Doctrine\DBAL\Exception\LockWaitTimeoutException;
@@ -20,7 +19,6 @@ final readonly class GuildHallService
         private GameManager $manager,
         private EntityManagerInterface $em,
         private ActionGuard $guard,
-        private GameCatalog $catalog,
         private ResourceService $resources,
         private VacationCalendar $vacations,
         private DiplomacyAccessPolicy $access,
@@ -117,7 +115,7 @@ final readonly class GuildHallService
         // Partager les verrous participation → univers avec les départs de guilde,
         // le changement de commandant et les actions économiques sur une colonie.
         $this->guard->lockMembership($actor, currentReads: true);
-        if ($this->vacations->isActive($actor) || !$this->catalog->forUniverse($actor->universe)['features']['guilds_enabled']) {
+        if ($this->vacations->isActive($actor) || !$this->funding->availableIn($actor->universe)) {
             throw new \DomainException('Le Hall est indisponible dans ce contexte.');
         }
         $conn = $this->em->getConnection();

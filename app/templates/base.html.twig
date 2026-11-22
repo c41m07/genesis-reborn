@@ -10,7 +10,7 @@
 {% set presentationPages = {
 'app_combat_simulation':'simulateur','app_fleet_compositions':'compositions','app_fleet_composition_new':'compositions','app_fleet_composition_edit':'compositions','app_fleet_composition_load':'compositions','app_message_search':'recherche-messages','app_home':'accueil-public','app_profile':'profil','app_preferences':'preferences','app_vacation':'vacances','app_account_delete_page':'suppression-compte','app_feedback':'feedback',
 'app_planets':'planetes','app_technology_tree':'guide-technologique','app_fleets':'flottes','app_fleet_prepare':'flottes','app_fleet_orbits':'flottes','app_fleet_holds':'flottes','app_map':'galaxie','app_map_v2':'galaxie',
-'app_guilds':'guilde','app_guild_create':'guilde','app_guild_members':'guilde','app_guild_ranks':'guilde','app_guild_management':'guilde','app_personal_relations':'diplomatie','app_guild_profile_edit':'guilde','app_guild_public_profile':'guilde',
+'app_guilds':'guilde','app_guild_hall':'guilde','app_guild_create':'guilde','app_guild_members':'guilde','app_guild_ranks':'guilde','app_guild_management':'guilde','app_personal_relations':'diplomatie','app_guild_profile_edit':'guilde','app_guild_public_profile':'guilde',
 'app_boosts':'inventaire','app_inventory_boxes':'inventaire','app_inventory_pending':'inventaire','app_game_challenges':'evenements','app_game_events':'evenements','app_challenge':'defi','app_diplomacy':'diplomatie','app_messages':'messages',
 'app_guild_projects_available':'projets','app_guild_projects_history':'projets','app_guild_projects':'projets','app_guild_project':'projet-detail','app_leaderboard':'classements','app_combat_reports':'rapports',
 'app_combat_report':'rapport-combat','app_espionage_report':'rapport-espionnage','app_transport_report':'rapport-transport','app_player_report':'signaler-commandant','app_player_public_profile':'profil-commandant',
@@ -69,7 +69,7 @@
 {% endif %}
 {% endfor %}
 <div class="nav-section-label">Communauté</div>
-{% set guildRoutes = ['app_guilds','app_guild_create','app_guild_members','app_guild_ranks','app_guild_management','app_guild_profile_edit','app_guild_public_profile','app_guild_projects','app_guild_project','app_guild_projects_available','app_guild_projects_history'] %}
+{% set guildRoutes = ['app_guilds','app_guild_hall','app_guild_create','app_guild_members','app_guild_ranks','app_guild_management','app_guild_profile_edit','app_guild_public_profile','app_guild_projects','app_guild_project','app_guild_projects_available','app_guild_projects_history'] %}
 {% for item in [
     {route:'app_guilds',label:chrome.guild|default(null) ? 'Ma guilde' : 'Guildes',icon:'diplomacy'},
     {route:'app_diplomacy',label:'Diplomatie',icon:'diplomacy'},

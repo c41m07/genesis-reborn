@@ -6,6 +6,9 @@
         {route:'app_guild_ranks', label:'Grades et permissions'},
         {route:'app_guild_projects', label:'Projets collectifs'}
     ] %}
+    {% if guild_hall_available(chrome.membership.universe) %}
+        {% set destinations = destinations|merge([{route:'app_guild_hall', label:'Hall de guilde'}]) %}
+    {% endif %}
     {% if navigationGuild.leader.id == chrome.membership.id %}
         {% set destinations = destinations|merge([{route:'app_guild_profile_edit', label:'Personnalisation', parameters:{id:navigationGuild.id}}]) %}
     {% endif %}

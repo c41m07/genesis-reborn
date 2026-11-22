@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit;
 
+use App\Service\Catalog\GameCatalog;
 use App\Service\Guild\GuildHallFunding;
 use App\Service\Player\GuildProjectRules;
 use PHPUnit\Framework\TestCase;
@@ -14,14 +15,14 @@ final class GuildHallFundingTest extends TestCase
     {
         $rules = new GuildProjectRules();
         foreach ([0, -1, GuildProjectRules::MAX_STAGE_AMOUNT + 1] as $unapproved) {
-            self::assertNull((new GuildHallFunding($rules, $unapproved))->target());
+            self::assertNull((new GuildHallFunding($rules, new GameCatalog(dirname(__DIR__, 2).'/config/game'), $unapproved))->target());
         }
-        self::assertSame(32, (new GuildHallFunding($rules, 32))->target());
+        self::assertSame(32, (new GuildHallFunding($rules, new GameCatalog(dirname(__DIR__, 2).'/config/game'), 32))->target());
     }
 
     public function testTheFourNominalEquivalentsProduceIdenticalStrength(): void
     {
-        $funding = new GuildHallFunding(new GuildProjectRules(), 32);
+        $funding = new GuildHallFunding(new GuildProjectRules(), new GameCatalog(dirname(__DIR__, 2).'/config/game'), 32);
         foreach (['hydrogen' => 8, 'metal' => 4, 'nano' => 2, 'antimatter' => 1] as $resource => $amount) {
             self::assertSame(['cost' => [$resource => $amount], 'strength' => 8], $funding->donation([$resource => $amount], 8));
         }

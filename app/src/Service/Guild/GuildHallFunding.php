@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service\Guild;
 
+use App\Entity\Universe;
+use App\Service\Catalog\GameCatalog;
 use App\Service\Player\GuildProjectRules;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -15,6 +17,7 @@ final readonly class GuildHallFunding
 
     public function __construct(
         private GuildProjectRules $rules,
+        private GameCatalog $catalog,
         #[Autowire('%env(int:GUILD_HALL_REQUIRED_STRENGTH)%')] private int $requiredStrength,
     ) {
     }
@@ -23,6 +26,11 @@ final readonly class GuildHallFunding
     {
         return $this->requiredStrength > 0 && $this->requiredStrength <= GuildProjectRules::MAX_STAGE_AMOUNT
             ? $this->requiredStrength : null;
+    }
+
+    public function availableIn(Universe $universe): bool
+    {
+        return $this->target() !== null && (bool) $this->catalog->forUniverse($universe)['features']['guilds_enabled'];
     }
 
     /** @param array<string, mixed> $input @return array{cost: array<string, int>, strength: int} */

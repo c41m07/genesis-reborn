@@ -9,6 +9,7 @@
         <details class="guild-action-review">
             <summary>Examiner la dissolution</summary>
             <p>Cette action mettra fin à la guilde et à l’appartenance de ses membres.</p>
+            {% if guild_has_hall(own) %}<p>Les contributions au Hall ne seront pas remboursées. Si le Hall est installé, le système sera libéré.</p>{% endif %}
             <form method="post">
                 <input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}">
                 <button class="secondary guild-danger-button" name="action" value="disband">Dissoudre la guilde</button>

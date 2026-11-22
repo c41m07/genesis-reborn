@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\{Guild, GuildHall, PlayerUniverse};
+use App\Entity\{Guild, GuildHall, Planet, PlayerDiscovery, PlayerUniverse, SolarSystem};
 use Doctrine\DBAL\{ArrayParameterType, LockMode};
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -12,6 +12,32 @@ final readonly class GuildHallRepository
 {
     public function __construct(private EntityManagerInterface $em)
     {
+    }
+
+    public const SITE_PAGE_SIZE = 12;
+
+    public function forGuild(Guild $guild): ?GuildHall
+    {
+        return $this->em->getRepository(GuildHall::class)->findOneBy(['guild' => $guild]);
+    }
+
+    /** @return list<SolarSystem> */
+    public function availableSites(PlayerUniverse $actor, string $query, int $after): array
+    {
+        $builder = $this->em->createQueryBuilder()
+            ->select('system', 'galaxy')->from(SolarSystem::class, 'system')
+            ->join('system.galaxy', 'galaxy')->join(PlayerDiscovery::class, 'discovery', 'WITH', 'discovery.solarSystem = system')
+            ->leftJoin(GuildHall::class, 'hall', 'WITH', 'hall.solarSystem = system')
+            ->leftJoin(Planet::class, 'planet', 'WITH', 'planet.solarSystem = system AND planet.position = 0')
+            ->where('discovery.playerUniverse = :actor AND galaxy.universe = :universe AND hall.id IS NULL AND planet.id IS NULL')
+            ->andWhere('system.id > :after')->orderBy('system.id', 'ASC')->setMaxResults(self::SITE_PAGE_SIZE + 1)
+            ->setParameter('actor', $actor)->setParameter('universe', $actor->universe)->setParameter('after', $after);
+        if ($query !== '') {
+            // LOCATE est une recherche littérale : % et _ restent de simples caractères.
+            $builder->andWhere('LOCATE(:search, system.name) > 0')->setParameter('search', $query);
+        }
+
+        return $builder->getQuery()->getResult();
     }
 
     public function lockForGuild(Guild $guild): ?GuildHall

@@ -1,0 +1,84 @@
+{% extends 'base.html.twig' %}
+{% block title %}Hall de guilde · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="page-refinement guild-project-space project-redesign" data-page-sections="disabled">
+    <div class="page-heading"><div><h1>Hall de guilde</h1><p>Une construction collective pour {{ guild.name }} dans cet univers.</p></div></div>
+    {% include 'ui/guild_navigation.html.twig' with {compactNavigation:true} %}
+    <div class="guild-project-detail{% if (may_act and remaining > 0 and colonies) or may_place %} project-active-layout{% endif %}">
+        <section class="panel" aria-labelledby="hall-progress-title">
+            <h2 id="hall-progress-title">Progression de la construction</h2>
+            <p>{{ (required - remaining)|quantity(0) }} / {{ required|quantity(0) }} unités de force</p>
+            <progress aria-labelledby="hall-progress-title" max="{{ required }}" value="{{ required - remaining }}">{{ (required - remaining)|quantity(0) }} sur {{ required|quantity(0) }}</progress>
+            {% if hall and hall.solarSystem %}
+                {% set system = hall.solarSystem %}
+                <p>Installé à la position 0 de {{ system.galaxy.coordinateCode() }}:{{ system.number() }} · {{ system.name }}.</p>
+                <a class="secondary" href="{{ path('app_map_v2', {galaxy:system.galaxy.id, system:system.id}) }}">Voir le système dans Galaxie</a>
+            {% elseif remaining == 0 %}
+                <p>Le Hall est entièrement financé. Seul le commandant peut choisir et confirmer son emplacement.</p>
+            {% else %}
+                <p>Il reste {{ remaining|quantity(0) }} unités de force à financer. 8 hydrogène, 4 métal, 2 nano ou 1 antimatière valent chacun 8 unités.</p>
+            {% endif %}
+            <p class="muted">Le Hall revendique le système à la position 0. Il ne remplace aucune planète et ne donne ni bonus ni nouveau pouvoir.</p>
+        </section>
+        {% if not may_act %}
+            <p class="panel">Vous pouvez consulter le Hall, mais pas contribuer ni le placer pendant les vacances.</p>
+        {% elseif remaining > 0 %}
+            {% if colonies %}
+                <section class="panel project-donation-panel" aria-labelledby="hall-donation-title">
+                    <h2 id="hall-donation-title">Contribuer à la construction</h2>
+                    <form method="post" action="{{ path('app_guild_hall_contribute') }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('guild_hall_donate_' ~ guild.id) }}">
+                        <input type="hidden" name="revision" value="{{ hall.revision|default(0) }}">
+                        <label for="hall-colony">Colonie qui finance le don</label>
+                        <select id="hall-colony" name="planet_id" required>
+                            {% for planet in colonies %}<option value="{{ planet.id }}">{{ planet.name }} · {{ planet.coordinates() }}</option>{% endfor %}
+                        </select>
+                        <fieldset>
+                            <legend>Ressources à donner</legend>
+                            {% for resource, label in {hydrogen:'Hydrogène',metal:'Métal',nano:'Nano',antimatter:'Antimatière'} %}
+                                <label for="hall-{{ resource }}">{{ label }}</label>
+                                <input id="hall-{{ resource }}" name="resources[{{ resource }}]" type="number" inputmode="numeric" min="0" step="1" placeholder="0" max="{{ remaining }}">
+                            {% endfor %}
+                        </fieldset>
+                        <p>Le don est volontaire et débité de la colonie choisie. Il ne peut pas dépasser la force restante.</p>
+                        <button type="submit" class="primary">Donner ces ressources</button>
+                    </form>
+                </section>
+            {% else %}
+                <p class="panel">Il faut une colonie dans cet univers pour contribuer.</p>
+            {% endif %}
+        {% elseif may_place %}
+            <section class="panel project-donation-panel" aria-labelledby="hall-placement-title">
+                <h2 id="hall-placement-title">Placer le Hall</h2>
+                <p>Choisissez un système déjà exploré dont la position 0 est libre. Le Hall ne pourra pas être déplacé.</p>
+                <form method="get" action="{{ path('app_guild_hall') }}" role="search" aria-label="Rechercher un système exploré">
+                    <label for="hall-search">Nom du système</label>
+                    <input id="hall-search" name="q" type="search" value="{{ search }}" maxlength="80">
+                    <button type="submit" class="secondary">Rechercher</button>
+                </form>
+                {% if sites %}
+                    <form method="post" action="{{ path('app_guild_hall_place') }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('guild_hall_place_' ~ guild.id) }}">
+                        <input type="hidden" name="revision" value="{{ hall.revision }}">
+                        <label for="hall-system">Système à revendiquer</label>
+                        <select id="hall-system" name="system_id" required>
+                            <option value="">Choisir un emplacement</option>
+                            {% for system in sites %}<option value="{{ system.id }}">{{ system.galaxy.coordinateCode() }}:{{ system.number() }}:0 · {{ system.name }}</option>{% endfor %}
+                        </select>
+                        <label for="hall-confirm"><input type="checkbox" id="hall-confirm" name="confirm" value="1" required> Je confirme l’emplacement de mon Hall.</label>
+                        <button type="submit" class="primary">Installer le Hall</button>
+                    </form>
+                {% else %}
+                    <p>Aucun système libre parmi vos découvertes pour cette recherche.</p>
+                {% endif %}
+                {% if after or next_site %}
+                    <nav aria-label="Pagination des systèmes libres">
+                        {% if after %}<a class="secondary" href="{{ path('app_guild_hall', {q:search}) }}">Premiers systèmes</a>{% endif %}
+                        {% if next_site %}<a class="secondary" href="{{ path('app_guild_hall', {q:search, after:next_site}) }}">Systèmes suivants</a>{% endif %}
+                    </nav>
+                {% endif %}
+            </section>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

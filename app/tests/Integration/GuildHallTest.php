@@ -109,6 +109,28 @@ final class GuildHallTest extends KernelTestCase
         self::assertSame(8, (int) $this->em->getConnection()->fetchOne('SELECT strength FROM guild_hall WHERE guild_id = ?', [$guild->id]));
     }
 
+    public function testActualGuildDissolutionReleasesAnInstalledHallWithoutRefund(): void
+    {
+        [$leader, $colony, $guild] = $this->guild('HallDisband', 'HDB');
+        [$rival, $rivalPlanet, $rivalGuild] = $this->guild('HallSuccessor', 'HSU');
+        $service = self::getContainer()->get(GuildHallService::class);
+        $service->contribute($leader, $guild->id, $colony->id, 0, ['hydrogen' => 32]);
+        $system = $colony->solarSystem;
+        $service->place($leader, $guild->id, $system->id, 1);
+        $before = $this->stock($colony, 'hydrogen');
+        $db = $this->em->getConnection();
+        $guildId = $guild->id;
+
+        // La dissolution réelle supprime la guilde, contrairement à son archivage J30.
+        self::getContainer()->get(DiplomacyService::class)->disband($leader);
+        self::assertFalse($db->fetchOne('SELECT id FROM guild WHERE id = ?', [$guildId]));
+        self::assertFalse($db->fetchOne('SELECT id FROM guild_hall WHERE guild_id = ?', [$guildId]));
+        self::assertSame($before, $this->stock($colony, 'hydrogen'));
+        $this->discover($rival, $system);
+        $service->contribute($rival, $rivalGuild->id, $rivalPlanet->id, 0, ['hydrogen' => 32]);
+        self::assertSame($system->id, $service->place($rival, $rivalGuild->id, $system->id, 1)->solarSystem->id);
+    }
+
     #[DataProvider('refusals')]
     public function testRefusedCommandsDoNotDebitOrWrite(string $scenario, string $reason): void
     {
