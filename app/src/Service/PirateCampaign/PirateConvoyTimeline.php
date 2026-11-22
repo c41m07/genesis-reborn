@@ -153,6 +153,22 @@ final class PirateConvoyTimeline
         return true;
     }
 
+    /**
+     * Une vue de trajet ne reçoit ni le jeton, ni le point civil, ni le montant.
+     *
+     * @return array{destination: int, due: \DateTimeImmutable}|null
+     */
+    public function travelFor(int $membership, int $universe, \DateTimeImmutable $at): ?array
+    {
+        if (!$this->belongsTo($membership, $universe) || $this->state !== 'traveling'
+            || $this->destination === null || $this->dueAt === null
+            || $this->departedAt === null || $this->departedAt > $at) {
+            return null;
+        }
+
+        return ['destination' => $this->destination, 'due' => $this->dueAt];
+    }
+
     /** Tentative/participation/victoire et montant sont portés séparément par le droit SQL. */
     public function checkpoint(): array
     {

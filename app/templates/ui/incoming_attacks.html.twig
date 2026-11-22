@@ -1,17 +1,18 @@
 {# La surveillance de carte reste active hors des pages qui affichent les deux cadres. #}
 {% set showPanel = incoming_panel ?? true %}
+{% set campaignConvoys = showPanel ? pirate_campaign_traffic(chrome.membership|default(null)).incoming : [] %}
 <div class="incoming-attacks" data-controller="incoming-attacks" data-incoming-attacks-url-value="{{ path('app_fleet_surveillance') }}" data-incoming-attacks-membership-value="{{ chrome.membership.id }}" data-incoming-attacks-now-value="{{ chrome.serverNow }}" data-incoming-attacks-panel-value="{{ showPanel ? 'true' : 'false' }}">
 {% if incoming_catalog|default(false) %}
 {% set incoming = chrome.incomingAttacks|default([]) %}
 {% set threats = incoming|filter(fleet => fleet.mission in ['attack','conquer'])|length %}
 <details class="catalog-disclosure{{ threats ? ' has-hostile' : '' }}" data-catalog-disclosure="incoming">
     <summary class="catalog-follow-summary">
-        <strong data-incoming-attacks-target="count">Entrants · {{ incoming|length }}</strong>
+        <strong data-incoming-attacks-target="count">Entrants · {{ incoming|length + campaignConvoys|length }}</strong>
         <span data-incoming-attacks-target="preview">{{ threats ? threats~' attaque(s) détectée(s)' : 'Détails des arrivées' }} ⌄</span>
     </summary>
     <div class="catalog-follow-panel">
 {% endif %}
-<div data-incoming-attacks-target="content">{% if showPanel %}{% include 'ui/incoming_attacks_list.html.twig' with {attacks:chrome.incomingAttacks|default([])} %}{% endif %}</div>
+<div data-incoming-attacks-target="content">{% if showPanel %}{% include 'ui/incoming_attacks_list.html.twig' with {attacks:chrome.incomingAttacks|default([]), campaign_incoming:campaignConvoys} %}{% endif %}</div>
 {% if incoming_catalog|default(false) %}</div></details>{% endif %}
 <p class="visually-hidden" aria-live="polite" aria-atomic="true" data-incoming-attacks-target="status"></p>
 {% if showPanel %}<noscript><p>Actualisez la page pour vérifier les flottes entrantes et leurs échéances.</p></noscript>{% endif %}

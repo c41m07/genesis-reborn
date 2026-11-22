@@ -37,11 +37,17 @@ export default class extends Controller {
             if (colony && colony !== '0') url.searchParams.set('colony', colony);
             const galaxy = document.querySelector('[data-surveillance-galaxy]')?.dataset.surveillanceGalaxy;
             if (Number(galaxy) > 0) url.searchParams.set('galaxy', galaxy);
+            if (this.panelValue) url.searchParams.set('campaign', '1');
             const response = await fetch(url, { signal: this.abort.signal, headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' });
-            if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) { this.unavailable(); return; }
+            if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) {
+                if ([401, 403, 404].includes(response.status)) this.clearCampaignTraffic();
+                this.unavailable();
+                return;
+            }
             const data = await response.json();
             if (!this.active) return;
             if (data.membership !== this.membershipValue) {
+                this.clearCampaignTraffic();
                 this.removeUnavailableDetails();
                 return;
             }
@@ -51,6 +57,11 @@ export default class extends Controller {
                 const next = document.createElement('template');
                 next.innerHTML = data.html;
                 this.removeUnavailableDetails(next.content);
+                // Une perte de droit enlève le convoi sans attendre la fermeture d'un détail ordinaire.
+                const allowed = new Set([...next.content.querySelectorAll('[data-campaign-incoming]')].map(row => row.dataset.campaignIncoming));
+                for (const row of this.contentTarget.querySelectorAll('[data-campaign-incoming]')) {
+                    if (!allowed.has(row.dataset.campaignIncoming)) row.remove();
+                }
                 if (!this.contentTarget.contains(document.activeElement)
                     && !this.hasOpenDetails()) {
                     this.updatePanel(next.content, data.html);
@@ -61,6 +72,14 @@ export default class extends Controller {
             if (data.flights) window.dispatchEvent(new CustomEvent('genesis:visible-fleets', { detail: data }));
         } catch { if (this.active) this.unavailable(); }
         finally { clearTimeout(timeout); this.pending = false; }
+    }
+
+    clearCampaignTraffic() {
+        for (const row of this.contentTarget.querySelectorAll('[data-campaign-incoming]')) row.remove();
+        this.lastHtml = null;
+        if (document.querySelector('[data-surveillance-galaxy]')) {
+            window.dispatchEvent(new Event('genesis:campaign-traffic-unavailable'));
+        }
     }
 
     hasOpenDetails() {
@@ -91,7 +110,7 @@ export default class extends Controller {
         const count = content.querySelectorAll('[data-incoming-attack]').length;
         if (this.hasCountTarget) {
             const threats = content.querySelectorAll('[data-incoming-kind="attack"][data-incoming-attack]').length;
-            this.countTarget.textContent = `Entrants · ${count}`;
+            this.countTarget.textContent = `Entrants · ${count + content.querySelectorAll('[data-campaign-incoming]').length}`;
             this.previewTarget.textContent = threats ? `${threats} attaque(s) détectée(s) ⌄` : 'Détails des arrivées ⌄';
             this.countTarget.closest('details').classList.toggle('has-hostile', threats > 0);
         }

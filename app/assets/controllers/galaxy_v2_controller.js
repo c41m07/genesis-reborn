@@ -7,6 +7,11 @@ const missionColors = {
     explore: '#00d4ff', spy: '#a78bfa', colonize: '#2dd4a0', transport: '#34d399',
     attack: '#f43f5e', conquer: '#ffb040', defend: '#60a5fa', orbit: '#f472b6', station: '#2dd4a0',
 };
+// Les badges privés de campagne ne sont pas des flottes détectées ou des planètes PNJ.
+const campaignMapMarkers = {
+    movement: { symbol: '◇', color: '#66deff' },
+    pirates: { symbol: 'P', color: '#ffb960' },
+};
 const mapMarkers = {
     unknown: { symbol: '?', color: '#ffda66', label: 'Inexploré' },
     own: { symbol: '⌂', color: '#66deff', label: 'Vos planètes' },
@@ -53,6 +58,7 @@ export default class extends Controller {
             destinationSystem: this.systemById.get(Number(flight.destinationSystemId)),
             trail: [],
         }));
+        this.setCampaignTraffic(this.gameMap.campaignTraffic);
         this.serverClockOffset = Date.parse(this.gameMap.serverNow || new Date().toISOString()) - Date.now();
         this.selectedSystem = null;
         this.selectedPlanet = null;
@@ -111,6 +117,8 @@ export default class extends Controller {
         this.updateFlightTimers();
         this.fleetRefreshHandler = event => this.refreshVisibleFleets(event.detail);
         window.addEventListener('genesis:visible-fleets', this.fleetRefreshHandler);
+        this.campaignUnavailableHandler = () => this.clearCampaignTraffic();
+        window.addEventListener('genesis:campaign-traffic-unavailable', this.campaignUnavailableHandler);
         const initialSystem = this.systemById.get(Number(this.gameMap.selectedSystemId));
         if (initialSystem) this.previewSystem(initialSystem, false);
         this.startLoop();
@@ -122,6 +130,7 @@ export default class extends Controller {
         this.resizeObserver?.disconnect();
         document.removeEventListener('visibilitychange', this.visibilityHandler);
         window.removeEventListener('genesis:visible-fleets', this.fleetRefreshHandler);
+        window.removeEventListener('genesis:campaign-traffic-unavailable', this.campaignUnavailableHandler);
         this.unbindEvents();
     }
 
@@ -134,12 +143,43 @@ export default class extends Controller {
             destinationSystem: this.systemById.get(Number(flight.destinationSystemId)),
             trail: [],
         }));
+        this.setCampaignTraffic(data.campaignTraffic);
         this.fleetLogTarget.innerHTML = data.fleetLog;
-        this.element.querySelector('[data-galaxy-v2-empty-label]').hidden = this.flights.length > 0;
-        this.element.querySelector('.gv2-flight-log')?.classList.toggle('is-empty', !this.flights.length);
+        this.updateCampaignLogState();
         if (this.flights.length && !this.timerInterval && !document.hidden)
             this.timerInterval = window.setInterval(() => this.updateFlightTimers(), 1000);
         this.updateFlightTimers();
+        this.drawFrame(0);
+    }
+
+    setCampaignTraffic(traffic = []) {
+        this.campaignTraffic = traffic;
+        this.campaignBySystem = new Map();
+        for (const row of traffic) {
+            const kind = row.kind === 'pirates' ? 'pirates' : 'movement';
+            for (const id of row.systems) {
+                const system = this.systemById.get(Number(id));
+                if (!system?.known) continue;
+                const markers = this.campaignBySystem.get(system.id) ?? new Set();
+                markers.add(kind);
+                this.campaignBySystem.set(system.id, markers);
+            }
+        }
+    }
+
+    updateCampaignLogState() {
+        const hasTraffic = this.flights.length > 0 || this.campaignTraffic.length > 0;
+        this.element.querySelector('[data-galaxy-v2-empty-label]').hidden = hasTraffic;
+        const log = this.element.querySelector('.gv2-flight-log');
+        if (hasTraffic && this.campaignTraffic.length && log?.classList.contains('is-empty')) log.open = true;
+        log?.classList.toggle('is-empty', !hasTraffic);
+    }
+
+    clearCampaignTraffic() {
+        if (!this.campaignTraffic.length) return;
+        this.setCampaignTraffic();
+        for (const row of this.fleetLogTarget.querySelectorAll('[data-campaign-kind]')) row.remove();
+        this.updateCampaignLogState();
         this.drawFrame(0);
     }
 
@@ -706,8 +746,11 @@ export default class extends Controller {
 
     systemMarkers(system) {
         if (!system.known) return this.hiddenMarkers.has('unknown') ? [] : [mapMarkers.unknown];
-        return !this.hiddenMarkers.has('own') && system.planets.some((planet) => planet.ownedByCurrentPlayer || planet.relation === 'own')
+        const markers = !this.hiddenMarkers.has('own') && system.planets.some((planet) => planet.ownedByCurrentPlayer || planet.relation === 'own')
             ? [mapMarkers.own] : [];
+        for (const kind of this.campaignBySystem?.get(system.id) ?? []) markers.push(campaignMapMarkers[kind]);
+
+        return markers;
     }
 
     drawSystemMarkers(ctx, system, point, isHovered) {

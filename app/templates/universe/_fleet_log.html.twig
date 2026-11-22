@@ -1,4 +1,5 @@
-{% if galaxy_v2_flights is empty %}<p class="gv2-empty-log">Aucune flotte en mission actuellement.</p>{% else %}
+{% set campaignTraffic = galaxy_campaign_traffic|default([]) %}
+{% if galaxy_v2_flights is empty and campaignTraffic is empty %}<p class="gv2-empty-log">Aucune flotte en mission actuellement.</p>{% endif %}
                     {% for flight in galaxy_v2_flights %}<article class="gv2-flight-entry" data-flight-id="{{ flight.id }}">
                         <strong>{{ flight.missionLabel }}</strong><span>{{ flight.statusLabel }}</span>
                         <small>{{ flight.relationLabel }} · {{ flight.ownerName }}</small>
@@ -7,4 +8,14 @@
                         {% if flight.ownedByCurrentPlayer and flight.ships %}<small>{{ flight.ships }}</small>{% endif %}
                         {% if flight.arrivalAt %}<time datetime="{{ flight.arrivalAt }}" data-galaxy-v2-countdown="{{ flight.arrivalAt }}">Calcul du temps…</time>{% endif %}
                     </article>{% endfor %}
-                {% endif %}
+{% for movement in campaignTraffic %}
+    <article class="gv2-flight-entry" data-campaign-kind="{{ movement.kind }}">
+        <strong><span aria-hidden="true">{{ movement.kind == 'pirates' ? 'P' : '◇' }}</span> {{ movement.label }}</strong>
+        <small>Campagne pirate · Mission {{ movement.mission }}</small>
+        {% if movement.eta %}
+            <small>{{ movement.overdue ? 'Arrivée à confirmer · prévue le' : 'Arrivée prévue le' }}
+                <time datetime="{{ movement.eta }}">{{ movement.eta|date('d/m/Y à H:i:s', preferences.timezone|default(app.user.preferences.timezone|default('Europe/Paris'))) }}</time>
+            </small>
+        {% endif %}
+    </article>
+{% endfor %}

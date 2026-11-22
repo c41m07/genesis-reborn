@@ -27,6 +27,7 @@ final class ColonyController extends AbstractController
         private \App\Service\Combat\OccupationService $occupations,
         private LeaderboardService $leaderboard,
         private \App\Service\Fleet\FleetVisibility $visibility,
+        private \App\Service\PirateCampaign\PirateCampaignTraffic $campaignTraffic,
         private GameShell $shell,
         private LiveRegionResponse $liveResponses,
         private GalaxyGeometry $galaxyGeometry,
@@ -403,7 +404,8 @@ final class ColonyController extends AbstractController
         RelationResolver $relations,
     ): Response
     {
-        return $this->render('universe/map_v2.html.twig', $this->mapData($request, $catalog, $clock, true, $relations));
+        return $this->render('universe/map_v2.html.twig', $this->mapData($request, $catalog, $clock, true, $relations),
+            new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
     private function mapData(
@@ -488,6 +490,7 @@ final class ColonyController extends AbstractController
         }
         $galaxyV2Json = '';
         $flights = [];
+        $campaignTraffic = [];
         $mapOccupations = [];
         $mapConquerable = [];
         $mapReinforceable = [];
@@ -563,6 +566,7 @@ final class ColonyController extends AbstractController
                 ];
             }
             $flights = $this->visibility->forMap($m, $selectedGalaxy);
+            $campaignTraffic = $this->campaignTraffic->forGalaxy($m, $selectedGalaxy);
             $galaxyV2Json = json_encode([
                 'geometry' => ['name' => GalaxyGeometry::SPIRAL, 'extent' => GalaxyGeometry::EXTENT, 'unitsToAu' => GalaxyGeometry::UNITS_TO_AU],
                 'systems' => $mapSystems,
@@ -578,6 +582,7 @@ final class ColonyController extends AbstractController
                     'position' => $mapOrigin->position,
                 ] : null,
                 'flights' => $flights,
+                'campaignTraffic' => $campaignTraffic,
                 'serverNow' => $clock->now()->format(\DateTimeInterface::ATOM),
                 'galaxy' => $selectedGalaxy?->coordinateCode(),
                 'universe' => $m->universe->name,
@@ -597,6 +602,7 @@ final class ColonyController extends AbstractController
             'galaxy_v2_json' => $galaxyV2Json,
             'map_planet_relations' => $mapPlanetRelations,
             'galaxy_v2_flights' => $flights,
+            'galaxy_campaign_traffic' => $campaignTraffic,
             'map_occupations' => $mapOccupations,
             'map_conquerable' => $mapConquerable,
             'map_reinforceable' => $mapReinforceable,
