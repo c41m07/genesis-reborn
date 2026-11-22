@@ -1,5 +1,5 @@
 import { test, expect } from './support/isolated-test.mjs';
-import { runIsolatedSql } from './support/game-fixtures.mjs';
+import { runIsolatedSql, queryIsolatedSql } from './support/game-fixtures.mjs';
 
 test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
 
@@ -26,11 +26,11 @@ async function enterJournal(page) {
   expect(Number.isSafeInteger(member) && member > 0).toBe(true);
   const insert = (message, kind) => runIsolatedSql(process.env.BROWSER_ROUTER,
     "INSERT INTO notification (recipient_id,message,created_at,journal_kind) VALUES (" + member + ",'" + message + "',UTC_TIMESTAMP()," + kind + ")");
-  return { id, overview, insert };
+  return { id, overview, member, insert };
 }
 
 test('Journal : cinq entrées, acquittement à la lecture et repli clavier sans JavaScript', async ({ page, browser, baseURL }) => {
-  const { id, overview, insert } = await enterJournal(page);
+  const { id, overview, member, insert } = await enterJournal(page);
   const requests = [], errors = [];
   page.on('request', request => { if (request.url().includes('/planetes/')) requests.push({ url: request.url(), live: request.headers()['x-genesis-live'] }); });
   page.on('pageerror', error => errors.push(error.message));
@@ -71,8 +71,13 @@ test('Journal : cinq entrées, acquittement à la lecture et repli clavier sans 
   await page.bringToFront();
   await notices.first().scrollIntoViewIfNeeded();
   const response = await ack;
-  expect(await response.json()).toEqual({ unread: true });
+  expect(response.status()).toBe(200);
+  expect(response.headers()['cache-control']).toContain('private');
+  expect(response.headers()['cache-control']).toContain('no-store');
   await expect(page.locator('.dashboard-journal [role="status"]')).toHaveText('Journal consulté.');
+  const counts = queryIsolatedSql(process.env.BROWSER_ROUTER,
+    'SELECT COUNT(*), SUM(consulted_at IS NOT NULL) FROM notification WHERE player_universe_id = '+member+' AND journal_kind IS NOT NULL');
+  expect(counts.split('\t').map(Number)).toEqual([9, 8]);
   await expect(notices).toHaveCount(5);
   await refresh();
   await expect(notices).toHaveCount(5);
