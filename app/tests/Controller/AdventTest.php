@@ -60,7 +60,7 @@ final class AdventTest extends WebTestCase
         $member = $this->player('AdventMember');
         $other = $this->player('AdventNeighbor');
         $admin = $this->player('AdventAdmin', admin: true);
-        $originalMembership = $member->currentPlayerUniverse;
+        $originalUniverse = $member->currentPlayerUniverse->universe->slug;
         $planet = $this->planet($member);
         $foreign = $this->planet($other);
         $this->client->loginUser($member);
@@ -107,7 +107,7 @@ final class AdventTest extends WebTestCase
         self::assertNull($initial['delivered_at']);
 
         // Aucun second droit ni changement de choix : même compte, autre univers.
-        $this->select($member, 'turbo-1');
+        $member = $this->select($member, 'turbo-1');
         $altPlanet = $this->planet($member);
         $this->client->loginUser($member);
         $this->client->request('GET', '/evenements/avent');
@@ -117,7 +117,7 @@ final class AdventTest extends WebTestCase
         self::assertResponseStatusCodeSame(403);
         self::assertSame($initial, $db->fetchAssociative('SELECT choice, resources, delivered_at, destination_id FROM advent_claim'));
 
-        $this->select($member, $originalMembership->universe->slug);
+        $member = $this->select($member, $originalUniverse);
         $this->client->loginUser($member);
         $crawler = $this->client->request('GET', '/evenements/avent');
         $token = $crawler->filter('#advent-door-1 input[name="_token"]')->attr('value');
@@ -180,15 +180,16 @@ final class AdventTest extends WebTestCase
             $player->roles = ['ROLE_ADMIN'];
         }
         $this->em->flush();
-        $this->select($player, 'omega-1');
-
-        return $player;
+        return $this->select($player, 'omega-1');
     }
 
-    private function select(Player $player, string $slug): void
+    private function select(Player $player, string $slug): Player
     {
+        $player = $this->em->find(Player::class, $player->id);
         $universe = $this->em->getRepository(Universe::class)->findOneBy(['slug' => $slug]);
         static::getContainer()->get(UniverseService::class)->select($player, $universe->id);
+
+        return $player;
     }
 
     private function planet(Player $player): Planet
