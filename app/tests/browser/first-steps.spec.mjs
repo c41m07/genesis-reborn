@@ -265,7 +265,8 @@ test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', a
         await expect(summary.getByRole('columnheader', { name: 'Survivants' })).toBeVisible();
         await expect(summary.getByRole('columnheader', { name: 'Pertes' })).toBeVisible();
         for (const side of ['Escorte', 'Pirates']) {
-            const row = summary.getByRole('row').filter({ has: summary.getByRole('rowheader', { name: side }) });
+            const row = summary.getByRole('row').filter({ has: view.getByRole('rowheader', { name: side, exact: true }) });
+            await expect(row).toHaveCount(1);
             const values = await row.getByRole('cell').allTextContents();
             expect(values).toHaveLength(2);
             expect(values[0]).toMatch(/^[0-2] sur 2$/);
