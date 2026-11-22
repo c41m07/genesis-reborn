@@ -11,6 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'report_notice_espionage_unique', columns: ['player_universe_id', 'espionage_report_id'])]
 #[ORM\UniqueConstraint(name: 'report_notice_transport_unique', columns: ['player_universe_id', 'transport_report_id'])]
 #[ORM\Index(name: 'report_notice_unread_idx', columns: ['player_universe_id', 'consulted_at'])]
+#[ORM\Index(name: 'report_notice_member_idx', columns: ['player_universe_id'])]
 #[ORM\Index(name: 'report_notice_combat_idx', columns: ['combat_log_id'])]
 #[ORM\Index(name: 'report_notice_espionage_idx', columns: ['espionage_report_id'])]
 #[ORM\Index(name: 'report_notice_transport_idx', columns: ['transport_report_id'])]
