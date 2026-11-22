@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit;
 
 use App\Service\Advent\{AdventCalendar, AdventGifts};
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class AdventCalendarTest extends TestCase
@@ -31,10 +32,19 @@ final class AdventCalendarTest extends TestCase
         self::assertSame(23 * 3600, $dates['doors'][4]->getTimestamp() - $dates['doors'][3]->getTimestamp());
     }
 
-    public function testBadCivilDateCannotBeSilentlyNormalised(): void
+    #[DataProvider('invalidDays')]
+    public function testBadCivilDateCannotBeSilentlyNormalised(string $date): void
     {
+        $this->expectExceptionMessage('Saisissez une date civile valide');
         $this->expectException(\DomainException::class);
-        (new AdventCalendar())->schedule('2026-11-31', '2026-12-31');
+        (new AdventCalendar())->schedule($date, '2026-12-31');
+    }
+
+    public static function invalidDays(): iterable
+    {
+        yield 'jour inexistant' => ['2026-11-31'];
+        yield 'octet nul refusé avant parsing' => ["2026-12-01\0"];
+        yield 'retour à la ligne' => ["2026-12-01\n"];
     }
 
     public function testClosingBeforeDoor24IsRejected(): void

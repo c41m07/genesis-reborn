@@ -46,8 +46,13 @@ final class AdventCalendar
 
     private function parisDay(string $date): \DateTimeImmutable
     {
+        // Filtrer la forme et les caractères avant le parseur PHP : une
+        // chaîne contenant un octet nul ne doit pas contourner le refus métier.
+        if (!preg_match('/\A20\d{2}-\d{2}-\d{2}\z/', $date)) {
+            throw new \DomainException('Saisissez une date civile valide au format AAAA-MM-JJ.');
+        }
         $day = \DateTimeImmutable::createFromFormat('!Y-m-d', $date, new \DateTimeZone(self::PARIS));
-        if ($day === false || $day->format('Y-m-d') !== $date || !preg_match('/\A20\d{2}-\d{2}-\d{2}\z/', $date)) {
+        if ($day === false || $day->format('Y-m-d') !== $date) {
             throw new \DomainException('Saisissez une date civile valide au format AAAA-MM-JJ.');
         }
 

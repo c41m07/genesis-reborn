@@ -169,6 +169,23 @@ final class AdventTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
+    public function testInvalidAdminDateReturnsValidationWithoutPublication(): void
+    {
+        $admin = $this->player('AdventInvalidAdmin', admin: true);
+        $this->client->loginUser($admin);
+        $crawler = $this->client->request('GET', '/admin/events/avent');
+        $token = $crawler->filter('.admin-event-form input[name="_token"]')->attr('value');
+        foreach (['2026-11-31', "2026-12-01\0"] as $invalidDate) {
+            $this->client->request('POST', '/admin/events/avent', [
+                '_token' => $token, 'name' => 'Avent invalide', 'first' => $invalidDate, 'last' => '2026-12-31',
+                'options' => array_fill(1, 24, [['metal' => '7']]),
+            ]);
+            self::assertResponseStatusCodeSame(422);
+            self::assertSelectorTextContains('main', 'Saisissez une date civile valide');
+        }
+        self::assertSame(0, $this->em->getRepository(AdventEdition::class)->count());
+    }
+
     #[DataProvider('races')]
     public function testCompetingOrdersFromSeparateProcessesCreditOneLot(bool $retry): void
     {
