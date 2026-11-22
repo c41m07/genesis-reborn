@@ -17,7 +17,6 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
   await page.getByLabel('Confirmer le mot de passe').fill(password);
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await expect(page).toHaveURL(/connexion/);
-  runIsolatedSql(project, "UPDATE player SET email_verified_at=COALESCE(email_verified_at,UTC_TIMESTAMP()) WHERE email='" + email + "'");
   await page.getByLabel('Adresse email').fill(email);
   await page.getByLabel('Mot de passe', { exact: true }).fill(password);
   await page.getByRole('button', { name: /Connexion/ }).click();
@@ -28,7 +27,11 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
   const universe = Number(queryIsolatedSql(project, 'SELECT universe_id FROM player_universe WHERE id=' + member));
   expect(member).toBeGreaterThan(0);
   expect(universe).toBeGreaterThan(0);
-  runIsolatedSql(project, "INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'probe','basic',1 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle' ON DUPLICATE KEY UPDATE quantity=1");
+  // Une nouvelle colonie n’a pas forcément encore de hangar matérialisé.
+  runIsolatedSql(project, "INSERT INTO fleet (player_universe_id,home_planet_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token) SELECT owner_id,id,'idle','idle',1,'{}',0,0,0,0,'' FROM planet WHERE id=" + origin + " AND NOT EXISTS (SELECT 1 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle')");
+  for (const slug of ['probe', 'fighter']) {
+    runIsolatedSql(project, "INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'" + slug + "','basic',1 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle' ON DUPLICATE KEY UPDATE quantity=1");
+  }
   runIsolatedSql(project, "UPDATE planet_resource SET current_stock=5000 WHERE planet_id=" + origin + " AND resource_type='hydrogen'");
 
   await page.setViewportSize({ width: 1440, height: 900 });
