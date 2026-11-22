@@ -1,61 +1,115 @@
-{# Pas de chrome de jeu : ce dossier n'enregistre aucune présence. #}
-<!doctype html>
-<html lang="fr">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="robots" content="noindex, nofollow">
-    <title>Campagne pirate | Genesis Reborn</title>
-    {{ encore_entry_link_tags('app') }}
-    {{ encore_entry_script_tags('app') }}
-</head>
-<body>
-<main class="shell" id="main">
-    <h1>Campagne pirate</h1>
-    {% if app.environment == 'dev' %}<p>Pilote local</p>{% endif %}
-    <nav aria-label="Dossiers de la campagne">
-        <ul>
-            {% if dossier.current is not null and dossier.current != dossier.selected %}
-                <li><a href="{{ path('app_pirate_campaign') }}">Mission courante</a></li>
+{% extends 'base.html.twig' %}
+{# Le dossier ne lance pas le suivi réseau des flottes entrantes du shell. #}
+{% block incoming_fleets %}{% endblock %}
+{% block title %}Campagne pirate · Genesis Reborn{% endblock %}
+{% block body %}
+{% set briefing = dossier.briefing %}
+{% set narrative = dossier.signal_copy ?? briefing.narrative %}
+{% set defeatedCount = dossier.history|filter(entry => entry.won)|length %}
+{% set canDeposit = deposit_token and dossier.convoy.selected_reward.state|default('') == 'full_pending' %}
+{% set hasIntel = briefing and (briefing.formation is not null or (briefing.quote is not null and not dossier.convoy.selected_reward)) %}
+
+<div class="page-refinement pirate-campaign" data-page-sections="disabled">
+    <header class="page-heading">
+        <div>
+            <h1>Campagne pirate</h1>
+            <p>Répondez aux signaux civils et rouvrez les routes de votre secteur.</p>
+        </div>
+        {% if dossier.current and dossier.current != dossier.selected %}
+            <a class="secondary" href="{{ path('app_pirate_campaign') }}">Mission courante</a>
+        {% endif %}
+    </header>
+
+    <section class="pirate-campaign-banner" aria-label="Progression de la campagne">
+        <img class="pirate-campaign-art" src="{{ asset('art/genesis-reborn-planet.webp') }}" width="1448" height="1086" alt="" decoding="async">
+        <div class="pirate-campaign-progress">
+            <div>
+                <strong aria-current="step">Chapitre {{ dossier.chapter.number }}</strong>
+                <span>{{ dossier.chapter.title }}</span>
+            </div>
+            <div class="pirate-campaign-track">
+                <progress class="visually-hidden" value="{{ defeatedCount }}" max="{{ dossier.mission_count }}" aria-label="Missions réussies">{{ defeatedCount }} / {{ dossier.mission_count }}</progress>
+                <span class="pirate-campaign-markers" aria-hidden="true">
+                    {% for number in 1..dossier.mission_count %}
+                        <i class="{{ number <= defeatedCount ? 'is-cleared' : (number == dossier.current ? 'is-current' : '') }}"></i>
+                    {% endfor %}
+                </span>
+                <small>{{ defeatedCount }} {{ defeatedCount == 1 ? 'mission réussie' : 'missions réussies' }}</small>
+            </div>
+            <strong>Mission {{ dossier.selected }} / {{ dossier.mission_count }}</strong>
+        </div>
+    </section>
+
+    <section class="panel pirate-campaign-dossier{{ hasIntel ? ' pirate-campaign-dossier--has-intel' : '' }}" aria-labelledby="pirate-mission-title">
+        <div class="pirate-campaign-briefing">
+            {% include 'player/pirate_campaign/_mission_heading.html.twig' with {narrative: narrative, status: dossier.signal_pending ? 'Signal de détresse' : briefing.status} only %}
+
+            {% if dossier.signal_pending and not encounter_form and not needs_colony %}
+                <p role="status">Un départ de reconnaissance n’est pas disponible depuis la colonie active.</p>
             {% endif %}
-            {% for entry in dossier.history %}
-                <li>
-                    {% if entry.number == dossier.selected %}
-                        <span aria-current="page">Mission {{ entry.number }}</span>
-                    {% else %}
-                        <a href="{{ path('app_pirate_campaign', {missionNumber: entry.number}) }}">Mission {{ entry.number }}</a>
-                    {% endif %}
-                    {% if entry.won %} · réussie{% endif %}
-                </li>
-            {% endfor %}
-        </ul>
-    </nav>
-    {% include 'player/pirate_campaign/_convoy_status.html.twig' with {convoy: dossier.convoy, selected: dossier.selected, deposit_token: deposit_token} only %}
-    {% if destination_form %}
-        {% include 'player/pirate_campaign/_destination_form.html.twig' with {choice: destination_form, mission: dossier.selected} only %}
-    {% endif %}
-    {% if dossier.signal_pending %}
-        <section class="panel" aria-labelledby="pirate-signal-title">
-            <h2 id="pirate-signal-title">Mission {{ dossier.selected }}</h2>
-            <p>{% if encounter_form and encounter_form.action == 'reconnaissance' %}Le signal civil est prêt pour une reconnaissance.{% else %}Un départ de reconnaissance n’est pas disponible depuis la colonie active.{% endif %}</p>
-        </section>
-    {% elseif dossier.briefing is not null %}
-        {# La section convoi ci-dessus affiche le seul état durable ; ne pas répéter l’ancien devis indicatif. #}
-        {% include 'player/pirate_campaign/_briefing.html.twig' with {briefing: dossier.briefing|merge({quote: null})} only %}
-    {% endif %}
-    {% if survivor_form %}
-        {% include 'player/pirate_campaign/_destination_form.html.twig' with {choice: survivor_form, mission: dossier.selected} only %}
-    {% endif %}
-    {% if encounter_form %}
-        {% include 'player/pirate_campaign/_encounter_form.html.twig' with {
-            form: encounter_form, mission: dossier.selected, origin: origin_label
-        } only %}
-    {% elseif needs_colony %}
-        <p>Sélectionnez une colonie qui vous appartient dans le jeu, puis revenez au dossier.</p>
-    {% elseif dossier.current is null %}
-        <p>Campagne terminée. Les dossiers gagnés restent consultables.</p>
-    {% endif %}
-    <p><a href="{{ path('app_pirate_campaign', {missionNumber: dossier.selected}) }}">Actualiser le dossier</a></p>
-</main>
-</body>
-</html>
+            {% if briefing %}
+                {% include 'player/pirate_campaign/_briefing.html.twig' with {briefing: briefing} only %}
+            {% endif %}
+
+            {# Les commandes restent dans leur ordre natif ; un seul bouton porte l'accent principal. #}
+            {% include 'player/pirate_campaign/_convoy_status.html.twig' with {convoy: dossier.convoy, selected: dossier.selected, deposit_token: deposit_token} only %}
+            {% if destination_form %}
+                {% include 'player/pirate_campaign/_destination_form.html.twig' with {choice: destination_form, mission: dossier.selected, primary: not canDeposit} only %}
+            {% endif %}
+            {% if survivor_form %}
+                {% include 'player/pirate_campaign/_destination_form.html.twig' with {choice: survivor_form, mission: dossier.selected, primary: not canDeposit and not destination_form} only %}
+            {% endif %}
+            {% if encounter_form %}
+                {% include 'player/pirate_campaign/_encounter_form.html.twig' with {
+                    form: encounter_form, mission: dossier.selected, origin: origin_label,
+                    primary: not canDeposit and not destination_form and not survivor_form
+                } only %}
+            {% elseif needs_colony %}
+                <p>Sélectionnez une colonie qui vous appartient dans le jeu, puis revenez au dossier.</p>
+                <a class="secondary" href="{{ path('app_planets') }}">Voir vos colonies</a>
+            {% elseif dossier.current is null %}
+                <p>Campagne terminée. Les dossiers gagnés restent consultables.</p>
+            {% endif %}
+            <p class="pirate-campaign-refresh"><a class="inline-link" href="{{ path('app_pirate_campaign', {missionNumber: dossier.selected}) }}">Actualiser le dossier</a></p>
+        </div>
+
+        {% if hasIntel %}
+            {% include 'player/pirate_campaign/_intelligence.html.twig' with {briefing: briefing, has_durable_reward: dossier.convoy.selected_reward is not null} only %}
+        {% endif %}
+    </section>
+
+    <section class="panel pirate-campaign-missions" aria-labelledby="pirate-missions-title">
+        <h2 id="pirate-missions-title">Missions</h2>
+        <nav aria-label="Dossiers de la campagne">
+            {% set chapterMissions = dossier.chapter.missions|map(mission => mission.number) %}
+            <ol class="pirate-campaign-mission-list" role="list">
+                {% for mission in dossier.chapter.missions %}
+                    {% set chosen = mission.number == dossier.selected %}
+                    <li class="pirate-campaign-mission-row pirate-campaign-mission-row--{{ mission.state }}{{ chosen ? ' is-selected' : '' }}">
+                        <span class="pirate-campaign-mission-number" aria-hidden="true">{{ mission.number }}</span>
+                        {% if chosen %}
+                            <span class="pirate-campaign-mission-title" aria-current="page">{{ mission.title }}</span>
+                        {% elseif mission.state == 'locked' %}
+                            <span class="pirate-campaign-mission-title">Mission {{ mission.number }}</span>
+                        {% else %}
+                            <a class="pirate-campaign-mission-title" href="{{ path('app_pirate_campaign', {missionNumber: mission.number}) }}">{{ mission.title }}</a>
+                        {% endif %}
+                        <span class="badge">{{ {won: 'Terminée', current: 'En cours', locked: 'Verrouillée'}[mission.state] }}</span>
+                    </li>
+                {% endfor %}
+            </ol>
+            {% set previousChapters = dossier.history|filter(entry => entry.number not in chapterMissions) %}
+            {% if previousChapters is not empty %}
+                <details class="pirate-campaign-archives">
+                    <summary>Autres dossiers consultables</summary>
+                    <ul>
+                        {% for entry in previousChapters %}
+                            <li><a href="{{ path('app_pirate_campaign', {missionNumber: entry.number}) }}">Mission {{ entry.number }}</a>{% if entry.won %} · Terminée{% endif %}</li>
+                        {% endfor %}
+                    </ul>
+                </details>
+            {% endif %}
+        </nav>
+    </section>
+</div>
+{% endblock %}

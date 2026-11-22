@@ -212,6 +212,22 @@ final class PirateCampaignCatalogue
     }
 
     /**
+     * Texte civil sans site, flotte ni récompense. Le dossier l’appelle après avoir validé le signal courant.
+     *
+     * @return array{title: string, message: string, guidance: string}
+     */
+    public function signalCopy(string $key): array
+    {
+        $content = $this->definition($key);
+
+        return [
+            'title' => $content['title'],
+            'message' => $content['signal'],
+            'guidance' => 'Envoyez une seule sonde basique vers le poste civil. Elle sera perdue, mais son rapport révélera la flotte pirate à l’arrivée, même si la sonde est détectée.',
+        ];
+    }
+
+    /**
      * Préparer une seule fois l'adversaire, le prix catalogue et les paramètres natifs déjà mesurés.
      * Ne définit ni génération de site, ni détection, cadence, conditions d'accès, ni carburant.
      */
@@ -244,9 +260,12 @@ final class PirateCampaignCatalogue
             return null;
         }
 
+        if ($moment === PirateCampaignMoment::Signal) {
+            return $this->signalCopy($key);
+        }
+
         $content = $this->definition($key);
         [$message, $guidance] = match ($moment) {
-            PirateCampaignMoment::Signal => [$content['signal'], 'Envoyez une seule sonde basique vers le poste civil. Elle sera perdue, mais son rapport révélera la flotte pirate à l’arrivée, même si la sonde est détectée.'],
             PirateCampaignMoment::ReconnaissanceEnRoute => ['La sonde est en route vers le poste civil.', 'Le renseignement sera disponible après son arrivée.'],
             PirateCampaignMoment::RenseignementRecu => ['La sonde a cessé d’émettre, mais son relevé est complet.', $content['intel_tip'] ?? 'Consultez le rapport pour préparer votre escorte.'],
             PirateCampaignMoment::AttaqueEngagee => ['Votre escorte est engagée. Le relais attend l’issue du combat.', null],
@@ -258,7 +277,7 @@ final class PirateCampaignCatalogue
 
         // Certains titres d'après rapport nomment une coque ou le nombre de menaces.
         // Avant le vrai renseignement, garder l'intitulé narratif neutre.
-        $revealed = !in_array($moment, [PirateCampaignMoment::Signal, PirateCampaignMoment::ReconnaissanceEnRoute], true);
+        $revealed = $moment !== PirateCampaignMoment::ReconnaissanceEnRoute;
         $title = $revealed ? ($content['revealed_title'] ?? $content['title']) : $content['title'];
 
         return ['title' => $title, 'message' => $message, 'guidance' => $guidance];
