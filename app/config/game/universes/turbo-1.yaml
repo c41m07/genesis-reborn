@@ -2,7 +2,7 @@
   "slug": "turbo-1",
   "name": "Turbo · laboratoire de jeu",
   "features": {
-    "guilds_enabled": false,
+    "guilds_enabled": true,
     "planet_conquest": true
   },
   "multipliers": {

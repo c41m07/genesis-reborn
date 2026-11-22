@@ -16,6 +16,10 @@ framework:
         routing:
             'App\Message\QueueItemFinished': async
             'App\Message\FleetArrived': async
+            'App\Message\PirateReconnaissanceDue': async
+            'App\Message\PirateAttackDue': async
+            'App\Message\PirateConvoyDue': async
+            'App\Message\PirateSurvivorsDue': async
             'App\Message\CombatEventDue': async
             'App\Message\GuildProjectRewardsDue': async
             'App\Message\OccupationDue': async

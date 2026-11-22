@@ -1,0 +1,61 @@
+{# Pas de chrome de jeu : ce dossier n'enregistre aucune présence. #}
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Campagne pirate | Genesis Reborn</title>
+    {{ encore_entry_link_tags('app') }}
+    {{ encore_entry_script_tags('app') }}
+</head>
+<body>
+<main class="shell" id="main">
+    <h1>Campagne pirate</h1>
+    {% if app.environment == 'dev' %}<p>Pilote local</p>{% endif %}
+    <nav aria-label="Dossiers de la campagne">
+        <ul>
+            {% if dossier.current is not null and dossier.current != dossier.selected %}
+                <li><a href="{{ path('app_pirate_campaign') }}">Mission courante</a></li>
+            {% endif %}
+            {% for entry in dossier.history %}
+                <li>
+                    {% if entry.number == dossier.selected %}
+                        <span aria-current="page">Mission {{ entry.number }}</span>
+                    {% else %}
+                        <a href="{{ path('app_pirate_campaign', {missionNumber: entry.number}) }}">Mission {{ entry.number }}</a>
+                    {% endif %}
+                    {% if entry.won %} · réussie{% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </nav>
+    {% include 'player/pirate_campaign/_convoy_status.html.twig' with {convoy: dossier.convoy, selected: dossier.selected, deposit_token: deposit_token} only %}
+    {% if destination_form %}
+        {% include 'player/pirate_campaign/_destination_form.html.twig' with {choice: destination_form, mission: dossier.selected} only %}
+    {% endif %}
+    {% if dossier.signal_pending %}
+        <section class="panel" aria-labelledby="pirate-signal-title">
+            <h2 id="pirate-signal-title">Mission {{ dossier.selected }}</h2>
+            <p>{% if encounter_form and encounter_form.action == 'reconnaissance' %}Le signal civil est prêt pour une reconnaissance.{% else %}Un départ de reconnaissance n’est pas disponible depuis la colonie active.{% endif %}</p>
+        </section>
+    {% elseif dossier.briefing is not null %}
+        {# La section convoi ci-dessus affiche le seul état durable ; ne pas répéter l’ancien devis indicatif. #}
+        {% include 'player/pirate_campaign/_briefing.html.twig' with {briefing: dossier.briefing|merge({quote: null})} only %}
+    {% endif %}
+    {% if survivor_form %}
+        {% include 'player/pirate_campaign/_destination_form.html.twig' with {choice: survivor_form, mission: dossier.selected} only %}
+    {% endif %}
+    {% if encounter_form %}
+        {% include 'player/pirate_campaign/_encounter_form.html.twig' with {
+            form: encounter_form, mission: dossier.selected, origin: origin_label
+        } only %}
+    {% elseif needs_colony %}
+        <p>Sélectionnez une colonie qui vous appartient dans le jeu, puis revenez au dossier.</p>
+    {% elseif dossier.current is null %}
+        <p>Campagne terminée. Les dossiers gagnés restent consultables.</p>
+    {% endif %}
+    <p><a href="{{ path('app_pirate_campaign', {missionNumber: dossier.selected}) }}">Actualiser le dossier</a></p>
+</main>
+</body>
+</html>

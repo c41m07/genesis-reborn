@@ -7,7 +7,7 @@ use Random\Randomizer;
 /** Combat déterministe sur un instantané validé par les services métier. */
 final class CombatSimulator
 {
-    private const MAX_UNITS = 5000;
+    public const MAX_UNITS = 5000;
     /** Puissance figée au début du tour, selon la durabilité restante. */
     private function powerFactor(array $unit):float
     {

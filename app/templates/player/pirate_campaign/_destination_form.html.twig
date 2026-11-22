@@ -1,0 +1,34 @@
+{% set survivors = choice.action == 'survivors' %}
+{% set prefix = survivors ? 'pirate-recovery' : 'pirate-convoy-route' %}
+{% set preview = survivors ? 'app_pirate_campaign_survivors_preview' : 'app_pirate_campaign_convoy_route_preview' %}
+{% set confirm = survivors ? 'app_pirate_campaign_survivors' : 'app_pirate_campaign_convoy_route' %}
+<section class="panel" aria-labelledby="{{ prefix }}-title">
+    <h2 id="{{ prefix }}-title">{{ survivors ? 'Organiser le repli des survivants' : 'Choisir une colonie pour le convoi' }}</h2>
+    {% if choice.choices is defined %}
+        {% if survivors %}<p>Le trajet doit tenir dans la réserve embarquée. Sans trajet possible, les survivants ne sont pas transférés.</p>{% endif %}
+        <form method="post" action="{{ path(preview, {missionNumber: mission}) }}">
+            <input type="hidden" name="_token" value="{{ choice.token }}">
+            <label for="{{ prefix }}-destination">{{ survivors ? 'Colonie de repli' : 'Nouvelle colonie de destination' }}</label>
+            <select id="{{ prefix }}-destination" name="destination_choice" required>
+                <option value="">Choisissez une colonie</option>
+                {% for option in choice.choices %}
+                    <option value="{{ option.ordinal }}">{{ option.label }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Voir le trajet</button>
+        </form>
+    {% else %}
+        <p>Colonie : <strong>{{ choice.target }}</strong>. Durée prévue : {{ choice.seconds }} s.</p>
+        {% if survivors %}
+            <p>Hydrogène prélevé sur la réserve embarquée : {{ choice.hydrogen }}. Reliquat après le trajet : {{ choice.remaining }}.</p>
+            <p>Les vaisseaux et leur réserve restante ne sont rendus qu’après l’arrivée dans un hangar admissible.</p>
+        {% else %}
+            <p>Le convoi ne déposera le lot entier qu’à son arrivée, si la colonie vous appartient toujours et dispose de la place nécessaire.</p>
+        {% endif %}
+        <form method="post" action="{{ path(confirm, {missionNumber: mission}) }}">
+            <input type="hidden" name="_token" value="{{ choice.token }}">
+            <input type="hidden" name="destination_choice" value="{{ choice.choice }}">
+            <button type="submit">{{ survivors ? 'Confirmer le repli' : 'Confirmer le trajet du convoi' }}</button>
+        </form>
+    {% endif %}
+</section>

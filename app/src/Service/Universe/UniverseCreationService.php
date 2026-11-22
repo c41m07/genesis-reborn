@@ -54,7 +54,7 @@ final class UniverseCreationService
         $universe->slug = $slug;
         $universe->status = 'active';
         $universe->gameSettings = [
-            'features' => ['guilds_enabled' => true, 'planet_conquest' => true],
+            'features' => ['guilds_enabled' => true, 'planet_conquest' => true, Universe::PIRATE_CAMPAIGN_FEATURE => true],
             'multipliers' => [
                 'building_time' => 1 / $speed,
                 'research_time' => 1 / $speed,
