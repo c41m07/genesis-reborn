@@ -81,7 +81,13 @@ test('L7A A : colonies, renommage, comparaison et bilan complets sur quatre form
       await expect(page.locator('.colony-comparison tbody tr')).toHaveCount(2);
       if (width === 1440) await expect(page.locator('.colony-comparison td[data-resource="nano"]').first()).toBeVisible();
       else await expect(page.locator('.colony-comparison td[data-resource="nano"]').first()).toBeHidden();
-      await expect(page.locator('.colony-comparison tbody tr').filter({ has: page.getByRole('link', { name: 'Horizon', exact: true }) })).toContainText('1 commande en file');
+      const horizonWork = page.locator('.colony-comparison tbody tr')
+        .filter({ has: page.getByRole('link', { name: 'Horizon', exact: true }) })
+        .locator('[data-comparison-queue="building"]');
+      await expect(horizonWork).toContainText('Mine à ciel ouvert');
+      await expect(horizonWork).toContainText('Niveau 5');
+      await expect(horizonWork).toContainText('En cours');
+      await expect(horizonWork.locator('time')).toHaveAttribute('datetime', /T/);
       await capture(page, info, 'comparaison', theme, width);
       await page.goto(abandon);
       for (const title of ['Un abandon définitif', 'Bilan des pertes', 'Ressources', 'Bâtiments', 'Défenses', 'Vaisseaux présents', 'Ressources embarquées présentes', 'Commandes annulées sans remboursement', 'Confirmer l’abandon']) {
