@@ -56,6 +56,26 @@ test('L8 A : accès directs, petits écrans et deux palettes', async ({ page }, 
       for (const width of (name === 'login' ? [1920, 1440, 768, 390, 320] : [1440, 768, 390, 320])) {
         await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
         await checkBounds(page, width);
+        if (name === 'home') {
+          await expect(page.locator('.entry-home-actions a[href="/inscription"]')).toBeVisible();
+          await expect(page.locator('.entry-home-actions a[href="/connexion"]')).toBeVisible();
+          await expect(page.locator('.public-previews a[href="/connexion"]')).toHaveCount(0);
+          await expect(page.locator('.public-previews img[alt]')).toHaveCount(1);
+        } else if (name === 'register') {
+          await expect(page.locator('.entry-public-navigation a[href="/inscription"]')).not.toHaveClass(/\bprimary\b/);
+          await expect(page.locator('.entry-public-navigation a[href="/connexion"]')).toBeVisible();
+          await expect(page.locator('main h1').locator('..').locator('.primary')).toHaveCount(1);
+        } else if (name !== 'login') {
+          const panel = page.locator('.core-entry-access--compact .entry-access-panel');
+          await expect(page.locator('.entry-access-context')).toHaveCount(0);
+          const back = panel.getByRole('link', { name: 'Retour à la connexion' });
+          await expect(back).toHaveCount(1);
+          await expect(back).toHaveAttribute('href', '/connexion');
+          const link = await back.boundingBox();
+          expect(link.height).toBeGreaterThanOrEqual(44);
+          const centre = await panel.evaluate(node => node.getBoundingClientRect().x + node.getBoundingClientRect().width / 2);
+          expect(Math.abs(centre - width / 2)).toBeLessThanOrEqual(2);
+        }
         if (name === 'login') {
           const scene = page.locator('.entry-access-context');
           await expect(page.locator('.auth-form').getByRole('link', { name: 'Mot de passe oublié ?' })).toBeVisible();

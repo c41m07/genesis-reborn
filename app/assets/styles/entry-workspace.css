@@ -204,13 +204,6 @@ body.ui-refined[data-ui-page="accueil-public"] .entry-home .public-previews arti
     display: block;
 }
 
-.entry-exploration-copy .secondary {
-    margin-top: 16px;
-    border-color: transparent;
-    background: transparent;
-    color: var(--accent);
-}
-
 .entry-access-layout {
     display: grid;
     grid-template-columns: minmax(0,1fr) minmax(0,1fr);
@@ -529,7 +522,7 @@ body.ui-refined[data-ui-page="accueil-public"] .entry-home .public-previews arti
     grid-column: 1/-1;
 }
 
-body[data-theme=light] .entry-workspace :is(.entry-text-link,.entry-eyebrow,.entry-access-links a,.auth-back a,.entry-exploration-copy .secondary,.universe-current,.universe-opening-timer strong) {
+body[data-theme=light] .entry-workspace :is(.entry-text-link,.entry-eyebrow,.entry-access-links a,.auth-back a,.universe-current,.universe-opening-timer strong) {
     color: var(--text);
 }
 
@@ -616,3 +609,16 @@ body .entry-public-header .entry-public-navigation .public-login.secondary {
     box-shadow:none;
 }
 body .entry-public-header .entry-public-navigation .public-login.secondary:hover { border-color:var(--accent); }
+
+
+/* Un seul repère de reprise sous l’action principale des cartes courtes. */
+.core-entry-access--compact .auth-back {
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+}
+
+.core-entry-access--compact .auth-back a {
+    display: inline-flex;
+    padding-inline: 0;
+    background: transparent;
+}

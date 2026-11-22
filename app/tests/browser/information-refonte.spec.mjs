@@ -206,6 +206,16 @@ test('L9 A : documents publics, ancres, métadonnées et contexte connecté', as
       }
       await expect(page.locator('main h1')).toHaveCount(1);
       await expect(page.getByRole('heading', { name: 'Information provisoire et incomplète' })).toBeVisible();
+      const warning = page.getByRole('complementary', { name: 'État de cette information' });
+      await expect(warning.getByRole('link', { name: 'contact@genesis-reborn.fr' })).toBeVisible();
+      const pad = await warning.evaluate(node => [
+        parseFloat(getComputedStyle(node).paddingTop),
+        parseFloat(getComputedStyle(node).paddingBottom),
+      ]);
+      expect(pad).toEqual([14, 14]);
+      const firstTopic = page.locator(path === '/confidentialite' ? '#responsable-contact' : '.legal-content > h2:first-child');
+      await expect(firstTopic).toBeVisible();
+      expect(await firstTopic.evaluate(node => getComputedStyle(node).marginTop)).toBe('0px');
       await expect(page.locator('main nav[aria-label="Informations juridiques"] a[aria-current=page]')).toHaveCount(1);
       await layout(page, testInfo, `legal-${path.slice(1)}-${theme}`);
       if (path==='/confidentialite') {

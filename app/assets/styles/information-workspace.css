@@ -378,3 +378,43 @@ body[data-theme=light] .information-workspace a:not(.primary) {
         grid-template-columns: minmax(0,1fr) minmax(0,1fr);
     }
 }
+
+
+/* Le bandeau reste visible sans déplacer le début du document sous une
+   accumulation de marges. Ne modifier ni les articles ni les autres espaces. */
+.information-workspace.legal-page > :is(header,.legal-links,.legal-warning) {
+    margin-block-end: clamp(12px, 1.4vw, 18px);
+}
+
+.information-workspace.legal-page > header > p {
+    margin: 6px 0 0;
+}
+
+.information-workspace.legal-page > .legal-warning {
+    padding: 14px clamp(14px, 2.3vw, 22px);
+}
+
+.information-workspace.legal-page .legal-warning h2 {
+    margin: 0 0 6px;
+}
+
+.information-workspace.legal-page .legal-warning p {
+    margin: 0;
+}
+
+.information-workspace.legal-page .legal-warning p + p {
+    margin-top: 6px;
+}
+
+.information-workspace.legal-page .legal-content > h2:first-child,
+.information-workspace.legal-page .legal-contents h2 {
+    margin-top: 0;
+}
+
+.information-workspace.legal-page .legal-contents ul {
+    margin: 0 0 18px;
+}
+
+.information-workspace.legal-page .legal-contents + h2 {
+    margin-top: 0;
+}

@@ -7,6 +7,11 @@
     <div class="entry-access-layout{{ compactAccess ? ' core-entry-access--compact' : ' core-entry-access--task-first' }}">
         <section class="panel auth-card entry-access-panel" aria-labelledby="{{ access_heading_id }}">
             {% block access_content %}{% endblock %}
+            {% if compactAccess %}
+                {% block access_footer %}
+                    <p class="auth-back"><a href="{{ path('app_login') }}">Retour à la connexion</a></p>
+                {% endblock %}
+            {% endif %}
         </section>
         {% if not compactAccess %}
             <div class="entry-access-context">
