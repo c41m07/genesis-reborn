@@ -4,7 +4,7 @@
 {% set campaignConvoys = campaign_incoming|default([]) %}
 {% set threats = fleets|filter(fleet => fleet.mission in ['attack', 'conquer'])|length %}
 <section class="panel flight-operations incoming-attack-panel{{ threats ? ' has-hostile' : '' }}" aria-labelledby="incoming-attacks-heading">
-<div class="section-heading"><div><h2 id="incoming-attacks-heading">{{ ui.icon('fleet') }} Flottes entrantes <span class="badge">{{ fleets|length + campaignConvoys|length }}</span></h2></div><a href="{{ path('app_fleets') }}" class="inline-link">Voir les flottes {{ ui.icon('arrow') }}</a></div>
+<div class="section-heading"><div><h2 id="incoming-attacks-heading">{{ ui.icon('fleet') }} Flottes entrantes <span class="badge" data-incoming-panel-count>{{ fleets|length + campaignConvoys|length }}</span></h2></div><a href="{{ path('app_fleets') }}" class="inline-link">Voir les flottes {{ ui.icon('arrow') }}</a></div>
 {% if threats %}<p class="flight-idle">{{ threats }} attaque{{ threats == 1 ? '' : 's' }} détectée{{ threats == 1 ? '' : 's' }} · Organisez votre défense et vos renforts avant l’impact.</p>{% endif %}
 {% for fleet in fleets %}
 {% set hostile = fleet.mission in ['attack', 'conquer'] %}

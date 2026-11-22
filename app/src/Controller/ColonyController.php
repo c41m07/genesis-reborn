@@ -171,6 +171,7 @@ final class ColonyController extends AbstractController
         if ($data['section'] === 'overview') {
             // Réutiliser les ressources déjà préparées ; le bandeau conserve son propre rendu.
             $templates['overview-attention'] = 'colony/_overview_attention.html.twig';
+            $templates['overview-flight-metric'] = 'colony/_overview_flight_metric.html.twig';
         }
         $regions = [];
         foreach ($templates as $name => $template) {

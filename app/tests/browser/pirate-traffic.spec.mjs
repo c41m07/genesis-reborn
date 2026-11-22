@@ -46,6 +46,14 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
     await expect(page.locator('[data-campaign-kind="pirates"],[data-campaign-kind="convoy"]')).toHaveCount(0);
   }
 
+  const metric = page.locator('[data-live-region="overview-flight-metric"]');
+  await expect(metric.locator('strong')).toHaveText('1');
+  const refreshedMetric = await page.evaluate(async () => {
+    const response = await fetch(location.href, { headers: { 'X-Genesis-Live': '1', Accept: 'application/json' } });
+    return (await response.json()).regions['overview-flight-metric'];
+  });
+  expect(refreshedMetric).toContain('<strong>1</strong>');
+
   await page.goto('/carte-v2?galaxy=' + galaxy + '&system=' + system);
   const shell = page.locator('.galaxy-v2');
   const read = JSON.parse(await shell.getAttribute('data-galaxy-v2-map-value'));

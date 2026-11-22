@@ -57,14 +57,13 @@ export default class extends Controller {
                 const next = document.createElement('template');
                 next.innerHTML = data.html;
                 this.removeUnavailableDetails(next.content);
-                // Une perte de droit enlève le convoi sans attendre la fermeture d'un détail ordinaire.
-                const allowed = new Set([...next.content.querySelectorAll('[data-campaign-incoming]')].map(row => row.dataset.campaignIncoming));
-                for (const row of this.contentTarget.querySelectorAll('[data-campaign-incoming]')) {
-                    if (!allowed.has(row.dataset.campaignIncoming)) row.remove();
-                }
                 if (!this.contentTarget.contains(document.activeElement)
                     && !this.hasOpenDetails()) {
                     this.updatePanel(next.content, data.html);
+                } else {
+                    // Les convois n'ont aucun contrôle interactif : les synchroniser
+                    // même lorsqu'un détail de flotte ordinaire porte le focus.
+                    this.syncCampaignRows(next.content);
                 }
             }
             this.tick();
@@ -75,11 +74,36 @@ export default class extends Controller {
     }
 
     clearCampaignTraffic() {
-        for (const row of this.contentTarget.querySelectorAll('[data-campaign-incoming]')) row.remove();
+        this.syncCampaignRows();
         this.lastHtml = null;
         if (document.querySelector('[data-surveillance-galaxy]')) {
             window.dispatchEvent(new Event('genesis:campaign-traffic-unavailable'));
         }
+    }
+
+    syncCampaignRows(next = null) {
+        const panel = this.contentTarget.querySelector('.incoming-attack-panel');
+        if (!panel) return;
+        const incomingSelector = '[data-campaign-incoming]';
+        const nextRows = new Map(Array.from(next?.querySelectorAll(incomingSelector) ?? [], row => [row.dataset.campaignIncoming, row]));
+        for (const row of panel.querySelectorAll(incomingSelector)) {
+            const latest = nextRows.get(row.dataset.campaignIncoming);
+            if (!latest) row.remove();
+            else if (latest.outerHTML !== row.outerHTML) row.replaceWith(latest.cloneNode(true));
+            nextRows.delete(row.dataset.campaignIncoming);
+        }
+        for (const row of nextRows.values()) panel.append(row.cloneNode(true));
+        const total = panel.querySelectorAll('[data-incoming-attack], [data-campaign-incoming]').length;
+        let empty = panel.querySelector('.incoming-empty-message');
+        if (total) empty?.remove();
+        else if (!empty) {
+            empty = document.createElement('p');
+            empty.className = 'flight-idle incoming-empty-message';
+            empty.textContent = 'Aucune flotte entrante visible vers vos colonies.';
+            panel.append(empty);
+        }
+        panel.querySelector('[data-incoming-panel-count]').textContent = String(total);
+        if (this.hasCountTarget) this.countTarget.textContent = `Entrants · ${total}`;
     }
 
     hasOpenDetails() {
