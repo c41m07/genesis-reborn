@@ -16,6 +16,33 @@ Le lot 5 poursuit les services validés : trois listes dédiées et paginées, a
 la fiche existante pour contribuer. Les droits, dons et récompenses ne changent
 pas. [Navigation, vérifications et intégration](NAVIGATION_PAGES_DEDIEES.md).
 
+## Noyau du Hall de guilde — chantier non ouvert
+
+La construction est propre à une guilde et ne réutilise pas les paliers ou les
+récompenses des projets existants. Un don volontaire transforme 8 hydrogène,
+4 métal, 2 nano ou 1 antimatière en 8 unités de force, ce qui s'additionne sans
+arrondi. L'électricité ne finance pas le Hall. Le service refuse avant débit
+un don supérieur au restant dû ; aucun excédent n'est perdu.
+
+La cible de construction est figée au premier don. Par défaut,
+`GUILD_HALL_REQUIRED_STRENGTH=0` ferme les mutations ; le seuil 32 utilisé
+dans les fixtures n'est ni un prix de jeu ni une suggestion de prix. Le noyau
+ne définit aucune route joueur et n'ouvre aucune autorisation supplémentaire.
+
+Le premier modèle limite le Hall à un par guilde. Une fois la cible atteinte,
+seul le commandant en exercice peut l'installer à la position 0 d'un système
+libre déjà cartographié dans son univers. La position indique un Hall et non une
+planète, une flotte, une prise des colonies ou un bonus. Les autres lecteurs
+ne consultent que la projection du tag dans leurs propres systèmes découverts.
+
+Le même verrou de participation et d'univers que pour les actions de guilde
+et de stock sérialise les écritures. Une ancienne révision ne peut être débitée
+deux fois et une contrainte SQL interdit un second Hall dans le système.
+Le noyau n'ajoute ni capture, déplacement, remboursement ou privilège. Le
+cycle de vie en cas d'archivage et le prix effectif restent à décider avant
+l'ouverture. La migration additive conserve les Hall existants en cas de retour
+du code et ne doit être appliquée que selon la procédure habituelle.
+
 ## Périmètre validé
 
 - Grades personnalisés avec permissions détaillées pour les guildes.

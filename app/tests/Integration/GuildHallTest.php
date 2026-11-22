@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Process\Process;
 
 final class GuildHallTest extends KernelTestCase
 {
@@ -69,6 +70,43 @@ final class GuildHallTest extends KernelTestCase
         $this->discover($neighbor, $system);
         self::assertSame([$system->id => ['tag' => 'HLA', 'position' => 0]], $halls->claimsForKnownSystems($neighbor, [$system->id]));
         self::assertSame([], $halls->claimsForKnownSystems($otherUniverse, [$system->id]));
+    }
+
+    public function testTwoCommandersCanOnlyClaimOneHallAtTheSameSystem(): void
+    {
+        [$first, $firstPlanet, $firstGuild] = $this->guild('HallRaceAlpha', 'HRA');
+        [$second, $secondPlanet, $secondGuild] = $this->guild('HallRaceBeta', 'HRB');
+        $service = self::getContainer()->get(GuildHallService::class);
+        $service->contribute($first, $firstGuild->id, $firstPlanet->id, 0, ['antimatter' => 4]);
+        $service->contribute($second, $secondGuild->id, $secondPlanet->id, 0, ['antimatter' => 4]);
+        $this->discover($second, $firstPlanet->solarSystem);
+        $system = $firstPlanet->solarSystem->id;
+
+        $results = $this->race($first->universe->id, [
+            ['action' => 'place', 'member' => $first->id, 'guild' => $firstGuild->id, 'system' => $system],
+            ['action' => 'place', 'member' => $second->id, 'guild' => $secondGuild->id, 'system' => $system],
+        ]);
+        self::assertContains('accepted', $results);
+        self::assertContains('La position 0 de ce système est déjà occupée.', $results);
+        $db = $this->em->getConnection();
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM guild_hall WHERE solar_system_id = ?', [$system]));
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM guild_hall WHERE solar_system_id IS NULL AND strength = 32'));
+    }
+
+    public function testTwoDonationsFromTheSameRevisionOnlyDebitOneColony(): void
+    {
+        [$leader, $origin, $guild] = $this->guild('HallFundingRace', 'HFR');
+        [$member, $planet] = $this->player('HallDonor');
+        self::getContainer()->get(DiplomacyService::class)->join($member, $guild->id);
+        $before = $this->stock($origin, 'hydrogen') + $this->stock($planet, 'hydrogen');
+        $results = $this->race($leader->universe->id, [
+            ['action' => 'contribute', 'member' => $leader->id, 'guild' => $guild->id, 'planet' => $origin->id],
+            ['action' => 'contribute', 'member' => $member->id, 'guild' => $guild->id, 'planet' => $planet->id],
+        ]);
+        self::assertContains('accepted', $results);
+        self::assertContains('Le Hall a changé. Rechargez la page avant de réessayer.', $results);
+        self::assertEqualsWithDelta($before - 8, $this->stock($origin, 'hydrogen') + $this->stock($planet, 'hydrogen'), 0.1);
+        self::assertSame(8, (int) $this->em->getConnection()->fetchOne('SELECT strength FROM guild_hall WHERE guild_id = ?', [$guild->id]));
     }
 
     #[DataProvider('refusals')]
@@ -179,6 +217,76 @@ final class GuildHallTest extends KernelTestCase
         $discovery->solarSystem = $system;
         $this->em->persist($discovery);
         $this->em->flush();
+    }
+
+    /**
+     * @param list<array<string, int|string>> $actions
+     * @return list<string>
+     */
+    private function race(int $universe, array $actions): array
+    {
+        $directory = sys_get_temp_dir().'/genesis-hall-'.bin2hex(random_bytes(8));
+        mkdir($directory, 0700);
+        $db = $this->em->getConnection();
+        $processes = [];
+        $db->beginTransaction();
+        try {
+            // Les deux acteurs ont leur propre connexion. Tenir le point commun
+            // de sérialisation permet de prouver qu'ils attendent ensemble.
+            $db->fetchOne('SELECT id FROM universe WHERE id = ? FOR UPDATE', [$universe]);
+            foreach ($actions as $index => $action) {
+                $input = $action + ['ready' => $directory.'/'.$index, 'barrier' => $directory.'/go'];
+                $process = new Process([PHP_BINARY, dirname(__DIR__).'/Support/concurrent_guild_hall.php', json_encode($input, JSON_THROW_ON_ERROR)]);
+                $process->setTimeout(25);
+                $process->start();
+                $processes[] = $process;
+            }
+            $deadline = microtime(true) + 12;
+            do {
+                $ready = glob($directory.'/[0-9]') ?: [];
+                if (count($ready) === 2) {
+                    break;
+                }
+                usleep(10000);
+            } while (microtime(true) < $deadline);
+            self::assertCount(2, $ready, implode('; ', array_map(static fn (Process $p): string => $p->getErrorOutput(), $processes)));
+            $ids = array_map(static fn (string $file): int => (int) file_get_contents($file), $ready);
+            self::assertCount(2, array_unique($ids));
+            touch($directory.'/go');
+            do {
+                $blocked = 0;
+                foreach ($db->fetchAllAssociative('SHOW FULL PROCESSLIST') as $row) {
+                    if (in_array((int) $row['Id'], $ids, true) && str_contains(strtoupper($row['Info'] ?? ''), 'FOR UPDATE')) {
+                        ++$blocked;
+                    }
+                }
+                if ($blocked === 2) {
+                    break;
+                }
+                usleep(10000);
+            } while (microtime(true) < $deadline);
+            self::assertSame(2, $blocked, 'Les deux commandes doivent être réellement concurrentes.');
+            $db->commit();
+
+            return array_map(static function (Process $process): string {
+                self::assertSame(0, $process->wait(), $process->getOutput().$process->getErrorOutput());
+
+                return trim($process->getOutput());
+            }, $processes);
+        } finally {
+            if ($db->isTransactionActive()) {
+                $db->rollBack();
+            }
+            foreach ($processes as $process) {
+                if ($process->isRunning()) {
+                    $process->stop();
+                }
+            }
+            foreach (glob($directory.'/*') ?: [] as $file) {
+                unlink($file);
+            }
+            rmdir($directory);
+        }
     }
 
     private function stock(Planet $planet, string $resource): float
