@@ -60,8 +60,19 @@ export default class extends Controller {
             const match = input.name.match(/^ships\[([^\]]+)\](?:\[([^\]]+)\])?$/);
             if (match) {
                 input.value = String(detail.composition[match[1]]?.[match[2] || 'basic'] || 0);
-                input.dataset.available = String(detail.ship_available[match[1]]?.[match[2] || 'basic'] || 0);
+                const available = detail.ship_available[match[1]]?.[match[2] || 'basic'] || 0;
+                input.dataset.available = String(available);
+                // Le devis relit le hangar. L'affichage et les deux contrôles doivent suivre ce même stock.
+                input.disabled = available === 0;
+                input.nextElementSibling.disabled = input.disabled;
+                input.closest('td').querySelector('[data-fleet-stock-value]').textContent = '(' + exactNumber(available) + ')';
             }
+        }
+        // Une famille peut acquérir un rang pendant la préparation. Ne jamais soumettre
+        // l'alias scalaire du Basique avec un autre rang imbriqué de ce même type.
+        for (const input of this.shipTargets.filter(field => field.dataset.shipBasicAlias)) {
+            const otherRank = input.closest('tr').querySelector('input[data-ship-tier]:not([data-ship-tier="basic"]):enabled');
+            input.name = otherRank ? input.dataset.shipRankedName : input.dataset.shipBasicAlias;
         }
         this.updateShipBounds();
         for (const input of this.cargoTargets) {
