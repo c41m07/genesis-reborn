@@ -505,24 +505,32 @@ final class PirateReconnaissanceTest extends KernelTestCase
         $db->executeStatement('DROP TABLE pirate_convoy_delivery');
         $db->executeStatement('DROP TABLE pirate_attack_campaign');
         $db->executeStatement('DROP TABLE pirate_reconnaissance');
-        require_once dirname(__DIR__, 2).'/migrations/Version20261120000900.php';
-        require_once dirname(__DIR__, 2).'/migrations/Version20261120000930.php';
-        require_once dirname(__DIR__, 2).'/migrations/Version20261120000950.php';
-        require_once dirname(__DIR__, 2).'/migrations/Version20261120001000.php';
-        foreach ([\DoctrineMigrations\Version20261120000900::class, \DoctrineMigrations\Version20261120000930::class, \DoctrineMigrations\Version20261120000950::class, \DoctrineMigrations\Version20261120001000::class] as $class) {
-            $migration = new $class($db, new NullLogger());
-            $migration->up(new Schema());
-            foreach ($migration->getSql() as $query) {
-                $db->executeStatement($query->getStatement(), $query->getParameters(), $query->getTypes());
+        try {
+            require_once dirname(__DIR__, 2).'/migrations/Version20261120000900.php';
+            require_once dirname(__DIR__, 2).'/migrations/Version20261120000930.php';
+            require_once dirname(__DIR__, 2).'/migrations/Version20261120000950.php';
+            require_once dirname(__DIR__, 2).'/migrations/Version20261120001000.php';
+            foreach ([\DoctrineMigrations\Version20261120000900::class, \DoctrineMigrations\Version20261120000930::class, \DoctrineMigrations\Version20261120000950::class, \DoctrineMigrations\Version20261120001000::class] as $class) {
+                $migration = new $class($db, new NullLogger());
+                $migration->up(new Schema());
+                foreach ($migration->getSql() as $query) {
+                    $db->executeStatement($query->getStatement(), $query->getParameters(), $query->getTypes());
+                }
             }
+            self::assertTrue((new SchemaValidator($this->em))->schemaInSyncWithMetadata());
+            self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_convoy_delivery'));
+            self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_attack_campaign'));
+            self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_reconnaissance'));
+            self::assertSame(3, (int) $db->fetchOne('SELECT quantity FROM fleet_ship WHERE id = ?', [$stock->id]));
+            self::assertTrue($this->service->launch($member, $home, $system, PirateDistressSite::inExistingSystem($member, $system), 'test-migration', $this->encounter()));
+            self::assertSame('traveling', $this->service->statusFor($member, 'test-migration')['status']);
+        } finally {
+            // Les noms de contraintes des migrations diffèrent de ceux générés par SchemaTool.
+            // Retirer uniquement ces tables de fixture, dans l’ordre inverse de leurs dépendances.
+            $db->executeStatement('DROP TABLE IF EXISTS pirate_convoy_delivery');
+            $db->executeStatement('DROP TABLE IF EXISTS pirate_attack_campaign');
+            $db->executeStatement('DROP TABLE IF EXISTS pirate_reconnaissance');
         }
-        self::assertTrue((new SchemaValidator($this->em))->schemaInSyncWithMetadata());
-        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_convoy_delivery'));
-        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_attack_campaign'));
-        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_reconnaissance'));
-        self::assertSame(3, (int) $db->fetchOne('SELECT quantity FROM fleet_ship WHERE id = ?', [$stock->id]));
-        self::assertTrue($this->service->launch($member, $home, $system, PirateDistressSite::inExistingSystem($member, $system), 'test-migration', $this->encounter()));
-        self::assertSame('traveling', $this->service->statusFor($member, 'test-migration')['status']);
     }
 
     private function preparePilotFuel(Planet $home, FleetShip $probe, float $stockOnGround): void

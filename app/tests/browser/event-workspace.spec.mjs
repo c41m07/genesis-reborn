@@ -42,7 +42,20 @@ test('L6 A : annonces en lignes, objectifs et participation, récompenses et mob
   await page.setViewportSize({ width: 390, height: 900 });
   for (const [key, url] of [['events', '/evenements'], ['challenges', '/evenements/defis']]) {
     await page.goto(url);
-    await expect(page.locator('.event-redesign .event-card')).toHaveCount(0);
+    const campaign = page.getByRole('link', { name: 'Ouvrir le dossier de campagne', exact: true });
+    if (key === 'events') {
+      for (const [group, message] of [['current', 'Aucun événement en cours dans cet univers.'], ['upcoming', 'Aucun événement à venir annoncé.']]) {
+        const section = page.locator('section[aria-labelledby="events-' + group + '"]');
+        await expect(section.locator('.event-card')).toHaveCount(0);
+        await expect(section.getByText(message, { exact: true })).toBeVisible();
+      }
+      await expect(campaign).toBeVisible();
+      await expect(campaign).toHaveAttribute('href', /^\/evenements\/campagne-pirate(?:\/1)?$/);
+    } else {
+      await expect(page.locator('.event-challenge-grid .event-card')).toHaveCount(0);
+      await expect(page.getByText('Aucun défi ou rotation annoncé dans cet univers.', { exact: true })).toBeVisible();
+      await expect(campaign).toHaveCount(0);
+    }
     await capture(page, info, key + '-vide', 'dark', 390);
   }
   for (const [name, upcoming, global] of [['Production renforcée', false, false], ['Rendez-vous des commandants', false, true], ['Semaine des bâtisseurs', true, false]]) {
