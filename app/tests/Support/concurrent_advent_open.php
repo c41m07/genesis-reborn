@@ -15,7 +15,7 @@ $input = json_decode($argv[1], true, 512, JSON_THROW_ON_ERROR);
 $kernel = new Kernel('test', true);
 $kernel->boot();
 $container = $kernel->getContainer()->get('test.service_container');
-$container->set('clock', new MockClock('2026-11-30T23:00:00Z'));
+$container->set('clock', new MockClock($input['when'].'Z'));
 $em = $container->get(EntityManagerInterface::class);
 $connection = $em->getConnection();
 $params = $connection->getParams();

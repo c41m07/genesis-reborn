@@ -6,10 +6,12 @@ namespace App\Tests\Controller;
 
 use App\Entity\{AdventClaim, AdventEdition, Planet, Player, Universe};
 use App\Service\Universe\{UniverseImporter, UniverseService};
+use App\Service\Colony\ResourceService;
 use App\Service\Player\RegistrationService;
 use App\Validator\DTO\RegistrationData;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Clock\MockClock;
@@ -167,15 +169,44 @@ final class AdventTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
-    public function testCompetingChoicesFromSeparateProcessesCreditOneLot(): void
+    #[DataProvider('races')]
+    public function testCompetingOrdersFromSeparateProcessesCreditOneLot(bool $retry): void
     {
         $member = $this->player('AdventRacer');
         $admin = $this->player('AdventRaceAdmin', admin: true);
         $membership = $member->currentPlayerUniverse->id;
-        $planet = $this->planet($member)->id;
+        $origin = $this->planet($member);
         $edition = $this->publish($admin);
         $db = $this->em->getConnection();
-        $this->fixtureStocks($planet, '2026-11-30 23:00:00', ['metal' => 500, 'nano' => 500]);
+        $planets = [$origin->id, $origin->id];
+        $choices = [0, 1];
+        $when = '2026-11-30 23:00:00';
+        if ($retry) {
+            $currentMember = $this->em->find(Player::class, $member->id)->currentPlayerUniverse;
+            $origin = $this->em->find(Planet::class, $origin->id);
+            $spare = $this->em->getRepository(Planet::class)->findOneBy([
+                'owner' => null, 'npcPlanet' => false, 'solarSystem' => $origin->solarSystem,
+            ]);
+            self::assertNotNull($spare);
+            $spare->acquireBy($currentMember, $this->clock->now());
+            static::getContainer()->get(ResourceService::class)->initialize($spare, colony: true);
+            $claim = new AdventClaim();
+            $claim->adventEdition = $this->em->find(AdventEdition::class, $edition);
+            $claim->player = $currentMember->player;
+            $claim->originalDestinationId = $origin->id;
+            $claim->door = 1;
+            $claim->choice = 0;
+            $claim->resources = ['metal' => 7];
+            $claim->openedAt = new \DateTimeImmutable('2026-11-30T23:00:00Z');
+            $this->em->persist($claim);
+            $this->em->flush();
+            $planets[1] = $spare->id;
+            $choices = [0, 0];
+            $when = '2027-01-02 15:00:00';
+        }
+        foreach (array_unique($planets) as $planet) {
+            $this->fixtureStocks($planet, $when, ['metal' => 500, 'nano' => 500]);
+        }
 
         $directory = sys_get_temp_dir().'/genesis-advent-'.bin2hex(random_bytes(8));
         mkdir($directory, 0700);
@@ -185,9 +216,9 @@ final class AdventTest extends WebTestCase
             // Une vraie transaction retient la participation. Les deux choix
             // préparent leurs propres connexions puis attendent la même ligne.
             $db->fetchOne('SELECT id FROM player_universe WHERE id = ? FOR UPDATE', [$membership]);
-            foreach ([0, 1] as $choice) {
-                $input = ['player' => $member->id, 'membership' => $membership, 'planet' => $planet,
-                    'edition' => $edition, 'choice' => $choice, 'ready' => $directory.'/'.$choice, 'go' => $directory.'/go'];
+            foreach ($choices as $index => $choice) {
+                $input = ['player' => $member->id, 'membership' => $membership, 'planet' => $planets[$index],
+                    'edition' => $edition, 'choice' => $choice, 'when' => $when, 'ready' => $directory.'/'.$index, 'go' => $directory.'/go'];
                 $worker = new Process([PHP_BINARY, dirname(__DIR__).'/Support/concurrent_advent_open.php', json_encode($input, JSON_THROW_ON_ERROR)]);
                 $worker->setTimeout(20);
                 $worker->start();
@@ -230,10 +261,16 @@ final class AdventTest extends WebTestCase
             }
             self::assertEqualsCanonicalizing(['delivered', 'already'], $results);
             self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_claim WHERE delivered_at IS NOT NULL'));
-            $choice = (int) $db->fetchOne('SELECT choice FROM advent_claim');
-            $stocks = $db->fetchAllKeyValue("SELECT resource_type, current_stock FROM planet_resource WHERE planet_id = ? AND resource_type IN ('metal', 'nano')", [$planet]);
-            self::assertEqualsWithDelta($choice === 0 ? 507 : 500, (float) $stocks['metal'], .01);
-            self::assertEqualsWithDelta($choice === 1 ? 503 : 500, (float) $stocks['nano'], .01);
+            $receipt = $db->fetchAssociative('SELECT choice, original_destination_id, delivered_destination_id FROM advent_claim');
+            $choice = (int) $receipt['choice'];
+            $destination = (int) $receipt['delivered_destination_id'];
+            self::assertSame($origin->id, (int) $receipt['original_destination_id']);
+            self::assertContains($destination, $planets);
+            foreach (array_unique($planets) as $planet) {
+                $stocks = $db->fetchAllKeyValue("SELECT resource_type, current_stock FROM planet_resource WHERE planet_id = ? AND resource_type IN ('metal', 'nano')", [$planet]);
+                self::assertEqualsWithDelta($planet === $destination && $choice === 0 ? 507 : 500, (float) $stocks['metal'], .01);
+                self::assertEqualsWithDelta($planet === $destination && $choice === 1 ? 503 : 500, (float) $stocks['nano'], .01);
+            }
         } finally {
             if ($db->isTransactionActive()) {
                 $db->rollBack();
@@ -249,6 +286,12 @@ final class AdventTest extends WebTestCase
             }
             rmdir($directory);
         }
+    }
+
+    public static function races(): iterable
+    {
+        yield 'deux choix le jour de l’ouverture' => [false];
+        yield 'deux destinations de reprise après clôture' => [true];
     }
 
     /** @param array<string, int> $stocks */
