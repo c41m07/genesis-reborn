@@ -256,20 +256,40 @@ final class AdminService
         if ($maxPlanets === false || $maxPlanets < 1 || $maxPlanets > 50 || $maxFleet === false || $maxFleet < 1 || $maxFleet > 1000000) {
             throw new \DomainException('Les limites doivent rester dans les bornes autorisées.');
         }
+        $features = is_array($input['features'] ?? null) ? $input['features'] : [];
+        $campaign = null;
+        if (array_key_exists(Universe::PIRATE_CAMPAIGN_FEATURE, $features)) {
+            $campaign = match ($features[Universe::PIRATE_CAMPAIGN_FEATURE]) {
+                '1', 1, true => true,
+                '0', 0, false => false,
+                default => throw new \DomainException('Le réglage de campagne pirate doit être activé ou désactivé.'),
+            };
+        }
         $settings = [
             'multipliers' => $multipliers,
             'limits' => ['max_planets' => $maxPlanets, 'max_fleet_size' => $maxFleet],
             'features' => [
-                'guilds_enabled' => filter_var($input['features']['guilds_enabled'] ?? false, FILTER_VALIDATE_BOOL),
-                'planet_conquest' => filter_var($input['features']['planet_conquest'] ?? false, FILTER_VALIDATE_BOOL),
+                ...(array_key_exists('guilds_enabled', $features)
+                    ? ['guilds_enabled' => filter_var($features['guilds_enabled'], FILTER_VALIDATE_BOOL)] : []),
+                ...(array_key_exists('planet_conquest', $features)
+                    ? ['planet_conquest' => filter_var($features['planet_conquest'], FILTER_VALIDATE_BOOL)] : []),
             ],
         ];
-        $this->manager->transaction(function () use ($admin, $universeId, $settings): void {
+        $this->manager->transaction(function () use ($admin, $universeId, $settings, $campaign): void {
             $universe = $this->repo->find(Universe::class, $universeId);
-            if (!$universe instanceof Universe || $universe->status === 'closed') {
+            if (!$universe instanceof Universe) {
                 throw new \DomainException('Univers introuvable ou fermé.');
             }
-            $this->manager->lock($universe);
+            $this->manager->lockCurrent($universe);
+            if ($universe->status === 'closed') {
+                throw new \DomainException('Univers introuvable ou fermé.');
+            }
+            // Un formulaire plus ancien sans ce champ ne décide pas d'une suspension ou réactivation.
+            $oldFeatures = $universe->gameSettings['features'] ?? [];
+            $settings['features'] = array_replace(is_array($oldFeatures) ? $oldFeatures : [], $settings['features']);
+            if ($campaign !== null) {
+                $settings['features'][Universe::PIRATE_CAMPAIGN_FEATURE] = $campaign;
+            }
             $settings['catalog_overrides']=$universe->gameSettings['catalog_overrides']??[];
             $universe->gameSettings = array_replace($universe->gameSettings, $settings);
             $this->audit($admin, 'universe_settings_change', 'universe', $universeId, $settings);

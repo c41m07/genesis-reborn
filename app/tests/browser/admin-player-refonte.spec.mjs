@@ -111,8 +111,11 @@ test('Fiche A : états vides et correction native sans JavaScript', async ({ pag
     const fallback = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 900 }, storageState: await page.context().storageState() });
     const nativePage = await fallback.newPage();
     await nativePage.goto(`/admin/joueurs/${userId}`);
-    await expect(nativePage.locator('.admin-player-activity')).toContainText('Non mesurée');
-    await expect(nativePage.locator('.admin-player-activity')).toContainText('Aucune activité enregistrée');
+    const universe = queryIsolatedSql(project, "SELECT u.name FROM planet p JOIN player_universe pu ON pu.id=p.owner_id JOIN universe u ON u.id=pu.universe_id WHERE p.id="+planetId);
+    const membership = nativePage.getByRole('region', { name: universe, exact: true });
+    await expect(membership.getByText('Non mesurée', { exact: true })).toBeVisible();
+    await expect(membership.getByText('Aucune activité enregistrée', { exact: true })).toBeVisible();
+    await expect(nativePage.getByRole('region', { name: 'Diagnostic du compte', exact: true })).toBeVisible();
     const details = nativePage.locator(`#colony-${planetId}`);
     await details.locator('summary').click();
     await details.getByLabel('Métal', { exact: true }).fill('25.50');

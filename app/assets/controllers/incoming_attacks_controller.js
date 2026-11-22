@@ -37,30 +37,37 @@ export default class extends Controller {
             if (colony && colony !== '0') url.searchParams.set('colony', colony);
             const galaxy = document.querySelector('[data-surveillance-galaxy]')?.dataset.surveillanceGalaxy;
             if (Number(galaxy) > 0) url.searchParams.set('galaxy', galaxy);
+            if (this.panelValue) url.searchParams.set('campaign', '1');
             const response = await fetch(url, { signal: this.abort.signal, headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' });
-            if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) { this.unavailable(); return; }
+            if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) {
+                if (response.redirected || [401, 403, 404].includes(response.status)) this.clearCampaignTraffic();
+                this.unavailable();
+                return;
+            }
             const data = await response.json();
-            if (!this.active || data.membership !== this.membershipValue) return;
+            if (!this.active) return;
+            if (data.membership !== this.membershipValue) {
+                this.clearCampaignTraffic();
+                this.removeUnavailableDetails();
+                return;
+            }
             if (this.failed) { this.statusTarget.textContent = ''; this.statusTarget.classList.add('visually-hidden'); this.failed = false; }
             this.offset = Date.parse(data.serverNow) - Date.now();
-            if (data.html !== this.lastHtml && !this.contentTarget.contains(document.activeElement)) {
-                // Hors des vues de vol, lire les alertes sans insérer un cadre qui décalerait la page.
-                const content = this.panelValue ? this.contentTarget : document.createElement('div');
-                content.innerHTML = data.html;
-                this.lastHtml = data.html;
-                const count = content.querySelectorAll('[data-incoming-attack]').length;
-                if (this.hasCountTarget) {
-                    const threats = content.querySelectorAll('[data-incoming-kind="attack"][data-incoming-attack]').length;
-                    this.countTarget.textContent = `Entrants · ${count}`;
-                    this.previewTarget.textContent = threats ? `${threats} attaque(s) détectée(s) ⌄` : 'Détails des arrivées ⌄';
-                    this.countTarget.closest('details').classList.toggle('has-hostile', threats > 0);
+            if (data.html !== this.lastHtml) {
+                const next = document.createElement('template');
+                next.innerHTML = data.html;
+                this.removeUnavailableDetails(next.content);
+                if (!this.contentTarget.contains(document.activeElement)
+                    && !this.hasOpenDetails()) {
+                    this.updatePanel(next.content, data.html);
+                } else {
+                    // Les convois n'ont aucun contrôle interactif : les synchroniser
+                    // même lorsqu'un détail de flotte ordinaire porte le focus.
+                    this.syncCampaignRows(next.content);
+                    // Le cache complet ne correspond plus au DOM : A → convoi → A
+                    // doit retirer le convoi même si le HTML initial revient à l'identique.
+                    this.lastHtml = null;
                 }
-                const signature = [...content.querySelectorAll('[data-incoming-attack]')].map(row => row.dataset.incomingAttack).join(',');
-                if (this.signature !== undefined && signature !== this.signature) {
-                    const threats = content.querySelectorAll('[data-incoming-attack][data-incoming-kind="attack"]').length;
-                    this.statusTarget.textContent = count ? count + ' flotte(s) entrante(s).' + (threats ? ' Dont ' + threats + ' attaque(s) détectée(s).' : '') : 'Aucune flotte entrante visible en trajet.';
-                }
-                this.signature = signature;
             }
             this.tick();
             if (data.orbitHtml !== undefined) window.dispatchEvent(new CustomEvent('genesis:orbit-requests', { detail: data }));
@@ -69,7 +76,81 @@ export default class extends Controller {
         finally { clearTimeout(timeout); this.pending = false; }
     }
 
+    clearCampaignTraffic() {
+        this.syncCampaignRows();
+        this.lastHtml = null;
+        if (document.querySelector('[data-surveillance-galaxy]')) {
+            window.dispatchEvent(new Event('genesis:campaign-traffic-unavailable'));
+        }
+    }
+
+    syncCampaignRows(next = null) {
+        const panel = this.contentTarget.querySelector('.incoming-attack-panel');
+        if (!panel) return;
+        const incomingSelector = '[data-campaign-incoming]';
+        const nextRows = new Map(Array.from(next?.querySelectorAll(incomingSelector) ?? [], row => [row.dataset.campaignIncoming, row]));
+        for (const row of panel.querySelectorAll(incomingSelector)) {
+            const latest = nextRows.get(row.dataset.campaignIncoming);
+            if (!latest) row.remove();
+            else if (latest.outerHTML !== row.outerHTML) row.replaceWith(latest.cloneNode(true));
+            nextRows.delete(row.dataset.campaignIncoming);
+        }
+        for (const row of nextRows.values()) panel.append(row.cloneNode(true));
+        const total = panel.querySelectorAll('[data-incoming-attack], [data-campaign-incoming]').length;
+        let empty = panel.querySelector('.incoming-empty-message');
+        if (total) empty?.remove();
+        else if (!empty) {
+            empty = document.createElement('p');
+            empty.className = 'flight-idle incoming-empty-message';
+            empty.textContent = 'Aucune flotte entrante visible vers vos colonies.';
+            panel.append(empty);
+        }
+        panel.querySelector('[data-incoming-panel-count]').textContent = String(total);
+        if (this.hasCountTarget) this.countTarget.textContent = `Entrants · ${total}`;
+    }
+
+    hasOpenDetails() {
+        return typeof HTMLElement.prototype.showPopover === 'function'
+            && this.contentTarget.querySelector('[data-incoming-detail] [popover]:popover-open') !== null;
+    }
+
+    removeUnavailableDetails(next = null) {
+        const authorized = new Set(Array.from(next?.querySelectorAll('[data-incoming-detail]') ?? [], node => node.closest('[data-incoming-attack]').dataset.incomingAttack));
+        for (const detail of this.contentTarget.querySelectorAll('[data-incoming-detail]')) {
+            const row = detail.closest('[data-incoming-attack]');
+            if (authorized.has(row.dataset.incomingAttack)) continue;
+            // Le rafraîchissement général protège le focus. Si les droits
+            // changent, retirer la fiche sans attendre que l’utilisateur en sorte.
+            if (detail.contains(document.activeElement)) row.querySelector('.incoming-fleet-actions a')?.focus();
+            row.removeAttribute('data-controller');
+            row.removeAttribute('data-action');
+            detail.remove();
+            this.lastHtml = null;
+        }
+    }
+
+    updatePanel(next, html) {
+        // Hors des vues de vol, compter les alertes sans insérer de cadre.
+        const content = this.panelValue ? this.contentTarget : next;
+        if (this.panelValue) content.replaceChildren(next);
+        this.lastHtml = html;
+        const count = content.querySelectorAll('[data-incoming-attack]').length;
+        if (this.hasCountTarget) {
+            const threats = content.querySelectorAll('[data-incoming-kind="attack"][data-incoming-attack]').length;
+            this.countTarget.textContent = `Entrants · ${count + content.querySelectorAll('[data-campaign-incoming]').length}`;
+            this.previewTarget.textContent = threats ? `${threats} attaque(s) détectée(s) ⌄` : 'Détails des arrivées ⌄';
+            this.countTarget.closest('details').classList.toggle('has-hostile', threats > 0);
+        }
+        const signature = [...content.querySelectorAll('[data-incoming-attack]')].map(row => row.dataset.incomingAttack).join(',');
+        if (this.signature !== undefined && signature !== this.signature) {
+            const threats = content.querySelectorAll('[data-incoming-attack][data-incoming-kind="attack"]').length;
+            this.statusTarget.textContent = count ? count + ' flotte(s) entrante(s).' + (threats ? ' Dont ' + threats + ' attaque(s) détectée(s).' : '') : 'Aucune flotte entrante visible en trajet.';
+        }
+        this.signature = signature;
+    }
+
     unavailable() {
+        this.removeUnavailableDetails();
         this.failed = true;
         this.statusTarget.classList.remove('visually-hidden');
         this.statusTarget.textContent = 'Surveillance temporairement indisponible. Actualisez la page pour vérifier les flottes entrantes.';

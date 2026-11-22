@@ -6,6 +6,26 @@ const controllerSource = readFileSync('app/assets/controllers/galaxy_v2_controll
   .replace("import { Controller } from '@hotwired/stimulus';", 'class Controller {}');
 const { default: GalaxyController } = await import('data:text/javascript;base64,' + Buffer.from(controllerSource).toString('base64'));
 
+// Le vrai retour Galaxie synchronise le lien natif, même dans ces tests sans Stimulus ni DOM.
+function listNavigationFixture() {
+  const listLink = {
+    href: 'https://genesis.example.test/carte?galaxy=1&system=2',
+    setAttribute(name, value) {
+      expect(name).toBe('href');
+      this.href = new URL(value, this.href).href;
+    },
+  };
+  return {
+    listLink,
+    controllerTargets: {
+      element: {
+        parentElement: { querySelector: selector => selector === '[data-galaxy-list-link]' ? listLink : null },
+      },
+      syncListLink: GalaxyController.prototype.syncListLink,
+    },
+  };
+}
+
 // Coordonnées exportées de GalaxyGeometry (spiral-v1), indépendantes du dessin JavaScript.
 const referenceSystems = JSON.parse(readFileSync('app/tests/Fixtures/galaxy-spiral-reference.json', 'utf8'));
 
@@ -15,7 +35,9 @@ test('Les fins d’animation de la carte respectent une navigation plus récente
   const callbacks = [];
   globalThis.window = { setTimeout: callback => callbacks.push(callback) };
   const target = () => ({ hidden: false, textContent: '' });
+  const { listLink, controllerTargets } = listNavigationFixture();
   const state = {
+    ...controllerTargets,
     motionReduced: false, selectedPlanet: { id: 1, name: 'Planète', coordinates: '1:1:1' },
     selectedSystem: { name: 'Système', galaxy: '1', number: 1 },
     systemPanelTarget: target(), planetPanelTarget: target(), systemBackTarget: target(), planetBackTarget: target(),
@@ -34,6 +56,10 @@ test('Les fins d’animation de la carte respectent une navigation plus récente
     callbacks.shift()();
     expect(state.mode).toBe('transition-to-galaxy');
     expect(state.systemPanelTarget.hidden).toBe(true);
+    expect(listLink.href).toBe('https://genesis.example.test/carte?galaxy=1');
+    state.mode = 'system';
+    state.selectedSystem = { name: 'Autre système', galaxy: '1', number: 2 };
+    state.selectedPlanet = { id: 2, name: 'Autre planète', coordinates: '1:2:1' };
     GalaxyController.prototype.enterPlanetView.call(state);
     callbacks.shift()();
     expect(state.mode).toBe('planet');
@@ -65,7 +91,9 @@ for (const motionReduced of [false, true]) {
   for (const mode of ['system', 'planet', 'transition-to-planet']) {
     test(`La croix planète revient à la galaxie depuis ${mode}, mouvement réduit ${motionReduced}`, () => {
       const target = () => ({ hidden: false, textContent: '' });
+      const { listLink, controllerTargets } = listNavigationFixture();
       const state = {
+        ...controllerTargets,
         mode, motionReduced, selectedPlanet: { id: 1 }, selectedSystem: { id: 2 },
         systemPanelTarget: target(), planetPanelTarget: target(), systemBackTarget: target(), planetBackTarget: target(),
         minimapWrapTarget: { hidden: true }, fleetLogTarget: { parentElement: { hidden: true } },
@@ -84,6 +112,7 @@ for (const motionReduced of [false, true]) {
       expect(state.minimapWrapTarget.hidden).toBe(false);
       expect(state.selectedPlanet).toBeNull();
       expect(state.selectedSystem).toBeNull();
+      expect(listLink.href).toBe('https://genesis.example.test/carte?galaxy=1');
       expect(state.camera).toEqual({ x: 12, y: 24 });
       expect(state.targetZoom).toBe(0.8);
     });
@@ -333,25 +362,66 @@ test('Le cercle extérieur des systèmes possédés reste vert sans modifier leu
   }
 });
 
-test('Le nouveau retour choisit le système réel de la planète et conserve le cadrage galaxie', () => {
-  const planet = { id: 7 };
-  const target = { id: 3, planets: [planet] };
-  const previous = { id: 2, planets: [] };
-  for (const selected of [target, previous]) {
-    let returned = false;
-    const saved = { camera: { x: 12, y: 24 }, zoom: .8 };
-    const state = {
-      systems: [previous, target], selectedPlanet: planet, selectedSystem: selected, savedCamera: saved,
-      focusSystem(system) { this.selectedSystem = system; this.selectedPlanet = null; this.savedCamera = {}; },
-      toSystem(restoreChoice) {
-        returned = true;
-        expect(restoreChoice).toBe(true);
-        expect(this.selectedSystem).toBe(target);
-        expect(this.selectedPlanet).toBe(planet);
-      },
-    };
-    GalaxyController.prototype.returnToPlanetSystem.call(state);
-    expect(returned).toBe(true);
-    expect(state.savedCamera).toBe(saved);
-  }
+test('La sélection et le retour d’un aperçu préservent la caméra ; seule l’entrée la déplace', () => {
+  const { listLink, controllerTargets } = listNavigationFixture();
+  const target = () => ({ hidden: false, textContent: '' });
+  const system = { id: 7, name: 'Système', galaxy: '1', number: 7, known: true, wx: 180, wy: 220 };
+  const camera = { x: 12, y: 24 };
+  const state = {
+    ...controllerTargets,
+    element: { ...controllerTargets.element, querySelector: () => null },
+    mode: 'galaxy', motionReduced: true, hasUserCamera: true,
+    camera: { ...camera }, zoom: .8, targetZoom: .8, baseZoom: .25,
+    tooltipTarget: target(), systemPanelTarget: target(), planetPanelTarget: target(),
+    systemBackTarget: target(), planetBackTarget: target(), minimapWrapTarget: target(),
+    fleetLogTarget: { parentElement: target() }, locationTarget: target(), coordinatesTarget: target(),
+    mapHelpTarget: target(), systemContentTarget: { replaceChildren() {} },
+    searchInputTarget: { focus() {} },
+    setCanvasMode(value) { this.view = value; }, drawFrame() {}, focusPanel() {},
+    gameMap: { galaxy: '1' },
+    prepareSystemPanel: GalaxyController.prototype.prepareSystemPanel,
+    showSystemPreview: GalaxyController.prototype.showSystemPreview,
+  };
+  const preview = () => GalaxyController.prototype.previewSystem.call(state, system);
+  const back = () => GalaxyController.prototype.toGalaxy.call(state);
+  preview();
+  expect(state.mode).toBe('galaxy');
+  expect(state.systemPanelTarget.hidden).toBe(false);
+  expect(listLink.href).toBe('https://genesis.example.test/carte?galaxy=1&system=7');
+  expect(state.camera).toEqual(camera);
+  expect(state.zoom).toBe(.8);
+  expect(state.savedCamera).toBeUndefined();
+  back();
+  expect(state.selectedSystem).toBeNull();
+  expect(state.camera).toEqual(camera);
+  expect(state.zoom).toBe(.8);
+  preview();
+  GalaxyController.prototype.enterSelectedSystem.call(state);
+  expect(state.mode).toBe('system');
+  expect(state.view).toBe('system');
+  expect(state.camera).toEqual({ x: 180, y: 220 });
+  expect(state.zoom).toBeCloseTo(.725);
+  back();
+  expect(state.camera).toEqual(camera);
+  expect(state.zoom).toBe(.8);
+  expect(state.hasUserCamera).toBe(true);
+});
+
+test('Revenir depuis une planète consultée en aperçu restaure la fiche, sans entrer dans le système', () => {
+  let focused = false;
+  const state = {
+    mode: 'planet', planetReturnView: 'galaxy', selectedSystem: { id: 1 }, selectedPlanet: { id: 2 },
+    camera: { x: 50, y: 90 }, zoom: .6,
+    toSystem: GalaxyController.prototype.toSystem,
+    setCanvasMode(value) { this.view = value; },
+    showSystemPreview() {},
+    systemContentTarget: { querySelector: selector => selector === '[data-planet-id="2"]' ? { focus() { focused = true; } } : null },
+  };
+  GalaxyController.prototype.returnToPlanetSystem.call(state);
+  expect(state.mode).toBe('galaxy');
+  expect(state.view).toBe('galaxy');
+  expect(state.planetReturnView).toBeNull();
+  expect(state.camera).toEqual({ x: 50, y: 90 });
+  expect(state.zoom).toBe(.6);
+  expect(focused).toBe(true);
 });

@@ -13,7 +13,17 @@
             </div>
         </div>
         <figure class="public-hero-preview">
-            <a href="{{ asset('art/ui-preview-colony.png') }}"><img src="{{ asset('art/ui-preview-colony.png') }}" alt="Vue générale d’une colonie de démonstration : ressources, développement et suivi des activités" width="1440" height="1000"></a>
+            <a href="{{ asset('art/ui-preview-colony.png') }}">
+                <picture>
+                    <source type="image/webp"
+                            sizes="(max-width: 1050px) calc(100vw - 58px), (max-width: 1440px) calc(55vw - 100px), 692px"
+                            srcset="{{ asset('art/ui-preview-colony-432.webp') }} 432w,
+                                    {{ asset('art/ui-preview-colony-720.webp') }} 720w,
+                                    {{ asset('art/ui-preview-colony-1008.webp') }} 1008w,
+                                    {{ asset('art/ui-preview-colony-1440.webp') }} 1440w">
+                    <img src="{{ asset('art/ui-preview-colony.png') }}" alt="Vue générale d’une colonie de démonstration : ressources, développement et suivi des activités" width="1440" height="1000">
+                </picture>
+            </a>
             <figcaption>Ressources, colonies et opérations réunies.</figcaption>
         </figure>
     </section>
@@ -23,7 +33,7 @@
     </section>
     <section class="public-previews" aria-label="Aperçus réels du jeu">
         <article>
-            <a href="{{ asset('art/ui-preview-galaxy.png') }}"><img src="{{ asset('art/ui-preview-galaxy.png') }}" alt="Carte interactive de la galaxie sur un compte de démonstration, avec ses systèmes et ses commandes d’exploration" width="1440" height="1000" loading="lazy"></a>
+            <a href="{{ asset('art/ui-preview-galaxy.png') }}"><picture><source type="image/webp" srcset="{{ asset('art/ui-preview-galaxy.webp') }}"><img src="{{ asset('art/ui-preview-galaxy.png') }}" alt="Carte interactive de la galaxie sur un compte de démonstration, avec ses systèmes et ses commandes d’exploration" width="1440" height="1000" loading="lazy"></picture></a>
             <div class="entry-exploration-copy">
                 <h2>Explorez la galaxie</h2>
                 <p>Découvrez des systèmes inconnus, préparez vos missions et étendez votre empire.</p>

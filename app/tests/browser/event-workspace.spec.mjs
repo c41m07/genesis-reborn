@@ -42,7 +42,20 @@ test('L6 A : annonces en lignes, objectifs et participation, récompenses et mob
   await page.setViewportSize({ width: 390, height: 900 });
   for (const [key, url] of [['events', '/evenements'], ['challenges', '/evenements/defis']]) {
     await page.goto(url);
-    await expect(page.locator('.event-redesign .event-card')).toHaveCount(0);
+    const campaign = page.getByRole('link', { name: 'Ouvrir le dossier de campagne', exact: true });
+    if (key === 'events') {
+      for (const [group, message] of [['current', 'Aucun événement en cours dans cet univers.'], ['upcoming', 'Aucun événement à venir annoncé.']]) {
+        const section = page.locator('section[aria-labelledby="events-' + group + '"]');
+        await expect(section.locator('.event-card')).toHaveCount(0);
+        await expect(section.getByText(message, { exact: true })).toBeVisible();
+      }
+      await expect(campaign).toBeVisible();
+      await expect(campaign).toHaveAttribute('href', /^\/evenements\/campagne-pirate(?:\/1)?$/);
+    } else {
+      await expect(page.locator('.event-challenge-grid .event-card')).toHaveCount(0);
+      await expect(page.getByText('Aucun défi ou rotation annoncé dans cet univers.', { exact: true })).toBeVisible();
+      await expect(campaign).toHaveCount(0);
+    }
     await capture(page, info, key + '-vide', 'dark', 390);
   }
   for (const [name, upcoming, global] of [['Production renforcée', false, false], ['Rendez-vous des commandants', false, true], ['Semaine des bâtisseurs', true, false]]) {
@@ -73,6 +86,11 @@ test('L6 A : annonces en lignes, objectifs et participation, récompenses et mob
       runIsolatedSql(project, `INSERT INTO player_boost(player_universe_id,source_type,source_key,status,earned_at,kind,payload) VALUES (${member},'event','event-${eventKey}-player-${member}','pending',UTC_TIMESTAMP(),'resource_box','${JSON.stringify(box)}')`);
     }
   }
+  // Des participations historiques sans compte rendent la pagination et l'anonymat observables.
+  const lastMember = Number(queryIsolatedSql(project, 'SELECT COALESCE(MAX(id),0) FROM player_universe'));
+  runIsolatedSql(project, `INSERT INTO player_universe (universe_id, joined_at, catalog_unlocks) VALUES ${Array.from({ length: 26 }, () => `(${universe},UTC_TIMESTAMP(),'{}')`).join(',')}`);
+  runIsolatedSql(project, `INSERT INTO boost_event_contribution(event_id,player_universe_id,source_key,value)
+    SELECT ${ids.guided},id,CONCAT('anonymous-ranking-',id),1 FROM player_universe WHERE universe_id=${universe} AND id>${lastMember}`);
   const pages = [['events', '/evenements'], ['challenges', '/evenements/defis'], ...['guided', 'weekly', 'closed', 'cancelled'].map(key => [key, '/evenements/defis/' + ids[key]])];
   for (const theme of ['dark', 'light']) {
     runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
@@ -92,6 +110,9 @@ test('L6 A : annonces en lignes, objectifs et participation, récompenses et mob
           await expect(zero.locator('dd')).toHaveText('0,00');
           await expect(page.locator('.collective-challenge')).toContainText('Début effectif (UTC)');
           await expect(page.locator('.event-participation .primary')).toHaveAttribute('href', '/carte-v2');
+          await expect(page.locator('#event-ranking tbody tr')).toHaveCount(25);
+          await expect(page.locator('#event-ranking tbody tr').first()).toContainText('(vous)');
+          await expect(page.locator('#event-ranking tbody tr').nth(1)).toContainText('Ancien participant');
         }
         if (key === 'weekly') {
           await expect(page.locator('.collective-challenge')).toContainText('ex æquo inclus');
@@ -120,6 +141,18 @@ test('L6 A : annonces en lignes, objectifs et participation, récompenses et mob
     if (key === 'transport') await expect(page.locator('.event-participation .primary')).toHaveAttribute('href', /flottes\/preparer\?mission=transport$/);
     await capture(page, info, key, 'light', 390);
   }
+  await page.goto('/evenements/defis/' + ids.guided);
+  const rankingNext = page.getByRole('navigation', { name: 'Pages du classement des contributions' }).getByRole('link', { name: 'Page suivante' });
+  await rankingNext.focus();
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Shift+Tab');
+  await expect(rankingNext).toBeFocused();
+  expect(await rankingNext.evaluate(link => link.matches(':focus-visible') && getComputedStyle(link).outlineStyle !== 'none')).toBe(true);
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/ranking_page=2#event-ranking$/);
+  await expect(page.locator('#event-ranking tbody tr')).toHaveCount(2);
+  await expect(page.locator('#event-ranking tbody tr td:first-child')).toHaveText(['2', '2']);
+
   const rewardKey = `event-guided-${suffix}-closed-player-${member}`;
   for (const status of ['available', 'used']) {
     runIsolatedSql(project, `UPDATE player_boost SET status='${status}',used_at=${status === 'used' ? 'UTC_TIMESTAMP()' : 'NULL'} WHERE source_key='${rewardKey}'`);

@@ -1,0 +1,3 @@
+{# Utiliser le même compteur pour le premier rendu et les actualisations de la Vue générale. #}
+{% import 'ui/macros.html.twig' as ui %}
+<a class="metric-card" data-live-region="overview-flight-metric" href="{{ path('app_fleets') }}"><span class="metric-symbol">{{ ui.icon('fleet') }}</span><span><small>Flottes en vol</small><strong>{{ active_fleets|length + pirate_campaign_traffic(membership).outbound|length }}</strong><span class="metric-caption">toutes colonies confondues</span></span><span class="metric-arrow" aria-hidden="true">→</span></a>

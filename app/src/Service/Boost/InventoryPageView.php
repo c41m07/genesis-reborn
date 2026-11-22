@@ -2,7 +2,7 @@
 
 namespace App\Service\Boost;
 
-use App\Entity\{Fleet, Planet, PlayerUniverse};
+use App\Entity\{Planet, PlayerUniverse};
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Player\VacationCalendar;
@@ -54,7 +54,7 @@ final class InventoryPageView
                 'available_colonies' => $this->repo->all(Planet::class, ['owner' => $membership], ['id' => 'ASC']),
             ];
         }
-        $data += ['duration_reduction_percent' => $this->grants->durationReductionRatio() * 100, 'active_queues' => [], 'active_fleets' => []];
+        $data += ['duration_reduction_percent' => $this->grants->durationReductionRatio() * 100, 'active_queues' => []];
         if ($counts['boosts'] > 0 && !$data['vacation']) {
             $definitions = array_merge($this->catalog->all('buildings'), $this->catalog->all('technologies'), $this->catalog->all('ships'), $this->catalog->all('defenses'));
             // Les opérations gardent leur périmètre de tout l’empire, quelle que soit la colonie active.
@@ -64,7 +64,6 @@ final class InventoryPageView
                     $data['active_queues'][] = ['item' => $item, 'label' => $definition ? $this->catalog->withTier($definition, $item->tier)['label'] : $item->itemSlug];
                 }
             }
-            $data['active_fleets'] = array_values(array_filter($this->repo->activeFleetsForBoost($membership), fn (Fleet $fleet): bool => $fleet->arrivalAt > $this->clock->now()));
         }
         return $data;
     }

@@ -102,6 +102,22 @@ body.authenticated .social-workspace .message-thread {
     height: min(45vh,480px);
 }
 
+body.authenticated .messaging-workspace .message-composer {
+    margin-top: auto;
+}
+
+@media (min-width: 1051px) {
+    /* Une boîte de réception longue défile sans étirer la conversation ni repousser la saisie. */
+    body.authenticated .messaging-workspace .inbox-sidebar {
+        contain: size;
+        overflow-y: auto;
+    }
+
+    body.authenticated .messaging-workspace .message-thread {
+        flex: 1 1 auto;
+    }
+}
+
 body.authenticated .social-workspace .message-compose {
     position: static;
     margin: 0 12px;

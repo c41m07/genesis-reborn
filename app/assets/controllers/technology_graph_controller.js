@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { technologyGuideGoal, technologyGuideRecommendationText } from '../technology_guide.js';
 
 export default class extends Controller {
     static values = { storageKey: String };
@@ -182,10 +183,12 @@ export default class extends Controller {
         const nextBox = document.createElement('div');
         nextBox.className = 'technology-next';
         this.appendText(nextBox, 'h3', 'Prochaine étape conseillée');
-        const next = this.nextStep(this.selected);
-        this.appendText(nextBox, 'p', node.dataset.acquired === 'true' ? 'Objectif atteint : accès acquis définitivement.' : next?.text || 'Prérequis atteints : consulter la fiche pour construire ou rechercher cet élément.');
-        if (next && this.byKey.has(next.key)) {
-            const link = this.byKey.get(next.key).querySelector('.tech-node-open').cloneNode(true);
+        const recommendation = technologyGuideGoal(node).recommendation;
+        const step = recommendation.state === 'step' ? recommendation.requirement : null;
+        this.appendText(nextBox, 'p', technologyGuideRecommendationText(recommendation));
+        const stepNode = step ? this.byKey.get(this.requirementKey(step)) : null;
+        if (stepNode) {
+            const link = stepNode.querySelector('.tech-node-open').cloneNode(true);
             link.textContent = 'Ouvrir la fiche de cette étape →';
             nextBox.append(link);
         }
@@ -234,23 +237,6 @@ export default class extends Controller {
         return `${requirement.group}:${requirement.slug}-${requirement.tier}`;
     }
 
-    nextStep(key, seen = new Set()) {
-        if (seen.has(key)) return null;
-        seen.add(key);
-        const node = this.byKey.get(key);
-        if (!node || node.dataset.acquired === 'true') return null;
-        for (const requirement of this.requirements.get(key) || []) {
-            if (requirement.met) continue;
-            const parentKey = this.requirementKey(requirement), parent = this.byKey.get(parentKey);
-            if (parent && parent.dataset.acquired !== 'true' && !parent.classList.contains('available')) {
-                const earlier = this.nextStep(parentKey, seen);
-                if (earlier) return earlier;
-            }
-            return { key: parentKey, text: requirement.label + (requirement.level !== null ? ` → niveau ${requirement.level} (actuel : ${requirement.current})` : ' → débloquer l’accès') };
-        }
-        return null;
-    }
-
     appendText(parent, tag, text, className = '') {
         const element = document.createElement(tag);
         element.textContent = text;
@@ -270,14 +256,20 @@ export default class extends Controller {
             if (this.goalKey) localStorage.setItem(this.storageKeyValue, this.goalKey);
             else localStorage.removeItem(this.storageKeyValue);
         } catch { /* Une restriction du navigateur ne bloque pas la consultation. */ }
+        const node = this.byKey.get(this.goalKey);
+        window.dispatchEvent(new CustomEvent('technology-goal:changed', {
+            detail: {
+                storageKey: this.storageKeyValue,
+                goal: technologyGuideGoal(node),
+            },
+        }));
     }
 
     updateGoal() {
-        const node = this.byKey.get(this.goalKey);
-        const next = node ? this.nextStep(this.goalKey) : null;
-        this.goalTarget.textContent = node ? `${node.dataset.label} · ${node.dataset.acquired === 'true' ? 'accès acquis' : next?.text || 'prérequis atteints'}` : 'Aucun objectif sélectionné';
-        this.goalBarTarget.hidden = !node;
-        this.goalButtonTargets.forEach(button => { button.hidden = !node; });
+        const goal = technologyGuideGoal(this.byKey.get(this.goalKey));
+        this.goalTarget.textContent = goal ? `${goal.label} · ${technologyGuideRecommendationText(goal.recommendation)}` : 'Aucun objectif sélectionné';
+        this.goalBarTarget.hidden = !goal;
+        this.goalButtonTargets.forEach(button => { button.hidden = !goal; });
     }
 
     showGoal(event) {

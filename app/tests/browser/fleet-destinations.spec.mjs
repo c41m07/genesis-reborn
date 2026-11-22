@@ -111,7 +111,7 @@ test('Une attaque PNJ peut être envoyée depuis PNJ sans capturer la planète n
   expect(queryIsolatedSql(project, 'SELECT COUNT(*) FROM planet_occupation WHERE planet_id=' + npc.id)).toBe('0');
 });
 
-test('Flottes : colonie active, compteurs et actualisation restent cohérents',async({page})=>{
+test('Flottes : missions de l’empire, préparation locale et actualisation cohérentes',async({page})=>{
   const {own,project,origin}=await prepare(page);
   runIsolatedSql(project,`INSERT INTO fleet(player_universe_id,home_planet_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token) SELECT owner_id,id,'idle','idle',1,'{}',0,0,0,0,'' FROM planet WHERE id=${own.id}`);
   runIsolatedSql(project,`INSERT INTO fleet_ship(fleet_id,slug,tier,quantity) SELECT MAX(id),'probe','basic',2 FROM fleet WHERE home_planet_id=${own.id} AND status='idle'`);
@@ -124,17 +124,28 @@ test('Flottes : colonie active, compteurs et actualisation restent cohérents',a
     await page.goto('/planetes/'+colony);await page.goto('/flottes/preparer');
     await expect(page.locator('form[action="/flottes/envoyer"]')).toHaveCount(1);
     await expect(page.locator('form[action="/flottes/envoyer"] input[name="origin"]')).toHaveValue(String(colony));
-    await expect(page.locator('[data-live-region="mission-summary"] .badge')).toHaveText('1');
+    const summary = page.locator('[data-live-region="mission-summary"]');
+    await expect(summary.locator('.badge')).toHaveText('1');
+    await expect(summary.getByRole('link', { name: 'Exploration · flotte ' + visible })).toBeVisible();
+    await expect(summary.getByRole('link', { name: 'Exploration · flotte ' + hidden })).toHaveCount(0);
     await page.goto('/flottes');
-    await expect(page.locator('[data-active-fleet="'+visible+'"]')).toBeVisible();
-    await expect(page.locator('[data-active-fleet="'+hidden+'"]')).toHaveCount(0);
+    await expect(page.locator('[data-live-region="active-flights"] h2 .badge')).toHaveText('2');
+    for (const fleet of flights) await expect(page.locator('[data-active-fleet="'+fleet+'"]')).toBeVisible();
     await expect(page.getByRole('link',{name:'Missions actives',exact:true})).toBeVisible();
     await expect(page.locator('main').getByRole('link',{name:'Simuler un combat',exact:true})).toHaveCount(0);
     await expect(page.getByRole('navigation',{name:'Navigation des flottes'}).getByRole('link',{name:'Mes compositions',exact:true})).toBeVisible();
     const polling=await page.waitForResponse(response=>response.url().includes('/flottes/surveillance')&&new URL(response.url()).searchParams.get('colony')===String(colony));
     expect(polling.status()).toBe(200);
+    const refresh = page.waitForResponse(response =>
+      new URL(response.url()).pathname === '/flottes' && response.request().headers()['x-genesis-live'] === '1');
     await page.evaluate(()=>window.dispatchEvent(new CustomEvent('genesis:refresh')));
-    await expect(page.locator('[data-active-fleet="'+hidden+'"]')).toHaveCount(0);
+    const live = await refresh;
+    expect(live.status()).toBe(200);
+    const { regions } = await live.json();
+    for (const fleet of flights) {
+      expect(regions['active-flights']).toContain('data-active-fleet="'+fleet+'"');
+      await expect(page.locator('[data-active-fleet="'+fleet+'"]')).toBeVisible();
+    }
   }
 });
 

@@ -105,7 +105,7 @@ test('L8 A : règles complètes, calendriers et reprise d’empire', async ({ pa
   await expect(omega.locator('.universe-rules dt')).toHaveCount(9);
   await expect(turbo.locator('.universe-rules dt')).toHaveCount(9);
   await expect(omega.locator('.universe-rules dd')).toHaveText(['× 1', '× 1', '× 1', '× 1', '× 1', '31', '1 000 000', 'Activées', 'Autorisée']);
-  await expect(turbo.locator('.universe-rules dd')).toHaveText(['× 100', '× 100', '× 100', '× 1', '× 100', '31', '1 000 000', 'Désactivées', 'Autorisée']);
+  await expect(turbo.locator('.universe-rules dd')).toHaveText(['× 100', '× 100', '× 100', '× 1', '× 100', '31', '1 000 000', 'Activées', 'Autorisée']);
 
   runIsolatedSql(project, `UPDATE universe SET name='Omega — Exploration et développement des colonies périphériques' WHERE id=${omegaId}`);
   for (const theme of ['dark', 'light']) {

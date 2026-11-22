@@ -1,0 +1,58 @@
+{% set step = panel.next %}
+{% set guide = panel.guide %}
+<section class="panel first-steps-popup-panel" data-first-steps-guide-fragment data-first-steps-guide-step="{{ panel.next }}" aria-labelledby="first-steps-popup-title">
+        <header class="first-steps-popup-heading">
+            <div>
+                <p class="first-steps-popup-eyebrow">PREMIERS PAS · {{ panel.count }}/{{ panel.total }}</p>
+                <h2 id="first-steps-popup-title">{{ guide.title }}</h2>
+            </div>
+            <button type="button" hidden class="quiet-button" data-first-steps-guide-target="closeButton" data-action="first-steps-guide#close">Fermer</button>
+        </header>
+        <div class="first-steps-popup-content" role="region" aria-label="Instructions et illustrations" tabindex="0">
+            <div class="first-steps-gallery" aria-label="Gestes dans l’interface">
+                {% for slide in panel.slides %}
+                    {% set visualId = 'first-steps-visual-'~loop.index %}
+                    <figure{% if slide.image is defined %} class="first-steps-figure--visual"{% endif %} hidden data-first-steps-guide-target="slide">
+                        <figcaption><strong>{{ loop.first ? 'Le geste' : 'Le repère' }} :</strong> {{ slide.caption }}</figcaption>
+                        {% if slide.image is defined %}
+                            {% set image = slide.image %}
+                            <button type="button" class="quiet-button first-steps-zoom" aria-expanded="false"
+                                    aria-controls="{{ visualId }}" data-first-steps-zoom
+                                    data-action="first-steps-guide#toggleZoom">Voir en grand</button>
+                            <span id="{{ visualId }}" class="first-steps-gesture-frame" data-first-steps-visual
+                                  style="--guide-fit-width:{{ (image.width * 208 / image.height)|round }}px;--guide-mobile-fit-width:{{ (image.width * 133 / image.height)|round }}px;--guide-native-width:{{ image.width }}px;">
+                                <img alt="{{ image.alt }}" data-src="{{ asset('art/first-steps/'~image.file~'.webp') }}"
+                                     width="{{ image.width }}" height="{{ image.height }}" decoding="async">
+                                {% if image.x is defined %}
+                                    <svg class="first-steps-gesture-arrow" aria-hidden="true" viewBox="0 0 50 34"
+                                         style="--guide-tip-x:{{ image.x }}%;--guide-tip-y:{{ image.y }}%;">
+                                        <path d="M45 4 C36 6 19 12 6 26 M7 17 L5 27 L15 27" class="first-steps-gesture-arrow-outline"/>
+                                        <path d="M45 4 C36 6 19 12 6 26 M7 17 L5 27 L15 27"/>
+                                    </svg>
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    </figure>
+                {% endfor %}
+            </div>
+            <p>{{ guide.explanation }}</p>
+            <p><strong>À faire :</strong> {{ guide.action }}</p>
+            <p><strong>Validation :</strong> {{ panel.validation }}</p>
+        </div>
+        <footer class="first-steps-popup-footer">
+            <div class="first-steps-gallery-controls" hidden data-first-steps-guide-target="controls">
+                <button type="button" class="quiet-button" data-first-steps-guide-target="previous" data-action="first-steps-guide#previousSlide">Précédent</button>
+                <output aria-live="polite" data-first-steps-guide-target="position">1 sur {{ panel.slides|length }}</output>
+                <button type="button" class="quiet-button" data-first-steps-guide-target="next" data-action="first-steps-guide#nextSlide">Suivant</button>
+            </div>
+            {% include 'player/_first_steps_action.html.twig' with {step: step, guide: guide, colony: planet, actionStyle: 'primary'} only %}
+            <div class="first-steps-popup-actions">
+                <a href="{{ path('app_first_steps') }}" data-first-steps-guide-return>Guide complet et remboursements</a>
+                <form method="post" action="{{ path('app_first_steps_preference') }}" data-turbo="false">
+                    <input type="hidden" name="_token" value="{{ csrf_token('first-steps-preference') }}">
+                    <input type="hidden" name="guide_enabled" value="0">
+                    <button type="submit" class="quiet-button">Désactiver le guide</button>
+                </form>
+            </div>
+        </footer>
+    </section>

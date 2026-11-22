@@ -7,6 +7,17 @@ x-app: &app
   environment:
     APP_ENV: prod
     APP_DEBUG: "0"
+    # Compose contrôle ces clés avant le téléchargement de l’image et l’arrêt des services.
+    APP_SECRET: ${APP_SECRET:?Renseigner APP_SECRET dans .env.prod}
+    DATABASE_URL: ${DATABASE_URL:?Renseigner DATABASE_URL dans .env.prod}
+    MESSENGER_TRANSPORT_DSN: ${MESSENGER_TRANSPORT_DSN:?Renseigner MESSENGER_TRANSPORT_DSN dans .env.prod}
+    MAILER_DSN: ${MAILER_DSN:?Renseigner MAILER_DSN dans .env.prod}
+    MAILER_FROM: ${MAILER_FROM:?Renseigner MAILER_FROM dans .env.prod}
+    DEFAULT_URI: ${DEFAULT_URI:?Renseigner DEFAULT_URI dans .env.prod}
+    MERCURE_URL: ${MERCURE_URL:?Renseigner MERCURE_URL dans .env.prod}
+    MERCURE_PUBLIC_URL: ${MERCURE_PUBLIC_URL:?Renseigner MERCURE_PUBLIC_URL dans .env.prod}
+    MERCURE_JWT_SECRET: ${MERCURE_JWT_SECRET:?Renseigner MERCURE_JWT_SECRET dans .env.prod}
+    MERCURE_JWT_ISSUER: ${MERCURE_JWT_ISSUER:?Renseigner MERCURE_JWT_ISSUER dans .env.prod}
   networks: [backend]
   volumes: ["process_runtime:/app/var/run"]
 services:

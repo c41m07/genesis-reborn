@@ -2,7 +2,7 @@
 
 namespace App\Tests\Controller;
 
-use App\Entity\{Planet, PlanetResource, Player, PlayerBoost, Universe};
+use App\Entity\{Fleet, Planet, PlanetResource, Player, PlayerBoost, Universe};
 use App\Service\Boost\InventoryPageView;
 use App\Service\Player\RegistrationService;
 use App\Service\Universe\{UniverseImporter, UniverseService};
@@ -135,6 +135,52 @@ final class InventoryPagesTest extends WebTestCase
         self::assertSame('used',$this->em->find(PlayerBoost::class,$this->boxes[0]->id)->status);
         $this->client->request('POST',$action,$values);self::assertResponseRedirects('/inventaire/boites');
         $this->client->followRedirect();self::assertSelectorTextContains('.flash.success','déjà été traitée');
+    }
+
+    public function testLegacyFleetBoostFormIsRefusedWithoutChangingInventoryOrFleet(): void
+    {
+        $fleet = new Fleet();
+        $fleet->playerUniverse = $this->owner->currentPlayerUniverse;
+        $fleet->homePlanet = $this->home;
+        $fleet->destinationSystem = $this->home->solarSystem;
+        $fleet->status = 'traveling';
+        $fleet->mission = 'explore';
+        $fleet->departureAt = new \DateTimeImmutable('2026-11-16T12:00:00Z');
+        $fleet->arrivalAt = $fleet->departureAt->modify('+1 hour');
+        $fleet->travelSeconds = 3600;
+        $fleet->dispatchToken = bin2hex(random_bytes(16));
+        $historical = $this->item($this->owner, 'used');
+        $this->em->persist($fleet);
+        $this->em->flush();
+        $historical->operationType = 'fleet';
+        $historical->operationId = $fleet->id;
+        $historical->usedAt = $fleet->departureAt;
+        $this->em->flush();
+
+        $connection = $this->em->getConnection();
+        $fleetRow = fn () => $connection->fetchAssociative('SELECT * FROM fleet WHERE id = ?', [$fleet->id]);
+        $inventoryRows = fn () => $connection->fetchAllAssociative('SELECT * FROM player_boost WHERE player_universe_id = ? ORDER BY id', [$fleet->playerUniverse->id]);
+        $beforeFleet = $fleetRow();
+        $beforeInventory = $inventoryRows();
+        $csrf = bin2hex(random_bytes(32));
+        $requestKey = bin2hex(random_bytes(16));
+
+        // Reconstituer un jeton encore valide d’un formulaire chargé avant la mise à jour.
+        $session = static::getContainer()->get('session.factory')->createSession();
+        $session->setId($this->client->getCookieJar()->get($session->getName())->getValue());
+        $session->set('_csrf/boost-fleet-'.$fleet->id, $csrf);
+        $session->save();
+        $url = '/boosts/utiliser/fleet/'.$fleet->id;
+        $this->client->request('POST', $url, ['_token' => 'invalid', 'request_key' => $requestKey]);
+        self::assertResponseStatusCodeSame(403);
+        $this->client->request('POST', $url, ['_token' => $csrf, 'request_key' => $requestKey]);
+        self::assertResponseRedirects('/boosts');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.flash.error', 'Les boosts de l’inventaire ne s’appliquent plus aux missions de flotte.');
+        self::assertSelectorNotExists('form[action^="/boosts/utiliser/fleet/"]');
+        self::assertSame($beforeFleet, $fleetRow());
+        self::assertSame($beforeInventory, $inventoryRows());
+        self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM action_receipt WHERE request_key = ?', [$requestKey]));
     }
 
     public function testAnonymousAccessToEveryDestinationRequiresLogin(): void

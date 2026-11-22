@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+{% block title %}Récompense quotidienne · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="page-heading">
+    <div>
+        <h1>Récompense quotidienne</h1>
+        <p>Un retrait par jour pour votre compte, tous univers confondus. Le jour change à minuit (heure de Paris).</p>
+    </div>
+    {% if planet %}<a class="quiet-button" href="{{ path('app_colony', {id: planet.id}) }}">Retour à la vue générale</a>{% endif %}
+</div>
+<section class="panel account-panel" aria-labelledby="daily-reward-heading">
+    <h2 id="daily-reward-heading" tabindex="-1">Jour {{ status.slot }} sur 7</h2>
+    <p>Univers actif : <strong>{{ universe.name }}</strong>.{% if planet %} Planète destinataire : <strong>{{ planet.name }}</strong> ({{ planet.coordinates() }}).{% endif %}</p>
+    {% if status.claimed %}
+        <p>Votre compte a déjà récupéré son lot du jour. Revenez après minuit (heure de Paris).</p>
+        <a class="quiet-button" href="{{ path('app_daily_reward', planet ? {colony: planet.id} : {}) }}">Actualiser la récompense</a>
+    {% elseif not planet %}
+        <p>Vous devez contrôler une planète dans cet univers pour récupérer le lot.</p>
+    {% else %}
+        <p><strong>{{ status.reward.metal|quantity(0) }} métal</strong> et <strong>{{ status.reward.nano|quantity(0) }} nano</strong>.</p>
+        <p id="daily-reward-rules">Le lot doit tenir en entier dans vos stocks. Si vous manquez un jour, le cycle ne repart pas à zéro.</p>
+        {% include 'player/_daily_reward_claim_form.html.twig' with {
+            planet: planet,
+            status: status,
+            tokenId: tokenId,
+            submitLabel: 'Récupérer',
+            rulesId: 'daily-reward-rules'
+        } only %}
+    {% endif %}
+</section>
+{% endblock %}

@@ -61,6 +61,58 @@ contrat d’accueil, droit de combat, coût, trajet ou état de flotte n’est m
 Les attributs et le format d’actualisation existants restent compatibles avec
 les pages déjà ouvertes. Aucune dépendance, migration ou livraison Alpha.
 
+## Récapitulatif du transport entrant — 20 novembre 2026
+
+« Consulter le récapitulatif du transport » ouvre le rapport économique existant,
+dans sa page dédiée. Le panneau, sur ordinateur comme sur mobile, ne duplique
+pas le bilan. Un seul chargement groupé récupère les identifiants des rapports
+pour les arrivées de transport visibles dont le joueur est le destinataire
+enregistré au départ. Un changement de propriétaire de la colonie ne transfère
+pas ce droit. Aucun lien n’est présenté si le rapport historique est absent ;
+aucun rapport n’est reconstitué. La route conserve sa vérification des participants.
+
+| Mission non hostile | Action du destinataire | Composition / fret |
+|---|---|---|
+| Transport | Rapport économique depuis l’arrivée visible, réservé aux participants enregistrés du même univers | Composition détaillée et carburant privés ; fret expédié, livré ou retourné dans le rapport économique, pas dans le panneau |
+| Défense / renfort | Résumé de l’arrivée vers sa colonie, sans nouveau lien | Composition détaillée et fret privés |
+| Mise en orbite | Résumé et demande d’orbite selon l’autorisation existante | Composition détaillée et fret privés |
+| Stationnement | Missions entre colonies du même commandant | Détails pour le propriétaire, pas de destinataire tiers |
+| Exploration / colonisation | Pas de destinataire joueur d’une colonie occupée | Pas de partage tiers de composition ni de fret |
+
+L’espionnage demeure privé pendant le trajet, même entre alliés ; la détection
+des attaques et des conquêtes conserve ses règles. La carte, les détails privés,
+les relations, les autorisations d’envoi et le calcul du transport ne changent pas.
+
+## Composition et fret des flottes entrantes
+
+Complexité **4/5** : réutilisation du popover des vols personnels sans
+réutiliser leurs données privées. Un volet de consultation local garde le
+lien vers le rapport de transport, sans ajouter une nouvelle page. Les règles
+ci-dessous remplacent la colonne de visibilité détaillée du tableau précédent.
+
+| Arrivée en cours | Quand le joueur voit les quantités au départ |
+|---|---|
+| Transport | Rapport du destinataire enregistré et réception encore autorisée |
+| Défense | Trace du destinataire au départ, hors renfort d’un occupant |
+| Orbite | Demande actuelle reconnue et liée au destinataire et à la planète |
+| Autres missions, retours ou historiques sans preuve | Aucun détail supplémentaire |
+
+Dans tous les cas : même univers, colonie toujours possédée par le destinataire
+au départ, origine déjà découverte, deux joueurs actifs et non ennemis. Le
+fret utilisé est le fret déclaré au départ ; il ne compte jamais l’hydrogène
+réservé au vol, mais affiche l’hydrogène réellement expédié. La défense et
+l’orbite n’acceptent pas de fret et l’indiquent dans la fiche. Ni la trace
+d’administration ni le supplément ne sont exportés dans les données de carte.
+Une actualisation retirant ce droit retire aussi la fiche ouverte.
+
+Recette locale : 57 tests PHP (438 assertions, un avis de dépréciation) et
+quatre parcours Chromium réussis sur bases jetables. Le détail a été exercé
+au survol, au clavier (dont Échap) et au toucher à 390 px, avec retrait de la
+fiche et report du focus sur le lien de colonie à l’actualisation. Le rapport
+reste accessible ; l’absence de détail hors périmètre est vérifiée sur HTML
+initial, fragment actualisé et données de carte. Compose, assets, PHP/Twig,
+conteneur Symfony, JavaScript et diff validés. Aucun déploiement.
+
 ## Vérifications de l’extension initiale
 
 - 32 tests PHP ciblés / 1 113 assertions réussis : arrivées neutres et alliées,

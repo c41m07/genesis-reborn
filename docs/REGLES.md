@@ -99,6 +99,9 @@ dans le rang demandé. Pour les rangs avancés, le même bâtiment doit
 atteindre le niveau 20 (chantier) ou 8 (bunker) dans chaque rang précédent.
 Le Piège à antimatière exige le producteur d’hydrogène 5 sur la colonie et
 la recherche industrielle 5 dans l’univers, tous deux du rang demandé.
+Pour l’Intermédiaire, le producteur d’antimatière Basique doit aussi atteindre
+le niveau 25. Pour le Supérieur, ses rangs Basique et Intermédiaire doivent
+atteindre les niveaux 50 et 25, respectivement.
 Le laboratoire niveau 1 du même rang sert au déblocage initial de cette recherche.
 Les accès déjà acquis restent conservés ; cette révision ne change pas la version
 du registre et ne nécessite aucune nouvelle requalification. Coûts, durées,
@@ -299,6 +302,8 @@ Le nombre maximum de vaisseaux par flotte est fixé par défaut à **1 000 000**
 ### Capacité d’inventaire — 5 novembre 2026
 
 L’inventaire peut contenir **100 objets disponibles** par joueur et par univers, boosts et boîtes de ressources confondus. Les récompenses supplémentaires restent en attente et rejoignent l’inventaire de la plus ancienne à la plus récente lorsqu’une place se libère. Cette capacité remplace la limite précédente de 3 emplacements.
+
+**Boosts d’inventaire** : seules les commandes actives de la file de construction, de recherche ou de production (vaisseaux et défenses inclus) peuvent être accélérées. Les missions de flotte restent éligibles aux récompenses prévues mais pas à l’utilisation d’un boost. Une accélération de flotte déjà enregistrée n’est ni annulée, ni recalculée, ni remboursée.
 
 #### Boîtes de ressources — décisions du 8 novembre, réalisation du 9 novembre 2026
 
@@ -585,10 +590,12 @@ non consultés des absences antérieures. Une actualisation automatique ne const
 ni une nouvelle ouverture ni une consultation. Les notifications instantanées
 restent distinctes du journal d’absence.
 
-Le bouton « Marquer ces événements comme consultés » porte uniquement sur les
-événements affichés, au plus 50 par affichage. Les suivants deviennent accessibles
-après consultation, sans suppression d’historique ; les arrivées ultérieures ne
-sont jamais marquées par une ancienne sélection. L’état est conservé côté serveur
+Le journal affiche au plus cinq événements. Quand le premier est visible dans
+l’onglet actif, toute la sélection de la visite est marquée comme consultée, y
+compris les événements non affichés. Sans JavaScript, le bouton « Marquer le
+journal comme consulté » réalise la même action. Les lignes affichées restent
+lisibles pendant la visite avec JavaScript. Aucun historique n’est supprimé et
+les arrivées ultérieures restent en attente. L’état est conservé côté serveur
 par participation à l’univers et protégé contre les accès tiers et formulaires expirés.
 
 ### Destinations et suggestions des flottes — lot D

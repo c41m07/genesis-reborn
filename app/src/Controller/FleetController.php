@@ -53,11 +53,9 @@ final class FleetController extends AbstractController
             $this->addFlash('error', 'Les disponibilités ou la composition ont changé. Vérifiez les quantités avant de charger.');
             return $this->redirectToRoute('app_fleet_composition_load', $data['composition_review']);
         }
-        if ($data['fleet_planet']) {
-            $request->getSession()->set('selected_planet_'.$member->id, $data['fleet_planet']->id);
-        }
+        $data['tutorial_spy'] = $page === 'prepare' && $parameters['mission'] === 'spy' && $request->query->getBoolean('tutorial');
         if ($request->headers->get('X-Genesis-Live') === '1' && $request->getPreferredFormat() === 'json') {
-            $data['chrome'] = $shell->get($this->getUser());
+            $data['chrome'] = $shell->get($this->getUser(), $data['fleet_planet'], rememberSelection: false);
             $data['section'] = 'overview';
             $data['preferences'] = array_replace(PreferencesService::DEFAULTS, $this->getUser()->preferences);
             $templates = [
@@ -77,6 +75,9 @@ final class FleetController extends AbstractController
                 $regions[$name] = $this->renderView($template, $data);
             }
             return $liveResponses->create($request, $regions);
+        }
+        if ($data['fleet_planet']) {
+            $request->getSession()->set('selected_planet_'.$member->id, $data['fleet_planet']->id);
         }
         return $this->render('fleet/index.html.twig', $data, new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
@@ -294,12 +295,16 @@ final class FleetController extends AbstractController
                 $request->request->all('cargo'),
                 (string) $request->request->get('request_key'),
                 $orbitHours,
-                $request->request->getBoolean('require_exact_composition')
+                $request->request->getBoolean('require_exact_composition'),
+                tutorialSpy: $mission === 'spy' && $request->request->getBoolean('tutorial_spy'),
             );
             $this->addFlash('success', 'Flotte envoyée. Carburant aller-retour réservé.' . ($adjusted ? ' Quantités ajustées aux stocks et capacités disponibles.' : ''));
         } catch (\DomainException $e) {
             $this->addFlash('error', $e->getMessage());
         }
-        return $this->redirectToRoute(isset($adjusted) ? 'app_fleets' : 'app_fleet_prepare', isset($adjusted) ? [] : ['mission' => $request->request->getString('mission', 'explore')]);
+        return $this->redirectToRoute(isset($adjusted) ? 'app_fleets' : 'app_fleet_prepare', isset($adjusted) ? [] : array_filter([
+            'mission' => $request->request->getString('mission', 'explore'),
+            'tutorial' => $request->request->getBoolean('tutorial_spy') ? 1 : null,
+        ]));
     }
 }

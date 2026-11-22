@@ -2,10 +2,11 @@
 
 namespace App\Repository;
 
-use App\Entity\{Player, PlayerUniverse, Universe, Galaxy, SolarSystem, Planet, PlanetResource, PlanetBuilding, PlayerTechnology, Fleet, FleetShip, PlayerDiscovery, QueueItem, OutboxMessage, CombatLog, CombatParticipant, PlayerBoost, BoostEvent, BoostEventContribution, GameEvent, Guild, GuildProject, GuildProjectDefinition, GuildProjectContribution};
-use Doctrine\DBAL\{ArrayParameterType, Query\QueryBuilder};
+use App\Entity\{Player, PlayerUniverse, Universe, Galaxy, SolarSystem, Planet, PlanetResource, PlanetBuilding, PlayerTechnology, Fleet, FleetShip, PlayerDiscovery, QueueItem, OutboxMessage, PirateAttackCampaign, PirateReconnaissance, CombatLog, CombatParticipant, PlayerBoost, BoostEvent, BoostEventContribution, GameEvent, Guild, GuildProject, GuildProjectDefinition, GuildProjectContribution};
+use Doctrine\DBAL\{ArrayParameterType, LockMode, Query\QueryBuilder};
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 
 final class GameRepository
@@ -154,17 +155,21 @@ final class GameRepository
         return false;
     }
 
-    /** @return array{fleets:list<Fleet>,count:int,page:int,pages:int} Missions de la colonie, bornées avant enrichissement. */
-    public function fleetMissionPage(PlayerUniverse $owner, ?Planet $colony, int $page, int $limit = 30, int $focusId = 0): array
+    /** @return array{fleets:list<Fleet>,count:int,page:int,pages:int} Missions personnelles, bornées avant enrichissement. */
+    public function fleetMissionPage(PlayerUniverse $owner, ?Planet $colony, int $page, int $limit = 30, int $focusId = 0, bool $allColonies = false): array
     {
-        if (!$colony) {
+        // Une colonie manquante n’élargit jamais le résumé local à l’empire.
+        if (!$allColonies && !$colony) {
             return ['fleets' => [], 'count' => 0, 'page' => 1, 'pages' => 1];
         }
         $limit = max(1, min(30, $limit));
         $query = $this->em->createQueryBuilder()->select('fleet')->from(Fleet::class, 'fleet')
-            ->where('fleet.playerUniverse = :owner')->andWhere('fleet.homePlanet = :colony')
-            ->andWhere('fleet.status IN (:states)')->setParameter('owner', $owner)->setParameter('colony', $colony)
+            ->where('fleet.playerUniverse = :owner')
+            ->andWhere('fleet.status IN (:states)')->setParameter('owner', $owner)
             ->setParameter('states', ['traveling', 'returning', 'attacking', 'defending', 'orbiting', 'orbit_pending', 'occupying']);
+        if (!$allColonies) {
+            $query->andWhere('fleet.homePlanet = :colony')->setParameter('colony', $colony);
+        }
         $count = (int) (clone $query)->select('COUNT(fleet.id)')->getQuery()->getSingleScalarResult();
         $pages = max(1, (int) ceil($count / $limit));
         if ($focusId > 0) {
@@ -246,6 +251,18 @@ final class GameRepository
             ->andWhere('a.archivedAt IS NULL AND b.archivedAt IS NULL')->setParameter('guild', $guild)
             ->setParameter('universe', $guild->universe)->groupBy('relation.status')->getQuery()->getArrayResult();
         return array_map('intval', array_column($rows, 'total', 'status'));
+    }
+
+    /** @return list<array{id: int, name: string}> */
+    public function recruitingGuildDirectory(PlayerUniverse $viewer): array
+    {
+        // Dans le modèle actuel, le recrutement est ouvert aux guildes actives
+        // du même univers. La découverte ne charge ni dirigeants ni membres.
+        return $this->em->createQueryBuilder()->select('guild.id AS id', 'guild.name AS name')
+            ->from(\App\Entity\Guild::class, 'guild')
+            ->where('guild.universe = :universe')->andWhere('guild.archivedAt IS NULL')
+            ->setParameter('universe', $viewer->universe)->orderBy('guild.id', 'ASC')
+            ->setMaxResults(6)->getQuery()->getArrayResult();
     }
 
     /** @return list<\App\Entity\Guild> Recherche bornée avant chargement des équipages. */
@@ -575,6 +592,81 @@ final class GameRepository
         return $query->orderBy('r.createdAt', 'DESC')->addOrderBy('r.id', 'DESC')->setFirstResult((max(1, $page) - 1) * 50)->setMaxResults(50)->getQuery()->getResult();
     }
 
+    /**
+     * @param list<int> $fleetIds
+     * @return array<int, int> Identifiant du rapport par flotte entrante.
+     */
+    public function incomingTransportReportIds(PlayerUniverse $recipient, array $fleetIds): array
+    {
+        if ($fleetIds === []) {
+            return [];
+        }
+
+        // Le propriétaire actuel de la colonie peut voir l'arrivée sans être le
+        // destinataire enregistré du fret. Ne charger ni le contenu ni les autres rapports.
+        $rows = $this->em->createQueryBuilder()
+            ->select('IDENTITY(report.fleet) AS fleetId', 'report.id AS reportId')
+            ->from(\App\Entity\TransportReport::class, 'report')
+            ->join('report.sender', 'sender')
+            ->where('IDENTITY(report.fleet) IN (:fleets)')
+            ->andWhere('report.recipient = :recipient')
+            ->andWhere('sender.universe = :universe')
+            ->setParameter('fleets', $fleetIds)
+            ->setParameter('recipient', $recipient)
+            ->setParameter('universe', $recipient->universe)
+            ->getQuery()->getArrayResult();
+
+        $ids = [];
+        foreach ($rows as $row) {
+            $ids[(int) $row['fleetId']] = (int) $row['reportId'];
+        }
+        return $ids;
+    }
+
+    /**
+     * @param list<int> $fleetIds
+     * @return array<int, array{ships:array, freight:array}> Seules les quantités au départ.
+     */
+    public function incomingFleetDepartureDetails(PlayerUniverse $recipient, array $fleetIds): array
+    {
+        if ($fleetIds === []) {
+            return [];
+        }
+
+        // Relire l’hôte actuel et l’identité au départ dans la même requête. La
+        // trace complète (carburant, coordonnées, etc.) ne quitte pas la base.
+        $rows = $this->em->getConnection()->fetchAllAssociative(
+            <<<'SQL'
+                SELECT f.id, JSON_EXTRACT(trace.snapshot, '$.ships') AS ships,
+                       JSON_EXTRACT(trace.snapshot, '$.freight') AS freight
+                FROM fleet_mission_trace trace
+                JOIN fleet f ON f.id = trace.fleet_id AND f.player_universe_id = trace.sender_id
+                JOIN planet target ON target.id = f.destination_id AND target.owner_id = trace.recipient_id
+                WHERE f.id IN (:fleets)
+                  AND trace.universe_id = :universe AND trace.recipient_id = :recipient
+                  AND trace.target_was_player = 1 AND trace.mission = f.mission
+                  AND f.status = 'traveling' AND f.mission IN ('transport', 'defend', 'orbit')
+                  AND (f.mission <> 'transport' OR EXISTS (
+                      SELECT 1 FROM transport_report r
+                      WHERE r.fleet_id = f.id AND r.sender_id = f.player_universe_id
+                        AND r.recipient_id = trace.recipient_id AND r.status = 'traveling'
+                  ))
+                SQL,
+            ['fleets' => $fleetIds, 'universe' => $recipient->universe->id, 'recipient' => $recipient->id],
+            ['fleets' => ArrayParameterType::INTEGER],
+        );
+
+        $details = [];
+        foreach ($rows as $row) {
+            $ships = json_decode((string) $row['ships'], true);
+            $freight = json_decode((string) $row['freight'], true);
+            if (is_array($ships) && array_is_list($ships) && is_array($freight)) {
+                $details[(int) $row['id']] = ['ships' => $ships, 'freight' => $freight];
+            }
+        }
+        return $details;
+    }
+
     public function espionageReportsFor(PlayerUniverse $membership, int $limit = 50): array
     {
         return $this->em->createQueryBuilder()->select('r')->from(\App\Entity\EspionageReport::class, 'r')->where('r.sender = :membership')->setParameter('membership', $membership)->orderBy('r.createdAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();
@@ -583,6 +675,15 @@ final class GameRepository
     public function combatLogsFor(PlayerUniverse $membership, int $limit = 50): array
     {
         return $this->em->createQueryBuilder()->select('DISTINCT l')->from(CombatLog::class, 'l')->join('l.combatEvent', 'e')->join('e.planet', 'p')->leftJoin(CombatParticipant::class, 'cp', 'WITH', 'cp.combatEvent = e')->where('cp.playerUniverse = :membership')->orWhere('p.owner = :membership')->setParameter('membership', $membership)->orderBy('l.resolvedAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();
+    }
+
+    /** @return list<PlanetResource> Lecture courante pour un dépôt sous verrou de planète. */
+    public function lockedPlanetResources(Planet $planet): array
+    {
+        return $this->em->createQueryBuilder()->select('resource')->from(PlanetResource::class, 'resource')
+            ->where('resource.planet = :planet')->setParameter('planet', $planet)->orderBy('resource.id', 'ASC')
+            ->getQuery()->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)
+            ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)->getResult();
     }
 
     public function planets(Universe $u, ?PlayerUniverse $owner = null, bool $freeOnly = false): array
@@ -723,6 +824,40 @@ final class GameRepository
             $counts[(int) $row['planetId']] = (int) $row['total'];
         }
         return $counts;
+    }
+
+    /**
+     * Colonnes d’affichage seulement, dans les limites des files validées à l’ajout.
+     * @param list<Planet> $planets
+     * @return list<array{id: int, originId: int, ownerId: ?int, kind: string, slug: string, tier: string, level: ?int, quantity: int, duration: int, started: ?\DateTimeImmutable}>
+     */
+    public function comparisonQueueRows(PlayerUniverse $membership, array $planets): array
+    {
+        if ($planets === []) {
+            return [];
+        }
+
+        // Les queues locales d’une colonie perdue ne sont pas accessibles.
+        // Une recherche commune reste propre à l’empire, mais sa provenance n’est plus affichable.
+        return $this->em->createQueryBuilder()
+            ->select('q.id AS id', 'IDENTITY(q.planet) AS originId', 'IDENTITY(p.owner) AS ownerId')
+            ->addSelect('q.queueType AS kind', 'q.itemSlug AS slug', 'q.tier AS tier', 'q.itemLevel AS level')
+            ->addSelect('q.quantity AS quantity', 'q.durationSeconds AS duration', 'q.startedAt AS started')
+            ->from(QueueItem::class, 'q')
+            ->join('q.planet', 'p')
+            ->join('p.solarSystem', 's')
+            ->join('s.galaxy', 'g')
+            ->where('q.playerUniverse = :membership')
+            ->andWhere('g.universe = :universe')
+            ->andWhere('(q.queueType = :research OR (q.queueType IN (:local) AND p.owner = :membership AND p IN (:planets)))')
+            ->setParameter('membership', $membership)
+            ->setParameter('universe', $membership->universe)
+            ->setParameter('research', 'research')
+            ->setParameter('local', ['building', 'shipyard'])
+            ->setParameter('planets', $planets)
+            ->orderBy('q.id', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
     }
 
     /** @return list<QueueItem> */
@@ -868,6 +1003,75 @@ final class GameRepository
         return $this->all(BoostEventContribution::class, ['event' => $event], ['id' => 'ASC']);
     }
 
+    /** Lecture restreinte avec contrôle du propriétaire courant, même si l'appelant possède une ancienne participation en mémoire. */
+    public function ownPirateReconnaissance(PlayerUniverse $membership, string $missionKey, \DateTimeImmutable $now): ?PirateReconnaissance
+    {
+        return $this->em->createQueryBuilder()
+            ->select('mission')->from(PirateReconnaissance::class, 'mission')
+            ->join('mission.membership', 'participation')->join('participation.universe', 'universe')
+            ->where('participation.id = :membership')
+            ->andWhere('mission.missionKey = :missionKey')
+            ->andWhere('mission.owner = :owner AND participation.player = :owner AND participation.forgottenAt IS NULL')
+            ->andWhere('universe.id = :universe AND universe.status = :active')
+            ->andWhere('universe.startsAt IS NULL OR universe.startsAt <= :now')
+            ->andWhere('universe.endsAt IS NULL OR universe.endsAt > :now')
+            ->setParameter('membership', $membership->id)
+            ->setParameter('missionKey', $missionKey)
+            ->setParameter('owner', $membership->player)
+            ->setParameter('universe', $membership->universe->id)
+            ->setParameter('active', 'active')
+            ->setParameter('now', $now, Types::DATETIME_IMMUTABLE)
+            ->getQuery()
+            ->setHint(Query::HINT_REFRESH, true)
+            ->getOneOrNullResult();
+    }
+
+    /** Relire sous verrou uniquement la mission rattachée à la participation déjà verrouillée. */
+    public function lockPirateReconnaissance(int $id, PlayerUniverse $membership): ?PirateReconnaissance
+    {
+        return $this->em->createQueryBuilder()
+            ->select('recon')->from(PirateReconnaissance::class, 'recon')
+            ->where('recon.id = :id AND recon.membership = :membership')
+            ->setParameter('id', $id)
+            ->setParameter('membership', $membership)
+            ->getQuery()
+            ->setLockMode(LockMode::PESSIMISTIC_WRITE)
+            ->setHint(Query::HINT_REFRESH, true)
+            ->getOneOrNullResult();
+    }
+
+    /** Traiter seulement l'agrégat encore présent et rattaché à la participation verrouillée. */
+    public function lockPirateAttack(int $id, PlayerUniverse $membership): ?PirateAttackCampaign
+    {
+        return $this->em->createQueryBuilder()
+            ->select('campaign')->from(PirateAttackCampaign::class, 'campaign')
+            ->join('campaign.reconnaissance', 'recon')
+            ->where('campaign.id = :id AND recon.membership = :membership')
+            ->setParameter('id', $id)
+            ->setParameter('membership', $membership)
+            ->getQuery()
+            ->setLockMode(LockMode::PESSIMISTIC_WRITE)
+            ->setHint(Query::HINT_REFRESH, true)
+            ->getOneOrNullResult();
+    }
+
+    /** Portée immutable du droit, relue après verrou de la participation et de son univers. */
+    public function lockPirateConvoy(int $id, PlayerUniverse $membership): ?\App\Entity\PirateConvoyDelivery
+    {
+        return $this->em->createQueryBuilder()
+            ->select('delivery')->from(\App\Entity\PirateConvoyDelivery::class, 'delivery')
+            ->where('delivery.id = :id AND delivery.membershipId = :membership')
+            ->andWhere('delivery.ownerId = :owner AND delivery.universeId = :universe')
+            ->setParameter('id', $id)
+            ->setParameter('membership', $membership->id)
+            ->setParameter('owner', $membership->player?->id)
+            ->setParameter('universe', $membership->universe->id)
+            ->getQuery()
+            ->setLockMode(LockMode::PESSIMISTIC_WRITE)
+            ->setHint(Query::HINT_REFRESH, true)
+            ->getOneOrNullResult();
+    }
+
     public function outbox(bool $notifications): array
     {
         return $this->em->createQueryBuilder()->select('o')->from(OutboxMessage::class, 'o')->where($notifications ? 'o.kind = :kind' : 'o.kind IN (:kind)')->setParameter('kind', $notifications ? 'notification' : [
@@ -878,6 +1082,10 @@ final class GameRepository
             'occupation',
             'guild_project',
             'reconstruction',
+            \App\Message\PirateReconnaissanceDue::KIND,
+            \App\Message\PirateAttackDue::KIND,
+            \App\Message\PirateConvoyDue::KIND,
+            \App\Message\PirateSurvivorsDue::KIND,
         ])->orderBy('o.id', 'ASC')->setMaxResults(100)->getQuery()->getResult();
     }
 
@@ -889,16 +1097,6 @@ final class GameRepository
     public function activeQueueItemsFor(PlayerUniverse $membership): array
     {
         return $this->em->createQueryBuilder()->select('q')->from(QueueItem::class, 'q')->where('q.playerUniverse = :membership')->andWhere('q.startedAt IS NOT NULL')->setParameter('membership', $membership)->orderBy('q.startedAt', 'ASC')->getQuery()->getResult();
-    }
-
-    public function activeFleetsForBoost(PlayerUniverse $membership): array
-    {
-        return $this->em->createQueryBuilder()->select('f')->from(Fleet::class, 'f')->where('f.playerUniverse = :membership')->andWhere('f.status IN (:statuses)')->andWhere('f.arrivalAt IS NOT NULL')->setParameter('membership', $membership)->setParameter('statuses', [
-            'traveling',
-            'returning',
-            'defending',
-            'orbiting',
-        ])->orderBy('f.arrivalAt', 'ASC')->getQuery()->getResult();
     }
 
     public function boostsFor(PlayerUniverse $membership): array

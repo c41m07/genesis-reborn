@@ -45,10 +45,14 @@ test('Événements : périodes, portée et contenu visible au joueur', async ({ 
   const { email } = await enter(page);
   await join(page);
   await page.goto('/evenements');
-  await expect(page.locator('.event-card')).toHaveCount(0);
+  const eventList = page.locator('.event-list');
+  await expect(eventList.locator('.event-card')).toHaveCount(0);
+  const campaign = page.getByRole('region', { name: 'Campagne pirate', exact: true });
+  await expect(campaign).toBeVisible();
+  await expect(campaign.getByRole('link', { name: 'Ouvrir le dossier de campagne', exact: true })).toHaveAttribute('href', /^\/evenements\/campagne-pirate(?:\/1)?$/);
   await expect(page.getByRole('heading', { name: 'Événements et bonus', exact: true })).toBeVisible();
-  await expect(page.locator('.event-list')).toContainText('Aucun événement en cours dans cet univers.');
-  await expect(page.locator('.event-list')).toContainText('Aucun événement à venir annoncé.');
+  await expect(eventList).toContainText('Aucun événement en cours dans cet univers.');
+  await expect(eventList).toContainText('Aucun événement à venir annoncé.');
   await expect(page.getByRole('navigation', { name: 'Navigation des événements', exact: true }).getByRole('link', { name: 'Défis et rotations', exact: true })).toHaveAttribute('href', '/evenements/defis');
   const project = process.env.BROWSER_ROUTER;
   const universeId = Number(queryIsolatedSql(project, `SELECT pu.universe_id FROM player_universe pu JOIN player p ON p.id=pu.player_id WHERE p.email=${quote(email)}`));
@@ -68,7 +72,7 @@ test('Événements : périodes, portée et contenu visible au joueur', async ({ 
   }
   await page.reload();
   const rotationCount=Number(queryIsolatedSql(project,`SELECT COUNT(*) FROM boost_event WHERE universe_id=${universeId} AND status IN ('scheduled','active')`));
-  await expect(page.locator('.event-card')).toHaveCount(2);
+  await expect(eventList.locator('.event-card')).toHaveCount(2);
   const drawer = page.locator('.event-drawer');
   const summary = drawer.locator('summary');
   for (const width of [1440, 390]) {
@@ -102,7 +106,7 @@ test('Retour joueur : erreur, saisies conservées, pièce jointe et suivi admin'
   const { email, password } = await enter(page);
   await join(page);
   const sourceUrl = page.url();
-  await page.getByRole('link', { name: 'Envoyer un feedback', exact: true }).click();
+  await page.locator('.topbar').getByRole('link', { name: 'Feedback', exact: true }).click();
   await expect(page.getByLabel('Lien de la page concernée')).toHaveValue(sourceUrl);
   const contextUrl = new URL('/galaxie?system=2', sourceUrl).href;
   await page.getByLabel('Lien de la page concernée').fill(contextUrl);

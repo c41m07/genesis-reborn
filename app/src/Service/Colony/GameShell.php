@@ -7,12 +7,15 @@ use Symfony\Component\HttpFoundation\RequestStack;
 final class GameShell
 {
     public function __construct(private GameRepository $repo,private ResourceService $resources,private ClockInterface $clock,private RequestStack $requests,private \App\Service\Event\EventPanelService $eventPanel,private \App\Service\Player\LeaderboardService $leaderboard,private \App\Service\Player\SocialMessageService $messages,private \App\Service\Catalog\GameCatalog $catalog,private \App\Service\Player\VacationCalendar $vacations,private \App\Service\Player\EmpireActivityService $activity,private \App\Service\Notification\JournalService $journal,private \App\Service\Fleet\FleetVisibility $visibility) {}
-    public function get(?Player $player,?Planet $selected=null):array
+    public function get(?Player $player, ?Planet $selected = null, bool $rememberSelection = true): array
     {
         $m=$player?->currentPlayerUniverse;
         if(!$m || !$m->isPlayerControlled() || $m->player->id!==$player->id || !$m->universe->isAccessible($this->clock->now())) return ['membership'=>null,'planet'=>null,'planets'=>[],'resources'=>[],'notifications'=>[],'events'=>[]];
         $planets=$this->repo->planets($m->universe,$m);$session=$this->requests->getCurrentRequest()?->getSession();
-        if($selected && $selected->owner?->id===$m->id) $session?->set('selected_planet_'.$m->id,$selected->id);
+        // Un fragment peut afficher la planète de son onglet sans remplacer le choix fait ailleurs.
+        if ($rememberSelection && $selected && $selected->owner?->id === $m->id) {
+            $session?->set('selected_planet_'.$m->id, $selected->id);
+        }
         if(!$selected) foreach($planets as $p) if($p->id===$session?->get('selected_planet_'.$m->id)) $selected=$p;
         $selected??=$planets[0]??null;
         $notifications=array_slice($this->repo->all(Notification::class,['recipient'=>$m],['id'=>'DESC']),0,5);
@@ -32,6 +35,6 @@ final class GameShell
         },$config['catalog']['buildings']);
         $guild=$this->repo->one(\App\Entity\GuildMember::class,['playerUniverse'=>$m])?->guild;
         $guild=$guild?->archivedAt===null?$guild:null;
-        return ['guild'=>$guild,'incomingAttacks'=>$this->visibility->incoming($m),'serverNow'=>$this->clock->now()->format(DATE_ATOM),'journal'=>$this->journal->data($m),'vacation'=>$this->vacations->currentPeriod($m),'colonyLimit'=>$colonyLimit,'unreadMessages'=>$this->messages->unreadPrivateCount($m)+$this->messages->unreadGuildCount($m),'protection'=>$protection,'membership'=>$m,'planet'=>$selected,'planets'=>$planets,'resourceConsumerLabels'=>$consumerLabels,'resourceSourceLabels'=>array_map(static fn(array $definition):string=>$definition['label'],$config['catalog']['buildings']+array_filter($config['catalog']['ships'],static fn(array $ship):bool=>isset($ship['economic_unit']))),'resources'=>$selected?$this->resources->snapshot($selected,true):[],'notifications'=>$notifications,'events'=>$this->eventPanel->forPlayer($m)];
+        return ['guild'=>$guild,'incomingAttacks'=>$this->visibility->incoming($m),'serverNow'=>$this->clock->now()->format(DATE_ATOM),'journal'=>['unreadCount'=>$this->journal->unreadCount($m)],'vacation'=>$this->vacations->currentPeriod($m),'colonyLimit'=>$colonyLimit,'unreadMessages'=>$this->messages->unreadPrivateCount($m)+$this->messages->unreadGuildCount($m),'protection'=>$protection,'membership'=>$m,'planet'=>$selected,'planets'=>$planets,'resourceConsumerLabels'=>$consumerLabels,'resourceSourceLabels'=>array_map(static fn(array $definition):string=>$definition['label'],$config['catalog']['buildings']+array_filter($config['catalog']['ships'],static fn(array $ship):bool=>isset($ship['economic_unit']))),'resources'=>$selected?$this->resources->snapshot($selected,true):[],'notifications'=>$notifications,'events'=>$this->eventPanel->forPlayer($m)];
     }
 }

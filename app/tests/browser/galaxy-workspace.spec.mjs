@@ -74,6 +74,8 @@ test('L7C : système et globe conservent clic, rotation, zoom, gestes tactiles e
     const home=data.systems.find(s=>s.planets.some(p=>p.ownedByCurrentPlayer));
     await page.getByRole('searchbox').fill(home.name);
     await page.locator('.gv2-search-results button').filter({hasText:home.name}).first().click();
+    await expect(map).toHaveAttribute('data-view','galaxy');
+    await page.getByRole('button',{name:'Entrer dans le système',exact:true}).click();
     await expect(map).toHaveAttribute('data-view','system');
     const choice=page.locator('.gv2-planet-choice').filter({hasText:home.planets.find(p=>p.ownedByCurrentPlayer).name});
     await choice.click();
@@ -99,6 +101,14 @@ test('L7C : système et globe conservent clic, rotation, zoom, gestes tactiles e
     await page.locator('[data-galaxy-v2-target=systemBack]').click();await expect(map).toHaveAttribute('data-view','galaxy');
     const unknown=data.systems.find(s=>!s.known);await page.getByRole('searchbox').fill(unknown.name);await page.locator('.gv2-search-results button').filter({hasText:unknown.name}).first().click();
     await expect(map).toHaveAttribute('data-view','galaxy');await expect(page.locator('.gv2-system-panel')).toContainText('aucune planète révélée');
-    await expect(page.locator('.gv2-system-panel .gv2-planet-choice')).toHaveCount(0);
+    const panel = page.locator('.gv2-system-panel');
+    await expect(panel.locator('.gv2-planet-choice')).toHaveCount(0);
+    await expect(panel.getByRole('button',{name:'Entrer dans le système',exact:true})).toHaveCount(0);
+    await page.setViewportSize({width:320,height:800});
+    await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+    await expect(panel).toBeVisible();
+    await page.getByRole('button',{name:'Zoomer',exact:true}).tap();
+    await page.getByRole('button',{name:'Dézoomer',exact:true}).tap();
+    await expect(panel).toBeVisible();
     expect(errors).toEqual([]);
 });

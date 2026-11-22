@@ -13,7 +13,8 @@ final class FleetVisibility
     private const STATUSES=['traveling'=>'En vol','returning'=>'Retour','attacking'=>'Combat','defending'=>'Défense','orbiting'=>'En orbite','occupying'=>'Occupation JcE','orbit_pending'=>'Demande d’orbite','station_waiting'=>'Stationnement en attente'];
 
     public function __construct(private GameRepository $repo,private RelationResolver $relations,private AttackDetection $detection,
-        private GameCatalog $catalog,private LeaderboardService $leaderboard,private ClockInterface $clock) {}
+        private GameCatalog $catalog,private LeaderboardService $leaderboard,private ClockInterface $clock,
+        private TransportService $transports, private OrbitPolicy $orbitPolicy, private OrbitRequestState $orbitRequests) {}
 
     public function forMap(PlayerUniverse $viewer,?Galaxy $galaxy): array
     {
@@ -30,7 +31,7 @@ final class FleetVisibility
         return $rows;
     }
 
-    public function incoming(PlayerUniverse $viewer): array
+    public function incoming(PlayerUniverse $viewer, bool $includeDetails = true): array
     {
         if (!$this->canRead($viewer)) return [];
         $known = $this->knownSystems($viewer);
@@ -57,9 +58,122 @@ final class FleetVisibility
         foreach ($this->repo->all(FleetShip::class, ['fleet'=>$visible]) as $ship) {
             $shipsByFleet[$ship->fleet->id][] = $ship;
         }
+        $transportIds = [];
+        foreach ($visible as $fleet) {
+            if ($fleet->mission === 'transport') {
+                $transportIds[] = $fleet->id;
+            }
+        }
+        $reportIds = $this->repo->incomingTransportReportIds($viewer, $transportIds);
+        $detailIds = [];
+        $enemies = [];
+        if ($includeDetails) {
+            foreach ($visible as $fleet) {
+                if ($this->canShareDeparture($viewer, $fleet, $known, $now, isset($reportIds[$fleet->id]), $enemies)) {
+                    $detailIds[] = $fleet->id;
+                }
+            }
+        }
+        $departures = $this->repo->incomingFleetDepartureDetails($viewer, $detailIds);
         $rows = [];
-        foreach ($visible as $fleet) $rows[] = $this->row($viewer, $fleet, $known, $shipsByFleet[$fleet->id] ?? []);
+        foreach ($visible as $fleet) {
+            $row = $this->row($viewer, $fleet, $known, $shipsByFleet[$fleet->id] ?? []);
+            if (isset($reportIds[$fleet->id])) {
+                $row['transportReportId'] = $reportIds[$fleet->id];
+            }
+            if (isset($departures[$fleet->id])) {
+                $detail = $this->departureDetail($viewer, $fleet->mission, $departures[$fleet->id]);
+                if ($detail !== null) {
+                    $row['incomingDetail'] = $detail;
+                }
+            }
+            $rows[] = $row;
+        }
         return $rows;
+    }
+
+    /** @param array<int, bool> $enemies Relation relue une fois par expéditeur. */
+    private function canShareDeparture(
+        PlayerUniverse $viewer,
+        Fleet $fleet,
+        array $known,
+        \DateTimeImmutable $now,
+        bool $hasTransportReport,
+        array &$enemies,
+    ): bool {
+        $sender = $fleet->playerUniverse;
+        if (!in_array($fleet->mission, ['transport', 'defend', 'orbit'], true)
+            || $fleet->status !== 'traveling' || !$fleet->arrivalAt || $fleet->arrivalAt <= $now
+            || !$sender->isPlayerControlled() || $sender->player->lockedAt !== null
+            || $sender->universe->id !== $viewer->universe->id
+            || $fleet->destination?->owner?->id !== $viewer->id
+            || !isset($known[$fleet->homePlanet->solarSystem->id])
+        ) {
+            return false;
+        }
+
+        $enemies[$sender->id] ??= $this->relations->enemy($viewer, $sender);
+        if ($enemies[$sender->id]) {
+            return false;
+        }
+        if ($fleet->mission === 'transport') {
+            return $hasTransportReport && $this->transports->canReceive($sender, $fleet->destination);
+        }
+        if ($fleet->mission === 'defend') {
+            // Un renfort envoyé à un occupant peut viser une colonie dont le
+            // propriétaire n’est pas l’hôte de la mission.
+            return $fleet->orbitDurationSeconds === 0;
+        }
+
+        $request = $this->orbitRequests->read($fleet);
+        return ($request['recipient_id'] ?? null) === $viewer->id
+            && ($request['planet_id'] ?? null) === $fleet->destination->id
+            && in_array($request['status'] ?? null, ['pending', 'accepted_manual', 'accepted_auto'], true)
+            && $this->orbitPolicy->canRequest($sender, $fleet->destination);
+    }
+
+    /**
+     * @param array{ships:array, freight:array} $departure
+     * @return array{ships:list<array{label:string,tier:string,quantity:int}>,resources:array<string,array{label:string,stock:float}>}|null
+     */
+    private function departureDetail(PlayerUniverse $viewer, string $mission, array $departure): ?array
+    {
+        $definitions = $this->catalog->forUniverse($viewer->universe)['catalog']['ships'];
+        $tiers = $this->catalog->tiers();
+        $ships = [];
+        foreach ($departure['ships'] as $ship) {
+            if (!is_array($ship) || !is_string($ship['slug'] ?? null) || !is_string($ship['tier'] ?? null)
+                || !is_int($ship['quantity'] ?? null) || $ship['quantity'] <= 0
+                || !isset($definitions[$ship['slug']]['label'], $tiers[$ship['tier']]['label'])
+            ) {
+                return null;
+            }
+            $key = $ship['slug'].':'.$ship['tier'];
+            $ships[$key] ??= [
+                'label' => $definitions[$ship['slug']]['label'],
+                'tier' => $tiers[$ship['tier']]['label'],
+                'quantity' => 0,
+            ];
+            $ships[$key]['quantity'] += $ship['quantity'];
+        }
+        if ($ships === []) {
+            return null;
+        }
+
+        if ($mission !== 'transport') {
+            // Les ordres de défense et d’orbite n’autorisent pas de fret.
+            return ['ships' => array_values($ships), 'resources' => []];
+        }
+        $freight = [];
+        foreach ($this->catalog->rules()['resources'] as $slug => $label) {
+            // Le fret au départ ne contient que la charge choisie. Le stock
+            // d’hydrogène brut de la flotte y ajouterait la réserve de carburant.
+            $value = $departure['freight'][$slug] ?? 0;
+            if ((is_float($value) || is_int($value)) && is_finite((float) $value) && $value > 0) {
+                $freight[$slug] = ['label' => $label, 'stock' => (float) $value];
+            }
+        }
+        return ['ships' => array_values($ships), 'resources' => $freight];
     }
 
     private function canRead(PlayerUniverse $viewer): bool

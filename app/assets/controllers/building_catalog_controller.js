@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { syncCatalogEmptyState } from '../catalog_empty_state.js';
 
 // Conserve les choix pendant le remplacement du catalogue par l’actualisation automatique.
 const catalogStates = new Map();
@@ -98,7 +99,7 @@ export default class extends Controller {
             this.restoreHighlight();
             requestAnimationFrame(() => {
                 if (!panel.isConnected) return;
-                const bars = [...document.querySelectorAll('.topbar, .resource-event-stack, .event-drawer-wrap, .catalog-operations-rail')].filter(bar => ['fixed','sticky'].includes(getComputedStyle(bar).position));
+                const bars = [...document.querySelectorAll('.topbar, .resource-event-stack, .catalog-operations-rail')].filter(bar => ['fixed','sticky'].includes(getComputedStyle(bar).position));
                 const top = Math.max(0, ...bars.map(bar => bar.getBoundingClientRect().bottom));
                 const family = panel.closest('[data-slug]');
                 window.scrollTo({ top: window.scrollY + family.getBoundingClientRect().top - top - 16, behavior: 'instant' });
@@ -146,8 +147,7 @@ export default class extends Controller {
                 document.getElementById(tab.hash.slice(1)).hidden = !active;
             });
         });
-        const empty = this.element.querySelector('[data-catalog-empty]');
-        if (empty) empty.hidden = this.familyTargets.some(family => !family.hidden);
+        syncCatalogEmptyState(this.element, this.familyTargets, this.state.category);
         this.state.showLocked = this.showLockedValue;
         catalogStates.set(this.stateKey, this.state);
     }

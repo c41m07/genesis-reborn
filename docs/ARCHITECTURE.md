@@ -394,18 +394,42 @@ ensuite les absences. Cette reprise évite une lecture d’état de suivi périm
 dans une transaction métier ancienne et n’ajoute aucun verrou à ces traitements.
 Les autres catégories restent conservées hors du journal.
 
-À l’ouverture, les notifications suivies deviennent disponibles dans le journal ;
-journalAvailableAt les maintient lors des visites suivantes. L’état consultedAt
-n’est défini qu’au POST protégé par CSRF et participation, après vérification
-des identifiants disponibles du destinataire. UPDATE conditionnel, verrou de
-participation et sélection bornée à 50 rendent les répétitions sans double effet.
-Les événements non affichés ne sont pas consultés. Le témoin mobile repose sur
-cet état serveur et ne valide plus le journal par un stockage local automatique.
+À l’ouverture, les notifications suivies deviennent disponibles. Sous le verrou
+de la participation, journalAvailableAt ordonne strictement les nouveaux lots,
+même pour deux ouvertures dans une seconde. Le ticket signé à durée courte lie
+la borne du lot à la participation et à la planète ; les cinq lignes affichées
+ne constituent pas une liste d’identifiants transmise au serveur. Le POST protégé
+par CSRF revérifie la possession de la planète et la participation active sous
+verrou, puis marque les lignes non consultées jusqu’à cette borne, sans retirer
+l’historique. Le contrôleur Stimulus ne lance l’action qu’à l’apparition de la
+première ligne dans l’onglet actif ; un formulaire natif reste disponible.
+Le contenu acquitté reste lisible sur la page courante. Ni une réponse de
+consultation retardée, ni un signal Mercure ne changent directement le témoin.
+Ils déclenchent ou regroupent l’actualisation privée déjà utilisée par le menu,
+qui seule lit les événements encore non consultés en base.
 
 EmpireDetails ne produit que les données des planètes et flottes du propriétaire
 dans son univers. Les snapshots de stocks restent calculés en lecture seule.
 La migration Version20261112010000 ajoute six colonnes nullables et deux index ;
 elle n’effectue aucune datation ni reprise de notification historique.
+
+## Nouveaux rapports du joueur
+
+L’état de lecture est distinct du journal d’absence et des archives. Un état
+est créé dans la transaction de naissance du rapport, et seulement pour les
+participations qui peuvent le consulter : combat résolu dédupliqué, émetteur
+de l’espionnage, émetteur et destinataire du transport à son départ. Les trois
+références exclusives permettent le même flush et le nettoyage en cascade, sans
+reprise des anciens rapports ni alerte d’envoi externe.
+
+Le compteur privé n’inclut que les rapports encore accessibles à l’empire actif.
+Le chargement et le préchargement des fiches restent en lecture seule. Seule la
+fiche réellement consultée déclenche le POST protégé par CSRF, ou le formulaire
+natif sans JavaScript ; la condition de visibilité est revérifiée dans l’écriture.
+Archiver masque du compteur sans marquer lu ; restaurer retrouve l’état existant.
+Les lignes nouvelles restent identifiables dans les listes accessibles, via une
+lecture groupée de la page. Le témoin a sa propre actualisation
+privée, mise en pause hors onglet visible, sans réutiliser le compteur du Journal.
 
 ## Catalogue des destinations — lot D
 
@@ -969,6 +993,24 @@ contrôleur JavaScript, chargement ou traitement métier n’est ajouté.
 commun : annonces/bonus applicables et occurrences en cours ou programmées.
 Il conserve toutes ses informations, son compteur fermé et ses comptes à rebours ;
 il ne charge aucun historique de défis. Les pages n’ajoutent pas de sondage.
+
+La fiche d’un défi existant réserve le classement aux participations de
+l’univers ayant une contribution positive dans ce défi. Le contrôle et le
+classement paginé sont réalisés côté serveur sur la même lecture ; un score
+égal donne le même rang, sans départage de récompense ni mise à jour.
+Le départ d'un joueur ne retire pas le score historique : sa ligne n'affiche
+plus son pseudo. Les lignes ne contiennent jamais d'identifiant, de courriel
+ni d'état de récompense d’un autre joueur. La réponse est privée et non
+stockable. Le tableau sous la participation conserve l’objectif et les
+actions à leur emplacement ; trois colonnes souples et des liens natifs
+permettent de consulter la même fiche sur mobile et sans JavaScript.
+Complexité 3/5. Recette locale isolée : 33 tests / 215 assertions (fiches,
+permissions, pagination et régressions d’attribution), lints PHP/Twig et
+conteneur, validation Compose et compilation des assets réussis. Chromium
+rejoue la fiche dans les deux thèmes à 1 440, 768, 390 et 320 px,
+avec contrôle des débordements et analyse axe à 390 px ; pagination au
+clavier vérifiée. Aucun test ni modification en production.
+
 L’ancien fragment `#page-section-0` du sommaire des défis est orienté côté navigateur
 vers la nouvelle liste. `#events-current` et `#events-upcoming` restent sur le
 document des annonces ; les nouveaux écrans désactivent le sommaire automatique.
@@ -1180,3 +1222,34 @@ sommaire automatique et ne sont plus repliées par `admin_editors`.
 avec remplacement de l’entrée d’historique ; sans JavaScript, listes et liens
 serveur permettent d’atteindre les mêmes fiches. Aucun changement de schéma,
 dépendance ou chargement global de données de jeu n’est ajouté.
+
+
+## Diagnostic privé des comptes — lot support
+
+`AdminAccountDiagnosticRepository` sélectionne uniquement la dernière échéance
+des liens de confirmation et de réinitialisation du compte consulté (deux
+lectures bornées). `AdminAccountDiagnosticService` compare à une même horloge
+et distingue compte confirmé et lien résiduel. Le panneau de la fiche joueur
+réutilise les droits et la trace de consultation ; il ne réalise aucun envoi
+ni écriture de jeton. Voir [le périmètre et les limites](ADMIN_SUPPORT_COMPTES.md).
+
+`AdminReadRepository::players` applique aussi le critère `verification` avant
+pagination ; `AdminController` n’admet que `confirmed` et `pending`. Les
+fragments et liens GET gardent ce critère, indépendamment de la suspension.
+## Capacités administratives
+
+La politique fermée `AdminCapabilityPolicy` est partagée par le voter Symfony
+et les interventions sous verrou. Les trois actions de `AdminPlayerController` et le POST intervention flotte
+conservent aussi ROLE_ADMIN. Aucun nouveau rôle ou stockage de permission
+n’est activé. Voir [ADMIN_PERMISSIONS.md](ADMIN_PERMISSIONS.md).
+
+La page GET `/admin/permissions` réutilise `AdminCapability::definitions()` :
+sa liste est aussi celle reconnue par la politique. Le contrôleur garde les
+deux contrôles ROLE_ADMIN et PLAYER_VIEW, sans accès à une cible ni écriture.
+La navigation la place dans Exploitation ; aucun accès délégué n'est activé.
+## Focus de la recherche administrative
+
+`admin-list` relève le focus avant remplacement des résultats. S’il était dans
+la zone remplacée, le bilan actualisé reçoit le focus sans scroll forcé ;
+la saisie et les éléments extérieurs ne sont pas déplacés. Les protections
+de génération et erreurs sont conservées. [Recette](ADMIN_ACCESSIBILITE_RECHERCHE.md).

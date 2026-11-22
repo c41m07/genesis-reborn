@@ -10,7 +10,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class AccountDeletionService
 {
-    public function __construct(private GameManager $manager, private GameRepository $repo, private EntityManagerInterface $em, private EmpireConversionService $conversion, private UserPasswordHasherInterface $hasher, private ClockInterface $clock, private \App\Service\Colony\ResourceService $resources) {}
+    public function __construct(private GameManager $manager, private GameRepository $repo, private EntityManagerInterface $em, private EmpireConversionService $conversion, private UserPasswordHasherInterface $hasher, private ClockInterface $clock, private \App\Service\Colony\ResourceService $resources, private PlayerEmailAddressChange $addressChange) {}
 
     public function delete(Player $player,string $password,bool $confirmed): void
     {
@@ -34,11 +34,13 @@ final class AccountDeletionService
             foreach ([EmailVerificationToken::class,PasswordResetToken::class] as $class) {
                 foreach ($this->repo->all($class,['player'=>$player]) as $token) $this->manager->remove($token);
             }
-            $player->email='deleted-'.$player->id.'-'.bin2hex(random_bytes(12)).'@deleted.invalid';
+            $this->addressChange->changeLocked($player,'deleted-'.$player->id.'-'.bin2hex(random_bytes(12)).'@deleted.invalid');
             $player->username='Compte supprimé #'.$player->id;
             $player->password=$this->hasher->hashPassword($player,bin2hex(random_bytes(32)));
             $player->emailVerifiedAt=null;$player->roles=[];$player->preferences=[];
             $player->currentPlayerUniverse=null;$player->lockedAt=$this->clock->now();
+            $player->firstPlanetStarterPending=false;
+            $this->em->getConnection()->delete('daily_reward_claim', ['player_id' => $player->id]);
             $entry=new AdminAuditLog();$entry->actor=$player;$entry->action='player_account_deleted';$entry->targetType='player';
             $entry->targetId=$player->id;$entry->createdAt=$this->clock->now();$entry->details=['empires'=>'forgotten','identity'=>'erased'];
             $this->manager->save($entry);

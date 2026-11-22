@@ -3,7 +3,9 @@ namespace App\Controller;
 
 use App\Entity\{AdminAuditLog, Planet, Player, PlayerActivity, PlayerUniverse};
 use App\Service\Player\PlayerActivityService;
+use App\Security\AdminCapability;
 use App\Service\Admin\AdminInterventionService;
+use App\Service\Admin\AdminAccountDiagnosticService;
 use App\Service\Colony\ResourceService;
 use App\Service\Catalog\GameCatalog;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,7 +19,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class AdminPlayerController extends AbstractController
 {
     #[Route('/admin/joueurs/{id}', name: 'app_admin_player', requirements: ['id'=>'\d+'], methods: ['GET'])]
-    public function show(int $id, EntityManagerInterface $em, PlayerActivityService $activity, ClockInterface $clock, ResourceService $resources, GameCatalog $catalog): Response
+    #[IsGranted(AdminCapability::PLAYER_VIEW)]
+    public function show(int $id, EntityManagerInterface $em, PlayerActivityService $activity, ClockInterface $clock, ResourceService $resources, GameCatalog $catalog, AdminAccountDiagnosticService $diagnostic, \App\Service\Admin\AdminActivationAction $activation): Response
     {
         $player = $em->find(Player::class, $id);
         if (!$player) throw $this->createNotFoundException('Joueur introuvable.');
@@ -31,10 +34,17 @@ final class AdminPlayerController extends AbstractController
         $entry = new AdminAuditLog();
         $entry->actor = $this->getUser();$entry->action = 'admin_player_view';$entry->targetType = 'player';$entry->targetId = $id;$entry->createdAt = $clock->now();
         $em->persist($entry);$em->flush();
-        return $this->render('admin/player.html.twig', ['player'=>$player, 'memberships'=>$memberships, 'stocks'=>$stocks, 'ship_catalog'=>$catalog->all('ships'), 'ship_tiers'=>$catalog->tiers()]);
+        $activationEnabled = $activation->isEnabled();
+        $activationKey = bin2hex(random_bytes(32));
+        if ($activationEnabled && $activation instanceof \App\Service\Admin\AdminActivationContextAction) {
+            $activationKey = $activation->prepareFormKey($this->getUser(), $id);
+            $activationEnabled = $activationKey !== null;
+        }
+        return $this->render('admin/player.html.twig', ['activation_enabled'=>$activationEnabled, 'activation_request_key'=>$activationKey, 'player'=>$player, 'account_diagnostic'=>$diagnostic->snapshot($player), 'memberships'=>$memberships, 'stocks'=>$stocks, 'ship_catalog'=>$catalog->all('ships'), 'ship_tiers'=>$catalog->tiers()]);
     }
 
     #[Route('/admin/joueurs/{id}/colonies/{planetId}/ressources', name: 'app_admin_player_resources', requirements: ['id'=>'\d+', 'planetId'=>'\d+'], methods: ['POST'])]
+    #[IsGranted(AdminCapability::RESOURCES_ADJUST)]
     public function resources(int $id, int $planetId, Request $request, EntityManagerInterface $em, AdminInterventionService $interventions): Response
     {
         if (!$this->isCsrfTokenValid('admin_resources_'.$planetId, $request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
@@ -48,6 +58,7 @@ final class AdminPlayerController extends AbstractController
         return $this->redirectToRoute('app_admin_player', ['id'=>$id, '_fragment'=>'colony-'.$planetId]);
     }
     #[Route('/admin/joueurs/{id}/colonies/{planetId}/vaisseaux', name: 'app_admin_player_ships', requirements: ['id'=>'\d+', 'planetId'=>'\d+'], methods: ['POST'])]
+    #[IsGranted(AdminCapability::SHIPS_GRANT)]
     public function ships(int $id, int $planetId, Request $request, EntityManagerInterface $em, AdminInterventionService $interventions): Response
     {
         if (!$this->isCsrfTokenValid('admin_ships_'.$planetId, $request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
@@ -61,6 +72,38 @@ final class AdminPlayerController extends AbstractController
             $this->addFlash('success', $changed ? 'Vaisseaux attribués et attribution journalisée.' : 'Cette attribution a déjà été traitée.');
         } catch (\DomainException $error) { $this->addFlash('error', $error->getMessage()); }
         return $this->redirectToRoute('app_admin_player', ['id'=>$id, '_fragment'=>'ships-'.$planetId]);
+    }
+
+    #[Route('/admin/joueurs/{id}/activation', name: 'app_admin_player_activation', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function activation(int $id, Request $request, \App\Service\Admin\AdminActivationAction $activation): Response
+    {
+        if (!$activation->isEnabled()) {
+            throw $this->createNotFoundException();
+        }
+        if (!$this->isCsrfTokenValid('admin_activation_'.$id, $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré.');
+        }
+        try {
+            if (!$request->request->getBoolean('confirmed')) {
+                throw new \DomainException('Confirmez explicitement la demande de renvoi.');
+            }
+            $result = $activation->request($this->getUser(), $id, $request->request->getString('request_key'));
+            $message = match ($result) {
+                'transport_accepted' => 'Mail accepté par le transport. Sa réception n’est pas confirmée.',
+                'not_dispatched' => 'Aucun mail envoyé : le transport administratif n’est pas raccordé.',
+                'recovery_not_dispatched' => 'Aucun renvoi pris en charge par le transport.',
+                'too_early' => 'Le délai de récupération n’est pas écoulé.',
+                'legacy_active', 'generation_unavailable' => 'La récupération n’est pas disponible pour ce compte.',
+                'replayed' => 'Cette demande a déjà été enregistrée. Aucun nouvel envoi.',
+                'blocked' => 'Demande bloquée : délai en cours ou résultat précédent non résolu.',
+                'ineligible', 'cancelled' => 'Le compte ne nécessite pas ou ne permet pas ce renvoi.',
+                default => 'Résultat indéterminé. Aucun réessai automatique ne sera effectué.',
+            };
+            $this->addFlash($result === 'transport_accepted' ? 'success' : 'warning', $message);
+        } catch (\DomainException|\InvalidArgumentException $exception) {
+            $this->addFlash('error', $exception->getMessage());
+        }
+        return $this->redirectToRoute('app_admin_player', ['id' => $id, '_fragment' => 'account-diagnostic']);
     }
 
 }

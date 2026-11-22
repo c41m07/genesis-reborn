@@ -13,10 +13,24 @@ test('Liens ciblés : cadre temporaire, animations réduites et événements fix
   await page.goto(`${url}?section=${section}&showLockedItems=1&focusItem=1#item-${slug}-basic`);
   const card=page.locator(`[data-building-catalog-target="family"][data-slug="${slug}"]`);await expect(card).toHaveClass(/catalog-card--targeted/);await expect(card).toHaveCSS('outline-width','3px');
   await expect.poll(async()=>{const box=await card.boundingBox(),bar=await page.locator('.resource-event-stack').boundingBox();return box.y>=bar.y+bar.height;}).toBe(true);
-  const event=page.locator('.event-drawer-wrap');await expect(event).toHaveCSS('position','sticky');const before=await event.boundingBox();await page.evaluate(()=>window.scrollBy({top:200,behavior:'instant'}));await expect.poll(async()=>Math.abs((await event.boundingBox()).y-before.y)).toBeLessThan(2);
+  const stack=page.locator('.resource-event-stack');await expect(stack).toHaveCSS('position','sticky');const event=page.locator('.topbar > .event-drawer-wrap');const before=await event.boundingBox();await page.evaluate(()=>window.scrollBy({top:200,behavior:'instant'}));await expect.poll(async()=>Math.abs((await event.boundingBox()).y-before.y)).toBeLessThan(2);
   await expect(card).not.toHaveClass(/catalog-card--targeted/,{timeout:7000});
  }
  await page.emulateMedia({reducedMotion:'reduce'});await page.goto(`${url}?section=buildings&focusItem=1#item-mine_metal-basic`);const reduced=page.locator('[data-building-catalog-target="family"][data-slug="mine_metal"]');await expect(reduced).toHaveClass(/catalog-card--targeted/);await expect(reduced).toHaveCSS('animation-name','none');
  await page.goto('/profil/preferences');await page.getByLabel('Thème de l’interface').selectOption('light');await page.getByRole('button',{name:'Enregistrer les paramètres'}).click();await page.goto(`${url}?section=buildings&focusItem=1#item-mine_metal-basic`);await expect(page.locator('body')).toHaveAttribute('data-theme','light');await expect(reduced).toHaveClass(/catalog-card--targeted/);await expect(reduced).toHaveCSS('animation-name','none');
- await page.goto(url);await page.getByRole('link',{name:'Métal',exact:true}).first().click();await expect(page.locator('.catalog-card--targeted')).toBeVisible();
+ const planetId=Number(url.split('/').at(-1));
+ const setMetalStock = amount => runIsolatedSql(process.env.BROWSER_ROUTER,
+  'UPDATE planet_resource SET current_stock='+amount+' WHERE planet_id='+planetId+" AND resource_type='metal'");
+ const metalLink=page.locator('[data-live-region="overview-attention"]').getByRole('link',{name:'Métal',exact:true});
+ // Le lien est une alerte de stockage plein, et non un invariant d'une inscription.
+ setMetalStock(5000);
+ await page.goto(url);
+ await expect(page.locator('body')).toHaveAttribute('data-theme','light');
+ await expect(metalLink).toHaveCount(0);
+ setMetalStock(10000);
+ await page.reload();
+ await expect(page.locator('body')).toHaveAttribute('data-theme','light');
+ await expect(metalLink).toHaveAttribute('href',url+'?section=buildings#item-storage_metal-basic');
+ await metalLink.click();
+ await expect(page.locator('[data-building-catalog-target="family"][data-slug="storage_metal"]')).toHaveClass(/catalog-card--targeted/);
 });

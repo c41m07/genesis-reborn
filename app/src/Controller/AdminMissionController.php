@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Entity\{Fleet, CombatLog, CombatParticipant, EspionageReport};
 use App\Service\Admin\AdminMissionMonitoring;
 use App\Service\Admin\AdminInterventionService;
+use App\Security\AdminCapability;
 use App\Service\Combat\{CombatReportPresenter, OccupationReportState};
 use App\Service\Catalog\GameCatalog;
 use Doctrine\ORM\EntityManagerInterface;
@@ -32,6 +33,7 @@ final class AdminMissionController extends AbstractController
     }
 
     #[Route('/admin/flottes/{id}/intervention', name: 'app_admin_mission_intervention', requirements: ['id'=>'\d+'], methods: ['POST'])]
+    #[IsGranted(AdminCapability::FLEET_INTERVENE)]
     public function intervene(int $id, Request $request, EntityManagerInterface $em, AdminInterventionService $interventions): Response
     {
         if (!$this->isCsrfTokenValid('admin_fleet_'.$id, $request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');

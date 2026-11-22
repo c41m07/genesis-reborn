@@ -1,7 +1,7 @@
 <?php
 namespace App\Tests\Integration;
 
-use App\Entity\{AllianceContract, CombatEvent, EspionageReport, Fleet, FleetShip, Planet, PlanetResource, Player, PlayerBoost, PlayerDiscovery, TransportReport, Universe, VacationPeriod};
+use App\Entity\{AllianceContract, CombatEvent, EspionageReport, Fleet, FleetShip, Planet, PlanetResource, Player, PlayerDiscovery, TransportReport, Universe, VacationPeriod};
 use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use App\Service\Colony\{ActionGuard, ResourceService};
@@ -195,21 +195,6 @@ final class VacationMissionsTest extends KernelTestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('vacances');
         self::getContainer()->get(FleetService::class)->decideOrbit($this->host->currentPlayerUniverse,$pending->id,true);
-    }
-
-    public function testFleetBoostIsRejectedBeforeConsumingTheBoost(): void
-    {
-        $fleet = $this->transit('transport','returning');
-        $originalArrival = $fleet->arrivalAt;
-        $this->vacation($this->visitor);
-        $boost = new PlayerBoost();$boost->playerUniverse=$this->visitor->currentPlayerUniverse;$boost->sourceType='event';$boost->sourceKey='vacation-fleet-boost';$boost->earnedAt=$this->clock->now();
-        $this->em->persist($boost);$this->em->flush();
-        try {
-            self::getContainer()->get(\App\Service\Boost\BoostUseService::class)->useOnFleet($this->visitor->currentPlayerUniverse,$fleet->id,str_repeat('a',32));
-            self::fail('Une flotte ne peut pas être accélérée pendant les vacances.');
-        } catch (\DomainException $error) { self::assertStringContainsString('vacances',$error->getMessage()); }
-        self::assertSame('available',$this->em->getConnection()->fetchOne('SELECT status FROM player_boost WHERE id = ?',[$boost->id]));
-        self::assertSame($originalArrival->format('Y-m-d H:i:s'),$this->em->getConnection()->fetchOne('SELECT arrival_at FROM fleet WHERE id = ?',[$fleet->id]));
     }
 
     private function player(string $name): array

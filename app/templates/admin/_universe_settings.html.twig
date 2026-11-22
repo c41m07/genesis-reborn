@@ -38,10 +38,11 @@
         <div><label for="fleet-{{ universe.id }}">Vaisseaux maximum par flotte</label><input id="fleet-{{ universe.id }}" type="number" name="limits[max_fleet_size]" min="1" max="1000000" value="{{ draftSettings and universeSettingsDraft.limits.max_fleet_size is defined ? universeSettingsDraft.limits.max_fleet_size : config.limits.max_fleet_size }}" required></div>
     </fieldset>
     <fieldset {{ universe.status == 'closed' ? 'disabled' : '' }}><legend>Fonctionnalités</legend>
-        {% for key,label in {'guilds_enabled':'Guildes autorisées','planet_conquest':'Conquête de planètes PNJ autorisée'} %}
+        {% for key,label in {'guilds_enabled':'Guildes autorisées','planet_conquest':'Conquête de planètes PNJ autorisée','pirate_campaign_enabled':'Campagne pirate'} %}
             {% set enabled = draftSettings and universeSettingsDraft.features[key] is defined ? universeSettingsDraft.features[key] : config.features[key] %}
             <input type="hidden" name="features[{{ key }}]" value="0"><label class="admin-feature-toggle" for="feature-{{ key }}-{{ universe.id }}"><input id="feature-{{ key }}-{{ universe.id }}" type="checkbox" name="features[{{ key }}]" value="1" {{ enabled ? 'checked' : '' }}>{{ label }}</label>
         {% endfor %}
+        <p class="admin-settings-wide">Désactiver la campagne empêche les nouveaux ordres. Les missions déjà engagées se poursuivent.</p>
     </fieldset>
     <button class="primary" {{ universe.status == 'closed' ? 'disabled' : '' }}>Enregistrer les règles</button>
 </form>

@@ -47,6 +47,35 @@ test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsq
     await expect(panel.getByRole('status')).toContainText('Ressources manquantes : 240 Métal, 130 Nano, 200 Électricité.');
     await expect(panel.getByRole('button', { name: /^Il manque :/ })).toBeDisabled();
     await expect(panel.locator('.catalog-missing-resource')).toHaveText(['Métal : 240', 'Nano : 130', 'Électricité : 200']);
+    const wait = panel.locator('.catalog-wait > button');
+    const waitText = panel.locator('.catalog-wait > span');
+    await expect(waitText).toContainText(/Délai (estimé|indisponible)/);
+    await expect(panel.locator('.catalog-payment')).toContainText('Il manque :');
+    await expect(panel.locator('.catalog-payment')).toContainText('aucun gain net');
+    await page.reload();
+    await expect(waitText).toContainText(/Délai (estimé|indisponible)/);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await wait.hover();
+    await expect(panel.locator('.catalog-wait-info')).toBeVisible();
+    await wait.focus();
+    await page.keyboard.press('Escape');
+    await expect(panel.locator('.catalog-wait-info')).toBeHidden();
+    await expect(wait).toBeFocused();
+    await input.fill('2');
+    await expect(wait).toBeHidden();
+    await input.press('Tab');
+    await expect(wait).toBeVisible();
+
+    const touch = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 900 }, storageState: await page.context().storageState() });
+    try {
+        const touchPage = await touch.newPage();
+        await touchPage.goto('/planetes/' + planet + '?section=ships');
+        const touchPanel = touchPage.locator('#item-probe-basic');
+        await touchPanel.locator('.catalog-wait > button').tap();
+        await expect(touchPanel.locator('.catalog-wait-info')).toBeVisible();
+    } finally {
+        await touch.close();
+    }
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE planet_id=${planet}`)).toBe('0');
     prepareOwnedColony(project, email, { stock: 150000 });
     await maximum.click();
@@ -63,6 +92,67 @@ test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsq
     await expect.poll(() => Number(queryIsolatedSql(project, `SELECT COALESCE(MAX(quantity),0) FROM queue_item WHERE planet_id=${planet} AND item_slug='probe'`))).toBeGreaterThan(100);
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM planet_resource WHERE planet_id=${planet} AND current_stock<0`)).toBe('0');
     await nativeContext.close();
+});
+
+test('Il manque : décompte estimatif sans requête, expiration prudente et nouvelle colonie', async ({ page, browser }) => {
+    test.setTimeout(120000);
+    const { planet, project } = await enter(page);
+    const url = id => `/planetes/${id}?section=buildings`;
+    await page.goto(url(planet));
+    const card = page.locator('#item-mine_metal-basic');
+    const priced = async slug => {
+        const title = await card.locator(`.building-costs > [data-resource="${slug}"]`).getAttribute('title');
+        return Number(title.split(' · ')[0].replace(/\D/g, ''));
+    };
+    const metal = await priced('metal');
+    const nano = await priced('nano');
+    expect(metal).toBeGreaterThan(1);
+    expect(nano).toBeGreaterThan(1);
+    const second = Number(queryIsolatedSql(project, `SELECT id FROM planet WHERE owner_id IS NULL AND npc_planet=0 AND solar_system_id=(SELECT solar_system_id FROM planet WHERE id=${planet}) LIMIT 1`));
+    expect(second).toBeGreaterThan(0);
+    runIsolatedSql(project, `
+        UPDATE planet target JOIN planet source ON source.id=${planet} SET target.owner_id=source.owner_id WHERE target.id=${second};
+        INSERT INTO planet_resource (planet_id,resource_type,current_stock,production_rate,last_updated_at)
+            SELECT ${second},resource_type,IF(resource_type='nano',${nano - 2},150000),0,UTC_TIMESTAMP()
+            FROM planet_resource WHERE planet_id=${planet}
+            ON DUPLICATE KEY UPDATE current_stock=VALUES(current_stock),last_updated_at=VALUES(last_updated_at);
+        UPDATE planet_resource SET current_stock=${metal - 1},last_updated_at=UTC_TIMESTAMP()
+            WHERE planet_id=${planet} AND resource_type='metal';
+    `);
+    await page.clock.install({ time: new Date('2031-12-17T13:00:00Z') });
+    await page.goto(url(planet));
+    const timer = card.getByRole('timer');
+    await expect(timer).toContainText(/Délai estimé : .+ \(Métal\)/);
+    await expect(timer).toHaveAttribute('aria-live', 'off');
+    const initial = await timer.textContent();
+    const estimateMs = await timer.evaluate(element => (Number(element.dataset.deadline) - Number(element.dataset.observedAt)) * 1000);
+    expect(estimateMs).toBeGreaterThan(2000);
+    const estimateRequests = [];
+    page.on('request', request => {
+        if (request.url().includes('/construction-maximum') || request.headers()['x-genesis-live'] === '1') {
+            estimateRequests.push(request.url());
+        }
+    });
+    await page.clock.fastForward(2000);
+    await expect(timer).not.toHaveText(initial);
+    await page.clock.fastForward(estimateMs);
+    await expect(timer).toHaveText('Estimation écoulée. Actualisez pour vérifier les ressources.');
+    await expect(card.getByRole('button', { name: /^Il manque :/ })).toBeDisabled();
+    expect(estimateRequests).toEqual([]);
+
+    await page.goto(url(second));
+    await expect(timer).toContainText(/Délai estimé : .+ \(Nano\)/);
+    const native = await browser.newContext({ javaScriptEnabled: false, storageState: await page.context().storageState() });
+    try {
+        const nativePage = await native.newPage();
+        await nativePage.goto(url(second));
+        const nativeCard = nativePage.locator('#item-mine_metal-basic .catalog-payment');
+        await expect(nativeCard.getByRole('timer')).toContainText(/Délai estimé : .+ \(Nano\)/);
+        await expect(nativeCard).toContainText('Il manque :');
+        await expect(nativeCard.getByRole('button', { name: /^Il manque :/ })).toBeDisabled();
+    } finally {
+        await native.close();
+    }
 });
 
 test('Flotte et fret : Max conserve les autres champs, réserve le carburant et reste utilisable au clavier sur mobile', async ({ page }, info) => {

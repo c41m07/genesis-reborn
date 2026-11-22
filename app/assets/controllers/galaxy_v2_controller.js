@@ -1,9 +1,16 @@
 import { Controller } from '@hotwired/stimulus';
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const galaxyHelp = 'Glisser pour naviguer · Molette pour zoomer · Cliquer sur un système pour afficher sa fiche';
+const solarHelp = 'Cliquez sur une planète pour sa vue rapprochée ; utilisez la liste pour sa fiche.';
 const missionColors = {
     explore: '#00d4ff', spy: '#a78bfa', colonize: '#2dd4a0', transport: '#34d399',
     attack: '#f43f5e', conquer: '#ffb040', defend: '#60a5fa', orbit: '#f472b6', station: '#2dd4a0',
+};
+// Les badges privés de campagne ne sont pas des flottes détectées ou des planètes PNJ.
+const campaignMapMarkers = {
+    movement: { symbol: '◇', color: '#66deff' },
+    pirates: { symbol: 'P', color: '#ffb960' },
 };
 const mapMarkers = {
     unknown: { symbol: '?', color: '#ffda66', label: 'Inexploré' },
@@ -33,7 +40,7 @@ export default class extends Controller {
     static targets = [
         'scene', 'galaxyCanvas', 'systemCanvas', 'planetCanvas', 'location', 'coordinates',
         'searchInput', 'searchResults', 'searchClear', 'searchStatus', 'tooltip', 'systemBack', 'planetBack',
-        'systemPanel', 'systemContent', 'systemPanelToggle', 'planetPanel', 'planetContent', 'minimapWrap',
+        'systemPanel', 'systemContent', 'planetPanel', 'planetContent', 'minimapWrap',
         'minimapCanvas', 'fleetLog', 'motionToggle', 'galaxySelect', 'mapHelp',
         'mapMode', 'mapModeLabel', 'legend', 'filterToggle', 'mapSettings', 'layoutButton',
     ];
@@ -51,6 +58,7 @@ export default class extends Controller {
             destinationSystem: this.systemById.get(Number(flight.destinationSystemId)),
             trail: [],
         }));
+        this.setCampaignTraffic(this.gameMap.campaignTraffic);
         this.serverClockOffset = Date.parse(this.gameMap.serverNow || new Date().toISOString()) - Date.now();
         this.selectedSystem = null;
         this.selectedPlanet = null;
@@ -109,6 +117,10 @@ export default class extends Controller {
         this.updateFlightTimers();
         this.fleetRefreshHandler = event => this.refreshVisibleFleets(event.detail);
         window.addEventListener('genesis:visible-fleets', this.fleetRefreshHandler);
+        this.campaignUnavailableHandler = () => this.clearCampaignTraffic();
+        window.addEventListener('genesis:campaign-traffic-unavailable', this.campaignUnavailableHandler);
+        const initialSystem = this.systemById.get(Number(this.gameMap.selectedSystemId));
+        if (initialSystem) this.previewSystem(initialSystem, false);
         this.startLoop();
     }
 
@@ -118,6 +130,7 @@ export default class extends Controller {
         this.resizeObserver?.disconnect();
         document.removeEventListener('visibilitychange', this.visibilityHandler);
         window.removeEventListener('genesis:visible-fleets', this.fleetRefreshHandler);
+        window.removeEventListener('genesis:campaign-traffic-unavailable', this.campaignUnavailableHandler);
         this.unbindEvents();
     }
 
@@ -130,12 +143,43 @@ export default class extends Controller {
             destinationSystem: this.systemById.get(Number(flight.destinationSystemId)),
             trail: [],
         }));
+        this.setCampaignTraffic(data.campaignTraffic);
         this.fleetLogTarget.innerHTML = data.fleetLog;
-        this.element.querySelector('[data-galaxy-v2-empty-label]').hidden = this.flights.length > 0;
-        this.element.querySelector('.gv2-flight-log')?.classList.toggle('is-empty', !this.flights.length);
+        this.updateCampaignLogState();
         if (this.flights.length && !this.timerInterval && !document.hidden)
             this.timerInterval = window.setInterval(() => this.updateFlightTimers(), 1000);
         this.updateFlightTimers();
+        this.drawFrame(0);
+    }
+
+    setCampaignTraffic(traffic = []) {
+        this.campaignTraffic = traffic;
+        this.campaignBySystem = new Map();
+        for (const row of traffic) {
+            const kind = row.kind === 'pirates' ? 'pirates' : 'movement';
+            for (const id of row.systems) {
+                const system = this.systemById.get(Number(id));
+                if (!system?.known) continue;
+                const markers = this.campaignBySystem.get(system.id) ?? new Set();
+                markers.add(kind);
+                this.campaignBySystem.set(system.id, markers);
+            }
+        }
+    }
+
+    updateCampaignLogState() {
+        const hasTraffic = this.flights.length > 0 || this.campaignTraffic.length > 0;
+        this.element.querySelector('[data-galaxy-v2-empty-label]').hidden = hasTraffic;
+        const log = this.element.querySelector('.gv2-flight-log');
+        if (hasTraffic && this.campaignTraffic.length && log?.classList.contains('is-empty')) log.open = true;
+        log?.classList.toggle('is-empty', !hasTraffic);
+    }
+
+    clearCampaignTraffic() {
+        if (!this.campaignTraffic.length) return;
+        this.setCampaignTraffic();
+        for (const row of this.fleetLogTarget.querySelectorAll('[data-campaign-kind]')) row.remove();
+        this.updateCampaignLogState();
         this.drawFrame(0);
     }
 
@@ -323,8 +367,7 @@ export default class extends Controller {
         this.motionPreferenceChange = (event) => {
             this.motionReduced = event.matches || this.reducedMotionValue;
             this.updateMotionButton();
-            this.motionReduced ? this.stopLoop() : this.startLoop();
-            this.drawFrame(0);
+            this.refreshMotion();
         };
         this.motionMedia = window.matchMedia('(prefers-reduced-motion: reduce)');
         this.motionMedia.addEventListener?.('change', this.motionPreferenceChange);
@@ -577,7 +620,7 @@ export default class extends Controller {
 
         this.drawFlights(ctx);
         if (this.hoveredSystem) this.drawSelection(ctx, this.hoveredSystem, '#00d4ff');
-        if (this.selectedSystem && this.mode !== 'galaxy') this.drawSelection(ctx, this.selectedSystem, '#ffb040');
+        if (this.selectedSystem) this.drawSelection(ctx, this.selectedSystem, '#ffb040');
     }
 
     toggleMapFilters() {
@@ -703,8 +746,11 @@ export default class extends Controller {
 
     systemMarkers(system) {
         if (!system.known) return this.hiddenMarkers.has('unknown') ? [] : [mapMarkers.unknown];
-        return !this.hiddenMarkers.has('own') && system.planets.some((planet) => planet.ownedByCurrentPlayer || planet.relation === 'own')
+        const markers = !this.hiddenMarkers.has('own') && system.planets.some((planet) => planet.ownedByCurrentPlayer || planet.relation === 'own')
             ? [mapMarkers.own] : [];
+        for (const kind of this.campaignBySystem?.get(system.id) ?? []) markers.push(campaignMapMarkers[kind]);
+
+        return markers;
     }
 
     drawSystemMarkers(ctx, system, point, isHovered) {
@@ -1187,7 +1233,7 @@ export default class extends Controller {
         }
         if (this.mode === 'galaxy') {
             const system = this.nearestSystem(point);
-            if (system) this.focusSystem(system);
+            if (system) this.previewSystem(system);
         } else if (this.mode === 'system') {
             const planet = this.nearestPlanet(point);
             if (planet) {
@@ -1272,7 +1318,7 @@ export default class extends Controller {
         }
         const hint = document.createElement('p');
         hint.className = 'gv2-tooltip-hint';
-        hint.textContent = 'Cliquer pour ouvrir le système';
+        hint.textContent = 'Cliquer pour afficher la fiche du système';
         const nodes = [title, coordinates, state];
         if (facts.childElementCount) nodes.push(facts);
         if (distanceLabel) {
@@ -1359,38 +1405,67 @@ export default class extends Controller {
         this.startLoop();
     }
 
-    focusSystem(system, planetId = null) {
-        if (!system) return;
+    syncListLink(system) {
+        // Les deux vues utilisent l'identifiant validé par le serveur, jamais
+        // le numéro local affiché qui peut être partagé entre deux galaxies.
+        const listLink = this.element.parentElement.querySelector('[data-galaxy-list-link]');
+        if (!listLink) return;
+        const url = new URL(listLink.href);
+        if (system) url.searchParams.set('system', system.id);
+        else url.searchParams.delete('system');
+        listLink.setAttribute('href', url.pathname + url.search + url.hash);
+    }
+
+    previewSystem(system, focus = true) {
+        if (this.mode !== 'galaxy' || !system) return;
+        this.planetReturnView = null;
+        this.prepareSystemPanel(system);
+        // La fiche reste en dehors de la scène : la sélection ne touche ni
+        // la caméra ni les dimensions de la scène, même sur petit écran.
+        this.hoveredSystem = null;
+        this.tooltipTarget.hidden = true;
+        this.showSystemPreview(focus);
+    }
+
+    prepareSystemPanel(system) {
         if (this.selectedSystem?.id !== system.id) {
             this.systemScale = 1;
             this.systemCamera = { x: 0, y: 0 };
         }
         this.selectedSystem = system;
         this.selectedPlanet = null;
-        this.savedCamera = { camera: { ...this.camera }, zoom: this.targetZoom };
-        this.systemContentTarget.replaceChildren();
+        this.syncListLink(system);
         const template = this.element.querySelector('template[data-gv2-system="' + system.id + '"]');
+        this.systemContentTarget.replaceChildren();
         if (template) this.systemContentTarget.append(template.content.cloneNode(true));
+    }
+
+    showSystemPreview(focus = true) {
         this.systemPanelTarget.hidden = false;
         this.planetPanelTarget.hidden = true;
-        this.systemPanelToggleTarget.textContent = system.galaxy + ':' + system.number + ' · ' + (system.known ? system.planets.length + ' planètes' : 'À explorer');
-        this.focusPanel(this.systemPanelTarget);
+        this.systemBackTarget.hidden = this.planetBackTarget.hidden = true;
+        this.minimapWrapTarget.hidden = this.fleetLogTarget.parentElement.hidden = false;
+        this.locationTarget.textContent = this.selectedSystem.name;
+        this.coordinatesTarget.textContent = this.selectedSystem.galaxy + ':' + this.selectedSystem.number;
+        this.mapHelpTarget.textContent = galaxyHelp;
+        if (focus) this.focusPanel(this.systemPanelTarget);
+        this.drawFrame(0);
+    }
+
+    enterSelectedSystem() {
+        const system = this.selectedSystem;
+        if (this.mode !== 'galaxy' || !system?.known) return;
+        this.savedCamera = { camera: { ...this.camera }, zoom: this.zoom, userCamera: this.hasUserCamera };
+        this.planetReturnView = null;
         this.systemBackTarget.hidden = false;
         this.planetBackTarget.hidden = true;
         this.minimapWrapTarget.hidden = true;
         this.fleetLogTarget.parentElement.hidden = true;
-        this.locationTarget.textContent = system.name;
-        this.coordinatesTarget.textContent = system.galaxy + ':' + system.number;
-        this.mapHelpTarget.textContent = system.known ? 'Cliquez sur une planète pour sa vue rapprochée ; utilisez la liste pour sa fiche.' : 'Ce signal n’est pas cartographié. Une sonde peut l’explorer.';
-        if (!system.known) {
-            this.mode = 'galaxy';
-            this.setCanvasMode('galaxy');
-            this.drawFrame(0);
-            return;
-        }
+        this.mapHelpTarget.textContent = solarHelp;
         const destinationZoom = clamp(this.baseZoom * 2.9, .25, 1.25);
         this.mode = this.motionReduced ? 'system' : 'transition-to-system';
         this.setCanvasMode('system');
+        this.focusPanel(this.systemPanelTarget);
         if (this.motionReduced) {
             this.camera = { x: system.wx, y: system.wy };
             this.zoom = this.targetZoom = destinationZoom;
@@ -1401,7 +1476,6 @@ export default class extends Controller {
                 this.drawFrame(0);
             });
         }
-        if (planetId) window.setTimeout(() => this.selectPlanetById(planetId), this.motionReduced ? 0 : 560);
     }
 
     animateCamera(x, y, zoom, duration, done) {
@@ -1430,7 +1504,8 @@ export default class extends Controller {
     }
 
     toGalaxy() {
-        this.mode = this.motionReduced ? 'galaxy' : 'transition-to-galaxy';
+        const wasOverview = this.mode === 'galaxy' || this.planetReturnView === 'galaxy';
+        this.syncListLink(null);
         this.setCanvasMode('galaxy');
         this.systemPanelTarget.hidden = true;
         this.planetPanelTarget.hidden = true;
@@ -1440,22 +1515,30 @@ export default class extends Controller {
         this.fleetLogTarget.parentElement.hidden = false;
         this.locationTarget.textContent = this.gameMap.galaxy || this.gameMap.universe;
         this.coordinatesTarget.textContent = this.gameMap.galaxy || '—';
-        this.mapHelpTarget.textContent = 'Glisser pour naviguer · Molette pour zoomer · Cliquer sur un système pour l’examiner';
+        this.mapHelpTarget.textContent = galaxyHelp;
         this.searchInputTarget.focus({ preventScroll: true });
-        const camera = this.savedCamera?.camera || this.baseCamera;
-        const zoom = this.savedCamera?.zoom || this.baseZoom;
-        const done = () => {
+        this.selectedSystem = this.selectedPlanet = this.planetReturnView = null;
+        if (wasOverview) {
             this.mode = 'galaxy';
-            this.selectedSystem = null;
-            this.selectedPlanet = null;
-            this.hasUserCamera = false;
+            this.drawFrame(0);
+            return;
+        }
+
+        const saved = this.savedCamera || { camera: this.baseCamera, zoom: this.baseZoom };
+        const done = () => {
+            this.savedCamera = null;
+            this.mode = 'galaxy';
+            this.zoom = this.targetZoom = saved.zoom;
+            this.hasUserCamera = saved.userCamera;
             this.drawFrame(0);
         };
         if (this.motionReduced) {
-            this.camera = { ...camera };
-            this.zoom = this.targetZoom = zoom;
+            this.camera = { ...saved.camera };
             done();
-        } else this.animateCamera(camera.x, camera.y, zoom, 420, done);
+        } else {
+            this.mode = 'transition-to-galaxy';
+            this.animateCamera(saved.camera.x, saved.camera.y, saved.zoom, 420, done);
+        }
     }
 
     setCanvasMode(mode) {
@@ -1479,6 +1562,7 @@ export default class extends Controller {
         const planet = this.selectedSystem.planets.find((candidate) => Number(candidate.id) === Number(id));
         if (!planet) return;
         this.selectedPlanet = planet;
+        if (this.mode === 'galaxy') this.planetReturnView = 'galaxy';
         const template = this.element.querySelector('template[data-gv2-planet="' + planet.id + '"]');
         if (template) {
             this.planetContentTarget.replaceChildren(template.content.cloneNode(true));
@@ -1498,30 +1582,11 @@ export default class extends Controller {
     }
 
     returnToPlanetSystem() {
-        const planet = this.selectedPlanet;
-        const system = this.systems.find((candidate) => candidate.planets.some((item) => Number(item.id) === Number(planet?.id)));
-        if (!system) return;
-        if (system !== this.selectedSystem) {
-            const savedCamera = this.savedCamera;
-            this.focusSystem(system);
-            this.savedCamera = savedCamera;
-            this.selectedPlanet = planet;
-        }
+        // La planète vient toujours de la sélection courante (recherche ou fiche).
         this.toSystem(true);
     }
 
-    toggleSystemPanel() {
-        const collapsed = this.systemPanelTarget.classList.toggle('is-collapsed');
-        this.systemPanelToggleTarget.setAttribute('aria-expanded', String(!collapsed));
-        this.systemPanelToggleTarget.setAttribute('aria-label', (collapsed ? 'Afficher' : 'Replier') + ' les informations du système');
-    }
-
     focusPanel(panel) {
-        const toggle = panel.querySelector('.gv2-sheet-toggle');
-        if (toggle?.getClientRects().length && panel.classList.contains('is-collapsed')) {
-            toggle.focus({ preventScroll: true });
-            return;
-        }
         const heading = panel.querySelector('h2');
         if (!heading) return;
         panel.scrollTop = 0;
@@ -1561,6 +1626,16 @@ export default class extends Controller {
 
     toSystem(restoreChoice = false) {
         if (!this.selectedSystem) return;
+        if (this.planetReturnView === 'galaxy') {
+            this.planetReturnView = null;
+            this.mode = 'galaxy';
+            this.setCanvasMode('galaxy');
+            this.showSystemPreview(false);
+            const choice = this.systemContentTarget.querySelector('[data-planet-id="' + this.selectedPlanet?.id + '"]');
+            if (restoreChoice === true && choice) choice.focus({ preventScroll: true });
+            else this.focusPanel(this.systemPanelTarget);
+            return;
+        }
         this.mode = this.motionReduced ? 'system' : 'transition-to-system-from-planet';
         this.setCanvasMode('system');
         this.planetPanelTarget.hidden = true;
@@ -1568,17 +1643,13 @@ export default class extends Controller {
         this.systemBackTarget.hidden = false;
         this.planetBackTarget.hidden = true;
         const choice = this.systemContentTarget.querySelector('[data-planet-id="' + this.selectedPlanet?.id + '"]');
-        if (restoreChoice === true && choice && this.hasSystemPanelToggleTarget
-            && this.systemPanelToggleTarget.getClientRects().length && this.systemPanelTarget.classList.contains('is-collapsed')) {
-            this.toggleSystemPanel();
-        }
         if (choice?.getClientRects?.().length) choice.focus({ preventScroll: true });
         else this.focusPanel(this.systemPanelTarget);
         this.minimapWrapTarget.hidden = true;
         this.fleetLogTarget.parentElement.hidden = true;
         this.locationTarget.textContent = this.selectedSystem.name;
         this.coordinatesTarget.textContent = this.selectedSystem.galaxy + ':' + this.selectedSystem.number;
-        this.mapHelpTarget.textContent = 'Cliquez sur une planète pour sa vue rapprochée ; utilisez la liste pour sa fiche.';
+        this.mapHelpTarget.textContent = solarHelp;
         if (this.motionReduced) {
             this.mode = 'system';
             this.drawFrame(0);
@@ -2160,8 +2231,23 @@ export default class extends Controller {
 
     selectSearchResult(item) {
         this.hideSearchResults();
-        if (item.type === 'system') this.focusSystem(item.system);
-        else this.focusSystem(item.system, item.planet.id);
+        // La recherche reste disponible dans les vues rapprochées. Si elle
+        // sélectionne ailleurs, revenir d’abord à la caméra de la galaxie.
+        if (this.mode !== 'galaxy') {
+            const saved = this.savedCamera;
+            this.cameraAnimation = null;
+            this.mode = 'galaxy';
+            this.setCanvasMode('galaxy');
+            if (saved) {
+                this.camera = { ...saved.camera };
+                this.zoom = this.targetZoom = saved.zoom;
+                this.hasUserCamera = saved.userCamera;
+            }
+            this.savedCamera = null;
+        }
+        this.planetReturnView = null;
+        this.previewSystem(item.system, item.type === 'system');
+        if (item.type === 'planet') this.selectPlanetById(item.planet.id);
     }
 
     hideSearchResults() {
@@ -2215,8 +2301,20 @@ export default class extends Controller {
     toggleMotion() {
         this.motionReduced = !this.motionReduced;
         this.updateMotionButton();
-        if (this.motionReduced) this.stopLoop();
-        else this.startLoop();
+        this.refreshMotion();
+    }
+
+    refreshMotion() {
+        if (this.motionReduced) {
+            this.stopLoop();
+            // Ne pas laisser une transition de caméra figée si la préférence
+            // change après un clic sur Entrer ou Retour.
+            const animation = this.cameraAnimation;
+            if (animation) {
+                this.stepCameraAnimation(animation.started + animation.duration);
+                this.zoom = this.targetZoom;
+            }
+        } else this.startLoop();
         this.drawFrame(0);
     }
 
@@ -2247,7 +2345,7 @@ export default class extends Controller {
             placeholderDistance = Math.min(placeholderDistance, Math.hypot(placeholder.wx - worldX, placeholder.wy - worldY));
         }
         if (nearest && nearestDistance <= placeholderDistance) {
-            this.focusSystem(nearest);
+            this.previewSystem(nearest);
             return;
         }
         this.camera.x = worldX;

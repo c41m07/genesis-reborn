@@ -1,0 +1,6 @@
+<header class="pirate-campaign-mission-heading">
+    <span class="badge">{{ status }}</span>
+    <h2 id="pirate-mission-title">{{ narrative.title }}</h2>
+    <p>{{ narrative.message }}</p>
+    {% if narrative.guidance %}<p>{{ narrative.guidance }}</p>{% endif %}
+</header>

@@ -2,7 +2,7 @@ import { test, expect } from './support/isolated-test.mjs';
 
 test.use({ hasTouch: true });
 
-test('GalaxieV2 relie la galaxie, le système et la planète sans casser la carte classique', async ({ page }) => {
+test('GalaxieV2 relie la galaxie, le système et la planète sans casser la carte classique', async ({ page, browser }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   // Observer les coordonnées réellement dessinées pour exercer le clic natif sur le canvas.
   await page.addInitScript(() => {
@@ -14,6 +14,11 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
     const fillText = CanvasRenderingContext2D.prototype.fillText;
     const clearRect = CanvasRenderingContext2D.prototype.clearRect;
     const stroke = CanvasRenderingContext2D.prototype.stroke;
+    const strokeRect = CanvasRenderingContext2D.prototype.strokeRect;
+    CanvasRenderingContext2D.prototype.strokeRect = function(...args) {
+      if (this.canvas.closest('.gv2-minimap')) window.galaxyCameraRectangle = args;
+      return strokeRect.apply(this, args);
+    };
     CanvasRenderingContext2D.prototype.clearRect = function(...args) {
       if (this.canvas.classList.contains('gv2-canvas--galaxy')) { window.galaxyUnknownMarkers = [];window.galaxyCoordinateLabels = [];window.galaxyOwnedRings = []; }
       return clearRect.apply(this, args);
@@ -142,6 +147,22 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   expect(hoverBounds.y + hoverBounds.height).toBeLessThanOrEqual(galaxyBounds.y + galaxyBounds.height);
 
   await page.screenshot({ path: 'output/playwright/galaxy-system-hover.png' });
+  const systemPanel = page.locator('.gv2-system-panel');
+  const enterSystem = page.getByRole('button', { name: 'Entrer dans le système', exact: true });
+  const readCamera = () => page.evaluate(() => window.galaxyCameraRectangle);
+  const preselection = await readCamera();
+  expect(preselection).toHaveLength(4);
+  await page.mouse.click(galaxyBounds.x + homePoint.x, galaxyBounds.y + homePoint.y);
+  await expect(map).toHaveAttribute('data-view', 'galaxy');
+  await expect(systemPanel).toContainText(homeSystem.name);
+  await expect(enterSystem).toBeVisible();
+  const rightPanel = await systemPanel.boundingBox();
+  expect(rightPanel.x).toBeGreaterThanOrEqual(galaxyBounds.x + galaxyBounds.width);
+  expect(await readCamera()).toEqual(preselection);
+  await page.keyboard.press('Escape');
+  await expect(systemPanel).toBeHidden();
+  await expect(labelSearch).toBeFocused();
+  expect(await readCamera()).toEqual(preselection);
   await page.mouse.move(0, 0);
   await expect.poll(() => page.evaluate(() => window.galaxyCoordinateLabels)).toEqual([]);
 
@@ -149,9 +170,18 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await search.fill(homeSystem.name);
   const result = page.locator('.gv2-search-results button').filter({ hasText: homeSystem.name }).first();
   await expect(result).toBeVisible();
-  await result.click();
-  await expect(page.locator('.gv2-system-panel')).toBeVisible();
-  await expect(page.locator('.gv2-system-panel')).toContainText(homeSystem.name);
+  await search.press('ArrowDown');
+  await expect(result).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(systemPanel).toBeVisible();
+  await expect(systemPanel).toContainText(homeSystem.name);
+  await expect(systemPanel.getByRole('heading')).toBeFocused();
+  await expect(map).toHaveAttribute('data-view', 'galaxy');
+  expect(await readCamera()).toEqual(preselection);
+  await enterSystem.focus();
+  await page.keyboard.press('Enter');
+  await expect(map).toHaveAttribute('data-view', 'system');
+  await expect(enterSystem).toBeHidden();
   const line = page.locator('[data-galaxy-v2-target="systemContent"] .gv2-planet-choice').first();
   const nameCell = line.locator('.gv2-planet-choice-name');
   const originalName = await nameCell.textContent();
@@ -259,11 +289,29 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await expect(filters).toContainText('PNJ');
   await expect(page.locator('#gv2-filter-content')).toBeHidden();
   await expect(emptyJournal).toBeVisible();
-  const mobileSearch = page.getByRole('searchbox', { name: 'Rechercher un système ou une planète connue' });
-  await mobileSearch.fill(homeSystem.name);
-  await page.locator('.gv2-search-results button').filter({ hasText: homeSystem.name }).first().click();
-  const sheet = page.locator('.gv2-sheet-toggle');
-  await expect(sheet).toBeHidden();
+  const mobileCanvas = page.locator('.gv2-canvas--galaxy');
+  await mobileCanvas.scrollIntoViewIfNeeded();
+  const mobileBounds = await mobileCanvas.boundingBox();
+  const mobilePoint = await page.evaluate(() => window.galaxyOwnedRings[0]);
+  const mobileCamera = await readCamera();
+  expect(mobilePoint, 'la colonie doit être dessinée sur la carte mobile').toBeTruthy();
+  await page.touchscreen.tap(mobileBounds.x + mobilePoint.x, mobileBounds.y + mobilePoint.y);
+  await expect(map).toHaveAttribute('data-view', 'galaxy');
+  await expect(systemPanel).toContainText(homeSystem.name);
+  const mobilePanel = await systemPanel.boundingBox();
+  const zoomIn = page.getByRole('button', { name: 'Zoomer', exact: true });
+  const zoomOut = page.getByRole('button', { name: 'Dézoomer', exact: true });
+  expect(mobilePanel.height).toBeLessThan(mobileBounds.height / 2);
+  expect(mobilePanel.y + mobilePanel.height).toBeLessThanOrEqual(mobileBounds.y);
+  expect(await readCamera()).toEqual(mobileCamera);
+  await zoomIn.tap();
+  const mobileZoomed = await readCamera();
+  expect(mobileZoomed[2]).toBeLessThan(mobileCamera[2]);
+  await zoomOut.tap();
+  expect((await readCamera())[2]).toBeGreaterThan(mobileZoomed[2]);
+  await expect(systemPanel).toBeVisible();
+  await enterSystem.tap();
+  await expect(map).toHaveAttribute('data-view', 'system');
   await expect(page.locator('#gv2-system-content')).toBeVisible();
   await page.screenshot({ path: 'output/playwright/galaxy-solar-mobile.png' });
   await expect(page.locator('.gv2-system-panel .gv2-planet-list .gv2-marker--own')).toBeVisible();
@@ -280,10 +328,41 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await expect(page.locator('.gv2-planet-panel')).toContainText(mobilePlanet.name);
   await page.locator('.gv2-planet-panel').getByRole('button', { name: /Revenir au système/ }).tap();
   await expect(page.locator('.gv2-canvas--system')).toHaveClass(/is-active/);
-  await expect(sheet).toBeHidden();
   await expect(page.locator('.gv2-system-panel .gv2-panel-heading')).toContainText(homeSystem.name);
   await expect(page.locator('.gv2-planet-choice').filter({ hasText: mobilePlanet.name })).toBeFocused();
 
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/carte-v2');
+  const current = JSON.parse(await map.getAttribute('data-galaxy-v2-map-value'));
+  const selected = current.systems.slice(1).find(system => system.number === 49) ?? current.systems[1];
+  expect(selected, 'la fixture doit proposer un système différent du système par défaut').toBeTruthy();
+  const coordinates = selected.galaxy + ':' + selected.number;
+  await page.getByRole('searchbox', { name: 'Rechercher un système ou une planète connue' }).fill(selected.name);
+  await page.locator('.gv2-search-results button').filter({ hasText: selected.name }).first().click();
+  await expect(page.locator('.gv2-system-panel').getByRole('heading', { name: coordinates, exact: true })).toBeVisible();
+  const list = page.getByRole('link', { name: 'Liste des systèmes', exact: true });
+  await expect(list).toHaveAttribute('href', new RegExp('[?&]system='+selected.id+'$'));
+  await list.click();
+  await expect(page.locator('#selected-system-title')).toContainText(coordinates + ' ·');
+  await expect(page.getByLabel('Système', { exact: true })).toHaveValue(String(selected.id));
+  const listUrl = page.url();
+  await page.getByRole('link', { name: 'Carte interactive', exact: true }).click();
+  await expect(page.locator('.gv2-system-panel').getByRole('heading', { name: coordinates, exact: true })).toBeVisible();
+  await expect(map).toHaveAttribute('data-view', 'galaxy');
+  await page.getByRole('button', { name: 'Fermer la fiche du système', exact: true }).click();
+  await expect(list).toHaveAttribute('href', /[?]galaxy=\d+$/);
+
+  const native = await browser.newContext({ javaScriptEnabled: false, storageState: await page.context().storageState() });
+  try {
+    const fallback = await native.newPage();
+    await fallback.goto(listUrl);
+    await expect(fallback.locator('#selected-system-title')).toContainText(coordinates + ' ·');
+    await fallback.getByRole('link', { name: 'Carte interactive', exact: true }).click();
+    await fallback.getByRole('link', { name: 'Liste des systèmes', exact: true }).click();
+    await expect(fallback.locator('#selected-system-title')).toContainText(coordinates + ' ·');
+  } finally {
+    await native.close();
+  }
   expect(pageErrors).toEqual([]);
 
 

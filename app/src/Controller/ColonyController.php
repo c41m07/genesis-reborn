@@ -2,12 +2,13 @@
 
 namespace App\Controller;
 
-use App\Entity\{Planet, PlayerDiscovery, Fleet, FleetShip};
+use App\Entity\{Planet, PlanetBuilding, PlayerTechnology, PlayerDiscovery, Fleet, FleetShip};
 use App\Repository\GameRepository;
 use App\Service\Universe\UniverseContext;
-use App\Service\Colony\{ColonyView, GameShell, ResourceService, LiveRegionResponse};
+use App\Service\Notification\JournalService;
+use App\Service\Colony\{CatalogueInsights, CatalogueItemLink, ColonyComparisonActivities, ColonyView, GameShell, ResourceService, LiveRegionResponse};
 use App\Service\Queue\QueueService;
-use App\Service\Player\{LeaderboardService, PreferencesService, RelationResolver};
+use App\Service\Player\{FirstStepsView, LeaderboardService, PreferencesService, RelationResolver};
 use App\Service\Catalog\GameCatalog;
 use App\Service\Fleet\{GalaxyGeometry, MovementCalculator};
 use App\Manager\GameManager;
@@ -26,6 +27,7 @@ final class ColonyController extends AbstractController
         private \App\Service\Combat\OccupationService $occupations,
         private LeaderboardService $leaderboard,
         private \App\Service\Fleet\FleetVisibility $visibility,
+        private \App\Service\PirateCampaign\PirateCampaignTraffic $campaignTraffic,
         private GameShell $shell,
         private LiveRegionResponse $liveResponses,
         private GalaxyGeometry $galaxyGeometry,
@@ -66,24 +68,27 @@ final class ColonyController extends AbstractController
         return $planet ? $this->redirectToRoute('app_colony', array_filter(['id' => $planet->id, 'section' => $section === 'overview' ? null : $section])) : $this->redirectToRoute('app_universes');
     }
     #[Route('/planetes', name: 'app_planets', methods: ['GET'])]
-    public function planets(Request $request, ResourceService $resources, \App\Service\Colony\EmpireDetails $details): Response
-    {
+    public function planets(
+        Request $request,
+        ResourceService $resources,
+        \App\Service\Colony\EmpireDetails $details,
+        ColonyComparisonActivities $comparison,
+    ): Response {
         $membership = $this->context->membership();
         $planets = $this->repo->planets($membership->universe, $membership);
+        $tableView = $request->query->get('view') === 'table';
         $positionModifiers = [];
-        $activities = $this->repo->queueCounts($membership, $planets);
-        foreach ($planets as $planet) {
-            $activities[$planet->id] ??= 0;
-        }
-        foreach ($planets as $planet) {
-            $positionModifiers[$planet->id] = $resources->positionProductionModifiers($planet);
+        if (!$tableView) {
+            foreach ($planets as $planet) {
+                $positionModifiers[$planet->id] = $resources->positionProductionModifiers($planet);
+            }
         }
         return $this->render('colony/planets.html.twig', [
             'membership' => $membership,
             'planets' => $planets,
             'position_modifiers' => $positionModifiers,
-            'activities' => $activities,
-            'table_view' => $request->query->get('view') === 'table',
+            'comparison_activities' => $tableView ? $comparison->forPlanets($membership, $planets) : null,
+            'table_view' => $tableView,
             'comparison_resource' => in_array($request->query->getString('resource'), [
                 'metal',
                 'nano',
@@ -102,8 +107,9 @@ final class ColonyController extends AbstractController
         \App\Service\Player\DailyLeaderboard $leaderboard,
         RelationResolver $relations,
         GameCatalog $catalog,
-        \App\Service\Notification\JournalService $journal,
+        JournalService $journal,
         \App\Service\Colony\EmpireDetails $details,
+        FirstStepsView $firstSteps,
     ): Response
     {
         $p = $this->owned($id);
@@ -113,10 +119,12 @@ final class ColonyController extends AbstractController
         if ($section !== 'overview' && $request->query->has('showLockedItems')) {
             $data['show_locked_items'] = $request->query->getBoolean('showLockedItems');
         }
+        $isLiveJson = $request->headers->get('X-Genesis-Live') === '1' && $request->getPreferredFormat() === 'json';
         if ($section === 'overview') {
             if ($request->headers->get('X-Genesis-Live') !== '1') {
                 $journal->open($m);
             }
+            $data['journal_page'] = $journal->data($m, $id);
             $points = [
                 'building_points' => 0,
                 'research_points' => 0,
@@ -138,16 +146,19 @@ final class ColonyController extends AbstractController
             $data['empire_rank'] = $rank;
             $data['empire_guild'] = $relations->guild($m);
             $data['guilds_enabled'] = (bool) ($features['guilds_enabled'] ?? false);
+        } elseif ($request->query->has('tutorial')) {
+            $data['training_hint'] = $firstSteps->catalogHint($request->query->getString('tutorial'), $section, $p, $data['building_levels'], $data['resources']);
         }
-        if ($request->headers->get('X-Genesis-Live') === '1' && $request->getPreferredFormat() === 'json') {
+        if ($isLiveJson) {
             return $this->liveRegions($request, $data + ['section' => $section]);
         }
-        return $this->render('colony/show.html.twig', $data + ['section' => $section]);
+        return $this->render('colony/show.html.twig', $data + ['section' => $section],
+            $section === 'overview' ? new Response(headers: ['Cache-Control' => 'private, no-store']) : null);
     }
 
     private function liveRegions(Request $request, array $data): JsonResponse
     {
-        $data['chrome'] = $this->shell->get($this->getUser(), $data['planet']);
+        $data['chrome'] = $this->shell->get($this->getUser(), $data['planet'], rememberSelection: false);
         $data['preferences'] = array_replace(PreferencesService::DEFAULTS, $this->getUser()->preferences);
         $templates = [
             'colony-selector' => 'ui/colony_selector.html.twig',
@@ -160,6 +171,7 @@ final class ColonyController extends AbstractController
         if ($data['section'] === 'overview') {
             // Réutiliser les ressources déjà préparées ; le bandeau conserve son propre rendu.
             $templates['overview-attention'] = 'colony/_overview_attention.html.twig';
+            $templates['overview-flight-metric'] = 'colony/_overview_flight_metric.html.twig';
         }
         $regions = [];
         foreach ($templates as $name => $template) {
@@ -168,26 +180,29 @@ final class ColonyController extends AbstractController
         return $this->liveResponses->create($request, $regions);
     }
     #[Route('/planetes/{id}/journal/consulter', name: 'app_journal_consult', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function consultJournal(int $id, Request $request, \App\Service\Notification\JournalService $journal): Response
+    public function consultJournal(int $id, Request $request, JournalService $journal): Response
     {
-        $this->owned($id);
+        $planet = $this->owned($id);
         $membership = $this->context->membership();
         if ((string) $request->request->get('membership') !== (string) $membership->id || !$this->isCsrfTokenValid('journal-' . $membership->id, $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le journal.');
         }
-        $ids = $request->request->all('notice_ids');
-        foreach ($ids as $value) {
-            if (!is_scalar($value) || !ctype_digit((string) $value) || (int) $value < 1) {
-                throw new \Symfony\Component\HttpKernel\Exception\BadRequestHttpException('Sélection de journal invalide.');
-            }
-        }
         try {
-            $journal->consult($membership, array_map('intval', $ids));
+            $unread = $journal->consult($this->getUser(), $membership, $planet, $request->request->getString('journal_ticket'));
         } catch (\DomainException $error) {
             throw $this->createNotFoundException($error->getMessage());
         }
-        $this->addFlash('success', 'Les événements affichés ont été marqués comme consultés.');
-        return $this->redirectToRoute('app_colony', ['id' => $id, '_fragment' => 'dashboard-journal-title']);
+        if ($request->getPreferredFormat() === 'json') {
+            return $this->json(['unread' => $unread > 0], 200, ['Cache-Control' => 'private, no-store']);
+        }
+
+        $this->addFlash('success', 'Les événements de cette visite ont été marqués comme consultés.');
+        // Un formulaire resté ouvert sur A ne doit pas sélectionner A à nouveau si B a été choisie depuis.
+        $selectedId = (int) $request->getSession()->get('selected_planet_' . $membership->id, $id);
+        if ($selectedId !== $id) {
+            return $this->redirectToRoute('app_home', status: Response::HTTP_SEE_OTHER);
+        }
+        return $this->redirectToRoute('app_colony', ['id' => $id, '_fragment' => 'dashboard-journal-title'], Response::HTTP_SEE_OTHER);
     }
     #[Route('/technologies', name: 'app_technology_tree', methods: ['GET'])]
     public function technologyTree(Request $request, ColonyView $view): Response
@@ -208,6 +223,41 @@ final class ColonyController extends AbstractController
         $planet ??= $planets[0];
         return $this->render('player/technology_tree.html.twig', $view->data($membership, $planet, section: 'tree') + ['tree_standalone' => true]);
     }
+    #[Route('/planetes/{id}/objectif-technologique', name: 'app_technology_goal_summary', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function technologyGoalSummary(int $id, Request $request, GameCatalog $catalog, CatalogueInsights $insights, CatalogueItemLink $links): JsonResponse
+    {
+        // Le navigateur choisit la clé, mais le catalogue et la colonie restent vérifiés côté serveur.
+        $planet = $this->owned($id);
+        $key = $request->query->all()['goal'] ?? null;
+        $headers = ['Cache-Control' => 'private, no-store'];
+        if (!is_string($key) || strlen($key) > 160 || !preg_match('/^(buildings|technologies|ships|defenses):([a-z0-9_]+)-(basic|intermediate|superior)$/D', $key, $parts)) {
+            return $this->json(['goal' => null], 200, $headers);
+        }
+        [, $group, $slug, $tier] = $parts;
+        if (!isset($catalog->all($group)[$slug])) {
+            return $this->json(['goal' => null], 200, $headers);
+        }
+
+        // Lecture seule de deux jeux de niveaux acquis. Les files ne valident pas un niveau à l’avance.
+        $membership = $this->context->membership();
+        $goal = $insights->goalSummary(
+            $membership,
+            $planet,
+            $group,
+            $slug,
+            $tier,
+            $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]),
+            $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]),
+        );
+
+        if (($goal['recommendation']['state'] ?? null) === 'step') {
+            $step = $goal['recommendation']['requirement'];
+            $goal['itemUrl'] = $links->focus($planet->id, $step['group'], $step['slug'], $step['tier']);
+        }
+
+        return $this->json(['goal' => $goal], 200, $headers);
+    }
+
     #[Route('/planetes/{id}/renommer', name: 'app_planet_rename', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function rename(int $id, Request $request, GameManager $manager): Response
     {
@@ -277,13 +327,24 @@ final class ColonyController extends AbstractController
                 (string) $request->request->get('slug'),
                 $quantity,
                 (string) $request->request->get('request_key'),
-                (string) $request->request->get('tier', 'basic')
+                (string) $request->request->get('tier', 'basic'),
+                guided: $request->request->getBoolean('guided_first_step'),
             );
             $this->addFlash('success', 'Commande enregistrée dans la file.' . ($actualQuantity > 0 && $actualQuantity < $quantity ? ' Quantité ajustée au maximum constructible : ' . $actualQuantity . '.' : ''));
         } catch (\DomainException $e) {
             $this->addFlash('error', $e->getMessage());
         }
-        return $this->redirectToRoute('app_colony', ['id' => $id, 'section' => $this->section((string) $request->request->get('section', 'overview')), '_fragment' => 'item-' . (string) $request->request->get('slug', '') . '-' . (string) $request->request->get('tier', 'basic')]);
+        $section = $this->section($request->request->getString('section', 'overview'));
+        $slug = $request->request->getString('slug');
+        $tier = $request->request->getString('tier', 'basic');
+        $return = ['id' => $id, 'section' => $section, '_fragment' => 'item-'.$slug.'-'.$tier];
+        if ($request->request->getBoolean('guided_first_step') && $tier === 'basic'
+            && (($section === 'buildings' && $slug === 'mine_metal') || ($section === 'technologies' && $slug === 'engineering_foundations'))) {
+            // Garder la fiche guidée après un refus (stocks changés, etc.) pour une nouvelle tentative.
+            $return += ['tutorial' => $slug, 'showLockedItems' => 1, 'focusItem' => 1];
+        }
+
+        return $this->redirectToRoute('app_colony', $return);
     }
     #[Route('/planetes/{id}/file/{itemId}/annulation', name: 'app_queue_cancel_preview', methods: ['GET'], requirements: ['id' => '\d+', 'itemId' => '\d+'])]
     public function cancellationPreview(
@@ -344,7 +405,8 @@ final class ColonyController extends AbstractController
         RelationResolver $relations,
     ): Response
     {
-        return $this->render('universe/map_v2.html.twig', $this->mapData($request, $catalog, $clock, true, $relations));
+        return $this->render('universe/map_v2.html.twig', $this->mapData($request, $catalog, $clock, true, $relations),
+            new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
     private function mapData(
@@ -429,6 +491,7 @@ final class ColonyController extends AbstractController
         }
         $galaxyV2Json = '';
         $flights = [];
+        $campaignTraffic = [];
         $mapOccupations = [];
         $mapConquerable = [];
         $mapReinforceable = [];
@@ -504,9 +567,11 @@ final class ColonyController extends AbstractController
                 ];
             }
             $flights = $this->visibility->forMap($m, $selectedGalaxy);
+            $campaignTraffic = $this->campaignTraffic->forGalaxy($m, $selectedGalaxy);
             $galaxyV2Json = json_encode([
                 'geometry' => ['name' => GalaxyGeometry::SPIRAL, 'extent' => GalaxyGeometry::EXTENT, 'unitsToAu' => GalaxyGeometry::UNITS_TO_AU],
                 'systems' => $mapSystems,
+                'selectedSystemId' => $selectedId > 0 ? $selectedSystem['system']->id : null,
                 'origin' => $mapOrigin ? [
                     'planetName' => $mapOrigin->name,
                     'planetCoordinates' => $mapOrigin->coordinates(),
@@ -518,6 +583,7 @@ final class ColonyController extends AbstractController
                     'position' => $mapOrigin->position,
                 ] : null,
                 'flights' => $flights,
+                'campaignTraffic' => $campaignTraffic,
                 'serverNow' => $clock->now()->format(\DateTimeInterface::ATOM),
                 'galaxy' => $selectedGalaxy?->coordinateCode(),
                 'universe' => $m->universe->name,
@@ -531,11 +597,13 @@ final class ColonyController extends AbstractController
             'map_fleet_limit' => $mapFleetLimit,
             'systems' => $systems,
             'selected_system' => $selectedSystem,
+            'selected_system_id' => $selectedId > 0 ? $selectedSystem['system']->id : null,
             'galaxies' => $galaxies,
             'selected_galaxy' => $selectedGalaxy,
             'galaxy_v2_json' => $galaxyV2Json,
             'map_planet_relations' => $mapPlanetRelations,
             'galaxy_v2_flights' => $flights,
+            'galaxy_campaign_traffic' => $campaignTraffic,
             'map_occupations' => $mapOccupations,
             'map_conquerable' => $mapConquerable,
             'map_reinforceable' => $mapReinforceable,

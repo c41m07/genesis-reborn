@@ -1,5 +1,14 @@
 # Roadmap Genesis Reborn
 
+## Kit T1 et récompense quotidienne (expérimentation)
+
+Le kit T1 de la première planète des nouveaux comptes et le bouton quotidien
+forment un lot indivisible. Le clic est attaché au compte et à la date civile
+de Paris ; la planète reste celle annoncée dans l’univers actif. La place doit
+permettre de transférer le lot entier, sans consommation du jour en cas
+d’insuffisance. Le barème métal/nano ×10 reste expérimental. Aucun changement
+des kits de colonisation, de la production ou des comptes existants.
+
 ## Coûts par rang et première colonisation — 19 novembre 2026
 
 La [grille de référence](COUTS.md) passe à B48/52, I34/36/30 et S28/31/31/10.
@@ -2069,3 +2078,187 @@ huit tests HTTP / 173 assertions et vérification du diff réussis.
 La [PR #89](https://github.com/c41m07/genesis-reborn/pull/89) consigne la CI complète
 et l’intégration, puis une nouvelle promotion Alpha reprend le dev consolidé. Aucune migration de base existante,
 installation de dépendance ni intervention sur le serveur dans cette reprise.
+
+
+## Administration — support comptes (branche indépendante)
+
+Première tranche : diagnostic privé des états de compte et des liens conservés,
+sans envoi ni correction de progression. Renvoi administrateur sécurisé,
+historique persistant des emails et interventions métier restent à réaliser.
+Intégration, CI complète et déploiement non effectués.
+Voir [ADMIN_SUPPORT_COMPTES.md](ADMIN_SUPPORT_COMPTES.md).
+
+Incrément support : recherche des inscriptions non confirmées depuis la liste,
+combinable au rôle et à la suspension, avant pagination. Le renvoi administratif
+attend le cycle commun idempotent documenté ; aucun email réel envoyé.
+## Administration : socle permissions
+
+Premier périmètre local : fiche joueur et interventions ressources/vaisseaux/flottes.
+Les admins existants conservent leur accès ; aucune délégation activée.
+Matrice de rôles, stockage, révocation et conversion des autres routes restent
+à définir/implémenter avant ouverture. [Suivi](ADMIN_PERMISSIONS.md).
+## Accessibilité administration : recherche différée
+
+Correctif local ciblé du focus perdu après remplacement AJAX, reproduit puis
+vérifié dans Chromium sur fixture. Six scénarios aux largeurs ordinateur/mobile
+et assets validés ; recette complète/CI non réalisées. [Suivi](ADMIN_ACCESSIBILITE_RECHERCHE.md).
+
+## Estimation de paiement dans les catalogues
+
+Lot autonome de complexité 3/5. Les coûts et les stocks existants alimentent
+un calcul partagé entre le rendu initial et l'estimation de quantité.
+Le bloc adjacent à l'action bloquée n'ajoute pas de requête au rendu et ne
+modifie ni les prix, ni les ressources, ni la règle d'acceptation serveur.
+L'ancien délai est retiré dès édition de quantité ou recalcul en cours.
+
+Vérifications ciblées : 5 tests PHPUnit / 6 assertions, syntaxe PHP/JS, lint
+Twig du gabarit partagé, Compose, compilation des assets et diff. 2 scénarios
+Chromium sur base jetable : délai initial et actualisé, invalidation à la saisie,
+survol, fermeture au clavier, toucher à 390 px, conservation des validations
+de quantité et du fret. Instance et réseau privés supprimés après recette.
+Aucune mesure de performances, CI intégrale ni recette du site réel.
+
+Suivi du 21 novembre : regroupement de l'estimation dans « Il manque ». Le
+relevé du serveur ancre un compteur local commun, sans requête récurrente.
+L'échéance invite à vérifier les stocks sans activer la commande ; les raisons
+de blocage et l'estimation statique restent lisibles sans JavaScript.
+
+
+## Inventaire : retrait de l’accélération des flottes
+
+La branche indépendante retire uniquement la flotte des cibles d’un boost
+d’inventaire. L’ancien formulaire reçoit un refus explicite et les commandes
+actives, objets, récompenses en attente et attributions restent inchangés.
+Pour les vols déjà accélérés, échéance, réserves, historique et règles de rappel
+sont conservés. Ni migration ni changement du calcul de trajet.
+
+### Guide techno et événements
+
+Le raccourci du Guide suit immédiatement le sélecteur d’univers dans la barre
+supérieure. L’objectif reste enregistré par empire et colonie dans ce navigateur.
+Le Guide et le raccourci emploient les mêmes recommandations : écarter les
+prérequis atteints, privilégier l’écart le plus faible entre niveau acquis et
+requis parmi les jalons directs que les déblocages et le labo local permettent
+d’avancer, puis chercher un jalon plus en amont si aucun direct ne convient.
+Les stocks et les files ne servent pas à calculer le conseil : il ne valide
+pas un lancement. Un accès déjà acquis, des prérequis remplis et l’absence
+d’étape disponible sont distingués.
+
+Hors Guide, seule une clé d’objectif enregistrée déclenche la lecture privée :
+deux lectures de niveaux acquis, résolution du seul objectif et de ses étapes
+utiles, sans graphe complet ou lecture sur l’actualisation générale. Dans le
+Guide, le raccourci réutilise la recommandation préparée sur la page. Sans
+JavaScript, stockage local ou objectif valide, le lien reste utilisable.
+
+Le tiroir Événements suit le Guide et précède les raccourcis dans la topbar. Il
+reste disponible sans planète si l’univers fournit des événements. L’ouverture
+native superpose le panneau aux ressources sans déplacer la barre ni la page.
+Sur tablette et sur mobile, ainsi que lorsque le menu latéral réduit la largeur
+disponible sur petit écran, les outils occupent une deuxième rangée réservée. La bande des
+ressources reste un élément fixe distinct, mesuré et actualisé séparément.
+Aucune règle économique, aucun déblocage ni aucune migration ne change.
+
+Parcours concernés : bandeau de ressources et navigation directe des catalogues,
+coque commune claire/sombre et sans JavaScript, tiroir des événements, suivi
+des objectifs du Guide et pages sans empire.
+
+### Premiers pas : fondation économie et recherche
+
+Quatre étapes facultatives expliquent quoi faire, pourquoi et vers quelle fiche
+aller : mine de métal comme premier conseil, centrale, nanos et une première
+recherche au choix. Le lien est dans Vue générale ; aucune étape ne conditionne
+une autre action du jeu.
+
+La fin réellement appliquée d’une construction ou amélioration basique ciblée,
+ou d’une recherche, inscrit une preuve unique par participation et jalon dans
+la transaction de la file. Stock, propriété et date de fin des files ne
+changent pas. Pas de rattrapage depuis les niveaux déjà présents, ni de prime,
+ni de pseudo-événement. La migration ajoute uniquement la table vide.
+
+Les futurs chapitres de vaisseau, exploration, espionnage, colonisation et
+entraînement pirate restent séparés ; leurs preuves, règles et récompenses ne
+sont pas ajoutées ici.
+
+### Premiers pas : premier vaisseau et première exploration
+
+Le même suivi conserve l’achèvement d’un vrai ordre de chantier qui augmente
+un stock de vaisseau. Posséder un vaisseau, le recevoir, préparer un départ ou
+achever une défense ne suffit pas. L’exploration se valide à l’arrivée d’une
+mission qui crée une nouvelle découverte dans l’empire ; le système natal
+et une destination déjà connue ne comptent pas. La consommation existante
+d’une sonde à l’arrivée ne change pas. Le guide invite à en construire une
+autre en vue d’un futur espionnage, sans en promettre ni en attribuer.
+
+La transaction de chaque action conserve la première preuve. Même table,
+aucune migration supplémentaire, aucun ajustement de coût, de durée ni
+de récompense. Espionnage, colonisation et entraînement restent hors lot.
+
+### Premiers pas : rapport d’espionnage PNJ et première colonisation
+
+Le premier rapport d’une vraie mission d’espionnage arrivée sur un monde PNJ
+natif sans propriétaire valide la découverte du parcours. Un rapport
+« détecté » ne fournit aucun renseignement ; même sans détection, les
+informations peuvent être partielles ou absentes. Le guide explique de viser
+une planète connue, de prévoir une sonde consommée, et de retenter avec une
+nouvelle sonde si nécessaire. Il ne présélectionne aucune destination et ne
+lance aucune mission.
+
+La colonisation ne dépend pas des autres étapes. La preuve est inscrite
+uniquement après le transfert d’une planète encore libre et non PNJ,
+l’application du stock d’arrivée existant et la consommation du
+colonisateur. Ni la planète initiale, ni la conquête, ni une arrivée où la
+planète n’est plus libre ne valident ce jalon. Le rapport ou le transfert
+et la première preuve partagent la transaction d’arrivée ; une annulation
+annule la preuve. Aucun suivi supplémentaire des autres missions, aucune
+nouvelle lecture du graphe et aucune migration supplémentaire. Les primes
+et l’entraînement pirate restent hors de ce lot.
+
+### Premiers pas : exercice pirate facultatif
+
+Un convoi civil fictif sert de briefing. Le formulaire natif utilise
+l’empire actif et n’accepte aucune cible ni force réelle. Un seul appel
+borné au simulateur de combat produit un rapport privé et non archivé,
+avec issue, survivants, pertes et effets des tirs. Ni victoire ni défaite
+ne change l’apprentissage : après le rendu, seule la première preuve est
+inscrite dans la table existante, séparément pour chaque empire.
+Le briefing seul ne valide rien. Aucun vaisseau, carburant, stock, butin,
+journal de bataille réel, récompense ni progression de campagne. Refaire
+l’exercice n’ajoute pas de preuve et ne débloque rien dans le jeu.
+
+### Premiers pas : parcours guidé et pilote de remboursement
+
+Le guide et sa carte Vue générale proposent un ordre sans verrou :
+mine, énergie, nanos, Dépôt de minerais, laboratoire, recherche,
+chantier d’assemblage, sonde, exploration, espionnage PNJ, exercice pirate,
+puis première colonie. Les bâtiments basiques déjà présents sur la colonie
+active et les recherches basiques déjà apprises sont reconnus pour l’affichage
+sans écrire de preuve ni réserver de remboursement. Le Dépôt basique niveau 1
+demande une Mine à ciel ouvert basique niveau 5 dans la grille de base ; le
+laboratoire et le reste du parcours restent accessibles en parallèle. La fiche
+du Dépôt distingue la capacité totale et la part protégée du pillage en
+réutilisant la projection existante. La colonisation n’est jamais conditionnée
+par les étapes du guide.
+
+Une commande de la Mine à ciel ouvert ou de Génie civil colonial de niveau 1
+basique lancée dans la fiche guidée paie normalement le prix et attend la fin
+réelle. La preuve et la réservation suivent la même transaction. Le compte
+peut recevoir au plus un remboursement par étape, calculé sur son paiement
+en métal et nanos, à 25 % arrondis vers le bas, plafonnés à 96/52 pour la
+mine et à 240/130 pour la recherche, jamais rétroactivement. Le lot reste
+visible dans le guide de l’empire d’obtention et se récupère sur une colonie
+contrôlée de cet empire. Un stock plein ne consomme pas le droit et ne produit
+pas de versement partiel. Aucun autre remboursement de ressources.
+
+Le premier espionnage guidé s’envoie avec exactement une sonde basique vers
+un PNJ natif connu, jamais un joueur ni un empire oublié. Si la cible cesse
+d’être éligible avant l’arrivée, la mission guidée n’exécute pas l’espionnage.
+Un rapport effectivement produit avec perte réelle de la sonde restaure une
+sonde au hangar de départ, détectée ou non, une seule fois par compte.
+Un rapport « détecté » peut ne contenir aucun renseignement ; le pilote ne
+change pas les résultats tactiques, les sondes consommées en dehors du guide
+ni la campagne à venir. Aucun barème de progression cible n’est mesuré ici.
+
+Déploiement local futur : appliquer normalement en base dédiée la migration
+additive `Version20261120000830` (drapeaux à faux pour les actions existantes,
+registre des droits vide). Ne pas annuler une migration pour supprimer les
+preuves de crédits, même déjà consommés.

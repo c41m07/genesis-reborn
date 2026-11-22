@@ -1,0 +1,22 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Préparer une restauration · {{ universe.name }}{% endblock %}
+{% block body %}
+<h1>Restaurer les valeurs de la trace #{{ source }}</h1>
+<p>{{ universe.name }} · {{ slug }}. Seuls les champs modifiables ci-dessous seront réappliqués comme surcharges. Les règles, prérequis, stocks, files déjà payées et niveaux des joueurs ne sont pas restaurés.</p>
+<p>La production sera matérialisée puis recalculée à la publication. Une évolution du catalogue depuis cet aperçu bloque la confirmation. Les limites sont revérifiées côté serveur.</p>
+<div class="table-scroll"><table class="admin-ops-table"><caption>Valeurs actuelles et historiques proposées</caption><thead><tr><th scope="col">Champ</th><th scope="col">Actuel</th><th scope="col">Proposé</th></tr></thead><tbody>
+{% for field in preview.comparison %}<tr><th scope="row">{{ field.label }}</th><td>{{ field.before }}</td><td>{{ field.after }}</td></tr>{% endfor %}
+</tbody></table></div>
+<h2>Devis indicatif</h2>
+<p>Rang basique, niveau 1, quantité 1, sans bonus ni vérification des stocks ou prérequis d’une planète. Ce n’est pas une restauration de l’ancien contexte de jeu.</p>
+<p>Durée : {{ preview.quote.before.duration }} s → {{ preview.quote.after.duration }} s.</p>
+<dl>{% for resource, cost in preview.quote.after.costs %}<dt>{{ resource }}</dt><dd>{{ preview.quote.before.costs[resource]|default(0) }} → {{ cost }}</dd>{% endfor %}</dl>
+<form method="post" class="admin-catalogue-restore">
+<input type="hidden" name="_token" value="{{ csrf_token(tokenKey) }}">
+<input type="hidden" name="revision" value="{{ preview.revision }}">
+<label for="restore-reason">Motif de restauration</label><textarea id="restore-reason" name="reason" required minlength="5" maxlength="1000"></textarea>
+<label><input type="checkbox" name="confirmed" value="1" required> Je confirme ces valeurs pour cette fiche et cet univers.</label>
+<button class="primary">Publier ces valeurs historiques</button>
+</form>
+<a class="secondary" href="{{ path('app_admin_catalogue_history', {id: universe.id, group: group, slug: slug}) }}">Annuler et revenir à l’historique</a>
+{% endblock %}

@@ -50,7 +50,15 @@ export default class extends Controller {
             const fragment = new DOMParser().parseFromString(html, 'text/html')
                 .querySelector('[data-admin-list-target="results"]');
             if (!fragment) throw new Error('Réponse de recherche invalide');
+            const focusInResults = this.resultsTarget.contains(document.activeElement);
             this.resultsTarget.replaceWith(fragment);
+            // Une réponse lente peut arriver après que le joueur a tabulé dans les résultats.
+            // Ne pas laisser le focus sur un élément supprimé, ni l'imposer hors de cette zone.
+            if (focusInResults) {
+                const focusTarget = fragment.querySelector('[role="status"]') ?? fragment;
+                focusTarget.setAttribute('tabindex', '-1');
+                focusTarget.focus({ preventScroll: true });
+            }
             // Le formulaire reste en place : focus, texte et sélection sont conservés.
             window.history.replaceState(window.history.state, '', url);
         } catch (error) {

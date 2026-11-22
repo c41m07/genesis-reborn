@@ -102,3 +102,12 @@ CI GitHub, ni la réception des messages en production.
 La cause de l'incident alpha reste à déterminer avec un accès autorisé ou
 des journaux expurgés ; ce lot améliore la reprise et la visibilité des erreurs
 sans établir cette cause ni ajouter une file durable d'envoi.
+
+
+## Consultation administrative des états de compte
+
+La fiche joueur présente désormais confirmation, suspension et échéances des
+liens conservés, sans hachage ni lien secret. Elle n’ajoute pas de mesure
+de réception ni d’historique des tentatives SMTP. Le renvoi reste le parcours
+public existant ; aucun email n’est envoyé par consultation du diagnostic.
+Voir [le lot support comptes](ADMIN_SUPPORT_COMPTES.md).

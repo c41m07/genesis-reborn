@@ -25,14 +25,38 @@ test('Rapports A : transport complet, retour filtré, effacement, thèmes et lec
     const snapshot = { sender: 'Nova', recipient: 'Orion', origin: 'Horizon · A:43:3', destination: 'Équinoxe · A:44:2', sent: { metal: 2000, nano: 800 }, delivered: { metal: 1500, nano: 800 }, returned: { metal: 500 }, returned_at: '2026-11-18T14:06:00+01:00', returned_deposited: { metal: 450 }, return_overflow: { metal: 50 } };
     runIsolatedSql(project, `INSERT INTO transport_report(fleet_id,sender_id,recipient_id,status,snapshot,created_at,resolved_at) VALUES(${fleet},${Number(member)},${Number(member)},'delivered','${JSON.stringify(snapshot).replaceAll("'", "''")}','2026-11-18 13:45:00','2026-11-18 13:50:00')`);
     const id = Number(queryIsolatedSql(project, 'SELECT MAX(id) FROM transport_report'));
+    runIsolatedSql(project, 'INSERT INTO report_notice (player_universe_id,transport_report_id) VALUES ('+Number(member)+','+id+')');
+    runIsolatedSql(project, "INSERT INTO espionage_report (sender_id,target_id,result,created_at,probes_sent,intel_categories,detection_chance,sender_espionage_level,target_espionage_level,target_counter_espionage_level,snapshot) VALUES ("+Number(member)+","+Number(planet)+",'detected',UTC_TIMESTAMP(),1,0,95,1,2,2,'{}')");
+    const spy = Number(queryIsolatedSql(project, 'SELECT MAX(id) FROM espionage_report WHERE sender_id='+Number(member)));
+    runIsolatedSql(project, 'INSERT INTO report_notice (player_universe_id,espionage_report_id) VALUES ('+Number(member)+','+spy+')');
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.goto('/rapports?type=economy');
+    await expect(page.locator('.report-unread-count')).toHaveText('2');
+    await expect(page.locator('body')).toHaveAttribute('data-menu-notifications-unread-journal-value', 'false');
+    await expect(page.locator('.report-row .report-new-label')).toHaveText('Nouveau');
+    expect(await page.evaluate(async url => (await fetch(url, { headers: { 'Sec-Purpose': 'prefetch' } })).status, '/rapports/transport/'+id)).toBe(200);
+    expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM report_notice WHERE player_universe_id='+Number(member)+' AND consulted_at IS NULL'))).toBe(2);
+
+    runIsolatedSql(project, "INSERT INTO notification (recipient_id,message,created_at,journal_kind) VALUES ("+Number(member)+",'Une arrivée dans le Journal',UTC_TIMESTAMP(),'arrival')");
+    await page.reload();
+    for (const [width, button] of [[390, '.mobile-bottom-nav button'], [768, '.topbar .mobile-menu']]) {
+        await page.setViewportSize({ width, height:1000 });
+        const journalDot = page.locator(button+' .menu-unread-dot');
+        const reportsDot = page.locator(button+' .report-mobile-indicator');
+        await expect(journalDot).toBeVisible();
+        await expect(reportsDot).toBeVisible();
+        const [journal, reports] = await Promise.all([journalDot.boundingBox(), reportsDot.boundingBox()]);
+        expect(journal.y + journal.height <= reports.y || reports.y + reports.height <= journal.y).toBe(true);
+    }
+    await page.setViewportSize({ width:1440, height:1000 });
     await page.getByLabel('Nom actuel de planète').fill(planetName);
     await page.getByRole('button', { name: 'Rechercher les rapports' }).click();
     await expect(page).toHaveURL(/planet=/);
     await page.locator(`a[href*="/rapports/transport/${id}"]`).click();
     const reportUrl = page.url();
+    await expect(page.locator('.report-notice-form')).toBeHidden();
+    await expect(page.locator('.report-unread-count')).toHaveText('1');
     const row = page.locator('.report-resource-table tbody tr').filter({ hasText: 'Métal' });
     await expect(row.locator('[data-label="Envoyé"]')).toHaveText('2 000,00');
     await expect(row.locator('[data-label="Livré"]')).toHaveText('1 500,00');
@@ -62,6 +86,16 @@ test('Rapports A : transport complet, retour filtré, effacement, thèmes et lec
     await expect(plain.locator('.report-resource-table [data-label="Perdu au retour"]').first()).toHaveText('−50,00');
     expect(await plain.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
     await plain.screenshot({ path: info.outputPath('transport-A-sans-javascript.png'), fullPage: true });
+    await plain.goto(new URL('/rapports/espionnage/'+spy, reportUrl).href);
+    await expect(plain.locator('.mobile-bottom-nav .report-mobile-indicator')).toBeVisible();
+    const manual = plain.getByRole('button', { name: 'Marquer ce rapport comme lu' });
+    await manual.focus();
+    await expect(manual).toBeFocused();
+    await plain.keyboard.press('Enter');
+    await expect(plain.locator('.mobile-bottom-nav .report-mobile-indicator')).toBeHidden();
+    await expect(plain.getByRole('heading', { name: 'Rapport d’espionnage' })).toBeVisible();
+    await expect(plain.locator('.mobile-bottom-nav .menu-unread-dot')).toBeVisible();
+    expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM report_notice WHERE player_universe_id='+Number(member)+' AND consulted_at IS NULL'))).toBe(0);
     await plain.goto('/rapports?type=economy');
     await expect(plain.getByRole('button', { name: 'Archiver la sélection', exact: true })).toBeEnabled();
     await expect(plain.getByRole('checkbox', { name: 'Tout sélectionner sur cette page' })).toBeHidden();
