@@ -5,7 +5,10 @@ export default class extends Controller {
     static targets = ['input', 'max', 'submit', 'status', 'label', 'arrow', 'form', 'cost', 'costHeading', 'duration', 'wait', 'waitText'];
     static values = { url: String };
 
-    connect() { this.maxTarget.hidden = false; }
+    connect() {
+        this.maximumUnavailable = this.maxTarget.disabled;
+        this.maxTarget.hidden = false;
+    }
     disconnect() { this.abort?.abort(); }
     invalidate() {
         // Une ancienne estimation ne doit plus être présentée dès que la quantité change.
@@ -37,6 +40,7 @@ export default class extends Controller {
             if (abort.signal.aborted || this.abort !== abort || !this.element.isConnected) return false;
             const requested = Number(this.inputTarget.value);
             const maximum = data.maximum;
+            this.maximumUnavailable = maximum === 0;
             this.inputTarget.max = String(maximum);
             this.inputTarget.min = maximum > 0 ? '1' : '0';
             if (maximize || requested > maximum || maximum === 0) this.inputTarget.value = String(maximum);
@@ -45,6 +49,8 @@ export default class extends Controller {
             this.renderPreview(data);
             this.updateWait(data.paymentWait, data.paymentEstimate);
             this.submitTarget.disabled = maximum === 0;
+            this.submitTarget.classList.toggle('primary', maximum > 0);
+            this.submitTarget.classList.toggle('secondary', maximum === 0);
             const missing = Object.values(data.missingResources ?? {});
             this.submitTarget.classList.toggle('has-missing-resources', missing.length > 0);
             this.labelTarget.replaceChildren(document.createTextNode(maximum === 0 ? (missing.length ? 'Il manque :' : data.unavailableLabel) : `${this.submitTarget.dataset.actionLabel} ${exactNumber(data.quantity)}`));
@@ -55,7 +61,9 @@ export default class extends Controller {
                 this.labelTarget.append(line);
             }
             this.arrowTarget.hidden = maximum === 0;
-            this.formTarget.dataset.dirty = 'true';
+            // Aucun lot sélectionné à zéro : le fragment de stock peut réactiver Max.
+            if (maximum === 0) delete this.formTarget.dataset.dirty;
+            else this.formTarget.dataset.dirty = 'true';
             return true;
         } catch (error) {
             if (error.name !== 'AbortError' && !abort.signal.aborted && this.abort === abort && this.element.isConnected) {
@@ -63,7 +71,7 @@ export default class extends Controller {
             }
             return false;
         } finally {
-            if (this.abort === abort) this.maxTarget.disabled = false;
+            if (this.abort === abort) this.maxTarget.disabled = this.maximumUnavailable;
         }
     }
 

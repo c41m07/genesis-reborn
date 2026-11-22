@@ -46,6 +46,7 @@ test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsq
     await maximum.click();
     await expect(panel.getByRole('status')).toContainText('Ressources manquantes : 240 Métal, 130 Nano, 200 Électricité.');
     await expect(panel.getByRole('button', { name: /^Il manque :/ })).toBeDisabled();
+    await expect(maximum).toBeDisabled();
     await expect(panel.locator('.catalog-missing-resource')).toHaveText(['Métal : 240', 'Nano : 130', 'Électricité : 200']);
     const wait = panel.locator('.catalog-wait > button');
     const waitText = panel.locator('.catalog-wait > span');
@@ -78,6 +79,11 @@ test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsq
     }
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE planet_id=${planet}`)).toBe('0');
     prepareOwnedColony(project, email, { stock: 150000 });
+    await page.evaluate(() => document.activeElement?.blur());
+    const stockRefresh = page.waitForResponse(response => response.request().headers()['x-genesis-live'] === '1');
+    await page.evaluate(() => window.dispatchEvent(new Event('genesis:refresh')));
+    await stockRefresh;
+    await expect(maximum).toBeEnabled();
     await maximum.click();
     await expect.poll(async () => Number(await input.inputValue())).toBeGreaterThan(100);
     // Le navigateur bloque une valeur supérieure à max avant l’envoi. Le parcours

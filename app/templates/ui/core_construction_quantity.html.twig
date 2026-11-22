@@ -1,0 +1,14 @@
+<div class="core-construction-quantity">
+    {% set quantityId = 'quantity-' ~ slug ~ '-' ~ card.tier %}
+    <label for="{{ quantityId }}">Quantité</label>
+    <div class="quantity-input">
+        {% if inactive %}
+            <input id="{{ quantityId }}" type="number" min="1" value="1" disabled>
+            <button type="button" class="secondary quantity-max" disabled aria-label="Max : quantité maximale de {{ d.label }}">Max</button>
+        {% else %}
+            <input id="{{ quantityId }}" name="quantity" type="number" min="1" value="1" required data-construction-quantity-target="input" data-action="input->construction-quantity#invalidate change->construction-quantity#change" aria-describedby="quantity-status-{{ slug }}-{{ card.tier }}">
+            <button type="button" class="secondary quantity-max" data-construction-quantity-target="max" data-action="construction-quantity#maximum" aria-label="Max : quantité maximale de {{ d.label }}"{{ blocked ? ' disabled' }} hidden>Max</button>
+        {% endif %}
+    </div>
+    {% if not inactive %}<small id="quantity-status-{{ slug }}-{{ card.tier }}" class="quantity-status" role="status" data-construction-quantity-target="status"></small>{% endif %}
+</div>

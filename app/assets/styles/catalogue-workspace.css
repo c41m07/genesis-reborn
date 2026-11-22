@@ -292,3 +292,50 @@ body[data-theme=light] .catalog-workspace .catalog-build-action.primary:not(:dis
     .catalog-workspace .core-catalogue-title { flex-basis:100%; }
     .catalog-workspace .catalog-condensed .core-catalogue-effects { grid-area:4/1/5/3; }
 }
+
+.core-catalogue-header--ships .core-catalogue-header-art { object-position:center 50%; }
+.core-catalogue-header--defenses { border-color:color-mix(in srgb,var(--gold) 32%,var(--line)); }
+.core-catalogue-header--defenses .core-catalogue-header-art { object-position:center 44%; }
+.core-catalogue-header--defenses .core-catalogue-kicker { color:var(--gold); }
+.catalog-workspace :is(.card--ships,.card--defenses) .catalog-card-art { aspect-ratio:5/2; }
+.core-unit-gain { margin-bottom:8px; }
+.card--defenses .core-unit-gain {
+    border-color:color-mix(in srgb,var(--gold) 33%,var(--line));
+    background:color-mix(in srgb,var(--gold) 8%,var(--panel));
+}
+.core-construction-order { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:start; gap:6px 10px; margin-bottom:10px; }
+.core-construction-quantity { min-width:0; }
+.core-construction-quantity label { display:block; margin:0 0 6px; font-size:11px; font-weight:700; color:var(--muted); }
+.core-construction-quantity .quantity-input { flex-wrap:nowrap; }
+.core-construction-quantity input { width:5ch; min-width:52px; min-height:44px; }
+.core-construction-quantity .quantity-max { min-width:44px; min-height:44px; }
+.core-construction-quantity .quantity-status { max-width:16ch; overflow-wrap:anywhere; }
+.catalog-workspace .core-construction-cost :is(.catalog-cost-heading,.building-costs) { margin:0 0 6px; padding:0; border:0; }
+.catalog-workspace .core-construction-cost .building-costs {
+    display:grid;
+    grid-auto-flow:column;
+    grid-auto-columns:minmax(0,1fr);
+}
+.catalog-workspace .core-construction-cost .building-costs > span { display:flex; min-width:0; font-size:12px; }
+.catalog-workspace .core-construction-cost .building-costs > span[hidden] { display:none; }
+.catalog-workspace .core-construction-cost .building-costs small { overflow-wrap:anywhere; }
+.catalog-workspace .core-unit-details .card-benefits { margin:8px 0 0; }
+.core-unit-price { list-style:none; padding:0; margin:0; }
+.core-unit-price li { margin:4px 0; }
+.catalog-workspace .catalog-condensed .core-construction-order { grid-template-columns:minmax(0,1fr); }
+.catalog-workspace .catalog-condensed .core-unit-gain { grid-area:1/2; }
+.catalog-workspace .catalog-condensed .core-unit-details { grid-area:2/2; }
+.catalog-workspace .catalog-condensed .core-unit-details .card-benefits { grid-area:auto; }
+.catalog-workspace .catalog-condensed .core-construction-cost :is(.catalog-cost-heading,.building-costs) { grid-area:auto; }
+@media(max-width:1199px) {
+    .catalog-workspace .catalog-condensed .core-unit-gain { grid-area:4/1/5/3; }
+    .catalog-workspace .catalog-condensed .core-unit-details { grid-area:7/1/8/3; }
+}
+@container(max-width:365px) { .core-construction-order { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:600px) {
+    .core-construction-order { grid-template-columns:minmax(0,1fr); }
+    .core-construction-quantity .quantity-status { max-width:none; }
+    .catalog-workspace .catalog-condensed .core-unit-details { grid-area:8/1/9/3; }
+}
+
+.catalog-workspace .core-construction-cost .building-costs > span > span { min-width:0; max-width:100%; overflow-wrap:anywhere; }
