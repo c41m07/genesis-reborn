@@ -59,9 +59,17 @@ test('Simulateur : dix combats reproductibles, détails accessibles et aucune mu
  await summary.focus();await page.keyboard.press('Enter');await expect(trial).toHaveAttribute('open','');
  await expect(trial.getByRole('heading',{name:'Camp attaquant',exact:true})).toBeVisible();
  await expect(trial.getByRole('heading',{name:'Camp défenseur',exact:true})).toBeVisible();
- await expect(trial.locator('.simulation-losses')).toHaveCount(2);
- const unitTotals=await trial.locator('.simulation-losses tbody tr').evaluateAll(rows=>rows.map(row=>[...row.querySelectorAll('td')].map(cell=>Number(cell.textContent.replace('−','-')))));
- for(const [initial,lost,remaining] of unitTotals)expect(initial).toBe(-lost+remaining);
+ const campTables=trial.locator('.simulation-losses');
+ await expect(campTables).toHaveCount(2);
+ for(const table of await campTables.all()){
+  await expect(table.getByRole('columnheader')).toHaveText(['Unité','Engagés','Survivants','Pertes']);
+  const unitTotals=await table.locator('tbody tr').evaluateAll(rows=>rows.map(row=>[...row.querySelectorAll('td')].map(cell=>Number(cell.textContent.replace('−','-')))));
+  expect(unitTotals.length).toBeGreaterThan(0);
+  for(const [initial,remaining,lost] of unitTotals){
+   expect(lost).toBeLessThanOrEqual(0);
+   expect(initial).toBe(remaining-lost);
+  }
+ }
  await trial.getByText('Structure détaillée des survivants',{exact:true}).focus();await page.keyboard.press('Space');
  await expect(trial.locator('ul').first()).toBeVisible();
  await summary.click();await expect(trial).not.toHaveAttribute('open','');
