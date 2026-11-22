@@ -31,7 +31,16 @@ final class GuildHallController extends AbstractController
         $target = $hall?->requiredStrength ?? $target;
         $remaining = $target - ($hall?->strength ?? 0);
         $mayAct = !$vacations->isActive($actor);
-        $mayPlace = $mayAct && $remaining === 0 && $hall->solarSystem === null && $policy->canCommand($actor, $guild);
+        $requiredDonors = $hall?->requiredDonors ?? $this->funding->requiredDonors;
+        $minimum = $hall?->minimumDonorStrength ?? $this->funding->minimumDonorStrength;
+        $qualified = $hall ? $this->halls->qualifiedDonors($hall) : 0;
+        $roster = $this->halls->currentRosterSize($guild, $requiredDonors);
+        $personal = $hall ? ($this->halls->donor($hall, $actor)?->strength ?? 0) : 0;
+        $maximum = $mayAct && $remaining > 0 ? $this->funding->maximumDonation(
+            $remaining, $personal, $hall ? $this->halls->topOtherDonors($hall, $actor->id) : [], $requiredDonors, $minimum,
+        ) : 0;
+        $mayPlace = $mayAct && $remaining === 0 && $qualified >= $requiredDonors && $roster >= $requiredDonors
+            && $hall->solarSystem === null && $policy->canCommand($actor, $guild);
         $query = mb_substr(trim($request->query->getString('q')), 0, 80);
         $after = max(0, $request->query->getInt('after'));
         $sites = $mayPlace ? $this->halls->availableSites($actor, $query, $after) : [];
@@ -41,9 +50,17 @@ final class GuildHallController extends AbstractController
             'hall' => $hall,
             'required' => $target,
             'remaining' => $remaining,
+            'required_donors' => $requiredDonors,
+            'minimum_donor_strength' => $minimum,
+            'qualified_donors' => $qualified,
+            'current_roster' => $roster,
+            'personal' => $personal,
+            'personal_remaining' => max(0, $minimum - $personal),
+            'maximum' => $maximum,
+            'resource_fields' => $this->funding->fields($maximum),
             'may_act' => $mayAct,
             'may_place' => $mayPlace,
-            'colonies' => $mayAct && $remaining > 0 ? $game->planets($actor->universe, $actor) : [],
+            'colonies' => $maximum > 0 ? $game->planets($actor->universe, $actor) : [],
             'search' => $query,
             'after' => $after,
             'sites' => array_slice($sites, 0, GuildHallRepository::SITE_PAGE_SIZE),

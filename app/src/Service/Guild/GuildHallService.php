@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Guild;
 
-use App\Entity\{Guild, GuildHall, Planet, PlayerUniverse, SolarSystem};
+use App\Entity\{Guild, GuildHall, GuildHallContribution, Planet, PlayerUniverse, SolarSystem};
 use App\Manager\GameManager;
 use App\Repository\GuildHallRepository;
 use App\Service\Colony\{ActionGuard, ResourceService};
@@ -46,7 +46,17 @@ final readonly class GuildHallService
             $this->guard->lock($actor, $planet, currentReads: true);
 
             $target = $hall?->requiredStrength ?? $this->funding->target();
-            $donation = $this->funding->donation($amounts, $target - ($hall?->strength ?? 0));
+            $requiredDonors = $hall?->requiredDonors ?? $this->funding->requiredDonors;
+            $minimumDonorStrength = $hall?->minimumDonorStrength ?? $this->funding->minimumDonorStrength;
+            $contribution = $hall ? $this->halls->donor($hall, $actor, lock: true) : null;
+            $maximum = $this->funding->maximumDonation(
+                $target - ($hall?->strength ?? 0),
+                $contribution?->strength ?? 0,
+                $hall ? $this->halls->topOtherDonors($hall, $actor->id, lock: true) : [],
+                $requiredDonors,
+                $minimumDonorStrength,
+            );
+            $donation = $this->funding->donation($amounts, $maximum);
             // Même transaction que la progression : ni double débit après un renvoi
             // du formulaire, ni construction créditée si le stock n'a pas été payé.
             $this->resources->consume($planet, $donation['cost'], lockStocks: true);
@@ -54,9 +64,18 @@ final readonly class GuildHallService
                 $hall = new GuildHall();
                 $hall->guild = $guild;
                 $hall->requiredStrength = $target;
+                $hall->requiredDonors = $requiredDonors;
+                $hall->minimumDonorStrength = $minimumDonorStrength;
                 $hall->startedAt = $this->clock->now();
                 $this->manager->save($hall);
             }
+            if ($contribution === null) {
+                $contribution = new GuildHallContribution();
+                $contribution->hall = $hall;
+                $contribution->memberId = $actor->id;
+                $this->manager->save($contribution);
+            }
+            $contribution->strength += $donation['strength'];
             $hall->strength += $donation['strength'];
             ++$hall->revision;
 
@@ -76,6 +95,14 @@ final readonly class GuildHallService
             $this->assertRevision($hall, $revision);
             if ($hall === null || $hall->strength !== $hall->requiredStrength || $hall->solarSystem !== null) {
                 throw new \DomainException('Il faut un Hall entièrement financé et non installé.');
+            }
+            // Les reçus acquis conservent leur valeur après un départ, mais
+            // une guilde réduite ne peut pas installer un Hall en solitaire.
+            if ($this->halls->qualifiedDonors($hall, lock: true) < $hall->requiredDonors) {
+                throw new \DomainException('Le nombre de donateurs ayant atteint le minimum personnel est insuffisant.');
+            }
+            if ($this->halls->currentRosterSize($guild, $hall->requiredDonors) < $hall->requiredDonors) {
+                throw new \DomainException('Il manque des membres actuels pour installer le Hall.');
             }
             $system = $this->em->find(SolarSystem::class, $systemId);
             if (!$system instanceof SolarSystem || $system->galaxy->universe->id !== $guild->universe->id) {

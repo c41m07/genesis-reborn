@@ -19,13 +19,58 @@ final readonly class GuildHallFunding
         private GuildProjectRules $rules,
         private GameCatalog $catalog,
         #[Autowire('%env(int:GUILD_HALL_REQUIRED_STRENGTH)%')] private int $requiredStrength,
+        #[Autowire('%env(int:GUILD_HALL_REQUIRED_DONORS)%')] public int $requiredDonors,
+        #[Autowire('%env(int:GUILD_HALL_MINIMUM_DONOR_STRENGTH)%')] public int $minimumDonorStrength,
+        #[Autowire('%env(bool:GUILD_HALL_ENABLED)%')] private bool $enabled,
     ) {
     }
 
     public function target(): ?int
     {
-        return $this->requiredStrength > 0 && $this->requiredStrength <= GuildProjectRules::MAX_STAGE_AMOUNT
-            ? $this->requiredStrength : null;
+        return $this->enabled && $this->requiredStrength > 0 && $this->requiredStrength <= GuildProjectRules::MAX_STAGE_AMOUNT
+            && $this->requiredDonors > 0 && $this->requiredDonors <= 100
+            && $this->minimumDonorStrength > 0
+            && $this->minimumDonorStrength <= intdiv($this->requiredStrength, $this->requiredDonors)
+                ? $this->requiredStrength : null;
+    }
+
+    /**
+     * @param list<int> $otherStrengths Au plus le nombre de donateurs requis, par ordre décroissant.
+     */
+    public function maximumDonation(int $remaining, int $personal, array $otherStrengths, int $requiredDonors, int $minimumEach): int
+    {
+        $reserve = $requiredDonors * $minimumEach;
+        foreach (array_slice($otherStrengths, 0, $requiredDonors) as $previous) {
+            $reserve -= min($minimumEach, $previous);
+        }
+        $last = min($minimumEach, $otherStrengths[$requiredDonors - 1] ?? 0);
+        // Un nouveau point ne réduit le déficit réservé qu'après entrée du
+        // donateur parmi les mieux placés, et seulement jusqu'au seuil personnel.
+        // La dépense + le futur déficit restent donc monotones : chercher le plafond.
+        $low = 0;
+        $high = max(0, $remaining);
+        while ($low < $high) {
+            $candidate = intdiv($low + $high + 1, 2);
+            $coverage = max(0, min($minimumEach, $personal + $candidate) - $last);
+            if ($candidate + $reserve - $coverage <= $remaining) {
+                $low = $candidate;
+            } else {
+                $high = $candidate - 1;
+            }
+        }
+
+        return $low;
+    }
+
+    /** @return array<string, array{label: string, maximum: int}> */
+    public function fields(int $maximum): array
+    {
+        $fields = [];
+        foreach (['hydrogen' => 'Hydrogène', 'metal' => 'Métal', 'nano' => 'Nano', 'antimatter' => 'Antimatière'] as $resource => $label) {
+            $fields[$resource] = ['label' => $label, 'maximum' => intdiv($maximum, self::WEIGHTS[$resource])];
+        }
+
+        return $fields;
     }
 
     public function availableIn(Universe $universe): bool
@@ -46,7 +91,7 @@ final readonly class GuildHallFunding
             $strength += $amount * self::WEIGHTS[$resource];
         }
         if ($strength > $remaining) {
-            throw new \DomainException('Ce don dépasse la force de construction restante. Aucun stock n’est débité.');
+            throw new \DomainException(sprintf('Ce don dépasse la force autorisée (%s points). La place requise pour les autres donateurs est réservée. Aucun stock n’est débité.', number_format($remaining, 0, ',', ' ')));
         }
 
         return ['cost' => $cost, 'strength' => $strength];

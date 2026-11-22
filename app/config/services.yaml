@@ -15,7 +15,10 @@ parameters:
     env(MAILER_FROM): 'no-reply@genesis-reborn.local'
     env(EMPIRE_INACTIVITY_WARNINGS_ENABLED): '0'
     env(FORGOTTEN_EMPIRES_ENABLED): '0'
-    env(GUILD_HALL_REQUIRED_STRENGTH): '0'
+    env(GUILD_HALL_ENABLED): '0'
+    env(GUILD_HALL_REQUIRED_STRENGTH): '500000'
+    env(GUILD_HALL_REQUIRED_DONORS): '3'
+    env(GUILD_HALL_MINIMUM_DONOR_STRENGTH): '50000'
     env(OPS_ALERT_ENABLED): '0'
     env(OPS_ALERT_TO): ''
     env(OPS_ALERT_SIGNAL_SECONDS): '120'
@@ -66,6 +69,10 @@ when@test:
             autowire: true
             arguments:
                 $requiredStrength: 32
+                $requiredDonors: 1
+                $minimumDonorStrength: 1
+                $enabled: true
+            public: true
         App\Service\Player\GuildImageStorage:
             arguments:
                 $directory: '%kernel.cache_dir%/guild-media'

@@ -389,6 +389,7 @@ final class EmpireConversionTest extends KernelTestCase
         $hall = new \App\Entity\GuildHall();
         $hall->guild = $guild;
         $hall->strength = $hall->requiredStrength = 32;
+        $hall->requiredDonors = $hall->minimumDonorStrength = 1;
         $hall->solarSystem = $this->planet->solarSystem;
         $hall->startedAt = $hall->placedAt = $this->clock->now()->modify('-1 day');
         $this->em->persist($hall);

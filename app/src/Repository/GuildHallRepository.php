@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\{Guild, GuildHall, Planet, PlayerDiscovery, PlayerUniverse, SolarSystem};
+use App\Entity\{Guild, GuildHall, GuildHallContribution, Planet, PlayerDiscovery, PlayerUniverse, SolarSystem};
 use Doctrine\DBAL\{ArrayParameterType, LockMode};
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -38,6 +38,52 @@ final readonly class GuildHallRepository
         }
 
         return $builder->getQuery()->getResult();
+    }
+
+    public function donor(GuildHall $hall, PlayerUniverse $actor, bool $lock = false): ?GuildHallContribution
+    {
+        $query = $this->em->createQueryBuilder()->select('contribution')
+            ->from(GuildHallContribution::class, 'contribution')
+            ->where('contribution.hall = :hall AND contribution.memberId = :actor')
+            ->setParameter('hall', $hall)->setParameter('actor', $actor->id)->getQuery();
+        if ($lock) {
+            $query->setLockMode(LockMode::PESSIMISTIC_WRITE)->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true);
+        }
+
+        return $query->getOneOrNullResult();
+    }
+
+    /** @return list<int> */
+    public function topOtherDonors(GuildHall $hall, int $memberId, bool $lock = false): array
+    {
+        return array_map('intval', $this->em->getConnection()->fetchFirstColumn(
+            'SELECT strength FROM guild_hall_contribution WHERE hall_id = ? AND member_id <> ?
+             ORDER BY strength DESC LIMIT '.$hall->requiredDonors.($lock ? ' FOR UPDATE' : ''),
+            [$hall->id, $memberId],
+        ));
+    }
+
+    public function qualifiedDonors(GuildHall $hall, bool $lock = false): int
+    {
+        return count($this->em->getConnection()->fetchFirstColumn(
+            'SELECT id FROM guild_hall_contribution WHERE hall_id = ? AND strength >= ?
+             LIMIT '.$hall->requiredDonors.($lock ? ' FOR UPDATE' : ''),
+            [$hall->id, $hall->minimumDonorStrength],
+        ));
+    }
+
+    public function currentRosterSize(Guild $guild, int $required): int
+    {
+        // La sélection d'un autre univers ou les vacances ne quittent pas la
+        // guilde. En revanche, un empire oublié n'est plus un membre jouable.
+        // En écriture l'univers est déjà verrouillé avant toute lecture normale :
+        // ne pas verrouiller les participations des autres membres dans l'ordre inverse.
+        return count($this->em->getConnection()->fetchFirstColumn(
+            'SELECT gm.id FROM guild_member gm JOIN player_universe pu ON pu.id = gm.player_universe_id
+             WHERE gm.guild_id = ? AND pu.universe_id = ? AND pu.player_id IS NOT NULL AND pu.forgotten_at IS NULL
+             LIMIT '.$required,
+            [$guild->id, $guild->universe->id],
+        ));
     }
 
     public function lockForGuild(Guild $guild): ?GuildHall

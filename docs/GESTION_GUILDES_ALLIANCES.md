@@ -24,11 +24,27 @@ récompenses des projets existants. Un don volontaire transforme 8 hydrogène,
 arrondi. L'électricité ne finance pas le Hall. Le service refuse avant débit
 un don supérieur au restant dû ; aucun excédent n'est perdu.
 
-La cible de construction est figée au premier don. Par défaut,
-`GUILD_HALL_REQUIRED_STRENGTH=0` ferme les mutations ; le seuil 32 utilisé
-dans les fixtures n'est ni un prix de jeu ni une suggestion de prix. Le pilote
-reste fermé sans seuil positif : l'onglet n'apparaît pas et les opérations sont
-refusées. Aucun rôle ni droit de grade n’est ajouté.
+Le prix fixé est de 500 000 points, avec trois personnes distinctes ayant
+versé au moins 50 000 points chacune en étant membres. Les trois critères
+sont figés au premier don. Le système réserve dans le total la part encore
+nécessaire aux donateurs ; une personne seule ne peut pas verser plus de
+400 000 points au départ. Un don au-delà du plafond de la personne est
+refusé sans débit, pas consommé ni réparti en surplus.
+
+L'identifiant de participation, commun à toutes ses colonies, ne compte
+qu'une fois en cas de départ puis retour. Son don et sa qualification ne
+sont pas remboursés ni transférés. Il faut aussi au moins trois membres
+jouables actuellement inscrits pour installer le Hall : un ancien trio
+n'autorise pas un commandant seul. Un nouveau membre renforce l'effectif,
+mais n'est pas compté comme donateur s'il n'a rien donné. Quitter la
+guilde après installation ne retire pas le Hall.
+
+`GUILD_HALL_ENABLED=0` reste le défaut. Une activation volontaire requiert
+un seuil et des minimums compatibles ; les configurations par défaut du
+pilote reprennent les valeurs validées ci-dessus. Aucune production n'est
+activée par ce lot. La migration des reçus ne crédite pas les anciens
+essais sans trace : elle refuse de continuer s'il reste un Hall du prototype
+précédent dans la base à migrer.
 
 Le premier modèle limite le Hall à un par guilde. Une fois la cible atteinte,
 seul le commandant en exercice peut l'installer à la position 0 d'un système
@@ -45,7 +61,7 @@ dans la même transaction sans restituer les dons. Si le commandant est
 converti sans successeur éligible, la guilde cesse d'être jouable et la place
 est libérée également, sans détruire les messages, profils et grades
 conservés dans l'historique. S'il reste un successeur, celui-ci garde le Hall.
-Le prix effectif reste à décider avant l'ouverture. La migration additive conserve les Hall existants en cas de retour
+ La migration additive conserve les Hall existants en cas de retour
 du code et ne doit être appliquée que selon la procédure habituelle.
 
 ## Périmètre validé

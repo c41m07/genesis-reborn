@@ -6,8 +6,9 @@ namespace App\Tests\Integration;
 
 use App\Entity\{Guild, GuildHall, Planet, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
 use App\Repository\GuildHallRepository;
-use App\Service\Guild\GuildHallService;
-use App\Service\Player\{DiplomacyService, RegistrationService, RelationResolver};
+use App\Service\Catalog\GameCatalog;
+use App\Service\Guild\{GuildHallFunding, GuildHallService};
+use App\Service\Player\{DiplomacyService, GuildProjectRules, RegistrationService, RelationResolver};
 use App\Service\Universe\{UniverseImporter, UniverseService};
 use App\Validator\DTO\RegistrationData;
 use Doctrine\ORM\EntityManagerInterface;
@@ -107,6 +108,8 @@ final class GuildHallTest extends KernelTestCase
         self::assertContains('Le Hall a changé. Rechargez la page avant de réessayer.', $results);
         self::assertEqualsWithDelta($before - 8, $this->stock($origin, 'hydrogen') + $this->stock($planet, 'hydrogen'), 0.1);
         self::assertSame(8, (int) $this->em->getConnection()->fetchOne('SELECT strength FROM guild_hall WHERE guild_id = ?', [$guild->id]));
+        self::assertSame(1, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM guild_hall_contribution'));
+        self::assertSame(8, (int) $this->em->getConnection()->fetchOne('SELECT SUM(strength) FROM guild_hall_contribution'));
     }
 
     public function testActualGuildDissolutionReleasesAnInstalledHallWithoutRefund(): void
@@ -129,6 +132,127 @@ final class GuildHallTest extends KernelTestCase
         $this->discover($rival, $system);
         $service->contribute($rival, $rivalGuild->id, $rivalPlanet->id, 0, ['hydrogen' => 32]);
         self::assertSame($system->id, $service->place($rival, $rivalGuild->id, $system->id, 1)->solarSystem->id);
+    }
+
+    public function testOfficialQuorumCountsMembershipAcrossColoniesAndUsesExactly500000Points(): void
+    {
+        [$leader, $member, $third, $origin, $secondPlanet, $guild, $hall, $service] = $this->fundOfficialHall();
+        $repo = self::getContainer()->get(GuildHallRepository::class);
+        self::assertSame(499999, $hall->strength);
+        self::assertSame(2, $repo->qualifiedDonors($hall));
+        self::assertSame(49999, $repo->donor($hall, $member)->strength);
+        self::assertSame(3, $repo->currentRosterSize($guild, $hall->requiredDonors));
+
+        // Une deuxième colonie de la même participation complète son reçu,
+        // elle ne devient jamais une quatrième identité.
+        $otherColony = $this->em->getRepository(Planet::class)->findOneBy(['owner' => null, 'solarSystem' => $secondPlanet->solarSystem]);
+        $otherColony->acquireBy($member, new \DateTimeImmutable());
+        self::getContainer()->get(\App\Service\Colony\ResourceService::class)->initialize($otherColony, colony: true);
+        $this->em->flush();
+        $hall = $service->contribute($member, $guild->id, $otherColony->id, $hall->revision, ['hydrogen' => 1]);
+        self::assertSame(500000, $hall->strength);
+        self::assertSame(50000, $repo->donor($hall, $member)->strength);
+        self::assertSame(3, $repo->qualifiedDonors($hall));
+        self::assertSame(3, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM guild_hall_contribution WHERE hall_id = ?', [$hall->id]));
+
+        $diplomacy = self::getContainer()->get(DiplomacyService::class);
+        $diplomacy->leave($member);
+        $diplomacy->leave($third);
+        self::assertSame(1, $repo->currentRosterSize($guild, 3));
+        self::assertSame(3, $repo->qualifiedDonors($hall));
+        $diplomacy->join($member, $guild->id);
+        [$newcomer] = $this->player('HallNewcomer');
+        $diplomacy->join($newcomer, $guild->id);
+        self::assertSame(3, $repo->currentRosterSize($guild, 3));
+        self::assertSame(3, $repo->qualifiedDonors($hall));
+        self::assertNull($repo->donor($hall, $newcomer));
+        self::assertSame(50000, $repo->donor($hall, $member)->strength);
+        $placed = $service->place($leader, $guild->id, $origin->solarSystem->id, $hall->revision);
+        self::assertNotNull($placed->solarSystem);
+        $diplomacy->leave($member);
+        $diplomacy->leave($newcomer);
+        self::assertSame($origin->solarSystem->id, $repo->forGuild($guild)->solarSystem->id);
+    }
+
+    public function testCannotPlaceAt499999(): void
+    {
+        // Chaque refus doit laisser la revendication et les dons inchangés.
+        [$leader, , , $origin, , $guild, $hall, $service] = $this->fundOfficialHall();
+        try {
+            $service->place($leader, $guild->id, $origin->solarSystem->id, $hall->revision);
+            self::fail('499999 points ne suffisent pas.');
+        } catch (\DomainException $exception) {
+            self::assertStringContainsString('entièrement financé', $exception->getMessage());
+        }
+        $db = $this->em->getConnection();
+        self::assertSame(499999, (int) $db->fetchOne('SELECT strength FROM guild_hall WHERE id = ?', [$hall->id]));
+        self::assertNull($db->fetchOne('SELECT solar_system_id FROM guild_hall WHERE id = ?', [$hall->id]));
+    }
+
+    public function testCommanderAloneCannotPlaceEvenWhenThreeFormerDonorsAreRecorded(): void
+    {
+        [$leader, $member, $third, $origin, $secondPlanet, $guild, $hall, $service] = $this->fundOfficialHall();
+        $hall = $service->contribute($member, $guild->id, $secondPlanet->id, $hall->revision, ['hydrogen' => 1]);
+        $diplomacy = self::getContainer()->get(DiplomacyService::class);
+        $diplomacy->leave($member);
+        $diplomacy->leave($third);
+        try {
+            $service->place($leader, $guild->id, $origin->solarSystem->id, $hall->revision);
+            self::fail('Un ancien trio ne donne pas le droit de placer seul.');
+        } catch (\DomainException $exception) {
+            self::assertStringContainsString('membres actuels', $exception->getMessage());
+        }
+        $db = $this->em->getConnection();
+        self::assertNull($db->fetchOne('SELECT solar_system_id FROM guild_hall WHERE id = ?', [$hall->id]));
+        self::assertSame(3, (int) $db->fetchOne('SELECT COUNT(*) FROM guild_hall_contribution WHERE hall_id = ?', [$hall->id]));
+    }
+
+    public function testAVeteranCannotConsumeTheReservedSharesInOneDonation(): void
+    {
+        $service = $this->officialService();
+        [$leader, $origin, $guild] = $this->guild('OfficialVeteran', 'OVT');
+        $before = $this->stock($origin, 'antimatter');
+        try {
+            $service->contribute($leader, $guild->id, $origin->id, 0, ['antimatter' => 62500]);
+            self::fail('Il faut réserver les parts des autres donateurs.');
+        } catch (\DomainException $exception) {
+            self::assertStringContainsString('400 000 points', $exception->getMessage());
+        }
+        self::assertSame($before, $this->stock($origin, 'antimatter'));
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM guild_hall'));
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM guild_hall_contribution'));
+    }
+
+    /** @return array{PlayerUniverse, PlayerUniverse, PlayerUniverse, Planet, Planet, Guild, GuildHall, GuildHallService} */
+    private function fundOfficialHall(): array
+    {
+        $service = $this->officialService();
+        [$leader, $origin, $guild] = $this->guild('OfficialLeader', 'OLD');
+        [$member, $secondPlanet] = $this->player('OfficialMember');
+        [$third, $thirdPlanet] = $this->player('OfficialThird');
+        $diplomacy = self::getContainer()->get(DiplomacyService::class);
+        $diplomacy->join($member, $guild->id);
+        $diplomacy->join($third, $guild->id);
+        $db = $this->em->getConnection();
+        foreach ([$origin, $secondPlanet, $thirdPlanet] as $planet) {
+            // Stocks de recette isolés : ce volume n'est pas un paquet de jeu.
+            $db->executeStatement("UPDATE planet_resource SET current_stock = 100000 WHERE planet_id = ? AND resource_type = 'antimatter'", [$planet->id]);
+        }
+        $hall = $service->contribute($leader, $guild->id, $origin->id, 0, ['antimatter' => 50000]);
+        $hall = $service->contribute($member, $guild->id, $secondPlanet->id, $hall->revision, ['antimatter' => 6249, 'hydrogen' => 7]);
+        $hall = $service->contribute($third, $guild->id, $thirdPlanet->id, $hall->revision, ['antimatter' => 6250]);
+
+        return [$leader, $member, $third, $origin, $secondPlanet, $guild, $hall, $service];
+    }
+
+    private function officialService(): GuildHallService
+    {
+        $container = self::getContainer();
+        $container->set(GuildHallFunding::class, new GuildHallFunding(
+            $container->get(GuildProjectRules::class), $container->get(GameCatalog::class), 500000, 3, 50000, true,
+        ));
+
+        return $container->get(GuildHallService::class);
     }
 
     #[DataProvider('refusals')]

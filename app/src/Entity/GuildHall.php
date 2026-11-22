@@ -24,6 +24,12 @@ class GuildHall
     public int $requiredStrength;
 
     #[ORM\Column]
+    public int $requiredDonors;
+
+    #[ORM\Column]
+    public int $minimumDonorStrength;
+
+    #[ORM\Column]
     public int $strength = 0;
 
     #[ORM\Column]
