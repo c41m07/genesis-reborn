@@ -608,3 +608,11 @@ body[data-theme=light] .entry-universe-state--open {
 .entry-access .core-entry-access--compact { grid-template-columns:minmax(0,540px); justify-content:center; }
 .entry-access-panel .entry-recovery-link { display:inline-flex; align-items:center; justify-self:start; min-height:44px; color:var(--accent); text-decoration:underline; text-underline-offset:3px; }
 .entry-access-panel .entry-access-links { grid-template-columns:repeat(auto-fit,minmax(min(100%,165px),1fr)); }
+/* Sur une page d’accès, le lien du menu doit rester secondaire dans les deux thèmes. */
+body .entry-public-header .entry-public-navigation .public-login.secondary {
+    color:var(--text);
+    background:var(--panel);
+    border-color:var(--line);
+    box-shadow:none;
+}
+body .entry-public-header .entry-public-navigation .public-login.secondary:hover { border-color:var(--accent); }
