@@ -1,12 +1,19 @@
 {% import 'ui/macros.html.twig' as ui %}
-<section class="panel guild-hub-hero guild-overview-hero" aria-label="Centre de guilde">
+<section class="panel guild-hub-hero guild-overview-hero{{ profile.has_logo ? '' : ' core-guild-no-logo' }}" aria-label="Centre de guilde">
 {% if profile.has_banner %}<img class="guild-public-banner" src="{{ path('app_guild_media',{id:own.id,kind:'banner'}) }}" alt="Bannière de la guilde {{ own.name }}">{% endif %}
 {% if profile.has_logo %}<img class="guild-public-logo" src="{{ path('app_guild_media',{id:own.id,kind:'logo'}) }}" alt="">{% else %}<span class="guild-hub-emblem" aria-hidden="true">{{ ui.icon('diplomacy') }}</span>{% endif %}
 <div class="guild-overview-identity">
     <h2><a class="public-profile-link" href="{{ path('app_guild_public_profile',{id:own.id}) }}">{{ own.name }}</a></h2>
-    <p class="guild-hub-stats">{% if own.tag %}<span class="guild-overview-tag">[{{ own.tag }}]</span> · {% endif %}{{ profile.member_count }} {{ profile.member_count > 1 ? 'membres' : 'membre' }} · {{ own.leader.id==membership.id ? 'Commandant' : ownMember.rank.name|default('Membre') }}</p>
+    <dl class="guild-hub-stats core-guild-stats">
+        {% if own.tag %}<div><dt>Tag</dt><dd class="guild-overview-tag">[{{ own.tag }}]</dd></div>{% endif %}
+        <div><dt>Membres</dt><dd>{{ profile.member_count|quantity(0) }}</dd></div>
+        <div><dt>Votre rôle</dt><dd>{{ own.leader.id == membership.id ? 'Commandant' : ownMember.rank.name|default('Membre') }}</dd></div>
+    </dl>
 </div>
-<p class="guild-overview-relations">{{ guildRelationCounts.allies|default(0) }} guildes alliées · {{ guildRelationCounts.enemies|default(0) }} guildes ennemies</p>
+<dl class="guild-overview-relations core-guild-stats" aria-label="Relations diplomatiques de cette guilde">
+    <div><dt>Guildes alliées</dt><dd>{{ guildRelationCounts.allies|default(0)|quantity(0) }}</dd></div>
+    <div><dt>Guildes ennemies</dt><dd>{{ guildRelationCounts.enemies|default(0)|quantity(0) }}</dd></div>
+</dl>
 <a class="primary guild-channel-link" href="{{ path('app_messages',{channel:'guild'}) }}">Ouvrir le canal de guilde {{ ui.icon('arrow') }}</a>
 </section>
 <section class="panel guild-overview-conversation"><div class="section-heading"><h2>Derniers échanges</h2><a href="{{ path('app_messages',{channel:'guild'}) }}">Tout lire</a></div>
