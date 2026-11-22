@@ -102,6 +102,8 @@ test('Proposition B : pages de guilde, cartes, menus mobiles et aperçu sans lec
             const order = await page.locator('.guild-overview-conversation, .guild-overview-details').evaluateAll(elements => elements.map(element => element.className));
             expect(order[0]).toContain('guild-overview-conversation');
             await expect(page.locator('.guild-public-banner')).toBeVisible();
+            await expect(page.locator('.guild-hub-stats')).toContainText('Votre rôle');
+            await expect(page.getByRole('link', { name: /Ouvrir le canal de guilde/ })).toBeVisible();
           }
           if (key === 'membres') {
             await expect(page.getByRole('row').filter({ hasText: memberName })).toContainText('En ligne');

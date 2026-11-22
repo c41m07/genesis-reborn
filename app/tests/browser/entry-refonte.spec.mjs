@@ -53,9 +53,19 @@ test('L8 A : accès directs, petits écrans et deux palettes', async ({ page }, 
         await page.locator('body').evaluate(element => { element.dataset.theme = 'light'; });
       }
       await expect(page.locator('main h1')).toHaveCount(1);
-      for (const width of [1440, 768, 390, 320]) {
-        await page.setViewportSize({ width, height: 900 });
+      for (const width of (name === 'login' ? [1920, 1440, 768, 390, 320] : [1440, 768, 390, 320])) {
+        await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
         await checkBounds(page, width);
+        if (name === 'login') {
+          const scene = page.locator('.entry-access-context');
+          await expect(page.locator('.auth-form').getByRole('link', { name: 'Mot de passe oublié ?' })).toBeVisible();
+          if (width === 1920) {
+            const [form, illustration] = await Promise.all([page.locator('.entry-access-panel').boundingBox(), scene.boundingBox()]);
+            expect(form.x + form.width).toBeLessThan(illustration.x);
+            const titles = await page.locator('#login-title,.entry-context-title').evaluateAll(nodes => nodes.map(node => parseFloat(getComputedStyle(node).fontSize)));
+            expect(titles[0]).toBeGreaterThan(titles[1]);
+          }
+        }
         if ([1440, 390].includes(width)) {
           await checkAccessibility(page);
           await page.screenshot({ path: testInfo.outputPath(`${name}-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });

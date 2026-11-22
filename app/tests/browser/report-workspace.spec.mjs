@@ -55,6 +55,7 @@ test('Rapports A : transport complet, retour filtré, effacement, thèmes et lec
     await expect(page).toHaveURL(/planet=/);
     await page.locator(`a[href*="/rapports/transport/${id}"]`).click();
     const reportUrl = page.url();
+    await expect(page.locator('.core-transport-route .core-report-state')).toHaveText('Livraison effectuée');
     await expect(page.locator('.report-notice-form')).toBeHidden();
     await expect(page.locator('.report-unread-count')).toHaveText('1');
     const row = page.locator('.report-resource-table tbody tr').filter({ hasText: 'Métal' });
