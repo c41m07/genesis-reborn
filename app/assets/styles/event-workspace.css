@@ -280,3 +280,23 @@ body.authenticated .event-redesign > .inline-link {
 .core-event-group-heading h2 { margin:0; }
 .event-list .core-event-empty { padding:14px 16px; margin:0 0 14px; color:var(--text); }
 .event-period dd { font-variant-numeric:tabular-nums; }
+
+.advent-doors {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    align-items: start;
+    gap: 1rem;
+    padding: 0;
+    list-style: none;
+}
+
+.advent-door,
+.advent-door-form > * {
+    min-width: 0;
+}
+
+.advent-door-form {
+    display: grid;
+    gap: .55rem;
+    margin-top: .75rem;
+}

@@ -4,6 +4,12 @@
 <div class="page-refinement events-space event-redesign" data-page-sections="disabled">
 <div class="page-heading"><div><h1>Événements et bonus</h1><p>Les rendez-vous en cours et à venir dans votre univers. Horaires : {{ preferences.timezone }}.</p></div></div>
 {% include 'ui/event_navigation.html.twig' %}
+{% if advent %}
+    <section class="panel event-card" aria-labelledby="advent-link-title">
+        <div><h2 id="advent-link-title">{{ advent.name }}</h2><p>24 cadeaux à ouvrir, un par porte pour votre compte et tous vos univers.</p></div>
+        <a class="secondary" href="{{ path('app_advent') }}">Ouvrir le calendrier de l’Avent</a>
+    </section>
+{% endif %}
 {% if pirateCampaignAvailable|default(false) %}
     <section class="campaign-transition" aria-label="Campagne pirate">
         <span>La campagne pirate se trouve désormais sous <strong>Flottes</strong> dans le menu.</span>
