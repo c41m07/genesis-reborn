@@ -87,3 +87,49 @@ test('Modèles de rotations : édition périmée, univers isolés et création n
   await native.goto('/admin/projets-guilde');await native.getByRole('link',{name:'Créer un modèle de projet',exact:true}).click();await expect(native.getByLabel('Nom du projet',{exact:true})).toBeVisible();
   await context.close();await stale.close();
 });
+
+test('Audit console : repères de lecture et contexte visibles sans modifier les données', async ({ page }) => {
+  test.setTimeout(120000);
+  const { email, universe } = await admin(page);
+  const project = process.env.BROWSER_ROUTER;
+  const contextName = queryIsolatedSql(project, 'SELECT name FROM universe WHERE id=' + universe);
+  const state = () => queryIsolatedSql(project, 'SELECT COUNT(*) FROM game_event');
+  const initialEvents = state();
+  const now = new Date(Date.now() + 3600000);
+  for (const { theme, width, height } of [{ theme: 'dark', width: 1920, height: 1080 }, { theme: 'light', width: 390, height: 844 }]) {
+    runIsolatedSql(project, 'UPDATE player SET preferences=JSON_OBJECT(\'theme\',\'' + theme + '\') WHERE email=\'' + email + '\'');
+    await page.setViewportSize({ width, height });
+    for (const route of ['/admin/permissions', '/admin/guildes', '/admin/juridique/cgu', '/admin/events', '/admin/universes/' + universe + '/boites', '/admin/universes/nouveau']) {
+      expect((await page.goto(route)).status()).toBe(200);
+      await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+      await expect(page.locator('h1')).toHaveCount(1);
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      if (route.endsWith('/permissions')) await expect(page.getByRole('heading', { name: 'Capacités raccordées · lecture seule' })).toBeVisible();
+      if (route.endsWith('/juridique/cgu')) {
+        await expect(page.getByText('Aperçu privé · non publié', { exact: true })).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Retour à l’exploitation' })).toBeVisible();
+      }
+      if (route.endsWith('/boites')) await expect(page.locator('.admin-topbar')).toContainText('Univers : ' + contextName);
+      if (route.endsWith('/nouveau')) await expect(page.getByRole('button', { name: 'Créer l’univers' })).toHaveAccessibleDescription(/ouvert dès sa création/);
+      if (route.endsWith('/events')) {
+        const link = page.getByRole('link', { name: 'Créer un événement guidé', exact: true });
+        await expect(link).toHaveCount(1);
+        await link.focus();
+        await page.keyboard.press('Enter');
+        await expect(page.getByText('Étape 1 sur 3', { exact: true })).toBeVisible();
+        await page.getByRole('link', { name: 'Choisir ce modèle : Annonce', exact: true }).click();
+        await expect(page.getByText('Étape 2 sur 3', { exact: true })).toBeVisible();
+        await page.getByLabel('Nom de l’événement').fill('Annonce de recette privée');
+        await page.getByLabel('Description pour les joueurs').fill('Une annonce non publiée.');
+        await page.getByLabel('Début (UTC)').fill(now.toISOString().slice(0,16));
+        await page.getByLabel('Fin (UTC)').fill(new Date(+now + 3600000).toISOString().slice(0,16));
+        await page.getByRole('button', { name: 'Voir l’aperçu', exact: true }).click();
+        await expect(page.getByText('Étape 3 sur 3 · non publié', { exact: true })).toBeVisible();
+        await expect(page.getByRole('region', { name: 'Contenu proposé aux joueurs' })).toContainText('Une annonce non publiée.');
+        await expect(page.getByRole('region', { name: 'Portée et confirmation' }).getByRole('button', { name: 'Confirmer et planifier' })).toBeVisible();
+        await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      }
+    }
+  }
+  expect(state()).toBe(initialEvents);
+});

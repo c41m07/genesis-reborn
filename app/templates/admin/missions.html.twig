@@ -50,7 +50,7 @@
                             {% endif %}
                         </span></td>
                         <td role="cell" data-label="Statut"><span>{{ statuses[fleet.status]|default(fleet.status) }}</span></td>
-                        <td role="cell" data-label="Dernier départ">{% if fleet.departureAt %}<time datetime="{{ fleet.departureAt|date('c') }}">{{ fleet.departureAt|date('d/m/Y H:i:s', preferences.timezone) }}</time>{% else %}—{% endif %}</td>
+                        <td role="cell" data-label="Dernier départ"><span>{% if fleet.departureAt %}<time datetime="{{ fleet.departureAt|date('c') }}">{{ fleet.departureAt|date('d/m/Y H:i:s', preferences.timezone) }}</time>{% else %}—{% endif %}</span></td>
                         <td role="cell" data-label="Échéance"><span>
                             {% if deadline %}
                                 <time datetime="{{ deadline|date('c') }}">{{ deadline|date('d/m/Y H:i:s', preferences.timezone) }}</time>
