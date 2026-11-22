@@ -10,6 +10,7 @@ use Symfony\Component\DependencyInjection\Attribute\When;
 
 /** Les identifiants de planètes ne sont ni exposés ni acceptés en tant qu'ordres. */
 #[When(env: 'dev')]
+#[When(env: 'prod')]
 final readonly class PiratePilotDestinationSelection
 {
     public function __construct(private GameRepository $repository)

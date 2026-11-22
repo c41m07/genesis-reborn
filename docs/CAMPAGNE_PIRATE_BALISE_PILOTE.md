@@ -119,3 +119,10 @@ au hangar est indivisible : vaisseaux et réserve embarquée restante, jamais un
 planétaire. L'échéance affichée n'est pas un reçu. Si le hangar refuse le lot ou si la destination
 est perdue en vol, les survivants restent en attente sans restitution affichée et l'ancien ordre
 ne permet pas de relancer le trajet.
+
+
+### Activation par univers
+
+Voir [la procédure d’admission et d’exploitation](CAMPAGNE_PIRATE_PILOTE_LOCAL.md). Le compte,
+l’empire et l’univers sont relus avant toute action. Les ordres natifs relisent l’option sous le
+verrou d’univers partagé avec l’Administration. Un ancien reçu n’est pas une nouvelle admission.

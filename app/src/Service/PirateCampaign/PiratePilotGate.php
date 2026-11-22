@@ -4,25 +4,21 @@ declare(strict_types=1);
 
 namespace App\Service\PirateCampaign;
 
-use App\Entity\{Player, PlayerUniverse};
+use App\Entity\{Player, PlayerUniverse, Universe};
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-/** Garde préparée pour le pilote local, non raccordée à une route ou à la navigation. */
+/** Admission au dossier privé via le réglage persistant de l’univers du joueur. */
 final readonly class PiratePilotGate
 {
-    private const PILOT_UNIVERSE = 'omega-1';
-
     public function __construct(
         #[Autowire('%kernel.environment%')] private string $kernelEnvironment,
-        private bool $localPilotEnabled = false,
-        private int $localOmegaUniverseId = 0,
     ) {
     }
 
-    /** Avant toute lecture privée : la branche Git, l’hôte HTTP et le slug ne prouvent rien. */
-    public function isLocallyEnabled(): bool
+    /** Une image en mode prod peut également tourner sur Alpha : aucune déduction d'hôte ou de slug. */
+    public function isAvailable(): bool
     {
-        return $this->kernelEnvironment === 'dev' && $this->localPilotEnabled && $this->localOmegaUniverseId > 0;
+        return in_array($this->kernelEnvironment, ['dev', 'prod'], true);
     }
 
     /**
@@ -31,7 +27,7 @@ final readonly class PiratePilotGate
      */
     public function admits(?Player $account, ?PlayerUniverse $membership, \DateTimeImmutable $at): bool
     {
-        if (!$this->isLocallyEnabled() || ($account?->id ?? 0) < 1 || $account->lockedAt !== null
+        if (!$this->isAvailable() || ($account?->id ?? 0) < 1 || $account->lockedAt !== null
             || $account->emailVerifiedAt === null || $account->emailVerifiedAt > $at
             || ($membership?->id ?? 0) < 1 || $account->currentPlayerUniverse?->id !== $membership->id
             || !$membership->isPlayerControlled() || $membership->player?->id !== $account->id
@@ -41,10 +37,13 @@ final readonly class PiratePilotGate
             return false;
         }
 
-        $universe = $membership->universe;
+        return $this->matchesWorld($membership->universe, $at);
+    }
 
-        return $universe->id === $this->localOmegaUniverseId
-            && $universe->slug === self::PILOT_UNIVERSE
-            && $universe->isAccessible($at);
+    /** Utiliser après le verrou de la participation et de l'univers dans les départs natifs. */
+    public function matchesWorld(Universe $universe, \DateTimeImmutable $at): bool
+    {
+        return $this->isAvailable() && ($universe->id ?? 0) > 0 && $universe->isAccessible($at)
+            && $universe->pirateCampaignEnabled();
     }
 }

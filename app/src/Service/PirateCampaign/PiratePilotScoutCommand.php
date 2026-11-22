@@ -16,6 +16,7 @@ use Symfony\Component\Security\Csrf\{CsrfToken, CsrfTokenManagerInterface};
 
 /** Premier ordre privé du pilote, explicitement sans route ni bouton associé. */
 #[When(env: 'dev')]
+#[When(env: 'prod')]
 final readonly class PiratePilotScoutCommand
 {
     public function __construct(
@@ -70,9 +71,9 @@ final readonly class PiratePilotScoutCommand
             }
             // La relecture d'ActionGuard et les mêmes verrous dans le lanceur natif ne libèrent
             // rien avant le commit externe. Il garde l'unicité, le prélèvement et l'outbox.
-            return $this->scout->launchDefinedWithOmegaPilotFuel(
+            return $this->scout->launchDefinedWithPilotFuel(
                 $member, $activeOrigin, $plan['signal']->system, $plan['signal']->site,
-                $plan['signal']->key, $plan['signal']->key,
+                $plan['signal']->key, $plan['signal']->key, $this->gate,
             );
         });
     }
@@ -80,7 +81,7 @@ final readonly class PiratePilotScoutCommand
     /** @return array{Player,PlayerUniverse}|null */
     private function readScope(int $missionNumber): ?array
     {
-        if ($missionNumber < 1 || !$this->gate->isLocallyEnabled()) {
+        if ($missionNumber < 1 || !$this->gate->isAvailable()) {
             return null;
         }
         $account = $this->security->getUser();
@@ -124,7 +125,7 @@ final readonly class PiratePilotScoutCommand
         if ($signal === null || !$signal->allowsFirstScout) {
             return null;
         }
-        $quote = $this->scout->pilotScoutQuoteLocked($member, $origin, $signal->system);
+        $quote = $this->scout->pilotScoutQuoteLocked($member, $origin, $signal->system, $this->gate);
         if ($quote === null || !$this->gate->admits($account, $member, $this->clock->now())) {
             return null; // L'univers peut avoir fermé pendant les derniers verrous de devis.
         }

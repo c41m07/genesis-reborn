@@ -37,6 +37,6 @@ while (!is_file($input['barrier'])) {
 }
 
 $result = ($input['pilot'] ?? false)
-    ? $service->launchDefinedWithOmegaPilotFuel($member, $origin, $target, $site, 'test-course', 'balise_17')
+    ? $service->launchDefinedWithPilotFuel($member, $origin, $target, $site, 'test-course', 'balise_17', new \App\Service\PirateCampaign\PiratePilotGate('dev'))
     : $service->launch($member, $origin, $target, $site, 'test-course', PirateEncounterSnapshot::freeze(['fighter' => ['basic' => 3]], ['metal' => 83]));
 echo $result ? "launched\n" : "duplicate\n";

@@ -1,7 +1,7 @@
 {% set survivors = choice.action == 'survivors' %}
 {% set prefix = survivors ? 'pirate-recovery' : 'pirate-convoy-route' %}
-{% set preview = survivors ? 'app_dev_pirate_pilot_survivors_preview' : 'app_dev_pirate_pilot_convoy_route_preview' %}
-{% set confirm = survivors ? 'app_dev_pirate_pilot_survivors' : 'app_dev_pirate_pilot_convoy_route' %}
+{% set preview = survivors ? 'app_pirate_campaign_survivors_preview' : 'app_pirate_campaign_convoy_route_preview' %}
+{% set confirm = survivors ? 'app_pirate_campaign_survivors' : 'app_pirate_campaign_convoy_route' %}
 <section class="panel" aria-labelledby="{{ prefix }}-title">
     <h2 id="{{ prefix }}-title">{{ survivors ? 'Organiser le repli des survivants' : 'Choisir une colonie pour le convoi' }}</h2>
     {% if choice.choices is defined %}

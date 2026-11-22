@@ -10,14 +10,17 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\When;
 use Symfony\Component\HttpFoundation\{Request, Response};
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[When(env: 'dev')]
+#[When(env: 'prod')]
+#[IsGranted('ROLE_USER')]
 final class PiratePilotLocalController extends AbstractController
 {
     private const PRIVATE_HEADERS = ['Cache-Control' => 'private, no-store'];
 
-    #[Route('/evenements/campagne-pirate/{missionNumber}', name: 'app_dev_pirate_pilot',
-        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['GET'], env: 'dev')]
+    #[Route('/evenements/campagne-pirate/{missionNumber}', name: 'app_pirate_campaign',
+        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['GET'], env: ['dev', 'prod'])]
     public function dossier(
         Request $request, PiratePilotLocalReader $reader, PiratePilotActiveColony $colonies,
         PiratePilotEncounterForms $forms, ?int $missionNumber = null, ?PiratePilotConvoyDepositCommand $deposit = null,
@@ -45,8 +48,8 @@ final class PiratePilotLocalController extends AbstractController
         return $this->page($dossier, $form, $origin, $current && $origin === null, $depositToken, $routeForm, $survivorForm);
     }
 
-    #[Route('/evenements/campagne-pirate/{missionNumber}/sonde', name: 'app_dev_pirate_pilot_scout',
-        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: 'dev')]
+    #[Route('/evenements/campagne-pirate/{missionNumber}/sonde', name: 'app_pirate_campaign_scout',
+        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: ['dev', 'prod'])]
     public function scout(
         Request $request, int $missionNumber, PiratePilotLocalReader $reader, PiratePilotActiveColony $colonies,
         PiratePilotScoutCommand $scout,
@@ -67,8 +70,8 @@ final class PiratePilotLocalController extends AbstractController
         return $this->afterCommand($missionNumber);
     }
 
-    #[Route('/evenements/campagne-pirate/{missionNumber}/attaque/apercu', name: 'app_dev_pirate_pilot_attack_preview',
-        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: 'dev')]
+    #[Route('/evenements/campagne-pirate/{missionNumber}/attaque/apercu', name: 'app_pirate_campaign_attack_preview',
+        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: ['dev', 'prod'])]
     public function attackPreview(
         Request $request, int $missionNumber, PiratePilotLocalReader $reader, PiratePilotActiveColony $colonies,
         PiratePilotEncounterForms $forms,
@@ -86,8 +89,8 @@ final class PiratePilotLocalController extends AbstractController
         return $this->page($scope[0], $card, $scope[1], false);
     }
 
-    #[Route('/evenements/campagne-pirate/{missionNumber}/attaque', name: 'app_dev_pirate_pilot_attack',
-        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: 'dev')]
+    #[Route('/evenements/campagne-pirate/{missionNumber}/attaque', name: 'app_pirate_campaign_attack',
+        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: ['dev', 'prod'])]
     public function attack(
         Request $request, int $missionNumber, PiratePilotLocalReader $reader, PiratePilotActiveColony $colonies,
         PiratePilotAttackCommand $attack,
@@ -108,8 +111,8 @@ final class PiratePilotLocalController extends AbstractController
         return $this->afterCommand($missionNumber);
     }
 
-    #[Route('/evenements/campagne-pirate/{missionNumber}/convoi/depot', name: 'app_dev_pirate_pilot_convoy_deposit',
-        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: 'dev')]
+    #[Route('/evenements/campagne-pirate/{missionNumber}/convoi/depot', name: 'app_pirate_campaign_convoy_deposit',
+        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: ['dev', 'prod'])]
     public function convoyDeposit(
         Request $request, int $missionNumber, PiratePilotLocalReader $reader, PiratePilotConvoyDepositCommand $deposit,
     ): Response {
@@ -130,16 +133,16 @@ final class PiratePilotLocalController extends AbstractController
         return $this->afterCommand($missionNumber);
     }
 
-    #[Route('/evenements/campagne-pirate/{missionNumber}/convoi/destination/apercu', name: 'app_dev_pirate_pilot_convoy_route_preview',
-        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: 'dev')]
+    #[Route('/evenements/campagne-pirate/{missionNumber}/convoi/destination/apercu', name: 'app_pirate_campaign_convoy_route_preview',
+        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: ['dev', 'prod'])]
     public function convoyRoutePreview(
         Request $request, int $missionNumber, PiratePilotLocalReader $reader, PiratePilotConvoyRouteCommand $route,
     ): Response {
         return $this->convoyRouteAction($request, $missionNumber, $reader, $route, false);
     }
 
-    #[Route('/evenements/campagne-pirate/{missionNumber}/convoi/destination', name: 'app_dev_pirate_pilot_convoy_route',
-        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: 'dev')]
+    #[Route('/evenements/campagne-pirate/{missionNumber}/convoi/destination', name: 'app_pirate_campaign_convoy_route',
+        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: ['dev', 'prod'])]
     public function convoyRoute(
         Request $request, int $missionNumber, PiratePilotLocalReader $reader, PiratePilotConvoyRouteCommand $route,
     ): Response {
@@ -170,16 +173,16 @@ final class PiratePilotLocalController extends AbstractController
         }
     }
 
-    #[Route('/evenements/campagne-pirate/{missionNumber}/repli/apercu', name: 'app_dev_pirate_pilot_survivors_preview',
-        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: 'dev')]
+    #[Route('/evenements/campagne-pirate/{missionNumber}/repli/apercu', name: 'app_pirate_campaign_survivors_preview',
+        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: ['dev', 'prod'])]
     public function survivorsPreview(
         Request $request, int $missionNumber, PiratePilotLocalReader $reader, PiratePilotSurvivorsCommand $survivors,
     ): Response {
         return $this->survivorAction($request, $missionNumber, $reader, $survivors, false);
     }
 
-    #[Route('/evenements/campagne-pirate/{missionNumber}/repli', name: 'app_dev_pirate_pilot_survivors',
-        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: 'dev')]
+    #[Route('/evenements/campagne-pirate/{missionNumber}/repli', name: 'app_pirate_campaign_survivors',
+        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: ['dev', 'prod'])]
     public function survivors(
         Request $request, int $missionNumber, PiratePilotLocalReader $reader, PiratePilotSurvivorsCommand $survivors,
     ): Response {
@@ -256,7 +259,7 @@ final class PiratePilotLocalController extends AbstractController
 
     private function afterCommand(int $mission): Response
     {
-        $result = $this->redirectToRoute('app_dev_pirate_pilot', ['missionNumber' => $mission], Response::HTTP_SEE_OTHER);
+        $result = $this->redirectToRoute('app_pirate_campaign', ['missionNumber' => $mission], Response::HTTP_SEE_OTHER);
         $result->headers->add(self::PRIVATE_HEADERS);
 
         return $result;

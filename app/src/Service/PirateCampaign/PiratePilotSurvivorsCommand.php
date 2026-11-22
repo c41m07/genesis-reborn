@@ -11,10 +11,12 @@ use Symfony\Component\Security\Csrf\{CsrfToken, CsrfTokenManagerInterface};
 
 /** Commander un repli seulement pour un lot dont l'immobilisation a été attestée. */
 #[When(env: 'dev')]
+#[When(env: 'prod')]
 final readonly class PiratePilotSurvivorsCommand
 {
     public function __construct(
         private PiratePilotHistoricalAccess $access,
+        private PiratePilotGate $gate,
         private PiratePilotDestinationSelection $destinations,
         private PirateCampaignCatalogue $catalogue,
         private PirateCampaignReadRepository $campaigns,
@@ -66,14 +68,14 @@ final readonly class PiratePilotSurvivorsCommand
             ))) {
                 return null;
             }
-            $quote = $this->recovery->preview($member, $attack->id, $evidence->attempt, $evidence->carrierRevision, $target->id);
+            $quote = $this->recovery->preview($member, $attack->id, $evidence->attempt, $evidence->carrierRevision, $target->id, $this->gate);
             if ($quote === null) {
                 return null;
             }
             $intent = 'confirm:'.$this->intent($member, $attack, $evidence, $mission, $target->id, $quote['digest'], $options);
             if ($execute) {
                 return $this->csrf->isTokenValid(new CsrfToken($intent, $token))
-                    && $this->recovery->launch($member, $attack->id, $evidence->attempt, $evidence->carrierRevision, $target->id, $quote['digest']);
+                    && $this->recovery->launch($member, $attack->id, $evidence->attempt, $evidence->carrierRevision, $target->id, $quote['digest'], $this->gate);
             }
 
             return ['action' => 'survivors', 'token' => $this->csrf->getToken($intent)->getValue(),

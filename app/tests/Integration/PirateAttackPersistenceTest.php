@@ -90,7 +90,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $resolver = new PiratePilotSignalResolver(self::getContainer()->get(GameRepository::class), $manager,
             new PirateCampaignReadRepository($this->em), $campaignCatalogue,
             new PiratePilotCampaignOrder($campaignCatalogue, new PirateCampaignSequence($campaignCatalogue, new PirateCampaignProgress($campaignCatalogue))));
-        $command = new PiratePilotAttackCommand(new PiratePilotGate('dev', true, $owner->universe->id), $security, $this->clock, $csrf,
+        $command = new PiratePilotAttackCommand(new PiratePilotGate('dev'), $security, $this->clock, $csrf,
             $this->em, $manager, self::getContainer()->get(ActionGuard::class), $resolver, $this->service);
 
         $firstChoice = ['escort' => [1 => '2']];
@@ -146,8 +146,8 @@ final class PirateAttackPersistenceTest extends KernelTestCase
             1.0, $catalog->forUniverse($member->universe)['multipliers']['travel_time'],
             $catalog->rules()['fuel_ratio_policy'], (int) $catalog->rules()['combat_window_seconds'] / 3600);
         self::assertGreaterThan(0, $native['orbit_fuel']);
-        self::assertTrue($this->service->launchWithOmegaPilotFuel($member, $home, 'signal', 0, $composition));
-        self::assertFalse($this->service->launchWithOmegaPilotFuel($member, $home, 'signal', 0, $composition));
+        self::assertTrue($this->service->launchWithPilotFuel($member, $home, 'signal', 0, $composition, new \App\Service\PirateCampaign\PiratePilotGate('dev')));
+        self::assertFalse($this->service->launchWithPilotFuel($member, $home, 'signal', 0, $composition, new \App\Service\PirateCampaign\PiratePilotGate('dev')));
 
         $campaign = $this->campaign();
         $receipt = PirateAttackFuelReceipt::read($campaign->timeline['pilot_attack_fuel']);
@@ -191,7 +191,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         [$member, $home, $fighter] = $this->fixture(omega: true, definition: 'balise_17');
         $this->finishRecon();
         try {
-            $this->service->launchWithOmegaPilotFuel($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]]);
+            $this->service->launchWithPilotFuel($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], new \App\Service\PirateCampaign\PiratePilotGate('dev'));
             self::fail('Un rapport de fixture non payé ne doit pas amorcer l’expédition pilote.');
         } catch (\DomainException $error) {
             self::assertStringContainsString('prélèvement natif', $error->getMessage());
@@ -209,7 +209,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $idle->cargo = ['hydrogen' => 100.0];
         $this->em->flush();
         try {
-            $this->service->launchWithOmegaPilotFuel($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]]);
+            $this->service->launchWithPilotFuel($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], new \App\Service\PirateCampaign\PiratePilotGate('dev'));
             self::fail('Le fret n’est pas un moyen de paiement du vol.');
         } catch (\DomainException $error) {
             self::assertStringContainsString('Ressources insuffisantes', $error->getMessage());
@@ -230,7 +230,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $idle->cargo = ['metal' => 400.0];
         $this->em->flush();
         try {
-            $this->service->launchWithOmegaPilotFuel($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]]);
+            $this->service->launchWithPilotFuel($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], new \App\Service\PirateCampaign\PiratePilotGate('dev'));
             self::fail('Les porteurs restants ne peuvent pas garder ce fret.');
         } catch (\DomainException $error) {
             self::assertStringContainsString('vaisseaux restants', $error->getMessage());
@@ -251,7 +251,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $db = $this->em->getConnection();
         $db->executeStatement("CREATE TRIGGER pirate_attack_test_reject_outbox BEFORE INSERT ON outbox_message FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'fixture funded attack outbox failure'");
         try {
-            $this->service->launchWithOmegaPilotFuel($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]]);
+            $this->service->launchWithPilotFuel($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], new \App\Service\PirateCampaign\PiratePilotGate('dev'));
             self::fail('Le départ ne peut pas délier prélèvement, réserve et ordre.');
         } catch (DriverException $error) {
             self::assertStringContainsString('fixture funded attack outbox failure', $error->getMessage());
@@ -390,11 +390,11 @@ final class PirateAttackPersistenceTest extends KernelTestCase
     {
         [$owner, $target, $other, $campaign, $recovery] = $this->recoverableFundedSurvivors();
         $id = $campaign->id;
-        self::assertNull($recovery->preview($other, $id, 1, 1, $target->id));
-        self::assertNull($recovery->preview($owner, $id, 1, 2, $target->id));
-        self::assertNull($recovery->preview($owner, $id, 1, 1, $campaign->originId));
+        self::assertNull($recovery->preview($other, $id, 1, 1, $target->id, new \App\Service\PirateCampaign\PiratePilotGate('dev')));
+        self::assertNull($recovery->preview($owner, $id, 1, 2, $target->id, new \App\Service\PirateCampaign\PiratePilotGate('dev')));
+        self::assertNull($recovery->preview($owner, $id, 1, 1, $campaign->originId, new \App\Service\PirateCampaign\PiratePilotGate('dev')));
 
-        $first = $recovery->preview($owner, $id, 1, 1, $target->id);
+        $first = $recovery->preview($owner, $id, 1, 1, $target->id, new \App\Service\PirateCampaign\PiratePilotGate('dev'));
         self::assertNotNull($first);
         self::assertGreaterThan(0, $first['remaining']);
         self::assertGreaterThan(0, $first['hydrogen']);
@@ -402,20 +402,20 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_survivors'"));
         $owner->universe->gameSettings['multipliers']['travel_time'] = 2.0;
         $this->em->flush();
-        self::assertFalse($recovery->launch($owner, $id, 1, 1, $target->id, $first['digest']));
-        $current = $recovery->preview($owner, $id, 1, 1, $target->id);
+        self::assertFalse($recovery->launch($owner, $id, 1, 1, $target->id, $first['digest'], new \App\Service\PirateCampaign\PiratePilotGate('dev')));
+        $current = $recovery->preview($owner, $id, 1, 1, $target->id, new \App\Service\PirateCampaign\PiratePilotGate('dev'));
         self::assertNotNull($current);
         self::assertNotSame($first['digest'], $current['digest']);
         $start = $this->clock->now()->modify('+12 seconds');
         $this->advanceTo($start);
-        self::assertTrue($recovery->launch($owner, $id, 1, 1, $target->id, $current['digest']));
+        self::assertTrue($recovery->launch($owner, $id, 1, 1, $target->id, $current['digest'], new \App\Service\PirateCampaign\PiratePilotGate('dev')));
         $saved = $campaign->timeline['pilot_recovery'];
         self::assertSame($start->format(DATE_ATOM), $saved['departure']);
         $due = new \DateTimeImmutable($saved['due']);
         self::assertSame($current['seconds'], $due->getTimestamp() - $start->getTimestamp());
         self::assertSame(2, $saved['generation']);
-        self::assertFalse($recovery->launch($owner, $id, 1, 1, $target->id, $current['digest']));
-        self::assertNull($recovery->preview($owner, $id, 1, 1, $target->id));
+        self::assertFalse($recovery->launch($owner, $id, 1, 1, $target->id, $current['digest'], new \App\Service\PirateCampaign\PiratePilotGate('dev')));
+        self::assertNull($recovery->preview($owner, $id, 1, 1, $target->id, new \App\Service\PirateCampaign\PiratePilotGate('dev')));
         $event = $db->fetchAssociative("SELECT target_id, token, due_at FROM outbox_message WHERE kind = 'pirate_survivors'");
         self::assertSame($id, (int) $event['target_id']);
         self::assertSame($saved['token'], $event['token']);
@@ -464,8 +464,8 @@ final class PirateAttackPersistenceTest extends KernelTestCase
     {
         [$owner, $target, $other, $campaign, $recovery] = $this->recoverableFundedSurvivors();
         $id = $campaign->id;
-        $quote = $recovery->preview($owner, $id, 1, 1, $target->id);
-        self::assertTrue($recovery->launch($owner, $id, 1, 1, $target->id, $quote['digest']));
+        $quote = $recovery->preview($owner, $id, 1, 1, $target->id, new \App\Service\PirateCampaign\PiratePilotGate('dev'));
+        self::assertTrue($recovery->launch($owner, $id, 1, 1, $target->id, $quote['digest'], new \App\Service\PirateCampaign\PiratePilotGate('dev')));
         $job = $campaign->timeline['pilot_recovery'];
         $target->owner = $other;
         $this->em->flush();
@@ -478,7 +478,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertEquals($quote['remaining'], $terminal['initial'] - $terminal['cost']);
         self::assertTrue($campaign->returnBlocked);
         self::assertNotSame([], $campaign->reservedShips);
-        self::assertNull($recovery->preview($owner, $id, 1, 1, $target->id));
+        self::assertNull($recovery->preview($owner, $id, 1, 1, $target->id, new \App\Service\PirateCampaign\PiratePilotGate('dev')));
         $db = $this->em->getConnection();
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM fleet WHERE home_planet_id = ?', [$target->id]));
         self::assertSame(0.0, $this->resourceStock($target->id, 'hydrogen'));
@@ -488,8 +488,8 @@ final class PirateAttackPersistenceTest extends KernelTestCase
     {
         [$owner, $target, , $campaign, $recovery] = $this->recoverableFundedSurvivors();
         $id = $campaign->id;
-        $quote = $recovery->preview($owner, $id, 1, 1, $target->id);
-        self::assertTrue($recovery->launch($owner, $id, 1, 1, $target->id, $quote['digest']));
+        $quote = $recovery->preview($owner, $id, 1, 1, $target->id, new \App\Service\PirateCampaign\PiratePilotGate('dev'));
+        self::assertTrue($recovery->launch($owner, $id, 1, 1, $target->id, $quote['digest'], new \App\Service\PirateCampaign\PiratePilotGate('dev')));
         self::assertGreaterThan(0.0, $quote['remaining']);
         $job = $campaign->timeline['pilot_recovery'];
         $owner->universe->gameSettings['catalog_overrides']['ships']['fighter'] = ['fuel_capacity' => 0, 'cargo_capacity' => 0];
@@ -507,11 +507,11 @@ final class PirateAttackPersistenceTest extends KernelTestCase
     {
         [$owner, $target, , $campaign, $recovery] = $this->recoverableFundedSurvivors();
         $id = $campaign->id;
-        $quote = $recovery->preview($owner, $id, 1, 1, $target->id);
+        $quote = $recovery->preview($owner, $id, 1, 1, $target->id, new \App\Service\PirateCampaign\PiratePilotGate('dev'));
         $db = $this->em->getConnection();
         $db->executeStatement("CREATE TRIGGER pirate_recovery_test_outbox BEFORE INSERT ON outbox_message FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'fixture repli outbox failure'");
         try {
-            $recovery->launch($owner, $id, 1, 1, $target->id, $quote['digest']);
+            $recovery->launch($owner, $id, 1, 1, $target->id, $quote['digest'], new \App\Service\PirateCampaign\PiratePilotGate('dev'));
             self::fail('Une preuve de départ ne peut survivre à l’échec de son outbox.');
         } catch (DriverException $error) {
             self::assertStringContainsString('fixture repli outbox failure', $error->getMessage());
@@ -530,7 +530,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $owner->player->currentPlayerUniverse = $owner;
         $this->em->flush();
         $this->finishRecon();
-        self::assertTrue($this->service->launchWithOmegaPilotFuel($owner, $home, 'balise_17', 0, ['fighter' => ['basic' => 2]]));
+        self::assertTrue($this->service->launchWithPilotFuel($owner, $home, 'balise_17', 0, ['fighter' => ['basic' => 2]], new \App\Service\PirateCampaign\PiratePilotGate('dev')));
         $first = $this->campaign();
         $proof = $first->reconnaissance->battleProofFor($owner, $this->clock->now());
         $first->timeline['seed'] = $this->seedWithVictory($first, $proof['prepared']->battleForServer());
@@ -578,7 +578,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $resolver = new PiratePilotSignalResolver(self::getContainer()->get(GameRepository::class), $manager,
             new PirateCampaignReadRepository($this->em), $campaignCatalogue,
             new PiratePilotCampaignOrder($campaignCatalogue, new PirateCampaignSequence($campaignCatalogue, new PirateCampaignProgress($campaignCatalogue))));
-        $gate = new PiratePilotGate('dev', true, $owner->universe->id);
+        $gate = new PiratePilotGate('dev');
         $scout = new PiratePilotScoutCommand($gate, $security, $this->clock, $csrf, $this->em, $manager, $guard, $resolver,
             self::getContainer()->get(PirateReconnaissanceService::class));
         $attack = new PiratePilotAttackCommand($gate, $security, $this->clock, $csrf, $this->em, $manager, $guard, $resolver, $this->service);
@@ -617,7 +617,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
     {
         [$owner, $target, , $campaign, $recovery] = $this->recoverableFundedSurvivors();
         $id = $campaign->id;
-        $quote = $recovery->preview($owner, $id, 1, 1, $target->id);
+        $quote = $recovery->preview($owner, $id, 1, 1, $target->id, new \App\Service\PirateCampaign\PiratePilotGate('dev'));
         $db = $this->em->getConnection();
         $dir = sys_get_temp_dir().'/gens-recovery-'.bin2hex(random_bytes(8));
         mkdir($dir, 0700);
@@ -694,8 +694,8 @@ final class PirateAttackPersistenceTest extends KernelTestCase
     {
         [$owner, $target, , $campaign, $recovery] = $this->recoverableFundedSurvivors();
         $id = $campaign->id;
-        $quote = $recovery->preview($owner, $id, 1, 1, $target->id);
-        self::assertTrue($recovery->launch($owner, $id, 1, 1, $target->id, $quote['digest']));
+        $quote = $recovery->preview($owner, $id, 1, 1, $target->id, new \App\Service\PirateCampaign\PiratePilotGate('dev'));
+        self::assertTrue($recovery->launch($owner, $id, 1, 1, $target->id, $quote['digest'], new \App\Service\PirateCampaign\PiratePilotGate('dev')));
         $job = $campaign->timeline['pilot_recovery'];
         $this->advanceTo(new \DateTimeImmutable($job['due']));
         $db = $this->em->getConnection();
@@ -747,7 +747,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame(2, $events, 'L’arrivée et le combat, jamais un troisième ordre pour un faux retour.');
         $stock = $this->resourceStock($origin->id, 'hydrogen');
         try {
-            $this->service->launchWithOmegaPilotFuel($owner, $origin, 'signal', 1, ['fighter' => ['basic' => 1]]);
+            $this->service->launchWithPilotFuel($owner, $origin, 'signal', 1, ['fighter' => ['basic' => 1]], new \App\Service\PirateCampaign\PiratePilotGate('dev'));
             self::fail('Une relance ne doit pas écraser les survivants retenus.');
         } catch (\DomainException $error) {
             self::assertStringContainsString('survivants', $error->getMessage());
@@ -772,7 +772,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertNull($campaign->nextAt);
         $hydrogen = $this->resourceStock($origin->id, 'hydrogen');
         $proof = $campaign->scenario;
-        self::assertTrue($this->service->launchWithOmegaPilotFuel($owner, $origin, 'signal', 1, ['fighter' => ['basic' => 1]]));
+        self::assertTrue($this->service->launchWithPilotFuel($owner, $origin, 'signal', 1, ['fighter' => ['basic' => 1]], new \App\Service\PirateCampaign\PiratePilotGate('dev')));
         self::assertSame(2, $campaign->timeline['pilot_attack_fuel']['attempt']);
         self::assertSame($proof, $campaign->scenario);
         self::assertLessThan($hydrogen, $this->resourceStock($origin->id, 'hydrogen'));
@@ -798,7 +798,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
             $fleet['heavy_fighter'] = ['basic' => 1];
         }
         $this->em->flush();
-        self::assertTrue($this->service->launchWithOmegaPilotFuel($owner, $origin, 'signal', 0, $fleet));
+        self::assertTrue($this->service->launchWithPilotFuel($owner, $origin, 'signal', 0, $fleet, new \App\Service\PirateCampaign\PiratePilotGate('dev')));
         $campaign = $this->campaign();
         $report = $campaign->reconnaissance->battleProofFor($owner, $this->clock->now());
         $scenario = $report['prepared']->battleForServer();
@@ -818,7 +818,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
     {
         [$owner, $origin, $stock, , $other] = $this->fixture(omega: true, scoutPaid: true);
         $this->finishRecon();
-        self::assertTrue($this->service->launchWithOmegaPilotFuel($owner, $origin, 'signal', 0, ['fighter' => ['basic' => 2]]));
+        self::assertTrue($this->service->launchWithPilotFuel($owner, $origin, 'signal', 0, ['fighter' => ['basic' => 2]], new \App\Service\PirateCampaign\PiratePilotGate('dev')));
         $campaign = $this->campaign();
         $reported = $campaign->reconnaissance->battleProofFor($owner, $this->clock->now());
         $campaign->timeline['seed'] = $this->seedWithVictory($campaign, $reported['prepared']->battleForServer());
@@ -1720,7 +1720,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         }
         $this->em->flush();
         $this->finishRecon();
-        self::assertTrue($this->service->launchWithOmegaPilotConvoy($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]]));
+        self::assertTrue($this->service->launchWithPilotConvoy($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], new \App\Service\PirateCampaign\PiratePilotGate('dev')));
         $attack = $this->campaign();
         $this->advanceTo($attack->nextAt);
         $this->service->processDue($attack->id, $attack->dispatchToken);
@@ -1868,7 +1868,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
                 $this->em->persist($stock);
             }
             $this->em->flush();
-            $recon->launchDefinedWithOmegaPilotFuel($member, $p, $s, $site, $missionKey, $definition ?? 'balise_17', true);
+            $recon->launchDefinedWithPilotFuel($member, $p, $s, $site, $missionKey, $definition ?? 'balise_17', new \App\Service\PirateCampaign\PiratePilotGate('dev'), true);
         } elseif ($definition !== null) {
             $recon->launchDefined($member, $p, $s, $site, 'signal', $definition);
         } else {

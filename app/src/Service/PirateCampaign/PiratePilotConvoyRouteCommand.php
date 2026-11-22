@@ -11,6 +11,7 @@ use Symfony\Component\Security\Csrf\{CsrfToken, CsrfTokenManagerInterface};
 
 /** Affectation ou nouvelle destination du convoi historique, jamais redirection d'un trajet en cours. */
 #[When(env: 'dev')]
+#[When(env: 'prod')]
 final readonly class PiratePilotConvoyRouteCommand
 {
     public function __construct(

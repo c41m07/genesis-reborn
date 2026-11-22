@@ -16,6 +16,7 @@ use Symfony\Component\Security\Csrf\{CsrfToken, CsrfTokenManagerInterface};
 
 /** Préparer puis confirmer strictement la même attaque. Aucune action HTTP n'appelle ce service. */
 #[When(env: 'dev')]
+#[When(env: 'prod')]
 final readonly class PiratePilotAttackCommand
 {
     public function __construct(
@@ -34,7 +35,7 @@ final readonly class PiratePilotAttackCommand
     public function options(Planet $origin, int $mission): ?array
     {
         return $this->withActivePilot($origin, $mission, fn (Player $account, PlayerUniverse $member, PiratePilotSignal $signal): ?array =>
-            $this->attack->pilotAttackOptionsLocked($member, $origin, $signal->key));
+            $this->attack->pilotAttackOptionsLocked($member, $origin, $signal->key, $this->gate));
     }
 
     public function preview(Planet $origin, int $mission, ?array $submitted): ?array
@@ -55,15 +56,15 @@ final readonly class PiratePilotAttackCommand
                 return false;
             }
 
-            return $this->attack->launchWithOmegaPilotFuel(
-                $member, $origin, $signal->key, $plan['attempt'], $plan['selection']->composition,
+            return $this->attack->launchWithPilotFuel(
+                $member, $origin, $signal->key, $plan['attempt'], $plan['selection']->composition, $this->gate,
             );
         }) === true;
     }
 
     private function prepareLocked(Player $account, PlayerUniverse $member, Planet $origin, PiratePilotSignal $signal, ?array $submitted): ?array
     {
-        $state = $this->attack->pilotAttackOptionsLocked($member, $origin, $signal->key);
+        $state = $this->attack->pilotAttackOptionsLocked($member, $origin, $signal->key, $this->gate);
         if ($state === null) {
             return null;
         }
@@ -75,7 +76,7 @@ final readonly class PiratePilotAttackCommand
         if ($selection === null) {
             return null;
         }
-        $native = $this->attack->pilotAttackQuoteLocked($member, $origin, $signal->key, $state['attempt'], $selection->composition);
+        $native = $this->attack->pilotAttackQuoteLocked($member, $origin, $signal->key, $state['attempt'], $selection->composition, $this->gate);
         if ($native === null || !$this->gate->admits($account, $member, $this->clock->now())) {
             return null;
         }
@@ -89,7 +90,7 @@ final readonly class PiratePilotAttackCommand
 
     private function withActivePilot(Planet $origin, int $mission, \Closure $callback): mixed
     {
-        if ($mission < 1 || $origin->id === null || !$this->gate->isLocallyEnabled()) {
+        if ($mission < 1 || $origin->id === null || !$this->gate->isAvailable()) {
             return null;
         }
         $account = $this->security->getUser();

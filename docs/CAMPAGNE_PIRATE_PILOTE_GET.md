@@ -1,4 +1,6 @@
-# Lecture du pilote : raccord local fermé par défaut
+# Historique du raccord en lecture : prototype local
+
+Cette note décrit le premier prototype, désormais remplacé par [l’admission par univers](CAMPAGNE_PIRATE_PILOTE_LOCAL.md). Ses anciennes variables ne constituent plus des instructions d’exploitation.
 
 Ce lot ajoute uniquement le GET de dossier et le lien interne vers chaque dossier consultable. Aucun bouton de départ, versement, claim, droit modifié, menu global ni lien depuis Premiers pas. Les dossiers historiques possédés restent navigables. Le vieux texte de devis « n’a pas été versé » reste absent. Le seul état durable et le lien vers le plus ancien droit en attente sont rendus en lecture, selon le contrat du [dossier convoi](CAMPAGNE_PIRATE_DOSSIER_CONVOI.md).
 

@@ -2707,7 +2707,7 @@ les trois rôles du gabarit actuel : visiteur, joueur et administrateur.
 Les neuf paramètres des univers restent lisibles avant les boutons : cinq vitesses,
 limites de planètes et de flotte, guildes et conquête JcE. Exemples basés sur les
 configurations Omega/Turbo : vitesses temporelles ×1/×100, production ×1, 31 planètes,
-1 000 000 vaisseaux ; guildes activées dans Omega et désactivées dans Turbo.
+1 000 000 vaisseaux ; à la date de ces exemples, guildes activées dans Omega et désactivées dans Turbo. La disponibilité par défaut actuelle des deux profils est documentée dans CAMPAGNE_PIRATE_PILOTE_LOCAL.md.
 Les participations, comptes et calendriers sont fictifs, sans état de serveur prétendu.
 Les illustrations et captures réutilisent les assets déjà présents dans le projet.
 

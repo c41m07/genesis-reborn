@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 /** Résolution de lecture, sans requête d’activité ni modification de la sélection existante. */
 #[When(env: 'dev')]
+#[When(env: 'prod')]
 final readonly class PiratePilotActiveColony
 {
     public function __construct(
@@ -27,7 +28,7 @@ final readonly class PiratePilotActiveColony
     /** Une planète issue d'un paramètre de requête ne peut pas devenir la colonie active. */
     public function forRequest(Request $request): ?Planet
     {
-        if (!$this->gate->isLocallyEnabled()) {
+        if (!$this->gate->isAvailable()) {
             return null;
         }
         $account = $this->security->getUser();

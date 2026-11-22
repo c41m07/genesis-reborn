@@ -7,7 +7,7 @@
     <p>Colonie de départ : <strong>{{ origin }}</strong></p>
     {% if form.kind == 'selection' %}
         <p>Choisissez jusqu’à {{ form.total_limit }} vaisseaux au total. L’aperçu ne déclenche aucun départ.</p>
-        <form method="post" action="{{ path('app_dev_pirate_pilot_attack_preview', {missionNumber: mission}) }}">
+        <form method="post" action="{{ path('app_pirate_campaign_attack_preview', {missionNumber: mission}) }}">
             <input type="hidden" name="_token" value="{{ form.token }}">
             <fieldset>
                 <legend>Vaisseaux disponibles</legend>
@@ -37,13 +37,13 @@
             <dt>Pris dans la réserve embarquée</dt><dd>{{ form.quote.hold|replace({'.': ','}) }} H₂</dd>
             <dt>Pris dans le stock de la colonie</dt><dd>{{ form.quote.planet|replace({'.': ','}) }} H₂</dd>
         </dl>
-        <form method="post" action="{{ path(form.action == 'reconnaissance' ? 'app_dev_pirate_pilot_scout' : 'app_dev_pirate_pilot_attack', {missionNumber: mission}) }}">
+        <form method="post" action="{{ path(form.action == 'reconnaissance' ? 'app_pirate_campaign_scout' : 'app_pirate_campaign_attack', {missionNumber: mission}) }}">
             <input type="hidden" name="_token" value="{{ form.token }}">
             {% for ordinal, quantity in form.hidden_escort %}
                 <input type="hidden" name="escort[{{ ordinal }}]" value="{{ quantity }}">
             {% endfor %}
             <button type="submit">{{ form.action == 'reconnaissance' ? 'Envoyer la sonde' : 'Confirmer et envoyer l’escorte' }}</button>
         </form>
-        {% if form.action == 'attack' %}<p><a href="{{ path('app_dev_pirate_pilot', {missionNumber: mission}) }}">Modifier l’escorte</a></p>{% endif %}
+        {% if form.action == 'attack' %}<p><a href="{{ path('app_pirate_campaign', {missionNumber: mission}) }}">Modifier l’escorte</a></p>{% endif %}
     {% endif %}
 </section>

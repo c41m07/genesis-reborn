@@ -11,6 +11,7 @@ use Symfony\Component\Security\Csrf\{CsrfToken, CsrfTokenManagerInterface};
 
 /** Adaptateur de présentation des devis : aucun contrôleur ni route et aucune commande exécutée. */
 #[When(env: 'dev')]
+#[When(env: 'prod')]
 final readonly class PiratePilotEncounterForms
 {
     public function __construct(

@@ -31,22 +31,22 @@ final readonly class PirateSurvivorRecoveryService
     }
 
     /** @return array{target_id:int,seconds:int,hydrogen:float,remaining:float,digest:string}|null */
-    public function preview(PlayerUniverse $owner, int $campaignId, int $attempt, int $revision, int $targetId): ?array
+    public function preview(PlayerUniverse $owner, int $campaignId, int $attempt, int $revision, int $targetId, PiratePilotGate $admission): ?array
     {
-        return $this->manager->transaction(function () use ($owner, $campaignId, $attempt, $revision, $targetId): ?array {
-            return $this->plan($owner, $campaignId, $attempt, $revision, $targetId)['summary'] ?? null;
+        return $this->manager->transaction(function () use ($owner, $campaignId, $attempt, $revision, $targetId, $admission): ?array {
+            return $this->plan($owner, $campaignId, $attempt, $revision, $targetId, $admission)['summary'] ?? null;
         });
     }
 
     /** Le clic n'envoie qu'une sélection et le digest autorisé ; coût, ETA et profils sont recalculés. */
-    public function launch(PlayerUniverse $owner, int $campaignId, int $attempt, int $revision, int $targetId, string $approvedDigest): bool
+    public function launch(PlayerUniverse $owner, int $campaignId, int $attempt, int $revision, int $targetId, string $approvedDigest, PiratePilotGate $admission): bool
     {
         if (preg_match('/^[a-f0-9]{64}$/D', $approvedDigest) !== 1) {
             return false;
         }
 
-        return $this->manager->transaction(function () use ($owner, $campaignId, $attempt, $revision, $targetId, $approvedDigest): bool {
-            $plan = $this->plan($owner, $campaignId, $attempt, $revision, $targetId);
+        return $this->manager->transaction(function () use ($owner, $campaignId, $attempt, $revision, $targetId, $approvedDigest, $admission): bool {
+            $plan = $this->plan($owner, $campaignId, $attempt, $revision, $targetId, $admission);
             if ($plan === null || !hash_equals($plan['summary']['digest'], $approvedDigest)) {
                 return false;
             }
@@ -65,7 +65,7 @@ final readonly class PirateSurvivorRecoveryService
         });
     }
 
-    private function plan(PlayerUniverse $owner, int $campaignId, int $attempt, int $revision, int $targetId): ?array
+    private function plan(PlayerUniverse $owner, int $campaignId, int $attempt, int $revision, int $targetId, PiratePilotGate $admission): ?array
     {
         if ($campaignId < 1 || $attempt < 1 || $targetId < 1 || $revision < 1 || $owner->id === null) {
             return null;
@@ -73,7 +73,7 @@ final readonly class PirateSurvivorRecoveryService
         // Tant que la participation commune n'est pas verrouillée, ne pas déréférencer
         // une relation paresseuse : MariaDB pourrait figer son instantané avant le premier départ.
         $this->guard->lockMembership($owner, true);
-        if ($owner->universe->slug !== 'omega-1' || $owner->player?->id === null
+        if (!$admission->matchesWorld($owner->universe, $this->now(false)) || $owner->player?->id === null
             || $owner->player->lockedAt !== null || $owner->player->emailVerifiedAt === null) {
             return null;
         }

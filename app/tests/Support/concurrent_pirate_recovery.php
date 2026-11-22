@@ -42,5 +42,5 @@ while (!is_file($input['barrier'])) {
 
 $owner = $em->find(PlayerUniverse::class, $input['owner']);
 $recovery = $container->get(PirateSurvivorRecoveryService::class);
-$result = $recovery->launch($owner, $input['campaign'], 1, 1, $input['target'], $input['digest']);
+$result = $recovery->launch($owner, $input['campaign'], 1, 1, $input['target'], $input['digest'], new \App\Service\PirateCampaign\PiratePilotGate('dev'));
 echo json_encode($result, JSON_THROW_ON_ERROR)."\n";

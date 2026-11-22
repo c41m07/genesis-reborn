@@ -19,7 +19,7 @@ final class PirateSurvivorRecoveryEvidence
             || $campaign->reservedShips === [] || $campaign->report === null
             || ($campaign->timeline['arrival_flow'] ?? null) !== 2
             || !in_array($campaign->timeline['state'] ?? null, ['won', 'retryable'], true)
-            || $viewer->universe->slug !== 'omega-1' || $campaign->reconnaissance->battleProofFor($viewer, $at) === null
+            || ($campaign->timeline['convoy_pilot'] ?? null) !== true || $campaign->reconnaissance->pilotScoutFuelFor($viewer, $at) === null
             || !is_array($proof) || !is_array($record) || ($proof['version'] ?? null) !== 1
             || ($proof['campaign'] ?? null) !== $campaign->id || ($proof['origin'] ?? null) !== $campaign->originId
             || ($proof['universe'] ?? null) !== $viewer->universe->id || ($proof['membership'] ?? null) !== $viewer->id

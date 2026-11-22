@@ -12,6 +12,7 @@ use Symfony\Component\DependencyInjection\Attribute\When;
 
 /** Lecture privée du pilote, sans présence ni écriture de jeu. */
 #[When(env: 'dev')]
+#[When(env: 'prod')]
 final readonly class PiratePilotLocalReader
 {
     public function __construct(
@@ -26,19 +27,9 @@ final readonly class PiratePilotLocalReader
     ) {
     }
 
-    public static function configuredGate(string $kernel, string $enabled, string $omegaId): PiratePilotGate
-    {
-        $id = preg_match('/^[1-9][0-9]{0,9}$/D', $omegaId) === 1
-            ? filter_var($omegaId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 2147483647]])
-            : false;
-
-        // Un réglage absent, ambigu ou hors borne ferme la garde plutôt que faire échouer la requête.
-        return new PiratePilotGate($kernel, $enabled === '1', $id === false ? 0 : $id);
-    }
-
     public function dossier(?int $missionNumber = null): ?array
     {
-        if (!$this->gate->isLocallyEnabled()) {
+        if (!$this->gate->isAvailable()) {
             return null;
         }
         $account = $this->security->getUser();

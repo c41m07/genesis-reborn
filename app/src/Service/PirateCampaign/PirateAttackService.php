@@ -66,34 +66,36 @@ final class PirateAttackService
     }
 
     /** Entrée interne explicite, que ni le dossier ni aucune route ne peuvent appeler aujourd'hui. */
-    public function launchWithOmegaPilotConvoy(
+    public function launchWithPilotConvoy(
         PlayerUniverse $membership,
         Planet $origin,
         string $missionKey,
         int $expectedPreviousAttempt,
         array $composition,
+        PiratePilotGate $admission,
     ): bool {
-        return $this->start($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, null, true, true);
+        return $this->start($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, null, true, true, admission: $admission);
     }
 
     /**
      * Départ du futur pilote : rapport scout payé, aucune flotte publique ni fret de mission.
      * Le dossier et le routeur n'exposent pas cette commande.
      */
-    public function launchWithOmegaPilotFuel(
+    public function launchWithPilotFuel(
         PlayerUniverse $membership,
         Planet $origin,
         string $missionKey,
         int $expectedPreviousAttempt,
         array $composition,
+        PiratePilotGate $admission,
     ): bool {
-        return $this->start($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, null, true, true, true);
+        return $this->start($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, null, true, true, true, $admission);
     }
 
     /** @return array{attempt:int, options:PiratePilotCommandOptions}|null */
-    public function pilotAttackOptionsLocked(PlayerUniverse $member, Planet $origin, string $key): ?array
+    public function pilotAttackOptionsLocked(PlayerUniverse $member, Planet $origin, string $key, PiratePilotGate $admission): ?array
     {
-        $state = $this->pilotAttackReadyLocked($member, $origin, $key);
+        $state = $this->pilotAttackReadyLocked($member, $origin, $key, $admission);
         if ($state === null) {
             return null;
         }
@@ -131,9 +133,9 @@ final class PirateAttackService
      * Le devis et le futur débit utilisent exactement le même constructeur natif des profils et du trajet.
      * @return array{quote:array{seconds:int,hydrogen:float,orbit:float,hold:float,planet:float},world:string}|null
      */
-    public function pilotAttackQuoteLocked(PlayerUniverse $member, Planet $origin, string $key, int $expectedAttempt, array $composition): ?array
+    public function pilotAttackQuoteLocked(PlayerUniverse $member, Planet $origin, string $key, int $expectedAttempt, array $composition, PiratePilotGate $admission): ?array
     {
-        $state = $this->pilotAttackReadyLocked($member, $origin, $key);
+        $state = $this->pilotAttackReadyLocked($member, $origin, $key, $admission);
         if ($state === null || $state['attempt'] !== $expectedAttempt) {
             return null;
         }
@@ -163,10 +165,10 @@ final class PirateAttackService
         ], 'world' => $world];
     }
 
-    private function pilotAttackReadyLocked(PlayerUniverse $member, Planet $origin, string $key): ?array
+    private function pilotAttackReadyLocked(PlayerUniverse $member, Planet $origin, string $key, PiratePilotGate $admission): ?array
     {
         $at = $this->now();
-        if ($member->universe->slug !== 'omega-1' || $member->id === null
+        if (!$admission->matchesWorld($member->universe, $at) || $member->id === null
             || !$member->isPlayerControlled() || !$member->universe->isAccessible($at) || $origin->owner?->id !== $member->id
             || $origin->solarSystem->galaxy->universe->id !== $member->universe->id || $member->player->lockedAt !== null) {
             return null;
@@ -210,12 +212,13 @@ final class PirateAttackService
         bool $arrivalFlow,
         bool $convoyPilot,
         bool $fundedPilot = false,
+        ?PiratePilotGate $admission = null,
     ): bool {
-        return $this->manager->transaction(function () use ($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, $initialRoundSeconds, $arrivalFlow, $convoyPilot, $fundedPilot): bool {
+        return $this->manager->transaction(function () use ($membership, $origin, $missionKey, $expectedPreviousAttempt, $composition, $initialRoundSeconds, $arrivalFlow, $convoyPilot, $fundedPilot, $admission): bool {
             // Verrous conquis dans le même ordre pour les commandes natales : empire, univers, planète.
             $this->guard->lock($membership, $origin, true);
-            if ($convoyPilot && $membership->universe->slug !== 'omega-1') {
-                throw new \DomainException('Le pilote de convoi est réservé à Omega.');
+            if ($convoyPilot && !($admission?->matchesWorld($membership->universe, $this->now()) ?? false)) {
+                throw new \DomainException('La campagne n’admet pas cet univers.');
             }
             if ($membership->player->lockedAt !== null) {
                 throw new \DomainException('Compte verrouillé.');
@@ -518,7 +521,10 @@ final class PirateAttackService
     /** @return array{PirateAttackFuelReceipt,PirateReturnAttestation} */
     private function fundedProof(PirateAttackCampaign $campaign, PlayerUniverse $membership, int $attempt): array
     {
-        if (!self::usesPrivateArrival($campaign) || $membership->universe->slug !== 'omega-1') {
+        // L'opt-in protège les nouveaux ordres. Les jobs déjà reçus persistent leur preuve économique et
+        // doivent finir même si la page est fermée entre le départ et le retour.
+        if (!self::usesPrivateArrival($campaign) || ($campaign->timeline['convoy_pilot'] ?? null) !== true
+            || $campaign->reconnaissance->pilotScoutFuelFor($membership, $this->now()) === null) {
             throw new \LogicException('Cette tentative n’utilise pas le retour du pilote privé.');
         }
         $receipt = PirateAttackFuelReceipt::read($campaign->timeline['pilot_attack_fuel']);

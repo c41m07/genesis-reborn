@@ -594,6 +594,43 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertSame(4, $this->em->getRepository(\App\Entity\AdminAuditLog::class)->count());
     }
 
+    public function testUniverseSettingsSuspendOnlyThisCampaignAndKeepUnrelatedFlags(): void
+    {
+        $admin = $this->player('CampaignAdmin');
+        $admin->roles = ['ROLE_ADMIN'];
+        $worlds = $this->em->getRepository(Universe::class);
+        $universe = $worlds->findOneBy(['slug' => 'omega-1']);
+        $other = $worlds->findOneBy(['slug' => 'turbo-1']);
+        $this->em->flush();
+        self::assertTrue($universe->pirateCampaignEnabled());
+        self::assertTrue($other->pirateCampaignEnabled());
+        $catalogue = self::getContainer()->get(GameCatalog::class);
+        self::assertTrue($catalogue->forUniverse($other)['features']['guilds_enabled']);
+        $other->gameSettings['features']['guilds_enabled'] = false;
+        $this->em->flush();
+        self::assertFalse($catalogue->forUniverse($other)['features']['guilds_enabled']);
+        $service = self::getContainer()->get(\App\Service\Admin\AdminService::class);
+        $settings = [
+            'multipliers' => array_fill_keys(['building_time', 'research_time', 'ship_build_time', 'resource_production', 'travel_time'], '1'),
+            'limits' => ['max_planets' => 8, 'max_fleet_size' => 150],
+            'features' => ['guilds_enabled' => '0', 'planet_conquest' => '1', Universe::PIRATE_CAMPAIGN_FEATURE => '0'],
+        ];
+        $service->setUniverseSettings($admin, $universe->id, $settings);
+        self::assertFalse($universe->pirateCampaignEnabled());
+        self::assertTrue($other->pirateCampaignEnabled());
+        self::assertFalse($catalogue->forUniverse($universe)['features']['guilds_enabled']);
+        unset($settings['features'][Universe::PIRATE_CAMPAIGN_FEATURE], $settings['features']['guilds_enabled']);
+        $service->setUniverseSettings($admin, $universe->id, $settings);
+        self::assertFalse($universe->pirateCampaignEnabled(), 'Un formulaire ancien ne réactive pas la campagne.');
+        self::assertFalse($catalogue->forUniverse($universe)['features']['guilds_enabled']);
+        $settings['features'][Universe::PIRATE_CAMPAIGN_FEATURE] = '1';
+        $service->setUniverseSettings($admin, $universe->id, $settings);
+        self::assertTrue($universe->pirateCampaignEnabled());
+        $audit = $this->em->getRepository(\App\Entity\AdminAuditLog::class)->findOneBy(['action' => 'universe_settings_change'], ['id' => 'DESC']);
+        self::assertTrue($audit->details['features'][Universe::PIRATE_CAMPAIGN_FEATURE]);
+        self::assertSame((string) $universe->id, (string) $audit->targetId);
+    }
+
     public function testDirectAllianceRequiresMutualConsentAndIsSymmetric(): void
     {
         $a=$this->player('Alpha');$this->join($a);$b=$this->player('Beta');$this->join($b);

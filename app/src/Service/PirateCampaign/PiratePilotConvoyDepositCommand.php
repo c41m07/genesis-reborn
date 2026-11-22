@@ -11,6 +11,7 @@ use Symfony\Component\Security\Csrf\{CsrfToken, CsrfTokenManagerInterface};
 
 /** Retenter la remise du lot déjà arrivé, à sa destination attestée. */
 #[When(env: 'dev')]
+#[When(env: 'prod')]
 final readonly class PiratePilotConvoyDepositCommand
 {
     public function __construct(

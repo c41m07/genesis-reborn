@@ -1,19 +1,34 @@
-# Pilote local Omega : garde et page privée
+# Campagne pirate : admission et recette
 
-Le pilote reste désactivé dans le code livré. Aucune URL, entrée de nav, configuration d’instance ou action de jeu n’est activée par ce lot.
+## Disponibilité
 
-## Contexte et activation future
+- Le dossier est accessible aux joueurs vérifiés possédant une participation active dans leur
+  univers, en mode applicatif dev ou prod. Le numéro d’une mission ne sélectionne ni le compte,
+  ni la participation, ni l’univers.
+- La case **Administration → Univers → Gérer → Règles de jeu → Fonctionnalités → Campagne pirate**
+  est activée par défaut, y compris pour un univers historique sans ce réglage. Les réglages explicites
+  sont conservés. Le nom d’affichage ou le slug de l’univers ne change pas l’admission.
+- Décocher cette case et enregistrer bloque les nouveaux ordres et masque l’accès dans Événements.
+  Cela ne purge rien : les opérations déjà engagées continuent avec leur preuve durable et le joueur
+  retrouve son historique lors d’une réactivation. Ce réglage ne nécessite pas de reconstruire ni
+  redéployer l’application après la mise en service de cette version.
+- Les Guildes sont également activées par défaut. Un réglage contraire enregistré pour un univers reste prioritaire.
+- L’environnement technique Symfony alpha n’enregistre pas ces routes. Si un environnement de
+  préproduction est délibérément déployé en APP_ENV=prod avec cette version, ses univers appliquent
+  les mêmes valeurs par défaut dans leur propre base. Ne pas confondre le mode Symfony et la cible
+  de déploiement.
 
-- La branche Git dev n’est ni l’environnement Symfony ni une instance de recette publiée. Le modèle local versionné indique APP_ENV=dev ; le Compose d’hébergement force APP_ENV=prod, y compris pour l’Alpha publiée depuis la branche alpha. Le nom de branche, l’hôte HTTP, un en-tête transmis par un proxy ou le slug seul ne peuvent rien ouvrir.
-- La garde nécessite ensemble un kernel Symfony dev, un opt-in serveur local et l’identifiant strictement positif de l’unique ligne Omega de la **base isolée**. Elle contrôle aussi le slug canonique omega-1 sur la ligne relue. L’opt-in est faux et l’ID vaut zéro par défaut. Même les deux entrées valides n’ouvrent rien sous un kernel prod, alpha ou test. Ce lot ne lit et ne change aucun paramètre d’instance.
-- Pour un futur essai autorisé sur une copie locale DEV (pas sur un hébergement), l’opérateur vérifie au préalable isolation de la base, boucle locale et absence de production, puis passe la capacité et l’ID par un câblage serveur propre à la recette. Ne pas apporter d’entrée d’activation par défaut, de variable Compose de production ou d’option de requête. Avant d’ouvrir, démontrer les refus avec paramètres absents, typo d’ID/slug et configuration forcée sous kernel prod. Désactiver en retirant l’opt-in, sans toucher aux missions qui existent déjà.
-- Le code n’infère jamais l’authentification à partir des paramètres : prendre le compte de Symfony Security puis revalider sa sélection actuelle via la requête propriétaire activeMembership du lecteur existant. Après contrôle de l’environnement et de l’opt-in, la garde valide cette participation fraîche avant tout chargement des lignes privées : même compte vérifié et non verrouillé, même sélection des deux côtés, empire non oublié, univers accessible et identité Omega attendue. Ne pas écrire la présence du joueur pour effectuer cette lecture.
+## Pour l'exploitation lors d'un déploiement décidé par l'opérateur
 
-## Contrat de page à raccorder séparément
+1. Lancer le processus habituel de validation et de migrations du dépôt avant l’ouverture.
+2. Vérifier app, relay et worker Messenger sur la cible voulue. La case ne peut pas compenser un
+   service asynchrone absent. Aucun drapeau ni identifiant d’univers supplémentaire n’est requis.
+3. Contrôler les données d’un univers via son administration et la présence de la campagne dans
+   Événements pour un joueur vérifié. Les routes de dossier sont privées et non mises en cache.
+4. En cas de pause, décocher la case pour le seul univers concerné. Ne pas arrêter les workers :
+   ils doivent vider les ordres déjà acceptés. Contrôler l’état durable après l’échéance ; n’utiliser
+   ni modification manuelle des reçus ni « rattrapage » par une relance générale.
 
-- Une vraie page, avec Événements comme entrée future, sans modifier leur planning ni leur tiroir. Un lien facultatif depuis l’exercice de Premiers pas peut être ajouté plus tard derrière la même garde ; l’exercice autonome existant reste distinct. Pas de lien public, ni d’affichage administratif de substitution.
-- Sous l’opt-in, un GET de dossier sans effet de bord. Le seul paramètre éventuel est un numéro canonique de mission à consulter, jamais un acteur, un univers, une colonie, un rapport ou un emplacement. Le lecteur existant revalide la portée propriétaire avant interrogation ; renvoyer un refus neutre identique hors pilote, mission future, compte tiers ou contexte stale, sans exposer les causes internes. Poser Cache-Control: private, no-store sur ces réponses, y compris les refus ou fragments. Ne pas exposer état de worker, jeton, lieu non découvert, calendrier interne ou résultat avant preuve durable.
-- La page doit distinguer sa mission courante et son historique consultable. Un dossier ancien reste accessible directement dans le même empire éligible quand la campagne a déjà avancé ; une prime ou un convoi en attente ne doit pas disparaître de cet historique. N’afficher que la projection privée destinée au joueur de son propre dossier et de ses droits acquis, jamais remonter un moteur en contournant le lecteur. Consultation n’implique ni départ ni crédit.
-- Toute future action privée explicite sera un POST distinct. CSRF lié à l’action, la participation et au dossier, reçu anti-rejeu distinct, validation propriétaire/univers/phase et stock sous verrou côté serveur. Le succès redirige vers le même dossier, courant ou historique, et ne rend jamais un POST accessible depuis GET. CSRF ne remplace pas l’autorisation ni l’idempotence. Aucune de ces routes ou écritures n’est livrée par ce lot.
-
-Ces refus sont couverts en PHP pur pour la garde. La recette HTTP réelle devra vérifier la configuration de provenance, la lecture sans émission ni présence, les refus/headers, la navigation/historique et les commandes privées avant une activation. Aucun test navigateur ou déploiement n’est revendiqué ici.
+Le catalogue de développement a employé Omega comme témoin et les recettes accélérées modifient
+uniquement leur univers et horloge jetables. Aucun trajet de 300 secondes n’est forcé en jeu.
+Le cadrage du déroulement est décrit dans [Campagne et Balise 17](CAMPAGNE_PIRATE_BALISE_PILOTE.md).

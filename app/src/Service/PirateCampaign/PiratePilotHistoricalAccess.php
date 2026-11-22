@@ -15,6 +15,7 @@ use Symfony\Component\DependencyInjection\Attribute\When;
 
 /** Les commandes d'une ancienne mission ne sont pas des ordres depuis la colonie active. */
 #[When(env: 'dev')]
+#[When(env: 'prod')]
 final readonly class PiratePilotHistoricalAccess
 {
     public function __construct(
@@ -29,7 +30,7 @@ final readonly class PiratePilotHistoricalAccess
 
     public function whileCurrent(\Closure $operation): mixed
     {
-        if (!$this->gate->isLocallyEnabled()) {
+        if (!$this->gate->isAvailable()) {
             return null;
         }
         $account = $this->security->getUser();

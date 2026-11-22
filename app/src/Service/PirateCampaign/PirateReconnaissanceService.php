@@ -51,20 +51,21 @@ final class PirateReconnaissanceService
     }
 
     /** Réservé au futur pilote local, après contrôle de son accès côté serveur. */
-    public function launchDefinedWithOmegaPilotFuel(
+    public function launchDefinedWithPilotFuel(
         PlayerUniverse $membership,
         Planet $origin,
         SolarSystem $system,
         PirateDistressSite $site,
         string $missionKey,
         string $definitionKey,
+        PiratePilotGate $admission,
         ?bool $detected = null,
     ): bool {
         return $this->start(
             $membership, $origin, $system, $site, $missionKey,
             fn (): PiratePreparedEncounter => $this->campaign->prepareForServer($definitionKey, $membership->universe),
             $detected,
-            pilotFuel: true,
+            admission: $admission,
         );
     }
 
@@ -73,9 +74,9 @@ final class PirateReconnaissanceService
      * Les chiffres viennent du moteur, pas d'une requête ou du jeton d'interface.
      * @return array{seconds:int,hydrogen:float,hold:float,planet:float}|null
      */
-    public function pilotScoutQuoteLocked(PlayerUniverse $membership, Planet $origin, SolarSystem $system): ?array
+    public function pilotScoutQuoteLocked(PlayerUniverse $membership, Planet $origin, SolarSystem $system, PiratePilotGate $admission): ?array
     {
-        if ($membership->universe->slug !== 'omega-1') {
+        if (!$admission->matchesWorld($membership->universe, $this->clock->now())) {
             return null;
         }
         try {
@@ -120,17 +121,17 @@ final class PirateReconnaissanceService
         string $missionKey,
         \Closure $capture,
         ?bool $detected,
-        bool $pilotFuel = false,
+        ?PiratePilotGate $admission = null,
     ): bool {
         if (!preg_match('/^[a-z0-9][a-z0-9_-]{0,63}$/D', $missionKey)) {
             throw new \DomainException('Identifiant de mission pirate invalide.');
         }
 
-        return $this->manager->transaction(function () use ($membership, $origin, $system, $site, $missionKey, $capture, $detected, $pilotFuel): bool {
+        return $this->manager->transaction(function () use ($membership, $origin, $system, $site, $missionKey, $capture, $detected, $admission): bool {
             // Même ordre que les commandes de flotte ; la participation sérialise aussi deux origines différentes.
             $this->guard->lock($membership, $origin, true);
-            if ($pilotFuel && $membership->universe->slug !== 'omega-1') {
-                throw new \DomainException('Le départ avec carburant pilote est réservé à Omega.');
+            if ($admission !== null && !$admission->matchesWorld($membership->universe, $this->clock->now())) {
+                throw new \DomainException('La campagne n’admet pas cet univers.');
             }
             if ($membership->player->lockedAt !== null || $site->signalFor($membership) === null || !$site->matchesSystem($system)) {
                 throw new \DomainException('Mission de reconnaissance privée inaccessible.');
@@ -148,7 +149,7 @@ final class PirateReconnaissanceService
             $probe = $this->lockProbe($membership, $origin);
             $idle = $probe->fleet;
             $flight = $this->flightQuote($membership, $origin, $system);
-            $budget = $pilotFuel ? PirateCampaignFuel::scout($flight) : null;
+            $budget = $admission !== null ? PirateCampaignFuel::scout($flight) : null;
             // Comme un départ courant : au besoin prendre la réserve du hangar, jamais son fret,
             // et vérifier que les coques restantes portent ce qui reste à quai.
             $paid = $this->hold->departure($idle, ['probe' => ['basic' => 1]], $budget?->amountForDeparture() ?? 0.0);

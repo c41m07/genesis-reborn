@@ -143,7 +143,7 @@ final class PirateReconnaissanceTest extends KernelTestCase
             new PiratePilotCampaignOrder($campaignCatalogue, new PirateCampaignSequence($campaignCatalogue, new PirateCampaignProgress($campaignCatalogue))));
 
         return [new PiratePilotScoutCommand(
-            new PiratePilotGate('dev', $enabled, $member->universe->id), $security, $this->clock, $csrf,
+            new PiratePilotGate($enabled ? 'dev' : 'test'), $security, $this->clock, $csrf,
             $this->em, $manager, self::getContainer()->get(ActionGuard::class), $resolver, $this->service,
         ), $csrf];
     }
@@ -351,8 +351,8 @@ final class PirateReconnaissanceTest extends KernelTestCase
         $native = self::getContainer()->get(FleetService::class)
             ->quote($member, $home, 'explore', $target->id, ['probe' => ['basic' => 1]], 1.0);
         $site = PirateDistressSite::inExistingSystem($member, $target);
-        self::assertTrue($this->service->launchDefinedWithOmegaPilotFuel($member, $home, $target, $site, 'balise_17', 'balise_17', $detected));
-        self::assertFalse($this->service->launchDefinedWithOmegaPilotFuel($member, $home, $target, $site, 'balise_17', 'balise_17', !$detected));
+        self::assertTrue($this->service->launchDefinedWithPilotFuel($member, $home, $target, $site, 'balise_17', 'balise_17', new \App\Service\PirateCampaign\PiratePilotGate('dev'), $detected));
+        self::assertFalse($this->service->launchDefinedWithPilotFuel($member, $home, $target, $site, 'balise_17', 'balise_17', new \App\Service\PirateCampaign\PiratePilotGate('dev'), !$detected));
         $db = $this->em->getConnection();
         $event = $db->fetchAssociative("SELECT target_id, token, due_at FROM outbox_message WHERE kind = 'pirate_reconnaissance'");
         $mission = $this->em->find(PirateReconnaissance::class, (int) $event['target_id']);
@@ -388,8 +388,8 @@ final class PirateReconnaissanceTest extends KernelTestCase
         }
         $target = $home->solarSystem;
         try {
-            $this->service->launchDefinedWithOmegaPilotFuel($member, $home, $target, PirateDistressSite::inExistingSystem($member, $target),
-                'balise_17', 'balise_17');
+            $this->service->launchDefinedWithPilotFuel($member, $home, $target, PirateDistressSite::inExistingSystem($member, $target),
+                'balise_17', 'balise_17', new \App\Service\PirateCampaign\PiratePilotGate('dev'));
             self::fail('La sonde et ses stocks ne doivent pas partir sans tout le carburant et son événement.');
         } catch (DriverException|\DomainException $error) {
             if ($canPay) {

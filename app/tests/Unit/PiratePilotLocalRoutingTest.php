@@ -6,7 +6,7 @@ namespace App\Tests\Unit;
 
 use App\Controller\PiratePilotLocalController;
 use App\Repository\{PirateCampaignReadRepository, PirateConvoyReadRepository};
-use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignWorkspace, PirateConvoyDossierProjection, PiratePilotActiveColony, PiratePilotAttackCommand, PiratePilotConvoyDepositCommand, PiratePilotConvoyRouteCommand, PiratePilotEncounterForms, PiratePilotLocalReader, PiratePilotScoutCommand, PiratePilotSurvivorsCommand};
+use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignWorkspace, PirateConvoyDossierProjection, PiratePilotActiveColony, PiratePilotAttackCommand, PiratePilotConvoyDepositCommand, PiratePilotConvoyRouteCommand, PiratePilotEncounterForms, PiratePilotGate, PiratePilotLocalReader, PiratePilotScoutCommand, PiratePilotSurvivorsCommand};
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Routing\AttributeRouteControllerLoader;
@@ -15,10 +15,10 @@ use Symfony\Component\HttpFoundation\Request;
 
 final class PiratePilotLocalRoutingTest extends TestCase
 {
-    public function testNativeRoutingOnlyImportsTheGetAndExactPostActionsInDev(): void
+    public function testNativeRoutingOnlyImportsTheGetAndExactPostActionsInDevAndProd(): void
     {
         $controller = PiratePilotLocalController::class;
-        $name = 'app_dev_pirate_pilot';
+        $name = 'app_pirate_campaign';
         $route = (new AttributeRouteControllerLoader('dev'))->load($controller)->get($name);
         self::assertNotNull($route);
         self::assertSame(['GET'], $route->getMethods());
@@ -27,21 +27,26 @@ final class PiratePilotLocalRoutingTest extends TestCase
 
         $expected = [
             $name => ['GET'],
-            'app_dev_pirate_pilot_scout' => ['POST'],
-            'app_dev_pirate_pilot_attack_preview' => ['POST'],
-            'app_dev_pirate_pilot_attack' => ['POST'],
-            'app_dev_pirate_pilot_convoy_deposit' => ['POST'],
-            'app_dev_pirate_pilot_convoy_route_preview' => ['POST'],
-            'app_dev_pirate_pilot_convoy_route' => ['POST'],
-            'app_dev_pirate_pilot_survivors_preview' => ['POST'],
-            'app_dev_pirate_pilot_survivors' => ['POST'],
+            'app_pirate_campaign_scout' => ['POST'],
+            'app_pirate_campaign_attack_preview' => ['POST'],
+            'app_pirate_campaign_attack' => ['POST'],
+            'app_pirate_campaign_convoy_deposit' => ['POST'],
+            'app_pirate_campaign_convoy_route_preview' => ['POST'],
+            'app_pirate_campaign_convoy_route' => ['POST'],
+            'app_pirate_campaign_survivors_preview' => ['POST'],
+            'app_pirate_campaign_survivors' => ['POST'],
         ];
         $devRoutes = (new AttributeRouteControllerLoader('dev'))->load($controller);
         self::assertCount(9, $devRoutes);
         foreach ($expected as $routeName => $methods) {
             self::assertSame($methods, $devRoutes->get($routeName)?->getMethods(), $routeName);
         }
-        foreach (['prod', 'alpha', 'test'] as $env) {
+        $prodRoutes = (new AttributeRouteControllerLoader('prod'))->load($controller);
+        self::assertCount(count($expected), $prodRoutes);
+        foreach ($expected as $routeName => $methods) {
+            self::assertSame($methods, $prodRoutes->get($routeName)?->getMethods(), $routeName);
+        }
+        foreach (['alpha', 'test'] as $env) {
             self::assertCount(0, (new AttributeRouteControllerLoader($env))->load($controller), $env);
         }
     }
@@ -57,7 +62,7 @@ final class PiratePilotLocalRoutingTest extends TestCase
         $catalogue = (new \ReflectionClass(PirateCampaignCatalogue::class))->newInstanceWithoutConstructor();
         $workspace = (new \ReflectionClass(PirateCampaignWorkspace::class))->newInstanceWithoutConstructor();
         $convoys = (new \ReflectionClass(PirateConvoyReadRepository::class))->newInstanceWithoutConstructor();
-        $reader = new PiratePilotLocalReader($security, $clock, PiratePilotLocalReader::configuredGate('dev', '0', '0'),
+        $reader = new PiratePilotLocalReader($security, $clock, new PiratePilotGate('alpha'),
             $repository, $catalogue, $workspace, $convoys, new PirateConvoyDossierProjection());
 
         $colonies = (new \ReflectionClass(PiratePilotActiveColony::class))->newInstanceWithoutConstructor();
@@ -87,15 +92,5 @@ final class PiratePilotLocalRoutingTest extends TestCase
             self::assertTrue($response->headers->hasCacheControlDirective('no-store'));
             self::assertSame('Page introuvable.', $response->getContent());
         }
-    }
-
-    public function testAbsentOrMalformedLocalOptInKeepsTheReadGateClosed(): void
-    {
-        foreach ([['0', '18'], ['true', '18'], ['', ''], ['1', '-4'], ['1', '00018'],
-            ['1', '4294967299'], ['1', ' 18'], ['1', "18\n"], ['1', '18e0']] as [$enabled, $id]) {
-            self::assertFalse(PiratePilotLocalReader::configuredGate('dev', $enabled, $id)->isLocallyEnabled());
-        }
-        self::assertTrue(PiratePilotLocalReader::configuredGate('dev', '1', '18')->isLocallyEnabled());
-        self::assertFalse(PiratePilotLocalReader::configuredGate('prod', '1', '18')->isLocallyEnabled());
     }
 }

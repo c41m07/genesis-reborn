@@ -12,18 +12,18 @@
 <body>
 <main class="shell" id="main">
     <h1>Campagne pirate</h1>
-    <p>Pilote local</p>
+    {% if app.environment == 'dev' %}<p>Pilote local</p>{% endif %}
     <nav aria-label="Dossiers de la campagne">
         <ul>
             {% if dossier.current is not null and dossier.current != dossier.selected %}
-                <li><a href="{{ path('app_dev_pirate_pilot') }}">Mission courante</a></li>
+                <li><a href="{{ path('app_pirate_campaign') }}">Mission courante</a></li>
             {% endif %}
             {% for entry in dossier.history %}
                 <li>
                     {% if entry.number == dossier.selected %}
                         <span aria-current="page">Mission {{ entry.number }}</span>
                     {% else %}
-                        <a href="{{ path('app_dev_pirate_pilot', {missionNumber: entry.number}) }}">Mission {{ entry.number }}</a>
+                        <a href="{{ path('app_pirate_campaign', {missionNumber: entry.number}) }}">Mission {{ entry.number }}</a>
                     {% endif %}
                     {% if entry.won %} · réussie{% endif %}
                 </li>
@@ -55,7 +55,7 @@
     {% elseif dossier.current is null %}
         <p>Campagne terminée. Les dossiers gagnés restent consultables.</p>
     {% endif %}
-    <p><a href="{{ path('app_dev_pirate_pilot', {missionNumber: dossier.selected}) }}">Actualiser le dossier</a></p>
+    <p><a href="{{ path('app_pirate_campaign', {missionNumber: dossier.selected}) }}">Actualiser le dossier</a></p>
 </main>
 </body>
 </html>
