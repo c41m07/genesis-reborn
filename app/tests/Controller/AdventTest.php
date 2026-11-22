@@ -133,8 +133,13 @@ final class AdventTest extends WebTestCase
         self::assertSelectorTextContains('#advent-door-1', 'Versé');
 
         $this->clock->sleep(31 * 24 * 3600 - 1);
+        // Le joueur rattrape les portes en revenant, pas avec la session de novembre.
+        $this->client->getCookieJar()->clear();
+        $this->client->loginUser($this->em->find(Player::class, $member->id));
         $this->client->request('GET', '/evenements/avent');
+        self::assertResponseIsSuccessful();
         self::assertSelectorExists('#advent-door-24 form');
+        self::assertSelectorExists('#advent-door-2 form');
         $this->clock->sleep(1);
         $this->client->request('GET', '/evenements/avent');
         self::assertResponseStatusCodeSame(404);
