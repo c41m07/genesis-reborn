@@ -21,12 +21,25 @@ final readonly class PirateConvoyReadRepository
      */
     public function forOwnedDossier(PlayerUniverse $viewer, array $visibleKeys, \DateTimeImmutable $at): array
     {
+        return $this->ownedRows($viewer, $visibleKeys, $at, count($visibleKeys));
+    }
+
+    /** Une commande exige un droit unique ; la seconde ligne permet de détecter toute incohérence. */
+    public function forOwnedMission(PlayerUniverse $viewer, string $missionKey, \DateTimeImmutable $at): ?PirateConvoyDelivery
+    {
+        $rights = $this->ownedRows($viewer, [$missionKey], $at, 2);
+
+        return count($rights) === 1 && $rights[0]['missionKey'] === $missionKey ? $rights[0]['right'] : null;
+    }
+
+    private function ownedRows(PlayerUniverse $viewer, array $visibleKeys, \DateTimeImmutable $at, int $limit): array
+    {
         if ($visibleKeys === [] || ($viewer->id ?? 0) < 1 || ($viewer->player?->id ?? 0) < 1
             || ($viewer->universe->id ?? 0) < 1) {
             return [];
         }
 
-        $rows = $this->queryForOwnedDossier($viewer, $visibleKeys, $at)->getResult();
+        $rows = $this->queryForOwnedDossier($viewer, $visibleKeys, $at, $limit)->getResult();
         $rights = [];
         foreach ($rows as $row) {
             if (($row[0] ?? null) instanceof PirateConvoyDelivery && is_string($row['missionKey'] ?? null)
@@ -39,7 +52,7 @@ final readonly class PirateConvoyReadRepository
     }
 
     /** @param list<string> $visibleKeys */
-    private function queryForOwnedDossier(PlayerUniverse $viewer, array $visibleKeys, \DateTimeImmutable $at): Query
+    private function queryForOwnedDossier(PlayerUniverse $viewer, array $visibleKeys, \DateTimeImmutable $at, int $limit): Query
     {
         // Vérifier l'identité durable du droit ET celle de la mission avant d'hydrater les détails.
         // Ne pas joindre Planet : aucun nom de destination n'est exposé, même après une cession.
@@ -63,7 +76,7 @@ final readonly class PirateConvoyReadRepository
             ->setParameter('status', 'active')
             ->setParameter('visible', $visibleKeys)
             ->setParameter('now', $at, Types::DATETIME_IMMUTABLE)
-            ->setMaxResults(count($visibleKeys))
+            ->setMaxResults($limit)
             ->getQuery()->setHint(Query::HINT_REFRESH, true);
     }
 }

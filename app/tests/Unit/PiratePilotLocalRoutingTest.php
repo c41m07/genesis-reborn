@@ -6,7 +6,7 @@ namespace App\Tests\Unit;
 
 use App\Controller\PiratePilotLocalController;
 use App\Repository\{PirateCampaignReadRepository, PirateConvoyReadRepository};
-use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignWorkspace, PirateConvoyDossierProjection, PiratePilotActiveColony, PiratePilotAttackCommand, PiratePilotEncounterForms, PiratePilotLocalReader, PiratePilotScoutCommand};
+use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignWorkspace, PirateConvoyDossierProjection, PiratePilotActiveColony, PiratePilotAttackCommand, PiratePilotConvoyDepositCommand, PiratePilotEncounterForms, PiratePilotLocalReader, PiratePilotScoutCommand};
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Routing\AttributeRouteControllerLoader;
@@ -30,9 +30,10 @@ final class PiratePilotLocalRoutingTest extends TestCase
             'app_dev_pirate_pilot_scout' => ['POST'],
             'app_dev_pirate_pilot_attack_preview' => ['POST'],
             'app_dev_pirate_pilot_attack' => ['POST'],
+            'app_dev_pirate_pilot_convoy_deposit' => ['POST'],
         ];
         $devRoutes = (new AttributeRouteControllerLoader('dev'))->load($controller);
-        self::assertCount(4, $devRoutes);
+        self::assertCount(5, $devRoutes);
         foreach ($expected as $routeName => $methods) {
             self::assertSame($methods, $devRoutes->get($routeName)?->getMethods(), $routeName);
         }
@@ -59,6 +60,7 @@ final class PiratePilotLocalRoutingTest extends TestCase
         $forms = (new \ReflectionClass(PiratePilotEncounterForms::class))->newInstanceWithoutConstructor();
         $scout = (new \ReflectionClass(PiratePilotScoutCommand::class))->newInstanceWithoutConstructor();
         $attack = (new \ReflectionClass(PiratePilotAttackCommand::class))->newInstanceWithoutConstructor();
+        $deposit = (new \ReflectionClass(PiratePilotConvoyDepositCommand::class))->newInstanceWithoutConstructor();
         $controller = new PiratePilotLocalController();
         $get = Request::create('/evenements/campagne-pirate/1');
         $post = Request::create('/evenements/campagne-pirate/1', 'POST');
@@ -67,6 +69,7 @@ final class PiratePilotLocalRoutingTest extends TestCase
             $controller->scout($post, 1, $reader, $colonies, $scout),
             $controller->attackPreview($post, 1, $reader, $colonies, $forms),
             $controller->attack($post, 1, $reader, $colonies, $attack),
+            $controller->convoyDeposit($post, 1, $reader, $deposit),
         ];
         foreach ($responses as $response) {
             self::assertSame(404, $response->getStatusCode());

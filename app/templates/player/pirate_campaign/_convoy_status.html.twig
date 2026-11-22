@@ -19,6 +19,13 @@
             <p>Arrivée confirmée, versement non confirmé.</p>
         {% elseif reward.state == 'full_pending' %}
             <p>Lot entier en attente : espace insuffisant lors du dernier contrôle.</p>
+            {% if deposit_token|default(null) %}
+                <p>Libérez assez de place dans la colonie de destination, puis retentez la remise du lot entier.</p>
+                <form method="post" action="{{ path('app_dev_pirate_pilot_convoy_deposit', {missionNumber: selected}) }}">
+                    <input type="hidden" name="_token" value="{{ deposit_token }}">
+                    <button type="submit">Retenter le dépôt dans la même colonie</button>
+                </form>
+            {% endif %}
         {% elseif reward.state == 'destination_lost' %}
             <p>Destination perdue. Aucun nouveau trajet n’est confirmé.</p>
         {% elseif reward.state == 'credited' %}

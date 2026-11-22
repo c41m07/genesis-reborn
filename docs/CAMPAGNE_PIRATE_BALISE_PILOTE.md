@@ -89,3 +89,14 @@ Les actions de récupération de convoi et de repli des survivants ne sont
 pas encore routées par ce raccordement. Le circuit n’est pas annoncé
 jouable avant une recette privée comprenant session Symfony authentique,
 transport Messenger réellement relayé et workers, sans compte ni donnée réelle.
+
+### Reprise de la remise d'un convoi
+
+Une victoire n'impose jamais d'attendre son convoi pour accéder à la mission suivante. Si le contrôle
+de stockage a laissé le lot entier en attente, ce droit apparaît dans le dossier de la mission gagnée
+et non comme un nouvel ordre de la mission courante. Le bouton « Retenter le dépôt dans la même
+colonie » ne propose aucune destination et ne crée aucun trajet. Il reste absent du dossier sans
+droit propriétaire en attente, ou si le droit a changé depuis le rendu. Le POST exige un jeton établi
+pour le droit, l'état exact et la vraie destination, revérifiés après verrous; le service natif applique
+la remise en entier (ou place le droit en attente de nouveau). Si la destination n'appartient plus à
+l'empire, aucun stock n'est crédité. Aucun rattrapage n'est tenté au chargement du dossier.
