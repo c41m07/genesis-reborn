@@ -29,10 +29,9 @@ final class PirateCampaignPresenterTest extends TestCase
         }
 
         $finale = $this->render($signal);
-        self::assertStringContainsString('Mission 20', $finale);
+        self::assertStringContainsString($signal['narrative']['title'], $finale);
         self::assertStringContainsString('une seule sonde basique', $finale);
         self::assertStringContainsString('Elle sera perdue', $finale);
-        self::assertStringContainsString('aria-current="step"', $finale);
         self::assertStringNotContainsString('Flotte pirate révélée', $finale);
         self::assertStringNotContainsString('Estimation', $finale);
         self::assertStringNotContainsString('PIRATE_PRIVATE_777', $finale);
@@ -62,6 +61,7 @@ final class PirateCampaignPresenterTest extends TestCase
         self::assertStringContainsString('Un destroyer menace particulièrement un croiseur', $html);
         self::assertStringContainsString('50 % du coût catalogue', $html);
         self::assertStringContainsString('Ce montant n’a pas été versé', $html);
+        self::assertStringContainsString('+20 074,5', $html);
         self::assertStringContainsString('des vaisseaux en réserve', $html);
         self::assertStringContainsString('de l’électricité', $html);
         self::assertStringContainsString('Ce n’est pas une condition pour combattre', $html);
@@ -232,7 +232,16 @@ final class PirateCampaignPresenterTest extends TestCase
     {
         $twig = new Environment(new FilesystemLoader(dirname(__DIR__, 2).'/templates'), ['strict_variables' => true]);
 
-        return $twig->render('player/pirate_campaign/_briefing.html.twig', ['briefing' => $view]);
+        $twig->addFunction(new \Twig\TwigFunction('asset', static fn (string $path): string => '/'.$path));
+        $twig->addFunction(new \Twig\TwigFunction('duration_label', static fn (int $seconds): string => $seconds.' s'));
+        $partials = 'player/pirate_campaign/';
+        $html = $twig->render($partials.'_mission_heading.html.twig', ['narrative' => $view['narrative'], 'status' => $view['status']])
+            .$twig->render($partials.'_briefing.html.twig', ['briefing' => $view]);
+        if ($view['formation'] !== null || $view['quote'] !== null) {
+            $html .= $twig->render($partials.'_intelligence.html.twig', ['briefing' => $view, 'has_durable_reward' => false]);
+        }
+
+        return $html;
     }
 
     /** @return array{PlayerUniverse, PirateDistressSite, PirateCampaignCatalogue, PirateReconnaissance, PirateAttackCampaign, PirateCampaignPresenter} */

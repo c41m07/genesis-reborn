@@ -6,8 +6,8 @@
     </a></p>
 {% endif %}
 {% if reward %}
-    <section class="panel" aria-labelledby="pirate-convoy-title">
-        <h2 id="pirate-convoy-title">Convoi de remerciement</h2>
+    <section class="pirate-campaign-command" aria-labelledby="pirate-convoy-title">
+        <h3 id="pirate-convoy-title">Convoi de remerciement</h3>
         {% if reward.state == 'unassigned' %}
             <p>Destination non attribuée. Aucun départ n’est confirmé.</p>
         {% elseif reward.state == 'protected_travel' %}
@@ -23,7 +23,7 @@
                 <p>Libérez assez de place dans la colonie de destination, puis retentez la remise du lot entier.</p>
                 <form method="post" action="{{ path('app_pirate_campaign_convoy_deposit', {missionNumber: selected}) }}">
                     <input type="hidden" name="_token" value="{{ deposit_token }}">
-                    <button type="submit">Retenter le dépôt dans la même colonie</button>
+                    <button type="submit" class="primary">Retenter le dépôt dans la même colonie</button>
                 </form>
             {% endif %}
         {% elseif reward.state == 'destination_lost' %}

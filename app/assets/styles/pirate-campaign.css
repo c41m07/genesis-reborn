@@ -1,0 +1,260 @@
+.campaign-transition {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .35rem .75rem;
+    margin-block: .75rem 1.25rem;
+    color: var(--muted);
+}
+.sidebar nav .nav-campaign-shortcut.active {
+    border-inline-start: 3px solid currentColor;
+}
+.pirate-campaign {
+    --campaign-focus-bg: #182d41;
+    --campaign-focus-line: #5686a3;
+    --campaign-won: #85d7b6;
+    display: grid;
+    gap: 1.1rem;
+}
+body[data-theme=light] .pirate-campaign {
+    --campaign-focus-bg: #eaf4fb;
+    --campaign-focus-line: #477792;
+    --campaign-won: #146447;
+}
+.pirate-campaign .page-heading {
+    margin: 0;
+}
+.pirate-campaign-banner {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--panel);
+}
+.pirate-campaign-art {
+    display: block;
+    width: 100%;
+    height: clamp(8rem, 14vw, 12rem);
+    object-fit: cover;
+    object-position: 62% 51%;
+}
+.pirate-campaign-progress {
+    display: grid;
+    grid-template-columns: auto minmax(6rem, 1fr) auto;
+    align-items: center;
+    gap: .6rem 1.4rem;
+    padding: .85rem 1.15rem;
+    border-top: 1px solid var(--line);
+}
+.pirate-campaign-progress span,
+.pirate-campaign-track small {
+    display: block;
+    color: var(--muted);
+}
+.pirate-campaign-progress > strong {
+    white-space: nowrap;
+}
+.pirate-campaign-track .pirate-campaign-markers {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .12rem;
+    min-height: 1rem;
+}
+.pirate-campaign-markers::before {
+    position: absolute;
+    inset-inline: 0;
+    top: 50%;
+    height: 1px;
+    background: var(--campaign-focus-line);
+    content: "";
+}
+.pirate-campaign-markers i {
+    position: relative;
+    flex: 0 0 clamp(.28rem, .65vw, .62rem);
+    aspect-ratio: 1;
+    border: 1px solid var(--campaign-focus-line);
+    border-radius: 50%;
+    background: var(--bg);
+}
+.pirate-campaign-markers .is-cleared {
+    border-color: #ad6d18;
+    background: #eab35b;
+}
+.pirate-campaign-markers .is-current {
+    border: 2px solid #ad6d18;
+}
+.pirate-campaign-track small {
+    margin-top: .18rem;
+}
+.pirate-campaign-dossier,
+.pirate-campaign-missions {
+    min-width: 0;
+    margin: 0;
+    padding: clamp(.9rem, 2vw, 1.55rem);
+}
+.pirate-campaign-dossier--has-intel {
+    display: grid;
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+    gap: clamp(1rem, 3vw, 2rem);
+}
+.pirate-campaign-briefing,
+.pirate-campaign-intel {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.pirate-campaign-dossier h2,
+.pirate-campaign-dossier h3,
+.pirate-campaign-missions h2 {
+    margin: 0 0 .55rem;
+}
+.pirate-campaign-dossier p {
+    margin: .55rem 0;
+}
+.pirate-campaign-mission-heading h2 {
+    margin: .55rem 0 .4rem;
+    font-size: clamp(1.35rem, 2.3vw, 1.9rem);
+}
+.pirate-campaign-intel {
+    padding-inline-start: clamp(.9rem, 2.5vw, 1.7rem);
+    border-inline-start: 1px solid var(--line);
+}
+.pirate-campaign-intel h3 {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.pirate-campaign-intel section + section,
+.pirate-campaign-command {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+}
+.pirate-campaign-formation,
+.pirate-campaign-losses ul {
+    padding-inline-start: 1.3rem;
+}
+.pirate-campaign-formation li + li {
+    margin-top: .25rem;
+}
+.pirate-campaign-reward,
+.pirate-campaign-dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem 1.2rem;
+    margin: .8rem 0;
+}
+.pirate-campaign-reward dd,
+.pirate-campaign-dates dd {
+    margin: .2rem 0;
+    font-variant-numeric: tabular-nums;
+}
+.pirate-campaign-command form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .6rem;
+    margin-block: .7rem;
+}
+.pirate-campaign-command label {
+    display: block;
+}
+.pirate-campaign-command select,
+.pirate-campaign-command button {
+    max-width: 100%;
+    min-height: 44px;
+    white-space: normal;
+}
+.pirate-campaign-command fieldset {
+    display: flex;
+    flex: 0 1 100%;
+    flex-wrap: wrap;
+    gap: .6rem;
+    min-width: 0;
+    margin: 0;
+    padding: .7rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+}
+.pirate-campaign-command fieldset div {
+    flex: 1 1 12rem;
+    min-width: 0;
+}
+.pirate-campaign-command fieldset input {
+    width: 100%;
+}
+.pirate-campaign-refresh {
+    padding-top: .35rem;
+}
+.pirate-campaign-mission-list {
+    display: grid;
+    gap: .42rem;
+    margin: .7rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+.pirate-campaign-mission-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .5rem .7rem;
+    min-height: 44px;
+    padding: .26rem .55rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+}
+.pirate-campaign-mission-row.is-selected {
+    border-color: var(--campaign-focus-line);
+    background: var(--campaign-focus-bg);
+}
+.pirate-campaign-mission-number {
+    min-width: 2rem;
+    padding: .16rem .28rem;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+.pirate-campaign-mission-title {
+    overflow-wrap: anywhere;
+}
+a.pirate-campaign-mission-title {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    text-decoration: underline;
+    text-underline-offset: .2em;
+}
+.pirate-campaign-mission-row--won > .badge {
+    color: var(--campaign-won);
+}
+.pirate-campaign-mission-row--locked {
+    color: var(--muted);
+}
+.pirate-campaign-archives {
+    margin-top: .7rem;
+}
+@media (max-width: 860px) {
+    .pirate-campaign-dossier--has-intel {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .pirate-campaign-intel {
+        padding: .9rem 0 0;
+        border: 0;
+        border-top: 1px solid var(--line);
+    }
+}
+@media (max-width: 560px) {
+    .pirate-campaign-progress {
+        grid-template-columns: minmax(0, 1fr) auto;
+        padding: .7rem;
+    }
+    .pirate-campaign-track {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+    .pirate-campaign-art {
+        object-position: 72% 52%;
+    }
+}

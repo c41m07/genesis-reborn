@@ -1,9 +1,9 @@
-<section class="panel account-panel" aria-labelledby="pirate-command-title">
-    <h2 id="pirate-command-title">
+<section class="pirate-campaign-command" aria-labelledby="pirate-command-title">
+    <h3 id="pirate-command-title">
         {% if form.action == 'reconnaissance' %}Préparer la reconnaissance
         {% elseif form.kind == 'selection' %}Choisir l’escorte
         {% else %}Confirmer l’attaque{% endif %}
-    </h2>
+    </h3>
     <p>Colonie de départ : <strong>{{ origin }}</strong></p>
     {% if form.kind == 'selection' %}
         <p>Choisissez jusqu’à {{ form.total_limit }} vaisseaux au total. L’aperçu ne déclenche aucun départ.</p>
@@ -19,7 +19,7 @@
                     </div>
                 {% endfor %}
             </fieldset>
-            <button type="submit">Vérifier le devis d’attaque</button>
+            <button type="submit" class="{{ primary ? 'primary' : 'secondary' }}">Vérifier le devis d’attaque</button>
         </form>
     {% else %}
         {% if form.notice is defined %}<p>{{ form.notice }}</p>{% endif %}
@@ -42,7 +42,7 @@
             {% for ordinal, quantity in form.hidden_escort %}
                 <input type="hidden" name="escort[{{ ordinal }}]" value="{{ quantity }}">
             {% endfor %}
-            <button type="submit">{{ form.action == 'reconnaissance' ? 'Envoyer la sonde' : 'Confirmer et envoyer l’escorte' }}</button>
+            <button type="submit" class="{{ primary ? 'primary' : 'secondary' }}">{{ form.action == 'reconnaissance' ? 'Envoyer la sonde' : 'Confirmer et envoyer l’escorte' }}</button>
         </form>
         {% if form.action == 'attack' %}<p><a href="{{ path('app_pirate_campaign', {missionNumber: mission}) }}">Modifier l’escorte</a></p>{% endif %}
     {% endif %}

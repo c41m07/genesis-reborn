@@ -5,7 +5,12 @@ export default class extends Controller {
     static values = { url: String };
     static targets = ['protection', 'protectionLabel', 'protectionTime', 'toggle', 'compactStock'];
     connect() {
-        this.element.classList.add('resource-strip--collapsible'); this.tickProtection(); this.protectionTimer = setInterval(() => this.tickProtection(), 1000); this.timer = setInterval(() => this.refresh(), 10000); }
+        this.element.classList.add('resource-strip--collapsible');
+        this.tickProtection();
+        this.protectionTimer = setInterval(() => this.tickProtection(), 1000);
+        // Un shell de consultation garde son volet et ses compteurs, mais ne sonde pas une route de jeu.
+        if (this.hasUrlValue) this.timer = setInterval(() => this.refresh(), 10000);
+    }
     disconnect() { this.element.classList.remove('resource-strip--collapsible'); clearInterval(this.protectionTimer); clearInterval(this.timer); this.abort?.abort(); }
     toggleDetails() {
         const expanded = this.element.classList.toggle('resource-strip--expanded');
@@ -31,7 +36,7 @@ export default class extends Controller {
         this.protectionTimeTarget.textContent = seconds ? `(${Math.floor(seconds / 86400)}j ${Math.floor(seconds % 86400 / 3600)}h ${Math.floor(seconds % 3600 / 60)}m ${seconds % 60}s)` : '';
     }
     async refresh() {
-        if (document.hidden || this.loading) return;
+        if (!this.hasUrlValue || document.hidden || this.loading) return;
         this.loading = true;
         this.abort = new AbortController();
         try {
