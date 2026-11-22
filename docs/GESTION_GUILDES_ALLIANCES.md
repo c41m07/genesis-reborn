@@ -41,10 +41,11 @@ et de stock sérialise les écritures. Une ancienne révision ne peut être déb
 deux fois et une contrainte SQL interdit un second Hall dans le système.
 Le Hall n'ajoute ni capture, déplacement, remboursement ou privilège. La
 dissolution normale supprime réellement la guilde, et libère sa position 0
-dans la même transaction sans restituer les dons. L'archivage distinct par
-conversion du commandant conserve la guilde : le repère est caché mais sa
-place reste réservée jusqu'à arbitrage. Le prix effectif reste à décider avant
-l'ouverture. La migration additive conserve les Hall existants en cas de retour
+dans la même transaction sans restituer les dons. Si le commandant est
+converti sans successeur éligible, la guilde cesse d'être jouable et la place
+est libérée également, sans détruire les messages, profils et grades
+conservés dans l'historique. S'il reste un successeur, celui-ci garde le Hall.
+Le prix effectif reste à décider avant l'ouverture. La migration additive conserve les Hall existants en cas de retour
 du code et ne doit être appliquée que selon la procédure habituelle.
 
 ## Périmètre validé

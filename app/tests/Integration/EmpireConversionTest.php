@@ -137,17 +137,20 @@ final class EmpireConversionTest extends KernelTestCase
         $inactive=$this->membership('inactive');$inactive->lastActivityAt=$this->clock->now()->modify('-15 days');
         $active=$this->membership('active');$later=$this->membership('later');
         $guild=$this->guild([$this->old,$inactive,$active,$later]);
+        $system = $this->installHallFixture($guild);
         $contract=new AllianceContract();$contract->playerA=$this->old;$contract->playerB=$active;$contract->proposer=$this->old;$contract->status='accepted';$this->em->persist($contract);$this->em->flush();
         $this->conversion()->convert($this->old);
         self::assertSame($active,$guild->leader);self::assertNull($guild->archivedAt);self::assertSame('ended',$contract->status);
         self::assertNull($this->em->getRepository(GuildMember::class)->findOneBy(['playerUniverse'=>$this->old]));
         self::assertSame(3,$this->em->getRepository(GuildMember::class)->count(['guild'=>$guild]));
+        self::assertSame($system->id, $this->em->getRepository(\App\Entity\GuildHall::class)->findOneBy(['guild' => $guild])->solarSystem->id);
     }
 
     public function testGuildArchiveRetainsMessagesAndRosterHistory(): void
     {
         $inactive=$this->membership('inactive');$inactive->lastActivityAt=$this->clock->now()->modify('-15 days');
         $guild=$this->guild([$this->old,$inactive]);
+        $system = $this->installHallFixture($guild);
         $message=new SocialMessage();$message->sender=$this->old;$message->guild=$guild;$message->content='Historique conservé';$message->createdAt=$this->clock->now();$this->em->persist($message);$this->em->flush();
         $this->conversion()->convert($this->old);
         self::assertEquals($this->clock->now(),$guild->archivedAt);self::assertSame(0,$this->em->getRepository(GuildMember::class)->count(['guild'=>$guild]));
@@ -156,7 +159,23 @@ final class EmpireConversionTest extends KernelTestCase
         self::assertCount(2,$log->effects['social']['guilds'][0]['roster']);
         self::assertNull(self::getContainer()->get(RelationResolver::class)->guild($inactive));
         self::getContainer()->get(\App\Service\Player\DiplomacyService::class)->create($inactive,'Une nouvelle guilde', 'NEW2');
-        self::assertNotNull(self::getContainer()->get(RelationResolver::class)->guild($inactive));
+        $nextGuild = self::getContainer()->get(RelationResolver::class)->guild($inactive);
+        self::assertNotNull($nextGuild);
+        $storedHall = $this->em->getRepository(\App\Entity\GuildHall::class)->findOneBy(['guild' => $guild]);
+        self::assertSame(32, $storedHall->strength);
+        self::assertNull($storedHall->solarSystem);
+        self::assertSame($system->id, $log->effects['social']['guilds'][0]['released_hall_system_id']);
+        if (!$this->em->getRepository(\App\Entity\PlayerDiscovery::class)->findOneBy(['playerUniverse' => $inactive, 'solarSystem' => $system])) {
+            $discovery = new \App\Entity\PlayerDiscovery();
+            $discovery->playerUniverse = $inactive;
+            $discovery->solarSystem = $system;
+            $this->em->persist($discovery);
+            $this->em->flush();
+        }
+        $hall = self::getContainer()->get(\App\Service\Guild\GuildHallService::class);
+        $planet = $this->em->getRepository(Planet::class)->findOneBy(['owner' => $inactive]);
+        $funded = $hall->contribute($inactive, $nextGuild->id, $planet->id, 0, ['hydrogen' => 32]);
+        self::assertSame($system->id, $hall->place($inactive, $nextGuild->id, $system->id, $funded->revision)->solarSystem->id);
     }
 
     public function testVisitBeforeActualConversionCancelsEvenADelayedConversion(): void
@@ -349,7 +368,7 @@ final class EmpireConversionTest extends KernelTestCase
     }
     private function conversion(bool $enabled=true): EmpireConversionService
     {
-        return new EmpireConversionService(self::getContainer()->get(GameManager::class),self::getContainer()->get(GameRepository::class),self::getContainer()->get(ActionGuard::class),$this->activity(),self::getContainer()->get(FleetService::class),self::getContainer()->get(QueueService::class),$this->clock,self::getContainer()->get(\App\Service\Combat\OccupationService::class),$enabled,self::getContainer()->get(\App\Service\Player\GuildProjectService::class),self::getContainer()->get(\App\Service\Player\EmpireReconstructionScheduler::class));
+        return new EmpireConversionService(self::getContainer()->get(GameManager::class),self::getContainer()->get(GameRepository::class),self::getContainer()->get(ActionGuard::class),$this->activity(),self::getContainer()->get(FleetService::class),self::getContainer()->get(QueueService::class),$this->clock,self::getContainer()->get(\App\Service\Combat\OccupationService::class),$enabled,self::getContainer()->get(\App\Service\Player\GuildProjectService::class),self::getContainer()->get(\App\Service\Player\EmpireReconstructionScheduler::class), self::getContainer()->get(\App\Repository\GuildHallRepository::class));
     }
     private function membership(string $name): PlayerUniverse
     {
@@ -365,6 +384,19 @@ final class EmpireConversionTest extends KernelTestCase
         $fleet->cargo=['metal'=>37,'hydrogen'=>100];$fleet->departureAt=$this->clock->now();$fleet->arrivalAt=$this->clock->now()->modify('+60 seconds');
         $fleet->dispatchToken='token-'.bin2hex(random_bytes(8));$this->em->persist($fleet);$this->em->flush();return $fleet;
     }
+    private function installHallFixture(Guild $guild): \App\Entity\SolarSystem
+    {
+        $hall = new \App\Entity\GuildHall();
+        $hall->guild = $guild;
+        $hall->strength = $hall->requiredStrength = 32;
+        $hall->solarSystem = $this->planet->solarSystem;
+        $hall->startedAt = $hall->placedAt = $this->clock->now()->modify('-1 day');
+        $this->em->persist($hall);
+        $this->em->flush();
+
+        return $hall->solarSystem;
+    }
+
     private function guild(array $memberships): Guild
     {
         $guild=new Guild();$guild->name='Conversion';$guild->universe=$this->old->universe;$guild->leader=$this->old;$this->em->persist($guild);

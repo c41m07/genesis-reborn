@@ -56,6 +56,25 @@ final readonly class GuildHallRepository
         return $hall;
     }
 
+    public function releaseClaimForEndedGuild(Guild $guild): ?int
+    {
+        if ($guild->archivedAt === null) {
+            throw new \LogicException('Une guilde encore active conserve sa revendication.');
+        }
+        // L'appelant tient déjà la guilde et son univers dans la transaction de
+        // conversion. Libérer uniquement la place, jamais les messages ni le stock.
+        $hall = $this->lockForGuild($guild);
+        if ($hall?->solarSystem === null) {
+            return null;
+        }
+        $system = $hall->solarSystem->id;
+        $hall->solarSystem = null;
+        $hall->placedAt = null;
+        ++$hall->revision;
+
+        return $system;
+    }
+
     public function isClaimed(int $systemId): bool
     {
         return $this->em->getConnection()->fetchOne(
