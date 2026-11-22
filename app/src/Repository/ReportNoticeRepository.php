@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\PlayerUniverse;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class ReportNoticeRepository
@@ -36,12 +37,19 @@ final readonly class ReportNoticeRepository
                 AND report.sender_id = n.player_universe_id)
             SQL,
         'transport' => <<<'SQL'
-            EXISTS (SELECT 1 FROM transport_report report WHERE report.id = n.transport_report_id
-                AND (report.sender_id = n.player_universe_id OR report.recipient_id = n.player_universe_id))
+            EXISTS (
+                SELECT 1 FROM transport_report report
+                JOIN player_universe sender ON sender.id = report.sender_id
+                JOIN player_universe recipient ON recipient.id = report.recipient_id
+                WHERE report.id = n.transport_report_id
+                  AND (report.sender_id = n.player_universe_id OR report.recipient_id = n.player_universe_id)
+                  AND sender.universe_id = :universe AND recipient.universe_id = :universe
+            )
             SQL,
     ];
 
     private const COLUMNS = ['combat' => 'combat_log_id', 'espionage' => 'espionage_report_id', 'transport' => 'transport_report_id'];
+    private const LIST_KINDS = ['combat' => 'combat', 'espionage' => 'espionage', 'economy' => 'transport'];
 
     public function __construct(private EntityManagerInterface $em)
     {
@@ -49,11 +57,72 @@ final readonly class ReportNoticeRepository
 
     public function count(PlayerUniverse $membership): int
     {
+        $eligible = [];
+        $parameters = $this->parameters($membership);
+        foreach (self::LIST_KINDS as $listKind => $kind) {
+            $column = self::COLUMNS[$kind];
+            $parameter = 'archive_'.$kind;
+            // Archivé ne veut pas dire lu : masquer du témoin sans modifier l’état de lecture.
+            $eligible[] = '(' . self::VISIBLE[$kind] . ' AND NOT EXISTS (
+                SELECT 1 FROM report_archive archive
+                WHERE archive.player_universe_id = n.player_universe_id AND archive.kind = :' . $parameter . '
+                  AND archive.report_id = n.' . $column . ' AND archive.archived_at IS NOT NULL
+            ))';
+            $parameters[$parameter] = $listKind;
+        }
         return (int) $this->em->getConnection()->fetchOne(
             'SELECT COUNT(*) FROM report_notice n WHERE n.consulted_at IS NULL AND '.self::ACTIVE
-                .' AND ('.implode(' OR ', self::VISIBLE).')',
-            $this->parameters($membership),
+                .' AND ('.implode(' OR ', $eligible).')',
+            $parameters,
         );
+    }
+
+    /**
+     * @param list<string> $keys Identités de la page déjà chargée selon les droits des rapports.
+     * @return array<string, true>
+     */
+    public function unreadKeys(PlayerUniverse $membership, array $keys): array
+    {
+        $requests = [];
+        foreach ($keys as $key) {
+            [$listKind, $id] = explode(':', $key, 2);
+            $requests[$listKind][] = (int) $id;
+        }
+        $where = [];
+        $columnAliases = [];
+        $parameters = $this->parameters($membership);
+        $types = [];
+        foreach (self::LIST_KINDS as $listKind => $kind) {
+            $column = self::COLUMNS[$kind];
+            if (!isset($requests[$listKind])) {
+                continue;
+            }
+            $parameter = 'ids_'.$kind;
+            $where[] = '(n.'.$column.' IN (:'.$parameter.') AND '.self::VISIBLE[$kind].')';
+            $parameters[$parameter] = $requests[$listKind];
+            $types[$parameter] = ArrayParameterType::INTEGER;
+            $columnAliases[$column] = $listKind;
+        }
+        if ($where === []) {
+            return [];
+        }
+
+        // Une seule lecture des marqueurs de la page, y compris en archive, sans chercher une fiche par ligne.
+        $rows = $this->em->getConnection()->fetchAllAssociative(
+            'SELECT n.'.implode(', n.', array_keys($columnAliases)).' FROM report_notice n
+             WHERE n.consulted_at IS NULL AND '.self::ACTIVE.' AND ('.implode(' OR ', $where).')',
+            $parameters,
+            $types,
+        );
+        $result = [];
+        foreach ($rows as $row) {
+            foreach ($columnAliases as $column => $kind) {
+                if ($row[$column] !== null) {
+                    $result[$kind.':'.$row[$column]] = true;
+                }
+            }
+        }
+        return $result;
     }
 
     public function unread(PlayerUniverse $membership, string $kind, int $id): bool

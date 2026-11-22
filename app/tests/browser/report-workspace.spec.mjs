@@ -34,8 +34,22 @@ test('Rapports A : transport complet, retour filtré, effacement, thèmes et lec
     await page.goto('/rapports?type=economy');
     await expect(page.locator('.report-unread-count')).toHaveText('2');
     await expect(page.locator('body')).toHaveAttribute('data-menu-notifications-unread-journal-value', 'false');
-    await page.evaluate(url => fetch(url, { headers: { 'Sec-Purpose': 'prefetch' } }), '/rapports/transport/'+id);
+    await expect(page.locator('.report-row .report-new-label')).toHaveText('Nouveau');
+    expect(await page.evaluate(async url => (await fetch(url, { headers: { 'Sec-Purpose': 'prefetch' } })).status, '/rapports/transport/'+id)).toBe(200);
     expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM report_notice WHERE player_universe_id='+Number(member)+' AND consulted_at IS NULL'))).toBe(2);
+
+    runIsolatedSql(project, "INSERT INTO notification (recipient_id,message,created_at,journal_kind) VALUES ("+Number(member)+",'Une arrivée dans le Journal',UTC_TIMESTAMP(),'arrival')");
+    await page.reload();
+    for (const [width, button] of [[390, '.mobile-bottom-nav button'], [768, '.topbar .mobile-menu']]) {
+        await page.setViewportSize({ width, height:1000 });
+        const journalDot = page.locator(button+' .menu-unread-dot');
+        const reportsDot = page.locator(button+' .report-mobile-indicator');
+        await expect(journalDot).toBeVisible();
+        await expect(reportsDot).toBeVisible();
+        const [journal, reports] = await Promise.all([journalDot.boundingBox(), reportsDot.boundingBox()]);
+        expect(journal.y + journal.height <= reports.y || reports.y + reports.height <= journal.y).toBe(true);
+    }
+    await page.setViewportSize({ width:1440, height:1000 });
     await page.getByLabel('Nom actuel de planète').fill(planetName);
     await page.getByRole('button', { name: 'Rechercher les rapports' }).click();
     await expect(page).toHaveURL(/planet=/);
@@ -73,13 +87,14 @@ test('Rapports A : transport complet, retour filtré, effacement, thèmes et lec
     expect(await plain.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
     await plain.screenshot({ path: info.outputPath('transport-A-sans-javascript.png'), fullPage: true });
     await plain.goto(new URL('/rapports/espionnage/'+spy, reportUrl).href);
-    await expect(plain.locator('.report-mobile-indicator')).toBeVisible();
+    await expect(plain.locator('.mobile-bottom-nav .report-mobile-indicator')).toBeVisible();
     const manual = plain.getByRole('button', { name: 'Marquer ce rapport comme lu' });
     await manual.focus();
     await expect(manual).toBeFocused();
     await plain.keyboard.press('Enter');
-    await expect(plain.locator('.report-mobile-indicator')).toBeHidden();
+    await expect(plain.locator('.mobile-bottom-nav .report-mobile-indicator')).toBeHidden();
     await expect(plain.getByRole('heading', { name: 'Rapport d’espionnage' })).toBeVisible();
+    await expect(plain.locator('.mobile-bottom-nav .menu-unread-dot')).toBeVisible();
     expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM report_notice WHERE player_universe_id='+Number(member)+' AND consulted_at IS NULL'))).toBe(0);
     await plain.goto('/rapports?type=economy');
     await expect(plain.getByRole('button', { name: 'Archiver la sélection', exact: true })).toBeEnabled();

@@ -140,5 +140,6 @@
 
 .report-notice-form { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 .sidebar nav .report-unread-count { margin-inline-start: auto; flex-shrink: 0; }
-.mobile-bottom-nav button:has(.report-mobile-indicator) { position: relative; }
-.report-mobile-indicator { position: absolute; inset-block-start: .3rem; inset-inline-end: .65rem; width: .5rem; height: .5rem; border-radius: 50%; background: var(--gold); }
+.mobile-bottom-nav button:has(.report-mobile-indicator), .topbar .mobile-menu:has(.report-mobile-indicator) { position: relative; }
+.report-mobile-indicator { position: absolute; inset-block-end: .35rem; inset-inline-end: .45rem; width: .45rem; height: .45rem; border: 1px solid var(--accent); background: var(--panel); transform: rotate(45deg); }
+.report-new-label { color: var(--accent); font-weight: 700; font-size: .8em; }

@@ -75,11 +75,17 @@ final class ReportArchiveTest extends WebTestCase
         self::assertSame(1, $notices->count($attacker));
         self::assertSame(0, $notices->count($foreign));
 
-        $archives->change($attacker, ['combat:'.$id], true);
-        self::assertSame(1, $notices->count($attacker));
-        self::assertTrue($notices->consult($attacker, 'combat', $id, new \DateTimeImmutable()));
-        $archives->change($attacker, ['combat:'.$id], false);
+        $key = 'combat:'.$id;
+        $archives->change($attacker, [$key], true);
         self::assertSame(0, $notices->count($attacker));
+        self::assertSame([$key => true], $notices->unreadKeys($attacker, [$key]));
+        $archives->change($attacker, [$key], false);
+        self::assertSame(1, $notices->count($attacker));
+        $archives->change($attacker, [$key], true);
+        self::assertTrue($notices->consult($attacker, 'combat', $id, new \DateTimeImmutable()));
+        $archives->change($attacker, [$key], false);
+        self::assertSame(0, $notices->count($attacker));
+        self::assertSame([], $notices->unreadKeys($attacker, [$key]));
         $log->combatEvent->planet->owner = $newOwner;
         $this->em->flush();
         self::assertNotNull($reader->findVisible($newOwner, $id));
@@ -88,6 +94,20 @@ final class ReportArchiveTest extends WebTestCase
         self::assertSame(0, $notices->count($newOwner));
         self::assertFalse($notices->consult($oldOwner, 'combat', $id, new \DateTimeImmutable()));
         self::assertFalse($notices->consult($foreign, 'combat', $id, new \DateTimeImmutable()));
+    }
+
+    public function testUnreadTransportIgnoresInconsistentLegacyParticipantsAcrossUniverses(): void
+    {
+        $report = $this->transport($this->player, $this->foreign, '2026-11-12T14:00:00Z');
+        $member = $this->player->currentPlayerUniverse;
+        $this->em->persist(new \App\Entity\ReportNotice($member, $report));
+        $this->em->flush();
+        $notices = self::getContainer()->get(\App\Repository\ReportNoticeRepository::class);
+        $summary = self::getContainer()->get(\App\Repository\ReportSummaryRepository::class);
+        self::assertSame([], $summary->transports($member, [$report->id]));
+        self::assertSame(0, $notices->count($member));
+        self::assertSame([], $notices->unreadKeys($member, ['economy:'.$report->id]));
+        self::assertFalse($notices->consult($member, 'transport', $report->id, new \DateTimeImmutable()));
     }
 
     public function testAdvancedFiltersRunBeforePaginationAndKeepTheReturnContext(): void

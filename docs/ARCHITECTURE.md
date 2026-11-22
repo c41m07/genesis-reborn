@@ -426,7 +426,9 @@ Le compteur privé n’inclut que les rapports encore accessibles à l’empire 
 Le chargement et le préchargement des fiches restent en lecture seule. Seule la
 fiche réellement consultée déclenche le POST protégé par CSRF, ou le formulaire
 natif sans JavaScript ; la condition de visibilité est revérifiée dans l’écriture.
-Les archives ne modifient pas cet état. Le témoin a sa propre actualisation
+Archiver masque du compteur sans marquer lu ; restaurer retrouve l’état existant.
+Les lignes nouvelles restent identifiables dans les listes accessibles, via une
+lecture groupée de la page. Le témoin a sa propre actualisation
 privée, mise en pause hors onglet visible, sans réutiliser le compteur du Journal.
 
 ## Catalogue des destinations — lot D
