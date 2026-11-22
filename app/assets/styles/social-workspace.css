@@ -510,3 +510,18 @@ body.authenticated .social-workspace .social-profile-scores dt {
 .guild-overview-hero .core-guild-stats dd { margin:0; font-size:13px; color:var(--text); font-weight:700; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
 .guild-overview-hero .guild-overview-identity h2 { overflow-wrap:anywhere; }
 .guild-overview-hero.core-guild-no-logo .guild-hub-emblem { color:var(--accent); border:1px solid var(--line); background:var(--panel); }
+
+
+body.authenticated .social-workspace .message-compose {
+    flex-wrap: wrap;
+}
+body.authenticated .social-workspace .message-compose .message-compose-audience {
+    grid-column: 1 / -1;
+    flex-basis: 100%;
+    margin: 0;
+    padding-block-end: 6px;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}

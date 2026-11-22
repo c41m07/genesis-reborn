@@ -12,11 +12,12 @@
     </section>
     <form method="post" action="{{ path('app_account_delete') }}" class="form-grid account-delete-form panel account-panel account-confirmation" aria-labelledby="account-delete-confirm-title">
         <h2 id="account-delete-confirm-title">Confirmer la suppression</h2>
+        <p id="account-delete-scope">Votre compte et vos empires dans tous les univers seront concernés.</p>
         <input type="hidden" name="_token" value="{{ csrf_token('account_delete') }}">
         <label for="account-delete-password">Mot de passe pour supprimer le compte</label>
         <input id="account-delete-password" type="password" name="password" autocomplete="current-password" required>
         <label class="account-delete-confirmation" for="account-delete-confirmed"><input id="account-delete-confirmed" type="checkbox" name="confirmed" value="1" required><span>Je confirme la suppression définitive de mon compte dans tous les univers.</span></label>
-        <button class="danger" type="submit">Supprimer définitivement mon compte</button>
+        <button class="danger" type="submit" aria-describedby="account-delete-scope">Supprimer définitivement mon compte</button>
     </form>
 </div>
 </div>

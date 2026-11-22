@@ -203,3 +203,11 @@ body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-intro h1 {
         font-size: 16px;
     }
 }
+
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-chapter > :is(p,ol,ul) {
+    max-inline-size: 76ch;
+}
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-search {
+    margin-block-start: 12px;
+}
