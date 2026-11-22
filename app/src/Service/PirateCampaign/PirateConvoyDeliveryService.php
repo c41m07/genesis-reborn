@@ -48,14 +48,14 @@ final readonly class PirateConvoyDeliveryService
      * ou premier choix quand l'origine n'était déjà plus possédée à la victoire.
      * Ce service ne signe aucun formulaire et ne crédite aucun stock.
      */
-    public function chooseOwnedDestination(PlayerUniverse $owner, int $deliveryId, int $newDestinationId): ?string
+    public function chooseOwnedDestination(PlayerUniverse $owner, int $deliveryId, int $newDestinationId, ?string $approvedDigest = null): ?string
     {
         $scope = $this->readScope($owner);
         if ($scope === null) {
             return null;
         }
 
-        return $this->manager->transaction(function () use ($owner, $scope, $deliveryId, $newDestinationId): ?string {
+        return $this->manager->transaction(function () use ($owner, $scope, $deliveryId, $newDestinationId, $approvedDigest): ?string {
             $right = $this->lockForOwner($owner, $scope, $deliveryId);
             if ($right === null || $owner->player?->lockedAt !== null) {
                 return null;
@@ -69,23 +69,32 @@ final readonly class PirateConvoyDeliveryService
             if ($planet === null) {
                 return null;
             }
-            $this->dispatchProtectedLeg($right, $timeline, $owner, $planet);
+            $this->dispatchProtectedLeg($right, $timeline, $owner, $planet, $approvedDigest);
 
             return $timeline->state();
         });
     }
 
-    private function dispatchProtectedLeg(
-        PirateConvoyDelivery $right,
-        PirateConvoyTimeline $timeline,
-        PlayerUniverse $owner,
-        Planet $planet,
-    ): void {
+    /** Devis privé en lecture seule, à recalculer sous verrou lors de la confirmation. */
+    public function previewOwnedDestination(PlayerUniverse $owner, PirateConvoyDelivery $right, Planet $target): ?array
+    {
+        if ($owner->id !== $right->membershipId || $owner->player?->id !== $right->ownerId
+            || $owner->universe->id !== $right->universeId || $target->owner?->id !== $owner->id
+            || $target->npcPlanet || $target->solarSystem->galaxy->universe->id !== $right->universeId) {
+            return null;
+        }
+        $plan = $this->protectedLegPlan($right->timeline(), $owner, $target);
+
+        return $plan === null ? null : ['seconds' => $plan['seconds'], 'digest' => $plan['digest']];
+    }
+
+    private function protectedLegPlan(PirateConvoyTimeline $timeline, PlayerUniverse $owner, Planet $planet): ?array
+    {
         $source = $timeline->attestedPositionForDeparture();
         if ($source === null || $source[1] !== $planet->solarSystem->galaxy->id
             || $timeline->checkpoint()['destination'] === $planet->id) {
             // Le droit subsiste, même sans position ou destination joignable ; jamais de téléportation.
-            return;
+            return null;
         }
         $destination = $this->coordinates($planet);
         // Le profil civil est une référence de vitesse, sans véritable Fleet et sans débit au joueur.
@@ -96,15 +105,36 @@ final readonly class PirateConvoyDeliveryService
                 $this->catalog->forUniverse($owner->universe)['multipliers']['travel_time'], $this->catalog->rules()['fuel_ratio_policy']);
         } catch (\DomainException) {
             // Un devis impossible ne doit pas effacer la victoire ni forcer une destination inventée.
+            return null;
+        }
+        $seconds = $quote['seconds'];
+        $digest = hash('sha256', json_encode([
+            $timeline->checkpoint(), $timeline->quote->exactParts(), $planet->id, $destination, $seconds,
+        ], JSON_THROW_ON_ERROR));
+
+        return ['source' => $source, 'destination' => $destination, 'seconds' => $seconds, 'digest' => $digest];
+    }
+
+    private function dispatchProtectedLeg(
+        PirateConvoyDelivery $right,
+        PirateConvoyTimeline $timeline,
+        PlayerUniverse $owner,
+        Planet $planet,
+        ?string $approvedDigest = null,
+    ): void {
+        $plan = $this->protectedLegPlan($timeline, $owner, $planet);
+        if ($plan === null || ($approvedDigest !== null && !hash_equals($plan['digest'], $approvedDigest))) {
             return;
         }
+        $source = $plan['source'];
+        $destination = $plan['destination'];
         $token = PirateConvoyDispatchToken::generate($timeline->checkpoint()['generation'] + 1);
         // Ni l'attente du verrou, ni la préparation du devis ne comptent comme temps de trajet.
         $at = $this->now();
         if (!$owner->universe->isAccessible($at) || !$owner->isPlayerControlled() || $planet->owner?->id !== $owner->id) {
             return;
         }
-        $due = $at->modify('+'.$quote['seconds'].' seconds');
+        $due = $at->modify('+'.$plan['seconds'].' seconds');
         if (!$timeline->dispatch($owner->id, $owner->universe->id, $planet->id, $source, $destination, $token, $at, $due)) {
             throw new \LogicException('L’ancre du droit de convoi ne correspond pas au trajet.');
         }

@@ -1,0 +1,24 @@
+<section class="panel" aria-labelledby="pirate-convoy-route-title">
+    <h2 id="pirate-convoy-route-title">Choisir une colonie pour le convoi</h2>
+    {% if choice.choices is defined %}
+        <form method="post" action="{{ path('app_dev_pirate_pilot_convoy_route_preview', {missionNumber: mission}) }}">
+            <input type="hidden" name="_token" value="{{ choice.token }}">
+            <label for="pirate-convoy-destination">Nouvelle colonie de destination</label>
+            <select id="pirate-convoy-destination" name="destination_choice" required>
+                <option value="">Choisissez une colonie</option>
+                {% for option in choice.choices %}
+                    <option value="{{ option.ordinal }}">{{ option.label }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Voir le trajet</button>
+        </form>
+    {% else %}
+        <p>Colonie : <strong>{{ choice.target }}</strong>. Durée prévue : {{ choice.seconds }} s.</p>
+        <p>Le convoi ne déposera le lot entier qu’à son arrivée, si la colonie vous appartient toujours et dispose de la place nécessaire.</p>
+        <form method="post" action="{{ path('app_dev_pirate_pilot_convoy_route', {missionNumber: mission}) }}">
+            <input type="hidden" name="_token" value="{{ choice.token }}">
+            <input type="hidden" name="destination_choice" value="{{ choice.choice }}">
+            <button type="submit">Confirmer le trajet du convoi</button>
+        </form>
+    {% endif %}
+</section>

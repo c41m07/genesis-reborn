@@ -31,6 +31,9 @@
         </ul>
     </nav>
     {% include 'player/pirate_campaign/_convoy_status.html.twig' with {convoy: dossier.convoy, selected: dossier.selected, deposit_token: deposit_token} only %}
+    {% if destination_form %}
+        {% include 'player/pirate_campaign/_destination_form.html.twig' with {choice: destination_form, mission: dossier.selected} only %}
+    {% endif %}
     {% if dossier.signal_pending %}
         <section class="panel" aria-labelledby="pirate-signal-title">
             <h2 id="pirate-signal-title">Mission {{ dossier.selected }}</h2>

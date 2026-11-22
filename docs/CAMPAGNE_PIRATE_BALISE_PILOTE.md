@@ -100,3 +100,11 @@ droit propriétaire en attente, ou si le droit a changé depuis le rendu. Le POS
 pour le droit, l'état exact et la vraie destination, revérifiés après verrous; le service natif applique
 la remise en entier (ou place le droit en attente de nouveau). Si la destination n'appartient plus à
 l'empire, aucun stock n'est crédité. Aucun rattrapage n'est tenté au chargement du dossier.
+
+Une destination de convoi peut être choisie après une victoire sans départ ou après perte constatée
+de l'ancienne colonie, et seulement à partir d'un point civil réellement attesté. Le choix porte sur
+une colonie actuelle du même empire et de la même galaxie. L’aperçu ne réexpédie rien ; la confirmation
+est liée au droit, à la nouvelle destination exacte et à la durée du trajet prévue. Sous verrou, le
+service refait le devis natif avant de poser une nouvelle échéance et un nouvel ordre. Les stocks ne
+sont ni crédités ni transférés par le choix. Un convoi en vol ou juste à court de place ne peut pas
+changer de colonie.

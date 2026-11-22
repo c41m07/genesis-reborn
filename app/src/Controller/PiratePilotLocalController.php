@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\Planet;
-use App\Service\PirateCampaign\{PiratePilotActiveColony, PiratePilotAttackCommand, PiratePilotConvoyDepositCommand, PiratePilotEncounterForms, PiratePilotLocalReader, PiratePilotScoutCommand};
+use App\Service\PirateCampaign\{PiratePilotActiveColony, PiratePilotAttackCommand, PiratePilotConvoyDepositCommand, PiratePilotConvoyRouteCommand, PiratePilotEncounterForms, PiratePilotLocalReader, PiratePilotScoutCommand};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\When;
 use Symfony\Component\HttpFoundation\{Request, Response};
@@ -21,6 +21,7 @@ final class PiratePilotLocalController extends AbstractController
     public function dossier(
         Request $request, PiratePilotLocalReader $reader, PiratePilotActiveColony $colonies,
         PiratePilotEncounterForms $forms, ?int $missionNumber = null, ?PiratePilotConvoyDepositCommand $deposit = null,
+        ?PiratePilotConvoyRouteCommand $route = null,
     ): Response {
         $dossier = $reader->dossier($missionNumber);
         if ($dossier === null) {
@@ -32,10 +33,13 @@ final class PiratePilotLocalController extends AbstractController
         $form = $origin === null ? null : ($forms->scoutConfirmation($origin, $dossier['selected'])
             ?? $forms->attackChoices($origin, $dossier['selected']));
 
-        $depositToken = ($dossier['convoy']['selected_reward']['state'] ?? null) === 'full_pending'
+        $state = $dossier['convoy']['selected_reward']['state'] ?? null;
+        $depositToken = $state === 'full_pending'
             ? $deposit?->confirmation($dossier['selected']) : null;
 
-        return $this->page($dossier, $form, $origin, $current && $origin === null, $depositToken);
+        $routeForm = in_array($state, ['unassigned', 'destination_lost'], true) ? $route?->choices($dossier['selected']) : null;
+
+        return $this->page($dossier, $form, $origin, $current && $origin === null, $depositToken, $routeForm);
     }
 
     #[Route('/evenements/campagne-pirate/{missionNumber}/sonde', name: 'app_dev_pirate_pilot_scout',
@@ -123,6 +127,46 @@ final class PiratePilotLocalController extends AbstractController
         return $this->afterCommand($missionNumber);
     }
 
+    #[Route('/evenements/campagne-pirate/{missionNumber}/convoi/destination/apercu', name: 'app_dev_pirate_pilot_convoy_route_preview',
+        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: 'dev')]
+    public function convoyRoutePreview(
+        Request $request, int $missionNumber, PiratePilotLocalReader $reader, PiratePilotConvoyRouteCommand $route,
+    ): Response {
+        return $this->convoyRouteAction($request, $missionNumber, $reader, $route, false);
+    }
+
+    #[Route('/evenements/campagne-pirate/{missionNumber}/convoi/destination', name: 'app_dev_pirate_pilot_convoy_route',
+        requirements: ['missionNumber' => '[1-9][0-9]{0,8}'], methods: ['POST'], env: 'dev')]
+    public function convoyRoute(
+        Request $request, int $missionNumber, PiratePilotLocalReader $reader, PiratePilotConvoyRouteCommand $route,
+    ): Response {
+        return $this->convoyRouteAction($request, $missionNumber, $reader, $route, true);
+    }
+
+    private function convoyRouteAction(
+        Request $request, int $mission, PiratePilotLocalReader $reader, PiratePilotConvoyRouteCommand $route, bool $execute,
+    ): Response {
+        $dossier = $reader->dossier($mission);
+        if ($dossier === null) {
+            return $this->missing();
+        }
+        $body = $this->body($request);
+        if ($body === null || !in_array($dossier['convoy']['selected_reward']['state'] ?? null,
+            ['unassigned', 'destination_lost'], true)) {
+            return $this->stale();
+        }
+        try {
+            if ($execute) {
+                return $route->execute($mission, $body[0], $body[1]) ? $this->afterCommand($mission) : $this->stale();
+            }
+            $choice = $route->preview($mission, $body[0], $body[1]);
+
+            return $choice === null ? $this->stale() : $this->page($dossier, null, null, false, null, $choice);
+        } catch (\DomainException) {
+            return $this->stale();
+        }
+    }
+
     private function scope(Request $request, int $mission, PiratePilotLocalReader $reader, PiratePilotActiveColony $colonies): array|Response
     {
         $dossier = $reader->dossier($mission);
@@ -150,11 +194,11 @@ final class PiratePilotLocalController extends AbstractController
         return [$post, $token];
     }
 
-    private function page(array $dossier, ?array $form, ?Planet $origin, bool $needsColony, ?string $depositToken = null): Response
+    private function page(array $dossier, ?array $form, ?Planet $origin, bool $needsColony, ?string $depositToken = null, ?array $destinationForm = null): Response
     {
         return $this->render('player/pirate_campaign/pilot_local.html.twig', [
             'dossier' => $dossier, 'encounter_form' => $form,
-            'origin_label' => $origin?->name, 'needs_colony' => $needsColony, 'deposit_token' => $depositToken,
+            'origin_label' => $origin?->name, 'needs_colony' => $needsColony, 'deposit_token' => $depositToken, 'destination_form' => $destinationForm,
         ], new Response(headers: self::PRIVATE_HEADERS));
     }
 
