@@ -56,6 +56,40 @@ final class ReportArchiveTest extends WebTestCase
         $report->createdAt=new \DateTimeImmutable($date);$report->snapshot=['sender'=>$sender->username,'recipient'=>$recipient->username,'destination'=>'Alpha:1:1'];$this->em->persist($report);return $report;
     }
 
+    public function testUnreadCombatKeepsBirthScopeAndCurrentVisibilityIndependentOfArchives(): void
+    {
+        $id = (int) substr($this->keys[0], strlen('combat:'));
+        $log = $this->em->find(CombatLog::class, $id);
+        $participant = $this->em->getRepository(CombatParticipant::class)->findOneBy(['combatEvent' => $log->combatEvent]);
+        $oldOwner = $this->recipient->currentPlayerUniverse;
+        $newOwner = $this->outsider->currentPlayerUniverse;
+        $foreign = $this->foreign->currentPlayerUniverse;
+        $attacker = $this->player->currentPlayerUniverse;
+        $notices = self::getContainer()->get(\App\Repository\ReportNoticeRepository::class);
+        $archives = self::getContainer()->get(ReportArchiveService::class);
+        $reader = self::getContainer()->get(\App\Service\Combat\CombatReportReader::class);
+        self::assertSame(0, $notices->count($oldOwner), 'Pas de rétroremplissage de l’historique.');
+        self::getContainer()->get(\App\Service\Report\ReportNoticeWriter::class)->combatCreated($log, [$participant, $participant]);
+        $this->em->flush();
+        self::assertSame(1, $notices->count($oldOwner));
+        self::assertSame(1, $notices->count($attacker));
+        self::assertSame(0, $notices->count($foreign));
+
+        $archives->change($attacker, ['combat:'.$id], true);
+        self::assertSame(1, $notices->count($attacker));
+        self::assertTrue($notices->consult($attacker, 'combat', $id, new \DateTimeImmutable()));
+        $archives->change($attacker, ['combat:'.$id], false);
+        self::assertSame(0, $notices->count($attacker));
+        $log->combatEvent->planet->owner = $newOwner;
+        $this->em->flush();
+        self::assertNotNull($reader->findVisible($newOwner, $id));
+        self::assertNull($reader->findVisible($oldOwner, $id));
+        self::assertSame(0, $notices->count($oldOwner));
+        self::assertSame(0, $notices->count($newOwner));
+        self::assertFalse($notices->consult($oldOwner, 'combat', $id, new \DateTimeImmutable()));
+        self::assertFalse($notices->consult($foreign, 'combat', $id, new \DateTimeImmutable()));
+    }
+
     public function testAdvancedFiltersRunBeforePaginationAndKeepTheReturnContext(): void
     {
         $service=self::getContainer()->get(ReportArchiveService::class);$member=$this->player->currentPlayerUniverse;

@@ -1,7 +1,8 @@
 <?php
 namespace App\Tests\Controller;
 
-use App\Entity\{AllianceContract, BoostEventContribution, Fleet, FleetShip, Planet, PlanetResource, Player, PlayerDiscovery, TransportReport, Universe};
+use App\Entity\{AllianceContract, BoostEventContribution, Fleet, FleetShip, Planet, PlanetResource, Player, PlayerDiscovery, ReportNotice, TransportReport, Universe};
+use App\Repository\ReportNoticeRepository;
 use App\Service\Fleet\{FleetService, TransportService};
 use App\Service\Colony\ResourceService;
 use App\Service\Universe\{UniverseImporter, UniverseService};
@@ -52,7 +53,7 @@ final class TransportTest extends WebTestCase
 
     private function player(string $name): Player
     {
-        $data = new RegistrationData();$data->email = strtolower($name).'@example.test';$data->username = $name;$data->plainPassword = 'A-test-password-2026';
+        $data = new RegistrationData();$data->email = strtolower($name).'@example.test';$data->username = $name;$data->plainPassword = bin2hex(random_bytes(18));
         $player = self::getContainer()->get(RegistrationService::class)->register($data);
         $universe = $this->em->getRepository(Universe::class)->findOneBy(['slug' => 'turbo-1']);
         self::getContainer()->get(UniverseService::class)->select($player, $universe->id);
@@ -74,19 +75,81 @@ final class TransportTest extends WebTestCase
     public function testPreparedMigrationMatchesDoctrineMapping(): void
     {
         $tool = new SchemaTool($this->em);
-        $tool->dropSchema([$this->em->getClassMetadata(TransportReport::class)]);
+        $notice = $this->em->getClassMetadata(ReportNotice::class);
+        $transport = $this->em->getClassMetadata(TransportReport::class);
+        $tool->dropSchema([$notice, $transport]);
         require_once dirname(__DIR__, 2).'/migrations/Version20261107150000.php';
         $migration = new \DoctrineMigrations\Version20261107150000($this->em->getConnection(), new \Psr\Log\NullLogger());
         try {
             $migration->up(new \Doctrine\DBAL\Schema\Schema());
             foreach ($migration->getSql() as $query) $this->em->getConnection()->executeStatement($query->getStatement());
+            // La table de notices dépend maintenant de la table que cette ancienne migration recrée.
+            $tool->createSchema([$notice]);
             self::assertSame([], $tool->getUpdateSchemaSql($this->em->getMetadataFactory()->getAllMetadata()));
         } finally {
             // Restaurer les noms de contraintes Doctrine pour les tests suivants.
-            $metadata = [$this->em->getClassMetadata(TransportReport::class)];
+            $metadata = [$notice, $transport];
             $tool->dropSchema($metadata);
             $tool->createSchema($metadata);
         }
+    }
+
+    public function testReportNoticeMigrationMatchesMappingWithoutBackfill(): void
+    {
+        $tool = new SchemaTool($this->em);
+        $metadata = $this->em->getClassMetadata(ReportNotice::class);
+        $tool->dropSchema([$metadata]);
+        require_once dirname(__DIR__, 2).'/migrations/Version20261122010100.php';
+        $migration = new \DoctrineMigrations\Version20261122010100($this->em->getConnection(), new \Psr\Log\NullLogger());
+        $migration->up(new \Doctrine\DBAL\Schema\Schema());
+        foreach ($migration->getSql() as $query) {
+            $this->em->getConnection()->executeStatement($query->getStatement());
+        }
+
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM report_notice'));
+        self::assertSame([], $tool->getUpdateSchemaSql($this->em->getMetadataFactory()->getAllMetadata()));
+    }
+
+    public function testUnreadTransportIsCreatedAtDepartureAndOnlyMarksOneAuthorizedReader(): void
+    {
+        $this->client->disableReboot();
+        $fleet = $this->send();
+        $report = $this->em->getRepository(TransportReport::class)->findOneBy(['fleet' => $fleet]);
+        $sender = $this->sender->currentPlayerUniverse;
+        $recipient = $this->recipient->currentPlayerUniverse;
+        $notices = self::getContainer()->get(ReportNoticeRepository::class);
+        self::assertSame(1, $notices->count($sender));
+        self::assertSame(1, $notices->count($recipient));
+
+        $this->client->loginUser($this->recipient);
+        $path = '/rapports/transport/'.$report->id;
+        $this->client->request('GET', $path.'?type=economy&view=archives&page=2', [], [], ['HTTP_SEC_PURPOSE' => 'prefetch']);
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, $notices->count($recipient));
+        self::assertSelectorTextContains('.report-unread-count', '1');
+        $form = $this->client->getCrawler()->selectButton('Marquer ce rapport comme lu')->form();
+        $this->client->request('POST', $form->getUri(), ['_token' => 'invalide']);
+        self::assertResponseStatusCodeSame(403);
+        self::assertSame(1, $notices->count($recipient));
+
+        $this->client->submit($form);
+        self::assertResponseRedirects($path.'?type=economy&view=archives&page=2', 303);
+        $this->client->request('GET', '/rapports/non-lus');
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
+        self::assertSame(['membership' => $recipient->id, 'count' => 0], json_decode(
+            $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR,
+        ));
+
+        $connection = $this->em->getConnection();
+        $readAt = $connection->fetchOne('SELECT consulted_at FROM report_notice WHERE player_universe_id = ?', [$recipient->id]);
+        self::assertNotNull($readAt);
+        $this->client->submit($form);
+        self::assertResponseRedirects(null, 303);
+        $this->arrive($fleet);
+        self::assertSame(2, (int) $connection->fetchOne('SELECT COUNT(*) FROM report_notice'));
+        self::assertSame($readAt, $connection->fetchOne('SELECT consulted_at FROM report_notice WHERE player_universe_id = ?', [$recipient->id]));
+        self::assertSame(1, $notices->count($sender));
     }
 
     public function testReceptionDefaultsToAlliesAndOwnColoniesRemainAllowed(): void

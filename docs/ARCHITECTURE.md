@@ -413,6 +413,22 @@ dans son univers. Les snapshots de stocks restent calculés en lecture seule.
 La migration Version20261112010000 ajoute six colonnes nullables et deux index ;
 elle n’effectue aucune datation ni reprise de notification historique.
 
+## Nouveaux rapports du joueur
+
+L’état de lecture est distinct du journal d’absence et des archives. Un état
+est créé dans la transaction de naissance du rapport, et seulement pour les
+participations qui peuvent le consulter : combat résolu dédupliqué, émetteur
+de l’espionnage, émetteur et destinataire du transport à son départ. Les trois
+références exclusives permettent le même flush et le nettoyage en cascade, sans
+reprise des anciens rapports ni alerte d’envoi externe.
+
+Le compteur privé n’inclut que les rapports encore accessibles à l’empire actif.
+Le chargement et le préchargement des fiches restent en lecture seule. Seule la
+fiche réellement consultée déclenche le POST protégé par CSRF, ou le formulaire
+natif sans JavaScript ; la condition de visibilité est revérifiée dans l’écriture.
+Les archives ne modifient pas cet état. Le témoin a sa propre actualisation
+privée, mise en pause hors onglet visible, sans réutiliser le compteur du Journal.
+
 ## Catalogue des destinations — lot D
 
 DestinationCatalogue regroupe les planètes connues de la participation active

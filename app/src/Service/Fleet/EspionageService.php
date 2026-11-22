@@ -7,13 +7,14 @@ use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Colony\ResourceService;
 use App\Service\Notification\NotificationService;
+use App\Service\Report\ReportNoticeWriter;
 use App\Service\Universe\PlanetNpcSeeder;
 use Psr\Clock\ClockInterface;
 use App\Service\Player\VacationCalendar;
 
 final class EspionageService
 {
-    public function __construct(private GameRepository $repo, private GameManager $manager, private GameCatalog $catalog, private ResourceService $resources, private PlanetNpcSeeder $npcSeeder, private NotificationService $notifications, private ClockInterface $clock, private \Random\Randomizer $randomizer, private VacationCalendar $vacations) {}
+    public function __construct(private GameRepository $repo, private GameManager $manager, private GameCatalog $catalog, private ResourceService $resources, private PlanetNpcSeeder $npcSeeder, private NotificationService $notifications, private ReportNoticeWriter $reportNotices, private ClockInterface $clock, private \Random\Randomizer $randomizer, private VacationCalendar $vacations) {}
 
     /** Résout une mission d'espionnage dans la transaction d'arrivée de flotte. */
     public function resolve(Fleet $fleet, int $probeCount): EspionageReport
@@ -57,6 +58,7 @@ final class EspionageService
             $this->notifications->enqueue($fleet->playerUniverse, 'Rapport d’espionnage disponible : ' . $target->name . '.',journalKind:'spy');
         }
         $this->manager->save($report);
+        $this->reportNotices->espionageCreated($report);
         $this->manager->flush();
         return $report;
     }
