@@ -598,3 +598,13 @@ body[data-theme=light] .entry-universe-state--open {
         grid-template-columns: minmax(0,1fr);
     }
 }
+
+/* Le formulaire reste dominant ; l'illustration accompagne l'entrée sans précéder la tâche. */
+.entry-access .core-entry-access--task-first { gap:clamp(24px,4vw,62px); }
+.entry-access .entry-access-panel h1 { color:var(--text); font-size:clamp(25px,2.3vw,36px); line-height:1.2; }
+.core-entry-access--task-first .entry-access-context { padding-top:24px; }
+.core-entry-access--task-first .entry-access-context .entry-context-title { font-size:20px; margin:0 0 6px; }
+.core-entry-access--task-first .entry-access-context > p:not(.entry-context-title) { font-size:14px; }
+.entry-access .core-entry-access--compact { grid-template-columns:minmax(0,540px); justify-content:center; }
+.entry-access-panel .entry-recovery-link { display:inline-flex; align-items:center; justify-self:start; min-height:44px; color:var(--accent); text-decoration:underline; text-underline-offset:3px; }
+.entry-access-panel .entry-access-links { grid-template-columns:repeat(auto-fit,minmax(min(100%,165px),1fr)); }
