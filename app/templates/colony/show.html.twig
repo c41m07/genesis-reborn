@@ -3,10 +3,20 @@
 {% block incoming_fleets %}{% endblock %}
 {% block body %}
 <div class="{{ section == 'overview' ? 'overview-page' : '' }}" data-controller="colony-live" data-colony-live-url-value="{{ path('app_colony',{id:planet.id}) }}">
-<div class="page-heading">
+{% set catalogueHeader = {
+    buildings: {title:'Pont d’ingénierie', intro:'Énergie, extraction et infrastructures de cette colonie.', art:'art/colony-overview.webp'},
+    technologies: {title:'Laboratoire colonial', intro:'Développez les technologies partagées par vos colonies dans cet univers.', art:'images/catalog/buildings/lab__basic-768.webp'},
+}[section]|default(null) %}
+<div class="page-heading{{ catalogueHeader ? ' core-catalogue-header core-catalogue-header--' ~ section : '' }}">
+    {% if catalogueHeader %}
+        <img class="core-catalogue-header-art" src="{{ asset(catalogueHeader.art) }}" alt="" decoding="async">
+    {% endif %}
     <div>
+        {% if catalogueHeader %}<p class="core-catalogue-kicker">{{ catalogueHeader.title }} · {{ planet.name }}</p>{% endif %}
         <h1>{{ {overview:'Vue générale',buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[section] }}<span>.</span></h1>
-        {% if section == 'overview' %}
+        {% if catalogueHeader %}
+            <p>{{ catalogueHeader.intro }}</p>
+        {% elseif section == 'overview' %}
             <p>Agir sur la colonie active, suivre tout l’empire.</p>
         {% endif %}
     </div>

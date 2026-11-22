@@ -327,3 +327,9 @@ Confirmation à droite sur grand écran, sous le bilan sinon ; aucune informatio
 nécessaire n’est cachée. Le nom, les champs de protection et les destinations
 existantes sont conservés. Styles limités à `.colony-redesign`, sans modification
 de la Vue générale ; [recette et captures](../REFONTE_VISUELLE_INTERFACES.md).
+
+## Catalogues du cœur de jeu
+
+- Bâtiments et Recherche gardent le même ordre de lecture : intitulé et rang, coût et temps du niveau visé, effet principal, puis action. Le détail reste replié par défaut. Le mode condensé garde l’effet principal et la même action native.
+- L’effet, son avant/après et les valeurs acquises viennent de la projection du catalogue. Une production nominale de la colonie ne décrit pas le débit net après consommations. Un maximum déjà en file n’est pas présenté comme acquis ; les commandes et la durée déjà engagées restent dans les files.
+- Deux bandeaux courts identifient le pont d’ingénierie et le laboratoire colonial. Leur illustration est décorative, avec un fond thématique qui découple la lisibilité du texte de l’image. Le cyan indique la sélection ; l’or marque la commande principale disponible, en complément de son libellé.
