@@ -353,3 +353,15 @@ body.authenticated .inventory-redesign .inventory-review-dialog {
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+
+body.authenticated .inventory-redesign .inventory-pending-list li { list-style-position: outside; }
+.inventory-pending-entry {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: start;
+    gap: 8px 16px;
+}
+.inventory-pending-entry > div { min-width: 0; }
+.inventory-pending-state { color: var(--text); }

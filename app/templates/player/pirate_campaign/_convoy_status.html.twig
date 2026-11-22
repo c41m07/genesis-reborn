@@ -8,6 +8,17 @@
 {% if reward %}
     <section class="pirate-campaign-command" aria-labelledby="pirate-convoy-title">
         <h3 id="pirate-convoy-title">Convoi de remerciement</h3>
+        {% set convoyStates = {
+            unassigned: 'Destination à attribuer',
+            protected_travel: 'En convoi',
+            arrival_confirmed: 'Arrivée confirmée',
+            full_pending: 'À déposer',
+            destination_lost: 'Destination perdue',
+            credited: 'Lot crédité',
+        } %}
+        {% if convoyStates[reward.state] is defined %}
+            <p class="badge">{{ convoyStates[reward.state] }}</p>
+        {% endif %}
         {% if reward.state == 'unassigned' %}
             <p>Destination non attribuée. Aucun départ n’est confirmé.</p>
         {% elseif reward.state == 'protected_travel' %}
