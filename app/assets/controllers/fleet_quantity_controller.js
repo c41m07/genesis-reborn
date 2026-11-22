@@ -57,22 +57,26 @@ export default class extends Controller {
         this.capacity = detail.freight_capacity;
         this.available = detail.cargo_available;
         for (const input of this.shipTargets) {
-            const match = input.name.match(/^ships\[([^\]]+)\](?:\[([^\]]+)\])?$/);
-            if (match) {
-                input.value = String(detail.composition[match[1]]?.[match[2] || 'basic'] || 0);
-                const available = detail.ship_available[match[1]]?.[match[2] || 'basic'] || 0;
-                input.dataset.available = String(available);
-                // Le devis relit le hangar. L'affichage et les deux contrôles doivent suivre ce même stock.
-                input.disabled = available === 0;
-                input.nextElementSibling.disabled = input.disabled;
-                input.closest('td').querySelector('[data-fleet-stock-value]').textContent = '(' + exactNumber(available) + ')';
-            }
+            const { shipType, shipTier } = input.dataset;
+            const available = detail.ship_available[shipType]?.[shipTier] || 0;
+            // Le devis relit le hangar. L'affichage et les deux contrôles suivent ce même stock.
+            input.value = String(detail.composition[shipType]?.[shipTier] || 0);
+            input.dataset.available = String(available);
+            input.disabled = available === 0;
+            input.nextElementSibling.disabled = input.disabled;
+            input.closest('td').querySelector('[data-fleet-stock-value]').textContent = '(' + exactNumber(available) + ')';
         }
-        // Une famille peut acquérir un rang pendant la préparation. Ne jamais soumettre
-        // l'alias scalaire du Basique avec un autre rang imbriqué de ce même type.
-        for (const input of this.shipTargets.filter(field => field.dataset.shipBasicAlias)) {
-            const otherRank = input.closest('tr').querySelector('input[data-ship-tier]:not([data-ship-tier="basic"]):enabled');
-            input.name = otherRank ? input.dataset.shipRankedName : input.dataset.shipBasicAlias;
+        // Une famille peut acquérir un rang pendant la préparation. Recalculer les noms
+        // ensemble évite de mêler l'alias scalaire du Basique à des rangs imbriqués.
+        for (const input of this.shipTargets) {
+            if (input.disabled) {
+                input.removeAttribute('name');
+                continue;
+            }
+            const { shipBasicAlias, shipRankedName } = input.dataset;
+            const hasOtherRank = shipBasicAlias
+                && input.closest('tr').querySelector('input[data-ship-tier]:not([data-ship-tier="basic"]):enabled');
+            input.name = shipBasicAlias && !hasOtherRank ? shipBasicAlias : shipRankedName;
         }
         this.updateShipBounds();
         for (const input of this.cargoTargets) {

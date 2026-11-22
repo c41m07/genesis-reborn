@@ -42,10 +42,11 @@
                         <div class="fleet-composition-control">
                             <input id="{{ inputId }}" type="number" min="0" max="{{ min(quantity, fleetLimit) }}" value="{{ quantity > 0 ? selected : 0 }}"
                                    aria-label="Quantité · {{ label }} · {{ rank }}" aria-describedby="{{ stockId }}"
-                                   name="{{ inputName }}" data-available="{{ quantity }}" data-ship-label="{{ label }}" data-ship-tier="{{ tier }}"
+                                   data-available="{{ quantity }}" data-ship-label="{{ label }}" data-ship-type="{{ slug }}" data-ship-tier="{{ tier }}"
                                    data-fleet-quantity-target="ship" data-fleet-wizard-target="quantity" data-action="input->fleet-quantity#clampShip"
-                                   {% if basicAlias %}data-ship-basic-alias="{{ basicAlias }}" data-ship-ranked-name="{{ rankedName }}"{% endif %}
-                                   {% if quantity == 0 %}disabled{% endif %}>
+                                   data-ship-ranked-name="{{ rankedName }}" {% if basicAlias %}data-ship-basic-alias="{{ basicAlias }}"{% endif %}
+                                   {# Un rang indisponible n’a pas de clé de formulaire ; le devis peut le réactiver via type/rang. #}
+                                   {% if quantity > 0 %}name="{{ inputName }}"{% else %}disabled{% endif %}>
                             <button type="button" class="secondary fleet-composition-maximum" aria-label="Max : sélectionner le maximum de {{ label }} · {{ rank }}"
                                     data-action="fleet-quantity#maximumShip" data-input-id="{{ inputId }}"
                                     {% if quantity == 0 %}disabled{% endif %}><span aria-hidden="true">↑</span></button>

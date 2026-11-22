@@ -48,6 +48,7 @@ test('Flottes : les trois rangs restent alignés et arrivent ensemble au devis, 
     const absent = table.getByRole('row', { name: /Sonde/ }).locator('td').nth(1);
     await expect(absent.locator('[data-fleet-stock-value]')).toHaveText('(0)');
     await expect(absent.getByRole('spinbutton', { name: /Intermédiaire/ })).toBeDisabled();
+    await expect(absent.locator('input:not([name])')).toHaveCount(1);
     await expect(absent.getByRole('button', { name: /Intermédiaire/ })).toBeDisabled();
     for (const width of [1440, 390, 360]) {
         await page.setViewportSize({ width, height: 900 });
@@ -140,16 +141,48 @@ test('Flottes : les trois rangs restent alignés et arrivent ensemble au devis, 
     await quoteAfterLoss;
     await form.getByRole('button', { name: 'Modifier la destination', exact: true }).click();
     await form.getByRole('button', { name: 'Retour à la composition', exact: true }).click();
-    await expect(ship(table, 'superior')).toBeDisabled();
+    const depleted = table.locator('input[data-ship-type="fighter"][data-ship-tier="superior"]');
+    await expect(depleted).toBeDisabled();
+    await expect(depleted).not.toHaveAttribute('name', /.+/);
     await expect(maximum).toBeDisabled();
     await expect(table.getByRole('row', { name: /Chasseur de patrouille/ }).locator('[data-fleet-stock-value]').last()).toHaveText('(0)');
     await expect(basic).toHaveValue('2');
     await expect(ship(table, 'intermediate')).toHaveValue('2');
     await expect(absent.locator('[data-fleet-stock-value]')).toHaveText('(2)');
     await expect(absent.getByRole('spinbutton')).toBeEnabled();
+    await expect(absent.getByRole('spinbutton')).toHaveAttribute('name', 'ships[probe][intermediate]');
     await expect(absent.getByRole('button')).toBeEnabled();
-    await expect(table.locator('[name="ships[probe][basic]"]')).toBeEnabled();
+    const probeBasic = table.locator('input[data-ship-type="probe"][data-ship-tier="basic"]');
+    await expect(probeBasic).toHaveAttribute('name', 'ships[probe][basic]');
+    await probeBasic.fill('1');
+    const quoteWithBothProbeRanks = page.waitForResponse(async response => {
+        if (new URL(response.url()).pathname !== '/flottes/estimer' || !response.ok()) return false;
+        const quote = await response.json();
+        return quote.composition.probe?.basic === 1 && quote.composition.probe?.intermediate === 2;
+    }, { timeout: 12000 });
     await absent.getByRole('button').click();
+    const reactivated = await (await quoteWithBothProbeRanks).json();
+    expect(reactivated.composition).toEqual({ probe: { basic: 1, intermediate: 2 }, fighter: { basic: 2, intermediate: 2 } });
     await expect(absent.getByRole('spinbutton')).toHaveValue('2');
+
+    runIsolatedSql(project, "UPDATE fleet_ship SET quantity=0 WHERE fleet_id=" + fleet + " AND slug='probe' AND tier='intermediate'");
+    await form.getByRole('button', { name: /Choisir la destination/ }).click();
+    await form.getByRole('button', { name: /Vérifier la mission/ }).click();
+    const quoteWithoutSibling = page.waitForResponse(async response => {
+        if (new URL(response.url()).pathname !== '/flottes/estimer' || !response.ok()) return false;
+        const quote = await response.json();
+        return quote.ship_available.probe.intermediate === 0 && quote.composition.probe?.basic === 1;
+    }, { timeout: 12000 });
+    await form.getByRole('button', { name: 'Estimer le trajet', exact: true }).click();
+    expect((await (await quoteWithoutSibling).json()).composition.probe).toEqual({ basic: 1 });
+    await form.getByRole('button', { name: 'Modifier la destination', exact: true }).click();
+    await form.getByRole('button', { name: 'Retour à la composition', exact: true }).click();
+    await expect(absent.getByRole('spinbutton')).toBeDisabled();
+    await expect(absent.getByRole('spinbutton')).not.toHaveAttribute('name', /.+/);
+    await expect(probeBasic).toHaveAttribute('name', 'ships[probe]');
+    await expect(probeBasic).toHaveValue('1');
+    const payload = await form.evaluate(element => Object.fromEntries(new FormData(element)));
+    expect(payload['ships[probe]']).toBe('1');
+    expect(Object.hasOwn(payload, 'ships[probe][intermediate]')).toBe(false);
     expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM fleet WHERE player_universe_id=' + owner + " AND status<>'idle'"))).toBe(0);
 });
