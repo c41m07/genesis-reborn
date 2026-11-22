@@ -80,7 +80,7 @@ test('L2A A : missions en lignes, trois étapes, devis et rappel sur ordinateur 
   const data = await prepare(page);
   for (const theme of ['light', 'dark']) {
     runIsolatedSql(data.project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${data.email}'`);
-    for (const width of [390, 1440, 768, 320]) {
+    for (const width of [1920, 390, 1440, 768, 320]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/flottes');
       await expect(page.locator('[data-active-fleet]')).toHaveCount(3);
@@ -93,6 +93,13 @@ test('L2A A : missions en lignes, trois étapes, devis et rappel sur ordinateur 
       await page.goto('/flottes/preparer');
       const form = page.locator('.fleet-form form').first();
       await form.locator('[name="ships[transport]"]').fill('8');
+      const recap = form.locator('.core-fleet-recap');
+      await expect(recap.locator('[data-fleet-wizard-target="recapCount"]')).toHaveText('8');
+      await expect(recap).toContainText('8 Basique');
+      const recapBox = await recap.boundingBox();
+      const tableBox = await form.locator('.fleet-composition-table').boundingBox();
+      if (width >= 1200) expect(recapBox.x).toBeGreaterThanOrEqual(tableBox.x + tableBox.width);
+      else expect(recapBox.y + recapBox.height).toBeLessThanOrEqual(tableBox.y);
       await checkLayout(page, width);
       await capture(page, testInfo, 'composition', theme, width);
       await form.getByRole('button', { name: /Choisir la destination/ }).click();

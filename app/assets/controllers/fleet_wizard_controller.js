@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 import { compactNumber, exactNumber } from '../quantity.js';
 
 export default class extends Controller {
-    static targets = ['step', 'indicator', 'counter', 'quantity', 'error', 'summary'];
+    static targets = ['step', 'indicator', 'counter', 'quantity', 'error', 'summary', 'recap', 'recapCount', 'recapRanks', 'recapShips', 'recapDestination', 'recapQuote'];
 
     static values = { origin: String };
 
@@ -10,6 +10,8 @@ export default class extends Controller {
         this.currentStep = 1;
         this.element.classList.add('fleet-wizard-ready');
         this.render();
+        if (this.hasRecapTarget) this.recapTarget.hidden = false;
+        this.updateRecap();
     }
 
     next(event) {
@@ -72,6 +74,48 @@ export default class extends Controller {
         }
         this.summaryTarget.replaceChildren(list);
         this.summaryTarget.title = composition.map(({ amount, label }) => exactNumber(amount) + ' × ' + label).join(', ');
+    }
+
+    updateRecap(event = null) {
+        if (!this.hasRecapTarget) return;
+        // Le résumé est déduit des seuls champs actifs du formulaire. Un nouveau
+        // choix invalide la mention du devis avant même sa prochaine réponse.
+        const selected = this.quantityTargets.filter(input => !input.disabled && Number(input.value) > 0);
+        const ranks = { basic: 0, intermediate: 0, superior: 0 };
+        let ships = 0;
+        for (const input of selected) {
+            const amount = Number(input.value);
+            ranks[input.dataset.shipTier] += amount;
+            ships += amount;
+        }
+        this.recapCountTarget.textContent = exactNumber(ships);
+        this.recapRanksTarget.textContent = Object.entries({ basic: 'Basique', intermediate: 'Intermédiaire', superior: 'Supérieur' })
+            .map(([rank, label]) => exactNumber(ranks[rank]) + ' ' + label).join(' · ');
+        this.recapRanksTarget.hidden = ships === 0;
+        this.recapShipsTarget.hidden = ships === 0;
+        this.recapShipsTarget.replaceChildren(...selected.map(input => {
+            const item = document.createElement('li');
+            const label = document.createElement('span');
+            const amount = document.createElement('strong');
+            label.textContent = input.dataset.shipLabel;
+            amount.textContent = exactNumber(Number(input.value));
+            item.append(label, amount);
+            return item;
+        }));
+
+        const field = this.destinationField();
+        const missionField = this.element.querySelector('[name="mission"]');
+        const option = field?.selectedOptions?.[0];
+        this.recapDestinationTarget.textContent = this.hasDestination()
+            ? ((option ? (missionField?.value === 'explore' ? option.dataset.systemCoordinates : option.textContent.trim()) : field.value.trim()) || 'À choisir')
+            : 'À choisir';
+        if (event) this.recapQuoteTarget.textContent = 'Après le devis du trajet';
+    }
+
+    quote() {
+        this.updateSummary();
+        this.updateRecap();
+        if (this.hasRecapTarget) this.recapQuoteTarget.textContent = 'Voir l’estimation du trajet';
     }
 
     showError(message) {
