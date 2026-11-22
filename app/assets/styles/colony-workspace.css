@@ -497,3 +497,28 @@ body.authenticated.ui-refined .colony-redesign .colony-comparison th[data-compar
 @media(min-width:1250px) {
     .core-overview-top { grid-template-columns:minmax(0,2fr) minmax(0,1fr); }
 }
+
+/* Les commandes restent dans l’ordre de lecture natif, le filtre GET sert aussi sans JS. */
+@media (min-width: 1201px) {
+    .colony-redesign .colony-comparison-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px 20px;
+        margin-block: 0 16px;
+    }
+
+    body.authenticated.ui-refined .colony-redesign .colony-comparison-toolbar .colony-resource-picker {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        width: auto;
+        margin: 0;
+    }
+
+    .colony-redesign .colony-comparison-toolbar .colony-resource-picker label { margin: 0; }
+    .colony-redesign .colony-comparison-toolbar .colony-resource-picker select { width: auto; }
+}
+.colony-redesign .colony-comparison [data-resource] { text-align: end; font-variant-numeric: tabular-nums; }
