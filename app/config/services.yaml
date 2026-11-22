@@ -57,9 +57,15 @@ when@test:
     services:
         # Le noyau Hall reste sans point d'entree joueur tant que le pilotage n'est pas valide.
         App\Service\Guild\GuildHallService:
+            autowire: true
             public: true
         App\Repository\GuildHallRepository:
+            autowire: true
             public: true
+        App\Service\Guild\GuildHallFunding:
+            autowire: true
+            arguments:
+                $requiredStrength: 32
         App\Service\Player\GuildImageStorage:
             arguments:
                 $directory: '%kernel.cache_dir%/guild-media'
