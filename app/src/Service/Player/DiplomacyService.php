@@ -85,12 +85,7 @@ final class DiplomacyService
             foreach($this->repo->all(GuildRelation::class) as $r) if($r->guildA->id===$g->id || $r->guildB->id===$g->id) $this->manager->remove($r);
             foreach($this->repo->all(GuildMember::class,['guild'=>$g]) as $member) $this->manager->remove($member);
             $this->projects->abandonForGuild($g);
-            // Supprimer aussi le Hall dans l'unité de travail quand il est déjà
-            // chargé. La clé étrangère reste la dernière protection côté base.
-            $hall = $this->guildHalls->lockForGuild($g);
-            if ($hall !== null) {
-                $this->manager->remove($hall);
-            }
+            $this->guildHalls->removeWithGuild($g);
             $this->manager->remove($g);
         });
     }

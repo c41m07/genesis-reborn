@@ -102,6 +102,23 @@ final readonly class GuildHallRepository
         return $hall;
     }
 
+    public function removeWithGuild(Guild $guild): void
+    {
+        $hall = $this->lockForGuild($guild);
+        if ($hall === null) {
+            return;
+        }
+
+        // Garder l'unité de travail cohérente sans matérialiser toute la liste
+        // des dons. La clé étrangère supprime les reçus qui n'ont pas été chargés.
+        foreach ($this->em->getUnitOfWork()->getIdentityMap()[GuildHallContribution::class] ?? [] as $contribution) {
+            if ($contribution->hall->id === $hall->id) {
+                $this->em->remove($contribution);
+            }
+        }
+        $this->em->remove($hall);
+    }
+
     public function releaseClaimForEndedGuild(Guild $guild): ?int
     {
         if ($guild->archivedAt === null) {

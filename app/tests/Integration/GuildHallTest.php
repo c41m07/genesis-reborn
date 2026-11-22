@@ -128,6 +128,7 @@ final class GuildHallTest extends KernelTestCase
         self::getContainer()->get(DiplomacyService::class)->disband($leader);
         self::assertFalse($db->fetchOne('SELECT id FROM guild WHERE id = ?', [$guildId]));
         self::assertFalse($db->fetchOne('SELECT id FROM guild_hall WHERE guild_id = ?', [$guildId]));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM guild_hall_contribution'));
         self::assertSame($before, $this->stock($colony, 'hydrogen'));
         $this->discover($rival, $system);
         $service->contribute($rival, $rivalGuild->id, $rivalPlanet->id, 0, ['hydrogen' => 32]);
