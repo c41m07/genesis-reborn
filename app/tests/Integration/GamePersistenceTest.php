@@ -672,9 +672,25 @@ final class GamePersistenceTest extends KernelTestCase
         $a=$this->player('Alpha');$this->join($a);$b=$this->player('Beta');$this->join($b,'omega-1');$this->expectException(\DomainException::class);
         self::getContainer()->get(\App\Service\Player\DiplomacyService::class)->alliance($a->currentPlayerUniverse,$b->currentPlayerUniverse->id,'propose');
     }
-    public function testGuildFeatureDisabledAndLeaderPermissionAreEnforced(): void
+    public function testExplicitlyDisabledGuildsCannotBeCreated(): void
     {
-        $a=$this->player('Alpha');$this->join($a);$this->expectException(\DomainException::class);self::getContainer()->get(\App\Service\Player\DiplomacyService::class)->create($a->currentPlayerUniverse,'Pas de guilde', 'NON');
+        $player = $this->player('Alpha');
+        $this->join($player, 'turbo-1');
+        $membership = $player->currentPlayerUniverse;
+        $membership->universe->gameSettings['features']['guilds_enabled'] = false;
+        $this->em->flush();
+        $service = self::getContainer()->get(\App\Service\Player\DiplomacyService::class);
+        $connection = $this->em->getConnection();
+        $universeId = $membership->universe->id;
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Les guildes sont désactivées dans cet univers.');
+        try {
+            $service->create($membership, 'Pas de guilde', 'NON');
+        } finally {
+            // Doctrine ferme son gestionnaire après le refus transactionnel.
+            self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM guild WHERE universe_id = ?', [$universeId]));
+        }
     }
     public function testNonLeaderCannotDeclareGuildEnemy(): void
     {

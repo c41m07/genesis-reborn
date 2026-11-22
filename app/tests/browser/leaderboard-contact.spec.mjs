@@ -200,7 +200,10 @@ test('Guildes et diplomatie : espaces séparés', async ({ page }) => {
   const tabs = page.getByRole('navigation', { name: 'Navigation de guilde' });
   await expect(tabs.getByRole('link')).toHaveText(['Trouver une guilde', 'Créer une guilde']);
   await expect(tabs.getByRole('link',{name:'Créer une guilde',exact:true})).toHaveAttribute('aria-current', 'page');
-  await expect(page.getByRole('region', { name: 'Centre de guilde' })).toBeVisible();
+  const creation = page.getByRole('region', { name: 'Fondez votre guilde', exact: true });
+  await expect(creation).toBeVisible();
+  await expect(creation.getByLabel('Nom de votre nouvelle guilde')).toBeEditable();
+  await expect(creation.getByRole('button', { name: 'Fonder une guilde', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Relations entre commandants' })).toHaveCount(0);
   await page.getByRole('navigation',{name:'Navigation principale'}).getByRole('link',{name:'Diplomatie',exact:true}).click();
   await expect(page.getByRole('heading', { name: 'Relations entre commandants' })).toBeVisible();
