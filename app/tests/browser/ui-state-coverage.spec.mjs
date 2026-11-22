@@ -69,7 +69,9 @@ test('Les écrans métier se chargent, restent stables et exposent un arbre acce
     if (route === '/') await expect(page.locator('.dashboard-journal .dashboard-empty')).toContainText('Aucun événement d’absence à consulter');
     if (route === '/flottes/preparer') await expect(page.getByRole('heading', { name: 'Aucun vaisseau disponible' })).toBeVisible();
     if (route === '/flottes') {
-      await expect(page.getByText('Aucune mission en cours au départ de cette colonie.')).toBeVisible();
+      const missions = page.locator('[data-live-region="active-flights"]');
+      await expect(missions.getByText('Toutes vos colonies · univers actif', { exact: true })).toBeVisible();
+      await expect(missions.getByText('Aucune flotte en vol. Les départs et les retours de toutes vos colonies apparaissent ici.', { exact: true })).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Journal des missions' })).toHaveCount(0);
     }
     if (route === '/flottes/orbites') {

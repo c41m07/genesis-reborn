@@ -5,6 +5,7 @@ export function technologyGuideGoal(node) {
         label: node.dataset.label,
         tier: node.dataset.tierLabel,
         recommendation: JSON.parse(node.dataset.recommendation),
+        itemUrl: node.dataset.recommendationUrl ?? null,
     };
 }
 

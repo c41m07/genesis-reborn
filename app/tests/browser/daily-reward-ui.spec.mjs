@@ -46,6 +46,7 @@ test('Quotidiennes : une ouverture à la connexion, sept jours, fermeture et ret
     const playerId = Number(queryIsolatedSql(project, "SELECT id FROM player WHERE email='" + member.email + "'"));
     const receipts = () => Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM daily_reward_claim WHERE player_id=' + playerId));
     await expect(dialog).toBeVisible();
+    await expect(page.locator('main').getByRole('link', { name: 'Récompense quotidienne', exact: true })).toHaveCount(0);
     await expect(dialog.getByRole('listitem')).toHaveCount(7);
     await expect(dialog.locator('[aria-current="step"]')).toContainText('Jour 1');
     await page.keyboard.press('Escape');
@@ -69,6 +70,7 @@ test('Quotidiennes : une ouverture à la connexion, sept jours, fermeture et ret
     try {
         const native = await nativeContext.newPage();
         await native.goto(member.home);
+        await expect(native.locator('main').getByRole('link', { name: 'Récompense quotidienne', exact: true })).toHaveCount(0);
         await native.locator('.topbar').getByRole('link', { name: 'Quotidiennes', exact: true }).click();
         await expect(native.getByRole('button', { name: 'Récupérer', exact: true })).toBeVisible();
         expect(receipts()).toBe(0);

@@ -77,16 +77,16 @@
                             <span data-resource="{{ resource }}" data-resource-label="{{ resources[resource].label }}"{% if not leveled %} data-construction-quantity-target="cost"{% endif %} class="{{ cost > resources[resource].stock ? 'insufficient' : '' }}" title="{{ resources[resource].label }} : {{ cost|number_format(0, ',', ' ') }}{{ cost > resources[resource].stock ? ' · Manque '~(cost-resources[resource].stock)|round(0,'ceil')|number_format(0, ',', ' ')~' '~resources[resource].label : '' }}" aria-label="{{ resources[resource].label }} : {{ cost|number_format(0, ',', ' ') }}{{ cost > resources[resource].stock ? ' · Manque '~(cost-resources[resource].stock)|round(0,'ceil')|number_format(0, ',', ' ')~' '~resources[resource].label : '' }}">{{ ui.icon(resource) }}<span><strong data-cost-amount>{{ cost|compact_number }}</strong><small><span class="cost-label-full">{{ resources[resource].label }}</span><abbr class="cost-label-short" title="{{ resources[resource].label }}">{{ {metal:'Métal',nano:'Nano',hydrogen:'Hydro.',antimatter:'Antim.',electricity:'Élec.'}[resource]|default(resources[resource].label) }}</abbr></small></span></span>
                         {% endif %}{% endfor %}
                     </div>
-                    {% include 'ui/catalogue_benefits.html.twig' with {direct_benefits:true} %}
+                    {% include 'ui/catalogue_benefits.html.twig' %}
                     {% if card.economic|default(null) %}{% include 'ui/economic_units.html.twig' with {state:card.economic,definition:d} %}{% endif %}
                     {% if card.maximum or card.failures or vacation %}<div class="catalog-blocked">{% endif %}
                     {% if card.maximum %}<p class="requirement complete">{{ ui.icon('check') }} Niveau maximum atteint</p>
-                    {% elseif card.failures %}<p class="requirement">{{ ui.icon('diplomacy') }} <span>Nécessite : {% for requirement in card.details.requirements|filter(requirement => not requirement.met) %}<a href="{{ path('app_colony',{id:planet.id,section:requirement.group,showLockedItems:1,focusItem:1}) }}#item-{{ requirement.slug }}-{{ requirement.rank }}">{{ requirement.label }} · {{ requirement.tier }}{% if requirement.required is not null %} · niveau {{ requirement.required }}{% endif %}</a>{% if not loop.last %}, {% endif %}{% else %}{{ card.failures|join(', ') }}{% endfor %}</span></p>
+                    {% elseif card.failures %}<p class="requirement">{{ ui.icon('diplomacy') }} <span>Nécessite : {% for requirement in card.details.requirements|filter(requirement => not requirement.met) %}<a href="{{ catalogue_item_url(planet.id, requirement.group, requirement.slug, requirement.rank) }}">{{ requirement.label }} · {{ requirement.tier }}{% if requirement.required is not null %} · niveau {{ requirement.required }}{% endif %}</a>{% if not loop.last %}, {% endif %}{% else %}{{ card.failures|join(', ') }}{% endfor %}</span></p>
                     {% elseif card.missing_research_laboratory|default(null) %}
                         <p class="requirement">
                             {{ ui.icon('diplomacy') }}
                             <span>Installez le bâtiment
-                                <a href="{{ path('app_colony', {id: planet.id, section: 'buildings', showLockedItems: 1, focusItem: 1, _fragment: 'item-lab-' ~ card.tier}) }}">{{ card.missing_research_laboratory }} de niveau 1</a>
+                                <a href="{{ catalogue_item_url(planet.id, 'buildings', 'lab', card.tier) }}">{{ card.missing_research_laboratory }} de niveau 1</a>
                                 sur cette colonie pour lancer la recherche.
                             </span>
                         </p>

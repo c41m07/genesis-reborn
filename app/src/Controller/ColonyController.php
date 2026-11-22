@@ -5,7 +5,7 @@ namespace App\Controller;
 use App\Entity\{Planet, PlanetBuilding, PlayerTechnology, PlayerDiscovery, Fleet, FleetShip};
 use App\Repository\GameRepository;
 use App\Service\Universe\UniverseContext;
-use App\Service\Colony\{CatalogueInsights, ColonyView, GameShell, ResourceService, LiveRegionResponse};
+use App\Service\Colony\{CatalogueInsights, CatalogueItemLink, ColonyView, GameShell, ResourceService, LiveRegionResponse};
 use App\Service\Queue\QueueService;
 use App\Service\Player\{FirstStepsView, LeaderboardService, PreferencesService, RelationResolver};
 use App\Service\Catalog\GameCatalog;
@@ -151,7 +151,7 @@ final class ColonyController extends AbstractController
 
     private function liveRegions(Request $request, array $data): JsonResponse
     {
-        $data['chrome'] = $this->shell->get($this->getUser(), $data['planet']);
+        $data['chrome'] = $this->shell->get($this->getUser(), $data['planet'], rememberSelection: false);
         $data['preferences'] = array_replace(PreferencesService::DEFAULTS, $this->getUser()->preferences);
         $templates = [
             'colony-selector' => 'ui/colony_selector.html.twig',
@@ -213,7 +213,7 @@ final class ColonyController extends AbstractController
         return $this->render('player/technology_tree.html.twig', $view->data($membership, $planet, section: 'tree') + ['tree_standalone' => true]);
     }
     #[Route('/planetes/{id}/objectif-technologique', name: 'app_technology_goal_summary', methods: ['GET'], requirements: ['id' => '\d+'])]
-    public function technologyGoalSummary(int $id, Request $request, GameCatalog $catalog, CatalogueInsights $insights): JsonResponse
+    public function technologyGoalSummary(int $id, Request $request, GameCatalog $catalog, CatalogueInsights $insights, CatalogueItemLink $links): JsonResponse
     {
         // Le navigateur choisit la clé, mais le catalogue et la colonie restent vérifiés côté serveur.
         $planet = $this->owned($id);
@@ -238,6 +238,11 @@ final class ColonyController extends AbstractController
             $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]),
             $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]),
         );
+
+        if (($goal['recommendation']['state'] ?? null) === 'step') {
+            $step = $goal['recommendation']['requirement'];
+            $goal['itemUrl'] = $links->focus($planet->id, $step['group'], $step['slug'], $step['tier']);
+        }
 
         return $this->json(['goal' => $goal], 200, $headers);
     }

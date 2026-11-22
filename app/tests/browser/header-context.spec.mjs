@@ -68,10 +68,12 @@ test('Barre haute : suit le prochain prérequis, garde le contexte et ne déplac
     const node = page.locator('#tech-signature_reduction-basic');
     await node.locator('summary').click();
     const displayed = 'Métallurgie des nanomatériaux';
+    const nativeTarget = overview + '?section=technologies&showLockedItems=1&focusItem=1#item-nanomaterial_synthesis-basic';
     await expect(page.getByText(`${displayed} → niveau 3 (actuel : 2)`, { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Suivre cet objectif', exact: true }).click();
     await expect(label).toHaveText(displayed);
     await expect(progress).toHaveText('2/3');
+    await expect(goal).toHaveAttribute('href', nativeTarget); // La page Guide s'appuie sur son rendu local.
     await page.reload();
     await expect(label).toHaveText(displayed);
     await expect(progress).toHaveText('2/3');
@@ -85,6 +87,8 @@ test('Barre haute : suit le prochain prérequis, garde le contexte et ne déplac
     expect(result.headers()['cache-control']).toContain('no-store');
     const { goal: resolvedGoal } = await result.json();
     expect(resolvedGoal.recommendation.requirement).toMatchObject({ current: 2, level: 3, slug: 'nanomaterial_synthesis', tier: 'basic' });
+    expect(resolvedGoal.itemUrl).toBe(nativeTarget);
+    await expect(goal).toHaveAttribute('href', nativeTarget);
     expect(requests).toBe(1);
     await page.evaluate(() => window.dispatchEvent(new CustomEvent('genesis:refresh')));
     for (const width of [1440, 1024, 768, 390, 360, 320]) {
@@ -132,6 +136,16 @@ test('Barre haute : suit le prochain prérequis, garde le contexte et ne déplac
 
     expect(requests).toBe(1);
 
+    // Le raccourci ouvre le vrai onglet, sélectionne le rang et le souligne via le catalogue natif.
+    await goal.focus();
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(new URL(nativeTarget, page.url()).href);
+    const card = page.locator('.building-card[data-slug="nanomaterial_synthesis"]');
+    await expect(card).toHaveClass(/catalog-card--targeted/);
+    await expect(card.locator('.building-rank-tab[data-tier="basic"]')).toBeFocused();
+    await expect(page.locator('#item-nanomaterial_synthesis-basic')).toBeVisible();
+    await page.goto(overview);
+
     // Une réponse retardée de l’ancienne clé ne doit pas réafficher un objectif retiré.
     await page.setViewportSize({ width: 1440, height: 900 });
     const other = await page.context().newPage();
@@ -158,6 +172,7 @@ test('Barre haute : suit le prochain prérequis, garde le contexte et ne déplac
     await expect(label).toHaveText('Choisir un objectif');
     await other.evaluate(key => localStorage.setItem(key, 'technologies:absent_du_catalogue-basic'), storageKey);
     await expect(label).toHaveText('Choisir un objectif');
+    await expect(goal).toHaveAttribute('href', '/technologies');
 
     // Ajouter une seconde colonie uniquement dans la base jetable.
     runIsolatedSql(project, `UPDATE planet SET owner_id=(SELECT owner_id FROM (SELECT owner_id FROM planet WHERE id=${planetId}) origin), name='Colonie témoin du rail' WHERE id=${target.id}`);
@@ -210,7 +225,10 @@ test('Barre haute : suit le prochain prérequis, garde le contexte et ne déplac
         await native.close();
         await other.close();
     }
-    await goal.click();
+    const guide = page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link', { name: 'Guide technologique', exact: true });
+    await expect(guide).toHaveAttribute('href', '/technologies');
+    await guide.click();
+    await expect(page).toHaveURL(/\/technologies$/);
     await page.getByRole('button', { name: 'Retirer l’objectif' }).click();
     await expect(label).toHaveText('Choisir un objectif');
 });

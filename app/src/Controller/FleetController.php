@@ -54,11 +54,8 @@ final class FleetController extends AbstractController
             return $this->redirectToRoute('app_fleet_composition_load', $data['composition_review']);
         }
         $data['tutorial_spy'] = $page === 'prepare' && $parameters['mission'] === 'spy' && $request->query->getBoolean('tutorial');
-        if ($data['fleet_planet']) {
-            $request->getSession()->set('selected_planet_'.$member->id, $data['fleet_planet']->id);
-        }
         if ($request->headers->get('X-Genesis-Live') === '1' && $request->getPreferredFormat() === 'json') {
-            $data['chrome'] = $shell->get($this->getUser());
+            $data['chrome'] = $shell->get($this->getUser(), $data['fleet_planet'], rememberSelection: false);
             $data['section'] = 'overview';
             $data['preferences'] = array_replace(PreferencesService::DEFAULTS, $this->getUser()->preferences);
             $templates = [
@@ -78,6 +75,9 @@ final class FleetController extends AbstractController
                 $regions[$name] = $this->renderView($template, $data);
             }
             return $liveResponses->create($request, $regions);
+        }
+        if ($data['fleet_planet']) {
+            $request->getSession()->set('selected_planet_'.$member->id, $data['fleet_planet']->id);
         }
         return $this->render('fleet/index.html.twig', $data, new Response(headers: ['Cache-Control' => 'private, no-store']));
     }

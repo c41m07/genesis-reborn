@@ -7,6 +7,7 @@ export default class extends Controller {
 
     initialize() {
         this.fallbackLabel = this.labelTarget.textContent;
+        this.fallbackHref = this.element.getAttribute('href');
     }
 
     connect() {
@@ -84,11 +85,24 @@ export default class extends Controller {
         this.labelTarget.textContent = label;
         this.progressTarget.hidden = !progress;
         this.progressTarget.textContent = progress;
+        // Même lien serveur qu’un prérequis de fiche, pas l’objectif final indiqué au survol.
+        this.element.setAttribute('href', step ? this.itemHref(goal.itemUrl) : this.fallbackHref);
 
         // Le texte complet reste accessible si un long nom de recherche est abrégé dans la barre.
         const summary = [label, progress ? `niveau ${step.current} sur ${step.level}` : ''].filter(Boolean).join(' · ');
         const detail = goal ? ` · Objectif : ${goal.label} (${goal.tier})` : '';
         this.element.title = summary + detail;
         this.element.setAttribute('aria-label', `Guide techno · ${summary}${detail}`);
+    }
+
+    itemHref(path) {
+        if (typeof path !== 'string' || !path.startsWith('/')) return this.fallbackHref;
+        try {
+            const item = new URL(path, window.location.origin);
+            if (item.origin === window.location.origin && /^#item-[a-z0-9_]+-(basic|intermediate|superior)$/.test(item.hash)) return path;
+        } catch {
+            // Un état vide ou périmé ne doit pas laisser le lien de la fiche précédente.
+        }
+        return this.fallbackHref;
     }
 }
