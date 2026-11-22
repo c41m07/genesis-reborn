@@ -917,3 +917,7 @@ vaisseaux restent indisponibles en attente, sans combat supplémentaire, coût
 de séjour, transfert ou perte automatique. Notification unique ; une reprise
 manuelle après devis utilise seulement la réserve existante et une colonie
 possédée et découverte. Sans solution, l’attente persiste.
+
+## Calendrier de l’Avent
+
+Une édition commune à tous les univers accessibles propose 24 portes civiles à l’heure de Paris, un lot par compte et par porte. Les portes non ouvertes expirent à la date de clôture annoncée. Un lot choisi et déjà réservé reste retirable ensuite vers une colonie éligible appartenant au même compte, sans versement partiel ni attribution en double. [Détail du calendrier et des réservations](CALENDRIER_AVENT.md).
