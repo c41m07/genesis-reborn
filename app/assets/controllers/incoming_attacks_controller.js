@@ -8,6 +8,8 @@ export default class extends Controller {
         this.active = true;
         this.offset = Date.parse(this.nowValue) - Date.now();
         this.lastHtml = null;
+        this.watchOverview = Boolean(this.element.closest('.overview-page'));
+        if (this.watchOverview) this.overviewSignature = this.deadlineSignature(this.contentTarget);
         this.signature = [...this.contentTarget.querySelectorAll('[data-incoming-attack]')].map(row => row.dataset.incomingAttack).join(',');
         this.refreshHandler = () => this.refresh();
         this.visibilityHandler = () => { if (!document.hidden) this.refresh(); };
@@ -56,6 +58,7 @@ export default class extends Controller {
             if (data.html !== this.lastHtml) {
                 const next = document.createElement('template');
                 next.innerHTML = data.html;
+                this.refreshOverview(next.content);
                 this.removeUnavailableDetails(next.content);
                 if (!this.contentTarget.contains(document.activeElement)
                     && !this.hasOpenDetails()) {
@@ -74,6 +77,24 @@ export default class extends Controller {
             if (data.flights) window.dispatchEvent(new CustomEvent('genesis:visible-fleets', { detail: data }));
         } catch { if (this.active) this.unavailable(); }
         finally { clearTimeout(timeout); this.pending = false; }
+    }
+
+    deadlineSignature(content) {
+        return [...content.querySelectorAll('[data-incoming-attack]')].map(row => [
+            row.dataset.incomingAttack,
+            row.dataset.incomingKind,
+            row.querySelector('time[data-incoming-impact]')?.dataset.incomingImpact ?? '',
+        ].join(':')).join(',');
+    }
+
+    refreshOverview(content) {
+        if (!this.watchOverview) return;
+        // Le flux autorisé existe déjà. Un changement des échéances déclenche
+        // un rafraîchissement de la Vue générale, pas une seconde surveillance.
+        const signature = this.deadlineSignature(content);
+        if (signature === this.overviewSignature) return;
+        this.overviewSignature = signature;
+        window.dispatchEvent(new Event('genesis:overview-incoming-changed'));
     }
 
     clearCampaignTraffic() {

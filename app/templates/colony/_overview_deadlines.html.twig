@@ -1,0 +1,34 @@
+{# Seuls les délais réels déjà connus sont repris ; jamais de départ, effectif ou fret hostile. #}
+{% set now = overview_time|date('U') %}
+{% set incoming = chrome.incomingAttacks|default([])|filter(fleet => fleet.status == 'traveling' and fleet.arrivalAt and fleet.arrivalAt|date('U') > now) %}
+{% set hostile = incoming|filter(fleet => fleet.mission in ['attack', 'conquer'])|first %}
+{% set other = [] %}
+{% for queue in overview_deadlines %}
+    {% set section = {building:'buildings', research:'technologies', shipyard:'ships'}[queue.kind] %}
+    {% set next = {kind:{building:'Fin de construction',research:'Fin de recherche',shipyard:'Fin au chantier'}[queue.kind], name:queue.label ~ (queue.level ? ' · niveau ' ~ queue.level : (queue.quantity ? ' × ' ~ queue.quantity : '')), colony:queue.planet.name, deadline:queue.deadline, href:path('app_colony', {id:queue.planet.id, section:section})} %}
+    {% set other = other|merge([next]) %}
+{% endfor %}
+{% for fleet in incoming|filter(fleet => fleet.mission not in ['attack', 'conquer'])|slice(0, 2) %}
+    {% set other = other|merge([{kind:'Arrivée de flotte', name:fleet.missionLabel, colony:fleet.destinationName, deadline:fleet.arrivalAt, href:path('app_fleets', {_fragment:'incoming-attacks-heading'})}]) %}
+{% endfor %}
+{% set other = other|sort((left, right) => left.deadline|date('U') <=> right.deadline|date('U'))|slice(0, 2) %}
+<div data-live-region="overview-deadlines">
+    {% if hostile or other %}
+        <ol class="core-empire-deadlines">
+            {% if hostile %}
+                <li class="core-empire-deadline is-hostile" data-empire-watch-kind="hostile">
+                    <div><strong>Attaque entrante</strong><a href="#incoming-attacks-heading">{{ hostile.destinationName }}</a></div>
+                    <time datetime="{{ hostile.arrivalAt }}">{{ hostile.arrivalAt|date('d/m H:i:s', preferences.timezone) }}</time>
+                </li>
+            {% endif %}
+            {% for deadline in other %}
+                <li class="core-empire-deadline">
+                    <div><span>{{ deadline.kind }}</span><a href="{{ deadline.href }}">{{ deadline.name }}</a><small>{{ deadline.colony }}</small></div>
+                    <time datetime="{{ deadline.deadline|date('c') }}">{{ deadline.deadline|date('d/m H:i:s', preferences.timezone) }}</time>
+                </li>
+            {% endfor %}
+        </ol>
+    {% else %}
+        <p>Aucune échéance confirmée à afficher.</p>
+    {% endif %}
+</div>
