@@ -81,7 +81,7 @@ test('L2A A : missions en lignes, trois étapes, devis et rappel sur ordinateur 
   for (const theme of ['light', 'dark']) {
     runIsolatedSql(data.project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${data.email}'`);
     for (const width of [1920, 390, 1440, 768, 320]) {
-      await page.setViewportSize({ width, height: 900 });
+      await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
       await page.goto('/flottes');
       await expect(page.locator('[data-active-fleet]')).toHaveCount(3);
       await expect(page.locator('.flight-details-action')).toHaveCount(3);
@@ -100,6 +100,9 @@ test('L2A A : missions en lignes, trois étapes, devis et rappel sur ordinateur 
       const tableBox = await form.locator('.fleet-composition-table').boundingBox();
       if (width >= 1200) expect(recapBox.x).toBeGreaterThanOrEqual(tableBox.x + tableBox.width);
       else expect(recapBox.y + recapBox.height).toBeLessThanOrEqual(tableBox.y);
+      if (width === 1920) {
+        expect((await new AxeBuilder({ page }).include('.core-fleet-recap').analyze()).violations).toEqual([]);
+      }
       await checkLayout(page, width);
       await capture(page, testInfo, 'composition', theme, width);
       await form.getByRole('button', { name: /Choisir la destination/ }).click();

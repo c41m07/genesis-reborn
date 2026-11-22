@@ -475,3 +475,5 @@ body.authenticated .fleet-redesign .core-fleet-workspace > .fleet-operations-rai
 }
 /* Le texte de corps du récapitulatif garde le contraste sur son fond légèrement teinté. */
 body.authenticated .fleet-redesign .core-fleet-recap p.core-fleet-recap-total { color:var(--text); }
+body.authenticated .fleet-redesign .core-fleet-recap-ships > li,
+body.authenticated .fleet-redesign .core-fleet-recap-ships > li > strong { color:var(--text); }
