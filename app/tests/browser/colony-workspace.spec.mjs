@@ -81,7 +81,13 @@ test('L7A A : colonies, renommage, comparaison et bilan complets sur quatre form
       await expect(page.locator('.colony-comparison tbody tr')).toHaveCount(2);
       if (width === 1440) await expect(page.locator('.colony-comparison td[data-resource="nano"]').first()).toBeVisible();
       else await expect(page.locator('.colony-comparison td[data-resource="nano"]').first()).toBeHidden();
-      await expect(page.locator('.colony-comparison tbody tr').filter({ has: page.getByRole('link', { name: 'Horizon', exact: true }) })).toContainText('1 commande en file');
+      const horizonWork = page.locator('.colony-comparison tbody tr')
+        .filter({ has: page.getByRole('link', { name: 'Horizon', exact: true }) })
+        .locator('[data-comparison-queue="building"]');
+      await expect(horizonWork).toContainText('Mine à ciel ouvert');
+      await expect(horizonWork).toContainText('Niveau 5');
+      await expect(horizonWork).toContainText('En cours');
+      await expect(horizonWork.locator('time')).toHaveAttribute('datetime', /T/);
       await capture(page, info, 'comparaison', theme, width);
       await page.goto(abandon);
       for (const title of ['Un abandon définitif', 'Bilan des pertes', 'Ressources', 'Bâtiments', 'Défenses', 'Vaisseaux présents', 'Ressources embarquées présentes', 'Commandes annulées sans remboursement', 'Confirmer l’abandon']) {
@@ -195,4 +201,65 @@ test('L7A A : clavier, toucher, historique et formulaires sans JavaScript', asyn
   } finally {
     await context.close();
   }
+});
+
+
+test('Comparateur : trois files privées lisibles au clavier et sans JavaScript', async ({ page, browser, baseURL }) => {
+  const user = await enter(page);
+  const other = await revealVirginPlanet(user.project, user.email);
+  runIsolatedSql(user.project, `UPDATE planet SET owner_id=${user.member},name='Boréal comparaison' WHERE id=${other.id}`);
+  runIsolatedSql(user.project, `UPDATE planet SET name='Aster comparaison' WHERE id=${user.planet}`);
+  runIsolatedSql(user.project, `INSERT INTO queue_item(planet_id,player_universe_id,queue_type,item_slug,tier,item_level,quantity,duration_seconds,started_at,queued_at,dispatch_token) VALUES
+    (${user.planet},${user.member},'building','mine_metal','basic',2,1,3600,UTC_TIMESTAMP(),UTC_TIMESTAMP(),'compare-build'),
+    (${user.planet},${user.member},'building','mine_metal','basic',3,1,7200,NULL,UTC_TIMESTAMP(),'compare-wait'),
+    (${other.id},${user.member},'research','engineering_foundations','basic',2,1,3600,UTC_TIMESTAMP(),UTC_TIMESTAMP(),'compare-research'),
+    (${user.planet},${user.member},'research','signature_reduction','basic',2,1,7200,UTC_TIMESTAMP(),UTC_TIMESTAMP(),'compare-research-parallel'),
+    (${other.id},${user.member},'shipyard','ground_turret_anti_light','basic',NULL,7,600,NULL,UTC_TIMESTAMP(),'compare-defense')`);
+  const plain = await browser.newContext({
+    baseURL,
+    storageState: await page.context().storageState(),
+    javaScriptEnabled: false,
+    viewport: { width: 390, height: 844 },
+  });
+  try {
+    const mobile = await plain.newPage();
+    await mobile.goto('/planetes?view=table&resource=hydrogen');
+    const region = mobile.getByRole('region', { name: 'Comparaison des colonies, défilement horizontal' });
+    const table = region.getByRole('table');
+    for (const name of ['Bâtiments', 'Recherche', 'Chantier spatial']) {
+      await expect(table.getByRole('columnheader', { name, exact: true })).toBeVisible();
+    }
+    const aster = table.getByRole('row').filter({ hasText: 'Aster comparaison' });
+    const boreal = table.getByRole('row').filter({ hasText: 'Boréal comparaison' });
+    await expect(aster.locator('[data-comparison-queue="building"]')).toContainText('Niveau 2');
+    await expect(aster.locator('[data-comparison-queue="building"]')).toContainText('+1 en attente');
+    await expect(aster.locator('[data-comparison-queue="building"] time')).toHaveAttribute('datetime', /T/);
+    await expect(aster.locator('[data-comparison-queue="research"]')).toContainText('Commune à cet empire');
+    await expect(boreal.locator('[data-comparison-queue="research"]')).toContainText('départ de cette colonie');
+    await expect(table.locator('td[data-comparison-queue="research"] time')).toHaveCount(1);
+    await expect(boreal.locator('[data-comparison-queue="shipyard"]')).toContainText('× 7');
+    await expect(boreal.locator('[data-comparison-queue="shipyard"] time')).toHaveCount(0);
+    expect(await mobile.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    await region.focus();
+    await expect(region).toBeFocused();
+    await mobile.keyboard.press('ArrowRight');
+    await expect.poll(() => region.evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
+    await mobile.getByLabel('Ressource à comparer').selectOption('electricity');
+    await mobile.getByRole('button', { name: 'Comparer cette ressource', exact: true }).click();
+    await expect(mobile).toHaveURL(/view=table&resource=electricity$/);
+    await expect(mobile.locator('th[data-resource="electricity"]')).toBeVisible();
+    await expect(mobile.locator('th[data-resource="hydrogen"]')).toBeHidden();
+  } finally {
+    await plain.close();
+  }
+  await page.goto('/planetes?view=table');
+  await expect(page.locator('td[data-comparison-queue="research"] time')).toHaveCount(1);
+  await expect(page.locator('th[data-resource]')).toHaveCount(5);
+  runIsolatedSql(user.project, `INSERT INTO vacation_period(membership_id,started_at,scheduled_end_at) VALUES
+    (${user.member},DATE_SUB(UTC_TIMESTAMP(),INTERVAL 1 MINUTE),DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 HOUR))`);
+  await page.reload();
+  const pausedResearch = page.locator('td[data-comparison-queue="research"]').filter({ hasText: 'départ de cette colonie' });
+  await expect(pausedResearch).toContainText('Suspendue');
+  await expect(pausedResearch).toContainText('+1 déjà lancée');
+  await expect(pausedResearch.locator('time')).toHaveCount(0);
 });

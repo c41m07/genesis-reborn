@@ -1,0 +1,751 @@
+# Génération versionnée du lien d’activation
+
+Complexité 4/5. Lot local additif depuis 3594a06, sans raccordement ni
+migration. Les fichiers Work référencés restent absents du dépôt. Pas de
+changement de route, formulaire, paramètres, fréquence, inscription, transport,
+autorisation ou politique de jeu.
+
+## Contrat du composant
+
+- `VerificationLinkGeneration` : joueur, numéro de génération, version
+  d'algorithme, identifiant de clé, nonce, échéance et empreinte. Pas d'entité
+  Doctrine et pas de lien en clair ni de clé.
+- `VersionedVerificationLink` : génération de métadonnées, reproduction
+  déterministe et comparaison de l'empreinte. Le HMAC V1 a un domaine dédié
+  et un encodage canonique ; le format 43 caractères base64url correspond à
+  l'alphabet et à la longueur habituels du lien historique. La production
+  de l'empreinte SHA-256 ne change pas son format.
+- `VerificationLinkKeyResolver` : interface uniquement, explicitement passée
+  à l'appel. Aucun service concret, secret, valeur d'environnement, accès
+  au trousseau ou repli vers APP_SECRET. Les tests injectent des clés
+  synthétiques distinctes ; l'entropie et l'isolation du futur trousseau
+  relèvent de son fournisseur.
+
+La reproduction ne réémet que si l'algorithme est reconnu, l'échéance
+strictement future et la clé correcte ; une clé absente, trop courte ou
+différente ne crée pas de génération de remplacement. L'échéance ne se
+prolonge pas. La vérification compare l'empreinte d'une génération déjà
+désignée comme active : elle n'est pas un contrôle de compte, de droits ni
+d'état DB. Elle n'exige pas la présence de la clé de dérivation. Le retrait
+de clé seul ne révoque donc pas les liens préparés avec cette clé : pour
+une compromission, révoquer explicitement leurs générations en plus de
+retirer la clé. Un appelant ne doit jamais fournir une génération archivée.
+
+Le service historique pratique toujours sa lecture par empreinte et conserve
+ses anciennes règles ; aucun jeton hérité n'est supposé reproductible. Les
+scripts et adaptateurs de preuve précédents ne sont pas inclus dans ce lot.
+
+## Conditions avant intégration
+
+1. Choisir la politique de clé dédiée, d'identifiants immuables utilisables
+   par tous les processus, de rétention et de révocation forcée. Appliquer les
+   limites de durée au service orchestrateur. Ne pas journaliser ni la clé,
+   ni le lien, ni les métadonnées qui ne sont pas nécessaires au support.
+2. Préparer la migration additive Doctrine : métadonnées facultatives pour
+   les liens hérités, unicité d'une génération active par compte, bornes
+   d'horodatage compatibles avec Doctrine et précontrôle des doublons. Aucun
+   outil de migration livré ici. Tester l'aller et le rollback applicatif
+   sur schéma jetable ; base existante seulement après autorisation explicite
+   et sauvegarde vérifiée. Protéger la génération contre la lecture périmée
+   sous verrou joueur ; la confirmation doit consommer ce lien sous ce verrou.
+3. Intégrer dans un lot distinct réservation + audit durable et coordination
+   des voies autorisées, notamment l'inscription pour éliminer l'émetteur
+   concurrent de secours avant activation. Distinguer nouvelle émission et
+   révocation ; conserver le limiteur public 5/h/IP et les réponses génériques.
+   Avec transport factice, tester réellement deux connexions, une révocation
+   concurrente, le refus des anciennes générations, et une interruption
+   pendant la récupération explicite. Ne pas requalifier un envoi indéterminé
+   ni redéclencher un envoi automatiquement.
+4. Ne pas faire cohabiter de vrais écrivains anciens et nouveaux. Pour tout
+   futur déploiement ou rollback, désactiver et drainer d'abord les émetteurs ;
+   conserver les empreintes et l'audit. Le lot présent s'annule sans DDL :
+   aucun appelant, donnée ajoutée ni service de clés à désactiver.
+
+## Vérifications
+
+- 5 tests unitaires / 22 assertions : vecteur V1 connu calculé séparément,
+  stabilité après reconstruction, alphabet, remplacement explicite, limite
+  d'expiration, refus de clé absente/courte/incorrecte, algorithme inconnu et
+  écart de métadonnées.
+- 17 tests / 101 assertions avec les régressions de confirmation d'adresse
+  historique et d'activation admin protégée. MariaDB et réseau de test
+  isolés retirés après vérification ; mailer de test/existant, aucun envoi réel.
+- Compose, validateur de conteneur Symfony, lint PHP ciblé et diff contrôlés.
+  Pas de garantie DB ou concurrence concernant la nouvelle génération, pas
+  de navigateur ni CI complète, aucune modification d'env ni publication.
+
+## Persistance additive isolée
+
+La migration `Version20261120000200` ajoute deux tables, sans modifier
+les lignes des jetons historiques ni des reçus existants. Elle n'a été
+exécutée (montée et retour) que sur MariaDB jetable. Aucune autre base
+n'a été ouverte. Ne jamais exécuter le down pour un rollback applicatif :
+il efface les générations et l'audit ajoutés. Conserver ces tables pour
+un retour arrière compatible, suspendre/drainer les émetteurs et garder
+le futur lecteur compatible tant que les liens versionnés peuvent être
+utilisés ; le contrôleur historique seul ne sait pas lire la nouvelle table.
+
+- `player_verification_generation` : clé primaire = joueur, version
+  monotone à chaque remplacement, état actif/révoqué/consommé. Pas de lien
+  ni de clé en base. La préparation garde chaque génération active non
+  expirée telle quelle, même si la nouvelle demande propose une échéance
+  différente. Si un lien historique valide existe, elle refuse de préparer
+  un lien nouveau ; elle ne nettoie pas non plus les empreintes expirées.
+  Le composant n'empêche pas l'ancien émetteur de créer un lien *après*
+  la préparation versionnée : les émetteurs doivent donc être drainés et
+  remplacés ensemble avant d'appeler cette persistance.
+- `VerificationGenerationStore` prend le verrou du compte avant toute ligne
+  enfant, et relit directement SQL. Les mutations sont réservées à un compte
+  non suspendu/non confirmé. Révocation et consommation visent une version,
+  pas une génération périmée ; en consommation, confirmer le compte et
+  épuiser le lien se fait dans la même transaction. Le service ne doit
+  être branché qu'après vérification des autorisations et de la politique
+  de révocation. Rafraîchir tout objet Player déjà chargé après l'écriture
+  SQL (sans quoi l'EntityManager peut refléter un état périmé).
+- `verification_recovery_event` : intention unique par reçu initial,
+  enregistrée après le délai explicite et le cooldown du dernier reçu
+  `unknown`. Elle contient seulement référence, empreinte de clé de
+  demande et horodatage. Même clé = rejeu, autre clé = bloquée. La ligne
+  originale n'est jamais réécrite. Ce journal ne réserve, n'enfile ni
+  n'envoie de mail ; il ne prétend pas donner une reprise transport sûre.
+
+### Assemblage restant
+
+- Réponse publique neutre et limiteur 5/h/IP inchangés ; choisir/quitter
+  la fenêtre des jetons historiques avec le plan de bascule. Le nouveau
+  lecteur devra rechercher l'empreinte dans les deux chemins sans rattacher
+  le lien au mauvais joueur et vérifier/consommer la génération active
+  sous le verrou commun. Examiner un index d'empreinte avant d'ajouter
+  un routage qui ignore l'identifiant de joueur.
+- Définir l'identité et l'autorisation de l'acteur de récupération/révocation,
+  et le cas d'une reprise après interruption avant revendication. Fournir au
+  futur orchestrateur une transaction commune pour événement + nouveau reçu
+  revendicable et leur audit d'issue ; ne pas simplement enchaîner la méthode
+  actuelle avec un envoi. Elle ouvre et clôt sa propre transaction et ne
+  garantit que l'intention, pas l'ordre de remise.
+- Intégrer une politique de clé et d'expiration approuvée. Le délai de
+  récupération est fourni à l'appel interne, pas exposé publiquement ;
+  les timestamps DATETIME historiques doivent utiliser le même fuseau
+  applicatif dans tous les processus. Idempotence d'envoi, purge et
+  compatibilité du lecteur ne sont pas traitées ici.
+
+### Recette additionnelle
+
+32 tests / 214 assertions avec les régressions activation publique,
+route admin désactivée, reçu et codec. Quatre tests ajoutés : montée et
+retour préservant l'empreinte historique, concurrence de deux préparations
+avec échéances distinctes, course révocation/consommation après remplacement
+et concurrence de deux intentions après résultat inconnu. Les workers
+sont des processus/connecteurs distincts derrière une barrière ; ils ne
+font aucun appel mail. Base et réseau privés retirés. Compose, conteneur
+Symfony, lint PHP et diff vérifiés. Aucun SMTP, configuration de clés,
+appel public, push, intégration ou déploiement.
+
+## Lecteur mixte interne, non raccordé
+
+`MixedVerificationLinkReader::confirm()` recherche l'empreinte dans
+les deux familles ; un résultat absent ou ambigu est refusé. Il ne prend
+pas un identifiant de joueur fourni par le client et n'a besoin d'aucune
+clé de dérivation. Les empreintes versionnées utilisent l'index unique
+additif `Version20261120000300`, recette montée/retour sur la base jetable
+uniquement. L'index historique est inchangé.
+
+La recherche initiale est non autorisante et hors transaction : elle indique
+seulement quel compte verrouiller. La transaction verrouille et relit
+le compte, puis les enfants, avec rafraîchissement des objets Doctrine.
+Confirmation atomique avec retrait de la ligne du seul lien historique
+consommé, ou marquage consommé de la génération active. Si deux familles
+existent exceptionnellement pour le compte, les deux confirmations ne
+peuvent pas gagner ; la réussite historique révoque aussi la génération
+active, une réussite versionnée laisse les empreintes historiques intactes.
+Le compte confirmé ne peut consommer aucun autre lien. Un compte suspendu
+est refusé par ce lecteur ; le lecteur historique actuellement branché n'a
+pas été modifié. Ce refus doit être validé comme règle produit avant branchement.
+
+Le lien brut n'est ni paramètre SQL ni champ d'audit. L'exception synthétique
+de transaction externe a vérifié la protection SensitiveParameter dans
+la trace PHP. Cette preuve n'audite pas les journaux proxy/serveur HTTP :
+il n'y a aucune route nouvelle, et les paramètres SQL portent l'empreinte,
+pas le lien brut. La validation d'usage reste la possession du lien ;
+un futur contrôleur doit conserver le POST, le CSRF, le no-store/no-referrer
+et les réponses neutres existantes.
+
+Recette : **37 tests / 250 assertions**, dont confirmation des deux familles,
+courses même lien et deux familles pour un compte, ancien lien révoqué,
+expiration, suspension revue après mise à jour SQL, cache d'identité Doctrine,
+collision entre familles refusée, traces PHP et régressions historiques.
+Courses réelles sur deux processus/connexions ; commandes migrations up/down,
+Compose, conteneur, lint PHP et diff vérifiés. DB/réseau jetables retirés.
+
+Aucun raccordement HTTP, résolveur réel, réglage, secret ou envoi réel.
+Avant branchement, confirmer la politique de suspension, borner le passage
+au lecteur mixte, drainer les anciens émetteurs et valider le plan de rollback.
+La migration d'index doit d'abord précontrôler les doublons et être appliquée
+après autorisation explicite et sauvegarde si une base existante est concernée.
+
+## Orchestrateur interne de récupération, sans exécution
+
+`VerificationRecoveryOrchestrator` réunit dans une transaction le journal
+d'intention, le nouveau reçu distinct et leur relation. La migration
+additive `Version20261120000400` ajoute l'identifiant unique (facultatif
+pour les anciennes intentions) et la version de génération au journal.
+La ligne du reçu d'origine n'est jamais modifiée. Le journal contient
+références, horodatage, version et empreinte de la demande ; ni le lien
+ni l'empreinte du lien, ni nonce, ni clé ou adresse. Un même identifiant
+de demande retrouve le même reçu ; une demande concurrente différente
+pour le même reçu initial est bloquée.
+
+Le verrou du compte précède toute lecture verrouillée des reçus et de la
+génération. Le reçu d'origine doit être le dernier du compte, indéterminé
+et résolu, le délai et le cooldown écoulés pour réserver une première
+fois. L'identité du compte est l'entrée de confiance, pas le numéro de
+reçu. Un futur parcours doit établir cette autorité sans permettre de
+choisir un compte arbitraire ni révéler son existence.
+
+### Refus et reprise
+
+- Un compte suspendu ou confirmé ne produit ni journal ni reçu. Un
+  reçu d'un autre compte est refusé sans révéler son état.
+- Un lien historique valide suspend la voie nouvelle (`legacy_active`).
+  Aucun renvoi ni rotation de secours. Le parcours historique reste
+  inchangé par ce lot ; ne pas l'appeler automatiquement depuis cette
+  voie lors de la bascule. L'échéance historique passée, réserver
+  seulement si la génération courante est déjà active et reproductible.
+- Génération absente, expirée, révoquée ou non reproductible : refus,
+  aucun remplacement ou prolongement. Un journal ancien sans reçu
+  associé n'est pas une preuve de réservation et bloque ; ne pas
+  l'adopter automatiquement.
+- La réservation est `recovery_reserved`, laquelle n'est pas
+  revendicable par le cycle générique. Aucun transport, tâche en file
+  ni clé réelle. Ne pas convertir ce nouvel état en `reserved` :
+  le prochain incrément devra vérifier sous verrou le lien journal-reçu,
+  la version active et l'éligibilité juste avant revendication, et
+  traiter la décision de remise et son audit sous le contrat validé.
+  La preuve de non-écrasement ne dispense ni de cette vérification ni du
+  drainage des anciens émetteurs.
+
+Candidat V5 **sans activation** : chaîne 3594a06 → codec → persistance →
+lecteur mixte → ce lot, schéma et tests inclus, sans route, alias réel
+de clé, configuration ni worker. Les migrations restent non exécutées
+sur une base existante. Pour un rollback applicatif, conserver les
+colonnes/tables du journal ; les down ne sont que la preuve sur base
+jetable et retireraient l'audit de récupération.
+
+### Recette
+
+**40 tests / 279 assertions** sur MariaDB privée : deux processus
+obtiennent une seule réservation ; un INSERT de reçu délibérément
+rejeté par déclencheur de fixture annule l'intention déjà insérée ;
+le nouvel essai est possible sans écraser `unknown`. Refus compte
+tiers/suspendu, avant délai, historique et échéance de génération.
+Aucune modification de l'échéance ni fuite de contenu de lien dans
+le journal ; le claim générique ne revendique pas le nouveau reçu.
+Montée/retour des migrations uniquement sur la base jetable ; base
+et réseau retirés, Compose, conteneur, PHP lint et diff contrôlés.
+Aucun mail réel, nouveau paramètre, push, merge ou déploiement.
+
+## Claim spécifique, non raccordé
+
+`VerificationRequestLifecycle::claimRecovery()` est l'unique chemin qui
+peut passer `recovery_reserved` à `dispatching`. Il utilise la possession
+existante (secret bref, uniquement son empreinte en base), mais exige en
+plus sous verrou du compte :
+
+- compte en attente, actif ; liaison unique du nouveau reçu au journal,
+  même clé de demande et version présente ;
+- reçu initial du même compte toujours résolu/indéterminé ;
+- génération courante active, version attendue, algorithme connu, échéance
+  future ; aucun lien historique encore valable.
+
+Avant toute possession, un prérequis manquant annule seulement le nouveau
+reçu (`cancelled`), sans prétendre qu'un envoi ambigu a échoué. Si le
+reçu porte des traces incohérentes de possession, son état devient
+`unknown` et il n'est pas repris. Aucun
+transport n'est possible avant commit réussi du claim. Le bail ne dépasse
+pas l'échéance du lien et, une fois expiré, l'état devient `unknown`, jamais
+remis en file ou réécrit en succès. Le reçu initial n'est jamais modifié.
+Un claim concurrent perd sans obtenir de secret. Le résultat ne contient
+que la version et le secret de possession, aucun lien, adresse, clé ou nonce.
+
+Pas de migration, clé, adaptateur applicatif, worker ou chemin HTTP dans
+ce palier. Les clés n'interviennent pas dans la revendication, qui n'émet
+aucun lien. Le futur adaptateur doit produire le lien uniquement après
+vérification du claim et de la même génération, et distinguer la
+non-remise certaine d'un résultat ambigu. Un verrou SQL de claim n'arrête
+pas un transport déjà engagé : il faut encore décider le contrat pour une
+révocation volontaire qui survient après le claim, drainer les anciens
+émetteurs, et choisir l'audit de remise et la politique de clés. Ne pas
+relier ce palier à V5 si sa recette est figée.
+
+## Adaptateur de remise interne, non raccordé
+
+Le port `VerificationRecoveryTransport` n'a pas d'implémentation réelle.
+`VerificationRecoveryDeliveryAdapter` ne possède ni clé, ni destinataire,
+ni accès applicatif. Les trois états de son port sont : accepté par
+transport (pas reçu), non remis avec preuve positive, ou indéterminé.
+Une exception ne prouve jamais l'absence de remise ; aucun message
+d'exception du transport n'est répété par l'adaptateur.
+
+La migration additive `Version20261120000500` ajoute au journal le point
+de remise, l'issue et sa date. Le claim récupération passe à un état
+distinct `recovery_dispatching` : le cycle générique ne peut pas annoncer
+un succès à sa place. Sous le verrou compte, la préparation vérifie le
+claim courant, sa lease, le journal lié, le reçu initial indéterminé et
+la génération active de la même version. Une génération révoquée avant
+cette préparation empêche le passage au transport et produit une annulation
+auditée `not_dispatched`. Le résolveur factice reconstruit le même lien,
+sans réécriture d'échéance. Seul le premier appel inscrit et commit le
+point de remise ; aucun autre détenteur du même claim n'obtient le lien.
+
+Le transport reçoit le lien **hors transaction et après commit**. Une
+révocation qui survient après ce point, y compris dans l'intervalle
+avant l'appel effectif au transport, rend le lien invalide mais ne permet
+pas d'empêcher ni d'annuler cette remise. Ne pas annoncer « aucun mail »
+dans ce cas. Un arrêt après le point de remise, ou un audit d'issue qui
+échoue après un retour de transport, ne réarme jamais le reçu. Après
+expiration de la lease, seule l'issue indéterminée est écrite ; aucun
+résultat tardif ne peut devenir un succès. L'issue et l'état du nouveau
+reçu sont réglés ensemble, sans modifier le reçu initial. Un audit ne
+contient ni lien, empreinte du lien, nonce, adresse ou clé.
+
+Ce lot reste sur une branche distincte de V5. Aucun point d'entrée,
+configuration, clé réelle, SMTP ou changement public. Une activation
+nécessiterait la preuve d'identité/autorisation du parcours, la politique
+de clé, la coordination des autres émetteurs, un contrat de révocation
+assumé et la revue de traces du vrai transport. La décision de remettre
+n'est pas une preuve de livraison, et le marqueur durable n'établit pas
+précisément quand un transport externe a commencé.
+
+Recette locale : **60 tests / 425 assertions** avec les régressions
+historiques/admin. Deux processus ont arbitré le même claim ; la
+révocation avant l'étape de remise n'a déclenché aucun appel, celle
+pendant le double de transport n'a pas fait disparaître son acceptation.
+Panne d'audit après acceptation factice : aucun succès persisté ni
+possibilité de remettre de nouveau. Retour tardif après échéance :
+indéterminé dans reçu et journal. Migration montée/descendue sur la
+base jetable seulement ; réseau et base retirés. Lint PHP, conteneur,
+Compose et diff vérifiés. Tests ciblés, pas de CI complète revendiquée.
+
+## Recette synthétique de câblage de bout en bout
+
+Le test d'intégration `testExplicitRecoveryGoesFromUnknownToOneAuditedDeliveryAndMixedConfirmation`
+compose les composants réels : génération, réservation et claim du premier
+reçu, clôture en indéterminé, attente de la limite de récupération, nouveau
+reçu, claim dédié, remise unique, audit puis confirmation via le lecteur
+mixte. Le port de transport et le résolveur de clé n'ont que des doubles
+dans la recette. Le lien capturé reste en mémoire et ne figure pas dans
+l'audit ; la remise a lieu hors transaction. La confirmation consomme le
+lien une seule fois et l'empreinte/échéance et le premier reçu ne sont pas
+réécrits par la récupération.
+
+Ce n'est pas un test HTTP ni une validation SMTP, d'un parcours public
+ou d'une clé réelle. Aucun changement de code applicatif : ce test est
+sur une branche de preuve séparée de V5.
+
+Résultat : **1 test, 30 assertions**, MariaDB jetable, montée et retour
+des migrations dans la fixture. Base et réseau de preuve retirés.
+
+## Recette HTTP du formulaire admin existant, branche hors V6
+
+Le contrôleur prend une interface `AdminActivationAction`. L'alias du
+vrai conteneur pointe toujours vers `AdminActivationService`, sans
+changement de décision, config de fournisseur ni valeur d'activation :
+le formulaire reste absent et le POST 404 par défaut. L'ancien transport
+par défaut continue de prouver la non-remise lorsqu'il est exercé seul.
+Aucune route, migration ou modification du parcours public n'a été ajoutée.
+
+Seule la WebTestCase remplace cet alias pour composer la récupération avec
+les composants réels et un reçu synthétique connu. Le garde ROLE_ADMIN,
+le CSRF propre au compte cible et la confirmation explicite sont ceux du
+vrai formulaire et contrôleur. Dans sa première version, la fixture repasse par la revérification
+d'acteur de la réservation existante avant la récupération et ne fournit
+qu'un résolveur de test et un transport factice. Cette composition ne doit
+pas être copiée comme fournisseur réel : elle connaît le reçu de fixture
+et sa revue d'acteur est une transaction séparée. Un branchement réel
+devrait sélectionner le reçu côté serveur et lier la revérification
+d'acteur, l'autorisation et la réservation dans une même transaction,
+en plus des conditions de clés, révocation et déploiement précédentes.
+
+Recette MariaDB jetable : **41 tests / 331 assertions** avec HTTP admin,
+confirmation publique et cycle d'intégration. Anonyme et simple joueur
+refusés, CSRF invalide et absence de confirmation sans effet, double
+soumission et nouvelle clé sans nouvelle remise, un seul passage factice
+et reçu initial intact. Le lien de fixture n'est dans aucun HTML,
+flash affiché, en-tête de redirection ni audit SQL vérifié. Cette recette
+ne prouve pas la confidentialité des logs réseau ou du futur transport.
+Validations PHP, Compose, conteneur Symfony et diff ; base/réseau retirés.
+Aucun navigateur partagé, port réseau exposé, Traefik, SMTP, secret réel,
+push, fusion ou modification de V6.
+
+## Ciblage et contrôle de l'acteur dans une transaction
+
+`reserveForAdmin` prend un acteur, le compte cible et le reçu attendu
+issu d'un contexte serveur. Aucun champ/routage HTTP n'a été ajouté.
+La politique préexistante est partagée : rôle courant ROLE_ADMIN,
+adresse vérifiée, absence de suspension ; aucune confiance dans la
+copie de session. Le contrôle commute les deux lignes compte dans
+l'ordre croissant des identifiants avant toute lecture des reçus.
+L'ancienne réservation normale réutilise le même garde et ne change
+pas ses droits. Tous les chemins appelants doivent conserver cet ordre.
+
+La transaction relit le reçu par (compte, reçu) et exige qu'il soit
+encore le dernier reçu admissible, sans choisir silencieusement son
+successeur. Absence et reçu appartenant à un autre compte ont la même
+réponse. Le rejeu d'une intention enregistrée ne réserve rien de plus.
+Un succès enregistre l'identité de l'acteur dans l'audit administratif
+avec le nouveau numéro de reçu et un motif fermé. L'audit, le journal,
+le lien entre reçus et la réservation sont commis ensemble ; aucun
+lien, adresse, clé ou empreinte du lien n'est renvoyé par le sélecteur.
+Le reçu indéterminé d'origine est intact.
+
+Le test HTTP s'appuie maintenant sur cette entrée défensive, toujours
+uniquement via sa substitution de conteneur. Une éventuelle future
+ouverture doit décider comment établir le contexte serveur de
+l'intention, maintenir le garde-fou et décider le comportement d'une
+révocation de droits intervenant *après* le commit. Ce lot sérialise
+les décisions au moment de réserver ; il n'annule pas un traitement
+déjà commis. Aucun nouvel accès effectif ni permission réelle.
+
+**55 tests / 428 assertions** : les tests à deux connexions observent
+une lecture verrouillée en attente avant de commettre soit la révocation
+du rôle, soit un successeur du reçu ; aucune récupération n'est alors
+réservée. Les tests ajoutés vérifient également le refus indiscernable
+du reçu tiers/inconnu. Recette HTTP factice et régressions historiques
+vertes ; Compose, PHP lint, conteneur et diff vérifiés. DB et réseau
+jetables retirés. Aucun schéma ajouté, SMTP, activation, changement de
+V6, push, fusion ni déploiement.
+
+## Contexte serveur court du formulaire, branche de recette
+
+Le contexte reprend le mécanisme du signalement joueur et de l'aperçu du
+catalogue : clé opaque déjà prévue par le formulaire, valeurs conservées
+dans une poche de session dédiée à la fiche et au POST d'activation.
+Le registre associe l'acteur, le compte cible et le reçu attendu, avec
+une fenêtre de 120 secondes et 20 entrées au maximum. Le lien avec la
+session est vérifié aussi après régénération d'identifiant (qui peut
+conserver les attributs). La clé opaque n'est pas un lien d'activation
+ni un droit ; elle ne remplace pas CSRF, confirmation et revérification
+transactionnelle. Le registre ne contient ni lien, ni clé de service,
+ni donnée d'un reçu tiers. La reprise autorisée dans la même session
+retrouve le même reçu pour permettre l'idempotence et ne prolonge
+jamais l'échéance.
+
+Dans cette branche, seule la substitution WebTestCase implémente
+`AdminActivationContextAction` ; l'alias vers le vrai fournisseur demeure
+inchangé. Le contrôleur partage la préparation et la validation du
+formulaire avec cette fixture, sans nouvel endpoint ni nouvelle donnée
+visible. Le POST n'accepte aucun champ de sélection de reçu. Contexte
+absent, falsifié, périmé, autre acteur/cible/session : même message de
+rechargement et aucune réservation ni remise. La valeur 120 secondes
+est le seuil de cette recette, pas une activation de politique réelle.
+
+Les tests purs `AdminActivationFormContextTest` vérifient la falsification,
+les liaisons et la régénération de session, le rejeu borné, l'échéance et
+la limite de rétention. La fixture HTTP ajoute un second navigateur avec
+le même administrateur et son propre CSRF, puis exerce une falsification,
+l'expiration et une soumission fraîche avec une seule remise factice.
+Aucun SMTP, nouveau secret, permission, configuration, intégration de
+V6 ou changement public.
+
+Recette exécutée après libération de V6 : **15 tests / 125 assertions**
+(HTTP admin, confirmation publique, contexte pur), MariaDB privée puis
+retirée. La même identité avec un autre cookie et son propre CSRF
+valide ne reprend pas l'ancien contexte. Clé falsifiée et expiration
+à la frontière ne réservent rien ; le formulaire frais fonctionne,
+un seul passage factice et ancien reçu intact. Compose, conteneur
+Symfony, lint PHP et diff validés. Aucune modification de V6.
+
+## Composition applicative optionnelle, aucune mise en service
+
+`AdminActivationRecoveryAction` compose la préparation de formulaire,
+le contexte de session, la récupération sous verrou, la revendication et
+l'adaptateur de remise. L'alias du vrai conteneur vise cette composition ;
+aucune substitution de contrôleur et plus aucune orchestration manuelle
+dans la fixture HTTP. Le mode ordinaire V7 délègue à l'implémentation
+existante sans regarder de reçu ni écrire de contexte de récupération.
+
+| Garde-fou admin existant | Autorisation du mode de récupération | Fournisseur du mode | Résultat |
+| --- | --- | --- | --- |
+| Désactivé | N'importe laquelle | N'importe lequel | Formulaire absent et POST 404. |
+| Activé | Désactivée (défaut) | Absent ou présent | Comportement ordinaire V7 ; le fournisseur de récupération est ignoré. |
+| Activé | Activée | Absent ou incomplet | Aucun formulaire ni tentative, POST 404, aucun fallback. Un couple incomplet ne peut pas être construit. |
+| Activé | Activée | Couple explicite | Contexte du dernier reçu indéterminé de la cible ; sélection et autorisation revérifiées sous verrou avant réservation. |
+
+Le défaut versionné du nouveau drapeau est 0 ; le paramètre
+`provider` est explicitement null. Aucun couple fournisseur n'est
+autodécouvert ; aucun fournisseur concret, secret ou réglage
+d'environnement réel n'a été créé. Ce drapeau n'attribue pas de droit :
+le rôle existant, le CSRF, la confirmation et le garde transactionnel
+demeurent nécessaires. Le conteneur de recette fournit deux doubles
+dans le même couple, sans affecter un autre conteneur.
+
+Si le mode sélectionné ne trouve pas de dernier reçu admissible, ne pas
+répartir vers l'ancienne voie : le contexte reste absent et aucune
+récupération ne peut être engagée. Si le reçu change après l'affichage
+du formulaire, le mauvais reçu ne peut pas être choisi. Les résultats
+audités ne contiennent ni lien, ni clé ; le contrôleur n'annonce pas
+de réception effective. La confirmation historique/public et les
+routes ne sont pas modifiées. Avant toute exposition effective,
+persistent les décisions de clés, bascule des écrivains, contrôle
+des traces de l'adaptateur réel et gouvernance opérationnelle.
+
+**61 tests / 463 assertions** sur MariaDB jetable : matrice démontée,
+mode V7 ordinaire et défaut inchangé ; vrai formulaire HTTP avec doubles
+et contexte de session, rôle, refus/CSRF, même lien factice remis une
+seule fois et audit durable. Compose, conteneur, PHP lint et diff
+vérifiés ; DB/réseau privés retirés. Pas de migration dans ce lot, ni
+SMTP, activation, push, fusion ou modification de V7.
+
+## Raccordement du seul lecteur au POST de confirmation
+
+`EMAIL_VERIFICATION_MIXED_READER_ENABLED` est à 0 par défaut.
+La sélection ne s'exerce qu'après le CSRF du POST déjà existant
+`app_email_verify`. Pas de nouvelle route, de lecture avant confirmation,
+de clé de dérivation, de fournisseur ou de transport. GET reste sans effet
+sur le compte ; POST maintient 403 pour CSRF invalide, 400 générique pour
+lien inutilisable et la redirection de succès vers la connexion. Les
+en-têtes no-store et no-referrer sont inchangés. Le jeton d'URL n'était pas
+utilisé par Twig : il n'est plus passé en variable au gabarit.
+
+Le mode éteint appelle le lecteur historique comme avant. Le mode
+sélectionné vérifie les deux tables sous le même verrou. Une suspension
+ne change pas le traitement du lien historique ; elle interdit une
+confirmation versionnée. L'adresse et l'état de suspension ne sont
+pas réécrits par ce raccordement. La consommation, l'expiration,
+la révocation et l'ambiguïté demeurent des décisions fail-closed.
+
+Le `RouterListener` Symfony émettait potentiellement les paramètres de route
+et l'URL brute au logger. Le décorateur applicatif retire ces deux champs
+uniquement pour `app_email_verify`, avant transmission au logger suivant.
+Il conserve le nom de route et la méthode, et laisse les autres routes
+intactes. Les arguments jeton sont signalés sensibles dans le contrôleur
+et les deux lecteurs. Cette preuve vise le journal de routage applicatif
+et les réponses HTTP ; elle n'audite ni le proxy, ni les journaux HTTP
+externes, ni un futur transport SMTP.
+
+Option non activée dans un environnement réel. Avant tout changement
+d'exploitation, disposer du schéma versionné et confirmer séparément
+sa migration sur copie. Le lecteur ne dépend pas du garde-fou de
+remise : en rollback futur, couper les écrivains d'abord et garder le
+lecteur tant que des liens doivent rester valides. Ce palier ne crée
+et ne modifie aucune génération dans les parcours publics d'inscription
+ou de renvoi ; l'étape d'émission n'est pas traitée.
+
+**53 tests / 442 assertions** sur base jetable avec régressions admin et
+d'intégration. Fixtures HTTP historiques/versionnées, suspension,
+CSRF, GET non consommant, mode désactivé, rejeu, ambiguïté, révocation et
+expiration ; aucun mailer réel. Le test de journal utilise le vrai
+`RouterListener` et vérifie aussi une autre route ; le conteneur compilé
+relie bien le décorateur à ce listener. PHP lint, Symfony, Compose et
+diff vérifiés. Base et réseau retirés. Aucun nouveau fichier de migration,
+config réelle, production, push, fusion ou déploiement.
+
+## Écrivain unique et préparation durable, sans raccordement public
+
+`VerificationGenerationStore::prepareForEmission` est l'unique point
+d'écriture de génération versionnée. Sous le verrou du compte et dans la
+même transaction, il relit l'éligibilité et le lien historique, puis crée
+ou réutilise la génération. `prepare` ne fait que déléguer à ce chemin.
+Le résultat retourne un état et, en cas de succès, les métadonnées de
+génération ; aucun lien en clair ni effet de transport.
+
+| État | Décision |
+| --- | --- |
+| `created` | Nouvelle génération : aucune génération utilisable auparavant, aucun lien historique encore actif. |
+| `reused` | Même génération reproductible, même empreinte et échéance ; un autre identifiant de clé proposé ne la fait pas tourner. |
+| `legacy_active` | Lien historique encore valide : ni reprise sous format versionné, ni remplacement, ni suppression. |
+| `key_unavailable` | Aucune clé pour créer : pas d'écriture ni d'ancienne voie de secours. |
+| `generation_unavailable` | Génération non reproductible, format/état non utilisable ou échéance dépassée pendant la préparation : pas de remplacement silencieux. |
+| `ineligible` | Compte absent/suspendu/confirmé : aucune émission. |
+
+Une exception de résolution de clé devient une indisponibilité, sans
+répéter ses détails dans la réponse. Le resolver doit rester local et
+borné : il est consulté durant la transaction. Un échec de préparation
+sur un compte venant d'être créé ne le confirme ni ne lui forge une
+empreinte historique. La stratégie de récupération de liens hérités
+reste explicite au plan de bascule, sans réinterprétation de leur hash.
+
+Aucun raccordement de l'inscription ou du formulaire de renvoi ici.
+Leur lecteur, écrivain, messages, limitation publique et transport restent
+comme avant le palier. Il serait dangereux d'appeler cette préparation
+depuis une seule des deux routes ou de revenir silencieusement à l'ancien
+émetteur lorsqu'une clé manque. Le prochain câblage devra sélectionner
+le même writer/remetteur pour les deux entrées après vérification du
+lecteur, protéger le mode contre l'autre émetteur et gérer le parcours
+historique de façon explicite. Drainer les anciens binaires avant
+toute activation ; aucun mélange de modes n'est garanti par ce commit.
+Aucun secret/transport réel, migration nouvelle, configuration ou envoi.
+
+Avant l'émission réelle, rattacher l'adresse au moment de la préparation
+et traiter sa modification/suppression sous le même verrou. Ne pas
+rechercher un destinataire modifié après coup pour un lien déjà préparé.
+La préparation seule ne réserve pas une remise et n'atteste pas de
+dépôt SMTP.
+
+**51 tests / 402 assertions**, dont une course de deux écrivains sur
+connexions séparées puis une course écrivain/lecteur, conservation exacte
+de l'empreinte/échéance, héritage et clé d'ancienne génération
+indisponible. Une inscription créée par le vrai RegistrationService
+reste pendante si le résolveur factice échoue : aucune génération,
+ancien hash ou reçu n'est créé. Régressions de confirmation/inscription/
+renvoi mode par défaut, codec (6 tests purs / 25 assertions), lint PHP,
+Compose, conteneur et diff validés. Base/réseau privés retirés.
+
+## Sélecteur commun d'émission, désactivé
+
+L'inscription et le renvoi public passent tous deux par
+`EmailVerificationEmissionSelector`. En mode éteint (défaut versionné),
+les deux délèguent à l'écrivain historique avec les mêmes arguments.
+Le limiteur IP 5/h, les flashes, le CSRF et les redirections des
+formulaires restent ceux de la voie existante.
+
+Si le mode nouveau est sélectionné, il exige le lecteur mixte et un
+couple complet de transport/résolveur explicitement injecté. Ce couple
+est null dans le conteneur livré, ne peut pas être construit avec un
+seul élément, et n'est pas autodécouvert. En cas d'absence, aucun repli
+sur l'écrivain historique. La règle proposée pour la recette est la
+gestion d'échec déjà visible à l'inscription : le compte reste en
+attente, son avertissement existant s'affiche, aucune confirmation
+ni bienvenue ne sont revendiquées si la remise n'a pas pu commencer.
+Le renvoi conserve la même réponse générique, compte existant ou non.
+Aucun changement d'environnement réel ni de politique d'adresse.
+
+Quand le mode est exercé avec doubles : création/réutilisation d'une
+génération, réservation d'un reçu qui porte sa version, claim puis point
+de remise durable unique. La sortie du transport n'atteste pas une
+réception. Un résultat ambigu reste indéterminé et ne part pas en
+rejeu. Le message de bienvenue est séparé et sans lien ; une seule
+tentative après un passage de confirmation, même si sa remise de
+confirmation est ambiguë. Il n'est jamais envoyé par le formulaire
+de renvoi. Le cooldown existant du compte sérialise les demandes en
+plus du limiteur IP ; un autre renvoi autorisé après le délai réutilise
+le même lien/l'échéance, sans nouveau lien.
+
+### Adresse du compte et migration
+
+`Version20261120000600` ajoute seulement l'empreinte destinataire et
+les deux champs version/point de remise du reçu. L'empreinte est
+calculée à partir de l'adresse courante et de l'empreinte du lien ;
+aucune nouvelle copie de l'adresse en clair n'est écrite. Réservation,
+lecteur et point de remise revérifient l'adresse sous le verrou
+commun. Le destinataire est capturé en mémoire à la remise, pas
+fourni par POST ni recherché après coup par le transport. Un lien
+préparé avant une modification d'adresse est refusé pour la nouvelle
+adresse ; aucun changement d'adresse ne prolonge ni ne recrée la
+génération. Ce palier seul n'assurait pas une invalidation permanente
+même si l'ancienne adresse était restaurée. Le palier ci-dessous ajoute
+la révocation explicite aux écritures de profil. Ne pas déduire de cette preuve une gouvernance de profil
+qui n'a pas été modifiée.
+
+Les anciens liens historiques ne sont ni convertis ni réinterprétés.
+Une génération versionnée sans liaison destinataire est refusée, jamais
+complétée rétroactivement à partir de l'adresse courante sans preuve.
+Les générations créées en recette sont toutes liées. Avant une
+bascule réelle, sauvegarder et tester le schéma sur copie, drainer tous
+anciens émetteurs, décider la fenêtre historique et ne pas mélanger
+des processus aux réglages d'écriture divergents. Pour revenir en
+arrière après un futur véritable envoi, couper l'émission puis
+laisser le lecteur mixte reconnaître les liens actifs jusqu'à leur
+échéance/révocation. Ne pas remettre l'ancien émetteur en face
+de ces liens actifs ni exécuter un down destructif par défaut.
+Ce lot ne décide aucune configuration SMTP, clé ou date de bascule.
+
+**81 tests / 660 assertions** sur MariaDB jetable : inscription/renvoi
+réels avec transport factice, bienvenue et limiteur inchangés,
+mode incomplet fermé, résultat ambigu non répété, changement d'adresse
+refusé au POST et aucune conversion d'héritage. Les courses de deux
+connexions confirment un seul point de remise ; le DDL 00600 monte et
+redescend en fixture, les colonnes du reçu disparaissent au retour et
+les empreintes historiques restent intactes. Régressions V9,
+Compose, PHP lint, Symfony et diff contrôlés. Base et réseau retirés.
+Aucun SMTP réel, secret, réglage réel, production, fusion ou déploiement.
+
+## Révocation irréversible lors d'un changement d'adresse métier
+
+Inventaire des écritures d'adresse existantes : `RegistrationService`
+(initialisation d'un compte neuf, y compris la commande de démo),
+`ProfileService` (changement authentifié) et `AccountDeletionService`
+(anonymisation après confirmation). Aucun autre écrivain applicatif
+d'adresse n'a été trouvé dans app/src, migrations ou scripts consultés.
+Les interventions SQL ad hoc ne font pas partie des chemins métier.
+
+Profil et anonymisation appellent `PlayerEmailAddressChange` depuis
+leur transaction et après leur verrou/rafraîchissement du compte.
+Pour une adresse réellement différente, l'état actif de la génération
+versionnée devient révoqué avant commit. Une normalisation sans
+changement n'a aucun effet. Le helper n'ouvre pas de deuxième
+transaction et ne modifie aucun jeton historique ; le retrait historique
+déjà fait par l'anonymisation reste inchangé. Aucun recontrôle de
+mot de passe ni règle historique de `emailVerifiedAt` n'est remplacé.
+Sur ancien schéma sans table de génération, il n'y a aucun lien
+versionné à révoquer et la mutation normale reste possible.
+
+Le rollback restaure l'adresse et la génération dans la même transaction.
+A→B→A ne restaure pas un lien révoqué : une demande ultérieure peut
+créer une nouvelle version, pas ressusciter l'ancienne. Une confirmation
+qui a déjà obtenu le verrou avant le changement peut consommer le lien
+de A ; si le changement obtient le verrou en premier, cette consommation
+est refusée. Un transport engagé ne s'annule pas sur le réseau, mais
+le lien non consommé ne redevient pas valide. Aucun écouteur global,
+nouveau champ, stockage brut d'adresse, secret ou réglage d'exploitation.
+
+**65 tests / 519 assertions** sur MariaDB jetable : profil A→B→A, retour
+de transaction quand l'écriture d'adresse échoue, course lecteur/profil
+sur processus indépendants, anonymisation et profil sur ancien schéma.
+Confirmation et écriture V10 désactivée/activée en tests factices
+revalidées. PHP lint, conteneur, Compose et diff vérifiés ; base/réseau
+retirés. Aucun nouveau schéma, SMTP, prod, push, fusion ou déploiement.
+
+## Adaptateur de remise SMTP directe, non raccordé
+
+Contrat vérifié dans la version installée **Symfony Mailer 7.4.19** :
+`TransportInterface::send()` retourne `SentMessage|null`, contrairement
+à `MailerInterface::send()` qui peut déléguer à un bus. Le nouveau port
+versionné n'utilise ni ce bus ni `AccountMailDelivery` (les réessais historiques
+restent confinés au mode historique). Il appelle une seule fois un transport
+SMTP direct par message et n'a ni boucle ni repli. NullTransport, transports
+composites et message non productible sont refusés *avant* appel. Ne pas
+interpréter le SentMessage synthétique de NullTransport comme une remise.
+
+Une prise en charge explicite du transport est `transport_accepted`, jamais
+une preuve de livraison/boîte de réception. Un retour null ou une exception
+après appel reste `unknown` ; seule la non-remise certaine avant appel est
+`not_dispatched`. L'adaptateur ne journalise ni MIME, lien, jeton, adresse, DSN
+ni détails d'exception. Les sujets et modèles sont mutualisés avec la voie
+historique. La bienvenue demeure un message séparé sans lien. Le destinataire
+et le nom utilisés sont ceux de l'instantané serveur établi sous le verrou,
+pas d'une adresse POST ou d'une recherche tardive.
+
+`SymfonyVerificationEmissionTransport` est exclu de l'autodécouverte.
+Le futur assemblage explicite `forSingleSmtp` n'accepte qu'un DSN SMTP direct
+TLS avec vérification du certificat, sans bus, dispatcher ni logger
+d'application. Sa construction n'ouvre pas de connexion. Aucun DSN réel
+ni fournisseur/clé ne sont injectés dans ce palier ; l'opt-in reste fermé.
+Le constructeur qui accepte un transport n'est utilisé que pour les doubles
+dans cette recette. Cette preuve ne couvre pas les journaux des serveurs
+SMTP, des relais ou le proxy.
+
+Ce port concerne l'émission versionnée qui possède déjà l'instantané
+destinataire. À ce palier, le port de récupération admin ne recevait qu'un
+identifiant joueur et un lien : ne pas le connecter en recherchant
+l'adresse plus tard. Avant de le raccorder, transmettre un instantané
+contrôlé au point de remise, puis vérifier configuration autorisée,
+expéditeur/URL, traces et procédure d'arrêt. Aucun envoi réel ici.
+
+**9 tests purs / 34 assertions**, uniquement doubles SMTP et NullTransport
+sans réseau : message/URL/unique destinataire, classification, composite
+refusé, modèle distinct et aucune seconde tentative. **37 tests / 312
+assertions** avec les régressions HTTP anciennes et versionnées sur
+MariaDB jetable retirée. Compose, PHP lint, conteneur et diff contrôlés.
+Pas de nouveau paramètre, migration, adresse configurée, SMTP effectif,
+commit distant, fusion ou déploiement.
+
+### Instantané destinataire de récupération (recette locale suivante)
+
+Le point de remise de récupération fournit désormais l'adresse et le nom
+courants du compte verrouillé après revalidation du lien destinataire,
+pas son identifiant. Le port ne relit aucun compte et ne reçoit aucune
+adresse POST. L'adaptateur SMTP direct peut alors réutiliser le modèle de
+confirmation sans envoyer de bienvenue ; aucun alias, fournisseur, secret,
+paramètre réel ou route nouvelle. Le défaut reste fermé. Voir la
+[preuve SMTP exclusivement interne](FICHE_PILOTE_ACTIVATION_LOCALE.md#pilote-distinct--récupération-admin).

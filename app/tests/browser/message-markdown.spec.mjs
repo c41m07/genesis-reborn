@@ -36,6 +36,16 @@ for (const channel of ['private', 'guild', 'global']) {
             const guildSql = channel === 'guild' ? `(SELECT id FROM guild WHERE leader_id=${owner.member})` : 'NULL';
             const recipientSql = channel === 'private' ? peer.member : 'NULL';
             runIsolatedSql(project, `INSERT INTO social_message (sender_id,recipient_id,guild_id,content,content_format,created_at) VALUES (${owner.member},${recipientSql},${guildSql},'**Ancien**  texte\nsuite','plain',UTC_TIMESTAMP())`);
+            if (channel === 'private') {
+                // De nombreux anciens contacts reproduisent la liste longue du retour joueur.
+                const latest = Number(queryIsolatedSql(project, 'SELECT MAX(id) FROM player_universe'));
+                const universe = Number(queryIsolatedSql(project, 'SELECT universe_id FROM player_universe WHERE id=' + owner.member));
+                runIsolatedSql(project, 'INSERT INTO player_universe (universe_id,joined_at,catalog_unlocks) VALUES ' +
+                    Array.from({ length: 12 }, () => `(${universe},UTC_TIMESTAMP(),'{}')`).join(','));
+                runIsolatedSql(project, `INSERT INTO social_message (sender_id,recipient_id,content,content_format,created_at)
+                    SELECT id,${owner.member},'Conversation témoin','plain',UTC_TIMESTAMP() FROM player_universe
+                    WHERE id>${latest} AND universe_id=${universe}`);
+            }
             const url = channel === 'private' ? '/messages?with=' + peer.member : '/messages?channel=' + channel;
             await page.goto(url);
             const form = page.locator('.message-compose'), textarea = form.locator('textarea'), button = form.getByRole('button', { name: 'Envoyer' });
@@ -85,7 +95,30 @@ for (const channel of ['private', 'guild', 'global']) {
                 await page.getByRole('button', { name: 'Enregistrer les paramètres' }).click();await page.goto(url);
                 for (const width of [320, 390, 1440]) {
                     await page.setViewportSize({ width, height: 900 });
-                    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+                    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+                    // Au redimensionnement mobile, le fil peut encore faire défiler la page.
+                    // Mesurer les trois éléments dans le même repère, au cours d'une seule lecture.
+                    await expect.poll(() => page.evaluate(() => {
+                        const pane = document.querySelector('.message-pane')?.getBoundingClientRect();
+                        const thread = document.querySelector('.message-thread')?.getBoundingClientRect();
+                        const composer = document.querySelector('.message-composer')?.getBoundingClientRect();
+                        const fitsViewport = document.documentElement.scrollWidth <= innerWidth;
+                        if (!pane?.height || !thread?.height || !composer?.height) return { ready: false, fitsViewport };
+                        const gapFromThread = composer.top - thread.bottom;
+                        const gapToPaneBottom = Math.abs(pane.bottom - composer.bottom);
+                        return {
+                            ready: true, fitsViewport, width: innerWidth, scrollY,
+                            gapFromThread, gapToPaneBottom,
+                            composerBelowThread: gapFromThread >= -1,
+                            composerAtBottom: gapToPaneBottom <= 2,
+                        };
+                    }), { message: `Disposition du canal ${channel}, ${theme}, ${width} px` }).toMatchObject({
+                        ready: true, width, fitsViewport: true, composerBelowThread: true, composerAtBottom: true,
+                    });
+                    if (channel === 'private') {
+                        await expect(page.locator('.inbox-item')).toHaveCount(14);
+                        expect(await page.locator('.inbox-sidebar').evaluate(sidebar => sidebar.scrollHeight > sidebar.clientHeight)).toBe(true);
+                    }
                     if (width !== 390) {
                         expect((await new AxeBuilder({ page }).include('main').analyze()).violations).toEqual([]);
                         if (channel === 'private') {

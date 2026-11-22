@@ -26,5 +26,20 @@
     </section>
     <button class="primary account-preferences-save">Enregistrer les paramètres</button>
 {{ form_end(form) }}
+<form method="post" action="{{ path('app_first_steps_preference') }}" class="panel account-panel first-steps-preference-form" data-turbo="false">
+    <fieldset class="account-section">
+        <legend>Guide Premiers pas</legend>
+        <input type="hidden" name="_token" value="{{ csrf_token('first-steps-preference') }}">
+        <input type="hidden" name="guide_enabled" value="0">
+        <div class="preference-toggle">
+            <input type="checkbox" name="guide_enabled" id="first-steps-guide-setting" value="1" aria-describedby="first-steps-guide-help"
+                   {% if app.user.preferences.firstStepsGuide ?? true %}checked{% endif %}>
+            <label for="first-steps-guide-setting">Afficher le guide Premiers pas</label>
+        </div>
+        <p id="first-steps-guide-help">Vous retrouverez vos étapes et récompenses acquises en le réactivant.</p>
+        <p><a href="{{ path('app_first_steps') }}">Voir le guide complet et les remboursements</a></p>
+        <button class="primary" type="submit">Enregistrer le réglage du guide</button>
+    </fieldset>
+</form>
 </div>
 {% endblock %}

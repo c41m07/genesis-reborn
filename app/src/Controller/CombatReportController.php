@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Entity\CombatLog;
+use App\Repository\ReportNoticeRepository;
 use App\Service\Combat\CombatReportReader;
 use App\Service\Combat\CombatReportPresenter;
 use App\Service\Catalog\GameCatalog;
@@ -14,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class CombatReportController extends AbstractController
 {
     #[Route('/rapports', name: 'app_combat_reports', methods: ['GET'])]
-    public function index(Request $request, UniverseContext $context, \App\Service\Combat\ReportArchiveService $archives): Response
+    public function index(Request $request, UniverseContext $context, \App\Service\Combat\ReportArchiveService $archives, ReportNoticeRepository $notices): Response
     {
         $membership = $context->membership();
         $filter = $request->query->getString('type', 'all');
@@ -27,6 +28,7 @@ final class CombatReportController extends AbstractController
         } catch(\DomainException $e) {
             $error=$e->getMessage();$status=422;$criteria=new \App\Service\Search\SearchCriteria([]);$data=['entries'=>[],'report_count'=>0,'page'=>1,'pages'=>1];
         }
+        $data['unread_report_keys'] = $notices->unreadKeys($membership, array_column($data['entries'], 'key'));
         return $this->render('combat/reports.html.twig', $data + ['membership'=>$membership, 'filter'=>$filter, 'archived'=>$archived,'criteria'=>$criteria->values,'search_filters'=>$criteria->url(),'search_error'=>$error],new Response(status:$status));
     }
 

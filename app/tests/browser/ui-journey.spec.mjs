@@ -57,6 +57,11 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
   await page.goto('/guildes/projets');
   await page.getByRole('link',{name:'Rejoindre une guilde',exact:true}).click();
   await expect(page).toHaveURL(/\/guildes$/);
+  const planetId=Number(new URL(home).pathname.split('/').at(-1));
+  const setMetalStock = amount => runIsolatedSql(process.env.BROWSER_ROUTER,
+    'UPDATE planet_resource SET current_stock='+amount+' WHERE planet_id='+planetId+" AND resource_type='metal'");
+  // Le bilan doit être vrai sous capacité puis à saturation, quel que soit le kit du compte.
+  setMetalStock(5000);
   await page.goto(home);
   await expect(page.locator('.economy-balance,.dashboard-colonies')).toHaveCount(0);
   await expect(page.locator('.dashboard-metrics a[href="/planetes"]')).toBeVisible();
@@ -64,8 +69,20 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
   await page.getByRole('button',{name:'Détails économiques : Métal',exact:true}).focus();
   await expect(metalEconomy,pageErrors.join(' ; ')).toBeVisible();
   await expect(metalEconomy.locator('dt')).toHaveText(['Stock / capacité','Production brute / h','Production actuelle / h','Consommation brute / h','Consommation actuelle / h','Solde net / h']);
-  await expect(metalEconomy.locator('[data-resource-target="potential"]')).not.toHaveText('0,00');
-  await expect(metalEconomy.locator('[data-resource-target="net"]')).toHaveText('0,00');
+  const potential=metalEconomy.locator('[data-resource-target="potential"]');
+  const net=metalEconomy.locator('[data-resource-target="net"]');
+  const production=(await potential.textContent()).trim();
+  expect(Number(production.replace(',', '.'))).toBeGreaterThan(0);
+  await expect(net).toHaveText(production);
+  await expect(metalEconomy.locator('[data-resource-target="estimate"]')).toContainText('Saturation');
+  await page.keyboard.press('Escape');
+  await expect(metalEconomy).toBeHidden();
+  setMetalStock(10000);
+  await page.reload();
+  await page.getByRole('button',{name:'Détails économiques : Métal',exact:true}).focus();
+  await expect(potential).toHaveText(production);
+  await expect(net).toHaveText('0,00');
+  await expect(metalEconomy.locator('[data-resource-target="estimate"]')).toHaveText('Stockage plein');
   await page.keyboard.press('Escape');
   await expect(metalEconomy).toBeHidden();
   await expect(page.getByRole('link',{name:/Explorer la galaxie/})).toHaveAttribute('href','/carte-v2');

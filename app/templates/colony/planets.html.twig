@@ -22,16 +22,25 @@
             </select>
             <button class="secondary">Comparer cette ressource</button>
         </form>
-        <div class="panel table-scroll" role="region" tabindex="0" aria-label="Comparaison des colonies, défilement horizontal">
+        {% if comparison_activities.research and comparison_activities.researchOrigin is null %}
+            <section class="colony-comparison-common-research" aria-label="File de recherche commune">
+                <p>Recherche commune à cet empire · Colonie d’origine indisponible</p>
+                {% include 'colony/_comparison_activity.html.twig' with {activity: comparison_activities.research, timezone: preferences.timezone} only %}
+            </section>
+        {% endif %}
+        <div class="panel colony-comparison-panel">
+            <div class="table-scroll" role="region" tabindex="0" aria-label="Comparaison des colonies, défilement horizontal">
             <table class="data-table colony-comparison">
-                <caption>Stocks / capacités et soldes nets par heure, au rythme actuel</caption>
+                <caption>Stocks / capacités, soldes nets par heure et files de votre empire</caption>
                 <thead><tr>
                     <th scope="col">Colonie</th>
                     {% for slug in ['metal','nano','hydrogen','antimatter','electricity'] %}
                         {% set resource=(planet_details|first).resources[slug]|default(null) %}
                         {% if resource %}<th scope="col" data-resource="{{ slug }}" class="{{ comparison_resource==slug ? 'is-selected-resource' : '' }}">{{ resource.label }}</th>{% endif %}
                     {% endfor %}
-                    <th scope="col">Activités</th>
+                    <th scope="col" data-comparison-queue="building">Bâtiments</th>
+                    <th scope="col" data-comparison-queue="research">Recherche</th>
+                    <th scope="col" data-comparison-queue="shipyard">Chantier spatial</th>
                 </tr></thead>
                 <tbody>
                     {% for world in planets %}
@@ -45,13 +54,27 @@
                                     {% if resource.stock>resource.capacity %}<span class="storage-warning">Stock supérieur à la capacité</span>{% endif %}
                                 </td>
                             {% endfor %}
-                            <td><a href="{{ path('app_colony',{id:world.id}) }}">{{ activities[world.id] }} commande{{ activities[world.id] > 1 ? 's' : '' }} en file</a></td>
+                            <td data-comparison-queue="building">
+                                {% include 'colony/_comparison_activity.html.twig' with {activity: comparison_activities.local[world.id].building|default(null), timezone: preferences.timezone} only %}
+                            </td>
+                            <td data-comparison-queue="research">
+                                {% if comparison_activities.research and comparison_activities.researchOrigin == world.id %}
+                                    <small>File commune · départ de cette colonie</small>
+                                    {% include 'colony/_comparison_activity.html.twig' with {activity: comparison_activities.research, timezone: preferences.timezone} only %}
+                                {% else %}
+                                    <span class="muted">{{ comparison_activities.research ? 'Commune à cet empire' : 'Aucune recherche en file' }}</span>
+                                {% endif %}
+                            </td>
+                            <td data-comparison-queue="shipyard">
+                                {% include 'colony/_comparison_activity.html.twig' with {activity: comparison_activities.local[world.id].shipyard|default(null), timezone: preferences.timezone} only %}
+                            </td>
                         </tr>
                     {% else %}
-                        <tr><td colspan="2">Aucune colonie à comparer. <a href="{{ path('app_map_v2') }}">Explorer la galaxie</a></td></tr>
+                        <tr><td colspan="4">Aucune colonie à comparer. <a href="{{ path('app_map_v2') }}">Explorer la galaxie</a></td></tr>
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     {% else %}
         <div class="planet-index-grid">
@@ -59,7 +82,7 @@
                 {% set detail_id='planet-details-'~world.id %}
                 {% set detail_label='Vaisseaux et ressources de '~world.name %}
                 <article data-controller="hover-details" data-action="focusout->hover-details#blur keydown->hover-details#escape" id="planet-{{ world.id }}" aria-labelledby="planet-title-{{ world.id }}" class="panel planet-index-card {{ chrome.planet and world.id==chrome.planet.id?'is-current':'' }}">
-                    <div class="planet-index-art"><img src="{{ asset('art/planet-desert.png') }}" alt="" aria-hidden="true"></div>
+                    <div class="planet-index-art"><picture><source type="image/webp" srcset="{{ asset('art/planet-desert.webp') }}"><img src="{{ asset('art/planet-desert.png') }}" alt="" aria-hidden="true"></picture></div>
                     <div class="planet-index-body">
                         <div class="planet-index-title">
                             <div>

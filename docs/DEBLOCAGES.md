@@ -29,7 +29,7 @@ progression de cette révision n’est pas mesuré.
 
 | Famille | Conditions du même rang | En plus pour l’Intermédiaire | En plus pour le Supérieur |
 |---|---|---|---|
-| Piège à antimatière (`mine_antimatter`) | Raffinerie d’hydrogène 5 + recherche industrielle 5 | — | — |
+| Piège à antimatière (`mine_antimatter`) | Raffinerie d’hydrogène 5 + recherche industrielle 5 | Antimatière Basique 25 | Antimatière Basique 50 + Intermédiaire 25 |
 | Chantier d’assemblage (`shipyard`) | Mine de métal 2 + producteur de nano 2 | Chantier Basique 20 | Chantiers Basique et Intermédiaire 20 |
 | Bunker de défense (`fortress`) | Mine de métal 1 + producteur de nano 1 | Bunker Basique 8 | Bunkers Basique et Intermédiaire 8 |
 
@@ -133,7 +133,7 @@ Toutes les conditions appartiennent au rang demandé.
 
 • En Basique, métal 2 + nano 2 → chantier 1 → chasseur et sonde.
 
-• Producteur d’hydrogène 5 sur la colonie + recherche industrielle 5 dans l’univers → piège à antimatière du même rang. Le piège 5 remplit le prérequis de production du stockage d’antimatière du même rang.
+• Producteur d’hydrogène 5 sur la colonie + recherche industrielle 5 dans l’univers → piège à antimatière du même rang. Les rangs avancés demandent aussi les niveaux des producteurs d’antimatière précédents indiqués dans le tableau. Le piège 5 remplit le prérequis de production du stockage d’antimatière du même rang.
 
 • En Basique, mine de métal 1 + atelier de nanofabrication 1 → bunker 1 → défense anti-léger.
 

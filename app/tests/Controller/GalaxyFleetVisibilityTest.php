@@ -296,6 +296,14 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
     }
 
 
+    private static function assertIncomingPanelCount(string $html, string $expected): void
+    {
+        $panel = new \Symfony\Component\DomCrawler\Crawler($html);
+        $count = $panel->filter('#incoming-attacks-heading > .badge');
+        self::assertCount(1, $count);
+        self::assertSame($expected, $count->text());
+    }
+
     public function testIncomingPanelIncludesNeutralTransportsAndAlliedReinforcementsAndOrbit(): void
     {
         [$viewer,$target]=$this->player('IncomingViewer');[$neutral,$home]=$this->player('IncomingNeutral');[$ally,$alliedHome]=$this->player('IncomingAlly');
@@ -305,9 +313,10 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
         $fleets=[$this->fleet($neutral,$home,$target,'transport'),$this->fleet($ally,$alliedHome,$target,'defend'),$this->fleet($neutral,$home,$target,'orbit')];
         foreach($fleets as $fleet)$this->ship($fleet,'transport','basic',2);
         $data=$this->surveillance($viewer);
-        self::assertStringContainsString('Flottes entrantes <span class="badge">3</span>',$data['html']);
+        self::assertIncomingPanelCount($data['html'], '3');
         foreach($fleets as $fleet)self::assertStringContainsString('data-incoming-attack="'.$fleet->id.'"',$data['html']);
         self::assertStringContainsString('Transport',$data['html']);self::assertStringContainsString('Défense',$data['html']);self::assertStringContainsString('Mise en orbite',$data['html']);
+        self::assertStringNotContainsString('Consulter le récapitulatif du transport', $data['html']);
         self::assertStringContainsString('Arrivée dans',$data['html']);self::assertStringNotContainsString('Impact dans',$data['html']);
         self::assertStringNotContainsString('has-hostile',$data['html']);
         $this->client->request('GET','/planetes/'.$target->id);self::assertSelectorTextContains('#incoming-attacks-heading','Flottes entrantes 3');
@@ -315,6 +324,110 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
         // La vue générale validée place les arrivées avant les vols propres.
         self::assertSelectorExists('.dashboard-secondary > .incoming-attacks .panel.flight-operations');
         self::assertSelectorExists('.dashboard-secondary > .incoming-attacks + [data-live-region="active-flights"]');
+    }
+
+    public function testOnlyProvenCurrentRecipientsCanSeeTheExplicitDepartureCompositionAndFreight(): void
+    {
+        [$viewer, $target] = $this->player('DetailViewer');
+        [$sender, $home] = $this->player('DetailSender');
+        [$successor] = $this->player('DetailSuccessor');
+        [$enemy, $enemyHome] = $this->player('DetailEnemy');
+        [$olderHost] = $this->player('DetailOldHost');
+        $viewer->preferences['transportReception'] = 'all';
+        $this->reveal($viewer, $home);
+        $this->reveal($viewer, $enemyHome);
+        $contract = new AllianceContract();
+        $contract->playerA = $viewer->currentPlayerUniverse;
+        $contract->playerB = $enemy->currentPlayerUniverse;
+        $contract->proposer = $viewer->currentPlayerUniverse;
+        $contract->status = 'enemies';
+        $this->em->persist($contract);
+
+        $traces = static::getContainer()->get(\App\Service\Admin\FleetMissionTraceService::class);
+        $transports = static::getContainer()->get(\App\Service\Fleet\TransportService::class);
+        $orbits = static::getContainer()->get(\App\Service\Fleet\OrbitRequestState::class);
+        $depart = function (Player $owner, Planet $origin, string $mission, array $freight) use ($target, $traces): Fleet {
+            $fleet = $this->fleet($owner, $origin, $target, $mission);
+            $this->ship($fleet, 'fighter', 'basic', 2);
+            $fleet->reservedFuel = 987654321;
+            $fleet->cargo = ['hydrogen' => ($freight['hydrogen'] ?? 0) + $fleet->reservedFuel, 'metal' => 54321876];
+            $fleet->navigation = ['marker' => 'NAVIGATION_NEVER_DISCLOSED'];
+            $traces->recordDeparture($fleet, ['fighter' => ['basic' => 2]], $freight);
+            $this->em->flush();
+
+            return $fleet;
+        };
+
+        $transport = $depart($sender, $home, 'transport', ['metal' => 123, 'hydrogen' => 45]);
+        $transports->recordDeparture($transport, ['metal' => 123, 'hydrogen' => 45]);
+        $defense = $depart($sender, $home, 'defend', []);
+        $orbit = $depart($sender, $home, 'orbit', []);
+        $orbits->open($orbit, false);
+        $noTrace = $this->fleet($sender, $home, $target, 'defend');
+        $occupation = $depart($sender, $home, 'defend', ['metal' => 45678]);
+        $occupation->orbitDurationSeconds = 3600;
+        $unverifiedOrbit = $depart($sender, $home, 'orbit', ['metal' => 87654]);
+        $enemyTransport = $depart($enemy, $enemyHome, 'transport', ['metal' => 92817]);
+        $transports->recordDeparture($enemyTransport, ['metal' => 92817]);
+        $otherMissions = [
+            $depart($sender, $home, 'attack', ['metal' => 90210]),
+            $depart($sender, $home, 'conquer', ['metal' => 90210]),
+            $depart($sender, $home, 'spy', ['metal' => 90210]),
+        ];
+        $unknownOrigin = $this->hiddenOrigin($viewer, $sender, $target);
+        $fromUnknown = $depart($sender, $unknownOrigin, 'defend', ['metal' => 81624]);
+        $returning = $depart($sender, $home, 'defend', ['metal' => 98761]);
+        $returning->status = 'returning';
+        $target->owner = $olderHost->currentPlayerUniverse;
+        $formerHost = $depart($sender, $home, 'defend', ['metal' => 71583]);
+        $target->owner = $viewer->currentPlayerUniverse;
+        $this->em->flush();
+
+        $viewDetails = static function (array $payload, Fleet $fleet): \Symfony\Component\DomCrawler\Crawler {
+            return (new \Symfony\Component\DomCrawler\Crawler($payload['html']))
+                ->filter('[data-incoming-attack="'.$fleet->id.'"] [data-incoming-detail]');
+        };
+        $payload = $this->surveillance($viewer);
+        foreach ([$transport, $defense, $orbit] as $fleet) {
+            $detail = $viewDetails($payload, $fleet);
+            self::assertCount(1, $detail);
+            self::assertStringContainsString('Basique', $detail->text());
+            self::assertStringContainsString('Composition et fret', $detail->text());
+        }
+        self::assertStringContainsString('123', $viewDetails($payload, $transport)->text());
+        self::assertStringContainsString('45', $viewDetails($payload, $transport)->text());
+        self::assertStringContainsString('Aucun fret transporté.', $viewDetails($payload, $defense)->text());
+        self::assertStringContainsString('Aucun fret transporté.', $viewDetails($payload, $orbit)->text());
+        foreach ([$noTrace, $occupation, $unverifiedOrbit, $enemyTransport, $fromUnknown, $returning, $formerHost, ...$otherMissions] as $fleet) {
+            self::assertCount(0, $viewDetails($payload, $fleet));
+        }
+        foreach (['987654321', '54321876', 'NAVIGATION_NEVER_DISCLOSED'] as $privateValue) {
+            self::assertStringNotContainsString($privateValue, $payload['html']);
+        }
+        // La page initiale et l’actualisation utilisent la même décision.
+        $this->client->request('GET', '/flottes');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('#incoming-fleet-details-'.$transport->id);
+        self::assertSelectorExists('[data-incoming-attack="'.$transport->id.'"] a[href^="/rapports/transport/"]');
+        $mapPayload = $this->surveillance($viewer, $target->solarSystem->galaxy->id);
+        self::assertCount(0, $viewDetails($mapPayload, $transport));
+        self::assertStringNotContainsString('incomingDetail', json_encode($mapPayload['flights'], JSON_THROW_ON_ERROR));
+
+        // Ni un tiers ni le nouveau propriétaire ne reçoivent un détail existant.
+        foreach ([$transport, $defense, $orbit] as $fleet) {
+            self::assertCount(0, $viewDetails($this->surveillance($successor), $fleet));
+        }
+        $manager = static::getContainer()->get(EntityManagerInterface::class);
+        $target = $manager->find(Planet::class, $target->id);
+        $successor = $manager->find(Player::class, $successor->id);
+        $target->owner = $successor->currentPlayerUniverse;
+        $manager->flush();
+        $successorPayload = $this->surveillance($successor);
+        self::assertStringContainsString('data-incoming-attack="'.$transport->id.'"', $successorPayload['html']);
+        foreach ([$transport, $defense, $orbit] as $fleet) {
+            self::assertCount(0, $viewDetails($successorPayload, $fleet));
+            self::assertCount(0, $viewDetails($this->surveillance($viewer), $fleet));
+        }
     }
 
     public function testIncomingPanelExcludesOwnFlightsReturnsSpiesAndAlliedThirdPartyRoutes(): void
@@ -329,7 +442,7 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
         $thirdParty=$this->fleet($sender,$home,$elsewhere,'transport');
         $data=$this->surveillance($viewer);
         foreach([$own,$return,$spy,$thirdParty] as $fleet)self::assertStringNotContainsString('data-incoming-attack="'.$fleet->id.'"',$data['html']);
-        self::assertStringContainsString('Flottes entrantes <span class="badge">0</span>',$data['html']);
+        self::assertIncomingPanelCount($data['html'], '0');
         self::assertStringContainsString('Aucune flotte entrante visible vers vos colonies.',$data['html']);
     }
 

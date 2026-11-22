@@ -1,0 +1,31 @@
+{# Les dates, pertes et retours viennent uniquement du dossier déjà autorisé. #}
+{% if briefing.dates %}
+    <dl class="pirate-campaign-dates">
+        {% for event in briefing.dates %}
+            <div>
+                <dt>{{ event.label }}</dt>
+                <dd{% if event.countdown %} data-controller="pirate-countdown" data-pirate-countdown-deadline-value="{{ event.at }}"
+                    data-pirate-countdown-server-value="{{ date()|date('c','UTC') }}"{% endif %}>
+                    <time datetime="{{ event.at }}">{{ event.at|date('d/m/Y à H:i:s', 'UTC') }} UTC</time>
+                    {% if event.countdown %}<span data-pirate-countdown-target="remaining" hidden></span>{% endif %}
+                </dd>
+            </div>
+        {% endfor %}
+    </dl>
+{% endif %}
+{% if briefing.losses is not null %}
+    <section class="pirate-campaign-losses" aria-labelledby="pirate-losses-title">
+        <h3 id="pirate-losses-title">Vaisseaux perdus par votre escorte</h3>
+        {% if briefing.losses %}
+            <ul>
+                {% for ship in briefing.losses %}
+                    <li>{{ ship.label }} ({{ ship.tier }}) : {{ ship.quantity }}</li>
+                {% endfor %}
+            </ul>
+            <p>Ces pertes sont définitives.</p>
+        {% else %}
+            <p>Aucun vaisseau perdu.</p>
+        {% endif %}
+    </section>
+{% endif %}
+{% if briefing.return %}<p>{{ briefing.return }}</p>{% endif %}

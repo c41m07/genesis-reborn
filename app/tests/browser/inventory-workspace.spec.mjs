@@ -149,7 +149,18 @@ test('L3 A : inventaire guidé, confirmations, états vides et vacances dans les
     const plain = await plainContext.newPage();
     await plain.goto('/boosts');
     await expect(plain.locator('#inventory-operation')).toBeHidden();
-    await expect(plain.locator('.boost-operation:visible')).toHaveCount(3);
+    const operations = plain.locator('.boost-operation:visible');
+    await expect(operations).toHaveCount(2);
+    for (const [title, label, id] of [
+      ['Mine à ciel ouvert · Horizon', 'Mine à ciel ouvert', queue],
+      ['Génie civil colonial · Avant-poste des Constellations Oubliées', 'Génie civil colonial', research],
+    ]) {
+      const operation = operations.filter({ has: plain.getByRole('heading', { name: title, exact: true }) });
+      await expect(operation).toHaveCount(1);
+      const form = operation.locator('form[method="post"][action="/boosts/utiliser/queue/' + id + '"]');
+      await expect(form.getByRole('button', { name: 'Utiliser un boost pour ' + label, exact: true })).toBeVisible();
+    }
+    await expect(plain.locator('form[action^="/boosts/utiliser/fleet/"], option[value^="fleet-"]')).toHaveCount(0);
     await expect(plain.getByRole('navigation', { name: 'Navigation de l’inventaire' })).toBeVisible();
   } finally { await plainContext.close(); }
 

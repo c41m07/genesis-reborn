@@ -44,7 +44,7 @@ final class FleetPageView
         }
         $data = [
             'membership' => $member, 'fleet_page' => $page, 'fleet_planet' => $selectedPlanet,
-            'fleet_colony_scope' => true, 'idle' => [], 'holds' => [], 'held_fleets' => [], 'held_details' => [],
+            'fleet_colony_scope' => $page !== 'missions', 'idle' => [], 'holds' => [], 'held_fleets' => [], 'held_details' => [],
             'active_fleets' => [], 'fleet_details' => [], 'combat_events' => [], 'orbit_requests' => [],
             'active_fleet_count' => 0, 'missions_page' => 1, 'missions_pages' => 1,
             'catalog' => [], 'resources' => [], 'systems' => [], 'destination_choices' => [],
@@ -114,8 +114,11 @@ final class FleetPageView
             $data['resources'] = $this->catalog->rules()['resources'];
         }
         if (in_array($page, ['missions', 'prepare'], true)) {
-            // La préparation garde trois missions sans charger composition, fret ou combats détaillés.
-            $missions = $this->repo->fleetMissionPage($member, $selectedPlanet, $page === 'missions' ? $parameters['page'] : 1, $page === 'missions' ? 30 : 3, $page === 'missions' ? $parameters['focus'] : 0);
+            // La liste suit la participation même lorsque l’ancienne origine n’est plus possédée.
+            // La préparation garde trois missions de la colonie, sans détail de composition, fret ou combat.
+            $missions = $page === 'missions'
+                ? $this->repo->fleetMissionPage($member, null, $parameters['page'], focusId: $parameters['focus'], allColonies: true)
+                : $this->repo->fleetMissionPage($member, $selectedPlanet, 1, limit: 3);
             $data['active_fleets'] = $missions['fleets'];
             $data['active_fleet_count'] = $missions['count'];
             $data['missions_page'] = $missions['page'];

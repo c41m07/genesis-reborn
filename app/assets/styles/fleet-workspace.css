@@ -149,35 +149,92 @@ body.authenticated .fleet-redesign .fleet-wizard-panel h3 {
     outline-offset: 4px;
 }
 
-body.authenticated .fleet-redesign .quantity-choice {
-    padding-block: 12px;
-    border-bottom: 1px solid var(--line);
+body.authenticated .fleet-redesign .fleet-composition-table {
+    width: 100%;
+    table-layout: fixed;
 }
 
-.fleet-redesign .fleet-ship-info {
-    min-width: 0;
+.fleet-redesign .fleet-composition-table th:first-child {
+    width: 35%;
+    text-align: start;
+}
+
+.fleet-redesign .fleet-composition-table th,
+.fleet-redesign .fleet-composition-table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.fleet-redesign .fleet-composition-table tbody th {
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+}
+
+.fleet-redesign .fleet-composition-table td {
+    padding: 5px 7px 7px;
+}
+
+.fleet-redesign .fleet-composition-stock,
+.fleet-redesign .fleet-composition-restriction {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.fleet-redesign .fleet-composition-stock {
+    margin-bottom: 3px;
+    font-variant-numeric: tabular-nums;
     overflow-wrap: anywhere;
 }
 
-body.authenticated .fleet-redesign .fleet-ship-info strong {
-    font-size: 15px;
-    line-height: 1.5;
+.fleet-redesign .fleet-composition-restriction {
+    margin-top: 4px;
 }
 
-body.authenticated .fleet-redesign .fleet-ship-info small {
-    font-size: 13px;
-    line-height: 1.5;
+.fleet-redesign .fleet-composition-control {
+    display: flex;
+    width: 100%;
+    max-width: 138px;
+    height: 44px;
+    margin-inline: auto;
 }
 
-body.authenticated .fleet-redesign .fleet-ship-choice {
-    border: 0;
-}
-
-body.authenticated .fleet-redesign .fleet-ship-choice input {
-    width: 96px;
-    max-width: none;
-    flex: 0 0 96px;
+body.authenticated .fleet-redesign .fleet-composition-control > input,
+body.authenticated .fleet-redesign .fleet-composition-control > button {
+    box-sizing: border-box;
+    height: 100%;
+    min-height: 0;
     margin: 0;
+}
+
+body.authenticated .fleet-redesign .fleet-composition-control > input {
+    flex: 1;
+    min-width: 0;
+    padding-inline: 4px;
+    border-radius: 5px 0 0 5px;
+    text-align: center;
+    appearance: textfield;
+}
+
+.fleet-redesign .fleet-composition-control > input::-webkit-inner-spin-button,
+.fleet-redesign .fleet-composition-control > input::-webkit-outer-spin-button {
+    appearance: none;
+}
+
+body.authenticated .fleet-redesign .fleet-composition-control > .fleet-composition-maximum {
+    flex: 0 0 24px;
+    min-width: 24px;
+    padding: 0;
+    margin-inline-start: -1px;
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+}
+
+.fleet-redesign .fleet-composition-control > :focus-visible {
+    position: relative;
+    z-index: 1;
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 body.authenticated .fleet-redesign .fleet-wizard-note,
@@ -360,24 +417,22 @@ body.authenticated .fleet-redesign .space-navigation-menu .space-navigation {
         font-size: 11px;
     }
 
-    .fleet-redesign .quantity-choice {
-        align-items: flex-end;
+    .fleet-redesign .fleet-composition-table th:first-child {
+        width: 30%;
     }
 
-    body.authenticated .fleet-redesign .fleet-ship-choice {
-        display: grid;
-        grid-template-columns: 28px minmax(0, 1fr);
-        gap: 8px;
+    .fleet-redesign .fleet-composition-table thead th {
+        padding-inline: 2px;
+        font-size: 10px;
     }
 
-    .fleet-redesign .fleet-ship-icon {
-        width: 28px;
-        height: 28px;
+    .fleet-redesign .fleet-composition-table tbody th {
+        padding-inline: 4px;
+        font-size: 11px;
     }
 
-    body.authenticated .fleet-redesign .fleet-ship-choice input {
-        grid-column: 1 / -1;
-        width: 100%;
+    .fleet-redesign .fleet-composition-table td {
+        padding-inline: 3px;
     }
 
     .fleet-redesign .fleet-wizard-actions > button {

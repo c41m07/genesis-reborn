@@ -1,15 +1,12 @@
 <?php
 namespace App\Service\Boost;
 
-use App\Entity\Fleet;
-use App\Entity\PlayerBoost;
 use App\Entity\PlayerUniverse;
 use App\Entity\QueueItem;
 use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Colony\ActionGuard;
-use App\Service\Fleet\FleetService;
 use App\Service\Queue\QueueService;
 use Psr\Clock\ClockInterface;
 
@@ -21,9 +18,7 @@ final class BoostUseService
         private GameCatalog $catalog,
         private ActionGuard $guard,
         private QueueService $queues,
-        private FleetService $fleets,
         private ClockInterface $clock,
-        private \App\Service\Player\VacationCalendar $vacations,
         private BoostGrantService $grants,
     ) {}
 
@@ -40,7 +35,7 @@ final class BoostUseService
                 throw new \DomainException('Opération active introuvable.');
             }
             $this->manager->lock($item);
-            $boost = $this->takeAvailableBoost($membership, 'queue', $queueId);
+            $this->takeAvailableBoost($membership, $queueId);
             $this->queues->applyPlayerBoost($item, $this->divisor());
             $this->manager->flush();
             $this->grants->promoteOldestPendingLocked($membership);
@@ -48,31 +43,7 @@ final class BoostUseService
         });
     }
 
-    public function useOnFleet(PlayerUniverse $membership, int $fleetId, string $requestKey): void
-    {
-        $this->manager->transaction(function () use ($membership, $fleetId, $requestKey): void {
-            $this->guard->lockMembership($membership);
-            $this->vacations->assertCanSendFleet($membership);
-            if (!$this->guard->receipt($membership, $requestKey)) {
-                return;
-            }
-            $fleet = $this->repo->find(Fleet::class, $fleetId);
-            $allowed = ['traveling', 'returning', 'defending', 'orbiting'];
-            if (!$fleet instanceof Fleet || $fleet->playerUniverse->id !== $membership->id || !in_array($fleet->status, $allowed, true) || !$fleet->arrivalAt || $fleet->arrivalAt <= $this->clock->now()) {
-                throw new \DomainException('Mission chronométrée active introuvable.');
-            }
-            $this->manager->lock($fleet);
-            $boost = $this->takeAvailableBoost($membership, 'fleet', $fleetId);
-            $remaining = max(1, $fleet->arrivalAt->getTimestamp() - $this->clock->now()->getTimestamp());
-            $newRemaining = max(1, (int) ceil($remaining * (1 - $this->ratio())));
-            $newArrivalAt = $this->clock->now()->modify('+' . $newRemaining . ' seconds');
-            $this->fleets->reschedulePlayerBoost($fleet, $newArrivalAt);
-            $this->grants->promoteOldestPendingLocked($membership);
-            $this->manager->flush();
-        });
-    }
-
-    private function takeAvailableBoost(PlayerUniverse $membership, string $operationType, int $operationId): PlayerBoost
+    private function takeAvailableBoost(PlayerUniverse $membership, int $queueId): void
     {
         $boost = $this->repo->oldestBoost($membership, 'available', 'boost');
         if (!$boost) {
@@ -84,10 +55,8 @@ final class BoostUseService
         }
         $boost->status = 'used';
         $boost->usedAt = $this->clock->now();
-        $boost->operationType = $operationType;
-        $boost->operationId = $operationId;
-
-        return $boost;
+        $boost->operationType = 'queue';
+        $boost->operationId = $queueId;
     }
 
     private function ratio(): float

@@ -1,4 +1,7 @@
+{# Conserver le contexte explicitement sélectionné, pas le premier système affiché par défaut. #}
+{% set viewParams = selected_galaxy ? {galaxy:selected_galaxy.id} : {} %}
+{% if selected_system_id %}{% set viewParams = viewParams|merge({system:selected_system_id}) %}{% endif %}
 <nav class="report-tabs ui-tabs galaxy-view-tabs" aria-label="Vue de la galaxie">
-    <a href="{{ path('app_map_v2', selected_galaxy ? {galaxy:selected_galaxy.id} : {}) }}" class="{{ route=='app_map_v2'?'active':'' }}" {{ route=='app_map_v2'?'aria-current="page"':'' }}>Carte interactive</a>
-    <a href="{{ path('app_map', selected_galaxy ? {galaxy:selected_galaxy.id} : {}) }}" class="{{ route=='app_map'?'active':'' }}" {{ route=='app_map'?'aria-current="page"':'' }}>Liste des systèmes</a>
+    <a href="{{ path('app_map_v2', viewParams) }}" class="{{ route=='app_map_v2'?'active':'' }}" {{ route=='app_map_v2'?'aria-current="page"':'' }}>Carte interactive</a>
+    <a href="{{ path('app_map', viewParams) }}" data-galaxy-list-link class="{{ route=='app_map'?'active':'' }}" {{ route=='app_map'?'aria-current="page"':'' }}>Liste des systèmes</a>
 </nav>

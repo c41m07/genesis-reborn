@@ -1,0 +1,12 @@
+{% set style = actionStyle|default('secondary') %}
+{% if step == 'pirate_exercise' %}
+    <a class="{{ style }}" href="{{ path('app_first_steps_exercise') }}">{{ done|default(false) ? 'Rouvrir le briefing de l’exercice' : guide.label }}</a>
+{% elseif colony %}
+    {% if guide.mission is defined %}
+        {% set params = {mission: guide.mission, origin: colony.id} %}
+        {% if step == 'espionage' %}{% set params = params|merge({tutorial: 1}) %}{% endif %}
+        <a class="{{ style }}" href="{{ path('app_fleet_prepare', params) }}">{{ guide.label }}</a>
+    {% else %}
+        <a class="{{ style }}" href="{{ path('app_colony', {id: colony.id, section: guide.section, showLockedItems: 1, focusItem: 1, tutorial: guide.item, _fragment: 'item-'~guide.item~'-basic'}) }}">{{ guide.label }}</a>
+    {% endif %}
+{% endif %}

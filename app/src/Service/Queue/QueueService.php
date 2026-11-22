@@ -7,9 +7,11 @@ use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Requirement\RequirementChecker;
-use App\Service\Colony\{ResourceService, ActionGuard};
+use App\Service\Colony\{ResourceService, ActionGuard, ResourceWaitEstimate};
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
+use App\Service\Player\FirstStepRewardPolicy;
+use App\Service\Player\FirstSteps;
 use App\Service\Player\VacationCalendar;
 
 /**
@@ -33,6 +35,7 @@ final class QueueService
         private \App\Service\Player\EmpireReconstructionScheduler $reconstruction,
         private \App\Service\Colony\EconomicUnitCapacity $economicUnits,
         private \App\Service\Combat\LocalGarrison $garrison,
+        private FirstSteps $firstSteps,
     )
     {
     }
@@ -45,9 +48,10 @@ final class QueueService
         int $quantity,
         string $requestKey,
         string $tier = 'basic',
+        bool $guided = false,
     ): int
     {
-        return $this->manager->transaction(function () use ($membership, $planet, $group, $slug, $quantity, $requestKey, $tier) {
+        return $this->manager->transaction(function () use ($membership, $planet, $group, $slug, $quantity, $requestKey, $tier, $guided) {
             $this->guard->lock($membership, $planet);
             $this->vacations->assertCanManageQueues($membership);
             // Les niveaux et les stocks doivent tenir compte des commandes déjà échues avant tout nouvel achat.
@@ -133,6 +137,7 @@ final class QueueService
             $item->itemLevel = in_array($group, ['buildings', 'technologies'], true) ? $level : null;
             $item->quantity = $quantity;
             $item->paidCosts = $plan['costs'];
+            $item->firstStepsGuided = $guided && FirstStepRewardPolicy::queueStep($queueType, $slug, $tier, $item->itemLevel) !== null;
             $item->durationSeconds = $duration;
             $item->queuedAt = $this->clock->now();
             $item->dependsOn = $previousLevel;
@@ -244,6 +249,8 @@ final class QueueService
         $reason = '';
         $missing = [];
         $missingResources = [];
+        $paymentWait = null;
+        $paymentEstimate = null;
         if ($maximum === 0) {
             $failures = $this->access->failures($membership, $planet, $group, $definition, $tier, $buildings, $technologies);
             if (count($this->repo->queue($planet, 'shipyard')) >= 30) {
@@ -253,14 +260,13 @@ final class QueueService
             } elseif ($this->economicUnits->constructionLimit($planet, $definition, $buildings) === 0) {
                 $reason = 'Aucune place de satellite disponible dans la centrale de ce rang.';
             } else {
-                $stocks = $this->resources->snapshot($planet);
-                foreach ($plan['costs'] as $resource => $amount) {
-                    if ($amount > ($stocks[$resource]['stock'] ?? 0)) {
-                        $deficit = (int) ceil($amount - ($stocks[$resource]['stock'] ?? 0));
-                        $label = $this->catalog->rules()['resources'][$resource];
-                        $missing[] = number_format($deficit, 0, ',', ' ') . ' ' . $label;
-                        $missingResources[$resource] = ['label' => $label, 'amount' => $deficit];
-                    }
+                $observedAt = $this->clock->now();
+                $payment = ResourceWaitEstimate::forCosts($plan['costs'], $this->resources->snapshot($planet, observedAt: $observedAt), $observedAt);
+                $missingResources = $payment['missing'];
+                $paymentWait = $payment['paymentWait'];
+                $paymentEstimate = $payment['paymentEstimate'];
+                foreach ($missingResources as $resource) {
+                    $missing[] = number_format($resource['amount'], 0, ',', ' ') . ' ' . $resource['label'];
                 }
                 $reason = $missing ? 'Ressources manquantes : ' . implode(', ', $missing) . '.' : 'Limite de quantité atteinte.';
             }
@@ -274,6 +280,8 @@ final class QueueService
             'displayCosts' => $plan['costs'],
             'displayDuration' => $plan['duration'],
             'missingResources' => $missingResources,
+            'paymentWait' => $paymentWait,
+            'paymentEstimate' => $paymentEstimate,
             'reason' => $reason,
             'unavailableLabel' => $maximum === 0 ? $missing ? 'Manque ' . implode(' · ', $missing) : $reason : '',
         ];
@@ -401,6 +409,7 @@ final class QueueService
         $finish = $item->finishAt();
         $shipConstruction = $item->queueType === 'shipyard' && isset($this->catalog->all('ships')[$item->itemSlug]);
         $economic = $shipConstruction && isset($this->catalog->all('ships')[$item->itemSlug]['economic_unit']);
+        $shipCredited = false;
         if ($economic) {
             // Créditer uniquement l'ancien effectif jusqu'à la fin payée, même après une longue absence.
             $this->resources->materialize($planet, $finish);
@@ -445,6 +454,7 @@ final class QueueService
             $ship->tier = $item->tier;
             $ship->quantity += $item->quantity;
             $this->manager->save($ship);
+            $shipCredited = $shipConstruction;
         }
         foreach ($this->repo->all(QueueItem::class, ['dependsOn' => $item]) as $dependent) {
             $dependent->dependsOn = null;
@@ -455,6 +465,7 @@ final class QueueService
             default => isset($this->catalog->all('defenses')[$item->itemSlug]) ? 'defenses' : 'ships',
         };
         $this->notifications->enqueue($membership, 'Terminé : ' . $this->catalog->getTierForUniverse($membership->universe, $group, $item->itemSlug, $item->tier)['label'] . ' sur ' . $planet->name . '.', journalKind: 'queue');
+        $this->firstSteps->recordQueueCompletion($item, $finish, shipConstructed: $shipCredited);
         $this->reconstruction->afterCompletionLocked($item);
         $queueType = $item->queueType;
         $this->manager->remove($item);

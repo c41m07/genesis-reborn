@@ -26,20 +26,34 @@ final class AdminOperationsService
             $databaseHealthy = false;
         }
 
-        $now = $this->clock->now();
-        $outbox = ['queue' => 0, 'fleet' => 0, 'combat' => 0, 'universe' => 0, 'notification' => 0, 'guild_project' => 0, 'other' => 0];
+        $now = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
+        $outbox = ['queue' => 0, 'fleet' => 0, 'combat' => 0, 'universe' => 0, 'notification' => 0, 'guild_project' => 0, 'occupation' => 0, 'reconstruction' => 0, 'other' => 0];
         $overdue = 0;
         $outboxAvailable = false;
         $pending = [];
+        $byKind = [];
         try {
             $rows = $this->connection->fetchAllAssociative(
-                'SELECT kind, COUNT(*) AS total, SUM(due_at <= :now) AS overdue FROM outbox_message GROUP BY kind',
+                'SELECT kind, COUNT(*) AS total, SUM(due_at <= :now) AS overdue, MIN(due_at) AS oldest_due_at FROM outbox_message GROUP BY kind',
                 ['now' => $now->format('Y-m-d H:i:s')],
             );
             foreach ($rows as $row) {
                 $kind = array_key_exists((string) $row['kind'], $outbox) ? (string) $row['kind'] : 'other';
                 $outbox[$kind] += (int) $row['total'];
                 $overdue += (int) $row['overdue'];
+                $oldest = isset($row['oldest_due_at'])
+                    ? new \DateTimeImmutable((string) $row['oldest_due_at'], new \DateTimeZone('UTC'))
+                    : null;
+                $byKind[] = [
+                    'kind' => (string) $row['kind'],
+                    'known' => $kind !== 'other',
+                    'total' => (int) $row['total'],
+                    'due' => (int) $row['overdue'],
+                    'future' => max(0, (int) $row['total'] - (int) $row['overdue']),
+                    'oldest_due_at' => $oldest,
+                    // Une échéance passée mesure un retard de publication, pas un échec.
+                    'delay_seconds' => $oldest === null ? null : max(0, $now->getTimestamp() - $oldest->getTimestamp()),
+                ];
             }
             $details = $this->connection->fetchAllAssociative(
                 'SELECT id, kind, target_id, due_at FROM outbox_message ORDER BY due_at ASC, id ASC LIMIT 20',
@@ -53,12 +67,15 @@ final class AdminOperationsService
                     'due_at' => $dueAt,
                     'overdue_seconds' => max(0, $now->getTimestamp() - $dueAt->getTimestamp()),
                     'due' => $dueAt <= $now,
+                    'diagnostic' => OutboxDiagnostic::describe((string) $row['kind'], $dueAt <= $now),
                 ];
             }
+            usort($byKind, static fn(array $a, array $b): int => ($b['delay_seconds'] ?? -1) <=> ($a['delay_seconds'] ?? -1) ?: strcmp($a['kind'], $b['kind']));
             $outboxAvailable = true;
         } catch (\Throwable) {
             // Une collecte échouée ne prouve pas que la file est vide.
             $pending = [];
+            $byKind = [];
         }
 
         $processes = [];
@@ -84,6 +101,8 @@ final class AdminOperationsService
             'outbox_total' => $outboxAvailable ? array_sum($outbox) : null,
             'outbox_overdue' => $outboxAvailable ? $overdue : null,
             'outbox_pending' => $pending,
+            'outbox_by_kind' => $byKind,
+            'outbox_future' => $outboxAvailable ? max(0, array_sum($outbox) - $overdue) : null,
             'fleet_health' => $this->fleetHealth($now),
             'captured_at' => $now,
         ];

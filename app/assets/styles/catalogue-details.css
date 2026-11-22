@@ -1,5 +1,5 @@
-.catalog-info-dialog{width:min(720px,calc(100vw - 32px));max-height:85dvh}
-.catalog-info-content{max-height:85dvh}
+/* Le dialogue porte seul le défilement vertical, y compris quand son contenu est long. */
+.catalog-info-dialog{width:min(720px,calc(100vw - 32px));max-height:85dvh;overflow-y:auto;overscroll-behavior-y:contain}
 .catalog-info-content .catalog-info-intro{font-size:13px;line-height:1.65;color:var(--text)}
 .catalog-info-content .catalog-info-scope{padding:9px 12px;border:1px solid var(--line);border-radius:5px}
 .catalog-info-section{border-top:1px solid var(--line);margin-top:18px}

@@ -16,7 +16,8 @@ export default class extends Controller {
         event.preventDefault();
         if (this.currentStep === 1 && !this.hasComposition()) {
             this.showError('Choisissez au moins un vaisseau pour poursuivre.');
-            this.quantityTargets[0]?.focus();
+            const firstChoice = this.quantityTargets.find(input => !input.disabled);
+            (firstChoice ?? this.stepTargets[0].querySelector('h3'))?.focus();
             return;
         }
         if (this.currentStep === 2 && !this.hasDestination()) {
@@ -57,12 +58,10 @@ export default class extends Controller {
         const targetField = this.destinationField();
         const option = targetField?.selectedOptions?.[0];
         const destination = (option ? (missionField.value === 'explore' ? option.dataset.systemCoordinates : option.textContent.trim()) : targetField?.value.trim()) || 'destination à confirmer';
-        const ships = this.quantityTargets
-            .filter(input => Number(input.value) > 0)
-            .map(input => {
-                const label = input.closest('label')?.querySelector('.fleet-ship-info strong')?.textContent.trim() || 'Vaisseau';
-                return compactNumber(Number(input.value)) + ' × ' + label;
-            });
+        const composition = this.quantityTargets
+            .filter(input => !input.disabled && Number(input.value) > 0)
+            .map(input => ({ amount: Number(input.value), label: input.dataset.shipLabel }));
+        const ships = composition.map(({ amount, label }) => compactNumber(amount) + ' × ' + label);
         const cargo = [...this.element.querySelectorAll('[name^="cargo["]')]
             .filter(input => Number(input.value) > 0)
             .map(input => (this.element.querySelector(`label[for="${input.id}"]`)?.textContent.trim() || 'Ressource') + ' : ' + exactNumber(Number(input.value)));
@@ -72,7 +71,7 @@ export default class extends Controller {
             term.textContent = label; description.textContent = value; entry.append(term, description); list.append(entry);
         }
         this.summaryTarget.replaceChildren(list);
-        this.summaryTarget.title = this.quantityTargets.filter(input => Number(input.value) > 0).map(input => exactNumber(Number(input.value)) + ' × ' + (input.closest('label')?.querySelector('strong')?.textContent.trim() || 'Vaisseau')).join(', ');
+        this.summaryTarget.title = composition.map(({ amount, label }) => exactNumber(amount) + ' × ' + label).join(', ');
     }
 
     showError(message) {

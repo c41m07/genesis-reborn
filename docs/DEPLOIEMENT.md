@@ -108,6 +108,36 @@ ayant accès au package et un token limité à `read:packages` :
 docker login ghcr.io -u UTILISATEUR_GITHUB
 ```
 
+## Mettre à jour la configuration de production
+
+Avant chaque déploiement, prendre le fichier `.env.prod.example` de la version
+à livrer comme référence. Le workflow conserve le `.env.prod` privé du serveur.
+Comparer les noms de variables et reporter les clés manquantes avec les valeurs
+du serveur. Conserver les valeurs existantes, en particulier les secrets et les
+mots de passe des services persistants.
+
+Sur le serveur, placer une copie du modèle versionné à côté de `.env.prod`, puis
+exécuter dans `/opt/docker-compose/genesis-reborn` :
+
+```bash
+env_keys() {
+  sed -nE 's/^[[:space:]]*(export[[:space:]]+)?([A-Za-z_][A-Za-z0-9_]*)[[:space:]]*=.*/\2/p' "$1" |
+    LC_ALL=C sort -u
+}
+LC_ALL=C comm -23 <(env_keys .env.prod.example) <(env_keys .env.prod)
+```
+
+La commande affiche uniquement les noms des clés absentes. Certaines options
+ont des valeurs par défaut dans Symfony. Pour les mails, renseigner
+`DEFAULT_URI` avec l’URL publique HTTPS du jeu et `MAILER_FROM` avec un expéditeur
+autorisé par le relais configuré dans `MAILER_DSN`.
+
+Le script de déploiement exécute `docker compose --env-file .env.prod -f compose.prod.yaml config --quiet`
+avant le téléchargement de l’image et tout arrêt de service. Compose signale les
+variables obligatoires absentes ou vides. Ce contrôle vérifie leur présence.
+La réception des mails et la validité du lien de confirmation se vérifient
+avec un compte de test après la livraison.
+
 ## Installer les outils d’exploitation séparément
 
 Le workflow SSH transfère **uniquement** `compose.prod.yaml` et `scripts/deploy.sh`
@@ -222,8 +252,11 @@ procédure de restauration spécifique.
 
 ```bash
 docker build -f docker/prod/Dockerfile -t genesis-reborn-prod:check .
-APP_IMAGE=genesis-reborn-prod:check APP_ENV_FILE=.env.prod.example docker compose --env-file .env.prod.example -f compose.prod.yaml config --quiet
 ```
+
+`make validate` contrôle aussi le Compose de production avec `.env.prod.example`.
+Lorsqu’une clé devient obligatoire, la déclarer dans `docker/compose.prod.yaml`,
+l’ajouter au modèle et signaler la configuration à reporter avant livraison.
 
 La construction compile les assets et installe les dépendances PHP sans celles
 de développement. `.dockerignore` exclut les secrets, dépendances locales et Git.

@@ -156,12 +156,19 @@ final class OccupationStartTest extends WebTestCase
         self::assertSame(0,$this->em->getRepository(\App\Entity\PlanetNpcShip::class)->count(['planet'=>$target]));
     }
 
-    public function testOccupationPreventsVacationsAndCannotBeAcceleratedAsAFlight(): void
+    public function testOccupationPreventsVacationsAndCannotBeRescheduledAsAFlight(): void
     {
         $fleet=$this->fleet($this->target);$this->win($fleet);
         self::assertTrue(static::getContainer()->get(GameRepository::class)->hasVacationFleetBlocker($this->player->currentPlayerUniverse));
         $this->expectException(\DomainException::class);
-        static::getContainer()->get(FleetService::class)->reschedulePlayerBoost($fleet,$this->clock->now()->modify('+1 second'));
+        $manager = static::getContainer()->get(GameManager::class);
+        $manager->transaction(function () use ($manager, $fleet): void {
+            $manager->lock($fleet->playerUniverse);
+            $manager->lock($fleet->playerUniverse->universe);
+            $manager->lock($fleet->homePlanet);
+            $manager->lock($fleet);
+            static::getContainer()->get(FleetService::class)->rescheduleForAdministrationLocked($fleet, $this->clock->now()->modify('+1 second'));
+        });
     }
 
     public function testWinningWithoutColonyShipDoesNotReserveAndReturnsUnusedStationFuel(): void

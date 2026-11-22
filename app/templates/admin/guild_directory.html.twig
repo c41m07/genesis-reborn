@@ -1,0 +1,45 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}{{ guild ? guild.name : 'Guildes actives' }} · Administration{% endblock %}
+{% block body %}
+{% set relationLabels = {neutral:'Neutre',enemies:'Hostilité',allies:'Alliance',non_aggression:'Non-agression',defense:'Défense mutuelle',pending:'Proposition en attente'} %}
+{% set projectLabels = {active:'En cours',completed:'Terminé',abandoned:'Abandonné'} %}
+{% set relationLabels = {neutral:'Neutre',enemies:'Hostilité',allies:'Alliance',non_aggression:'Non-agression',defense:'Défense mutuelle',pending:'Proposition en attente'} %}
+{% set projectLabels = {active:'En cours',completed:'Terminé',abandoned:'Abandonné'} %}
+{% set sectionLabels = {members:'Membres et direction', diplomacy:'Diplomatie', projects:'Projets lancés'} %}
+<div class="page-heading"><div><p class="eyebrow">Consultation administrative</p><h1>{{ guild ? guild.name : 'Guildes actives' }}</h1>
+<p>Lecture seule. Aucun changement de membre, direction, traité ou projet. Les messages privés et coordonnées de compte ne sont pas affichés.</p></div></div>
+{% if guild %}
+<p>{{ guild.universe_name }} · Direction : {{ guild.leader_name|default('Empire oublié', true) }} · Participation n° {{ guild.leader_id }}</p>
+<p><a href="{{ path('app_admin_guild_directory', {universe:guild.universe_id}) }}">Retour aux guildes de cet univers</a></p>
+<nav class="admin-page-navigation" aria-label="Consultation de la guilde">{% for key,label in sectionLabels %}<a href="{{ path('app_admin_guild_detail', {universeId:guild.universe_id,id:guild.id,section:key}) }}"{% if section == key %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+<h2>{{ sectionLabels[section] }}</h2>
+{% set pageRoute = 'app_admin_guild_detail' %}
+{% set pageParams = {universeId:guild.universe_id,id:guild.id,section:section} %}
+{% else %}
+<form method="get" class="admin-page-search">
+<label for="guild-universe">Univers</label><select id="guild-universe" name="universe"><option value="0">Tous les univers</option>{% for universe in universes %}<option value="{{ universe.id }}"{% if selectedUniverse == universe.id %} selected{% endif %}>{{ universe.name }}</option>{% endfor %}</select>
+<label for="guild-search">Nom ou tag</label><input id="guild-search" name="q" type="search" maxlength="100" value="{{ query }}"><button class="primary">Rechercher</button>
+</form>
+{% set pageRoute = 'app_admin_guild_directory' %}
+{% set pageParams = {universe:selectedUniverse,q:query} %}
+{% endif %}
+{% if listing.rows %}
+<div class="table-wrap" role="region" tabindex="0" aria-label="{{ guild ? sectionLabels[section] : 'Liste des guildes' }}">
+<table class="admin-ops-table"><caption>25 résultats maximum par page, classés par identifiant</caption>
+{% if not guild %}
+<thead><tr><th scope="col">Guilde</th><th scope="col">Tag</th><th scope="col">Univers</th></tr></thead><tbody>
+{% for row in listing.rows %}<tr><th scope="row"><a href="{{ path('app_admin_guild_detail', {universeId:row.universe_id,id:row.id}) }}">{{ row.name }}</a></th><td data-label="Tag">{{ row.tag|default('Sans tag',true) }}</td><td data-label="Univers">{{ row.universe_name }}</td></tr>{% endfor %}
+{% elseif section == 'members' %}
+<thead><tr><th scope="col">Commandant</th><th scope="col">Participation</th><th scope="col">Rang</th></tr></thead><tbody>
+{% for row in listing.rows %}<tr><th scope="row">{{ row.username|default('Empire oublié',true) }}{% if row.membership_id == guild.leader_id %} · Direction{% endif %}</th><td data-label="Participation">n° {{ row.membership_id }}</td><td data-label="Rang">{{ row.rank_name|default('Sans rang',true) }}</td></tr>{% endfor %}
+{% elseif section == 'diplomacy' %}
+<thead><tr><th scope="col">Guilde</th><th scope="col">État enregistré</th><th scope="col">Proposition en attente</th></tr></thead><tbody>
+{% for row in listing.rows %}<tr><th scope="row">{{ row.name }}{% if row.tag %} [{{ row.tag }}]{% endif %}</th><td data-label="État enregistré">{{ relationLabels[row.status]|default(row.status) }}</td><td data-label="Proposition en attente">{{ row.proposal ? relationLabels[row.proposal]|default(row.proposal) : 'Aucune' }}</td></tr>{% endfor %}
+{% else %}
+<thead><tr><th scope="col">Projet</th><th scope="col">État</th><th scope="col">Paliers terminés</th><th scope="col">Début UTC</th><th scope="col">Récompenses</th></tr></thead><tbody>
+{% for row in listing.rows %}<tr><th scope="row">{{ row.name|default('Projet n° '~row.id,true) }}</th><td data-label="État">{{ projectLabels[row.status]|default(row.status) }}</td><td data-label="Paliers terminés">{{ row.stage_index }} / {{ row.stage_count|default('Inconnu',true) }}</td><td data-label="Début UTC">{{ row.started_at }}</td><td data-label="Récompenses">{{ row.rewards_delivered_at ? 'Livraison enregistrée' : 'Aucune livraison enregistrée' }}</td></tr>{% endfor %}
+{% endif %}
+</tbody></table></div>
+{% else %}<p class="panel" role="status">Aucun résultat pour cette sélection.</p>{% endif %}
+<nav aria-label="Pagination">{% if after %}<a class="secondary" href="{{ path(pageRoute,pageParams) }}">Retour au début</a>{% endif %}{% if listing.next %}<a class="secondary" href="{{ path(pageRoute,pageParams|merge({after:listing.next})) }}">Page suivante</a>{% endif %}</nav>
+{% endblock %}

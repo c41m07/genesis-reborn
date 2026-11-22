@@ -594,6 +594,46 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertSame(4, $this->em->getRepository(\App\Entity\AdminAuditLog::class)->count());
     }
 
+    public function testUniverseSettingsSuspendOnlyThisCampaignAndKeepUnrelatedFlags(): void
+    {
+        $admin = $this->player('CampaignAdmin');
+        $admin->roles = ['ROLE_ADMIN'];
+        $worlds = $this->em->getRepository(Universe::class);
+        $universe = $worlds->findOneBy(['slug' => 'omega-1']);
+        $other = $worlds->findOneBy(['slug' => 'turbo-1']);
+        $this->em->flush();
+        self::assertTrue($universe->pirateCampaignEnabled());
+        self::assertTrue($other->pirateCampaignEnabled());
+        $catalogue = self::getContainer()->get(GameCatalog::class);
+        self::assertTrue($catalogue->forUniverse($other)['features']['guilds_enabled']);
+        $other->gameSettings['features']['guilds_enabled'] = false;
+        $this->em->flush();
+        self::assertFalse($catalogue->forUniverse($other)['features']['guilds_enabled']);
+        $service = self::getContainer()->get(\App\Service\Admin\AdminService::class);
+        $settings = [
+            'multipliers' => array_fill_keys(['building_time', 'research_time', 'ship_build_time', 'resource_production', 'travel_time'], '1'),
+            'limits' => ['max_planets' => 8, 'max_fleet_size' => 150],
+            'features' => ['guilds_enabled' => '0', 'planet_conquest' => '1', Universe::PIRATE_CAMPAIGN_FEATURE => '0'],
+        ];
+        $service->setUniverseSettings($admin, $universe->id, $settings);
+        self::assertFalse($universe->pirateCampaignEnabled());
+        self::assertTrue($other->pirateCampaignEnabled());
+        self::assertFalse($catalogue->forUniverse($universe)['features']['guilds_enabled']);
+        unset($settings['features'][Universe::PIRATE_CAMPAIGN_FEATURE], $settings['features']['guilds_enabled'], $settings['features']['planet_conquest']);
+        $service->setUniverseSettings($admin, $universe->id, $settings);
+        self::assertFalse($universe->pirateCampaignEnabled(), 'Un formulaire ancien ne réactive pas la campagne.');
+        self::assertFalse($catalogue->forUniverse($universe)['features']['guilds_enabled']);
+        self::assertTrue($catalogue->forUniverse($universe)['features']['planet_conquest']);
+        $settings['features'][Universe::PIRATE_CAMPAIGN_FEATURE] = '1';
+        $settings['features']['planet_conquest'] = '0';
+        $service->setUniverseSettings($admin, $universe->id, $settings);
+        self::assertTrue($universe->pirateCampaignEnabled());
+        self::assertFalse($catalogue->forUniverse($universe)['features']['planet_conquest']);
+        $audit = $this->em->getRepository(\App\Entity\AdminAuditLog::class)->findOneBy(['action' => 'universe_settings_change'], ['id' => 'DESC']);
+        self::assertTrue($audit->details['features'][Universe::PIRATE_CAMPAIGN_FEATURE]);
+        self::assertSame((string) $universe->id, (string) $audit->targetId);
+    }
+
     public function testDirectAllianceRequiresMutualConsentAndIsSymmetric(): void
     {
         $a=$this->player('Alpha');$this->join($a);$b=$this->player('Beta');$this->join($b);
@@ -632,9 +672,25 @@ final class GamePersistenceTest extends KernelTestCase
         $a=$this->player('Alpha');$this->join($a);$b=$this->player('Beta');$this->join($b,'omega-1');$this->expectException(\DomainException::class);
         self::getContainer()->get(\App\Service\Player\DiplomacyService::class)->alliance($a->currentPlayerUniverse,$b->currentPlayerUniverse->id,'propose');
     }
-    public function testGuildFeatureDisabledAndLeaderPermissionAreEnforced(): void
+    public function testExplicitlyDisabledGuildsCannotBeCreated(): void
     {
-        $a=$this->player('Alpha');$this->join($a);$this->expectException(\DomainException::class);self::getContainer()->get(\App\Service\Player\DiplomacyService::class)->create($a->currentPlayerUniverse,'Pas de guilde', 'NON');
+        $player = $this->player('Alpha');
+        $this->join($player, 'turbo-1');
+        $membership = $player->currentPlayerUniverse;
+        $membership->universe->gameSettings['features']['guilds_enabled'] = false;
+        $this->em->flush();
+        $service = self::getContainer()->get(\App\Service\Player\DiplomacyService::class);
+        $connection = $this->em->getConnection();
+        $universeId = $membership->universe->id;
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Les guildes sont désactivées dans cet univers.');
+        try {
+            $service->create($membership, 'Pas de guilde', 'NON');
+        } finally {
+            // Doctrine ferme son gestionnaire après le refus transactionnel.
+            self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM guild WHERE universe_id = ?', [$universeId]));
+        }
     }
     public function testNonLeaderCannotDeclareGuildEnemy(): void
     {
@@ -1108,6 +1164,9 @@ final class GamePersistenceTest extends KernelTestCase
         $report = $this->em->getRepository(\App\Entity\EspionageReport::class)->findOneBy(['sender' => $sender->currentPlayerUniverse]);
         self::assertNotNull($report);
         self::assertSame('detected',$report->result);
+        $unread = self::getContainer()->get(\App\Repository\ReportNoticeRepository::class);
+        self::assertSame(1, $unread->count($sender->currentPlayerUniverse));
+        self::assertSame(0, $unread->count($targetOwner->currentPlayerUniverse), 'L’alerte détectée ne crée pas un rapport pour la cible.');
         self::assertSame(95, $report->detectionChance);
         self::assertSame(2, $report->probesSent);
         if ($report->result === 'detected') {

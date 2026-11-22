@@ -2,7 +2,7 @@
 
 namespace App\Service\Colony;
 
-use App\Entity\Planet;
+use App\Entity\{Planet, PlayerUniverse};
 use App\Service\Catalog\GameCatalog;
 use App\Service\Combat\TechnologyEffectCalculator;
 use App\Service\Requirement\RequirementChecker;
@@ -22,7 +22,7 @@ final class CatalogueInsights
     public function benefits(
         array $definition,
         string $group,
-        int $target,
+        ?int $target,
         Planet $planet,
         array $levels,
         array $technologies,
@@ -33,26 +33,31 @@ final class CatalogueInsights
         $factor = GameCatalog::tierFactor($tier);
         $slug = $definition['slug'];
         if ($group === 'buildings') {
-            // Le niveau proposé inclut déjà la file : comparer seulement le dernier
-            // passage de niveau, pour les productions comme pour les bonus et stockages.
+            // Sans projection, les deux lectures utilisent les rangs acquis, jamais la file.
             $rankedLevels = $levels[$slug] ?? [];
             if (is_numeric($rankedLevels)) {
                 $rankedLevels = ['basic' => (int) $rankedLevels];
             }
-            $rankedLevels[$tier] = max(0, $target - 1);
+            if ($target !== null) {
+                // Pour un gain, comparer uniquement le dernier niveau proposé.
+                $rankedLevels[$tier] = max(0, $target - 1);
+            }
             $levels[$slug] = $rankedLevels;
             $next = $levels;
-            $next[$slug][$tier] = $target;
+            if ($target !== null) {
+                $next[$slug][$tier] = $target;
+            }
             if (isset($definition['production_resource'])) {
                 $benefitResource = $definition['production_resource'];
+                $production = $this->resources->rate($planet, $benefitResource, 0, $levels, $context) * 3600;
                 $result = [[
                     'label' => 'Production de ' . mb_strtolower($this->catalog->rules()['resources'][$benefitResource]),
-                    'before' => $this->resources->rate($planet, $benefitResource, 0, $levels, $context) * 3600,
-                    'after' => $this->resources->rate($planet, $benefitResource, 0, $next, $context) * 3600,
+                    'before' => $production,
+                    'after' => $target === null ? $production : $this->resources->rate($planet, $benefitResource, 0, $next, $context) * 3600,
                     'unit' => '/ h',
                 ]];
                 $beforeUse = $this->resources->factoryConsumption($planet, $slug, $levels, $context);
-                $afterUse = $this->resources->factoryConsumption($planet, $slug, $next, $context);
+                $afterUse = $target === null ? $beforeUse : $this->resources->factoryConsumption($planet, $slug, $next, $context);
                 foreach (['electricity' => 'Consommation électrique', 'hydrogen' => 'Consommation d’hydrogène'] as $resource => $label) {
                     if (max($beforeUse[$resource], $afterUse[$resource]) > 0) {
                         $result[] = [
@@ -68,17 +73,17 @@ final class CatalogueInsights
             }
             if (isset($definition['storage_resource'])) {
                 $benefitResource = $definition['storage_resource'];
+                $capacity = $this->resources->capacity($planet, $benefitResource, $levels);
                 return [[
                     'label' => 'Stockage de ' . mb_strtolower($this->catalog->rules()['resources'][$benefitResource]),
-                    'before' => $this->resources->capacity($planet, $benefitResource, $levels),
-                    'after' => $this->resources->capacity($planet, $benefitResource, $next),
+                    'before' => $capacity,
+                    'after' => $target === null ? $capacity : $this->resources->capacity($planet, $benefitResource, $next),
                     'unit' => '',
                 ]];
             }
             if (in_array($slug, ['lab', 'shipyard'], true)) {
                 $maxLevel = max(1, (int) ($definition['max_level'] ?? 25));
-                $afterRanks = $levels[$slug] ?? [];
-                $afterRanks[$tier] = $target;
+                $afterRanks = $next[$slug];
                 $cap = (float) ($this->catalog->rules()['time_reduction_max_percent'] ?? 70);
                 $before = GameCatalog::diminishingBonus($levels[$slug] ?? [], $cap, $maxLevel);
                 $after = GameCatalog::diminishingBonus($afterRanks, $cap, $maxLevel);
@@ -91,9 +96,12 @@ final class CatalogueInsights
             }
             if ($slug === 'fortress') {
                 $effect = $definition['effect'] ?? [];
-                $maxLevel = max(1, (int) ($definition['max_level'] ?? 25));
-                $afterRanks = $levels[$slug] ?? [];
-                $afterRanks[$tier] = $target;
+                if ($target === null && (($effect['targets'] ?? null) !== 'ground_defenses' || ($effect['stat'] ?? null) !== 'hp')) {
+                    return [];
+                }
+                // Le combat utilise le niveau de référence du bunker pour le bonus acquis.
+                $maxLevel = max(1, (int) (($target === null ? $this->catalog->get('buildings', $slug) : $definition)['max_level'] ?? 25));
+                $afterRanks = $next[$slug];
                 $cap = (float) ($effect['max_bonus'] ?? 25);
                 return [[
                     'label' => 'Structure supplémentaire des défenses',
@@ -166,7 +174,7 @@ final class CatalogueInsights
 
     private function technologyBenefits(
         array $definition,
-        int $target,
+        ?int $target,
         array $levels,
         Planet $planet,
     ): array
@@ -178,11 +186,15 @@ final class CatalogueInsights
         if (is_numeric($ranks)) {
             $ranks = ['basic' => (int) $ranks];
         }
-        $target = min($target, (int) ($effect['tier_max_levels'][$tier] ?? $definition['max_level'] ?? $target));
-        // Compare uniquement le niveau proposé au dernier niveau déjà programmé.
-        $ranks[$tier] = max(0, $target - 1);
+        if ($target !== null) {
+            $target = min($target, (int) ($effect['tier_max_levels'][$tier] ?? $definition['max_level'] ?? $target));
+            // Compare uniquement le niveau proposé au dernier niveau déjà programmé.
+            $ranks[$tier] = max(0, $target - 1);
+        }
         $afterRanks = $ranks;
-        $afterRanks[$tier] = $target;
+        if ($target !== null) {
+            $afterRanks[$tier] = $target;
+        }
         $maxLevel = max(1, (int) ($definition['max_level'] ?? 25));
         $type = $effect['type'] ?? null;
         if (in_array($slug, ['signature_masking', 'intelligence_countermeasures', 'tactical_intelligence'], true)) {
@@ -358,7 +370,7 @@ final class CatalogueInsights
     public function tree(
         array $levels,
         array $technologies,
-        ?\App\Entity\PlayerUniverse $membership = null,
+        ?PlayerUniverse $membership = null,
         ?Planet $planet = null,
     ): array
     {
@@ -376,58 +388,7 @@ final class CatalogueInsights
             foreach (GameCatalog::TIERS as $tier) {
                 foreach ($catalog[$kind] ?? $this->catalog->all($kind) as $slug => $base) {
                     $key = $kind . ':' . $slug . '-' . $tier;
-                    $definition = $this->catalog->withTier($base, $tier);
-                    $requirements = $this->requirements->forTier($definition, $tier, 1);
-                    $prerequisites = [];
-                    $parents = [];
-                    foreach (['buildings' => $levels, 'technologies' => $technologies] as $group => $owned) {
-                        foreach ($requirements[$group] ?? [] as $requirement) {
-                            $requiredTier = $requirement['tier'] ?? 'basic';
-                            $have = (int) ($owned[$requirement['slug']][$requiredTier] ?? ($requiredTier === 'basic' && is_numeric($owned[$requirement['slug']] ?? null) ? $owned[$requirement['slug']] : 0));
-                            $requiredDefinition = $this->catalog->withTier($catalog[$group][$requirement['slug']] ?? $this->catalog->get($group, $requirement['slug']), $requiredTier);
-                            $prerequisites[] = [
-                                'group' => $group,
-                                'slug' => $requirement['slug'],
-                                'tier' => $requiredTier,
-                                'label' => $requiredDefinition['label'],
-                                'level' => $requirement['level'],
-                                'current' => $have,
-                                'met' => $have >= (int) $requirement['level'],
-                            ];
-                            $parents[] = $group . ':' . $requirement['slug'] . '-' . $requiredTier;
-                        }
-                    }
-                    foreach ($requirements['ships'] ?? [] as $entry) {
-                        $shipSlug = is_array($entry) ? $entry['slug'] : $entry;
-                        $shipTier = is_array($entry) ? $entry['tier'] ?? 'basic' : 'basic';
-                        $parents[] = 'ships:' . $shipSlug . '-' . $shipTier;
-                        $ship = $this->catalog->withTier($catalog['ships'][$shipSlug] ?? $this->catalog->get('ships', $shipSlug), $shipTier);
-                        $met = !$this->requirements->check($this->requirements->forTier($ship, $shipTier), $levels, $technologies, [], $catalog ?: null);
-                        $prerequisites[] = [
-                            'group' => 'ships',
-                            'slug' => $shipSlug,
-                            'tier' => $shipTier,
-                            'label' => $ship['label'],
-                            'level' => null,
-                            'current' => null,
-                            'met' => $met,
-                        ];
-                    }
-                    $owned = $kind === 'buildings' ? $levels : ($kind === 'technologies' ? $technologies : []);
-                    $value = $owned[$slug] ?? 0;
-                    $acquired = $membership && $planet && $this->access->acquired($membership, $planet, $kind, $slug, $tier);
-                    $nodes[$key] = [
-                        'group' => $kind,
-                        'key' => $key,
-                        'definition' => $definition,
-                        'tier' => $tier,
-                        'slug' => $slug,
-                        'level' => is_array($value) ? (int) ($value[$tier] ?? 0) : ($tier === 'basic' ? (int) $value : 0),
-                        'prerequisites' => $prerequisites,
-                        'parents' => array_values(array_unique($parents)),
-                        'acquired' => (bool) $acquired,
-                        'available' => (!$membership || $this->access->isCurrent($membership)) && ($acquired || !$this->requirements->check($requirements, $levels, $technologies, [], $catalog ?: null)),
-                    ];
+                    $nodes[$key] = $this->technologyNode($kind, $slug, $tier, $base, $levels, $technologies, $catalog, $membership, $planet);
                 }
             }
         }
@@ -450,11 +411,130 @@ final class CatalogueInsights
             return $depths[$key] = $parentDepths ? max($parentDepths) + 1 : 0;
         };
         $columns = [];
+        $lookup = static fn (string $candidate): ?array => $nodes[$candidate] ?? null;
         foreach ($nodes as $key => $node) {
             $node['depth'] = $depth($key);
+            $node['recommendation'] = TechnologyGuideStep::resolve($key, $lookup);
             $columns[$node['depth']][] = $node;
         }
         ksort($columns);
         return $columns;
+    }
+
+    /** Ne prépare que l’objectif suivi et ses prérequis utiles, jamais une vue complète du Guide. */
+    public function goalSummary(
+        PlayerUniverse $membership,
+        Planet $planet,
+        string $group,
+        string $slug,
+        string $tier,
+        array $levels,
+        array $technologies,
+    ): ?array {
+        $catalog = $this->catalog->forUniverse($membership->universe)['catalog'];
+        $nodes = [];
+        $lookup = function (string $key) use (&$nodes, $catalog, $levels, $technologies, $membership, $planet): ?array {
+            if (array_key_exists($key, $nodes)) {
+                return $nodes[$key];
+            }
+            [$group, $slug, $tier] = preg_split('/[:-]/', $key);
+            $definition = $catalog[$group][$slug] ?? null;
+            return $nodes[$key] = $definition === null ? null : $this->technologyNode(
+                $group, $slug, $tier, $definition, $levels, $technologies, $catalog, $membership, $planet,
+            );
+        };
+        $key = $group . ':' . $slug . '-' . $tier;
+        $node = $lookup($key);
+        if ($node === null) {
+            return null;
+        }
+        return [
+            'label' => $node['definition']['label'],
+            'tier' => $node['definition']['_tier_label'],
+            'recommendation' => TechnologyGuideStep::resolve($key, $lookup),
+        ];
+    }
+
+    private function technologyNode(
+        string $kind,
+        string $slug,
+        string $tier,
+        array $base,
+        array $levels,
+        array $technologies,
+        array $catalog,
+        ?PlayerUniverse $membership,
+        ?Planet $planet,
+    ): array {
+        $key = $kind . ':' . $slug . '-' . $tier;
+        $definition = $this->catalog->withTier($base, $tier);
+        $requirements = $this->requirements->forTier($definition, $tier, 1);
+        $prerequisites = [];
+        $parents = [];
+        foreach (['buildings' => $levels, 'technologies' => $technologies] as $group => $owned) {
+            foreach ($requirements[$group] ?? [] as $requirement) {
+                $requiredTier = $requirement['tier'] ?? 'basic';
+                $have = (int) ($owned[$requirement['slug']][$requiredTier] ?? ($requiredTier === 'basic' && is_numeric($owned[$requirement['slug']] ?? null) ? $owned[$requirement['slug']] : 0));
+                $requiredDefinition = $this->catalog->withTier($catalog[$group][$requirement['slug']] ?? $this->catalog->get($group, $requirement['slug']), $requiredTier);
+                $prerequisites[] = [
+                    'group' => $group,
+                    'slug' => $requirement['slug'],
+                    'tier' => $requiredTier,
+                    'label' => $requiredDefinition['label'],
+                    'level' => $requirement['level'],
+                    'current' => $have,
+                    'met' => $have >= (int) $requirement['level'],
+                ];
+                $parents[] = $group . ':' . $requirement['slug'] . '-' . $requiredTier;
+            }
+        }
+        foreach ($requirements['ships'] ?? [] as $entry) {
+            $shipSlug = is_array($entry) ? $entry['slug'] : $entry;
+            $shipTier = is_array($entry) ? $entry['tier'] ?? 'basic' : 'basic';
+            $parents[] = 'ships:' . $shipSlug . '-' . $shipTier;
+            $ship = $this->catalog->withTier($catalog['ships'][$shipSlug] ?? $this->catalog->get('ships', $shipSlug), $shipTier);
+            $met = !$this->requirements->check($this->requirements->forTier($ship, $shipTier), $levels, $technologies, [], $catalog ?: null);
+            $prerequisites[] = [
+                'group' => 'ships',
+                'slug' => $shipSlug,
+                'tier' => $shipTier,
+                'label' => $ship['label'],
+                'level' => null,
+                'current' => null,
+                'met' => $met,
+            ];
+        }
+        $owned = $kind === 'buildings' ? $levels : ($kind === 'technologies' ? $technologies : []);
+        $value = $owned[$slug] ?? 0;
+        $acquired = $membership && $planet && $this->access->acquired($membership, $planet, $kind, $slug, $tier);
+        $available = (!$membership || $this->access->isCurrent($membership))
+            && ($acquired || !$this->requirements->check($requirements, $levels, $technologies, [], $catalog ?: null));
+        $level = is_array($value) ? (int) ($value[$tier] ?? 0) : ($tier === 'basic' ? (int) $value : 0);
+        $maximum = (int) ($definition['effect']['tier_max_levels'][$tier] ?? $definition['max_level'] ?? PHP_INT_MAX);
+        $localRequirement = null;
+        if ($kind === 'technologies' && $level < $maximum && !$this->access->hasLocalResearchLaboratory($levels, $tier)) {
+            // Un accès de recherche appartient à l’empire, mais chaque lancement exige un labo sur place.
+            $laboratory = $this->catalog->withTier($catalog['buildings']['lab'] ?? $this->catalog->get('buildings', 'lab'), $tier);
+            $localRequirement = [
+                'group' => 'buildings', 'slug' => 'lab', 'tier' => $tier, 'label' => $laboratory['label'],
+                'level' => 1, 'current' => 0, 'met' => false,
+            ];
+        }
+
+        return [
+            'group' => $kind,
+            'key' => $key,
+            'definition' => $definition,
+            'tier' => $tier,
+            'slug' => $slug,
+            'level' => $level,
+            'prerequisites' => $prerequisites,
+            'parents' => array_values(array_unique($parents)),
+            'acquired' => (bool) $acquired,
+            'available' => $available,
+            'localRequirement' => $localRequirement,
+            'maximum' => $maximum,
+            'canAdvance' => $available && $localRequirement === null && $level < $maximum,
+        ];
     }
 }

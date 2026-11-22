@@ -63,6 +63,7 @@ final class AdminController extends AbstractController
         $listFilters = [
             'q' => mb_substr(trim($request->query->getString('q')), 0, 150),
             'status' => in_array($request->query->getString('status'), ['active', 'suspended', 'scheduled', 'closed'], true) ? $request->query->getString('status') : '',
+            'verification' => in_array($request->query->getString('verification'), ['confirmed', 'pending'], true) ? $request->query->getString('verification') : '',
             'role' => in_array($request->query->getString('role'), ['admin', 'player'], true) ? $request->query->getString('role') : '',
             'action' => mb_substr($request->query->getString('action'), 0, 80),
         ];
@@ -220,9 +221,13 @@ final class AdminController extends AbstractController
         if ($slug !== null) {
             $draft = $request->getSession()->remove('admin_catalogue_draft_'.$id.'_'.$group.'_'.$slug);
             // Un échec ne perd pas les saisies et ne modifie jamais les valeurs de référence.
-            if (is_array($draft)) {
+            if (is_array($draft) && isset($draft['values'], $draft['revision'], $draft['reason']) && !$request->query->getBoolean('reload')) {
+                $catalogues[$group][0]['revision'] = $draft['revision'];
+                $catalogues[$group][0]['reason'] = $draft['reason'];
+                $catalogues[$group][0]['draft'] = true;
+                $catalogues[$group][0]['preview'] = $draft['preview'] ?? null;
                 foreach ($catalogues[$group][0]['fields'] as &$field) {
-                    $value = $draft;
+                    $value = $draft['values'];
                     foreach (explode('.', $field['path']) as $part) $value = is_array($value) ? ($value[$part] ?? null) : null;
                     if (is_scalar($value)) $field['value'] = $value;
                 }
@@ -246,6 +251,7 @@ final class AdminController extends AbstractController
         string $slug,
         Request $request,
         CatalogBalanceService $balance,
+        GameRepository $repo,
     ): Response
     {
         $tokenId = 'admin_catalogue_' . $id . '_' . $group . '_' . $slug;
@@ -253,15 +259,38 @@ final class AdminController extends AbstractController
             throw $this->createAccessDeniedException('Formulaire expiré.');
         }
         try {
+            if ($request->request->getBoolean('preview')) {
+                $universe = $repo->find(Universe::class, $id);
+                if (!$universe instanceof Universe) {
+                    throw $this->createNotFoundException('Univers introuvable.');
+                }
+                $preview = $balance->preview(
+                    $universe, $group, $slug, $request->request->all('values'),
+                    $request->request->getString('revision'),
+                    $request->request->getString('preview_tier', 'basic'),
+                    $request->request->getInt('preview_level', 1),
+                    $request->request->getInt('preview_quantity', 1),
+                );
+                $request->getSession()->set('admin_catalogue_draft_'.$id.'_'.$group.'_'.$slug, [
+                    'values' => $request->request->all('values'),
+                    'revision' => $request->request->getString('revision'),
+                    'reason' => $request->request->getString('reason'),
+                    'preview' => $preview,
+                ]);
+                return $this->redirectToRoute('app_admin_catalogue_edit', ['id' => $id, 'group' => $group, 'slug' => $slug]);
+            }
+            if (!$request->request->getBoolean('confirmed')) {
+                throw new \DomainException('Confirmez l’application de cette modification à l’univers.');
+            }
             if ($request->request->getBoolean('reset')) {
-                $balance->reset($this->getUser(), $id, $group, $slug);
+                $balance->reset($this->getUser(), $id, $group, $slug, $request->request->getString('revision'), $request->request->getString('reason'));
             } else {
-                $balance->save($this->getUser(), $id, $group, $slug, $request->request->all('values'));
+                $balance->save($this->getUser(), $id, $group, $slug, $request->request->all('values'), $request->request->getString('revision'), $request->request->getString('reason'));
             }
             $request->getSession()->remove('admin_catalogue_draft_'.$id.'_'.$group.'_'.$slug);
             $this->addFlash('success', 'Équilibrage enregistré pour cet univers.');
         } catch (\DomainException $error) {
-            $request->getSession()->set('admin_catalogue_draft_'.$id.'_'.$group.'_'.$slug, $request->request->all('values'));
+            $request->getSession()->set('admin_catalogue_draft_'.$id.'_'.$group.'_'.$slug, ['values' => $request->request->all('values'), 'revision' => $request->request->getString('revision'), 'reason' => $request->request->getString('reason')]);
             $this->addFlash('error', $error->getMessage());
         }
         return $this->redirectToRoute('app_admin_catalogue_edit', ['id' => $id, 'group' => $group, 'slug' => $slug]);
@@ -348,7 +377,7 @@ final class AdminController extends AbstractController
                 'ship_build_time',
                 'resource_production',
                 'travel_time',
-            ], 'limits' => ['max_planets', 'max_fleet_size'], 'features' => ['guilds_enabled', 'planet_conquest']] as $group => $keys) {
+            ], 'limits' => ['max_planets', 'max_fleet_size'], 'features' => ['guilds_enabled', 'planet_conquest', Universe::PIRATE_CAMPAIGN_FEATURE]] as $group => $keys) {
                 $values = is_array($input[$group] ?? null) ? $input[$group] : [];
                 $draft[$group] = array_filter(array_intersect_key($values, array_flip($keys)), 'is_scalar');
             }

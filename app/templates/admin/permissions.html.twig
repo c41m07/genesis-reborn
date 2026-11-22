@@ -1,0 +1,29 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Permissions · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="page-heading"><div><p class="eyebrow">Exploitation</p><h1>Permissions administratives</h1><p>Matrice du périmètre raccordé, sans attribution ni modification de droits.</p></div></div>
+<section class="panel" aria-labelledby="permission-status">
+    <h2 id="permission-status">Accès actuel</h2>
+    <p>Ces quatre capacités sont réservées aux administrateurs non suspendus. Les joueurs et les visiteurs n’en disposent pas. Aucun autre rôle administratif n’est attribué depuis cet écran.</p>
+    <p>La portée indique la cible contrôlée lors de l’action, pas une restriction d’administration à un univers. Les autres pages restent protégées par le rôle administrateur existant.</p>
+</section>
+<section class="panel" aria-labelledby="permission-matrix-title">
+    <h2 id="permission-matrix-title">Capacités raccordées</h2>
+    <div class="table-wrap" role="region" tabindex="0" aria-label="Matrice des capacités administratives">
+        <table class="admin-ops-table" role="table">
+            <caption>Actions disponibles pour un administrateur actif</caption>
+            <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Capacité</th><th scope="col" role="columnheader">Effet</th><th scope="col" role="columnheader">Cible</th><th scope="col" role="columnheader">Garanties</th></tr></thead>
+            <tbody role="rowgroup">
+            {% for code, capability in capabilities %}
+                <tr role="row" data-capability="{{ code }}">
+                    <th scope="row" role="rowheader">{{ capability.label }}</th>
+                    <td role="cell" data-label="Effet">{{ capability.effect }}</td>
+                    <td role="cell" data-label="Cible">{{ capability.scope }}</td>
+                    <td role="cell" data-label="Garanties">{{ capability.safeguards }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

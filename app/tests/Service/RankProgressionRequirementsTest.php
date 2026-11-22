@@ -81,12 +81,19 @@ final class RankProgressionRequirementsTest extends TestCase
                 }
                 yield 'buildings/'.$slug.'/'.$tier => ['buildings', $slug, $tier, $rules];
             }
+            $antimatterBuildings = [['slug' => 'mine_hydrogen', 'tier' => $tier, 'level' => 5]];
+            if ($tier !== 'basic') {
+                $antimatterBuildings[] = ['slug' => 'mine_antimatter', 'tier' => 'basic', 'level' => $tier === 'superior' ? 50 : 25];
+            }
+            if ($tier === 'superior') {
+                $antimatterBuildings[] = ['slug' => 'mine_antimatter', 'tier' => 'intermediate', 'level' => 25];
+            }
             yield 'buildings/mine_antimatter/'.$tier => [
                 'buildings',
                 'mine_antimatter',
                 $tier,
                 [
-                    'buildings' => [['slug' => 'mine_hydrogen', 'tier' => $tier, 'level' => 5]],
+                    'buildings' => $antimatterBuildings,
                     'technologies' => [['slug' => 'engineering_foundations', 'tier' => $tier, 'level' => 5]],
                 ],
             ];

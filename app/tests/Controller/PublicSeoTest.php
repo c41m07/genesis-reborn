@@ -48,7 +48,14 @@ final class PublicSeoTest extends WebTestCase
             self::assertSelectorTextNotContains('body', 'Note de préparation');
             self::assertSelectorTextNotContains('body', 'MENTION_EDITEUR_ET_DIRECTION_PUBLICATION_A_VALIDER');
         }
-        $client->request('GET', '/confidentialite');
+        foreach (['/cgu', '/confidentialite'] as $document) {
+            $client->request('GET', $document);
+            self::assertResponseIsSuccessful();
+            self::assertSelectorTextContains('main a[href="/profil/supprimer"]', 'Suppression du compte');
+            self::assertSelectorTextContains('main', 'Le mot de passe actuel et une confirmation explicite sont nécessaires.');
+            self::assertSelectorExists('main a[href="mailto:contact@genesis-reborn.fr"]');
+        }
+        self::assertSelectorTextContains('main', 'Une ligne technique anonymisée');
         self::assertSelectorTextContains('main', 'Google Fonts');
         $client->request('GET', '/inscription');
         self::assertSelectorExists('footer a[href="/confidentialite"]');

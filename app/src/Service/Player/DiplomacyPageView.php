@@ -40,7 +40,7 @@ final class DiplomacyPageView
                 'members' => 'Membres de ma guilde', 'ranks' => 'Grades et permissions', 'management' => 'Gestion de ma guilde',
                 'relations' => 'Relations entre commandants', default => 'Relations entre guildes',
             }, 'guildPermissions' => $guildPermissions,
-            'ownRow' => ['members' => []], 'guilds' => [], 'guildRelations' => [], 'guildSearchResults' => [],
+            'ownRow' => ['members' => []], 'guilds' => [], 'guildRelations' => [], 'guildSearchResults' => [], 'recruitingGuilds' => [],
             'ranks' => [], 'selectedRank' => null, 'rankAssignments' => [], 'memberPresence' => [],
             'rankPermissionLabels' => DiplomacyAccessPolicy::PERMISSIONS,
             'guildPreview' => [], 'profile' => null, 'guildRelationCounts' => [], 'players' => [], 'searchPlayers' => [],
@@ -103,6 +103,9 @@ final class DiplomacyPageView
             $data['guildRelationCounts'] = $this->repository->guildRelationCounts($own);
             $data['profile'] = $this->profiles->guild($membership, $own->id);
             $data['guildPreview'] = $this->repository->guildConversation($own, 3);
+        }
+        if ($tab === 'join' && $search === '' && $membership->isPlayerControlled()) {
+            $data['recruitingGuilds'] = $this->repository->recruitingGuildDirectory($membership);
         }
         if ($tab === 'join' || ($own && $tab === 'diplomacy')) {
             $relations = $own ? $this->repository->guildRelations($own) : [];

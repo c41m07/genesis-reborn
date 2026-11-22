@@ -8,19 +8,24 @@ use Psr\Clock\ClockInterface;
 use App\Service\Player\VacationCalendar;
 final class ResourceService
 {
+    /** Même ordre d’affichage dans le bandeau et le formulaire de fret, sans incidence sur les calculs. */
+    public const DISPLAY_ORDER = ['metal', 'nano', 'hydrogen', 'antimatter', 'electricity'];
+
+
     public function __construct(private GameRepository $repo,private GameManager $manager,private GameCatalog $catalog,private ClockInterface $clock,private \App\Service\Event\GameEventService $events,private VacationCalendar $vacations,private EconomicUnitCapacity $economicUnits) {}
     public static function stock(float $stock,float $rate,\DateTimeImmutable $last,\DateTimeImmutable $now,float $cap): float
     {
         return min(max($cap,$stock),max(0,$stock)+max(0,$now->getTimestamp()-$last->getTimestamp())*$rate);
     }
-    public function initialize(Planet $planet,bool $colony=false,?array $initialLevels=null,float $stockMultiplier=1): void
+    public function initialize(Planet $planet,bool $colony=false,?array $initialLevels=null,float $stockMultiplier=1,bool $firstAccountPlanet=false): void
     {
         $levels=$initialLevels??$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
         $context=$this->catalogueContext($planet);
+        $stockProfile = $colony ? 'colony_initial_stock' : ($firstAccountPlanet ? 'new_account_first_planet_stock' : 'initial_stock');
         foreach ($this->catalog->rules()['resources'] as $slug=>$label) {
             if($this->repo->one(PlanetResource::class,['planet'=>$planet,'resourceType'=>$slug])) continue;
             $capacity=$this->capacity($planet,$slug,$levels);
-            $stock=$this->catalog->rules()[$colony?'colony_initial_stock':'initial_stock'][$slug];
+            $stock=$this->catalog->rules()[$stockProfile][$slug];
             $r=new PlanetResource();$r->planet=$planet;$r->resourceType=$slug;
             $r->currentStock=min($capacity,$stock*$stockMultiplier);
             $r->lastUpdatedAt=$this->clock->now();
@@ -197,7 +202,7 @@ final class ResourceService
         return $result;
     }
 
-    public function snapshot(Planet $planet,bool $includeEconomy=false): array
+    public function snapshot(Planet $planet,bool $includeEconomy=false,?\DateTimeImmutable $observedAt=null): array
     {
         $levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);$rows=[];foreach($this->repo->all(PlanetResource::class,['planet'=>$planet]) as $resource)$rows[$resource->resourceType]=$resource;
         $protectedRatio=max(0.0,min(1.0,(float)($this->catalog->rules()['combat_loot_protected_storage_ratio']??0.1)));
@@ -211,7 +216,7 @@ final class ResourceService
             if($includeEconomy) $result[$slug]+= ['gross'=>0.0,'consumption'=>0.0,'uncredited'=>0.0,'sources'=>[],'consumptionSources'=>[],'estimateSeconds'=>null,'potentialGross'=>0.0,'potentialSources'=>[],'productionInputs'=>[],'consumptionPotential'=>0.0,'consumerSources'=>[]];
         }
         if($rows===[])return $result;
-        $anchor=$rows['electricity']->lastUpdatedAt??array_values($rows)[0]->lastUpdatedAt;$now=$this->clock->now();$stocks=[];foreach($rows as $slug=>$resource)$stocks[$slug]=$resource->currentStock;$simulation=$this->simulateRange($planet,$levels,$stocks,$anchor<$now?$anchor:$now,$now,$economicInventory);
+        $anchor=$rows['electricity']->lastUpdatedAt??array_values($rows)[0]->lastUpdatedAt;$now=$observedAt??$this->clock->now();$stocks=[];foreach($rows as $slug=>$resource)$stocks[$slug]=$resource->currentStock;$simulation=$this->simulateRange($planet,$levels,$stocks,$anchor<$now?$anchor:$now,$now,$economicInventory);
         foreach($this->catalog->rules()['resources'] as $slug=>$label){
             $result[$slug]['stock']=max(0.0,(float)($simulation['stocks'][$slug]??0));
             $result[$slug]['rate']=(float)($simulation['rates'][$slug]??0.0);
@@ -249,9 +254,11 @@ final class ResourceService
         return $result;
     }
 
-    public function materialize(Planet $planet,?\DateTimeImmutable $at=null):array
+    public function materialize(Planet $planet,?\DateTimeImmutable $at=null,bool $lockStocks=false):array
     {
-        $at??=$this->clock->now();$levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);$rows=[];foreach($this->repo->all(PlanetResource::class,['planet'=>$planet]) as $resource)$rows[$resource->resourceType]=$resource;if($rows===[])return [];
+        $at??=$this->clock->now();$levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);$rows=[];
+        $resources = $lockStocks ? $this->repo->lockedPlanetResources($planet) : $this->repo->all(PlanetResource::class, ['planet' => $planet]);
+        foreach($resources as $resource)$rows[$resource->resourceType]=$resource;if($rows===[])return [];
         $anchor=$rows['electricity']->lastUpdatedAt??array_values($rows)[0]->lastUpdatedAt;$effective=$at<$anchor?$anchor:$at;$stocks=[];foreach($rows as $slug=>$resource)$stocks[$slug]=$resource->currentStock;$simulation=$this->simulateRange($planet,$levels,$stocks,$anchor,$effective);
         foreach($rows as $slug=>$resource){$resource->currentStock=max(0.0,(float)($simulation['stocks'][$slug]??$resource->currentStock));$resource->lastUpdatedAt=$effective;}return $rows;
     }
@@ -273,10 +280,14 @@ final class ResourceService
             $rows[$slug]->currentStock+=min(max(0.0,$this->capacity($planet,$slug,$levels)-$rows[$slug]->currentStock),$amount*$ratio);
         }
     }
-    /** Décharge le fret sans dépasser le stockage de la planète et renvoie la part perdue. */
-    public function deposit(Planet $planet, array $cargo): array
+    /**
+     * Dépose les ressources dans la capacité existante. Pour un dépôt indivisible, overflow
+     * indique la place manquante et aucune ressource du lot n’est créditée si elle est insuffisante.
+     */
+    public function deposit(Planet $planet, array $cargo, bool $allOrNothing = false): array
     {
-        $rows = $this->materialize($planet);
+        // Le retrait indivisible est transactionnel et doit s’appuyer sur les stocks courants.
+        $rows = $this->materialize($planet, lockStocks: $allOrNothing);
         $levels = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]);
         $delivered = [];
         $overflow = [];
@@ -287,7 +298,12 @@ final class ResourceService
             $room = max(0.0, $this->capacity($planet, $slug, $levels) - $rows[$slug]->currentStock);
             $delivered[$slug] = min((float) $amount, $room);
             $overflow[$slug] = max(0.0, (float) $amount - $delivered[$slug]);
-            $rows[$slug]->currentStock += $delivered[$slug];
+        }
+        if ($allOrNothing && max([0.0, ...array_values($overflow)]) > 0.0) {
+            return ['delivered' => array_fill_keys(array_keys($delivered), 0.0), 'overflow' => $overflow];
+        }
+        foreach ($delivered as $slug => $amount) {
+            $rows[$slug]->currentStock += $amount;
         }
 
         return ['delivered' => $delivered, 'overflow' => $overflow];

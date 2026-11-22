@@ -5,6 +5,17 @@ use Doctrine\ORM\Mapping as ORM;
 
 class Universe
 {
+    public const PIRATE_CAMPAIGN_FEATURE = 'pirate_campaign_enabled';
+
+    /** L’option est active pour les univers existants et nouveaux, sauf désactivation explicite. */
+    public function pirateCampaignEnabled(): bool
+    {
+        $features = $this->gameSettings['features'] ?? [];
+
+        return is_array($features)
+            && (!array_key_exists(self::PIRATE_CAMPAIGN_FEATURE, $features) || $features[self::PIRATE_CAMPAIGN_FEATURE] === true);
+    }
+
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     public ?int $id = null;
     #[ORM\Column(length: 64, unique: true)]

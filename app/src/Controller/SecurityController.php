@@ -8,6 +8,7 @@ use App\Validator\DTO\PasswordResetRequestData;
 use App\Validator\DTO\PasswordResetData;
 use App\Service\Player\RegistrationService;
 use App\Service\Player\EmailVerificationService;
+use App\Service\Player\EmailVerificationEmissionSelector;
 use App\Validator\DTO\RegistrationData;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request,Response};
@@ -36,13 +37,13 @@ final class SecurityController extends AbstractController
     #[Route('/deconnexion',name:'app_logout',methods:['POST'])]
     public function logout(): never { throw new \LogicException('Intercepté par Symfony Security.'); }
     #[Route('/inscription',name:'app_register',methods:['GET','POST'])]
-    public function register(Request $request,RegistrationService $service,EmailVerificationService $verification): Response
+    public function register(Request $request,RegistrationService $service,EmailVerificationEmissionSelector $verification): Response
     {
         if($this->getUser()) return $this->redirectToRoute('app_home');
         $form=$this->createForm(RegistrationType::class,new RegistrationData());$form->handleRequest($request);
         if($form->isSubmitted() && $form->isValid()) {
             try {
-                $player=$service->register($form->getData());
+                $player=$service->register($form->getData(), starterEligible: true);
                 if (!$verification->sendWelcomeAndVerification($player)) {
                     $this->addFlash('warning', 'Votre compte est créé, mais le mail de confirmation n’a pas pu être envoyé. Réessayez avec le formulaire de renvoi.');
                     return $this->redirectToRoute('app_email_verify_request');
@@ -56,7 +57,7 @@ final class SecurityController extends AbstractController
     }
 
     #[Route('/inscription/renvoyer', name: 'app_email_verify_request', methods: ['GET', 'POST'])]
-    public function resendVerification(Request $request, EmailVerificationService $service, \App\Repository\GameRepository $repo, #[Autowire(service: 'limiter.password_reset_request')] RateLimiterFactory $limiterFactory): Response
+    public function resendVerification(Request $request, EmailVerificationEmissionSelector $service, \App\Repository\GameRepository $repo, #[Autowire(service: 'limiter.password_reset_request')] RateLimiterFactory $limiterFactory): Response
     {
         $form = $this->createForm(PasswordResetRequestType::class, new PasswordResetRequestData());
         $form->handleRequest($request);
@@ -72,12 +73,14 @@ final class SecurityController extends AbstractController
     }
 
     #[Route('/inscription/confirmer/{token}', name: 'app_email_verify', methods: ['GET', 'POST'])]
-    public function verifyEmail(Request $request, string $token, EmailVerificationService $service): Response
+    public function verifyEmail(Request $request, #[\SensitiveParameter] string $token, EmailVerificationService $service, \App\Service\Player\MixedVerificationLinkReader $mixedReader, #[Autowire('%env(bool:EMAIL_VERIFICATION_MIXED_READER_ENABLED)%')] bool $mixedReaderEnabled): Response
     {
         $headers = ['Referrer-Policy' => 'no-referrer', 'Cache-Control' => 'no-store'];
-        if ($request->isMethod('GET')) return $this->render('security/email_verification.html.twig', ['token' => $token], new Response(headers: $headers));
+        if ($request->isMethod('GET')) return $this->render('security/email_verification.html.twig', [], new Response(headers: $headers));
         if (!$this->isCsrfTokenValid('email_verify', $request->request->get('_token'))) return $this->render('security/email_verification_invalid.html.twig', [], new Response(status: 403, headers: $headers));
-        if (!$service->verify($token)) {
+        // Le lecteur peut rester actif pendant un retour arrière des envois.
+        $verified = $mixedReaderEnabled ? $mixedReader->confirm($token) : $service->verify($token);
+        if (!$verified) {
             return $this->render('security/email_verification_invalid.html.twig', [], new Response(status: 400, headers: $headers));
         }
         $this->addFlash('success', 'Adresse email confirmée. Vous pouvez vous connecter.');

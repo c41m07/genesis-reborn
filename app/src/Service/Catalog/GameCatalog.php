@@ -99,11 +99,12 @@ final class GameCatalog
     {
         $config = $this->data['universes'][$universe->slug] ?? [
             'slug' => $universe->slug,'name' => $universe->name,
-            'features' => ['guilds_enabled' => false, 'planet_conquest' => false],
+            'features' => ['guilds_enabled' => true, 'planet_conquest' => false],
             'multipliers' => ['building_time' => 1, 'research_time' => 1, 'ship_build_time' => 1, 'resource_production' => 1, 'travel_time' => 1],
             'limits' => ['max_planets' => 31, 'max_fleet_size' => 1000000],
         ];
         foreach (['features', 'multipliers', 'limits'] as $section) $config[$section] = array_replace($config[$section] ?? [], $universe->gameSettings[$section] ?? []);
+        $config['features'][Universe::PIRATE_CAMPAIGN_FEATURE] = $universe->pirateCampaignEnabled();
         $config['catalog']=[];
         foreach(['buildings','technologies','ships','defenses'] as $group){
             $config['catalog'][$group]=$this->data[$group];

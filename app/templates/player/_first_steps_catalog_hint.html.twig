@@ -1,0 +1,17 @@
+<aside class="requirement" aria-label="Conseil Premiers pas">
+    <div>
+        <p><strong>Premiers pas</strong> : {{ training_hint.explanation }} {{ training_hint.action }}</p>
+        {% if training_hint.storage is defined %}
+            {% set storage = training_hint.storage %}
+            <p>Actuellement : {{ storage.capacity|number_format(0, ',', ' ') }} unités de métal de capacité totale, dont {{ storage.protected|number_format(0, ',', ' ') }} protégées du pillage.
+                {% if storage.nextCapacity > storage.capacity %}Avec le Dépôt basique niveau 1 : {{ storage.nextCapacity|number_format(0, ',', ' ') }} unités au total, dont {{ storage.nextProtected|number_format(0, ',', ' ') }} protégées.{% endif %}
+                Le reste n’est pas protégé par le stockage.</p>
+            <a href="{{ path('app_colony', {id: planet.id, section: 'buildings', focusItem: 1, _fragment: 'item-mine_metal-basic'}) }}">Voir la Mine à ciel ouvert</a>
+        {% elseif training_hint.electricity is defined %}
+            <p>Bilan actuel : {{ (training_hint.electricity.produced * 3600)|quantity(1) }} produites et {{ (training_hint.electricity.used * 3600)|quantity(1) }} consommées par heure sur cette colonie.</p>
+        {% elseif slug in ['mine_metal', 'engineering_foundations'] and card.target == 1 %}
+            <p>Cette commande guidée paie le prix normal. À sa fin, le guide peut rendre 25 % du prix réellement payé en métal et nanos, dans les limites du pilote et une fois par compte.</p>
+        {% endif %}
+        <a href="{{ path('app_first_steps') }}">Revenir au guide</a>
+    </div>
+</aside>

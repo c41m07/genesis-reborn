@@ -758,6 +758,9 @@ final class CombatEventTest extends KernelTestCase
         $log = $this->em->getRepository(CombatLog::class)->findOneBy(['combatEvent' => $event]);
         self::assertNotNull($log);
         self::assertSame('attacker_wins', $log->outcome);
+        $unread = self::getContainer()->get(\App\Repository\ReportNoticeRepository::class);
+        self::assertSame(1, $unread->count($attacker->currentPlayerUniverse), 'Deux flottes, un seul rapport à lire.');
+        self::assertSame(1, $unread->count($defender->currentPlayerUniverse));
         self::assertSame(1, $this->em->getRepository(\App\Entity\PlayerBoost::class)->count(['playerUniverse' => $attacker->currentPlayerUniverse, 'sourceType' => 'risk_mission']));
         $combatEvent = $this->em->getRepository(\App\Entity\BoostEvent::class)->findOneBy(['universe' => $attacker->currentPlayerUniverse->universe, 'templateKey' => 'combat', 'status' => 'active']);
         self::assertGreaterThan(0, $this->em->getRepository(\App\Entity\BoostEventContribution::class)->findOneBy(['event' => $combatEvent, 'playerUniverse' => $attacker->currentPlayerUniverse])->value);

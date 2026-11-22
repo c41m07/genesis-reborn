@@ -138,15 +138,25 @@ test('Maquette admin : cinq entrées, cartes de rubrique, fil d’Ariane et acc�
   await expect(navigation.locator('.admin-navigation-links')).toHaveCount(0);
   await expect(page.locator('.admin-home-actions a')).toHaveCount(4);
   await expect(page.locator('.admin-home-actions').getByRole('link', { name: /^Préparer un événement/ })).toHaveAttribute('href', '/admin/events/assistant');
-  for (const [group, label, cards] of [['players','Joueurs et modération',4],['universe','Univers et activité',3],['events','Animation',5],['ops','Exploitation',4]]) {
+  const sections = [
+    ['players', 'Joueurs et modération', ['Guildes actives', 'Joueurs', 'Signalements', 'Feedbacks', 'Dossiers']],
+    ['universe', 'Univers et activité', ['Univers', 'Alertes', 'Flottes et transports']],
+    ['events', 'Animation', ['Événements', 'Projets de guilde', 'Défis collectifs', 'Rotations hebdomadaires', 'Patchnotes']],
+    ['ops', 'Exploitation', ['Sécurité', 'Permissions', 'État des traitements', 'Journal des actions', 'Brouillons juridiques']],
+  ];
+  for (const [group, label, modules] of sections) {
     await navigation.getByRole('link', { name: new RegExp('^' + label) }).click();
     await expect(page).toHaveURL(new RegExp('/admin/rubriques/' + group + '$'));
     await expect(page.getByRole('heading', { name: label, exact: true })).toBeVisible();
-    await expect(page.locator('.admin-module-card')).toHaveCount(cards);
-    if (group === 'events') await expect(page.locator('.admin-module-card').filter({ hasText: 'Projets de guilde' })).toHaveAttribute('href', '/admin/projets-guilde');
+    const cards = page.locator('.admin-module-card');
+    const card = name => cards.filter({ has: page.getByRole('heading', { name, exact: true }) });
+    await expect(cards.getByRole('heading', { level: 2 })).toHaveText(modules);
+    if (group === 'players') await expect(card('Guildes actives')).toHaveAttribute('href', '/admin/guildes');
+    if (group === 'events') await expect(card('Projets de guilde')).toHaveAttribute('href', '/admin/projets-guilde');
+    if (group === 'ops') await expect(card('Permissions')).toHaveAttribute('href', '/admin/permissions');
     await expect(navigation.locator('.admin-navigation-links')).toHaveCount(1);
     await expect(navigation.locator('.admin-primary-link[aria-current="page"]')).toHaveCount(1);
-    await page.locator('.admin-module-card').first().click();
+    await card(modules[0]).click();
     const breadcrumbs = page.getByRole('navigation', { name: 'Fil d’Ariane' });
     await breadcrumbs.getByRole('link', { name: label, exact: true }).click();
     await expect(page).toHaveURL(new RegExp('/admin/rubriques/' + group + '$'));

@@ -34,6 +34,11 @@
           "slug": "mine_hydrogen",
           "tier": "intermediate",
           "level": 5
+        },
+        {
+          "slug": "mine_antimatter",
+          "tier": "basic",
+          "level": 25
         }
       ],
       "technologies": [
@@ -50,6 +55,16 @@
           "slug": "mine_hydrogen",
           "tier": "superior",
           "level": 5
+        },
+        {
+          "slug": "mine_antimatter",
+          "tier": "basic",
+          "level": 50
+        },
+        {
+          "slug": "mine_antimatter",
+          "tier": "intermediate",
+          "level": 25
         }
       ],
       "technologies": [

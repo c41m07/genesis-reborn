@@ -10,10 +10,12 @@ use App\Service\Boost\BoostEventService;
 use App\Service\Notification\NotificationService;
 use Symfony\Component\Uid\Uuid;
 use Psr\Clock\ClockInterface;
+use App\Service\Player\FirstStepRewardPolicy;
+use App\Service\Player\FirstSteps;
 use App\Service\Player\VacationCalendar;
 final class FleetService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment, private FirstSteps $firstSteps) {}
     private function coords(SolarSystem $s,?int $position): array { return [$s->id,$s->galaxy->id,$s->coordX,$s->coordY,$position]; }
     public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0): array
     {
@@ -105,13 +107,17 @@ final class FleetService
             return ['arrival_at'=>$this->clock->now()->modify('+'.$q['seconds'].' seconds')->format(DATE_ATOM)]+array_intersect_key($q,array_flip(['distance','normal_distance','hyper_distance','seconds','one_way_fuel','orbit_fuel','total_fuel','stored_fuel_used','planet_fuel','fuel_capacity','cargo_capacity','freight_capacity','composition','freight','cargo_available','cargo_maximum','ship_available','ship_adjusted','adjusted']));
         });
     }
-    public function send(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo,string $key,float $orbitHours=0,bool $requireExactComposition=false): bool
+    public function send(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo,string $key,float $orbitHours=0,bool $requireExactComposition=false, bool $tutorialSpy=false): bool
     {
-        return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$key,$orbitHours,$requireExactComposition){
+        return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$key,$orbitHours,$requireExactComposition,$tutorialSpy){
             $this->guard->lock($m,$origin);$this->queues->synchronize($m);if(!$this->guard->receipt($m,$key)) return false;
             $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours);
             if($requireExactComposition && $q['ship_adjusted']) throw new \DomainException('La composition n’est plus disponible exactement. Vérifiez à nouveau les quantités avant envoi.');
             if($q['target'] instanceof Planet) $this->manager->lock($q['target']);
+            if ($tutorialSpy && ($mission !== 'spy' || !FirstStepRewardPolicy::isNativeNpc($q['target'] instanceof Planet ? $q['target'] : null)
+                || $q['ship_adjusted'] || $q['composition'] !== ['probe' => ['basic' => 1]])) {
+                throw new \DomainException('Pour l’exercice guidé, choisissez un monde PNJ découvert et envoyez exactement une Sonde de reconnaissance basique.');
+            }
             if($mission==='transport') { if(!$q['target']->owner) throw new \DomainException('Cette planète n’accepte plus vos transports.');$this->manager->lock($q['target']->owner->player);if(!$this->transports->canReceive($m,$q['target'])) throw new \DomainException('Cette planète n’accepte plus vos transports.'); }
             if($mission==='station' && $q['target']->owner?->id!==$m->id) throw new \DomainException('Cette colonie ne vous appartient plus.');
             if($q['idle']) $this->manager->lock($q['idle']);
@@ -119,6 +125,7 @@ final class FleetService
             if($q['idle']) $q['idle']->storedFuel-=$q['stored_fuel_used'];
             $cargo=$q['freight'];$cargo['hydrogen']=($cargo['hydrogen']??0)+$q['total_fuel'];
             $f=new Fleet();$f->playerUniverse=$m;$f->homePlanet=$origin;$f->destination=$q['target'] instanceof Planet?$q['target']:null;$f->destinationSystem=$q['system'];$f->status='traveling';$f->mission=$mission;$f->speedRatio=$ratio;$f->cargo=$cargo;$f->reservedFuel=$q['total_fuel'];$f->orbitFuel=$q['orbit_fuel'];$f->orbitDurationSeconds=$mission==='defend' && $q['target'] instanceof Planet && $this->occupations->activeFor($q['target'])!==null?(int)round($this->occupations->reinforcementHours($q['target'])*3600):($mission==='conquer' && $this->occupations->isEnabled()?\App\Service\Combat\OccupationPolicy::DURATION_SECONDS:(int)round($orbitHours*3600));$f->travelSeconds=$q['seconds'];$f->departureAt=$this->clock->now();$f->arrivalAt=$this->clock->now()->modify('+'.$f->travelSeconds.' seconds');$f->navigation=$this->navigation->freeze($this->coords($origin->solarSystem,$origin->position),$this->coords($q['system'],$q['target'] instanceof Planet?$q['target']->position:null),$q['movement_ships'],$ratio,$this->catalog->rules()['fuel_ratio_policy'],$q,$f->departureAt);$this->manager->save($f);$this->manager->flush();
+            $f->firstStepsSpy = $tutorialSpy;
             if($mission==='station') $f->navigation['station']=['leg_fuel'=>$q['one_way_fuel']];
             foreach($q['composition'] as $slug=>$tiers)foreach($tiers as $tier=>$quantity) {
                 $stock=$this->repo->one(FleetShip::class,['fleet'=>$q['idle'],'slug'=>$slug,'tier'=>$tier]);$stock->quantity-=$quantity;
@@ -145,17 +152,6 @@ final class FleetService
             return $q['adjusted'];
         });
     }
-    public function reschedulePlayerBoost(Fleet $fleet, \DateTimeImmutable $arrivalAt): void
-    {
-        $this->vacations->assertCanSendFleet($fleet->playerUniverse);
-        if (!in_array($fleet->status, ['traveling', 'returning', 'defending', 'orbiting'], true) || !$fleet->arrivalAt) {
-            throw new \DomainException('Mission chronométrée active introuvable.');
-        }
-        $this->navigation->reschedule($fleet,$this->clock->now());
-        $fleet->arrivalAt = $arrivalAt;
-        $this->schedule($fleet);
-    }
-
     private function schedule(Fleet $f): void
     {
         $this->dispatch->schedule($f);
@@ -299,23 +295,51 @@ final class FleetService
                 $f->status='orbit_pending';$f->arrivalAt=null;$f->dispatchToken=Uuid::v4()->toRfc4122();$this->combats->notifyOrbitRequest($f);
                 return;
             } elseif($f->mission==='spy') {
+                if ($f->firstStepsSpy && $f->destination !== null) {
+                    // Une cible devenue une colonie pendant le vol ne doit jamais être espionnée par le tutoriel.
+                    $this->manager->lock($f->destination);
+                    if (!FirstStepRewardPolicy::isNativeNpc($f->destination)) {
+                        $this->startReturn($f, $f->arrivalAt);
+                        $this->notifications->enqueue($m, 'La cible n’est plus un monde PNJ. Votre sonde rentre sans rapport d’exercice.', journalKind: 'spy');
+                        return;
+                    }
+                }
                 $probes=$this->repo->all(FleetShip::class,['fleet'=>$f,'slug'=>'probe']);
                 $probeCount=array_sum(array_map(static fn($probe)=>$probe->quantity,$probes));
                 if($probeCount<1) throw new \LogicException('Sondes d’espionnage absentes à l’arrivée.');
                 $report = $this->espionage->resolve($f,$probeCount);
+                $guidedProbeConsumed = $f->firstStepsSpy && count($probes) === 1
+                    && $probes[0]->tier === 'basic' && $probes[0]->quantity === 1;
                 foreach($probes as $probe)$probe->quantity=0;
+                // Un échec de l'arrivée annule aussi la perte, la preuve et la restitution éventuelle.
+                $this->firstSteps->recordNpcEspionageReport($f, $report, $guidedProbeConsumed);
                 if ($report->result === 'success' && $report->intelCategories > 0) $this->boostGrants->awardRiskMission($m,$f);
             } elseif($f->mission==='explore') {
                 $d=$this->repo->one(PlayerDiscovery::class,['playerUniverse'=>$m,'solarSystem'=>$f->destinationSystem]);
                 $newDiscovery = !$d;
                 if(!$d) { $d=new PlayerDiscovery();$d->playerUniverse=$m;$d->solarSystem=$f->destinationSystem;$this->manager->save($d); }
-                $this->consumeShip($f,'probe');$this->notifications->enqueue($m,'Système découvert : '.$f->destinationSystem->name.'.',journalKind:'arrival');
+                $this->consumeShip($f,'probe');
+                if ($newDiscovery) {
+                    // Observer la découverte avant le premier flush, sous le même verrou que l’arrivée.
+                    $this->firstSteps->recordExplorationDiscovery($f, $d);
+                }
+                $this->notifications->enqueue($m,'Système découvert : '.$f->destinationSystem->name.'.',journalKind:'arrival');
                 if ($newDiscovery) { $this->boostGrants->awardRiskMission($m,$f); $this->boostEvents->recordExplorationDiscovery($m,$f->destinationSystem); }
             } elseif($f->mission==='colonize') {
                 $target=$f->destination;$this->manager->lock($target);
                 $limit=$this->planetLimit($m,$this->catalog->forUniverse($m->universe));
-                if(!$target->owner && !$target->npcPlanet && count($this->repo->planets($m->universe,$m))<$limit) { $target->name=$this->planetNames->generate($m);$target->acquireBy($m,$this->clock->now());$colonyTier=$this->consumeShip($f,'colony_ship');$this->resources->initialize($target,true,stockMultiplier:GameCatalog::tierFactor($colonyTier)*$this->colonizationKits->multiplier($m,$target));$this->notifications->enqueue($m,'Nouvelle colonie : '.$target->name.'.',journalKind:'arrival'); }
-                else $this->notifications->enqueue($m,'Colonisation impossible à l’arrivée. Votre flotte revient.',journalKind:'arrival');
+                if (!$target->owner && !$target->npcPlanet && count($this->repo->planets($m->universe, $m)) < $limit) {
+                    $target->name = $this->planetNames->generate($m);
+                    $acquiredAt = $this->clock->now();
+                    $target->acquireBy($m, $acquiredAt);
+                    $colonyTier = $this->consumeShip($f, 'colony_ship');
+                    $this->resources->initialize($target, true, stockMultiplier: GameCatalog::tierFactor($colonyTier) * $this->colonizationKits->multiplier($m, $target));
+                    // Enregistrer ici, sous le verrou de la planète : ni la planète de départ ni une conquête n'empruntent ce chemin.
+                    $this->firstSteps->recordColonization($f, $target, $acquiredAt);
+                    $this->notifications->enqueue($m, 'Nouvelle colonie : '.$target->name.'.', journalKind: 'arrival');
+                } else {
+                    $this->notifications->enqueue($m, 'Colonisation impossible à l’arrivée. Votre flotte revient.', journalKind: 'arrival');
+                }
             } elseif($f->mission==='transport') {
                 $this->transports->deliver($f);
             }

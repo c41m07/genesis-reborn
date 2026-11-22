@@ -6,7 +6,7 @@
 {% include 'ui/event_navigation.html.twig' %}
 <div class="event-detail-layout">
 <section class="panel collective-challenge"><h2>Objectif et récompense</h2>{% include 'events/_challenge_summary.html.twig' %}</section>
-<section class="panel event-participation"><h2>Votre participation</h2>{% if challenge.event.rewardMode=='top3' %}<p>Votre classement : {{ challenge.rank ? '#'~challenge.rank : 'Non classé' }}.</p>{% endif %}<p>Contribution personnelle : <strong>{{ challenge.score|quantity(2) }}</strong></p>
+<section class="panel event-participation"><h2>Votre participation</h2>{% if ranking or challenge.event.rewardMode=='top3' %}<p>Votre classement : {{ ranking ? '#'~ranking.viewer_rank : 'Non classé' }}.</p>{% endif %}<p>Contribution personnelle : <strong>{{ (ranking ? ranking.viewer_contribution : challenge.score)|quantity(2) }}</strong></p>
 {# Un objet déjà attribué reste accessible même après annulation : cet ordre est volontaire. #}
 {% if challenge.earned %}<p>Récompense : {{ {available:'disponible dans votre inventaire',pending:'en attente d’une place dans votre inventaire',used:'déjà utilisée'}[challenge.earned.status]|default(challenge.earned.status) }}.</p><a class="secondary" href="{{ path('app_boosts') }}">Ouvrir mon inventaire</a>
 {% elseif challenge.event.status=='cancelled' %}<p>Ce défi a été annulé. Aucune nouvelle récompense n’est attribuée.</p>
@@ -18,5 +18,8 @@
 {% elseif challenge.event.templateKey=='transport' %}<a class="primary" href="{{ path('app_fleet_prepare',{mission:'transport'}) }}">Préparer un transport entre mes colonies</a><p>Choisissez une de vos propres colonies : les dons entre joueurs ne comptent pas.</p>{% endif %}{% endif %}
 </section>
 </div>
+{% if ranking %}
+    {% include 'events/_contribution_ranking.html.twig' with {ranking: ranking, event_id: challenge.event.id} only %}
+{% endif %}
 </div>
 {% endblock %}
