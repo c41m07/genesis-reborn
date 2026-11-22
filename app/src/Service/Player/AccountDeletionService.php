@@ -41,6 +41,7 @@ final class AccountDeletionService
             $player->currentPlayerUniverse=null;$player->lockedAt=$this->clock->now();
             $player->firstPlanetStarterPending=false;
             $this->em->getConnection()->delete('daily_reward_claim', ['player_id' => $player->id]);
+            $this->em->getConnection()->delete('advent_claim', ['player_id' => $player->id]);
             $entry=new AdminAuditLog();$entry->actor=$player;$entry->action='player_account_deleted';$entry->targetType='player';
             $entry->targetId=$player->id;$entry->createdAt=$this->clock->now();$entry->details=['empires'=>'forgotten','identity'=>'erased'];
             $this->manager->save($entry);
