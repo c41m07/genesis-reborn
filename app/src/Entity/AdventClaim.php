@@ -9,7 +9,6 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity]
 #[ORM\UniqueConstraint(name: 'advent_claim_account_door_unique', columns: ['player_id', 'advent_edition_id', 'door'])]
 #[ORM\Index(name: 'advent_claim_edition_idx', columns: ['advent_edition_id'])]
-#[ORM\Index(name: 'advent_claim_destination_idx', columns: ['destination_id'])]
 class AdventClaim
 {
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
@@ -22,8 +21,13 @@ class AdventClaim
     #[ORM\ManyToOne, ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     public Player $player;
 
-    #[ORM\ManyToOne, ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
-    public ?Planet $destination;
+    // Identifiants historiques, pas de nom ou d’association vers une colonie
+    // potentiellement abandonnée. Ne jamais les utiliser comme autorisation.
+    #[ORM\Column]
+    public int $originalDestinationId;
+
+    #[ORM\Column(nullable: true)]
+    public ?int $deliveredDestinationId = null;
 
     #[ORM\Column]
     public int $door;

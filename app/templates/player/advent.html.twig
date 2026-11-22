@@ -10,13 +10,21 @@
         </div>
         <a class="secondary" href="{{ path('app_game_events') }}">Retour aux événements</a>
     </div>
-    <p>Destination à choisir parmi vos colonies dans <strong>{{ membership.universe.name }}</strong>. Un lot réservé doit être repris dans la colonie confirmée.</p>
+    <p>Destination à choisir parmi vos colonies dans <strong>{{ membership.universe.name }}</strong>. Un cadeau réservé reste disponible après la clôture, même si vous choisissez une autre colonie.</p>
+    {% if otherEditions|length > 1 or (otherEditions|length == 1 and otherEditions[0].id != edition.id) %}
+        <nav aria-label="Éditions de l’Avent"><ul>
+            {% for other in otherEditions %}
+                <li><a href="{{ path('app_advent_edition', {id: other.id}) }}"{{ other.id == edition.id ? ' aria-current=page' }}>{{ other.name }} · {{ other.season }}</a></li>
+            {% endfor %}
+        </ul></nav>
+    {% endif %}
+    {% if closed %}<p>L’édition est close : les portes non ouvertes ont expiré. Vous pouvez encore retirer vos cadeaux réservés.</p>{% endif %}
     {% if not colonies %}<p>Vous n’avez pas de colonie dans cet univers pour recevoir un cadeau.</p>{% endif %}
     <ol class="advent-doors" aria-label="Les 24 portes de l’Avent">
         {% for day, door in doors %}
             {% set claim = door.claim %}
-            {% set actionable = door.open and colonies and (not claim or (not claim.deliveredAt and claim.destination and claim.destination.id in colonyIds)) %}
-            {% set status = claim ? (claim.deliveredAt ? 'Versé' : 'Réservé') : (door.open ? 'Prêt à ouvrir' : 'Fermé') %}
+            {% set actionable = colonies and (claim ? not claim.deliveredAt : door.open) %}
+            {% set status = claim ? (claim.deliveredAt ? 'Versé' : 'Réservé') : (door.open ? 'Prêt à ouvrir' : (closed ? 'Expiré' : 'Fermé')) %}
             <li class="panel advent-door" id="advent-door-{{ day }}" tabindex="-1">
                 <h2>Porte {{ day }}</h2>
                 <p><span class="badge">{{ status }}</span> <time datetime="{{ door.opensAt|date('c', 'UTC') }}">{{ door.opensAt|date('d/m', 'Europe/Paris') }}</time></p>
@@ -26,26 +34,29 @@
                         <form method="post" action="{{ path('app_advent_open', {id: edition.id, door: day}) }}" class="advent-door-form">
                             <input type="hidden" name="_token" value="{{ csrf_token('advent_' ~ edition.id ~ '_' ~ membership.id ~ '_' ~ day) }}">
                             {% if claim %}
-                                <p>Destination confirmée : <strong>{{ claim.destination.name }}</strong> ({{ claim.destination.coordinates() }}).</p>
+                                <p>Lot réservé : {% for resource, amount in claim.resources %}{{ amount|quantity(0) }} {{ resources[resource] }}{{ loop.last ? '' : ' · ' }}{% endfor %}.</p>
+                                {% if colonies[claim.originalDestinationId] is defined %}
+                                    {% set original = colonies[claim.originalDestinationId] %}
+                                    <p>Destination initiale : <strong>{{ original.name }}</strong> ({{ original.coordinates() }}).</p>
+                                {% endif %}
                                 <input type="hidden" name="choice" value="{{ claim.choice }}">
-                                <input type="hidden" name="colony" value="{{ claim.destination.id }}">
                             {% else %}
                                 <label for="advent-choice-{{ day }}">Cadeau de la porte {{ day }}</label>
                                 <select name="choice" id="advent-choice-{{ day }}" required>
                                     <option value="">Choisir le lot</option>
                                     {% for choice, amounts in door.options %}<option value="{{ choice }}">{% for resource, amount in amounts %}{{ amount|quantity(0) }} {{ resources[resource] }}{{ loop.last ? '' : ' · ' }}{% endfor %}</option>{% endfor %}
                                 </select>
-                                <label for="advent-colony-{{ day }}">Colonie destinataire</label>
-                                <select name="colony" id="advent-colony-{{ day }}" required>
-                                    <option value="">Choisir une de mes colonies</option>
-                                    {% for colony in colonies %}<option value="{{ colony.id }}">{{ colony.name }} ({{ colony.coordinates() }})</option>{% endfor %}
-                                </select>
                             {% endif %}
+                            <label for="advent-colony-{{ day }}">Colonie destinataire</label>
+                            <select name="colony" id="advent-colony-{{ day }}" required>
+                                <option value="">Choisir une de mes colonies</option>
+                                {% for colony in colonies %}<option value="{{ colony.id }}">{{ colony.name }} ({{ colony.coordinates() }})</option>{% endfor %}
+                            </select>
                             <button class="primary">{{ claim ? 'Retenter le versement' : 'Confirmer le cadeau et la destination' }}</button>
                         </form>
                     </details>
                 {% elseif claim and not claim.deliveredAt %}
-                    <p>Le lot reste réservé. La destination confirmée n’est pas accessible dans cet univers.</p>
+                    <p>Le lot reste réservé. Choisissez un univers où vous contrôlez une colonie.</p>
                 {% endif %}
             </li>
         {% endfor %}

@@ -32,7 +32,8 @@ final class Version20261122010400 extends AbstractMigration
             id INT AUTO_INCREMENT NOT NULL,
             advent_edition_id INT NOT NULL,
             player_id INT NOT NULL,
-            destination_id INT DEFAULT NULL,
+            original_destination_id INT NOT NULL,
+            delivered_destination_id INT DEFAULT NULL,
             door INT NOT NULL,
             choice INT NOT NULL,
             resources JSON NOT NULL,
@@ -41,12 +42,11 @@ final class Version20261122010400 extends AbstractMigration
             PRIMARY KEY (id),
             UNIQUE INDEX advent_claim_account_door_unique (player_id, advent_edition_id, door),
             INDEX advent_claim_edition_idx (advent_edition_id),
-            INDEX advent_claim_destination_idx (destination_id),
             CONSTRAINT advent_claim_edition_fk FOREIGN KEY (advent_edition_id) REFERENCES advent_edition (id) ON DELETE RESTRICT,
             CONSTRAINT advent_claim_player_fk FOREIGN KEY (player_id) REFERENCES player (id) ON DELETE CASCADE,
-            CONSTRAINT advent_claim_destination_fk FOREIGN KEY (destination_id) REFERENCES planet (id) ON DELETE SET NULL,
             CONSTRAINT advent_claim_door_range CHECK (door BETWEEN 1 AND 24),
-            CONSTRAINT advent_claim_choice_range CHECK (choice BETWEEN 0 AND 2)
+            CONSTRAINT advent_claim_choice_range CHECK (choice BETWEEN 0 AND 2),
+            CONSTRAINT advent_claim_delivery_consistency CHECK ((delivered_destination_id IS NULL) = (delivered_at IS NULL))
         ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
     }
 

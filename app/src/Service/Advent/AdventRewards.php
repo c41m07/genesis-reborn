@@ -63,12 +63,7 @@ final readonly class AdventRewards
                 return ['state' => 'stale'];
             }
 
-            $definition = $edition->doors[$door] ?? null;
             $now = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
-            if ($definition === null || !isset($definition['options'][$choice])
-                || !$this->calendar->canOpen($now, new \DateTimeImmutable($definition['opens_at']), $edition->closesAt)) {
-                return ['state' => 'unavailable'];
-            }
 
             // Une lecture courante du droit voit la décision d’un autre onglet
             // même si une lecture précédente avait ouvert un instantané SQL.
@@ -80,14 +75,21 @@ final readonly class AdventRewards
                 return ['state' => 'already'];
             }
             $claim = $existing === false ? null : $this->em->find(AdventClaim::class, (int) $existing['id']);
-            if ($claim !== null && ($claim->choice !== $choice || $claim->destination?->id !== $planet->id)) {
+            if ($claim !== null && $claim->choice !== $choice) {
                 return ['state' => 'reserved'];
             }
             if ($claim === null) {
+                $definition = $edition->doors[$door] ?? null;
+                // Après la clôture, les portes non ouvertes expirent ; aucun
+                // nouveau droit n’est recréé sur la base d’une ancienne page.
+                if ($definition === null || !isset($definition['options'][$choice])
+                    || !$this->calendar->canOpen($now, new \DateTimeImmutable($definition['opens_at']), $edition->closesAt)) {
+                    return ['state' => 'unavailable'];
+                }
                 $claim = new AdventClaim();
                 $claim->adventEdition = $edition;
                 $claim->player = $player;
-                $claim->destination = $planet;
+                $claim->originalDestinationId = $planet->id;
                 $claim->door = $door;
                 $claim->choice = $choice;
                 $claim->resources = $definition['options'][$choice];
@@ -108,6 +110,7 @@ final readonly class AdventRewards
                 return ['state' => 'full', 'missing' => $missing];
             }
 
+            $claim->deliveredDestinationId = $planet->id;
             $claim->deliveredAt = $now;
 
             return ['state' => 'delivered'];

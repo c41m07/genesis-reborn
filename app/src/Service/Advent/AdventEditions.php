@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Advent;
 
-use App\Entity\{AdminAuditLog, AdventEdition, Player};
+use App\Entity\{AdminAuditLog, AdventClaim, AdventEdition, Player};
 use App\Manager\GameManager;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
@@ -99,5 +99,44 @@ final readonly class AdventEditions
             ->orderBy('edition.startsAt', 'ASC')
             ->setMaxResults(1)
             ->getQuery()->getOneOrNullResult();
+    }
+
+    /** @return list<AdventEdition> */
+    public function listedFor(Player $player): array
+    {
+        if (!$this->enabled) {
+            return [];
+        }
+
+        // Le lien persiste pour un droit en attente, mais pas pour les
+        // éditions closes que le joueur n’a pas ou plus besoin de récupérer.
+        return $this->em->createQuery(
+            'SELECT e FROM '.AdventEdition::class.' e
+             WHERE e.closesAt > :now OR EXISTS (
+                 SELECT c.id FROM '.AdventClaim::class.' c
+                 WHERE c.player = :player AND c.adventEdition = e AND c.deliveredAt IS NULL
+             ) ORDER BY e.startsAt DESC',
+        )->setParameter('player', $player)->setParameter('now', $this->utcNow())->getResult();
+    }
+
+    public function forPlayer(Player $player, int $id): ?AdventEdition
+    {
+        if (!$this->enabled) {
+            return null;
+        }
+
+        // Une fiche close reste consultable par son bénéficiaire pour lire le
+        // reçu et retrouver les autres portes expirées, jamais par un tiers.
+        return $this->em->createQuery(
+            'SELECT e FROM '.AdventEdition::class.' e
+             WHERE e.id = :id AND (e.closesAt > :now OR EXISTS (
+                 SELECT c.id FROM '.AdventClaim::class.' c WHERE c.player = :player AND c.adventEdition = e
+             ))',
+        )->setParameter('id', $id)->setParameter('player', $player)->setParameter('now', $this->utcNow())->getOneOrNullResult();
+    }
+
+    private function utcNow(): \DateTimeImmutable
+    {
+        return $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
     }
 }

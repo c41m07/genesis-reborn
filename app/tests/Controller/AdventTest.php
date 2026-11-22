@@ -61,7 +61,6 @@ final class AdventTest extends WebTestCase
         $member = $this->player('AdventMember');
         $other = $this->player('AdventNeighbor');
         $admin = $this->player('AdventAdmin', admin: true);
-        $originalUniverse = $member->currentPlayerUniverse->universe->slug;
         $planet = $this->planet($member);
         $foreign = $this->planet($other);
         $this->client->loginUser($member);
@@ -89,7 +88,8 @@ final class AdventTest extends WebTestCase
         self::assertSelectorNotExists('#advent-door-2 form');
         $first = $crawler->filter('#advent-door-1 form');
         $token = $first->filter('input[name="_token"]')->attr('value');
-        $url = '/evenements/avent/'.$edition.'/portes/1';
+        $editionUrl = '/evenements/avent/'.$edition;
+        $url = $editionUrl.'/portes/1';
         $this->client->request('POST', $url, ['choice' => '0', 'colony' => $planet->id, '_token' => 'expired']);
         self::assertResponseStatusCodeSame(403);
         $this->client->request('POST', $url, ['choice' => '0', 'colony' => $foreign->id, '_token' => $token]);
@@ -99,52 +99,75 @@ final class AdventTest extends WebTestCase
         $db = $this->em->getConnection();
         $db->executeStatement("UPDATE planet_resource SET current_stock = 10000, last_updated_at = '2026-11-30 23:00:00' WHERE planet_id = ? AND resource_type = 'metal'", [$planet->id]);
         $this->client->request('POST', $url, ['choice' => '0', 'colony' => $planet->id, '_token' => $token]);
-        self::assertResponseRedirects('/evenements/avent#advent-door-1', 303);
+        self::assertResponseRedirects($editionUrl.'#advent-door-1', 303);
         $this->client->followRedirect();
         self::assertSelectorTextContains('#advent-door-1', 'Réservé');
-        $initial = $db->fetchAssociative('SELECT choice, resources, delivered_at, destination_id FROM advent_claim');
+        $initial = $db->fetchAssociative('SELECT choice, resources, delivered_at, original_destination_id, delivered_destination_id FROM advent_claim');
         self::assertSame(0, (int) $initial['choice']);
-        self::assertSame($planet->id, (int) $initial['destination_id']);
+        self::assertSame($planet->id, (int) $initial['original_destination_id']);
         self::assertNull($initial['delivered_at']);
 
-        // Aucun second droit ni changement de choix : même compte, autre univers.
+        // L’ancien formulaire se ferme après changement d’univers même si
+        // une nouvelle destination contrôlée peut ensuite être choisie.
         $member = $this->select($member, 'turbo-1');
         $altPlanet = $this->planet($member);
         $this->client->loginUser($member);
-        $this->client->request('GET', '/evenements/avent');
+        $this->client->request('GET', $editionUrl);
         self::assertSelectorTextContains('#advent-door-1', 'Réservé');
-        self::assertSelectorNotExists('#advent-door-1 form');
+        self::assertSelectorExists('#advent-door-1 form');
         $this->client->request('POST', $url, ['choice' => '1', 'colony' => $altPlanet->id, '_token' => $token]);
         self::assertResponseStatusCodeSame(403);
-        self::assertSame($initial, $db->fetchAssociative('SELECT choice, resources, delivered_at, destination_id FROM advent_claim'));
 
-        $member = $this->select($member, $originalUniverse);
-        $this->client->loginUser($member);
-        $crawler = $this->client->request('GET', '/evenements/avent');
-        $token = $crawler->filter('#advent-door-1 input[name="_token"]')->attr('value');
-        $db->executeStatement("UPDATE planet_resource SET current_stock = 500 WHERE planet_id = ? AND resource_type = 'metal'", [$planet->id]);
-        for ($i = 0; $i < 2; ++$i) {
-            $this->client->request('POST', $url, ['choice' => '0', 'colony' => $planet->id, '_token' => $token]);
-            self::assertResponseRedirects('/evenements/avent#advent-door-1', 303);
-        }
-        self::assertSame(1, $this->em->getRepository(AdventClaim::class)->count());
-        self::assertNotNull($db->fetchOne('SELECT delivered_at FROM advent_claim'));
-        self::assertEqualsWithDelta(507, (float) $db->fetchOne("SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = 'metal'", [$planet->id]), .01);
-        $this->client->request('GET', '/evenements/avent');
-        self::assertSelectorTextContains('#advent-door-1', 'Versé');
-
+        // Le joueur revient avec une nouvelle session jusqu’à la dernière
+        // seconde civile, puis reste connecté au passage de la clôture.
         $this->clock->sleep(31 * 24 * 3600 - 1);
-        // Le joueur rattrape les portes en revenant, pas avec la session de novembre.
         $this->client->getCookieJar()->clear();
         $this->client->loginUser($this->em->find(Player::class, $member->id));
-        $this->client->request('GET', '/evenements/avent');
+        $crawler = $this->client->request('GET', $editionUrl);
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('#advent-door-24 form');
-        self::assertSelectorExists('#advent-door-2 form');
+        $unopenedToken = $crawler->filter('#advent-door-2 input[name="_token"]')->attr('value');
         $this->clock->sleep(1);
-        $this->client->request('GET', '/evenements/avent');
+        $this->client->request('GET', '/evenements');
+        self::assertSelectorExists('a[href="/evenements/avent"]');
+        $crawler = $this->client->request('GET', $editionUrl);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('#advent-door-2', 'Expiré');
+        self::assertSelectorNotExists('#advent-door-2 form');
+        $token = $crawler->filter('#advent-door-1 input[name="_token"]')->attr('value');
+        $this->client->request('POST', $editionUrl.'/portes/2', ['choice' => '0', 'colony' => $altPlanet->id, '_token' => $unopenedToken]);
+        self::assertResponseRedirects($editionUrl.'#advent-door-2', 303);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('main', 'Cette porte ou ce choix de cadeau n’est pas disponible.');
+        $this->client->request('POST', $url, ['choice' => '0', 'colony' => $foreign->id, '_token' => $token]);
         self::assertResponseStatusCodeSame(404);
+        $this->client->request('POST', $url, ['choice' => '1', 'colony' => $altPlanet->id, '_token' => $token]);
+        self::assertResponseRedirects($editionUrl.'#advent-door-1', 303);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('main', 'Le choix du cadeau ne peut plus être modifié.');
+        self::assertSame($initial, $db->fetchAssociative('SELECT choice, resources, delivered_at, original_destination_id, delivered_destination_id FROM advent_claim'));
+        $db->executeStatement(
+            "UPDATE planet_resource SET current_stock = 500, last_updated_at = '2026-12-31 23:00:00' WHERE planet_id = ? AND resource_type = 'metal'",
+            [$altPlanet->id],
+        );
+        for ($i = 0; $i < 2; ++$i) {
+            $this->client->request('POST', $url, ['choice' => '0', 'colony' => $altPlanet->id, '_token' => $token]);
+            self::assertResponseRedirects($editionUrl.'#advent-door-1', 303);
+        }
         self::assertSame(1, $this->em->getRepository(AdventClaim::class)->count());
+        self::assertSame($planet->id, (int) $db->fetchOne('SELECT original_destination_id FROM advent_claim'));
+        self::assertSame($altPlanet->id, (int) $db->fetchOne('SELECT delivered_destination_id FROM advent_claim'));
+        self::assertSame('2026-12-31 23:00:00', $db->fetchOne('SELECT delivered_at FROM advent_claim'));
+        self::assertEqualsWithDelta(507, (float) $db->fetchOne("SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = 'metal'", [$altPlanet->id]), .01);
+        self::assertEqualsWithDelta(10000, (float) $db->fetchOne("SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = 'metal'", [$planet->id]), .01);
+        $this->client->request('GET', $editionUrl);
+        self::assertSelectorTextContains('#advent-door-1', 'Versé');
+        self::assertSelectorTextContains('#advent-door-24', 'Expiré');
+        $this->client->request('GET', '/evenements');
+        self::assertSelectorNotExists('a[href="/evenements/avent"]');
+        $this->client->loginUser($this->em->find(Player::class, $other->id));
+        $this->client->request('GET', $editionUrl);
+        self::assertResponseStatusCodeSame(404);
     }
 
     public function testCompetingChoicesFromSeparateProcessesCreditOneLot(): void

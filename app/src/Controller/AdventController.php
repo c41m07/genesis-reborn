@@ -16,16 +16,36 @@ use Symfony\Component\Routing\Attribute\Route;
 final class AdventController extends AbstractController
 {
     #[Route('/evenements/avent', name: 'app_advent', methods: ['GET'])]
-    public function calendar(UniverseContext $context, AdventEditions $editions, AdventRewards $rewards, AdventCalendar $calendar, GameRepository $game, ClockInterface $clock): Response
+    #[Route('/evenements/avent/{id}', name: 'app_advent_edition', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function calendar(UniverseContext $context, AdventEditions $editions, AdventRewards $rewards, AdventCalendar $calendar, GameRepository $game, ClockInterface $clock, ?int $id = null): Response
     {
-        $edition = $editions->visible();
+        $membership = $context->membership();
+        $player = $this->player();
+        $available = $editions->listedFor($player);
+        $now = $clock->now();
+        $edition = null;
+        if ($id !== null) {
+            $edition = $editions->forPlayer($player, $id);
+        } else {
+            // Retrouver d’abord l’édition ouverte ; les réservations des
+            // saisons closes gardent chacune leur propre adresse.
+            foreach ($available as $candidate) {
+                if ($candidate->startsAt <= $now && $candidate->closesAt > $now) {
+                    $edition = $candidate;
+                    break;
+                }
+            }
+            $edition ??= $available[0] ?? null;
+        }
         if ($edition === null) {
             throw $this->createNotFoundException('Aucune édition de l’Avent annoncée.');
         }
-        $membership = $context->membership();
         $colonies = $game->planets($membership->universe, $membership);
-        $now = $clock->now();
-        $claims = $rewards->claims($this->player(), $edition);
+        $coloniesById = [];
+        foreach ($colonies as $colony) {
+            $coloniesById[$colony->id] = $colony;
+        }
+        $claims = $rewards->claims($player, $edition);
         $doors = [];
         foreach ($edition->doors as $door => $definition) {
             $opensAt = new \DateTimeImmutable($definition['opens_at']);
@@ -38,10 +58,11 @@ final class AdventController extends AbstractController
 
         $response = $this->render('player/advent.html.twig', [
             'edition' => $edition,
+            'otherEditions' => $available,
+            'closed' => $now >= $edition->closesAt,
             'membership' => $membership,
             'doors' => $doors,
-            'colonies' => $colonies,
-            'colonyIds' => array_map(static fn (Planet $planet): int => $planet->id, $colonies),
+            'colonies' => $coloniesById,
             'resources' => AdventGifts::RESOURCES,
             'claimed' => count($claims),
         ]);
@@ -55,8 +76,9 @@ final class AdventController extends AbstractController
     public function open(Request $request, int $id, int $door, UniverseContext $context, AdventEditions $editions, AdventRewards $rewards, GameRepository $game): Response
     {
         $membership = $context->membership();
-        $edition = $editions->visible();
-        if ($edition === null || $edition->id !== $id || !isset($edition->doors[$door])) {
+        $player = $this->player();
+        $edition = $editions->forPlayer($player, $id);
+        if ($edition === null || !isset($edition->doors[$door])) {
             throw $this->createNotFoundException();
         }
         if (!$this->isCsrfTokenValid('advent_'.$id.'_'.$membership->id.'_'.$door, $request->request->getString('_token'))) {
@@ -69,7 +91,7 @@ final class AdventController extends AbstractController
         }
 
         try {
-            $result = $rewards->open($this->player(), $membership, $planet, $edition, $door, $request->request->getInt('choice', -1));
+            $result = $rewards->open($player, $membership, $planet, $edition, $door, $request->request->getInt('choice', -1));
         } catch (\DomainException) {
             $result = ['state' => 'stale'];
         }
@@ -77,14 +99,14 @@ final class AdventController extends AbstractController
             'delivered' => 'Porte '.$door.' : le cadeau a été versé à '.$planet->name.'.',
             'already' => 'Votre compte a déjà reçu le cadeau de cette porte.',
             'full' => 'Cadeau réservé : manque de place ('.$this->missing($result['missing']).'). Aucun versement partiel.',
-            'reserved' => 'Cette porte a déjà un choix et une colonie destinataire réservés.',
+            'reserved' => 'Cette porte a déjà un lot réservé. Le choix du cadeau ne peut plus être modifié.',
             'busy' => 'Une autre action est en cours sur votre compte. Réessayez après avoir vérifié l’état de la porte.',
             'stale' => 'Cette destination ou cet univers n’est plus accessible. Aucun cadeau n’a été versé.',
             default => 'Cette porte ou ce choix de cadeau n’est pas disponible.',
         };
         $this->addFlash(in_array($result['state'], ['delivered', 'already'], true) ? 'success' : 'error', $message);
 
-        return $this->redirectToRoute('app_advent', ['_fragment' => 'advent-door-'.$door], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('app_advent_edition', ['id' => $id, '_fragment' => 'advent-door-'.$door], Response::HTTP_SEE_OTHER);
     }
 
     /** @param array<string, int> $missing */

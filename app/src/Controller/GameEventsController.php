@@ -26,7 +26,7 @@ final class GameEventsController extends AbstractController
         }
         $player = $this->getUser();
 
-        return $this->render('player/events.html.twig', ['membership' => $membership, 'eventGroups' => $groups, 'advent' => $advent->visible(),
+        return $this->render('player/events.html.twig', ['membership' => $membership, 'eventGroups' => $groups, 'adventEditions' => $player instanceof Player ? $advent->listedFor($player) : [],
             'pirateCampaignAvailable' => $pirateCampaign->admits($player instanceof Player ? $player : null, $membership, $now)]);
     }
 
