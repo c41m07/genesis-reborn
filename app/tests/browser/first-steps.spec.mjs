@@ -125,7 +125,8 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     await expect(popup.locator('.first-steps-preview')).toBeVisible();
     await openIllustrations(popup);
     await guideLink.click();
-    await next.getByRole('link', { name: 'Ouvrir la Mine à ciel ouvert', exact: true }).click();
+    await guide.getByRole('region', { name: 'Prochaine étape conseillée', exact: true })
+        .getByRole('link', { name: 'Ouvrir la Mine à ciel ouvert', exact: true }).click();
     await expect(page).toHaveURL(/section=buildings.*#item-mine_metal-basic$/);
     const card = page.locator('#item-mine_metal-basic');
     await expect(card.getByRole('complementary', { name: 'Conseil Premiers pas' })).toContainText('paie le prix normal');
@@ -155,6 +156,55 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
         await expect(fallback.getByRole('progressbar', { name: 'Progression des premiers pas', exact: true })).toHaveAttribute('value', '1');
         await fallback.getByRole('link', { name: 'Ouvrir la Centrale nucléaire', exact: true }).click();
         await expect(fallback).toHaveURL(/section=buildings.*#item-power_plant-basic$/);
+    } finally {
+        await native.close();
+    }
+});
+
+test('Premiers pas : la prochaine action précède deux remboursements natifs disponibles', async ({ page, browser, baseURL }) => {
+    test.setTimeout(120000);
+    const email = await register(page);
+    expect(email).toMatch(/^first-steps-[a-f0-9]{8}@example[.]test$/);
+    const project = process.env.BROWSER_ROUTER;
+    const [player, member, planet] = queryIsolatedSql(project,
+        "SELECT p.id, p.current_player_universe_id, planet.id FROM player p JOIN planet ON planet.owner_id = p.current_player_universe_id WHERE p.email = '" + email + "'"
+    ).split(/\s+/).map(Number);
+    expect([player, member, planet].every(id => Number.isSafeInteger(id) && id > 0)).toBe(true);
+    // Des preuves synthétiques coexistantes ; le scénario de construction réelle couvre leur émission.
+    runIsolatedSql(project, "INSERT INTO first_step_completion (player_universe_id, step_key, completed_at) VALUES (" + member + ", 'metal_mine', UTC_TIMESTAMP()), (" + member + ", 'research', UTC_TIMESTAMP())");
+    runIsolatedSql(project, "INSERT INTO first_step_reward (player_id, source_membership_id, step_key, metal, nano) VALUES (" + player + ", " + member + ", 'metal_mine', 96, 52), (" + player + ", " + member + ", 'research', 240, 130)");
+
+    const native = await browser.newContext({ baseURL, storageState: await page.context().storageState(), javaScriptEnabled: false });
+    try {
+        const fallback = await native.newPage();
+        await fallback.setViewportSize({ width: 390, height: 844 });
+        await fallback.goto('/premiers-pas');
+        const next = fallback.getByRole('region', { name: 'Prochaine étape conseillée', exact: true });
+        const refunds = fallback.getByRole('region', { name: 'Remboursements disponibles', exact: true });
+        await expect(next.getByRole('link', { name: 'Ouvrir la Centrale nucléaire', exact: true }))
+            .toHaveAttribute('href', /section=buildings.*#item-power_plant-basic$/);
+        await expect(next.locator('.primary')).toHaveCount(1);
+        expect(await next.evaluate(section => Boolean(
+            section.compareDocumentPosition(document.querySelector('#training-reward-title')) & Node.DOCUMENT_POSITION_FOLLOWING
+        ))).toBe(true);
+        expect((await next.boundingBox())?.y).toBeLessThan((await refunds.boundingBox())?.y);
+        const colony = await fallback.getByRole('link', { name: 'Retour à la vue générale', exact: true }).getAttribute('href');
+        expect(colony).toBe('/planetes/' + planet);
+        const colonyName = queryIsolatedSql(project, 'SELECT name FROM planet WHERE id = ' + planet);
+        expect(colonyName).not.toBe('');
+        await expect(refunds.locator('#training-refund-destination strong')).toHaveText(colonyName);
+        await expect(refunds.locator('#first-step-refund-metal_mine')).toContainText('96 métal et 52 nanos');
+        await expect(refunds.locator('#first-step-refund-research')).toContainText('240 métal et 130 nanos');
+        const metal = refunds.locator('#first-step-refund-metal_mine').getByRole('button', { name: /^Récupérer :/ });
+        const research = refunds.locator('#first-step-refund-research').getByRole('button', { name: /^Récupérer :/ });
+        for (const button of [metal, research]) {
+            await expect(button).toBeEnabled();
+            await expect(button).toHaveAccessibleDescription(new RegExp('^Destination :'));
+            await button.click();
+            await expect(fallback.getByRole('status').filter({ hasText: 'Remboursement ajouté aux stocks' })).toBeVisible();
+        }
+        await expect(refunds).toHaveCount(0);
+        await expect(next.getByRole('link', { name: 'Ouvrir la Centrale nucléaire', exact: true })).toBeEnabled();
     } finally {
         await native.close();
     }

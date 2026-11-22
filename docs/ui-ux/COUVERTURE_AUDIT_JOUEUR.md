@@ -33,7 +33,7 @@ Source : sections 2 à 4 de l’audit UI/UX détaillé de Genesis Reborn. Le soc
 
 | Écran | Statut | Couverture |
 | --- | --- | --- |
-| Centre de rapports et archives | Conservés | Portée, filtres et sélection distincts dans le socle. |
+| Centre de rapports et archives | Conservés | Portée, filtres et sélection distincts dans le socle. L’index ne consomme pas les non-lus ; l’ouverture d’un détail en consomme un (report-workspace.spec.mjs dans le socle). |
 | Rapports de combat et de transport | Conservés | Bilan par camp et issue explicite ; statut de livraison associé au trajet et quantités rattachées au fret. |
 | Rapport d’espionnage | Retouché | Catégories non révélées étiquetées comme inconnues ; un zéro reste une valeur numérique. |
 | Boosts / Boîtes de ressources | Retouché / Conservé | Effet et disponibilité du boost près de l’action ; condition d’ouverture en regard de la destination et de l’action des boîtes dans le socle. |
