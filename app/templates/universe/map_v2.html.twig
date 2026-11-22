@@ -101,6 +101,7 @@
             <header class="gv2-panel-heading"><div><h2>{{ system.galaxy.coordinateCode() }}:{{ system.number() }}</h2><p>{{ system.name }}</p></div><button type="button" aria-label="Fermer la fiche du système" data-action="click->galaxy-v2#toGalaxy">×</button></header>
             <div class="gv2-system-state">{% if row.known %}<span class="gv2-state-dot is-known"></span>{% else %}<span class="gv2-marker gv2-marker--unknown" aria-hidden="true">?</span>{% endif %}{% if row.known %}Système exploré · {{ row.planets|length }} planètes cartographiées{% else %}Signal inconnu · aucune planète révélée{% endif %}</div>
             {% if row.known %}
+                {% if row.hall %}{% include 'universe/_guild_hall_marker.html.twig' with {hall:row.hall} only %}{% endif %}
                 <button type="button" class="gv2-action-link gv2-enter-system" data-action="click->galaxy-v2#enterSelectedSystem">Entrer dans le système</button>
                 <details class="gv2-legend gv2-system-legend">
                     <summary>Légende des planètes</summary>

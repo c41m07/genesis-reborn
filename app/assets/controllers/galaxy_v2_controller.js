@@ -749,6 +749,7 @@ export default class extends Controller {
         const markers = !this.hiddenMarkers.has('own') && system.planets.some((planet) => planet.ownedByCurrentPlayer || planet.relation === 'own')
             ? [mapMarkers.own] : [];
         for (const kind of this.campaignBySystem?.get(system.id) ?? []) markers.push(campaignMapMarkers[kind]);
+        if (system.hall) markers.push({ symbol: '◆', color: '#f1c374' });
 
         return markers;
     }
@@ -1307,7 +1308,11 @@ export default class extends Controller {
             : 'Non exploré · contenu inconnu';
         const facts = document.createElement('dl');
         facts.className = 'gv2-tooltip-facts';
-        for (const row of this.systemSummary(system)) {
+        const summary = this.systemSummary(system);
+        if (system.known && system.hall) {
+            summary.unshift({ label: 'Hall de guilde', value: system.hall.tag ? '[' + system.hall.tag + '] · Position 0' : 'Position 0' });
+        }
+        for (const row of summary) {
             const entry = document.createElement('div');
             const label = document.createElement('dt');
             const value = document.createElement('dd');
@@ -1733,6 +1738,18 @@ export default class extends Controller {
         ctx.scale(mobile ? .45 : .65, mobile ? .45 : .65);
         this.drawStar(ctx, 0, 0, system.starColor || '#ffe28c', this.elapsed);
         ctx.restore();
+        if (system.hall) {
+            // Une petite orbite dédiée figure la position 0 sans créer de cible planète.
+            const radius = (mobile ? 34 : 46) * this.systemScale;
+            ctx.save();
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, radius, radius * .65, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(241,195,116,.65)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.restore();
+            this.drawMarkers(ctx, [{ symbol: '◆', color: '#f1c374' }], centerX + radius, centerY + 4);
+        }
         for (const { planet, x: baseX, y: baseY, radius: orbitRadius, aspect } of positions) {
             const x = centerX + (baseX - layoutX) * this.systemScale;
             const y = centerY + (baseY - layoutY) * this.systemScale;

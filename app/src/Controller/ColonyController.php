@@ -3,13 +3,14 @@
 namespace App\Controller;
 
 use App\Entity\{Planet, PlanetBuilding, PlayerTechnology, PlayerDiscovery, Fleet, FleetShip};
-use App\Repository\GameRepository;
+use App\Repository\{GameRepository, GuildHallRepository};
 use App\Service\Universe\UniverseContext;
 use App\Service\Notification\JournalService;
 use App\Service\Colony\{CatalogueInsights, CatalogueItemLink, ColonyComparisonActivities, ColonyView, GameShell, ResourceService, LiveRegionResponse};
 use App\Service\Queue\QueueService;
 use App\Service\Player\{FirstStepsView, LeaderboardService, PreferencesService, RelationResolver};
 use App\Service\Catalog\GameCatalog;
+use App\Service\Guild\GuildHallFunding;
 use App\Service\Fleet\{GalaxyGeometry, MovementCalculator};
 use App\Manager\GameManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -32,6 +33,8 @@ final class ColonyController extends AbstractController
         private LiveRegionResponse $liveResponses,
         private GalaxyGeometry $galaxyGeometry,
         private MovementCalculator $movementCalculator,
+        private GuildHallRepository $guildHalls,
+        private GuildHallFunding $hallFunding,
     )
     {
     }
@@ -465,7 +468,10 @@ final class ColonyController extends AbstractController
         foreach ($this->repo->discoveredPlanets($m, $systemIds) as $planet) {
             $planetsBySystem[$planet->solarSystem->id][] = $planet;
         }
+        $claims = $this->hallFunding->availableIn($m->universe)
+            ? $this->guildHalls->claimsForKnownSystems($m, $systemIds) : [];
         foreach ($systems as &$row) {
+            $row['hall'] = $claims[$row['system']->id] ?? null;
             $row['planets'] = $planetsBySystem[$row['system']->id] ?? [];
         }
         unset($row);
@@ -564,7 +570,7 @@ final class ColonyController extends AbstractController
                         'npc' => $planet->npcPlanet || $planet->owner?->isForgotten(),
                         'conquestLevel' => $planet->conquestLevel,
                     ], $row['planets']),
-                ];
+                ] + ($row['hall'] ? ['hall' => $row['hall']] : []);
             }
             $flights = $this->visibility->forMap($m, $selectedGalaxy);
             $campaignTraffic = $this->campaignTraffic->forGalaxy($m, $selectedGalaxy);
