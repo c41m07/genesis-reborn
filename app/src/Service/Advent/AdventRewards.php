@@ -72,14 +72,14 @@ final readonly class AdventRewards
 
             // Une lecture courante du droit voit la décision d’un autre onglet
             // même si une lecture précédente avait ouvert un instantané SQL.
-            $id = $this->em->getConnection()->fetchOne(
-                'SELECT id FROM advent_claim WHERE player_id = ? AND advent_edition_id = ? AND door = ? FOR UPDATE',
+            $existing = $this->em->getConnection()->fetchAssociative(
+                'SELECT id, delivered_at FROM advent_claim WHERE player_id = ? AND advent_edition_id = ? AND door = ? FOR UPDATE',
                 [$player->id, $edition->id, $door],
             );
-            $claim = $id === false ? null : $this->em->find(AdventClaim::class, (int) $id);
-            if ($claim?->deliveredAt !== null) {
+            if ($existing !== false && $existing['delivered_at'] !== null) {
                 return ['state' => 'already'];
             }
+            $claim = $existing === false ? null : $this->em->find(AdventClaim::class, (int) $existing['id']);
             if ($claim !== null && ($claim->choice !== $choice || $claim->destination?->id !== $planet->id)) {
                 return ['state' => 'reserved'];
             }

@@ -65,6 +65,8 @@ final class AdventTest extends WebTestCase
         $foreign = $this->planet($other);
         $this->client->loginUser($member);
         $this->client->request('GET', '/admin/events/avent');
+        self::assertResponseRedirects('/acces-refuse');
+        $this->client->followRedirect();
         self::assertResponseStatusCodeSame(403);
         $this->client->request('GET', '/evenements/avent');
         self::assertResponseStatusCodeSame(404);
@@ -144,8 +146,8 @@ final class AdventTest extends WebTestCase
         $this->client->loginUser($admin);
         $crawler = $this->client->request('GET', '/admin/events/avent');
         self::assertResponseIsSuccessful();
-        self::assertCount(24, $crawler->filter('details'));
-        $token = $crawler->filter('input[name="_token"]')->attr('value');
+        self::assertCount(24, $crawler->filter('.admin-event-form details'));
+        $token = $crawler->filter('.admin-event-form input[name="_token"]')->attr('value');
         $this->client->request('POST', '/admin/events/avent', [
             '_token' => $token, 'name' => 'Avent synthétique', 'first' => '2026-12-01', 'last' => '2026-12-31',
             'options' => array_fill(1, 24, [['metal' => '7'], ['nano' => '3']]),
