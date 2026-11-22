@@ -394,18 +394,42 @@ ensuite les absences. Cette reprise évite une lecture d’état de suivi périm
 dans une transaction métier ancienne et n’ajoute aucun verrou à ces traitements.
 Les autres catégories restent conservées hors du journal.
 
-À l’ouverture, les notifications suivies deviennent disponibles dans le journal ;
-journalAvailableAt les maintient lors des visites suivantes. L’état consultedAt
-n’est défini qu’au POST protégé par CSRF et participation, après vérification
-des identifiants disponibles du destinataire. UPDATE conditionnel, verrou de
-participation et sélection bornée à 50 rendent les répétitions sans double effet.
-Les événements non affichés ne sont pas consultés. Le témoin mobile repose sur
-cet état serveur et ne valide plus le journal par un stockage local automatique.
+À l’ouverture, les notifications suivies deviennent disponibles. Sous le verrou
+de la participation, journalAvailableAt ordonne strictement les nouveaux lots,
+même pour deux ouvertures dans une seconde. Le ticket signé à durée courte lie
+la borne du lot à la participation et à la planète ; les cinq lignes affichées
+ne constituent pas une liste d’identifiants transmise au serveur. Le POST protégé
+par CSRF revérifie la possession de la planète et la participation active sous
+verrou, puis marque les lignes non consultées jusqu’à cette borne, sans retirer
+l’historique. Le contrôleur Stimulus ne lance l’action qu’à l’apparition de la
+première ligne dans l’onglet actif ; un formulaire natif reste disponible.
+Le contenu acquitté reste lisible sur la page courante. Ni une réponse de
+consultation retardée, ni un signal Mercure ne changent directement le témoin.
+Ils déclenchent ou regroupent l’actualisation privée déjà utilisée par le menu,
+qui seule lit les événements encore non consultés en base.
 
 EmpireDetails ne produit que les données des planètes et flottes du propriétaire
 dans son univers. Les snapshots de stocks restent calculés en lecture seule.
 La migration Version20261112010000 ajoute six colonnes nullables et deux index ;
 elle n’effectue aucune datation ni reprise de notification historique.
+
+## Nouveaux rapports du joueur
+
+L’état de lecture est distinct du journal d’absence et des archives. Un état
+est créé dans la transaction de naissance du rapport, et seulement pour les
+participations qui peuvent le consulter : combat résolu dédupliqué, émetteur
+de l’espionnage, émetteur et destinataire du transport à son départ. Les trois
+références exclusives permettent le même flush et le nettoyage en cascade, sans
+reprise des anciens rapports ni alerte d’envoi externe.
+
+Le compteur privé n’inclut que les rapports encore accessibles à l’empire actif.
+Le chargement et le préchargement des fiches restent en lecture seule. Seule la
+fiche réellement consultée déclenche le POST protégé par CSRF, ou le formulaire
+natif sans JavaScript ; la condition de visibilité est revérifiée dans l’écriture.
+Archiver masque du compteur sans marquer lu ; restaurer retrouve l’état existant.
+Les lignes nouvelles restent identifiables dans les listes accessibles, via une
+lecture groupée de la page. Le témoin a sa propre actualisation
+privée, mise en pause hors onglet visible, sans réutiliser le compteur du Journal.
 
 ## Catalogue des destinations — lot D
 

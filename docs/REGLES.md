@@ -590,10 +590,12 @@ non consultés des absences antérieures. Une actualisation automatique ne const
 ni une nouvelle ouverture ni une consultation. Les notifications instantanées
 restent distinctes du journal d’absence.
 
-Le bouton « Marquer ces événements comme consultés » porte uniquement sur les
-événements affichés, au plus 50 par affichage. Les suivants deviennent accessibles
-après consultation, sans suppression d’historique ; les arrivées ultérieures ne
-sont jamais marquées par une ancienne sélection. L’état est conservé côté serveur
+Le journal affiche au plus cinq événements. Quand le premier est visible dans
+l’onglet actif, toute la sélection de la visite est marquée comme consultée, y
+compris les événements non affichés. Sans JavaScript, le bouton « Marquer le
+journal comme consulté » réalise la même action. Les lignes affichées restent
+lisibles pendant la visite avec JavaScript. Aucun historique n’est supprimé et
+les arrivées ultérieures restent en attente. L’état est conservé côté serveur
 par participation à l’univers et protégé contre les accès tiers et formulaires expirés.
 
 ### Destinations et suggestions des flottes — lot D

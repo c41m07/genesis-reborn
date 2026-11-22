@@ -377,7 +377,7 @@ final class AdminController extends AbstractController
                 'ship_build_time',
                 'resource_production',
                 'travel_time',
-            ], 'limits' => ['max_planets', 'max_fleet_size'], 'features' => ['guilds_enabled', 'planet_conquest']] as $group => $keys) {
+            ], 'limits' => ['max_planets', 'max_fleet_size'], 'features' => ['guilds_enabled', 'planet_conquest', Universe::PIRATE_CAMPAIGN_FEATURE]] as $group => $keys) {
                 $values = is_array($input[$group] ?? null) ? $input[$group] : [];
                 $draft[$group] = array_filter(array_intersect_key($values, array_flip($keys)), 'is_scalar');
             }

@@ -328,6 +328,114 @@ final class ColonyPreparationTest extends KernelTestCase
         self::assertSame([], $repository->fleetCombatEvents($this->membership, $fleets));
     }
 
+    public function testComparisonQueuesUseOnlyPrivateScopedRowsAndPersistedTimes(): void
+    {
+        $other = new Planet();
+        $other->solarSystem = $this->planet->solarSystem;
+        $other->owner = $this->membership;
+        $other->position = 6;
+        $other->name = 'Seconde colonie synthétique';
+        $foreign = clone $other;
+        $foreign->owner = null;
+        $foreign->position = 7;
+        $foreign->name = 'Nom à ne pas exposer';
+        $foreignPlayer = new Player();
+        $foreignPlayer->email = 'other-comparison@example.test';
+        $foreignPlayer->username = 'Autre comparatif';
+        $foreignPlayer->password = 'unused';
+        $foreignMembership = new PlayerUniverse();
+        $foreignMembership->player = $foreignPlayer;
+        $foreignMembership->universe = $this->membership->universe;
+        $foreignMembership->joinedAt = new \DateTimeImmutable('2026-11-14T12:00:00Z');
+        foreach ([$other, $foreign, $foreignPlayer, $foreignMembership] as $entity) {
+            $this->em->persist($entity);
+        }
+        $now = new \DateTimeImmutable('2026-11-14T12:00:00Z');
+        $create = function (Planet $planet, string $kind, string $slug, ?\DateTimeImmutable $started, int $duration, ?int $level = null, int $quantity = 1, ?PlayerUniverse $owner = null) use ($now): \App\Entity\QueueItem {
+            $row = new \App\Entity\QueueItem();
+            $row->planet = $planet;
+            $row->playerUniverse = $owner ?? $this->membership;
+            $row->queueType = $kind;
+            $row->itemSlug = $slug;
+            $row->itemLevel = $level;
+            $row->quantity = $quantity;
+            $row->startedAt = $started;
+            $row->queuedAt = $now->modify('-10 minutes');
+            $row->durationSeconds = $duration;
+            $row->dispatchToken = \Symfony\Component\Uid\Uuid::v4()->toRfc4122();
+            $this->em->persist($row);
+            return $row;
+        };
+        $building = $create($this->planet, 'building', 'mine_metal', $now->modify('-1 minute'), 180, 2);
+        $waitingBuilding = $create($this->planet, 'building', 'mine_metal', null, 200, 3);
+        $readyYard = $create($other, 'shipyard', 'ground_turret_anti_light', $now->modify('-3 minutes'), 60, quantity: 7);
+        $create($other, 'shipyard', 'fighter', null, 180, quantity: 2);
+        $create($this->planet, 'research', 'engineering_foundations', $now->modify('-10 seconds'), 80, 2);
+        $headResearch = $create($other, 'research', 'signature_reduction', $now->modify('-5 seconds'), 20, 3);
+        $create($this->planet, 'research', 'engineering_foundations', null, 80, 3);
+        $create($foreign, 'building', 'lab', null, 100, 7);
+        $create($other, 'building', 'lab', null, 100, 9, owner: $foreignMembership);
+        $this->em->flush();
+
+        $repo = self::getContainer()->get(GameRepository::class);
+        $holder = self::getContainer()->get('doctrine.debug_data_holder');
+        foreach ([[$this->planet], [$this->planet, $other, $foreign]] as $input) {
+            $holder->reset();
+            $rows = $repo->comparisonQueueRows($this->membership, $input);
+            self::assertSame(1, count($holder->getData()['default'] ?? []));
+            self::assertNotContains($foreign->id, array_column($rows, 'originId'));
+            self::assertNotContains(9, array_column($rows, 'level'));
+        }
+        $comparison = self::getContainer()->get(\App\Service\Colony\ColonyComparisonActivities::class);
+        $view = $comparison->forPlanets($this->membership, [$this->planet, $other]);
+        $local = $view['local'][$this->planet->id]['building'];
+        self::assertSame('running', $local['status']);
+        self::assertSame(2, $local['level']);
+        self::assertSame(1, $local['waiting']);
+        self::assertEquals($now->modify('+2 minutes'), $local['finish']);
+        $yard = $view['local'][$other->id]['shipyard'];
+        self::assertSame('due', $yard['status']);
+        self::assertSame(7, $yard['quantity']);
+        self::assertSame(1, $yard['waiting']);
+        self::assertNull($yard['finish']);
+        self::assertSame($other->id, $view['researchOrigin']);
+        self::assertSame(3, $view['research']['level']);
+        self::assertSame(1, $view['research']['waiting']);
+        self::assertSame(1, $view['research']['additionalActive']);
+        self::assertEquals($now->modify('+15 seconds'), $view['research']['finish']);
+
+        $period = new \App\Entity\VacationPeriod();
+        $period->membership = $this->membership;
+        $period->startedAt = $now->modify('-1 second');
+        $period->scheduledEndAt = $now->modify('+1 hour');
+        $this->em->persist($period);
+        $this->em->flush();
+        $paused = $comparison->forPlanets($this->membership, [$this->planet, $other]);
+        self::assertSame('paused', $paused['research']['status']);
+        self::assertNull($paused['research']['finish']);
+        self::assertSame(1, $paused['research']['additionalActive']);
+        self::assertSame('paused', $paused['local'][$this->planet->id]['building']['status']);
+        self::assertNull($paused['local'][$this->planet->id]['building']['finish']);
+
+        $other->owner = null;
+        $this->em->flush();
+        $withoutOrigin = $comparison->forPlanets($this->membership, [$this->planet]);
+        self::assertNull($withoutOrigin['researchOrigin']);
+        self::assertSame($view['research']['label'], $withoutOrigin['research']['label']);
+        self::assertSame($view['research']['level'], $withoutOrigin['research']['level']);
+        self::assertSame('waiting', $withoutOrigin['research']['status']);
+        self::assertNull($withoutOrigin['research']['finish']);
+        self::assertArrayNotHasKey($other->id, $withoutOrigin['local']);
+
+        // Une lecture ne purge pas l’ordre échu, ne démarre pas l’attente et ne retouche pas l’origine.
+        $this->em->clear();
+        $repository = $this->em->getRepository(\App\Entity\QueueItem::class);
+        self::assertNotNull($repository->find($readyYard->id));
+        self::assertEquals($building->startedAt, $repository->find($building->id)->startedAt);
+        self::assertNull($repository->find($waitingBuilding->id)->startedAt);
+        self::assertSame($other->id, $repository->find($headResearch->id)->planet->id);
+    }
+
     public function testColonyQueueCountsAreGroupedAndExcludeUnownedPlanets(): void
     {
         $foreign = new Planet();

@@ -26,6 +26,7 @@ use App\Service\Boost\BoostGrantService;
 use App\Service\Boost\BoostEventService;
 use App\Service\Colony\ResourceService;
 use App\Service\Notification\NotificationService;
+use App\Service\Report\ReportNoticeWriter;
 use App\Service\Player\RelationResolver;
 use App\Service\Player\LeaderboardService;
 use App\Service\Player\PlayerProtection;
@@ -46,6 +47,7 @@ final class CombatEventService
         private RelationResolver $relations,
         private LeaderboardService $leaderboard,
         private NotificationService $notifications,
+        private ReportNoticeWriter $reportNotices,
         private ClockInterface $clock,
         private PlanetNpcSeeder $npcSeeder,
         private PlanetNameGenerator $planetNames,
@@ -612,6 +614,7 @@ final class CombatEventService
             ];
             $log->resolvedAt = $this->clock->now();
             $this->manager->save($log);
+            $this->reportNotices->combatCreated($log, $participants);
             $event->status = 'resolved';
             $this->manager->flush();
             $this->resources->refreshProduction($event->planet);
