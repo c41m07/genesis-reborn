@@ -1,13 +1,13 @@
 <?php
 namespace App\Service\Player;
 use App\Entity\{PlayerUniverse,Guild,GuildMember,GuildRelation,AllianceContract};
-use App\Repository\GameRepository;
+use App\Repository\{GameRepository,GuildHallRepository};
 use App\Manager\GameManager;
 use App\Service\Catalog\GameCatalog;
 use Psr\Clock\ClockInterface;
 final class DiplomacyService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private RelationResolver $relations,private GameCatalog $catalog,private ClockInterface $clock,private EmpireActivityService $activity,private DiplomacyAccessPolicy $access,private GuildProjectService $projects) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private RelationResolver $relations,private GameCatalog $catalog,private ClockInterface $clock,private EmpireActivityService $activity,private DiplomacyAccessPolicy $access,private GuildProjectService $projects,private GuildHallRepository $guildHalls) {}
     private function lock(PlayerUniverse $m,bool $guildFeature=false): void
     {
         $this->manager->lock($m);$this->manager->lock($m->universe);
@@ -85,6 +85,12 @@ final class DiplomacyService
             foreach($this->repo->all(GuildRelation::class) as $r) if($r->guildA->id===$g->id || $r->guildB->id===$g->id) $this->manager->remove($r);
             foreach($this->repo->all(GuildMember::class,['guild'=>$g]) as $member) $this->manager->remove($member);
             $this->projects->abandonForGuild($g);
+            // Supprimer aussi le Hall dans l'unité de travail quand il est déjà
+            // chargé. La clé étrangère reste la dernière protection côté base.
+            $hall = $this->guildHalls->lockForGuild($g);
+            if ($hall !== null) {
+                $this->manager->remove($hall);
+            }
             $this->manager->remove($g);
         });
     }
