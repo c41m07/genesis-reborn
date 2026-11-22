@@ -47,7 +47,9 @@
                                 <input id="hall-{{ resource }}" name="resources[{{ resource }}]" type="number" inputmode="numeric" min="0" step="1" placeholder="0" max="{{ field.maximum }}">
                             {% endfor %}
                         </fieldset>
-                        <p>Votre don peut atteindre {{ maximum|number_format(0, ',', ' ') }} points ; une part est réservée aux autres donateurs. Les dons sont volontaires et ne dépassent jamais le coût du Hall.</p>
+                        <p>Les dons sont volontaires. Une part entière reste réservée à chaque donateur qui doit encore se qualifier.</p>
+                        {% if ordinary_limit > 0 %}<p>Sans utiliser la réserve : jusqu’à {{ ordinary_limit|number_format(0, ',', ' ') }} points.</p>{% endif %}
+                        {% if qualifies_from is not null %}<p>Pour atteindre votre minimum et utiliser une part réservée : de {{ qualifies_from|number_format(0, ',', ' ') }} à {{ maximum|number_format(0, ',', ' ') }} points.</p>{% endif %}
                         <button type="submit" class="primary">Donner ces ressources</button>
                     </form>
                 </section>

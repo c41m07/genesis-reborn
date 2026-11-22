@@ -139,7 +139,7 @@ final class GuildHallTest extends KernelTestCase
     {
         [$leader, $member, $third, $origin, $secondPlanet, $guild, $hall, $service] = $this->fundOfficialHall();
         $repo = self::getContainer()->get(GuildHallRepository::class);
-        self::assertSame(499999, $hall->strength);
+        self::assertSame(450000, $hall->strength);
         self::assertSame(2, $repo->qualifiedDonors($hall));
         self::assertSame(49999, $repo->donor($hall, $member)->strength);
         self::assertSame(3, $repo->currentRosterSize($guild, $hall->requiredDonors));
@@ -151,6 +151,10 @@ final class GuildHallTest extends KernelTestCase
         self::getContainer()->get(\App\Service\Colony\ResourceService::class)->initialize($otherColony, colony: true);
         $this->em->flush();
         $hall = $service->contribute($member, $guild->id, $otherColony->id, $hall->revision, ['hydrogen' => 1]);
+        self::assertSame(450001, $hall->strength);
+        $hall = $service->contribute($leader, $guild->id, $origin->id, $hall->revision, ['antimatter' => 6249, 'hydrogen' => 6]);
+        self::assertSame(499999, $hall->strength);
+        $hall = $service->contribute($leader, $guild->id, $origin->id, $hall->revision, ['hydrogen' => 1]);
         self::assertSame(500000, $hall->strength);
         self::assertSame(50000, $repo->donor($hall, $member)->strength);
         self::assertSame(3, $repo->qualifiedDonors($hall));
@@ -178,7 +182,9 @@ final class GuildHallTest extends KernelTestCase
     public function testCannotPlaceAt499999(): void
     {
         // Chaque refus doit laisser la revendication et les dons inchangés.
-        [$leader, , , $origin, , $guild, $hall, $service] = $this->fundOfficialHall();
+        [$leader, $member, , $origin, $secondPlanet, $guild, $hall, $service] = $this->fundOfficialHall();
+        $hall = $service->contribute($member, $guild->id, $secondPlanet->id, $hall->revision, ['hydrogen' => 1]);
+        $hall = $service->contribute($leader, $guild->id, $origin->id, $hall->revision, ['antimatter' => 6249, 'hydrogen' => 6]);
         try {
             $service->place($leader, $guild->id, $origin->solarSystem->id, $hall->revision);
             self::fail('499999 points ne suffisent pas.');
@@ -194,6 +200,7 @@ final class GuildHallTest extends KernelTestCase
     {
         [$leader, $member, $third, $origin, $secondPlanet, $guild, $hall, $service] = $this->fundOfficialHall();
         $hall = $service->contribute($member, $guild->id, $secondPlanet->id, $hall->revision, ['hydrogen' => 1]);
+        $hall = $service->contribute($leader, $guild->id, $origin->id, $hall->revision, ['antimatter' => 6249, 'hydrogen' => 7]);
         $diplomacy = self::getContainer()->get(DiplomacyService::class);
         $diplomacy->leave($member);
         $diplomacy->leave($third);
@@ -206,6 +213,43 @@ final class GuildHallTest extends KernelTestCase
         $db = $this->em->getConnection();
         self::assertNull($db->fetchOne('SELECT solar_system_id FROM guild_hall WHERE id = ?', [$hall->id]));
         self::assertSame(3, (int) $db->fetchOne('SELECT COUNT(*) FROM guild_hall_contribution WHERE hall_id = ?', [$hall->id]));
+    }
+
+    public function testAnUnqualifiedMemberCanLeaveWithoutBlockingTheRemaining50000Points(): void
+    {
+        [$leader, $member, , $origin, , $guild, $hall, $service] = $this->fundOfficialHall();
+        $diplomacy = self::getContainer()->get(DiplomacyService::class);
+        $diplomacy->leave($member);
+        [$replacement, $colony] = $this->player('FreshHallDonor');
+        $diplomacy->join($replacement, $guild->id);
+        $this->em->getConnection()->executeStatement("UPDATE planet_resource SET current_stock = 20000 WHERE planet_id = ? AND resource_type = 'antimatter'", [$colony->id]);
+        $hall = $service->contribute($replacement, $guild->id, $colony->id, $hall->revision, ['antimatter' => 6250]);
+        self::assertSame(500000, $hall->strength);
+        $repo = self::getContainer()->get(GuildHallRepository::class);
+        self::assertSame(3, $repo->qualifiedDonors($hall));
+        self::assertSame(49999, $repo->donor($hall, $member)->strength);
+        self::assertSame($origin->solarSystem->id, $service->place($leader, $guild->id, $origin->solarSystem->id, $hall->revision)->solarSystem->id);
+    }
+
+    public function testA49999GiftCannotConsumeACompleteReservedShare(): void
+    {
+        $service = $this->officialService();
+        [$leader, $origin, $guild] = $this->guild('HallShareLeader', 'HSL');
+        [$member, $colony] = $this->player('HallShareMember');
+        self::getContainer()->get(DiplomacyService::class)->join($member, $guild->id);
+        $db = $this->em->getConnection();
+        $db->executeStatement("UPDATE planet_resource SET current_stock = 100000 WHERE planet_id = ? AND resource_type = 'antimatter'", [$origin->id]);
+        $hall = $service->contribute($leader, $guild->id, $origin->id, 0, ['antimatter' => 50000]);
+        $before = $this->stock($colony, 'antimatter');
+        try {
+            $service->contribute($member, $guild->id, $colony->id, $hall->revision, ['antimatter' => 6249, 'hydrogen' => 7]);
+            self::fail('Le don doit au moins qualifier le membre quand il touche la réserve.');
+        } catch (\DomainException $exception) {
+            self::assertStringContainsString('au moins 50 000 points', $exception->getMessage());
+        }
+        self::assertSame($before, $this->stock($colony, 'antimatter'));
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM guild_hall_contribution'));
+        self::assertSame(400000, (int) $db->fetchOne('SELECT strength FROM guild_hall'));
     }
 
     public function testAVeteranCannotConsumeTheReservedSharesInOneDonation(): void
@@ -239,7 +283,7 @@ final class GuildHallTest extends KernelTestCase
             // Stocks de recette isolés : ce volume n'est pas un paquet de jeu.
             $db->executeStatement("UPDATE planet_resource SET current_stock = 100000 WHERE planet_id = ? AND resource_type = 'antimatter'", [$planet->id]);
         }
-        $hall = $service->contribute($leader, $guild->id, $origin->id, 0, ['antimatter' => 50000]);
+        $hall = $service->contribute($leader, $guild->id, $origin->id, 0, ['antimatter' => 43750, 'hydrogen' => 1]);
         $hall = $service->contribute($member, $guild->id, $secondPlanet->id, $hall->revision, ['antimatter' => 6249, 'hydrogen' => 7]);
         $hall = $service->contribute($third, $guild->id, $thirdPlanet->id, $hall->revision, ['antimatter' => 6250]);
 

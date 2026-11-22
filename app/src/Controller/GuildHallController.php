@@ -36,9 +36,8 @@ final class GuildHallController extends AbstractController
         $qualified = $hall ? $this->halls->qualifiedDonors($hall) : 0;
         $roster = $this->halls->currentRosterSize($guild, $requiredDonors);
         $personal = $hall ? ($this->halls->donor($hall, $actor)?->strength ?? 0) : 0;
-        $maximum = $mayAct && $remaining > 0 ? $this->funding->maximumDonation(
-            $remaining, $personal, $hall ? $this->halls->topOtherDonors($hall, $actor->id) : [], $requiredDonors, $minimum,
-        ) : 0;
+        $limits = $this->funding->donationLimits($mayAct ? $remaining : 0, $personal, $qualified, $requiredDonors, $minimum);
+        $maximum = $limits['maximum'];
         $mayPlace = $mayAct && $remaining === 0 && $qualified >= $requiredDonors && $roster >= $requiredDonors
             && $hall->solarSystem === null && $policy->canCommand($actor, $guild);
         $query = mb_substr(trim($request->query->getString('q')), 0, 80);
@@ -57,6 +56,8 @@ final class GuildHallController extends AbstractController
             'personal' => $personal,
             'personal_remaining' => max(0, $minimum - $personal),
             'maximum' => $maximum,
+            'ordinary_limit' => $limits['ordinary'],
+            'qualifies_from' => $limits['qualifiesFrom'],
             'resource_fields' => $this->funding->fields($maximum),
             'may_act' => $mayAct,
             'may_place' => $mayPlace,

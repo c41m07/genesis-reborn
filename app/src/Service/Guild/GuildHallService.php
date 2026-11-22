@@ -49,14 +49,14 @@ final readonly class GuildHallService
             $requiredDonors = $hall?->requiredDonors ?? $this->funding->requiredDonors;
             $minimumDonorStrength = $hall?->minimumDonorStrength ?? $this->funding->minimumDonorStrength;
             $contribution = $hall ? $this->halls->donor($hall, $actor, lock: true) : null;
-            $maximum = $this->funding->maximumDonation(
+            $limits = $this->funding->donationLimits(
                 $target - ($hall?->strength ?? 0),
                 $contribution?->strength ?? 0,
-                $hall ? $this->halls->topOtherDonors($hall, $actor->id, lock: true) : [],
+                $hall ? $this->halls->qualifiedDonors($hall, lock: true) : 0,
                 $requiredDonors,
                 $minimumDonorStrength,
             );
-            $donation = $this->funding->donation($amounts, $maximum);
+            $donation = $this->funding->donation($amounts, $limits);
             // Même transaction que la progression : ni double débit après un renvoi
             // du formulaire, ni construction créditée si le stock n'a pas été payé.
             $this->resources->consume($planet, $donation['cost'], lockStocks: true);

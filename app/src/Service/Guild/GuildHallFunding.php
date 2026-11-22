@@ -34,32 +34,24 @@ final readonly class GuildHallFunding
                 ? $this->requiredStrength : null;
     }
 
-    /**
-     * @param list<int> $otherStrengths Au plus le nombre de donateurs requis, par ordre décroissant.
-     */
-    public function maximumDonation(int $remaining, int $personal, array $otherStrengths, int $requiredDonors, int $minimumEach): int
+    /** @return array{ordinary: int, qualifiesFrom: ?int, maximum: int} */
+    public function donationLimits(int $remaining, int $personal, int $qualified, int $requiredDonors, int $minimumEach): array
     {
-        $reserve = $requiredDonors * $minimumEach;
-        foreach (array_slice($otherStrengths, 0, $requiredDonors) as $previous) {
-            $reserve -= min($minimumEach, $previous);
-        }
-        $last = min($minimumEach, $otherStrengths[$requiredDonors - 1] ?? 0);
-        // Un nouveau point ne réduit le déficit réservé qu'après entrée du
-        // donateur parmi les mieux placés, et seulement jusqu'au seuil personnel.
-        // La dépense + le futur déficit restent donc monotones : chercher le plafond.
-        $low = 0;
-        $high = max(0, $remaining);
-        while ($low < $high) {
-            $candidate = intdiv($low + $high + 1, 2);
-            $coverage = max(0, min($minimumEach, $personal + $candidate) - $last);
-            if ($candidate + $reserve - $coverage <= $remaining) {
-                $low = $candidate;
-            } else {
-                $high = $candidate - 1;
+        $missing = max(0, $requiredDonors - $qualified);
+        $ordinary = max(0, $remaining - $missing * $minimumEach);
+
+        // Réserver une part entière tant que la qualification n'est pas acquise.
+        // Ainsi le départ d'un donateur partiel ne retire jamais la possibilité
+        // qu'une autre personne finance sa propre part, sans dépasser le prix.
+        if ($missing > 0 && $personal < $minimumEach) {
+            $from = $minimumEach - $personal;
+            $qualifyingMaximum = $remaining - ($missing - 1) * $minimumEach;
+            if ($qualifyingMaximum >= $from) {
+                return ['ordinary' => $ordinary, 'qualifiesFrom' => $from, 'maximum' => $qualifyingMaximum];
             }
         }
 
-        return $low;
+        return ['ordinary' => $ordinary, 'qualifiesFrom' => null, 'maximum' => $ordinary];
     }
 
     /** @return array<string, array{label: string, maximum: int}> */
@@ -78,8 +70,12 @@ final readonly class GuildHallFunding
         return $this->target() !== null && (bool) $this->catalog->forUniverse($universe)['features']['guilds_enabled'];
     }
 
-    /** @param array<string, mixed> $input @return array{cost: array<string, int>, strength: int} */
-    public function donation(array $input, int $remaining): array
+    /**
+     * @param array<string, mixed> $input
+     * @param array{ordinary: int, qualifiesFrom: ?int, maximum: int} $limits
+     * @return array{cost: array<string, int>, strength: int}
+     */
+    public function donation(array $input, array $limits): array
     {
         $cost = $this->rules->quantities(
             $input,
@@ -90,8 +86,11 @@ final readonly class GuildHallFunding
         foreach ($cost as $resource => $amount) {
             $strength += $amount * self::WEIGHTS[$resource];
         }
-        if ($strength > $remaining) {
-            throw new \DomainException(sprintf('Ce don dépasse la force autorisée (%s points). La place requise pour les autres donateurs est réservée. Aucun stock n’est débité.', number_format($remaining, 0, ',', ' ')));
+        if ($strength > $limits['maximum']) {
+            throw new \DomainException(sprintf('Ce don dépasse la force autorisée (%s points). La place requise pour les autres donateurs est réservée. Aucun stock n’est débité.', number_format($limits['maximum'], 0, ',', ' ')));
+        }
+        if ($strength > $limits['ordinary'] && $limits['qualifiesFrom'] !== null && $strength < $limits['qualifiesFrom']) {
+            throw new \DomainException(sprintf('Donnez au moins %s points pour atteindre votre minimum personnel, ou restez dans la limite libre de %s points. Aucun stock n’est débité.', number_format($limits['qualifiesFrom'], 0, ',', ' '), number_format($limits['ordinary'], 0, ',', ' ')));
         }
 
         return ['cost' => $cost, 'strength' => $strength];

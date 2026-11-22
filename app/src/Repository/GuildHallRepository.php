@@ -53,16 +53,6 @@ final readonly class GuildHallRepository
         return $query->getOneOrNullResult();
     }
 
-    /** @return list<int> */
-    public function topOtherDonors(GuildHall $hall, int $memberId, bool $lock = false): array
-    {
-        return array_map('intval', $this->em->getConnection()->fetchFirstColumn(
-            'SELECT strength FROM guild_hall_contribution WHERE hall_id = ? AND member_id <> ?
-             ORDER BY strength DESC LIMIT '.$hall->requiredDonors.($lock ? ' FOR UPDATE' : ''),
-            [$hall->id, $memberId],
-        ));
-    }
-
     public function qualifiedDonors(GuildHall $hall, bool $lock = false): int
     {
         return count($this->em->getConnection()->fetchFirstColumn(

@@ -80,6 +80,7 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
                 runIsolatedSql(project, 'INSERT INTO guild_member (guild_id,player_universe_id) SELECT ' + guild + ', owner_id FROM planet WHERE id=' + planet);
                 await peer.goto('/guildes/hall');
                 await expect(peer.getByText(/Il vous manque 8 points/)).toBeVisible();
+                await expect(peer.getByText(/utiliser une part réservée : de 8 à 8 points/)).toBeVisible();
                 await peer.getByLabel('Hydrogène', { exact: true }).fill('8');
                 await peer.getByRole('button', { name: 'Donner ces ressources' }).click();
                 await expect(peer.getByText(/Votre minimum personnel est atteint/)).toBeVisible();

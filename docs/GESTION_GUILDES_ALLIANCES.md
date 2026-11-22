@@ -26,10 +26,13 @@ un don supérieur au restant dû ; aucun excédent n'est perdu.
 
 Le prix fixé est de 500 000 points, avec trois personnes distinctes ayant
 versé au moins 50 000 points chacune en étant membres. Les trois critères
-sont figés au premier don. Le système réserve dans le total la part encore
-nécessaire aux donateurs ; une personne seule ne peut pas verser plus de
-400 000 points au départ. Un don au-delà du plafond de la personne est
-refusé sans débit, pas consommé ni réparti en surplus.
+sont figés au premier don. Le système réserve **50 000 points entiers**
+pour chaque qualification manquante, et n'en débloque une part que si le
+don atteint le minimum personnel. Le plafond initial d'une personne est
+de 400 000 points. Les dons partiels sont autorisés dans le budget libre ;
+un départ avant qualification ne prive pas un autre membre de sa part.
+L'interface distingue le plafond libre de la plage qui permet de se
+qualifier. Tout don hors de ces bornes est refusé sans débit.
 
 L'identifiant de participation, commun à toutes ses colonies, ne compte
 qu'une fois en cas de départ puis retour. Son don et sa qualification ne
