@@ -97,7 +97,7 @@ final class AdventTest extends WebTestCase
         self::assertSame(0, $this->em->getRepository(AdventClaim::class)->count());
 
         $db = $this->em->getConnection();
-        $db->executeStatement("UPDATE planet_resource SET current_stock = 10000, last_updated_at = '2026-11-30 23:00:00' WHERE planet_id = ? AND resource_type = 'metal'", [$planet->id]);
+        $this->fixtureStocks($planet->id, '2026-11-30 23:00:00', ['metal' => 10000]);
         $this->client->request('POST', $url, ['choice' => '0', 'colony' => $planet->id, '_token' => $token]);
         self::assertResponseRedirects($editionUrl.'#advent-door-1', 303);
         $this->client->followRedirect();
@@ -146,10 +146,7 @@ final class AdventTest extends WebTestCase
         $this->client->followRedirect();
         self::assertSelectorTextContains('main', 'Le choix du cadeau ne peut plus être modifié.');
         self::assertSame($initial, $db->fetchAssociative('SELECT choice, resources, delivered_at, original_destination_id, delivered_destination_id FROM advent_claim'));
-        $db->executeStatement(
-            "UPDATE planet_resource SET current_stock = 500, last_updated_at = '2026-12-31 23:00:00' WHERE planet_id = ? AND resource_type = 'metal'",
-            [$altPlanet->id],
-        );
+        $this->fixtureStocks($altPlanet->id, '2026-12-31 23:00:00', ['metal' => 500]);
         for ($i = 0; $i < 2; ++$i) {
             $this->client->request('POST', $url, ['choice' => '0', 'colony' => $altPlanet->id, '_token' => $token]);
             self::assertResponseRedirects($editionUrl.'#advent-door-1', 303);
@@ -178,10 +175,7 @@ final class AdventTest extends WebTestCase
         $planet = $this->planet($member)->id;
         $edition = $this->publish($admin);
         $db = $this->em->getConnection();
-        $db->executeStatement(
-            "UPDATE planet_resource SET current_stock = 500, last_updated_at = '2026-11-30 23:00:00' WHERE planet_id = ? AND resource_type IN ('metal', 'nano')",
-            [$planet],
-        );
+        $this->fixtureStocks($planet, '2026-11-30 23:00:00', ['metal' => 500, 'nano' => 500]);
 
         $directory = sys_get_temp_dir().'/genesis-advent-'.bin2hex(random_bytes(8));
         mkdir($directory, 0700);
@@ -254,6 +248,18 @@ final class AdventTest extends WebTestCase
                 }
             }
             rmdir($directory);
+        }
+    }
+
+    /** @param array<string, int> $stocks */
+    private function fixtureStocks(int $planet, string $at, array $stocks): void
+    {
+        $db = $this->em->getConnection();
+        // La matérialisation de toutes les ressources part de l’horloge de
+        // l’électricité. Neutraliser le temps simulé dans cette fixture seulement.
+        $db->executeStatement('UPDATE planet_resource SET last_updated_at = ? WHERE planet_id = ?', [$at, $planet]);
+        foreach ($stocks as $resource => $quantity) {
+            $db->executeStatement('UPDATE planet_resource SET current_stock = ? WHERE planet_id = ? AND resource_type = ?', [$quantity, $planet, $resource]);
         }
     }
 
