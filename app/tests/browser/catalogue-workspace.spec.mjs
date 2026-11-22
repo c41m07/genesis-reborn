@@ -160,8 +160,11 @@ test('L7B : manques multiples, devis de lot et suivi dépliable conservés aprè
     await expect(page.locator('.incoming-empty-message')).toBeVisible();
     await page.goto(`${user.path}?section=ships`);
     const unavailable = page.locator('#item-fighter-basic');
+    await expect(unavailable.getByRole('button', { name: /Max :/ })).toBeDisabled();
     const unavailableResponse = page.waitForResponse(response => response.url().includes('/construction-maximum'));
-    await unavailable.getByRole('button', { name: /Max :/ }).click();
+    const unavailableQuantity = unavailable.getByLabel('Quantité', { exact: true });
+    await unavailableQuantity.fill('2');
+    await unavailableQuantity.press('Tab');
     const quote = await (await unavailableResponse).json();
     expect(quote.maximum).toBe(0);
     expect(Object.keys(quote.missingResources).length).toBeGreaterThan(1);
