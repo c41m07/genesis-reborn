@@ -28,6 +28,8 @@ final readonly class PirateCampaignPresenter
         'combat_reported' => 'Rapport de combat reçu',
         'return_due' => 'Retour prévu des survivants',
         'return_settled' => 'Retour des survivants confirmé',
+        'recovery_due' => 'Arrivée prévue du repli',
+        'recovery_observed' => 'Arrivée du repli constatée',
     ];
 
     public function __construct(
@@ -80,11 +82,18 @@ final readonly class PirateCampaignPresenter
             'scheduled' => $progress['return_narrative']['message'],
             'blocked' => 'Le retour des survivants n’a pas été confirmé.',
             'returned' => 'Le retour des survivants a été confirmé.',
+            'recovery_travel' => 'Les survivants sont en repli vers votre colonie.',
+            'recovery_delivered' => 'Les survivants et leur réserve restante ont rejoint votre hangar.',
+            'recovery_lost' => 'La colonie de repli a été perdue. Ni les survivants ni leur réserve n’ont été transférés.',
+            'recovery_capacity' => 'Le hangar ne peut pas accueillir le lot entier. Les survivants et leur réserve restent en attente.',
             default => null,
         };
         if ($progress['returning'] === 'scheduled' && isset($progress['dates']['return_due'])
             && $at >= new \DateTimeImmutable($progress['dates']['return_due'])) {
             $return = 'L’heure de retour prévue est passée. Le retour n’a pas encore été confirmé.';
+        }
+        if ($progress['returning'] === 'recovery_travel' && $at >= new \DateTimeImmutable($progress['dates']['recovery_due'])) {
+            $return = 'L’arrivée du repli reste à confirmer.';
         }
         $formation = $this->shipRows($viewer, $progress['composition']);
         $losses = $this->shipRows($viewer, $progress['own_losses']);
@@ -117,7 +126,7 @@ final readonly class PirateCampaignPresenter
             $return,
             $progress['tactical_guidance'],
             $quote === null ? null : $this->rewardRows($quote),
-        );
+        ) + ['may_offer_recovery' => $progress['may_offer_recovery']];
     }
 
     /**
@@ -173,6 +182,7 @@ final readonly class PirateCampaignPresenter
                 'scout_due' => $phase === PirateCampaignMoment::ReconnaissanceEnRoute->name,
                 'attack_arrival_due' => $phase === PirateCampaignMoment::AttaqueEngagee->name && !isset($dates['attack_arrival_observed']),
                 'return_due' => $returning === 'scheduled',
+                'recovery_due' => $returning === 'recovery_travel',
                 default => false, // Ne pas déduire une issue, un crédit ou une clôture d'un chronomètre.
             };
             $rows[] = ['label' => self::DATE_LABELS[$key], 'at' => $at, 'countdown' => $countdown];

@@ -6,7 +6,7 @@ namespace App\Tests\Unit;
 
 use App\Controller\PiratePilotLocalController;
 use App\Repository\{PirateCampaignReadRepository, PirateConvoyReadRepository};
-use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignWorkspace, PirateConvoyDossierProjection, PiratePilotActiveColony, PiratePilotAttackCommand, PiratePilotConvoyDepositCommand, PiratePilotConvoyRouteCommand, PiratePilotEncounterForms, PiratePilotLocalReader, PiratePilotScoutCommand};
+use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignWorkspace, PirateConvoyDossierProjection, PiratePilotActiveColony, PiratePilotAttackCommand, PiratePilotConvoyDepositCommand, PiratePilotConvoyRouteCommand, PiratePilotEncounterForms, PiratePilotLocalReader, PiratePilotScoutCommand, PiratePilotSurvivorsCommand};
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Routing\AttributeRouteControllerLoader;
@@ -33,9 +33,11 @@ final class PiratePilotLocalRoutingTest extends TestCase
             'app_dev_pirate_pilot_convoy_deposit' => ['POST'],
             'app_dev_pirate_pilot_convoy_route_preview' => ['POST'],
             'app_dev_pirate_pilot_convoy_route' => ['POST'],
+            'app_dev_pirate_pilot_survivors_preview' => ['POST'],
+            'app_dev_pirate_pilot_survivors' => ['POST'],
         ];
         $devRoutes = (new AttributeRouteControllerLoader('dev'))->load($controller);
-        self::assertCount(7, $devRoutes);
+        self::assertCount(9, $devRoutes);
         foreach ($expected as $routeName => $methods) {
             self::assertSame($methods, $devRoutes->get($routeName)?->getMethods(), $routeName);
         }
@@ -64,6 +66,7 @@ final class PiratePilotLocalRoutingTest extends TestCase
         $attack = (new \ReflectionClass(PiratePilotAttackCommand::class))->newInstanceWithoutConstructor();
         $deposit = (new \ReflectionClass(PiratePilotConvoyDepositCommand::class))->newInstanceWithoutConstructor();
         $route = (new \ReflectionClass(PiratePilotConvoyRouteCommand::class))->newInstanceWithoutConstructor();
+        $survivors = (new \ReflectionClass(PiratePilotSurvivorsCommand::class))->newInstanceWithoutConstructor();
         $controller = new PiratePilotLocalController();
         $get = Request::create('/evenements/campagne-pirate/1');
         $post = Request::create('/evenements/campagne-pirate/1', 'POST');
@@ -75,6 +78,8 @@ final class PiratePilotLocalRoutingTest extends TestCase
             $controller->convoyDeposit($post, 1, $reader, $deposit),
             $controller->convoyRoutePreview($post, 1, $reader, $route),
             $controller->convoyRoute($post, 1, $reader, $route),
+            $controller->survivorsPreview($post, 1, $reader, $survivors),
+            $controller->survivors($post, 1, $reader, $survivors),
         ];
         foreach ($responses as $response) {
             self::assertSame(404, $response->getStatusCode());

@@ -43,6 +43,9 @@
         {# La section convoi ci-dessus affiche le seul état durable ; ne pas répéter l’ancien devis indicatif. #}
         {% include 'player/pirate_campaign/_briefing.html.twig' with {briefing: dossier.briefing|merge({quote: null})} only %}
     {% endif %}
+    {% if survivor_form %}
+        {% include 'player/pirate_campaign/_destination_form.html.twig' with {choice: survivor_form, mission: dossier.selected} only %}
+    {% endif %}
     {% if encounter_form %}
         {% include 'player/pirate_campaign/_encounter_form.html.twig' with {
             form: encounter_form, mission: dossier.selected, origin: origin_label

@@ -37,6 +37,7 @@ final class PirateCampaignProgress
         $returnNarrative = null;
         $losses = null;
         $returning = null;
+        $mayOfferRecovery = false;
         $dates = ['scout_departure' => $scout['departed_at'], 'scout_due' => $scout['due_at']];
         if ($scout['status'] === 'reported') {
             $phase = PirateCampaignMoment::RenseignementRecu;
@@ -75,6 +76,17 @@ final class PirateCampaignProgress
                         $returning = 'returned';
                         $dates['return_settled'] = $attack->timeline['settled'];
                     }
+                    $recovery = $attack->timeline['pilot_recovery'] ?? null;
+                    if (is_array($recovery)) {
+                        $status = $this->visibleRecovery($attack, $recovery, $at);
+                        if ($status !== null) {
+                            [$returning, $key, $stamp] = $status;
+                            $dates[$key] = $stamp;
+                        }
+                    } elseif ($returning === 'blocked' && is_array($attack->timeline['pilot_blocked_return'] ?? null)) {
+                        // Ceci ne prouve qu'une possibilité de formulaire ; le devis relit le vrai reçu.
+                        $mayOfferRecovery = true;
+                    }
                 }
             }
         }
@@ -96,7 +108,55 @@ final class PirateCampaignProgress
             'dates' => $dates,
             'own_losses' => $losses,
             'returning' => $returning,
+            'may_offer_recovery' => $mayOfferRecovery,
         ];
+    }
+
+    /** @return array{string, string, string}|null */
+    private function visibleRecovery(PirateAttackCampaign $attack, array $state, \DateTimeImmutable $at): ?array
+    {
+        $attempt = $attack->timeline['attempt'] ?? null;
+        if (($state['version'] ?? null) !== 1 || !is_int($attempt) || $attempt < 1 || $attempt >= PHP_INT_MAX
+            || ($state['attempt'] ?? null) !== $attempt || ($state['generation'] ?? null) !== $attempt + 1) {
+            return null;
+        }
+        $departed = self::privateRecoveryDate($state['departure'] ?? null);
+        $due = self::privateRecoveryDate($state['due'] ?? null);
+        if ($departed === null || $due === null || $departed > $at || $due <= $departed) {
+            return null;
+        }
+        $phase = $state['state'] ?? null;
+        if ($phase === PirateSurvivorRecoveryLeg::TRAVELING) {
+            return $attack->returnBlocked && $attack->reservedShips !== [] && ($state['observed'] ?? null) === null
+                ? ['recovery_travel', 'recovery_due', $state['due']] : null;
+        }
+        $observed = self::privateRecoveryDate($state['observed'] ?? null);
+        if ($observed === null || $observed < $due || $observed > $at) {
+            return null;
+        }
+        if ($phase === PirateSurvivorRecoveryLeg::DELIVERED && !$attack->returnBlocked && $attack->reservedShips === []
+            && ($attack->timeline['settled'] ?? null) === $state['observed']) {
+            return ['recovery_delivered', 'recovery_observed', $state['observed']];
+        }
+        if (!$attack->returnBlocked || $attack->reservedShips === []) {
+            return null;
+        }
+
+        return match ($phase) {
+            PirateSurvivorRecoveryLeg::DESTINATION_LOST => ['recovery_lost', 'recovery_observed', $state['observed']],
+            PirateSurvivorRecoveryLeg::CAPACITY_BLOCKED => ['recovery_capacity', 'recovery_observed', $state['observed']],
+            default => null,
+        };
+    }
+
+    private static function privateRecoveryDate(mixed $value): ?\DateTimeImmutable
+    {
+        if (!is_string($value) || preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+00:00$/D', $value) !== 1) {
+            return null;
+        }
+        $at = \DateTimeImmutable::createFromFormat(DATE_ATOM, $value);
+
+        return $at !== false && $at->format(DATE_ATOM) === $value ? $at : null;
     }
 
     /**

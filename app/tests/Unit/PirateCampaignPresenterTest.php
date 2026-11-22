@@ -154,6 +154,43 @@ final class PirateCampaignPresenterTest extends TestCase
         self::assertStringNotContainsString('Retour prévu', $html);
     }
 
+
+    public function testPrivateRecoveryDoesNotPresentDeliveryBeforeARealArrival(): void
+    {
+        [$player, , , $recon, $attack, $presenter] = $this->fixture();
+        $recon->reportWhenDue($player, 'fixture-pirate-job', $this->at(32));
+        $attack->departedAt = $this->at(40);
+        $attack->report = ['outcome' => 'attacker_wins'];
+        $attack->returnBlocked = true;
+        $attack->reservedShips = ['fighter' => ['basic' => 2]];
+        $stamp = fn(int $offset): string => $this->at($offset)->format(DATE_ATOM);
+        $attack->timeline = ['attempt' => 1, 'state' => 'won', 'resolved' => $stamp(60),
+            'pilot_return' => [], 'pilot_blocked_return' => []];
+        self::assertTrue($presenter->forProgress($player, $recon, $attack, $this->at(70))['may_offer_recovery']);
+        $leg = ['version' => 1, 'generation' => 2, 'attempt' => 1, 'state' => 'traveling',
+            'departure' => $stamp(70), 'due' => $stamp(130), 'observed' => null];
+        $attack->timeline['pilot_recovery'] = $leg;
+        $travel = $presenter->forProgress($player, $recon, $attack, $this->at(129));
+        self::assertFalse($travel['may_offer_recovery']);
+        self::assertStringContainsString('sont en repli', $travel['return']);
+        self::assertSame('L’arrivée du repli reste à confirmer.',
+            $presenter->forProgress($player, $recon, $attack, $this->at(130))['return']);
+
+        $attack->timeline['pilot_recovery'] = array_replace($leg, ['state' => 'capacity_blocked', 'observed' => $stamp(131)]);
+        self::assertStringContainsString('restent en attente', $presenter->forProgress($player, $recon, $attack, $this->at(131))['return']);
+        $attack->timeline['pilot_recovery'] = array_replace($leg, ['state' => 'destination_lost', 'observed' => $stamp(131)]);
+        self::assertStringContainsString('n’ont été transférés', $presenter->forProgress($player, $recon, $attack, $this->at(131))['return']);
+
+        $attack->returnBlocked = false;
+        $attack->reservedShips = [];
+        $attack->timeline['settled'] = $stamp(131);
+        $attack->timeline['pilot_recovery']['state'] = 'delivered';
+        self::assertNull($presenter->forProgress($player, $recon, $attack, $this->at(130))['return']);
+        $delivered = $presenter->forProgress($player, $recon, $attack, $this->at(131));
+        self::assertStringContainsString('ont rejoint votre hangar', $this->render($delivered));
+        self::assertFalse($delivered['may_offer_recovery']);
+    }
+
     public function testForeignAccountParticipationUniverseAndForeignAttemptRenderNothingPrivate(): void
     {
         [$player, $site, , $recon, $attack, $presenter] = $this->fixture();

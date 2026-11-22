@@ -108,3 +108,14 @@ est liée au droit, à la nouvelle destination exacte et à la durée du trajet 
 service refait le devis natif avant de poser une nouvelle échéance et un nouvel ordre. Les stocks ne
 sont ni crédités ni transférés par le choix. Un convoi en vol ou juste à court de place ne peut pas
 changer de colonie.
+
+### Repli des survivants
+
+Si le retour d'une escorte est réellement bloqué et que son point d'arrêt et sa réserve sont
+attestés, le dossier de cette mission peut proposer une autre colonie du même empire. L'aperçu
+affiche durée, coût et reliquat d'hydrogène sans déplacer ni débiter quoi que ce soit. Au second
+clic, le jeton ne couvre que cette solution et le vrai devis est recalculé sous verrou. La remise
+au hangar est indivisible : vaisseaux et réserve embarquée restante, jamais un crédit de stock
+planétaire. L'échéance affichée n'est pas un reçu. Si le hangar refuse le lot ou si la destination
+est perdue en vol, les survivants restent en attente sans restitution affichée et l'ancien ordre
+ne permet pas de relancer le trajet.
