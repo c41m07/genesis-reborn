@@ -6,7 +6,18 @@
 <a class="secondary" href="{{ path('app_admin_operations') }}">Retour à l’exploitation</a></div>
 <section class="panel">
 <h2>État de la cible au moment du relevé</h2>
-<p>Nature : {{ inspection.kind }} · Cible #{{ inspection.target_id }}</p>
+{% set stateLabels = {
+    unsupported: 'Diagnostic non disponible pour ce type',
+    target_absent: 'Cible absente du relevé',
+    superseded: 'Commande remplacée',
+    ownership_changed: 'Propriétaire changé',
+    not_started: 'Commande non démarrée',
+    not_due: 'Échéance future',
+    due_unproven: 'Échéance atteinte, exécution non confirmée'
+} %}
+<dl class="report-facts"><div><dt>Nature</dt><dd>{{ inspection.kind }}</dd></div>
+<div><dt>Cible</dt><dd>#{{ inspection.target_id }}</dd></div>
+<div><dt>État observé</dt><dd>{{ stateLabels[inspection.state]|default('État inconnu') }}</dd></div></dl>
 <p>{{ inspection.explanation }}</p>
 <p><strong>Aucune relance autorisée par ce diagnostic.</strong></p>
 <p>« Dû » ne signifie pas « relançable ». Une ligne présente ne prouve pas que le message n’a pas été relayé ; une ligne absente ne prouve pas que le traitement a été exécuté.</p>

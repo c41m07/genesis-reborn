@@ -12,10 +12,10 @@ Les règles globales, prérequis et bonus de colonie ne sont pas archivés ici :
 <p>{{ version.reason }}</p>
 {% if version.restorable %}<a class="secondary" href="{{ path('app_admin_catalogue_restore', {id: universe.id, group: group, slug: item.slug, source: version.id}) }}">Préparer la restauration de l’état après cette trace</a>{% else %}<p>Trace sans version complète : consultation uniquement.</p>{% endif %}
 <details><summary>Comparer avant, après et actuel</summary>
-<div class="table-scroll"><table class="admin-ops-table">
+<div class="table-scroll admin-history-table" role="region" tabindex="0" aria-label="Valeurs comparées, trace #{{ version.id }}"><table class="admin-ops-table">
 <caption>Champs de la fiche, trace #{{ version.id }}</caption>
 <thead><tr><th scope="col">Champ</th><th scope="col">Avant</th><th scope="col">Après</th><th scope="col">Actuel à l’ouverture</th></tr></thead>
-<tbody>{% for field in version.comparison %}<tr><th scope="row">{{ field.label }}</th><td>{{ field.before is null ? 'Non enregistré' : field.before }}</td><td>{{ field.after is null ? 'Non enregistré' : field.after }}</td><td>{{ field.current }}</td></tr>{% endfor %}</tbody>
+<tbody>{% for field in version.comparison %}<tr><th scope="row">{{ field.label }}{% if field.before is not null and field.after is not null and field.before is not same as(field.after) %}<small class="admin-history-revision">Modifié dans cette trace</small>{% endif %}</th><td>{{ field.before is null ? 'Non enregistré' : field.before }}</td><td>{{ field.after is null ? 'Non enregistré' : field.after }}</td><td>{{ field.current }}</td></tr>{% endfor %}</tbody>
 </table></div>
 </details></section>
 {% else %}<p role="status">Aucune trace enregistrée pour cette fiche dans cet univers.</p>{% endfor %}

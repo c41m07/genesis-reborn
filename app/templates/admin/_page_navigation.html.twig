@@ -1,7 +1,7 @@
 {% set pageLinks = [] %}
 {% if currentRoute starts with 'app_admin_universe' or currentRoute starts with 'app_admin_catalogue' or currentRoute == 'app_admin_resource_boxes' %}
     {% set pageLinks = [{route:'app_admin_universes',label:'Liste des univers'},{route:'app_admin_universe_new',label:'Nouvel univers'}] %}
-{% elseif currentRoute starts with 'app_admin_game_event' or currentRoute in ['app_admin_event_wizard','app_admin_event_preview'] %}
+{% elseif (currentRoute starts with 'app_admin_game_event' or currentRoute in ['app_admin_event_wizard','app_admin_event_preview']) and currentRoute != 'app_admin_game_events' %}
     {% set pageLinks = [{route:'app_admin_game_events',label:'Liste des événements'},{route:'app_admin_event_wizard',label:'Création guidée'},{route:'app_admin_game_event_new',label:'Formulaire avancé'}] %}
 {% elseif currentRoute starts with 'app_admin_guild_project' %}
     {% set pageLinks = [{route:'app_admin_guild_projects',label:'Liste des modèles de projets'},{route:'app_admin_guild_project_new',label:'Nouveau modèle'}] %}

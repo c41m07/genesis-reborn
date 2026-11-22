@@ -23,7 +23,7 @@
     {key:'ops', label:'Exploitation', description:'Sécurité, fonctionnement et traçabilité de la plateforme.', icon:'clock', items:[
         {route:'app_admin_security', label:'Sécurité', description:'Incidents d’accès et éléments à examiner.', matches:['app_admin_security'], category:'security'},
         {route:'app_admin_permissions', label:'Permissions', description:'Matrice des capacités du rôle administrateur.', matches:['app_admin_permissions']},
-        {route:'app_admin_operations', label:'État des traitements', description:'Traitements et relais à contrôler.', matches:['app_admin_operations']},
+        {route:'app_admin_operations', label:'État des traitements', description:'Traitements et relais à contrôler.', matches:['app_admin_operations','app_admin_outbox_inspection']},
         {route:'app_admin_audit', label:'Journal des actions', description:'Historique des interventions administratives.', matches:['app_admin_audit']},
         {route:'app_admin_legal_preview', label:'Brouillons juridiques', description:'Prévisualisation des documents existants.', matches:['app_admin_legal_preview']}
     ]}
@@ -83,6 +83,7 @@
     {% elseif currentRoute in ['app_admin_mission_combat','app_admin_mission_espionage'] %}
         {% set breadcrumbs = breadcrumbs|merge([{label:activeItem.label, url:path(activeItem.route)}, {label:'Flotte n° '~app.request.attributes.get('id'), url:path('app_admin_mission',{id:app.request.attributes.get('id')})}]) %}
         {% set detailLabel = currentRoute == 'app_admin_mission_combat' ? 'Rapport de combat' : 'Rapport d’espionnage' %}
+    {% elseif currentRoute == 'app_admin_outbox_inspection' %}{% set detailLabel = 'Diagnostic du relais #'~inspection.id %}
     {% elseif currentRoute == 'app_admin_universe_new' %}{% set detailLabel = 'Créer un univers' %}
     {% elseif currentRoute == 'app_admin_guild_project_new' %}{% set detailLabel = 'Créer un modèle de projet' %}
     {% elseif currentRoute == 'app_admin_guild_project_edit' %}{% set detailLabel = 'Modifier '~editing.name %}
@@ -103,7 +104,7 @@
     {% endif %}
     {% if detailLabel %}{% set breadcrumbs = breadcrumbs|merge([{label:detailLabel, url:null}]) %}{% endif %}
     {% endif %}
-    {% set compactContext = currentRoute starts with 'app_admin_catalogue' or currentRoute == 'app_admin_universe_metrics' %}
+    {% set compactContext = currentRoute starts with 'app_admin_catalogue' or currentRoute starts with 'app_admin_universe' or currentRoute == 'app_admin_resource_boxes' or currentRoute starts with 'app_admin_game_event' or currentRoute in ['app_admin_event_wizard', 'app_admin_event_preview'] %}
     {% if compactContext %}<div class="core-admin-context">{% endif %}
     <nav class="admin-breadcrumbs" aria-label="Fil d’Ariane">
         <ol>{% for crumb in breadcrumbs %}<li>{% if crumb.url %}<a href="{{ crumb.url }}">{{ crumb.label }}</a>{% else %}<span {% if loop.last %}aria-current="page"{% endif %}>{{ crumb.label }}</span>{% endif %}</li>{% endfor %}</ol>

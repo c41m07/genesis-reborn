@@ -50,10 +50,11 @@ test('Univers B : fiches, création et gestion dans les deux thèmes et trois fo
                 if (index === 0) {
                     await expect(page.locator(`#admin-universe-${user.universe} .admin-universe-alerts`)).toContainText('Fermeture dans moins de 7 jours');
                 } else if (index === 1) {
-                    await expect(page.locator('.admin-universe-create-help')).toContainText('ouvert immédiatement');
+                    await expect(page.getByRole('button', { name: 'Créer l’univers' })).toHaveAccessibleDescription(/ouvert dès sa création/);
                     await expect(page.getByRole('textbox', { name: 'Nom affiché' })).toBeVisible();
                 } else {
                     await expect(page.locator('.admin-universe-summary')).toContainText('Normal');
+                    await expect(page.locator('.admin-topbar')).toContainText('Univers : UniversInterstellaire');
                     await expect(page.locator('.admin-calendar-form')).toBeVisible();
                     await expect(page.locator('.admin-settings-form')).toBeVisible();
                     for (const checkbox of await page.locator('.admin-settings-form input[type="checkbox"]').all()) {

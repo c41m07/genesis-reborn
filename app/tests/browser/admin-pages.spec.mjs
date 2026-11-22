@@ -20,7 +20,7 @@ test('Pages administratives : liens directs, thèmes, clavier, ancres et rendu r
   const routes=['/admin/univers','/admin/universes/nouveau',`${base}/gerer`,`${base}/catalogue/buildings`,`${base}/catalogue/technologies`,`${base}/catalogue/ships`,`${base}/catalogue/defenses`,`${base}/catalogue/ships/fighter`,'/admin/events','/admin/events/nouveau','/admin/projets-guilde','/admin/projets-guilde/nouveau',`/admin/rotations?universe=${universe}`,`/admin/rotations/nouveau?universe=${universe}`,`/admin/rotations/${universe}/exploration/modifier`];
   for(const theme of ['dark','light']) {
     runIsolatedSql(process.env.BROWSER_ROUTER,`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
-    for(const width of [1440,390]) {
+    for(const width of [1920,768,390]) {
       await page.setViewportSize({width,height:900});
       for(const [index,route] of routes.entries()) {
         expect((await page.goto(route)).status()).toBe(200);
@@ -28,6 +28,12 @@ test('Pages administratives : liens directs, thèmes, clavier, ancres et rendu r
         await expect(page.locator('h1')).toHaveCount(1);
         await expect(page.locator('.admin-primary-link[aria-current="location"]')).toHaveCount(1);
         await expect(page.locator('.page-contents')).toHaveCount(0);
+        if (route === '/admin/events') {
+          const actions = page.locator('.page-heading .admin-event-heading-actions');
+          await expect(actions.getByRole('link', { name: 'Créer un événement guidé' })).toHaveCount(1);
+          await expect(actions.getByRole('link', { name: 'Création avancée' })).toHaveCount(1);
+          await expect(page.locator('#admin-main a[href="/admin/events/assistant"]')).toHaveCount(1);
+        }
         await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
         if(width===390 && [1,2,7,9,11,14].includes(index)) {
           const result=await new AxeBuilder({page}).include('#admin-main').withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']).analyze();

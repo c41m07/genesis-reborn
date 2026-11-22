@@ -14,7 +14,7 @@
 {% for definition in definitions %}
     <article class="panel">
         <h3>{{ definition.name }}</h3>
-        <p>{{ definition.enabled ? 'Actif' : 'Désactivé' }} · {{ objectives[definition.objective].label }} · {{ formats[definition.format] }} · {{ definition.duration_seconds / 3600 }} h</p>
+        <dl class="report-facts"><div><dt>Modèle</dt><dd>{{ definition.enabled ? 'Actif' : 'Désactivé' }}</dd></div><div><dt>Objectif</dt><dd>{{ objectives[definition.objective].label }}</dd></div><div><dt>Format</dt><dd>{{ formats[definition.format] }}</dd></div><div><dt>Durée par occurrence</dt><dd>{{ definition.duration_seconds / 3600 }} h</dd></div></dl>
         <p>{{ reward_modes[definition.reward_mode] }}{% if definition.global_goal|default(null) %} · Objectif global : {{ definition.global_goal|quantity(2) }}{% endif %}{% if definition.threshold_value|default(null) %} · Seuil individuel : {{ definition.threshold_value|quantity(2) }}{% endif %} · Un boost par participant éligible.</p>
         <a class="secondary" href="{{ path('app_admin_weekly_rotation_edit', {id: universe.id, key: definition.key}) }}">Modifier {{ definition.name }}</a>
     </article>

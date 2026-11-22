@@ -12,7 +12,8 @@
 </form>
 <div class="admin-monitor-toolbar"><p>Actualisation toutes les 20 secondes, suspendue pendant la consultation au clavier.</p><button type="button" class="secondary" data-action="admin-mission-monitor#refresh">Actualiser le suivi</button></div><p role="status" data-admin-mission-monitor-target="status"></p>
 <div data-admin-mission-monitor-target="results">
-<section class="admin-metrics" aria-label="Missions dans les résultats filtrés">{% for key,label in {active:'En cours',combat:'Engagées au combat',returning:'En retour',waiting:'Accord attendu'} %}<article class="admin-metric"><span>{{ label }}</span><strong>{{ summary[key] }}</strong></article>{% endfor %}</section>
+<p id="mission-counter-scope" class="admin-counter-scope">Compteurs des missions correspondant aux filtres ci-dessus.</p>
+<section class="admin-metrics" aria-labelledby="mission-counter-scope">{% for key,label in {active:'En cours',combat:'Engagées au combat',returning:'En retour',waiting:'Accord attendu'} %}<article class="admin-metric"><span>{{ label }}</span><strong>{{ summary[key] }}</strong></article>{% endfor %}</section>
 <p>{{ total }} mission{{ total == 1 ? '' : 's' }} trouvée{{ total == 1 ? '' : 's' }} · Relevé <time datetime="{{ captured_at|date('c') }}">{{ captured_at|date('d/m/Y H:i:s', preferences.timezone) }}</time>.</p>
 {% if fleets %}
     {# Les huit colonnes restent dans le HTML, y compris dans les fiches sur écran étroit. #}
@@ -49,7 +50,7 @@
                             {% endif %}
                         </span></td>
                         <td role="cell" data-label="Statut"><span>{{ statuses[fleet.status]|default(fleet.status) }}</span></td>
-                        <td role="cell" data-label="Dernier départ"><span>{{ fleet.departureAt ? fleet.departureAt|date('d/m/Y H:i:s', preferences.timezone) : '—' }}</span></td>
+                        <td role="cell" data-label="Dernier départ">{% if fleet.departureAt %}<time datetime="{{ fleet.departureAt|date('c') }}">{{ fleet.departureAt|date('d/m/Y H:i:s', preferences.timezone) }}</time>{% else %}—{% endif %}</td>
                         <td role="cell" data-label="Échéance"><span>
                             {% if deadline %}
                                 <time datetime="{{ deadline|date('c') }}">{{ deadline|date('d/m/Y H:i:s', preferences.timezone) }}</time>

@@ -190,3 +190,6 @@ body.admin-console.admin-balance-workspace .admin-catalogue-reset {
 .admin-balance-workspace .core-admin-restoration .admin-ops-table :is(th,td) { overflow-wrap:anywhere; }
 .admin-balance-workspace .core-admin-restoration .admin-ops-table :is(th,td):nth-child(n+2) { width:27%; text-align:right; }
 .admin-balance-workspace .core-admin-restoration form { margin-top:16px; }
+
+.admin-balance-workspace .admin-history-table { font-variant-numeric: tabular-nums; }
+.admin-balance-workspace .admin-history-revision { display: block; margin-top: 4px; color: var(--text); line-height: 1.35; }

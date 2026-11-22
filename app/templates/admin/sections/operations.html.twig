@@ -1,6 +1,6 @@
 {% set kindLabels = {'queue':'Files de construction/recherche','fleet':'Flottes','combat':'Combats','universe':'Univers','notification':'Notifications','guild_project':'Récompenses de guilde','occupation':'Occupations','reconstruction':'Reconstructions'} %}
 <section class="panel admin-operations">
-  <h2>État des opérations</h2><p>État relevé le {{ operations.captured_at|date('d/m/Y H:i:s', 'UTC') }} UTC. Actualisez la page pour relire les signaux.</p>
+  <h2>État des opérations</h2><p>État relevé le <time datetime="{{ operations.captured_at|date('c', 'UTC') }}">{{ operations.captured_at|date('d/m/Y H:i:s', 'UTC') }} UTC</time>. Actualisez la page pour relire les signaux.</p>
   <p>Un signal récent ne garantit pas la réussite des traitements ; un signal absent ne prouve pas un arrêt. Le test de base vérifie seulement une réponse à SELECT 1.</p>
   <p class="admin-ops-actions"><a class="secondary" href="{{ path('app_admin_operations') }}">Actualiser le relevé</a></p>
   <div class="admin-operations-grid">
