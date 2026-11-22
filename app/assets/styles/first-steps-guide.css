@@ -162,3 +162,31 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
     max-width: 100%;
 }
 .shell--galaxy-v2 > .first-steps-popup--preview .first-steps-popup-panel { margin-top: 0; }
+
+.first-steps .first-steps-next,
+.first-steps .first-steps-refunds {
+    margin-block: 18px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+}
+.first-steps .first-steps-next,
+.first-steps .first-steps-refunds form {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.first-steps .first-steps-next { border-inline-start: 3px solid var(--accent); }
+.first-steps .first-steps-next > div,
+.first-steps .first-steps-refunds form > div { flex: 1 1 240px; min-width: 0; }
+.first-steps .first-steps-next p,
+.first-steps .first-steps-refunds form p { margin: 0; color: var(--text); }
+.first-steps .first-steps-next h3 { margin: 0 0 4px; }
+.first-steps .first-steps-refunds h3 { font-size: 1.1rem; }
+.first-steps .first-steps-refunds form { border-top: 1px solid var(--line); padding-block: 8px; }
+.first-steps .first-steps-next > a,
+.first-steps .first-steps-refunds button { min-height: 44px; }
+.first-steps-exercise-summary { margin-block: 12px; }
+.first-steps-exercise-summary :is(th,td):not(:first-child) { text-align: end; font-variant-numeric: tabular-nums; }

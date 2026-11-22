@@ -153,3 +153,8 @@
     .topbar:has(.has-daily-reward-shortcuts) { gap: 5px; padding-inline: 9px; }
     .has-daily-reward-shortcuts .daily-reward-shortcut { width: 36px; }
 }
+
+.daily-reward-resource-lines { max-width: 32rem; margin-block: 16px; }
+.daily-reward-resource-lines > div { align-items: center; }
+.daily-reward-resource-lines dt { display: flex; gap: 8px; align-items: center; }
+.daily-reward-resource-lines dd { margin: 0; font-variant-numeric: tabular-nums; }

@@ -35,8 +35,8 @@
 
     <footer class="daily-reward-footer">
         <div>
-            {% if planet %}<p>Destination : <strong>{{ planet.name }}</strong> · {{ planet.coordinates() }}</p>{% endif %}
-            <p id="daily-reward-dialog-rules">Un lot par compte et par jour, à l’heure de Paris. Un jour manqué ne remet pas le cycle à zéro.</p>
+            {% if planet %}<p id="daily-reward-dialog-destination">Destination : <strong>{{ planet.name }}</strong> · {{ planet.coordinates() }}</p>{% endif %}
+            <p id="daily-reward-dialog-rules">Un lot par compte et par jour, à l’heure de Paris. Un jour manqué ne remet pas le cycle à zéro.{% if available %} Le lot entier doit tenir dans vos stocks.{% endif %}</p>
         </div>
         <div class="daily-reward-actions">
             <button type="button" class="quiet-button" data-action="daily-reward-ui#close">{{ available ? 'Plus tard' : 'Fermer' }}</button>
@@ -46,7 +46,7 @@
                 status: status,
                 tokenId: tokenId,
                 submitLabel: 'Récupérer le lot',
-                rulesId: 'daily-reward-dialog-rules'
+                rulesId: 'daily-reward-dialog-rules daily-reward-dialog-destination'
             } only %}
         {% endif %}
         </div>

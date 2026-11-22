@@ -82,6 +82,9 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     const next = guide.locator('.first-step--next');
     await expect(progress).toHaveAttribute('value', '0');
     await expect(next.getByRole('heading', { name: 'Mine à ciel ouvert', exact: true })).toBeVisible();
+    const nextAction = guide.getByRole('region', { name: 'Prochaine étape conseillée' });
+    await expect(nextAction.getByRole('link')).toHaveAttribute('href', /section=buildings.*#item-mine_metal-basic$/);
+    await expect(guide.locator('.first-steps-next .primary')).toHaveCount(1);
     await expect(guide.getByRole('heading', { name: 'Première recherche', exact: true })).toBeVisible();
     await expect(progress).toHaveAttribute('max', '12');
     await expect(guide.getByRole('link', { name: 'Ouvrir la fiche de la sonde', exact: true })).toHaveAttribute('href', /section=ships.*#item-probe-basic$/);
@@ -208,7 +211,17 @@ test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', a
         const report = view.getByRole('region', { name: 'Rapport d’exercice', exact: true });
         await expect(report).toBeVisible();
         await expect(report).toContainText('Le jalon d’apprentissage est validé quel que soit le résultat');
-        await expect(report).toContainText(/Escorte : [0-2] sur 2 en service, [0-2] perdues dans la simulation/);
+        const summary = report.getByRole('table', { name: 'Survivants et pertes par camp' });
+        await expect(summary.getByRole('columnheader', { name: 'Survivants' })).toBeVisible();
+        await expect(summary.getByRole('columnheader', { name: 'Pertes' })).toBeVisible();
+        for (const side of ['Escorte', 'Pirates']) {
+            const row = summary.getByRole('row').filter({ has: summary.getByRole('rowheader', { name: side }) });
+            const values = await row.getByRole('cell').allTextContents();
+            expect(values).toHaveLength(2);
+            expect(values[0]).toMatch(/^[0-2] sur 2$/);
+            expect(values[1]).toMatch(/^[0-2]$/);
+            expect(Number(values[0][0]) + Number(values[1])).toBe(2);
+        }
         await report.getByText('Comprendre les tirs manche par manche', { exact: true }).click();
         await expect(report.getByText(/Manche 1 :/)).toBeVisible();
         await expect.poll(() => view.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
