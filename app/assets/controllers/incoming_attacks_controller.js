@@ -64,6 +64,9 @@ export default class extends Controller {
                     // Les convois n'ont aucun contrôle interactif : les synchroniser
                     // même lorsqu'un détail de flotte ordinaire porte le focus.
                     this.syncCampaignRows(next.content);
+                    // Le cache complet ne correspond plus au DOM : A → convoi → A
+                    // doit retirer le convoi même si le HTML initial revient à l'identique.
+                    this.lastHtml = null;
                 }
             }
             this.tick();

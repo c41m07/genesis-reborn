@@ -68,4 +68,35 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
   expect(payload.data.campaignTraffic).toEqual(read.campaignTraffic);
   await expect(page.locator('.gv2-flight-log [data-campaign-kind="scout"]')).toBeVisible();
   await expect(page.locator('.gv2-flight-log [data-campaign-kind="pirates"]')).toHaveCount(0);
+
+  // Entre deux réponses identiques, un détail natif garde le focus.
+  await page.goto('/planetes/' + origin);
+  const panel = page.getByRole('region', { name: /Flottes entrantes/ });
+  const first = await panel.evaluate(element => {
+    const fixture = element.cloneNode(true);
+    fixture.querySelector('[data-incoming-panel-count]').textContent = '1';
+    fixture.querySelector('.incoming-empty-message')?.remove();
+    fixture.insertAdjacentHTML('beforeend', '<button type="button" data-incoming-attack="fixture">Détail ordinaire</button>');
+    return fixture.outerHTML;
+  });
+  let surveillanceHtml = first;
+  await page.route('**/flottes/surveillance?**', route => route.fulfill({
+    json: { html: surveillanceHtml, membership: member, serverNow: new Date().toISOString() },
+    headers: { 'Cache-Control': 'private, no-store' },
+  }));
+  const refresh = () => page.evaluate(() => window.dispatchEvent(new Event('genesis:refresh')));
+  const native = panel.getByRole('button', { name: 'Détail ordinaire' });
+  await refresh();
+  await expect(native).toBeVisible();
+  await native.focus();
+  surveillanceHtml = first.replace('</section>', '<article data-campaign-incoming="1" data-campaign-kind="convoy">Convoi protégé</article></section>');
+  await refresh();
+  await expect(panel.getByText('Convoi protégé')).toBeVisible();
+  await expect(panel.locator('[data-incoming-panel-count]')).toHaveText('2');
+  await expect(native).toBeFocused();
+  surveillanceHtml = first;
+  await refresh();
+  await expect(panel.getByText('Convoi protégé')).toHaveCount(0);
+  await expect(panel.locator('[data-incoming-panel-count]')).toHaveText('1');
+  await expect(native).toBeFocused();
 });
