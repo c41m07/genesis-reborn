@@ -34,6 +34,10 @@
 
 <div class="admin-sidebar-footer"><a class="secondary" href="{{ path('app_home') }}">← Retour au jeu</a><form method="post" action="{{ path('app_logout') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}"><button class="secondary">Déconnexion</button></form><small>Accès administrateur · actions consignées</small></div>
 </div></aside>
-<div class="admin-main"><header class="admin-topbar"><span>Console d’administration <i class="connection-dot"></i></span><span>{{ app.user.username }} · ADMIN</span></header>
+<div class="admin-main"><header class="admin-topbar">
+    <span>Console d’administration <i class="connection-dot"></i></span>
+    {% if balanceWorkspace and universe.name is defined %}<span class="core-admin-universe">Univers : <strong>{{ universe.name }}</strong></span>{% endif %}
+    <span>{{ app.user.username }} · ADMIN</span>
+</header>
 <main {% if directWorkspace or currentRoute starts with 'app_admin_universe' or currentRoute starts with 'app_admin_catalogue' or currentRoute starts with 'app_admin_game_event' or currentRoute starts with 'app_admin_guild_project' or currentRoute starts with 'app_admin_weekly_rotation' %}data-page-sections="disabled"{% endif %} id="admin-main" class="admin-content" tabindex="-1">{% for type,messages in app.flashes %}{% for message in messages %}<div class="flash {{ type }}" role="{{ type=='error'?'alert':'status' }}">{{ message }}</div>{% endfor %}{% endfor %}{% include 'admin/_navigation.html.twig' with {placement:'content'} %}{% block body %}{% endblock %}</main>
 </div></div></body></html>
