@@ -12,13 +12,26 @@ use PHPUnit\Framework\TestCase;
 
 final class PirateCampaignWorkspaceTest extends TestCase
 {
-    public function testFirstSignalWithoutACalculatedSiteIsAPrivateNeutralPlaceholder(): void
+    public function testFirstSignalShowsOnlyCivilCopyAndHidesLockedDossiers(): void
     {
         [$viewer, , , $workspace] = $this->fixture();
+        $dossier = $workspace->forViewer($viewer, [], $this->at(0));
+        self::assertSame(20, $dossier['mission_count']);
+        self::assertSame(1, $dossier['current']);
+        self::assertSame(1, $dossier['selected']);
+        self::assertSame([], $dossier['history']);
+        self::assertTrue($dossier['signal_pending']);
+        self::assertNull($dossier['briefing']);
+        self::assertSame('Le silence de Balise 17', $dossier['signal_copy']['title']);
         self::assertSame([
-            'mission_count' => 20, 'current' => 1, 'selected' => 1, 'history' => [],
-            'signal_pending' => true, 'briefing' => null,
-        ], $workspace->forViewer($viewer, [], $this->at(0)));
+            'number' => 1,
+            'title' => 'Les appels interrompus',
+            'missions' => [
+                ['number' => 1, 'title' => 'Le silence de Balise 17', 'state' => 'current'],
+                ['number' => 2, 'title' => null, 'state' => 'locked'],
+                ['number' => 3, 'title' => null, 'state' => 'locked'],
+            ],
+        ], $dossier['chapter']);
         foreach ([2, 20, 21, 0, PHP_INT_MIN] as $invalid) {
             self::assertNull($workspace->forViewer($viewer, [], $this->at(0), $invalid));
         }
@@ -36,10 +49,17 @@ final class PirateCampaignWorkspaceTest extends TestCase
         self::assertNull($during['briefing']['formation']);
 
         $active = $workspace->forViewer($viewer, $conditions, $this->at(10));
+        self::assertSame(20, $active['mission_count']);
+        self::assertSame(2, $active['current']);
+        self::assertSame(2, $active['selected']);
+        self::assertSame([['number' => 1, 'won' => true]], $active['history']);
+        self::assertTrue($active['signal_pending']);
+        self::assertNull($active['briefing']);
         self::assertSame([
-            'mission_count' => 20, 'current' => 2, 'selected' => 2, 'history' => [['number' => 1, 'won' => true]],
-            'signal_pending' => true, 'briefing' => null,
-        ], $active);
+            ['number' => 1, 'title' => 'Le silence de Balise 17', 'state' => 'won'],
+            ['number' => 2, 'title' => 'L’escorte interceptée', 'state' => 'current'],
+            ['number' => 3, 'title' => null, 'state' => 'locked'],
+        ], $active['chapter']['missions']);
         $old = $workspace->forViewer($viewer, $conditions, $this->at(10), 1);
         self::assertSame(1, $old['selected']);
         self::assertSame(2, $old['current']);
@@ -77,6 +97,8 @@ final class PirateCampaignWorkspaceTest extends TestCase
         self::assertNull($ending['current']);
         self::assertSame(20, $ending['selected']);
         self::assertCount(20, $ending['history']);
+        self::assertSame(5, $ending['chapter']['number']);
+        self::assertSame(['won'], array_values(array_unique(array_column($ending['chapter']['missions'], 'state'))));
         self::assertSame(1, $workspace->forViewer($viewer, $rows, $this->at(10), 1)['selected']);
     }
 

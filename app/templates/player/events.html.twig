@@ -5,12 +5,9 @@
 <div class="page-heading"><div><h1>Événements et bonus</h1><p>Les rendez-vous en cours et à venir dans votre univers. Horaires : {{ preferences.timezone }}.</p></div><a class="primary" href="{{ path('app_game_challenges') }}">Consulter les défis et rotations</a></div>
 {% include 'ui/event_navigation.html.twig' %}
 {% if pirateCampaignAvailable|default(false) %}
-    <section class="panel event-card" aria-labelledby="events-pirate-campaign">
-        <div class="event-description-column">
-            <h2 id="events-pirate-campaign">Campagne pirate</h2>
-            <p>Répondez à un signal civil et progressez dans une campagne privée de 20 missions.</p>
-            <a class="primary" href="{{ path('app_pirate_campaign') }}">Ouvrir le dossier de campagne</a>
-        </div>
+    <section class="campaign-transition" aria-label="Campagne pirate">
+        <span>La campagne pirate se trouve désormais sous <strong>Flottes</strong> dans le menu.</span>
+        <a class="inline-link" href="{{ path('app_pirate_campaign') }}">Ouvrir le dossier de campagne</a>
     </section>
 {% endif %}
 {% set typeLabels = {'production_bonus':'Bonus de production','construction_speed':'Vitesse de construction','research_speed':'Vitesse de recherche','fleet_speed':'Vitesse des flottes','special':'Événement spécial','reward':'Récompense','announcement':'Annonce'} %}

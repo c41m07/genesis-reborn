@@ -2,8 +2,8 @@
 {% set prefix = survivors ? 'pirate-recovery' : 'pirate-convoy-route' %}
 {% set preview = survivors ? 'app_pirate_campaign_survivors_preview' : 'app_pirate_campaign_convoy_route_preview' %}
 {% set confirm = survivors ? 'app_pirate_campaign_survivors' : 'app_pirate_campaign_convoy_route' %}
-<section class="panel" aria-labelledby="{{ prefix }}-title">
-    <h2 id="{{ prefix }}-title">{{ survivors ? 'Organiser le repli des survivants' : 'Choisir une colonie pour le convoi' }}</h2>
+<section class="pirate-campaign-command" aria-labelledby="{{ prefix }}-title">
+    <h3 id="{{ prefix }}-title">{{ survivors ? 'Organiser le repli des survivants' : 'Choisir une colonie pour le convoi' }}</h3>
     {% if choice.choices is defined %}
         {% if survivors %}<p>Le trajet doit tenir dans la réserve embarquée. Sans trajet possible, les survivants ne sont pas transférés.</p>{% endif %}
         <form method="post" action="{{ path(preview, {missionNumber: mission}) }}">
@@ -15,7 +15,7 @@
                     <option value="{{ option.ordinal }}">{{ option.label }}</option>
                 {% endfor %}
             </select>
-            <button type="submit">Voir le trajet</button>
+            <button type="submit" class="{{ primary ? 'primary' : 'secondary' }}">Voir le trajet</button>
         </form>
     {% else %}
         <p>Colonie : <strong>{{ choice.target }}</strong>. Durée prévue : {{ choice.seconds }} s.</p>
@@ -28,7 +28,7 @@
         <form method="post" action="{{ path(confirm, {missionNumber: mission}) }}">
             <input type="hidden" name="_token" value="{{ choice.token }}">
             <input type="hidden" name="destination_choice" value="{{ choice.choice }}">
-            <button type="submit">{{ survivors ? 'Confirmer le repli' : 'Confirmer le trajet du convoi' }}</button>
+            <button type="submit" class="{{ primary ? 'primary' : 'secondary' }}">{{ survivors ? 'Confirmer le repli' : 'Confirmer le trajet du convoi' }}</button>
         </form>
     {% endif %}
 </section>

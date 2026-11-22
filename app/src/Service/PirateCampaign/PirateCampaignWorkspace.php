@@ -22,7 +22,8 @@ final readonly class PirateCampaignWorkspace
      *
      * @param list<array{reconnaissance:PirateReconnaissance, attack:?PirateAttackCampaign}> $rows
      * @return array{mission_count:int,current:?int,selected:int,history:list<array{number:int,won:bool}>,
-     *   signal_pending:bool,briefing:?array}|null
+     *   signal_pending:bool,signal_copy:?array,briefing:?array,
+     *   chapter:array{number:int,title:string,missions:list<array{number:int,title:?string,state:string}>}}|null
      */
     public function forViewer(
         PlayerUniverse $viewer,
@@ -65,8 +66,39 @@ final readonly class PirateCampaignWorkspace
             'history' => $history,
             // L'ordre est admissible à la lecture, pas un départ disponible : aucun site n'a été sélectionné.
             'signal_pending' => $signalPending,
+            'signal_copy' => $signalPending ? $this->catalogue->signalCopy($selected) : null,
             'briefing' => $briefing,
+            'chapter' => $this->chapterForDossier($selected, $current, $consultable, $positions, $briefing),
         ];
+    }
+
+    /**
+     * Le sommaire indique la progression, pas le contenu des dossiers verrouillés.
+     * Un titre révélateur n’est montré que dans le dossier autorisé qui l’a reçu.
+     */
+    private function chapterForDossier(string $selected, ?string $current, array $consultable, array $positions, ?array $briefing): array
+    {
+        $readable = array_fill_keys($consultable, true);
+        foreach ($this->catalogue->chapters() as $chapterIndex => $chapter) {
+            if (!in_array($selected, $chapter['keys'], true)) {
+                continue;
+            }
+
+            $missions = [];
+            foreach ($chapter['keys'] as $key) {
+                $state = $key === $current ? 'current' : (isset($readable[$key]) ? 'won' : 'locked');
+                $title = match (true) {
+                    $state === 'locked' => null,
+                    $key === $selected && $briefing !== null => $briefing['narrative']['title'],
+                    default => $this->catalogue->signalCopy($key)['title'],
+                };
+                $missions[] = ['number' => $positions[$key] + 1, 'title' => $title, 'state' => $state];
+            }
+
+            return ['number' => $chapterIndex + 1, 'title' => $chapter['title'], 'missions' => $missions];
+        }
+
+        throw new \LogicException('Le dossier ne correspond à aucun chapitre.');
     }
 
     private function ownedBriefing(PlayerUniverse $viewer, array $rows, string $key, \DateTimeImmutable $at): ?array
