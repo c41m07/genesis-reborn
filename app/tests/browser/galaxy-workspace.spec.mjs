@@ -72,9 +72,19 @@ test('L7C : système et globe conservent clic, rotation, zoom, gestes tactiles e
     await page.goto('/carte-v2?galaxy='+user.galaxy);
     const map=page.locator('.gv2-workspace'),data=JSON.parse(await map.getAttribute('data-galaxy-v2-map-value'));
     const home=data.systems.find(s=>s.planets.some(p=>p.ownedByCurrentPlayer));
+    await page.setViewportSize({width:1920,height:1080});
     await page.getByRole('searchbox').fill(home.name);
     await page.locator('.gv2-search-results button').filter({hasText:home.name}).first().click();
     await expect(map).toHaveAttribute('data-view','galaxy');
+    const inspector=page.locator('.gv2-system-panel'), scene=page.locator('.gv2-scene');
+    await expect(inspector).toContainText('Système sélectionné');
+    await expect.poll(async()=>{const panel=await inspector.boundingBox(), canvas=await scene.boundingBox();return panel.x>=canvas.x+canvas.width;}).toBe(true);
+    await page.setViewportSize({width:390,height:844});
+    await expect.poll(async()=>{const panel=await inspector.boundingBox(), canvas=await scene.boundingBox();return panel.y+panel.height<=canvas.y;}).toBe(true);
+    await inspector.getByRole('button',{name:'Fermer la fiche du système'}).focus();
+    await page.keyboard.press('Tab');
+    await expect(inspector.getByRole('button',{name:'Entrer dans le système',exact:true})).toBeFocused();
+    await page.setViewportSize({width:1920,height:1080});
     await page.getByRole('button',{name:'Entrer dans le système',exact:true}).click();
     await expect(map).toHaveAttribute('data-view','system');
     const choice=page.locator('.gv2-planet-choice').filter({hasText:home.planets.find(p=>p.ownedByCurrentPlayer).name});
@@ -92,6 +102,8 @@ test('L7C : système et globe conservent clic, rotation, zoom, gestes tactiles e
     await page.getByRole('button',{name:'Vue entière',exact:true}).click();
     await page.setViewportSize({width:390,height:1000});await canvas.scrollIntoViewIfNeeded();
     const touchBounds=await canvas.boundingBox(),session=await page.context().newCDPSession(page),initialSize=await page.evaluate(()=>window.planetRenderedSize);
+    const planetPanelBounds=await page.locator('.gv2-planet-panel').boundingBox();
+    expect(planetPanelBounds.y+planetPanelBounds.height).toBeLessThanOrEqual(touchBounds.y);
     const fingers=spread=>[{x:touchBounds.x+190-spread,y:touchBounds.y+210,id:1},{x:touchBounds.x+190+spread,y:touchBounds.y+210,id:2}];
     await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:fingers(25)});await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:fingers(50)});await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
     await expect.poll(()=>page.evaluate(()=>window.planetRenderedSize)).toBeGreaterThan(initialSize);
