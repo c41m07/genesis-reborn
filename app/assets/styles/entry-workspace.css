@@ -482,8 +482,15 @@ body.ui-refined[data-ui-page="accueil-public"] .entry-home .public-previews arti
     color: var(--text);
 }
 
-.entry-universes .universe-card > form {
+.entry-universes .entry-universe-choice {
     margin-top: 20px;
+}
+.entry-universes .entry-universe-choice :is(form, .universe-availability, .universe-opening-timer) {
+    margin: 0;
+}
+.entry-universes .entry-universe-status > .universe-availability {
+    flex-basis: 100%;
+    margin: 0;
 }
 
 .entry-universes .universe-availability,

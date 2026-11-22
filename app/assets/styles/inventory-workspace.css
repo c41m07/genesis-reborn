@@ -355,6 +355,7 @@ body.authenticated .inventory-redesign .inventory-review-dialog {
 }
 
 
+body.authenticated .inventory-redesign .inventory-pending-list { padding-inline-start: 2.4em; }
 body.authenticated .inventory-redesign .inventory-pending-list li { list-style-position: outside; }
 .inventory-pending-entry {
     display: flex;

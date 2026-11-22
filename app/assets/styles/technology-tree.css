@@ -87,7 +87,8 @@ body[data-theme=light] .technology-tree{--tech-met:#376647;--tech-missing:#79562
 .tech-node-open{display:block;font-size:13px;margin:12px 0;text-decoration:underline;text-underline-offset:3px;color:var(--text)}
 .technology-more{display:block;background:none;border:0;padding:8px 0;margin-top:12px;text-align:left;text-decoration:underline;text-underline-offset:3px;color:var(--text);font-size:13px}
 .technology-detail{min-width:0;border-left:1px solid var(--line);padding-left:20px;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
-.technology-detail h2{font-size:21px;margin:18px 0 8px;scroll-margin-top:180px}
+/* Même repère que le nœud sélectionné, sans dépendre de la position dans la liste. */
+.technology-detail h2{font-size:21px;margin:18px 0 8px;scroll-margin-top:180px;border-inline-start:3px solid var(--gold);padding-inline-start:9px}
 .technology-detail h3{font-size:14px;margin:22px 0 10px}
 .technology-detail p{font-size:13px}
 .technology-detail ul{padding-left:18px}
