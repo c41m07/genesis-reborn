@@ -473,3 +473,5 @@ body.authenticated .fleet-redesign .core-fleet-workspace > .fleet-operations-rai
     .core-fleet-recap-ships { display:none; }
     .core-fleet-recap-facts>div { padding:2px 0; }
 }
+/* Le texte de corps du récapitulatif garde le contraste sur son fond légèrement teinté. */
+body.authenticated .fleet-redesign .core-fleet-recap p.core-fleet-recap-total { color:var(--text); }
