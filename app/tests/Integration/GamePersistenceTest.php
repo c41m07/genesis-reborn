@@ -1148,6 +1148,9 @@ final class GamePersistenceTest extends KernelTestCase
         $report = $this->em->getRepository(\App\Entity\EspionageReport::class)->findOneBy(['sender' => $sender->currentPlayerUniverse]);
         self::assertNotNull($report);
         self::assertSame('detected',$report->result);
+        $unread = self::getContainer()->get(\App\Repository\ReportNoticeRepository::class);
+        self::assertSame(1, $unread->count($sender->currentPlayerUniverse));
+        self::assertSame(0, $unread->count($targetOwner->currentPlayerUniverse), 'L’alerte détectée ne crée pas un rapport pour la cible.');
         self::assertSame(95, $report->detectionChance);
         self::assertSame(2, $report->probesSent);
         if ($report->result === 'detected') {

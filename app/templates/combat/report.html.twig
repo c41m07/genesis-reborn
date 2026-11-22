@@ -11,6 +11,7 @@
         <h1>Rapport de combat</h1>
         <p>{{ report.combatEvent.planet.name }} · {{ report.combatEvent.planet.coordinates() }} · {{ report.resolvedAt|date('d/m/Y H:i') }}</p>
     </header>
+{% if app.request.attributes.get('_route') == 'app_combat_report' %}{% include 'ui/report_notice_form.html.twig' with {report_notice_kind:'combat'} %}{% endif %}
     <section class="panel report-summary {{ defeated ? 'report-summary--defeat' : '' }}" aria-labelledby="combat-result">
         <h2 id="combat-result">{% if viewer_verdict|default(null) %}{{ {win:'Victoire de votre camp', loss:'Défaite de votre camp', hold:'Position maintenue', draw:'Égalité'}[viewer_verdict] }}{% else %}{{ {attacker_wins:'Victoire des attaquants', defender_wins:'Victoire de la défense', draw:'Égalité'}[report.outcome]|default('Combat terminé') }}{% endif %}</h2>
         <p>Le combat sur {{ report.combatEvent.planet.name }} est terminé.{% if defeated %} Votre camp a perdu le combat.{% endif %}</p>

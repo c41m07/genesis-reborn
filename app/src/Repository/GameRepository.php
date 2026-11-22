@@ -826,6 +826,40 @@ final class GameRepository
         return $counts;
     }
 
+    /**
+     * Colonnes d’affichage seulement, dans les limites des files validées à l’ajout.
+     * @param list<Planet> $planets
+     * @return list<array{id: int, originId: int, ownerId: ?int, kind: string, slug: string, tier: string, level: ?int, quantity: int, duration: int, started: ?\DateTimeImmutable}>
+     */
+    public function comparisonQueueRows(PlayerUniverse $membership, array $planets): array
+    {
+        if ($planets === []) {
+            return [];
+        }
+
+        // Les queues locales d’une colonie perdue ne sont pas accessibles.
+        // Une recherche commune reste propre à l’empire, mais sa provenance n’est plus affichable.
+        return $this->em->createQueryBuilder()
+            ->select('q.id AS id', 'IDENTITY(q.planet) AS originId', 'IDENTITY(p.owner) AS ownerId')
+            ->addSelect('q.queueType AS kind', 'q.itemSlug AS slug', 'q.tier AS tier', 'q.itemLevel AS level')
+            ->addSelect('q.quantity AS quantity', 'q.durationSeconds AS duration', 'q.startedAt AS started')
+            ->from(QueueItem::class, 'q')
+            ->join('q.planet', 'p')
+            ->join('p.solarSystem', 's')
+            ->join('s.galaxy', 'g')
+            ->where('q.playerUniverse = :membership')
+            ->andWhere('g.universe = :universe')
+            ->andWhere('(q.queueType = :research OR (q.queueType IN (:local) AND p.owner = :membership AND p IN (:planets)))')
+            ->setParameter('membership', $membership)
+            ->setParameter('universe', $membership->universe)
+            ->setParameter('research', 'research')
+            ->setParameter('local', ['building', 'shipyard'])
+            ->setParameter('planets', $planets)
+            ->orderBy('q.id', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+    }
+
     /** @return list<QueueItem> */
     public function researchQueue(PlayerUniverse $membership): array
     {

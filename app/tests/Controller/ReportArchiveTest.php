@@ -56,6 +56,60 @@ final class ReportArchiveTest extends WebTestCase
         $report->createdAt=new \DateTimeImmutable($date);$report->snapshot=['sender'=>$sender->username,'recipient'=>$recipient->username,'destination'=>'Alpha:1:1'];$this->em->persist($report);return $report;
     }
 
+    public function testUnreadCombatKeepsBirthScopeAndCurrentVisibilityIndependentOfArchives(): void
+    {
+        $id = (int) substr($this->keys[0], strlen('combat:'));
+        $log = $this->em->find(CombatLog::class, $id);
+        $participant = $this->em->getRepository(CombatParticipant::class)->findOneBy(['combatEvent' => $log->combatEvent]);
+        $oldOwner = $this->recipient->currentPlayerUniverse;
+        $newOwner = $this->outsider->currentPlayerUniverse;
+        $foreign = $this->foreign->currentPlayerUniverse;
+        $attacker = $this->player->currentPlayerUniverse;
+        $notices = self::getContainer()->get(\App\Repository\ReportNoticeRepository::class);
+        $archives = self::getContainer()->get(ReportArchiveService::class);
+        $reader = self::getContainer()->get(\App\Service\Combat\CombatReportReader::class);
+        self::assertSame(0, $notices->count($oldOwner), 'Pas de rétroremplissage de l’historique.');
+        self::getContainer()->get(\App\Service\Report\ReportNoticeWriter::class)->combatCreated($log, [$participant, $participant]);
+        $this->em->flush();
+        self::assertSame(1, $notices->count($oldOwner));
+        self::assertSame(1, $notices->count($attacker));
+        self::assertSame(0, $notices->count($foreign));
+
+        $key = 'combat:'.$id;
+        $archives->change($attacker, [$key], true);
+        self::assertSame(0, $notices->count($attacker));
+        self::assertSame([$key => true], $notices->unreadKeys($attacker, [$key]));
+        $archives->change($attacker, [$key], false);
+        self::assertSame(1, $notices->count($attacker));
+        $archives->change($attacker, [$key], true);
+        self::assertTrue($notices->consult($attacker, 'combat', $id, new \DateTimeImmutable()));
+        $archives->change($attacker, [$key], false);
+        self::assertSame(0, $notices->count($attacker));
+        self::assertSame([], $notices->unreadKeys($attacker, [$key]));
+        $log->combatEvent->planet->owner = $newOwner;
+        $this->em->flush();
+        self::assertNotNull($reader->findVisible($newOwner, $id));
+        self::assertNull($reader->findVisible($oldOwner, $id));
+        self::assertSame(0, $notices->count($oldOwner));
+        self::assertSame(0, $notices->count($newOwner));
+        self::assertFalse($notices->consult($oldOwner, 'combat', $id, new \DateTimeImmutable()));
+        self::assertFalse($notices->consult($foreign, 'combat', $id, new \DateTimeImmutable()));
+    }
+
+    public function testUnreadTransportIgnoresInconsistentLegacyParticipantsAcrossUniverses(): void
+    {
+        $report = $this->transport($this->player, $this->foreign, '2026-11-12T14:00:00Z');
+        $member = $this->player->currentPlayerUniverse;
+        $this->em->persist(new \App\Entity\ReportNotice($member, $report));
+        $this->em->flush();
+        $notices = self::getContainer()->get(\App\Repository\ReportNoticeRepository::class);
+        $summary = self::getContainer()->get(\App\Repository\ReportSummaryRepository::class);
+        self::assertSame([], $summary->transports($member, [$report->id]));
+        self::assertSame(0, $notices->count($member));
+        self::assertSame([], $notices->unreadKeys($member, ['economy:'.$report->id]));
+        self::assertFalse($notices->consult($member, 'transport', $report->id, new \DateTimeImmutable()));
+    }
+
     public function testAdvancedFiltersRunBeforePaginationAndKeepTheReturnContext(): void
     {
         $service=self::getContainer()->get(ReportArchiveService::class);$member=$this->player->currentPlayerUniverse;

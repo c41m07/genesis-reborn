@@ -5,7 +5,8 @@ namespace App\Controller;
 use App\Entity\{Planet, PlanetBuilding, PlayerTechnology, PlayerDiscovery, Fleet, FleetShip};
 use App\Repository\GameRepository;
 use App\Service\Universe\UniverseContext;
-use App\Service\Colony\{CatalogueInsights, CatalogueItemLink, ColonyView, GameShell, ResourceService, LiveRegionResponse};
+use App\Service\Notification\JournalService;
+use App\Service\Colony\{CatalogueInsights, CatalogueItemLink, ColonyComparisonActivities, ColonyView, GameShell, ResourceService, LiveRegionResponse};
 use App\Service\Queue\QueueService;
 use App\Service\Player\{FirstStepsView, LeaderboardService, PreferencesService, RelationResolver};
 use App\Service\Catalog\GameCatalog;
@@ -66,24 +67,27 @@ final class ColonyController extends AbstractController
         return $planet ? $this->redirectToRoute('app_colony', array_filter(['id' => $planet->id, 'section' => $section === 'overview' ? null : $section])) : $this->redirectToRoute('app_universes');
     }
     #[Route('/planetes', name: 'app_planets', methods: ['GET'])]
-    public function planets(Request $request, ResourceService $resources, \App\Service\Colony\EmpireDetails $details): Response
-    {
+    public function planets(
+        Request $request,
+        ResourceService $resources,
+        \App\Service\Colony\EmpireDetails $details,
+        ColonyComparisonActivities $comparison,
+    ): Response {
         $membership = $this->context->membership();
         $planets = $this->repo->planets($membership->universe, $membership);
+        $tableView = $request->query->get('view') === 'table';
         $positionModifiers = [];
-        $activities = $this->repo->queueCounts($membership, $planets);
-        foreach ($planets as $planet) {
-            $activities[$planet->id] ??= 0;
-        }
-        foreach ($planets as $planet) {
-            $positionModifiers[$planet->id] = $resources->positionProductionModifiers($planet);
+        if (!$tableView) {
+            foreach ($planets as $planet) {
+                $positionModifiers[$planet->id] = $resources->positionProductionModifiers($planet);
+            }
         }
         return $this->render('colony/planets.html.twig', [
             'membership' => $membership,
             'planets' => $planets,
             'position_modifiers' => $positionModifiers,
-            'activities' => $activities,
-            'table_view' => $request->query->get('view') === 'table',
+            'comparison_activities' => $tableView ? $comparison->forPlanets($membership, $planets) : null,
+            'table_view' => $tableView,
             'comparison_resource' => in_array($request->query->getString('resource'), [
                 'metal',
                 'nano',
@@ -102,7 +106,7 @@ final class ColonyController extends AbstractController
         \App\Service\Player\DailyLeaderboard $leaderboard,
         RelationResolver $relations,
         GameCatalog $catalog,
-        \App\Service\Notification\JournalService $journal,
+        JournalService $journal,
         \App\Service\Colony\EmpireDetails $details,
         FirstStepsView $firstSteps,
     ): Response
@@ -119,6 +123,7 @@ final class ColonyController extends AbstractController
             if ($request->headers->get('X-Genesis-Live') !== '1') {
                 $journal->open($m);
             }
+            $data['journal_page'] = $journal->data($m, $id);
             $points = [
                 'building_points' => 0,
                 'research_points' => 0,
@@ -146,7 +151,8 @@ final class ColonyController extends AbstractController
         if ($isLiveJson) {
             return $this->liveRegions($request, $data + ['section' => $section]);
         }
-        return $this->render('colony/show.html.twig', $data + ['section' => $section]);
+        return $this->render('colony/show.html.twig', $data + ['section' => $section],
+            $section === 'overview' ? new Response(headers: ['Cache-Control' => 'private, no-store']) : null);
     }
 
     private function liveRegions(Request $request, array $data): JsonResponse
@@ -172,26 +178,29 @@ final class ColonyController extends AbstractController
         return $this->liveResponses->create($request, $regions);
     }
     #[Route('/planetes/{id}/journal/consulter', name: 'app_journal_consult', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function consultJournal(int $id, Request $request, \App\Service\Notification\JournalService $journal): Response
+    public function consultJournal(int $id, Request $request, JournalService $journal): Response
     {
-        $this->owned($id);
+        $planet = $this->owned($id);
         $membership = $this->context->membership();
         if ((string) $request->request->get('membership') !== (string) $membership->id || !$this->isCsrfTokenValid('journal-' . $membership->id, $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le journal.');
         }
-        $ids = $request->request->all('notice_ids');
-        foreach ($ids as $value) {
-            if (!is_scalar($value) || !ctype_digit((string) $value) || (int) $value < 1) {
-                throw new \Symfony\Component\HttpKernel\Exception\BadRequestHttpException('Sélection de journal invalide.');
-            }
-        }
         try {
-            $journal->consult($membership, array_map('intval', $ids));
+            $unread = $journal->consult($this->getUser(), $membership, $planet, $request->request->getString('journal_ticket'));
         } catch (\DomainException $error) {
             throw $this->createNotFoundException($error->getMessage());
         }
-        $this->addFlash('success', 'Les événements affichés ont été marqués comme consultés.');
-        return $this->redirectToRoute('app_colony', ['id' => $id, '_fragment' => 'dashboard-journal-title']);
+        if ($request->getPreferredFormat() === 'json') {
+            return $this->json(['unread' => $unread > 0], 200, ['Cache-Control' => 'private, no-store']);
+        }
+
+        $this->addFlash('success', 'Les événements de cette visite ont été marqués comme consultés.');
+        // Un formulaire resté ouvert sur A ne doit pas sélectionner A à nouveau si B a été choisie depuis.
+        $selectedId = (int) $request->getSession()->get('selected_planet_' . $membership->id, $id);
+        if ($selectedId !== $id) {
+            return $this->redirectToRoute('app_home', status: Response::HTTP_SEE_OTHER);
+        }
+        return $this->redirectToRoute('app_colony', ['id' => $id, '_fragment' => 'dashboard-journal-title'], Response::HTTP_SEE_OTHER);
     }
     #[Route('/technologies', name: 'app_technology_tree', methods: ['GET'])]
     public function technologyTree(Request $request, ColonyView $view): Response

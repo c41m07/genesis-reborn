@@ -7,12 +7,13 @@ use App\Repository\GameRepository;
 use App\Service\Boost\BoostEventService;
 use App\Service\Colony\ResourceService;
 use App\Service\Notification\NotificationService;
+use App\Service\Report\ReportNoticeWriter;
 use App\Service\Player\{PreferencesService, RelationResolver, VacationCalendar};
 use Psr\Clock\ClockInterface;
 
 final class TransportService
 {
-    public function __construct(private GameRepository $repo, private GameManager $manager, private ResourceService $resources, private PreferencesService $preferences, private RelationResolver $relations, private NotificationService $notifications, private BoostEventService $boostEvents, private ClockInterface $clock, private VacationCalendar $vacations) {}
+    public function __construct(private GameRepository $repo, private GameManager $manager, private ResourceService $resources, private PreferencesService $preferences, private RelationResolver $relations, private NotificationService $notifications, private ReportNoticeWriter $reportNotices, private BoostEventService $boostEvents, private ClockInterface $clock, private VacationCalendar $vacations) {}
 
     public function canReceive(PlayerUniverse $sender, ?Planet $target): bool
     {
@@ -42,6 +43,7 @@ final class TransportService
             'sent' => $freight, 'delivered' => [], 'returned' => [],
         ];
         $this->manager->save($report);
+        $this->reportNotices->transportCreated($report);
     }
 
     public function deliver(Fleet $fleet): void

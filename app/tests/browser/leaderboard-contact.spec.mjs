@@ -169,10 +169,28 @@ test('Conversations : dernier message, bulles distinctes et témoin mobile', asy
   await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeVisible();
   await page.goto('/');
   await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeVisible();
-  await page.getByRole('button', { name: 'Marquer ces événements comme consultés' }).click();
+  await page.bringToFront();
+  await page.locator('[data-journal-notice]').first().scrollIntoViewIfNeeded();
+  await expect(page.locator('.dashboard-journal [role="status"]')).toHaveText('Journal consulté.');
   await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeHidden();
   await page.goto(`/messages?with=${peerId}`);
   await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeHidden();
+  const reconcile = async (notificationId, expected) => {
+    const checked = page.waitForResponse(async response => {
+      if (new URL(response.url()).pathname !== '/messages/non-lus' || !response.ok()) return false;
+      return (await response.json()).journalUnread === expected;
+    });
+    await page.evaluate(id => window.dispatchEvent(new CustomEvent('genesis:refresh', { detail: { notificationId: id, journal: true } })), notificationId);
+    await checked;
+  };
+  // Un avis déjà consulté, relayé tard, ne rallume pas le témoin.
+  await reconcile(noticeId, false);
+  await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeHidden();
+  runIsolatedSql(project, `INSERT INTO notification (recipient_id,message,created_at,journal_kind) VALUES (${ownId},'Nouvelle arrivée',UTC_TIMESTAMP(),'arrival')`);
+  const lateId = Number(queryIsolatedSql(project, `SELECT MAX(id) FROM notification WHERE recipient_id=${ownId}`));
+  // Un poll déjà en vol peut rendre l’ancien état avant la réconciliation demandée.
+  await reconcile(lateId, true);
+  await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeVisible();
   await peerPage.close();
 });
 
