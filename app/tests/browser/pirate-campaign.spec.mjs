@@ -16,6 +16,8 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
   await page.getByLabel('Mot de passe (12 caractères minimum)', { exact: true }).fill(password);
   await page.getByLabel('Confirmer le mot de passe').fill(password);
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await expect(page).toHaveURL(/connexion/);
+  runIsolatedSql(project, "UPDATE player SET email_verified_at=COALESCE(email_verified_at,UTC_TIMESTAMP()) WHERE email='" + email + "'");
   await page.getByLabel('Adresse email').fill(email);
   await page.getByLabel('Mot de passe', { exact: true }).fill(password);
   await page.getByRole('button', { name: /Connexion/ }).click();
@@ -39,17 +41,23 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
   await page.goto(campaignPath);
   runIsolatedSql(project, "UPDATE player_universe SET last_activity_at=DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 HOUR) WHERE id=" + member);
   const beforeVisit = queryIsolatedSql(project, 'SELECT last_activity_at FROM player_universe WHERE id=' + member);
+  const background = [];
+  const onRequest = request => {
+    const url = new URL(request.url());
+    if (url.origin === new URL(page.url()).origin && ['fetch', 'xhr'].includes(request.resourceType())) background.push(url.pathname);
+  };
+  page.on('request', onRequest);
   const response = await page.reload();
   expect(response.status()).toBe(200);
   expect(response.headers()['cache-control']).toMatch(/no-store/);
   await expect(campaign).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('heading', { name: 'Campagne pirate', exact: true })).toBeVisible();
   await expect(page.locator('body')).not.toHaveAttribute('data-player-activity-url-value');
-  await expect(page.locator('[data-controller="events"]')).toHaveCount(0);
+  await expect(page.locator('[data-controller="events"], [data-controller="incoming-attacks"], [data-controller="universe-closing"]')).toHaveCount(0);
   const resources = page.locator('[data-live-region="resources"]');
   await expect(resources).toBeVisible();
   await expect(resources).not.toHaveAttribute('data-resource-strip-url-value');
-  await expect(page.locator('.header-technology-goal')).toHaveAttribute('href', /guide/);
+  await expect(page.locator('.header-technology-goal')).toHaveAttribute('href', '/technologies');
   await expect(page.locator('.header-technology-goal')).not.toHaveAttribute('data-controller');
   await expect(page.getByRole('heading', { name: 'Le silence de Balise 17', exact: true })).toBeVisible();
   await expect(page.getByText('Mission 1 / 20', { exact: true })).toBeVisible();
@@ -68,6 +76,10 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     if ([1440, 390].includes(width)) await page.screenshot({ path: info.outputPath('signal-' + width + '.png'), fullPage: true, animations: 'disabled' });
   }
   expect((await new AxeBuilder({ page }).include('.pirate-campaign').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()).violations).toEqual([]);
+  // Dépasser les anciens sondages de surveillance (5 s) et des ressources (10 s).
+  await page.waitForTimeout(10500);
+  page.off('request', onRequest);
+  expect(background).toEqual([]);
   expect(queryIsolatedSql(project, 'SELECT last_activity_at FROM player_universe WHERE id=' + member)).toBe(beforeVisit);
   expect((await page.request.get(campaignPath + '/2')).status()).toBe(404);
 

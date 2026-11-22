@@ -1,4 +1,6 @@
 {% extends 'base.html.twig' %}
+{# Le dossier ne lance pas le suivi réseau des flottes entrantes du shell. #}
+{% block incoming_fleets %}{% endblock %}
 {% block title %}Campagne pirate · Genesis Reborn{% endblock %}
 {% block body %}
 {% set briefing = dossier.briefing %}
