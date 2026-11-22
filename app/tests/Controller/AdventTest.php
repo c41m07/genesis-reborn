@@ -13,6 +13,7 @@ use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Clock\MockClock;
+use Symfony\Component\Process\Process;
 
 final class AdventTest extends WebTestCase
 {
@@ -144,6 +145,93 @@ final class AdventTest extends WebTestCase
         $this->client->request('GET', '/evenements/avent');
         self::assertResponseStatusCodeSame(404);
         self::assertSame(1, $this->em->getRepository(AdventClaim::class)->count());
+    }
+
+    public function testCompetingChoicesFromSeparateProcessesCreditOneLot(): void
+    {
+        $member = $this->player('AdventRacer');
+        $admin = $this->player('AdventRaceAdmin', admin: true);
+        $membership = $member->currentPlayerUniverse->id;
+        $planet = $this->planet($member)->id;
+        $edition = $this->publish($admin);
+        $db = $this->em->getConnection();
+        $db->executeStatement(
+            "UPDATE planet_resource SET current_stock = 500, last_updated_at = '2026-11-30 23:00:00' WHERE planet_id = ? AND resource_type IN ('metal', 'nano')",
+            [$planet],
+        );
+
+        $directory = sys_get_temp_dir().'/genesis-advent-'.bin2hex(random_bytes(8));
+        mkdir($directory, 0700);
+        $workers = [];
+        $db->beginTransaction();
+        try {
+            // Une vraie transaction retient la participation. Les deux choix
+            // préparent leurs propres connexions puis attendent la même ligne.
+            $db->fetchOne('SELECT id FROM player_universe WHERE id = ? FOR UPDATE', [$membership]);
+            foreach ([0, 1] as $choice) {
+                $input = ['player' => $member->id, 'membership' => $membership, 'planet' => $planet,
+                    'edition' => $edition, 'choice' => $choice, 'ready' => $directory.'/'.$choice, 'go' => $directory.'/go'];
+                $worker = new Process([PHP_BINARY, dirname(__DIR__).'/Support/concurrent_advent_open.php', json_encode($input, JSON_THROW_ON_ERROR)]);
+                $worker->setTimeout(20);
+                $worker->start();
+                $workers[] = $worker;
+            }
+            $deadline = microtime(true) + 8;
+            do {
+                clearstatcache();
+                if (is_file($directory.'/0') && is_file($directory.'/1')) {
+                    break;
+                }
+                usleep(20000);
+            } while (microtime(true) < $deadline && $workers[0]->isRunning() && $workers[1]->isRunning());
+            foreach ($workers as $choice => $worker) {
+                self::assertFileExists($directory.'/'.$choice, $worker->getErrorOutput());
+            }
+            $connections = [(int) file_get_contents($directory.'/0'), (int) file_get_contents($directory.'/1')];
+            self::assertNotSame($connections[0], $connections[1]);
+            touch($directory.'/go');
+
+            $waiting = 0;
+            $deadline = microtime(true) + 5;
+            do {
+                $waiting = (int) $db->fetchOne(
+                    "SELECT COUNT(*) FROM information_schema.PROCESSLIST WHERE ID IN (?, ?) AND INFO LIKE '%player_universe%' AND INFO LIKE '%FOR UPDATE%'",
+                    $connections,
+                );
+                if ($waiting === 2) {
+                    break;
+                }
+                usleep(20000);
+            } while (microtime(true) < $deadline && $workers[0]->isRunning() && $workers[1]->isRunning());
+            self::assertSame(2, $waiting, 'Les deux traitements doivent réellement attendre le même verrou.');
+            $db->commit();
+
+            $results = [];
+            foreach ($workers as $worker) {
+                self::assertSame(0, $worker->wait(), $worker->getErrorOutput());
+                $results[] = trim($worker->getOutput());
+            }
+            self::assertEqualsCanonicalizing(['delivered', 'already'], $results);
+            self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_claim WHERE delivered_at IS NOT NULL'));
+            $choice = (int) $db->fetchOne('SELECT choice FROM advent_claim');
+            $stocks = $db->fetchAllKeyValue("SELECT resource_type, current_stock FROM planet_resource WHERE planet_id = ? AND resource_type IN ('metal', 'nano')", [$planet]);
+            self::assertEqualsWithDelta($choice === 0 ? 507 : 500, (float) $stocks['metal'], .01);
+            self::assertEqualsWithDelta($choice === 1 ? 503 : 500, (float) $stocks['nano'], .01);
+        } finally {
+            if ($db->isTransactionActive()) {
+                $db->rollBack();
+            }
+            foreach ($workers as $worker) {
+                $worker->stop(0);
+            }
+            foreach (['0', '1', 'go'] as $part) {
+                $file = $directory.'/'.$part;
+                if (is_file($file)) {
+                    unlink($file);
+                }
+            }
+            rmdir($directory);
+        }
     }
 
     private function publish(Player $admin): int
