@@ -55,6 +55,11 @@ services:
 
 when@test:
     services:
+        # Le noyau Hall reste sans point d'entree joueur tant que le pilotage n'est pas valide.
+        App\Service\Guild\GuildHallService:
+            public: true
+        App\Repository\GuildHallRepository:
+            public: true
         App\Service\Player\GuildImageStorage:
             arguments:
                 $directory: '%kernel.cache_dir%/guild-media'
