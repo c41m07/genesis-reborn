@@ -105,6 +105,26 @@ class PirateReconnaissance
         ];
     }
 
+    /**
+     * Seul le départ du joueur peut être repéré avant remise. Ne sortir de cet accesseur
+     * ni le reçu complet, ni le système de destination, ni une origine historique non attestée.
+     */
+    public function pilotScoutOriginFor(PlayerUniverse $viewer, \DateTimeImmutable $at): ?int
+    {
+        if (!$this->belongsTo($viewer, $at) || $this->departedAt > $at
+            || !is_array($this->preparedEncounter['pilot_scout_fuel'] ?? null)) {
+            return null;
+        }
+        try {
+            $receipt = PirateScoutFuelReceipt::read($this->preparedEncounter['pilot_scout_fuel']);
+        } catch (\DomainException) {
+            return null;
+        }
+
+        return $this->dueAt->getTimestamp() - $this->departedAt->getTimestamp() === $receipt->seconds
+            ? $receipt->originId : null;
+    }
+
     /** Preuve serveur, utile au prochain départ pilote, jamais incluse dans la projection de renseignement. */
     public function pilotScoutFuelFor(PlayerUniverse $membership, \DateTimeImmutable $at): ?PirateScoutFuelReceipt
     {

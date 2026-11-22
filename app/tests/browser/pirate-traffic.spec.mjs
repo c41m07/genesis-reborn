@@ -30,8 +30,8 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
   await page.goto('/evenements/campagne-pirate');
   await page.getByRole('button', { name: 'Envoyer la sonde', exact: true }).click();
   await expect(page).toHaveURL(/campagne-pirate\/1$/);
-  // Une suite plus chargée peut laisser tourner le vrai relay ; garder la sonde du fixture en trajet.
-  runIsolatedSql(project, "UPDATE pirate_reconnaissance SET due_at=DATE_ADD(UTC_TIMESTAMP(), INTERVAL 1 HOUR) WHERE membership_id=" + member + " AND reported_at IS NULL");
+  // Le relay du lot CI ne doit pas terminer le scénario ; le reçu et son ETA restent intacts.
+  runIsolatedSql(project, "UPDATE outbox_message o JOIN pirate_reconnaissance r ON r.id=o.target_id SET o.due_at=DATE_ADD(UTC_TIMESTAMP(), INTERVAL 1 HOUR) WHERE o.kind='pirate_reconnaissance' AND r.membership_id=" + member);
 
   for (const url of ['/flottes', '/planetes/' + origin]) {
     await page.goto(url);

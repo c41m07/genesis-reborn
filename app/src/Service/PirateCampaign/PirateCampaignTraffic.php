@@ -108,7 +108,7 @@ final readonly class PirateCampaignTraffic
             $dates = $progress['dates'];
             $phase = $progress['phase'];
             if ($phase === PirateCampaignMoment::ReconnaissanceEnRoute->name) {
-                $origin = $recon->pirateScoutFuelFor($viewer, $at)?->originId;
+                $origin = $recon->pilotScoutOriginFor($viewer, $at);
                 // Le site n'entre pas dans la carte avant remise, même si sa position est déjà connue.
                 $snapshot['outbound'][] = $this->movement('scout', $number, 'Sonde de reconnaissance',
                     $dates['scout_due'], $at, $this->systems($known, $planets[$origin]->solarSystem ?? null));

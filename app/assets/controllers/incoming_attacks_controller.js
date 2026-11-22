@@ -40,7 +40,7 @@ export default class extends Controller {
             if (this.panelValue) url.searchParams.set('campaign', '1');
             const response = await fetch(url, { signal: this.abort.signal, headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' });
             if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) {
-                if ([401, 403, 404].includes(response.status)) this.clearCampaignTraffic();
+                if (response.redirected || [401, 403, 404].includes(response.status)) this.clearCampaignTraffic();
                 this.unavailable();
                 return;
             }
