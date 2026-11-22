@@ -6,7 +6,7 @@ namespace App\Tests\Integration;
 
 use App\Entity\{Fleet, FleetShip, Galaxy, PirateAttackCampaign, PirateConvoyDelivery, PirateReconnaissance, Planet, PlanetResource, Player, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
 use App\Manager\GameManager;
-use App\Repository\{GameRepository, PirateCampaignReadRepository};
+use App\Repository\{GameRepository, PirateCampaignReadRepository, PirateConvoyReadRepository};
 use App\Service\Colony\ActionGuard;
 use App\Message\{PirateAttackDue, PirateConvoyDue, PirateSurvivorsDue};
 use App\MessageHandler\{PirateAttackDueHandler, PirateSurvivorsDueHandler};
@@ -14,7 +14,7 @@ use App\Service\Catalog\GameCatalog;
 use App\Service\Combat\{CombatSimulator, CombatUnitFactory};
 use App\Service\Fleet\MovementCalculator;
 use App\Service\Notification\OutboxRelay;
-use App\Service\PirateCampaign\{PirateAttackFuelReceipt, PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignPresenter, PirateCampaignProgress, PirateCampaignSequence, PirateConvoyDeliveryService, PirateConvoyDispatchToken, PirateDistressSite, PirateEncounterSnapshot, PiratePilotAttackCommand, PiratePilotCampaignOrder, PiratePilotGate, PiratePilotScoutCommand, PiratePilotSignalResolver, PiratePreparedEncounter, PirateReconnaissanceService, PirateSurvivorRecoveryService};
+use App\Service\PirateCampaign\{PirateAttackFuelReceipt, PirateAttackService, PirateBattleScenario, PirateCampaignCatalogue, PirateCampaignPresenter, PirateCampaignProgress, PirateCampaignSequence, PirateCampaignTraffic, PirateConvoyDeliveryService, PirateConvoyDispatchToken, PirateDistressSite, PirateEncounterSnapshot, PiratePilotAttackCommand, PiratePilotCampaignOrder, PiratePilotGate, PiratePilotScoutCommand, PiratePilotSignalResolver, PiratePreparedEncounter, PirateReconnaissanceService, PirateSurvivorRecoveryService};
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -50,6 +50,100 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->clock = new MockClock('2026-11-21T09:00:00Z');
         self::getContainer()->set('clock', $this->clock);
         $this->service = self::getContainer()->get(PirateAttackService::class);
+    }
+
+    public function testPrivateTrafficKeepsAttestedTripsAndPreviousConvoyWithoutPublishingARealFleet(): void
+    {
+        [$owner, $origin, , , $neighbor] = $this->fixture(omega: true, scoutPaid: true, missionKey: 'balise_17');
+        $owner->player->currentPlayerUniverse = $owner;
+        $neighbor->player->currentPlayerUniverse = $neighbor;
+        $world = new Universe();
+        $world->slug = $world->name = 'autre-univers-trafic';
+        $foreignSeat = new PlayerUniverse();
+        $foreignSeat->player = $owner->player;
+        $foreignSeat->universe = $world;
+        $foreignSeat->joinedAt = $this->clock->now();
+        $galaxy = new Galaxy();
+        $galaxy->universe = $world;
+        $galaxy->name = 'Galaxie voisine';
+        foreach ([$world, $foreignSeat, $galaxy] as $entity) {
+            $this->em->persist($entity);
+        }
+        $this->em->flush();
+
+        $catalogue = self::getContainer()->get(PirateCampaignCatalogue::class);
+        $progress = new PirateCampaignProgress($catalogue);
+        $sequence = new PirateCampaignSequence($catalogue, $progress);
+        $gate = new PiratePilotGate('prod');
+        $traffic = new PirateCampaignTraffic($gate, $this->clock, new RequestStack(), self::getContainer()->get(GameRepository::class),
+            new PirateCampaignReadRepository($this->em), new PirateConvoyReadRepository($this->em), $catalogue, $sequence, $progress);
+
+        $system = $origin->solarSystem;
+        $ownGalaxy = $system->galaxy;
+        $scout = $traffic->forViewer($owner);
+        self::assertSame(['scout'], array_column($scout['outbound'], 'kind'));
+        self::assertSame([], $scout['presence']);
+        self::assertSame([], $scout['incoming']);
+        self::assertSame([$system->id], $traffic->forGalaxy($owner, $ownGalaxy)[0]['systems']);
+        self::assertSame(['kind', 'mission', 'label', 'eta', 'overdue', 'systems'], array_keys($scout['outbound'][0]));
+        self::assertSame([], $traffic->forGalaxy($owner, $galaxy));
+        self::assertSame([], $traffic->forGalaxy($neighbor, $ownGalaxy));
+
+        $this->finishRecon();
+        self::assertSame([], $traffic->forViewer($owner)['outbound']);
+        self::assertSame(['pirates'], array_column($traffic->forViewer($owner)['presence'], 'kind'));
+        self::assertTrue($this->service->launchWithPilotFuel($owner, $origin, 'balise_17', 0, ['fighter' => ['basic' => 2]], $gate));
+        $attack = $this->campaign();
+        $escort = $traffic->forViewer($owner)['outbound'];
+        self::assertSame(['escort'], array_column($escort, 'kind'));
+        self::assertSame($attack->arrivalAt->format(DATE_ATOM), $escort[0]['eta']);
+
+        $proof = $attack->reconnaissance->battleProofFor($owner, $this->clock->now());
+        $attack->timeline['seed'] = $this->seedWithVictory($attack, $proof['prepared']->battleForServer());
+        $this->em->flush();
+        $this->advanceTo($attack->nextAt);
+        $this->service->processDue($attack->id, $attack->dispatchToken);
+        self::assertSame([], $traffic->forViewer($owner)['outbound'], 'Une escorte déjà arrivée ne vole plus.');
+        $this->advanceTo($attack->nextAt);
+        $this->service->processDue($attack->id, $attack->dispatchToken);
+        self::assertSame('attacker_wins', $attack->report['outcome']);
+        $order = $sequence->forViewer($owner, [['reconnaissance' => $attack->reconnaissance, 'attack' => $attack]], $this->clock->now());
+        self::assertSame('escorte_interceptee', $order['current_mission']);
+
+        $after = $traffic->forViewer($owner);
+        self::assertSame(['return'], array_column($after['outbound'], 'kind'));
+        self::assertSame(['convoy'], array_column($after['incoming'], 'kind'));
+        self::assertSame(1, $after['outbound'][0]['mission']);
+        self::assertSame(1, $after['incoming'][0]['mission']);
+        self::assertSame($origin->name, $after['incoming'][0]['destination']);
+        $html = self::getContainer()->get(\Twig\Environment::class)->render('ui/campaign_movement_row.html.twig', [
+            'movement' => $after['incoming'][0], 'incoming' => true, 'preferences' => ['timezone' => 'UTC'],
+        ]);
+        self::assertStringContainsString('Trajet civil protégé', $html);
+        self::assertStringContainsString($after['incoming'][0]['eta'], $html);
+        self::assertDoesNotMatchRegularExpression('/<(?:form|a|button)\b/', $html);
+        self::assertStringNotContainsString('data-incoming-attack', $html);
+        self::assertSame([], $after['presence'], 'La station pirate n’est plus projetée après la victoire.');
+        self::assertSame([], $traffic->forGalaxy($neighbor, $ownGalaxy));
+        self::assertSame(['return', 'convoy'], array_column($traffic->forGalaxy($owner, $ownGalaxy), 'kind'));
+        $returnEta = new \DateTimeImmutable($after['outbound'][0]['eta']);
+        $convoyEta = new \DateTimeImmutable($after['incoming'][0]['eta']);
+        $this->advanceTo(max($returnEta, $convoyEta)->modify('+1 second'));
+        $db = $this->em->getConnection();
+        $before = (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message');
+        $waiting = $traffic->forViewer($owner);
+        self::assertTrue($waiting['outbound'][0]['overdue']);
+        self::assertTrue($waiting['incoming'][0]['overdue']);
+        self::assertSame($before, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM fleet WHERE status <> 'idle'"));
+        self::assertStringNotContainsString('token', json_encode($waiting, JSON_THROW_ON_ERROR));
+
+        // Un onglet encore lié au premier univers ne doit rien recevoir après une vraie bascule en base.
+        $db->executeStatement('UPDATE player SET current_player_universe_id = ? WHERE id = ?', [$foreignSeat->id, $owner->player->id]);
+        self::assertSame([], $traffic->forGalaxy($owner, $ownGalaxy));
+        $this->em->refresh($owner->player);
+        self::assertSame([], $traffic->forViewer($foreignSeat)['incoming']);
+        self::assertSame([], $traffic->forViewer($owner)['outbound']);
     }
 
     public function testNoPersistentAttackBeforeReport(): void

@@ -296,6 +296,14 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
     }
 
 
+    private static function assertIncomingPanelCount(string $html, string $expected): void
+    {
+        $panel = new \Symfony\Component\DomCrawler\Crawler($html);
+        $count = $panel->filter('#incoming-attacks-heading > .badge');
+        self::assertCount(1, $count);
+        self::assertSame($expected, $count->text());
+    }
+
     public function testIncomingPanelIncludesNeutralTransportsAndAlliedReinforcementsAndOrbit(): void
     {
         [$viewer,$target]=$this->player('IncomingViewer');[$neutral,$home]=$this->player('IncomingNeutral');[$ally,$alliedHome]=$this->player('IncomingAlly');
@@ -305,7 +313,7 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
         $fleets=[$this->fleet($neutral,$home,$target,'transport'),$this->fleet($ally,$alliedHome,$target,'defend'),$this->fleet($neutral,$home,$target,'orbit')];
         foreach($fleets as $fleet)$this->ship($fleet,'transport','basic',2);
         $data=$this->surveillance($viewer);
-        self::assertStringContainsString('Flottes entrantes <span class="badge">3</span>',$data['html']);
+        self::assertIncomingPanelCount($data['html'], '3');
         foreach($fleets as $fleet)self::assertStringContainsString('data-incoming-attack="'.$fleet->id.'"',$data['html']);
         self::assertStringContainsString('Transport',$data['html']);self::assertStringContainsString('Défense',$data['html']);self::assertStringContainsString('Mise en orbite',$data['html']);
         self::assertStringNotContainsString('Consulter le récapitulatif du transport', $data['html']);
@@ -434,7 +442,7 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
         $thirdParty=$this->fleet($sender,$home,$elsewhere,'transport');
         $data=$this->surveillance($viewer);
         foreach([$own,$return,$spy,$thirdParty] as $fleet)self::assertStringNotContainsString('data-incoming-attack="'.$fleet->id.'"',$data['html']);
-        self::assertStringContainsString('Flottes entrantes <span class="badge">0</span>',$data['html']);
+        self::assertIncomingPanelCount($data['html'], '0');
         self::assertStringContainsString('Aucune flotte entrante visible vers vos colonies.',$data['html']);
     }
 

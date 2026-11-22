@@ -39,7 +39,7 @@
     <nav class="dashboard-metrics" aria-label="Résumé de votre empire">
 {% include 'ui/colony_summaries.html.twig' %}
 <a class="metric-card" href="{{ path('app_leaderboard') }}"><span class="metric-symbol">{{ ui.icon('universe') }}</span><span><small>Classement</small><strong>{{ empire_rank ? '#'~empire_rank : '—' }}</strong><span class="metric-caption">Places : {{ evolution.value(ranking_changes is defined ? ranking_changes.rank_changes.points : null, "Places") }}</span></span><span class="metric-arrow" aria-hidden="true">→</span></a>
-<a class="metric-card" href="{{ path('app_fleets') }}"><span class="metric-symbol">{{ ui.icon('fleet') }}</span><span><small>Flottes en vol</small><strong>{{ active_fleets|length }}</strong><span class="metric-caption">toutes colonies confondues</span></span><span class="metric-arrow" aria-hidden="true">→</span></a>
+{% include 'colony/_overview_flight_metric.html.twig' %}
 <a class="metric-card" href="{{ path('app_guilds') }}"><span class="metric-symbol">{{ ui.icon('diplomacy') }}</span><span><small>Guilde</small><strong>{{ empire_guild ? empire_guild.name : (guilds_enabled ? 'Sans guilde' : 'Désactivée') }}</strong><span class="metric-caption">{{ empire_guild ? 'Ouvrir ma guilde' : (guilds_enabled ? 'Trouver une guilde' : 'Dans cet univers') }}</span></span><span class="metric-arrow" aria-hidden="true">→</span></a>
 </nav>
 </section>

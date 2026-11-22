@@ -1,0 +1,18 @@
+{# Un trajet de campagne n'est pas une Fleet : ni rappel, ni interception, ni transfert. #}
+<article class="flight-operation campaign-traffic-row" data-campaign-kind="{{ movement.kind }}"{% if incoming|default(false) %} data-campaign-incoming="{{ movement.mission }}"{% endif %}>
+    <div class="operation-heading">
+        <strong>{{ movement.label }}</strong>
+        <span class="badge">Mission {{ movement.mission }}</span>
+    </div>
+    {% if movement.destination is defined %}<p>Destination : {{ movement.destination }}</p>{% endif %}
+    {% if movement.eta %}
+        <p>{{ movement.overdue ? 'Arrivée à confirmer · prévue le' : 'Arrivée prévue le' }}
+            <time datetime="{{ movement.eta }}">{{ movement.eta|date('d/m/Y à H:i:s', preferences.timezone|default(app.user.preferences.timezone|default('Europe/Paris'))) }}</time>
+        </p>
+    {% endif %}
+    {% if incoming|default(false) %}
+        <p class="muted">Trajet civil protégé · aucune action de flotte disponible.</p>
+    {% else %}
+        <a class="inline-link" href="{{ path('app_pirate_campaign', {missionNumber:movement.mission}) }}">Consulter le dossier de campagne</a>
+    {% endif %}
+</article>

@@ -37,11 +37,17 @@ export default class extends Controller {
             if (colony && colony !== '0') url.searchParams.set('colony', colony);
             const galaxy = document.querySelector('[data-surveillance-galaxy]')?.dataset.surveillanceGalaxy;
             if (Number(galaxy) > 0) url.searchParams.set('galaxy', galaxy);
+            if (this.panelValue) url.searchParams.set('campaign', '1');
             const response = await fetch(url, { signal: this.abort.signal, headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' });
-            if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) { this.unavailable(); return; }
+            if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) {
+                if (response.redirected || [401, 403, 404].includes(response.status)) this.clearCampaignTraffic();
+                this.unavailable();
+                return;
+            }
             const data = await response.json();
             if (!this.active) return;
             if (data.membership !== this.membershipValue) {
+                this.clearCampaignTraffic();
                 this.removeUnavailableDetails();
                 return;
             }
@@ -54,6 +60,13 @@ export default class extends Controller {
                 if (!this.contentTarget.contains(document.activeElement)
                     && !this.hasOpenDetails()) {
                     this.updatePanel(next.content, data.html);
+                } else {
+                    // Les convois n'ont aucun contrôle interactif : les synchroniser
+                    // même lorsqu'un détail de flotte ordinaire porte le focus.
+                    this.syncCampaignRows(next.content);
+                    // Le cache complet ne correspond plus au DOM : A → convoi → A
+                    // doit retirer le convoi même si le HTML initial revient à l'identique.
+                    this.lastHtml = null;
                 }
             }
             this.tick();
@@ -61,6 +74,39 @@ export default class extends Controller {
             if (data.flights) window.dispatchEvent(new CustomEvent('genesis:visible-fleets', { detail: data }));
         } catch { if (this.active) this.unavailable(); }
         finally { clearTimeout(timeout); this.pending = false; }
+    }
+
+    clearCampaignTraffic() {
+        this.syncCampaignRows();
+        this.lastHtml = null;
+        if (document.querySelector('[data-surveillance-galaxy]')) {
+            window.dispatchEvent(new Event('genesis:campaign-traffic-unavailable'));
+        }
+    }
+
+    syncCampaignRows(next = null) {
+        const panel = this.contentTarget.querySelector('.incoming-attack-panel');
+        if (!panel) return;
+        const incomingSelector = '[data-campaign-incoming]';
+        const nextRows = new Map(Array.from(next?.querySelectorAll(incomingSelector) ?? [], row => [row.dataset.campaignIncoming, row]));
+        for (const row of panel.querySelectorAll(incomingSelector)) {
+            const latest = nextRows.get(row.dataset.campaignIncoming);
+            if (!latest) row.remove();
+            else if (latest.outerHTML !== row.outerHTML) row.replaceWith(latest.cloneNode(true));
+            nextRows.delete(row.dataset.campaignIncoming);
+        }
+        for (const row of nextRows.values()) panel.append(row.cloneNode(true));
+        const total = panel.querySelectorAll('[data-incoming-attack], [data-campaign-incoming]').length;
+        let empty = panel.querySelector('.incoming-empty-message');
+        if (total) empty?.remove();
+        else if (!empty) {
+            empty = document.createElement('p');
+            empty.className = 'flight-idle incoming-empty-message';
+            empty.textContent = 'Aucune flotte entrante visible vers vos colonies.';
+            panel.append(empty);
+        }
+        panel.querySelector('[data-incoming-panel-count]').textContent = String(total);
+        if (this.hasCountTarget) this.countTarget.textContent = `Entrants · ${total}`;
     }
 
     hasOpenDetails() {
@@ -91,7 +137,7 @@ export default class extends Controller {
         const count = content.querySelectorAll('[data-incoming-attack]').length;
         if (this.hasCountTarget) {
             const threats = content.querySelectorAll('[data-incoming-kind="attack"][data-incoming-attack]').length;
-            this.countTarget.textContent = `Entrants · ${count}`;
+            this.countTarget.textContent = `Entrants · ${count + content.querySelectorAll('[data-campaign-incoming]').length}`;
             this.previewTarget.textContent = threats ? `${threats} attaque(s) détectée(s) ⌄` : 'Détails des arrivées ⌄';
             this.countTarget.closest('details').classList.toggle('has-hostile', threats > 0);
         }

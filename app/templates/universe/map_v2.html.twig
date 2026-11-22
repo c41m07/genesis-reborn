@@ -87,8 +87,9 @@
             <div data-galaxy-v2-target="planetContent"></div>
         </aside>
 
-        <details class="gv2-flight-log {{ galaxy_v2_flights is empty?'is-empty':'' }}" {{ galaxy_v2_flights is not empty?'open':'' }}>
-            <summary><span class="gv2-live-dot" aria-hidden="true"></span>Journal de flotte<span class="visually-hidden" data-galaxy-v2-empty-label {% if galaxy_v2_flights is not empty %}hidden{% endif %}> · aucune mission</span></summary>
+        {% set hasTraffic = galaxy_v2_flights is not empty or galaxy_campaign_traffic is not empty %}
+        <details class="gv2-flight-log {{ hasTraffic?'':'is-empty' }}" {{ hasTraffic?'open':'' }}>
+            <summary><span class="gv2-live-dot" aria-hidden="true"></span>Journal de flotte<span class="visually-hidden" data-galaxy-v2-empty-label {% if hasTraffic %}hidden{% endif %}> · aucune mission</span></summary>
             <div data-galaxy-v2-target="fleetLog">
                 {% include 'universe/_fleet_log.html.twig' %}
             </div>
