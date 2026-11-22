@@ -84,7 +84,7 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
   page.off('request', onRequest);
   expect(background).toEqual([]);
   expect(queryIsolatedSql(project, 'SELECT last_activity_at FROM player_universe WHERE id=' + member)).toBe(beforeVisit);
-  expect((await page.request.get(campaignPath + '/2')).status()).toBe(404);
+  expect((await page.goto(campaignPath + '/2')).status()).toBe(404);
 
   const nativeContext = await browser.newContext({ javaScriptEnabled: false, storageState: await page.context().storageState() });
   const nativePage = await nativeContext.newPage();
@@ -121,13 +121,15 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     await page.screenshot({ path: info.outputPath('renseignement-390.png'), fullPage: true, animations: 'disabled' });
     expect((await new AxeBuilder({ page }).include('.pirate-campaign').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()).violations).toEqual([]);
 
-    runIsolatedSql(project, "UPDATE universe SET game_settings=JSON_SET(game_settings,'$.features.pirate_campaign_enabled',JSON_EXTRACT('false','$')) WHERE id=" + universe);
+    runIsolatedSql(project, `UPDATE universe SET game_settings=JSON_MERGE_PATCH(game_settings,'{"features":{"pirate_campaign_enabled":false}}') WHERE id=${universe}`);
+    const setting = "JSON_EXTRACT(game_settings,'$.features.pirate_campaign_enabled')";
+    expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM universe WHERE id=${universe} AND JSON_TYPE(${setting})='BOOLEAN' AND JSON_UNQUOTE(${setting})='false'`)).toBe('1');
     await nativePage.goto(base + '/evenements');
     await expect(transition).toHaveCount(0);
     await expect(nativePage.getByRole('navigation', { name: 'Navigation principale', exact: true }).getByRole('link', { name: 'Campagne pirate', exact: true })).toHaveCount(0);
-    expect((await nativePage.request.get(base + campaignPath)).status()).toBe(404);
+    expect((await nativePage.goto(base + campaignPath)).status()).toBe(404);
   } finally {
-    runIsolatedSql(project, "UPDATE universe SET game_settings=JSON_SET(game_settings,'$.features.pirate_campaign_enabled',JSON_EXTRACT('true','$')) WHERE id=" + universe);
+    runIsolatedSql(project, `UPDATE universe SET game_settings=JSON_MERGE_PATCH(game_settings,'{"features":{"pirate_campaign_enabled":true}}') WHERE id=${universe}`);
     await nativeContext.close();
   }
 });
