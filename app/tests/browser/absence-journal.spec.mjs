@@ -76,7 +76,7 @@ test('Journal : cinq entrées, acquittement à la lecture et repli clavier sans 
   expect(response.headers()['cache-control']).toContain('no-store');
   await expect(page.locator('.dashboard-journal [role="status"]')).toHaveText('Journal consulté.');
   const counts = queryIsolatedSql(process.env.BROWSER_ROUTER,
-    'SELECT COUNT(*), SUM(consulted_at IS NOT NULL) FROM notification WHERE player_universe_id = '+member+' AND journal_kind IS NOT NULL');
+    'SELECT COUNT(*), SUM(consulted_at IS NOT NULL) FROM notification WHERE recipient_id = '+member+' AND journal_kind IS NOT NULL');
   expect(counts.split('\t').map(Number)).toEqual([9, 8]);
   await expect(notices).toHaveCount(5);
   await refresh();
