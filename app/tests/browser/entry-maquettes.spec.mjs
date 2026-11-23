@@ -177,11 +177,13 @@ test('Premier accès : trois états universitaires dans le viewport de la maquet
     expect(omegaEnds).toMatch(/^(NULL|\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)$/);
     const restoreEnd = omegaEnds === 'NULL' ? 'NULL' : "'" + omegaEnds + "'";
     try {
-      runIsolatedSql(project, "UPDATE universe SET ends_at=DATE_ADD(UTC_TIMESTAMP(), INTERVAL 2 DAY) WHERE slug='omega-1'");
+      runIsolatedSql(project, "UPDATE universe SET ends_at=DATE_ADD(UTC_TIMESTAMP(), INTERVAL 12 HOUR) WHERE slug='omega-1'");
       await page.goto('/univers');
       const current = cards.filter({ has: page.getByText('Univers actuel', { exact: true }) });
       await expect(current.getByRole('button', { name: /Reprendre mon empire/ })).toBeVisible();
-      await expect(current.locator('.universe-closing time')).toContainText('UTC');
+      const closing = current.locator('.universe-closing');
+      await expect(closing).toBeVisible();
+      await expect(closing.locator('[data-universe-closing-target=date]')).toContainText('UTC');
       await capture(page, testInfo, '09-univers-reprise-fermeture', 1920, 1080);
       await capture(page, testInfo, '09-univers-reprise-fermeture', 390, 844);
       await current.getByRole('button', { name: /Reprendre mon empire/ }).click();
@@ -256,8 +258,8 @@ test.describe('Inscription et récupération avec confirmation en attente', () =
     await capture(page, testInfo, '03-compte-cree', 1920, 1080);
 
     const project = process.env.BROWSER_ROUTER;
-    const verifyLink = crypto.randomUUID().replaceAll('-', '');
-    const resetLink = crypto.randomUUID().replaceAll('-', '');
+    const verifyLink = crypto.randomUUID() + crypto.randomUUID().slice(0, 8);
+    const resetLink = crypto.randomUUID() + crypto.randomUUID().slice(0, 8);
     runIsolatedSql(project, `INSERT INTO player_email_verification_token (player_id,token_hash,expires_at) SELECT id,SHA2('${verifyLink}',256),DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 HOUR) FROM player WHERE email='${email}'`);
     runIsolatedSql(project, `INSERT INTO player_password_reset_token (player_id,token_hash,created_at,expires_at) SELECT id,SHA2('${resetLink}',256),UTC_TIMESTAMP(),DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 HOUR) FROM player WHERE email='${email}'`);
     await page.goto('/inscription/confirmer/' + verifyLink);
@@ -283,7 +285,7 @@ test('Erreurs publiques : repères de reprise sans dépendance applicative', asy
     const standalone = await french.newPage();
     const response = await standalone.goto('/page-publique-de-test-absente');
     expect(response.status()).toBe(404);
-    await expect(standalone.getByRole('link', { name: 'Genesis Reborn', exact: true })).toHaveAttribute('href', '/');
+    await expect(standalone.getByRole('link', { name: /^Genesis Reborn$/i })).toHaveAttribute('href', '/');
     await expect(standalone.locator('main').getByRole('link', { name: /Retour à l’accueil/ })).toHaveAttribute('href', '/');
     await expect(standalone.getByRole('navigation', { name: 'Informations juridiques' }).getByRole('link', { name: 'Confidentialité' })).toHaveAttribute('href', '/confidentialite');
     await capture(standalone, testInfo, '05-erreur-404', 1920, 1080);
