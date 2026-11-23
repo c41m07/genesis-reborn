@@ -359,3 +359,35 @@ body.authenticated .account-redesign:is(.account-deletion-page,.vacation-page) .
     }
     .preferences-page .account-board-settings > section:last-of-type .account-section > p { grid-column:1 / -1; }
 }
+
+
+/* P06 : l’information de validation et la zone sensible restent deux repères distincts. */
+body.authenticated .profile-page .profile-password > summary { padding-block:.65rem; }
+body.authenticated .profile-page .profile-password > summary > span { font-weight:700; }
+.profile-page .profile-password-hint {
+    display:block;
+    margin:.35rem 0 0 1rem;
+    color:color-mix(in srgb,var(--text) 75%,var(--muted));
+    font-size:.79rem;
+    font-weight:400;
+}
+body.authenticated .profile-page .profile-validation-notice {
+    margin-top:1rem;
+    border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));
+    background:color-mix(in srgb,var(--accent) 11%,var(--panel));
+    color:var(--text);
+}
+.profile-validation-notice p { margin:.35rem 0 0; color:var(--text); }
+.profile-page .profile-scope-card dl > div { display:block; }
+.profile-page .profile-scope-card dl dd {
+    margin:.35rem 0 0;
+    text-align:start;
+    color:color-mix(in srgb,var(--text) 70%,var(--muted));
+}
+.profile-page .profile-danger-card .account-board-danger {
+    border:1px solid color-mix(in srgb,var(--account-danger) 38%,var(--line));
+    background:color-mix(in srgb,var(--account-danger) 11%,var(--panel));
+}
+@media (min-width: 1280px) {
+    .profile-page .account-profile-confirmation { max-width:64%; }
+}

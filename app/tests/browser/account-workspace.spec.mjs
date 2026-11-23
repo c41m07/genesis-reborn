@@ -273,10 +273,27 @@ test('P06 : mes identifiants et refus sans modification du compte', async ({ pag
       const rail = page.getByRole('complementary',{name:'Portée et actions sensibles'});
       await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
       await expect(form.locator('.profile-password')).not.toHaveAttribute('open');
+      await expect(form.locator('.profile-password-hint')).toContainText('conserver votre mot de passe');
+      const validation = form.locator('.profile-validation-notice');
+      await expect(validation).toContainText('Toute modification enregistrée ferme cette session');
+      const save = form.getByRole('button',{name:'Enregistrer mes identifiants'});
+      const saveBounds = await save.boundingBox();
+      const noticeBounds = await validation.boundingBox();
+      expect(noticeBounds.y).toBeGreaterThanOrEqual(saveBounds.y+saveBounds.height);
+      const scope = rail.locator('.profile-scope-card').locator('dl > div').first();
+      const scopeTerm = await scope.locator('dt').boundingBox();
+      const scopeDescription = await scope.locator('dd').boundingBox();
+      expect(scopeDescription.y).toBeGreaterThanOrEqual(scopeTerm.y+scopeTerm.height);
+      if (viewport.width===390) {
+        expect((await new AxeBuilder({page}).include('.profile-password-hint').include('.profile-validation-notice').include('.profile-danger-card').analyze()).violations).toEqual([]);
+      }
       await expect(rail.getByRole('link',{name:'Voir la confirmation'})).toHaveAttribute('href','/profil/supprimer');
       await expect(form.getByRole('link',{name:'Voir la confirmation'})).toHaveCount(0);
       await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
       await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+      if (viewport.width===1920) {
+        await expect(validation).toBeInViewport({ratio:1});
+      }
       await page.screenshot({path:info.outputPath(`P06-identifiants-${theme}-${viewport.width}.png`),scale:'css',animations:'disabled'});
       if (viewport.width===390) {
         await form.getByRole('button',{name:'Enregistrer mes identifiants'}).scrollIntoViewIfNeeded();
