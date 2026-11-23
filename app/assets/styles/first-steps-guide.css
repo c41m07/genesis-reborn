@@ -154,14 +154,14 @@
 .first-steps-preview h2 { overflow-wrap: anywhere; }
 body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: hidden; }
 
-/* La carte utilise tout son canvas : placer l’aperçu et son bouton hors de cette surface. */
-.shell--galaxy-v2 > .first-steps-popup--preview {
+/* Surface de carte et composeur utilisent leur espace : l’aide reste au-dessus dans le flux. */
+:is(.shell--galaxy-v2, .shell--messaging) > .first-steps-popup-enhanced {
     position: relative;
     inset: auto;
     margin: 0 0 8px auto;
     max-width: 100%;
 }
-.shell--galaxy-v2 > .first-steps-popup--preview .first-steps-popup-panel { margin-top: 0; }
+:is(.shell--galaxy-v2, .shell--messaging) > .first-steps-popup-enhanced .first-steps-popup-panel { margin-top: 0; }
 
 .first-steps .first-steps-next,
 .first-steps .first-steps-refunds {
