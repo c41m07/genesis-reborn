@@ -406,7 +406,7 @@ body[data-theme=light] .information-workspace a:not(.primary) {
     margin-top: 6px;
 }
 
-.information-workspace.legal-page .legal-content > h2:first-child,
+.information-workspace.legal-page .legal-content > h2:first-of-type,
 .information-workspace.legal-page .legal-contents h2 {
     margin-top: 0;
 }
