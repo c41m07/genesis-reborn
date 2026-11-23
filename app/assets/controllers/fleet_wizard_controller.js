@@ -1,5 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
-import { compactNumber, exactNumber } from '../quantity.js';
+import { exactNumber } from '../quantity.js';
+
+const rankLabels = { basic: 'Basique', intermediate: 'Intermédiaire', superior: 'Supérieur' };
 
 export default class extends Controller {
     static targets = ['step', 'indicator', 'counter', 'quantity', 'error', 'summary', 'recap', 'recapCount', 'recapRanks', 'recapShips', 'recapDestination', 'recapCargo', 'recapQuote', 'recapActions', 'recapNotice', 'stageActions', 'quotePanel', 'recapQuoteSlot'];
@@ -67,20 +69,53 @@ export default class extends Controller {
         const targetField = this.destinationField();
         const option = targetField?.selectedOptions?.[0];
         const destination = (option ? (missionField.value === 'explore' ? option.dataset.systemCoordinates : option.textContent.trim()) : targetField?.value.trim()) || 'destination à confirmer';
-        const composition = this.quantityTargets
-            .filter(input => !input.disabled && Number(input.value) > 0)
-            .map(input => ({ amount: Number(input.value), label: input.dataset.shipLabel }));
-        const ships = composition.map(({ amount, label }) => compactNumber(amount) + ' × ' + label);
-        const cargo = [...this.element.querySelectorAll('[name^="cargo["]')]
-            .filter(input => Number(input.value) > 0)
-            .map(input => (this.element.querySelector(`label[for="${input.id}"]`)?.textContent.trim() || 'Ressource') + ' : ' + exactNumber(Number(input.value)));
         const list = document.createElement('dl');
-        for (const [label, value] of [['Origine', this.originValue], ['Destination', destination], ['Mission', mission], ['Composition', ships.join(', ')], ['Fret chargé', cargo.join(', ') || 'Aucun']]) {
+        list.className = 'fleet-review-context';
+        for (const [label, value] of [['Origine', this.originValue], ['Destination', destination], ['Mission', mission]]) {
             const entry = document.createElement('div'), term = document.createElement('dt'), description = document.createElement('dd');
             term.textContent = label; description.textContent = value; entry.append(term, description); list.append(entry);
         }
-        this.summaryTarget.replaceChildren(list);
-        this.summaryTarget.title = composition.map(({ amount, label }) => exactNumber(amount) + ' × ' + label).join(', ');
+
+        const selected = this.quantityTargets.filter(input => !input.disabled && Number(input.value) > 0);
+        const table = document.createElement('table');
+        table.className = 'data-table fleet-review-units';
+        table.createCaption().textContent = 'Composition';
+        const heading = table.createTHead().insertRow();
+        for (const label of ['Unité', 'Rang', 'Quantité']) {
+            const cell = document.createElement('th');
+            cell.scope = 'col';
+            cell.textContent = label;
+            heading.append(cell);
+        }
+        const rows = table.createTBody();
+        for (const input of selected) {
+            const row = rows.insertRow(), name = document.createElement('th');
+            name.scope = 'row';
+            name.textContent = input.dataset.shipLabel;
+            row.append(name);
+            row.insertCell().textContent = rankLabels[input.dataset.shipTier];
+            row.insertCell().textContent = exactNumber(Number(input.value));
+        }
+
+        // Les champs désactivés ne font pas partie de la mission soumise.
+        const cargo = [...this.element.querySelectorAll('[name^="cargo["]')].filter(input => !input.disabled);
+        const cargoHeading = document.createElement('h5'), cargoDetails = document.createElement('dl');
+        cargoHeading.textContent = 'Fret chargé';
+        cargoDetails.className = 'fleet-review-cargo';
+        for (const input of cargo) {
+            const entry = document.createElement('div'), term = document.createElement('dt'), description = document.createElement('dd');
+            term.textContent = input.labels?.[0]?.textContent.trim() || 'Ressource';
+            description.textContent = exactNumber(Number(input.value) || 0);
+            entry.append(term, description);
+            cargoDetails.append(entry);
+        }
+        if (!cargo.length) {
+            const empty = document.createElement('p');
+            empty.textContent = 'Aucun fret pour cette mission.';
+            this.summaryTarget.replaceChildren(list, table, cargoHeading, empty);
+        } else {
+            this.summaryTarget.replaceChildren(list, table, cargoHeading, cargoDetails);
+        }
     }
 
     updateRecap(event = null) {
@@ -96,7 +131,7 @@ export default class extends Controller {
             ships += amount;
         }
         this.recapCountTarget.textContent = exactNumber(ships);
-        this.recapRanksTarget.textContent = Object.entries({ basic: 'Basique', intermediate: 'Intermédiaire', superior: 'Supérieur' })
+        this.recapRanksTarget.textContent = Object.entries(rankLabels)
             .map(([rank, label]) => exactNumber(ranks[rank]) + ' ' + label).join(' · ');
         this.recapRanksTarget.hidden = ships === 0;
         this.recapShipsTarget.hidden = ships === 0;
@@ -142,6 +177,7 @@ export default class extends Controller {
     }
 
     render(moveFocus = false) {
+        this.element.dataset.fleetStep = String(this.currentStep);
         this.stepTargets.forEach(step => {
             const active = Number(step.dataset.step) === this.currentStep;
             step.hidden = !active;
