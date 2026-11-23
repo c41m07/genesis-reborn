@@ -247,3 +247,19 @@ html[data-theme="light"] .player-report-detail {
     --accent: #24627a;
     --gold: #805419;
 }
+
+/* Le joueur lit d’abord le bilan ; les coordonnées et participants restent visibles. */
+.player-transport-detail .transport-board-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.65rem; margin:0 0 1rem; }
+.player-transport-detail .transport-board-metrics > div { display:block; min-width:0; border:1px solid var(--line); padding:.85rem; border-radius:6px; background:color-mix(in srgb,var(--accent) 8%,var(--panel)); }
+.player-transport-detail .transport-board-metrics dd { margin:.35rem 0 0; color:var(--text); font-size:clamp(1rem,1.55vw,1.45rem); overflow-wrap:anywhere; }
+.player-transport-detail .transport-board-metrics dd + dd { color:var(--muted); font-size:.86rem; }
+.player-transport-detail .transport-board-content { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(15rem,1fr); gap:.85rem; align-items:start; }
+.player-transport-detail .transport-board-content .panel { min-width:0; margin:0; padding:.85rem; }
+.player-transport-detail .transport-board-route .report-facts { margin:0; }
+.player-transport-detail .transport-board-route .report-facts > div { padding-block:.45rem; gap:.5rem; }
+@media(max-width:1000px) {
+    .player-transport-detail .transport-board-content { grid-template-columns:minmax(0,1fr); }
+}
+@media(max-width:560px) {
+    .player-transport-detail .transport-board-metrics { grid-template-columns:minmax(0,1fr); }
+}
