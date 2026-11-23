@@ -50,7 +50,7 @@
     </section>
     <section class="public-previews" aria-label="Aperçus réels du jeu">
         <article>
-            <a class="entry-galaxy-preview" href="{{ asset('art/ui-preview-galaxy.png') }}" aria-labelledby="entry-galaxy-zoom">
+            <a class="entry-galaxy-preview" href="{{ asset('art/ui-preview-galaxy.png') }}">
                 <picture>
                     <source type="image/webp" srcset="{{ asset('art/ui-preview-galaxy.webp') }}">
                     <img src="{{ asset('art/ui-preview-galaxy.png') }}" alt="Carte interactive de la galaxie sur un compte de démonstration, avec ses systèmes et ses commandes d’exploration" width="1440" height="1000" loading="lazy">
@@ -58,7 +58,7 @@
                 <div class="entry-exploration-copy">
                     <h2>Explorez la galaxie</h2>
                     <p>Découvrez des systèmes inconnus, préparez vos missions et étendez votre empire.</p>
-                    <span id="entry-galaxy-zoom" class="entry-exploration-link">{{ ui.icon('arrow') }} Ouvrir l’aperçu de la galaxie</span>
+                    <span class="entry-exploration-link">{{ ui.icon('arrow') }} Ouvrir l’aperçu de la galaxie</span>
                 </div>
             </a>
         </article>

@@ -45,7 +45,7 @@ test('Les visuels WebP et les cartes légères restent décodables sur les parco
   await imageDownload(page, '/', 'img[src*="ui-preview-galaxy.png"]', /ui-preview-galaxy[.]webp$/, 150_000, true);
   const galaxyZoom = page.locator('a[href*="ui-preview-galaxy.png"]');
   await expect(galaxyZoom).toHaveCount(1);
-  await expect(galaxyZoom).toHaveAccessibleName('Ouvrir l’aperçu de la galaxie');
+  await expect(galaxyZoom).toHaveAccessibleName(/Explorez la galaxie.*Ouvrir l’aperçu de la galaxie/);
   await expect(galaxyZoom.locator('img')).toHaveAttribute('loading', 'lazy');
   await page.goto('/inscription');
   await page.getByLabel('Adresse email').fill(email);
