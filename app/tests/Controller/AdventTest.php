@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\{AdventClaim, AdventEdition, Planet, Player, Universe};
-use App\Service\Advent\{AdventCohortCapture, AdventEditions, AdventParticipation, AdventRewards};
+use App\Service\Advent\{AdventCohortCapture, AdventEditions, AdventParticipation, AdventQueueCredits, AdventRewards};
 use App\Service\Universe\{UniverseImporter, UniverseService};
 use App\Service\Colony\ResourceService;
 use App\Service\Player\RegistrationService;
+use App\Service\Queue\QueueService;
 use App\Validator\DTO\RegistrationData;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -436,6 +437,80 @@ final class AdventTest extends WebTestCase
             self::assertSame(count($codes), (int) $db->fetchOne('SELECT COUNT(*) FROM profile_cosmetic WHERE equipped = 1'));
             $crawler = $this->client->followRedirect();
         }
+    }
+
+    public function testResearchAndHullVouchersUseTheNativeQueueAndNeverRefundTheDiscount(): void
+    {
+        $admin = $this->player('AdventCreditAdmin', admin: true);
+        $id = $this->publishConsolidated($admin);
+        $this->clock->sleep(8 * 3600);
+        $member = $this->player('AdventCreditPlayer');
+        $membership = $member->currentPlayerUniverse;
+        $planet = $this->planet($member);
+        $edition = $this->em->find(AdventEdition::class, $id);
+        static::getContainer()->get(AdventParticipation::class)->bind($member, $membership, $edition);
+        $this->clock->sleep(11 * 86400);
+        $rewards = static::getContainer()->get(AdventRewards::class);
+        self::assertSame('credit_ready', $rewards->open($member, $membership, $planet, $edition, 6, 1)['state']);
+        self::assertSame('credit_ready', $rewards->open($member, $membership, $planet, $edition, 12, 0)['state']);
+        $membership->catalogUnlocks['v2:planet:'.$planet->id.':ships:transport:basic'] = true;
+        $membership->catalogUnlocks['v2:universe:technologies:engineering_foundations:basic'] = true;
+        $membership->catalogUnlocks['v2:universe:technologies:colonial_expansion:basic'] = true;
+        $lab = new \App\Entity\PlanetBuilding();
+        $lab->planet = $planet;
+        $lab->slug = 'lab';
+        $lab->tier = 'basic';
+        $lab->level = 1;
+        $this->em->persist($lab);
+        $this->em->flush();
+        $colony = $planet->id;
+        $db = $this->em->getConnection();
+        $researchId = (int) $db->fetchOne('SELECT id FROM advent_claim WHERE door = 12');
+        $shipId = (int) $db->fetchOne('SELECT id FROM advent_claim WHERE door = 6');
+        $this->fixtureStocks($colony, '2026-12-11 23:00:00', ['metal' => 9900, 'nano' => 9900, 'antimatter' => 9900, 'hydrogen' => 9900, 'electricity' => 9900]);
+
+        $this->client->getCookieJar()->clear();
+        $this->client->loginUser($member);
+        $url = '/evenements/avent/'.$id.'/avoirs/'.$researchId;
+        $this->client->request('GET', $url.'?colony='.$colony.'&item=colonial_expansion%3Abasic');
+        self::assertResponseStatusCodeSame(422);
+        self::assertNull($db->fetchOne('SELECT delivered_at FROM advent_claim WHERE id = ?', [$researchId]));
+        $crawler = $this->client->request('GET', $url.'?colony='.$colony.'&item=engineering_foundations%3Abasic');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('main', 'La remise est utilisée à l’ajout en file');
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM queue_item'));
+        $control = $this->em->find(Player::class, $member->id)->currentPlayerUniverse;
+        $target = $this->em->find(Planet::class, $colony);
+        $offer = static::getContainer()->get(AdventQueueCredits::class)->offer($control, $id, $researchId);
+        $queue = static::getContainer()->get(QueueService::class);
+        $quote = $queue->adventPreview($control, $target, 'technologies', 'engineering_foundations', 'basic', $offer);
+        $before = $db->fetchAllKeyValue('SELECT resource_type, current_stock FROM planet_resource WHERE planet_id = ?', [$colony]);
+        $this->client->submit($crawler->selectButton('Confirmer et utiliser la remise')->form());
+        self::assertResponseRedirects('/evenements/avent/'.$id, 303);
+        $command = $db->fetchAssociative("SELECT id, paid_costs, duration_seconds FROM queue_item WHERE queue_type = 'research'");
+        self::assertSame($quote['paid'], json_decode($command['paid_costs'], true));
+        self::assertSame($quote['duration'], (int) $command['duration_seconds']);
+        self::assertSame((int) $command['id'], (int) $db->fetchOne('SELECT redeemed_queue_id FROM advent_claim WHERE id = ?', [$researchId]));
+        $this->client->request('GET', $url.'?colony='.$colony.'&item=engineering_foundations%3Abasic');
+        self::assertResponseStatusCodeSame(404);
+        $control = $this->em->find(Player::class, $member->id)->currentPlayerUniverse;
+        $queue->cancel($control, (int) $command['id'], bin2hex(random_bytes(16)));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM queue_item'));
+        self::assertNotNull($db->fetchOne('SELECT delivered_at FROM advent_claim WHERE id = ?', [$researchId]));
+        foreach ($db->fetchAllKeyValue('SELECT resource_type, current_stock FROM planet_resource WHERE planet_id = ?', [$colony]) as $resource => $after) {
+            self::assertLessThanOrEqual((float) $before[$resource] + 0.01, (float) $after);
+        }
+
+        $crawler = $this->client->request('GET', '/evenements/avent/'.$id.'/avoirs/'.$shipId.'?colony='.$colony);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('main', 'équivalents métal');
+        $this->client->submit($crawler->selectButton('Confirmer et utiliser la remise')->form());
+        self::assertResponseRedirects('/evenements/avent/'.$id, 303);
+        $ship = $db->fetchAssociative("SELECT item_slug, tier, quantity FROM queue_item WHERE queue_type = 'shipyard'");
+        self::assertSame('transport', $ship['item_slug']);
+        self::assertSame('basic', $ship['tier']);
+        self::assertSame(1, (int) $ship['quantity']);
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM fleet_ship WHERE slug = 'transport'"));
     }
 
     public function testLateCaptureNeverPretendsToBeMidnight(): void
