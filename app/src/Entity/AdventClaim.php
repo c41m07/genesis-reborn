@@ -39,6 +39,17 @@ class AdventClaim
     #[ORM\Column(type: 'json')]
     public array $resources;
 
+    /** Lot figé pour les compositions et avoirs de l’édition consolidée. */
+    #[ORM\Column(type: 'json', nullable: true)]
+    public ?array $award = null;
+
+    /** @var array<string,int>|null Montants déjà versés, séparés du droit initial. */
+    #[ORM\Column(type: 'json', nullable: true)]
+    public ?array $creditedResources = null;
+
+    #[ORM\Column(nullable: true)]
+    public ?int $redeemedQueueId = null;
+
     #[ORM\Column]
     public \DateTimeImmutable $openedAt;
 

@@ -20,6 +20,12 @@ class AdventEdition
     #[ORM\Column(length: 120)]
     public string $name;
 
+    #[ORM\Column(length: 24, options: ['default' => 'custom'])]
+    public string $plan = 'custom';
+
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $cohortCapturedAt = null;
+
     #[ORM\Column]
     public \DateTimeImmutable $startsAt;
 

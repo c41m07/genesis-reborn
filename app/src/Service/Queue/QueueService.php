@@ -36,6 +36,7 @@ final class QueueService
         private \App\Service\Colony\EconomicUnitCapacity $economicUnits,
         private \App\Service\Combat\LocalGarrison $garrison,
         private FirstSteps $firstSteps,
+        private \App\Service\Advent\AdventQueueCredits $adventCredits,
     )
     {
     }
@@ -49,9 +50,10 @@ final class QueueService
         string $requestKey,
         string $tier = 'basic',
         bool $guided = false,
+        ?int $adventCreditId = null,
     ): int
     {
-        return $this->manager->transaction(function () use ($membership, $planet, $group, $slug, $quantity, $requestKey, $tier, $guided) {
+        return $this->manager->transaction(function () use ($membership, $planet, $group, $slug, $quantity, $requestKey, $tier, $guided, $adventCreditId) {
             $this->guard->lock($membership, $planet);
             $this->vacations->assertCanManageQueues($membership);
             // Les niveaux et les stocks doivent tenir compte des commandes déjà échues avant tout nouvel achat.
@@ -115,7 +117,13 @@ final class QueueService
             if ($failures) {
                 throw new \DomainException('Déblocage initial : ' . implode(', ', array_unique($failures)) . '.');
             }
-            if (in_array($group, ['ships', 'defenses'], true)) {
+            if ($adventCreditId !== null && $group === 'ships') {
+                // Le bon porte sur une coque. Contrôler la place et la borne
+                // du stock sans exiger le prix entier avant la remise.
+                if ($quantity !== 1 || $this->unitCapacity($membership, $planet, $group, $slug, $tier, $definition, $buildings) < 1) {
+                    throw new \DomainException('Cette commande ne peut pas accueillir une coque avec le bon de l’Avent.');
+                }
+            } elseif (in_array($group, ['ships', 'defenses'], true)) {
                 $maximum = $this->unitMaximum($membership, $planet, $group, $slug, $tier, $definition, $buildings, $config, $technologies);
                 if ($maximum < 1) {
                     if ($this->economicUnits->constructionLimit($planet, $definition, $buildings) === 0) {
@@ -127,7 +135,12 @@ final class QueueService
             }
             $plan = $this->calculator->calculate($definition, $group, $level, $quantity, $buildings, $config, $technologies);
             $duration = $plan['duration'];
-            $this->resources->consume($planet, $plan['costs']);
+            $credit = $adventCreditId === null ? null : $this->adventCredits->paymentLocked(
+                $adventCreditId, $membership, $group, $slug, $tier, $level, $quantity, $previousLevel === null, $plan['costs'],
+            );
+            // L’annulation utilise paidCosts, jamais le tarif avant la remise.
+            $paidCosts = $credit['paid'] ?? $plan['costs'];
+            $this->resources->consume($planet, $paidCosts);
             $item = new QueueItem();
             $item->planet = $planet;
             $item->playerUniverse = $membership;
@@ -136,7 +149,7 @@ final class QueueService
             $item->tier = $tier;
             $item->itemLevel = in_array($group, ['buildings', 'technologies'], true) ? $level : null;
             $item->quantity = $quantity;
-            $item->paidCosts = $plan['costs'];
+            $item->paidCosts = $paidCosts;
             $item->firstStepsGuided = $guided && FirstStepRewardPolicy::queueStep($queueType, $slug, $tier, $item->itemLevel) !== null;
             $item->durationSeconds = $duration;
             $item->queuedAt = $this->clock->now();
@@ -144,6 +157,9 @@ final class QueueService
             $item->dispatchToken = Uuid::v4()->toRfc4122();
             $this->manager->save($item);
             $this->manager->flush();
+            if ($credit !== null) {
+                $this->adventCredits->completeLocked($credit['claim'], $item, $planet);
+            }
             if (!$queue) {
                 $this->start($item, $this->clock->now());
             }
@@ -299,6 +315,13 @@ final class QueueService
         array $technologies,
     ): int
     {
+        $limit = $this->unitCapacity($membership, $planet, $group, $slug, $tier, $definition, $buildings);
+
+        return $this->calculator->maximum($definition, $group, $this->resources->snapshot($planet), $buildings, $config, $technologies, $limit);
+    }
+
+    private function unitCapacity(PlayerUniverse $membership, Planet $planet, string $group, string $slug, string $tier, array $definition, array $buildings): int
+    {
         $owned = $group === 'defenses' ? $this->repo->one(PlanetDefense::class, ['planet' => $planet, 'slug' => $slug, 'tier' => $tier])?->quantity ?? 0 : $this->repo->one(FleetShip::class, ['fleet' => $this->repo->one(Fleet::class, ['homePlanet' => $planet, 'playerUniverse' => $membership, 'status' => 'idle']), 'slug' => $slug, 'tier' => $tier])?->quantity ?? 0;
         $limit = 2147483647 - $owned;
         foreach ($this->repo->queue($planet, 'shipyard') as $item) {
@@ -307,7 +330,7 @@ final class QueueService
             }
         }
         $limit = min($limit, $this->economicUnits->constructionLimit($planet, $definition, $buildings));
-        return $this->calculator->maximum($definition, $group, $this->resources->snapshot($planet), $buildings, $config, $technologies, max(0, $limit));
+        return max(0, $limit);
     }
 
     private function start(QueueItem $item, \DateTimeImmutable $at): void
