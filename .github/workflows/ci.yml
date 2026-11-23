@@ -46,7 +46,9 @@ jobs:
       - id: plan
         env:
           CATEGORY: ${{ github.event.pull_request.draft && 'development' || inputs.category || 'all' }}
-        run: python3 scripts/ci-categories.py
+        run: |
+          python3 -m unittest discover -s app/tests/scripts -p test_ci_browser_batches.py
+          python3 scripts/ci-categories.py
 
   static:
     needs: select
@@ -95,21 +97,31 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: ./.github/actions/prepare-ci
         with:
-          assets: 'false'
+          frontend: none
       - run: docker compose --env-file .env.local pull database
       - run: make test-python test-backup
 
   reference:
     needs: select
     if: needs.select.outputs.browser != '[]'
-    name: Base de référence navigateur
+    name: Base de référence et répartition navigateur
+    outputs:
+      batches: ${{ steps.batches.outputs.batches }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: ./.github/actions/prepare-ci
         with:
-          assets: 'false'
+          frontend: install
       - run: make test-browser BROWSER_ARGS="--prepare-reference $RUNNER_TEMP/browser-reference"
+      - name: Répartir les fichiers découverts sur ce commit
+        id: batches
+        env:
+          CI_SCOPE: ${{ needs.select.outputs.scope }}
+          BROWSER_CATEGORIES: ${{ needs.select.outputs.browser }}
+        run: |
+          app/node_modules/.bin/playwright test --config app/playwright.config.mjs --list --reporter=json > "$RUNNER_TEMP/inventory.json"
+          python3 scripts/ci_browser_batches.py "$RUNNER_TEMP/inventory.json" "$RUNNER_TEMP/browser-reference/batches"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: browser-reference-${{ github.sha }}
@@ -126,8 +138,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(needs.select.outputs.browser) }}
-    name: Navigateur · ${{ matrix.label }}
+        include: ${{ fromJSON(needs.reference.outputs.batches) }}
+    name: Navigateur · ${{ matrix.label }} · ${{ matrix.part }}/${{ matrix.total }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: ./.github/actions/prepare-ci
@@ -141,9 +153,10 @@ jobs:
       - name: Parcours · ${{ matrix.category }}
         env:
           CATEGORY: ${{ matrix.category }}
+          TEST_LIST: ${{ matrix.list }}
           BROWSER_PERSISTENCE: '1'
           BROWSER_REFERENCE_DIR: ${{ runner.temp }}/browser-reference
-        run: make test-browser BROWSER_ARGS="--project=$CATEGORY"
+        run: make test-browser BROWSER_ARGS="--project=$CATEGORY --test-list=$BROWSER_REFERENCE_DIR/batches/$TEST_LIST"
 
   complete:
     needs: [select, static, php, backup, reference, browser]

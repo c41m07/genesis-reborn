@@ -426,9 +426,9 @@ Pendant la CI, le travail peut continuer sur un lot indépendant, avec une autre
 
 La CI complète affiche un job de qualité et de compilation, cinq jobs PHPUnit
 (Unitaires, Services, Contrôleurs, Intégration et schéma MariaDB, Rendu Twig),
-un job de sauvegarde et restauration, et quatre jobs navigateur (Audits
+un job de sauvegarde et restauration, et quatre catégories navigateur (Audits
 d’interface, Administration, Empire et progression, Flottes et interactions).
-Les quatre jobs navigateur restaurent chacun une copie de la même base
+Chaque catégorie se répartit en un à quatre jobs parallèles selon la durée estimée de ses fichiers. Chaque job navigateur restaure une copie de la même base
 synthétique préparée une fois pour le commit. Les cinq contrôles GitHub
 obligatoires valident le résultat de tous ces jobs avant fusion.
 
