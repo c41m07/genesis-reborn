@@ -23,7 +23,7 @@ $member = $origin?->owner;
 if (!$member || !preg_match('/^p22-[a-f0-9]{8}@example[.]test$/D', $member->player->email)) {
     throw new RuntimeException('Le compte doit avoir été créé par la fixture P22.');
 }
-$at = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+$at = new DateTimeImmutable(gmdate(DATE_ATOM));
 $key = 'balise_17';
 $mode = $argv[2] ?? '';
 $token = 'p22-browser-fixture';
