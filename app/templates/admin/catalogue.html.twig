@@ -2,26 +2,41 @@
 {% set groupLabels = {'buildings':'Bâtiments','technologies':'Technologies','ships':'Vaisseaux','defenses':'Défenses'} %}
 {% block title %}{{ editing ? item.label : (query ? 'Recherche dans les catalogues' : groupLabels[group]) }} · {{ universe.name }}{% endblock %}
 {% block body %}
-<div class="page-heading"><div><p class="eyebrow">Équilibrage · {{ universe.name }}</p><h1>{{ editing ? 'Modifier '~item.label : (query ? 'Recherche dans les catalogues' : groupLabels[group]) }}</h1><p>Les valeurs s’appliquent uniquement à cet univers. Les opérations déjà en file conservent leurs coûts et durées enregistrés.</p></div>{% if editing %}<a class="secondary" href="{{ path('app_admin_catalogue_group',{id:universe.id,group:group}) }}">Retour aux {{ groupLabels[group]|lower }}</a>{% endif %}</div>
+<div class="page-heading admin-task-heading"><div><p class="eyebrow">Équilibrage · {{ universe.name }}</p><h1>{{ editing ? 'Modifier '~item.label : (query ? 'Recherche dans les catalogues' : groupLabels[group]) }}</h1><p>Les valeurs s’appliquent uniquement à cet univers. Les opérations déjà en file conservent leurs coûts et durées enregistrés.</p></div>{% if editing %}<a class="secondary" href="{{ path('app_admin_catalogue_group',{id:universe.id,group:group}) }}">Retour aux {{ groupLabels[group]|lower }}</a>{% endif %}</div>
 <nav class="admin-page-navigation" aria-label="Familles de catalogues">{% for key,label in groupLabels %}<a href="{{ path('app_admin_catalogue_group',{id:universe.id,group:key}) }}"{% if key==group and not query %} aria-current="{{ editing ? 'location' : 'page' }}"{% endif %}>{{ label }}</a>{% endfor %}</nav>
- {% if editing %}<p><a class="secondary" href="{{ path('app_admin_catalogue_history', {id: universe.id, group: group, slug: item.slug}) }}">Consulter l’historique et comparer les versions</a></p>{% endif %}
-{% if editing %}<section class="panel"><h2>Valeurs de {{ item.label }}</h2><p>La production est matérialisée puis recalculée à l’enregistrement. Les références peuvent être restaurées pour cette entrée.</p>{% include 'admin/_catalogue_form.html.twig' %}</section>
+ {% if editing %}<p class="admin-catalogue-history-link"><a class="secondary" href="{{ path('app_admin_catalogue_history', {id: universe.id, group: group, slug: item.slug}) }}">Consulter l’historique et comparer les versions</a></p>{% endif %}
+{% if editing %}<section class="panel admin-catalogue-entry"><h2>Valeurs de {{ item.label }}</h2><p>La production est matérialisée puis recalculée à l’enregistrement. Les références peuvent être restaurées pour cette entrée.</p>{% include 'admin/_catalogue_form.html.twig' %}</section>
 {% else %}
 <form method="get" action="{{ path('app_admin_catalogue',{id:universe.id}) }}" class="admin-page-search" role="search"><label for="catalogue-query">Rechercher dans toutes les familles</label><input id="catalogue-query" name="q" type="search" maxlength="150" value="{{ query }}" placeholder="Nom, identifiant ou rang"><button class="primary">Rechercher</button>{% if query %}<a href="{{ path('app_admin_catalogue_group',{id:universe.id,group:group}) }}">Effacer la recherche</a>{% endif %}</form>
 {% set resultCount = 0 %}
-<div class="admin-module-grid admin-catalogue-grid">
-    {% for family, items in catalogues %}
-        {% for entry in items %}
-            {% set resultCount = resultCount + 1 %}
-            <article class="panel">
-                <h2>{{ entry.label }}</h2>
-                <p class="admin-catalogue-reference">{{ groupLabels[family] }} · <code>{{ entry.slug }}</code></p>
-                <p>{{ entry.tier_labels|join(' · ') }}</p>
-                <a class="secondary" href="{{ path('app_admin_catalogue_edit', {id: universe.id, group: family, slug: entry.slug}) }}">Modifier {{ entry.label }}</a>
-            </article>
+<section class="panel admin-catalogue-list" aria-labelledby="admin-catalogue-list-title">
+    <h2 id="admin-catalogue-list-title">Fiches du catalogue</h2>
+    <table class="admin-design-table" role="table" aria-labelledby="admin-catalogue-list-title">
+        <thead role="rowgroup">
+            <tr role="row">
+                <th scope="col" role="columnheader">Fiche</th>
+                <th scope="col" role="columnheader">Famille</th>
+                <th scope="col" role="columnheader">Rangs disponibles</th>
+                <th scope="col" role="columnheader">Ouvrir</th>
+            </tr>
+        </thead>
+        <tbody role="rowgroup">
+        {% for family, items in catalogues %}
+            {% for entry in items %}
+                {% set resultCount = resultCount + 1 %}
+                <tr role="row">
+                    <th scope="row" role="rowheader">{{ entry.label }} <small><code>{{ entry.slug }}</code></small></th>
+                    <td role="cell" data-label="Famille">{{ groupLabels[family] }}</td>
+                    <td role="cell" data-label="Rangs disponibles">{{ entry.tier_labels|join(' · ') }}</td>
+                    <td role="cell" class="admin-design-table-action">
+                        <a class="admin-design-row-link" href="{{ path('app_admin_catalogue_edit', {id: universe.id, group: family, slug: entry.slug}) }}">Modifier {{ entry.label }}</a>
+                    </td>
+                </tr>
+            {% endfor %}
         {% endfor %}
-    {% endfor %}
-</div>
+        </tbody>
+    </table>
+</section>
 {% if resultCount == 0 %}<p class="panel" role="status">Aucune entrée ne correspond à cette recherche.</p>{% endif %}
 {% endif %}
 {% endblock %}

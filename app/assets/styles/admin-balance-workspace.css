@@ -193,3 +193,92 @@ body.admin-console.admin-balance-workspace .admin-catalogue-reset {
 
 .admin-balance-workspace .admin-history-table { font-variant-numeric: tabular-nums; }
 .admin-balance-workspace .admin-history-revision { display: block; margin-top: 4px; color: var(--text); line-height: 1.35; }
+
+/* A : table de consultation native. En étroit les mêmes lignes se lisent
+   verticalement, sans dupliquer les liens ni les données. */
+.admin-balance-workspace .admin-design-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+    table-layout: fixed;
+}
+
+.admin-balance-workspace .admin-design-table :is(th,td) {
+    padding: 10px 14px;
+    text-align: start;
+    border-bottom: 1px solid var(--line);
+    overflow-wrap: anywhere;
+}
+
+.admin-balance-workspace .admin-design-table thead th { color: var(--muted); background: var(--admin-raised); }
+.admin-balance-workspace .admin-design-table thead th:nth-child(1) { width: 30%; }
+.admin-balance-workspace .admin-design-table thead th:nth-child(2) { width: 15%; }
+.admin-balance-workspace .admin-design-table thead th:nth-child(3) { width: 30%; }
+.admin-balance-workspace .admin-design-table tbody tr:nth-child(even) { background: color-mix(in srgb,var(--bg) 30%,var(--panel)); }
+.admin-balance-workspace .admin-design-table tbody th small { display: block; margin-top: 4px; font-weight: 400; }
+.admin-balance-workspace .admin-design-row-link { display: inline-flex; min-height: 44px; align-items: center; font-weight: 700; }
+.admin-balance-workspace .admin-catalogue-history-link { margin-block: 0 16px; }
+.admin-balance-workspace .admin-catalogue-history-link .secondary { width: fit-content; min-height: 44px; }
+.admin-balance-workspace .admin-catalogue-list { margin-bottom: 12px; }
+
+body.admin-console.admin-balance-workspace .admin-page-search {
+    grid-template-columns: minmax(0, 40rem) max-content;
+    align-items: end;
+    justify-content: start;
+    margin: 16px 0 20px;
+}
+body.admin-console.admin-balance-workspace .admin-page-search label { grid-column: 1 / -1; }
+body.admin-console.admin-balance-workspace .admin-page-search button { min-height: 48px; }
+body.admin-console.admin-balance-workspace .admin-page-search > a { grid-column: 1 / -1; }
+
+/* B : la comparaison reste avant la décision dans le DOM et au clavier.
+   Sur tablette et mobile, le rail retourne dans le flux. */
+.admin-balance-workspace :is(.admin-restoration-layout,.admin-catalogue-decision-layout) {
+    display: grid;
+    grid-template-columns: minmax(0,2fr) minmax(19rem,1fr);
+    gap: 18px;
+    align-items: start;
+}
+.admin-balance-workspace .admin-restoration-layout > .panel { margin: 0; }
+.admin-balance-workspace .admin-design-restore-decision .secondary { min-height: 44px; margin-top: 12px; }
+.admin-balance-workspace .admin-design-restore-decision .primary { min-height: 46px; }
+.admin-balance-workspace .admin-catalogue-publication,
+body.admin-console.admin-balance-workspace .admin-catalogue-editor .admin-catalogue-preview-inputs,
+body.admin-console.admin-balance-workspace .admin-catalogue-costs fieldset {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--admin-raised);
+}
+body.admin-console.admin-balance-workspace .admin-catalogue-costs legend { padding: 0 7px; }
+body.admin-console.admin-balance-workspace .admin-catalogue-publication h3 { margin: 0; }
+.admin-balance-workspace .admin-design-comparison { width: 100%; table-layout: fixed; font-variant-numeric: tabular-nums; }
+.admin-balance-workspace .admin-design-comparison :is(th,td):nth-child(n+2) { text-align: end; width: 27%; }
+.admin-balance-workspace .admin-design-comparison :is(th,td) { overflow-wrap: anywhere; }
+
+@media (max-width: 1080px) {
+    .admin-balance-workspace :is(.admin-restoration-layout,.admin-catalogue-decision-layout) {
+        grid-template-columns: minmax(0,1fr);
+    }
+}
+
+@media (max-width: 760px) {
+    body.admin-console.admin-balance-workspace .admin-page-search { grid-template-columns: minmax(0,1fr); }
+    .admin-balance-workspace .admin-design-table :is(tbody, tr, th, td) { display: block; width: 100%; }
+    .admin-balance-workspace .admin-design-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+    .admin-balance-workspace .admin-design-table tbody tr { padding-block: 5px; border-bottom: 1px solid var(--line); }
+    .admin-balance-workspace .admin-design-table tbody :is(th,td) { border-bottom: 0; padding: 6px 10px; }
+    .admin-balance-workspace .admin-design-table td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        color: var(--muted);
+        font-size: .86em;
+    }
+}
