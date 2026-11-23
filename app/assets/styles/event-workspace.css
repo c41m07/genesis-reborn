@@ -731,6 +731,14 @@ body.authenticated .advent-credit-board {
     --advent-credit-border: color-mix(in srgb, var(--line) 78%, var(--accent));
     --advent-credit-surface: color-mix(in srgb, var(--panel) 94%, var(--accent));
     --advent-credit-ink: var(--text);
+    --advent-credit-remise: var(--accent);
+    --advent-credit-payment: var(--gold);
+    --advent-credit-danger: var(--danger, #ff9b9b);
+}
+body.authenticated[data-theme="light"] .advent-credit-board {
+    --advent-credit-remise: #0b5971;
+    --advent-credit-payment: #6c4410;
+    --advent-credit-danger: #9f2936;
 }
 body.authenticated .advent-credit-board .page-heading {
     gap: 1rem 1.5rem;
@@ -836,6 +844,15 @@ body.authenticated .advent-credit-board thead th {
     background: color-mix(in srgb, var(--panel) 87%, var(--accent));
     color: var(--advent-credit-ink);
 }
+body.authenticated .advent-credit-board thead th:nth-child(2) {
+    color: var(--advent-credit-remise);
+}
+body.authenticated .advent-credit-board thead th:last-child {
+    color: var(--advent-credit-payment);
+}
+body.authenticated .advent-credit-board button[aria-describedby="advent-credit-usage"] {
+    min-inline-size: min(23rem, 100%);
+}
 body.authenticated .advent-credit-board tbody td:last-child {
     color: var(--advent-credit-ink);
     font-weight: 800;
@@ -848,8 +865,8 @@ body.authenticated .advent-credit-board :is(.advent-credit-note, .advent-credit-
     color: var(--advent-credit-ink);
 }
 body.authenticated .advent-credit-board .advent-credit-stock-warning {
-    border-color: color-mix(in srgb, var(--line) 52%, var(--danger));
-    background: color-mix(in srgb, var(--panel) 91%, var(--danger));
+    border-color: color-mix(in srgb, var(--line) 52%, var(--advent-credit-danger));
+    background: color-mix(in srgb, var(--panel) 91%, var(--advent-credit-danger));
 }
 body.authenticated .advent-credit-board :is(a, select, button):focus-visible {
     outline: 2px solid var(--accent);

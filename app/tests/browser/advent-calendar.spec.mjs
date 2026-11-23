@@ -220,10 +220,17 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
         await researchDoor.getByRole('radio').press('Space');
         await researchDoor.getByLabel('Colonie destinataire').selectOption(String(colony));
         await researchDoor.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).press('Enter');
-        await researchDoor.getByRole('link', { name: 'Voir le devis de cette remise' }).press('Enter');
+        const researchCredit = researchDoor.getByRole('link', { name: 'Voir le devis de cette remise' });
+        await expect(researchCredit).toBeVisible();
+        await researchCredit.focus();
+        await expect(researchCredit).toBeFocused();
+        const researchCreditUrl = new URL(await researchCredit.getAttribute('href'), baseURL).href;
+        await researchCredit.press('Enter');
+        await expect(mobile).toHaveURL(researchCreditUrl);
         await expect(mobile.getByRole('heading', { name: 'Remise de recherche' })).toBeVisible();
         await expect(mobile.getByRole('button', { name: 'Calculer le devis' })).toBeVisible();
-        await mobile.getByRole('link', { name: 'Retour au calendrier' }).press('Enter');
+        await mobile.getByRole('link', { name: 'Retour au calendrier' }).click();
+        await expect(mobile).toHaveURL(new URL('/evenements/avent/' + edition, baseURL).href);
         await mobile.getByRole('link', { name: /^Porte 18,/ }).press('Enter');
         const fightDoor = mobile.locator('#advent-door-18');
         await fightDoor.getByRole('radio').press('Space');
@@ -332,6 +339,16 @@ test('Avent : devis J6 et J12 maquetés, calcul et confirmation séparés', asyn
         storageState: await page.context().storageState(),
     });
     const proof = process.env.GR_AVENT_QUOTE_PROOF_DIRECTORY;
+    async function captureActualQuote(view, name, width, height) {
+        if (!proof) return;
+        // Capturer la navigation standard avec JavaScript, distincte du contrôle natif.
+        await page.setViewportSize({ width, height });
+        await openAdventDocument(page, view.url());
+        await expect(page.locator('.advent-credit-board')).toBeVisible();
+        await expect(page.locator('.advent-credit-board')).toHaveAttribute(
+            'data-advent-credit-day', await view.locator('.advent-credit-board').getAttribute('data-advent-credit-day'));
+        await page.screenshot({ path: proof + '/' + name + '.png', fullPage: width === 390 });
+    }
     const quoteUrl = {};
     const heading = { 6: 'Bon de construction', 12: 'Remise de recherche' };
     const rowName = { 6: /Cargo de ligne.*Basique/, 12: /niveau 1/ };
@@ -376,9 +393,7 @@ test('Avent : devis J6 et J12 maquetés, calcul et confirmation séparés', asyn
             } else {
                 await expect(mobile.getByRole('heading', { level: 1, name: heading[day] })).toBeVisible();
                 await expect(mobile.locator('[data-advent-credit-day="' + day + '"]')).toBeVisible();
-                if (proof && day === 6) {
-                    await mobile.screenshot({ path: proof + '/AVENT_J6_AVANT_CHOIX_390.png', fullPage: true });
-                }
+                if (day === 6) await captureActualQuote(mobile, 'AVENT_J6_AVANT_CHOIX_390', 390, 844);
             }
             await mobile.getByRole('link', { name: 'Retour au calendrier', exact: true }).click();
             await expect(mobile).toHaveURL(new URL('/evenements/avent/' + edition, baseURL).href);
@@ -392,9 +407,7 @@ test('Avent : devis J6 et J12 maquetés, calcul et confirmation séparés', asyn
         await pick(mobile, 12);
         await expect(mobile.getByText('Le stock de la colonie ne suffit pas.', { exact: false })).toBeVisible();
         await expect(submit(mobile)).toHaveCount(0);
-        if (proof) {
-            await mobile.screenshot({ path: proof + '/AVENT_J12_STOCK_INSUFFISANT_390.png', fullPage: true });
-        }
+        await captureActualQuote(mobile, 'AVENT_J12_STOCK_INSUFFISANT_390', 390, 844);
         setStocks(9900);
         expect(countQueue()).toBe(0);
 
@@ -415,8 +428,8 @@ test('Avent : devis J6 et J12 maquetés, calcul et confirmation séparés', asyn
                     });
                     expect(width === 1920 ? layout.inline : layout.stacked).toBe(true);
                     expect(await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
-                    if (proof && width !== 360) {
-                        await mobile.screenshot({ path: proof + '/AVENT_J' + day + '_DEVIS_' + width + '_' + theme + '.png', fullPage: width === 390 });
+                    if (width !== 360) {
+                        await captureActualQuote(mobile, 'AVENT_J' + day + '_DEVIS_' + width + '_' + theme, width, height);
                     }
                 }
             }
