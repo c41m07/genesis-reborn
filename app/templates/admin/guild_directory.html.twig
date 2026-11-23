@@ -7,9 +7,14 @@
 {% set projectLabels = {active:'En cours',completed:'Terminé',abandoned:'Abandonné'} %}
 {% set sectionLabels = {members:'Membres et direction', diplomacy:'Diplomatie', projects:'Projets lancés'} %}
 <div class="page-heading"><div><p class="eyebrow">Consultation administrative</p><h1>{{ guild ? guild.name : 'Guildes actives' }}</h1>
-<p>Lecture seule. Aucun changement de membre, direction, traité ou projet. Les messages privés et coordonnées de compte ne sont pas affichés.</p></div></div>
+<p>Lecture seule. Aucun changement de membre, direction, traité ou projet. Les messages privés et coordonnées de compte ne sont pas affichés.</p></div>
+<p class="admin-design-badge">Consultation</p></div>
 {% if guild %}
-<p>{{ guild.universe_name }} · Direction : {{ guild.leader_name|default('Empire oublié', true) }} · Participation n° {{ guild.leader_id }}</p>
+<dl class="admin-design-facts" aria-label="Contexte de la guilde">
+    <div><dt>Univers</dt><dd>{{ guild.universe_name }}</dd></div>
+    <div><dt>Direction</dt><dd>{{ guild.leader_name|default('Empire oublié', true) }}</dd></div>
+    <div><dt>Participation</dt><dd>n° {{ guild.leader_id }}</dd></div>
+</dl>
 <p><a href="{{ path('app_admin_guild_directory', {universe:guild.universe_id}) }}">Retour aux guildes de cet univers</a></p>
 <nav class="admin-page-navigation" aria-label="Consultation de la guilde">{% for key,label in sectionLabels %}<a href="{{ path('app_admin_guild_detail', {universeId:guild.universe_id,id:guild.id,section:key}) }}"{% if section == key %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
 <h2>{{ sectionLabels[section] }}</h2>

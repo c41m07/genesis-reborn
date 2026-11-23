@@ -5,8 +5,9 @@
 <div class="page-heading">
     <div>
         <h1>{{ caseFile.title }}</h1>
-        <p>Dossier n° {{ caseFile.id }} · {{ statuses[caseFile.status] }} · {{ caseFile.universe ? caseFile.universe.name : 'Plateforme' }}</p>
+        <p>Dossier n° {{ caseFile.id }} · {{ caseFile.universe ? caseFile.universe.name : 'Plateforme' }}</p>
     </div>
+    <p class="admin-design-badge">{{ statuses[caseFile.status] }}</p>
 </div>
 <div class="admin-case-detail-layout">
     <div class="admin-case-main">

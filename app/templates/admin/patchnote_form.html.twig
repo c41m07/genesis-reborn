@@ -4,7 +4,7 @@
 <div class="page-heading"><div><h1>{{ editing ? 'Modifier une patchnote' : 'Nouvelle patchnote' }}</h1><p>Texte simple, affiché aux joueurs avec ses sauts de ligne.</p></div></div>
 <p class="admin-patchnote-actions"><a class="secondary" href="{{ path('app_admin_patchnotes') }}">Toutes les patchnotes</a></p>
 {% if error %}<p class="flash error" role="alert">{{ error }}</p>{% endif %}
-<form method="post" class="admin-patchnote-form" action="{{ editing ? path('app_admin_patchnote_edit', {id: editing.id}) : path('app_admin_patchnote_new') }}">
+<form method="post" class="admin-patchnote-form admin-design-review-grid admin-design-review-grid--decision" action="{{ editing ? path('app_admin_patchnote_edit', {id: editing.id}) : path('app_admin_patchnote_new') }}">
     <input type="hidden" name="_token" value="{{ csrf_token(editing ? 'patchnote_edit_' ~ editing.id : 'patchnote_create') }}">
     <section class="panel" aria-labelledby="patchnote-writing-title">
         <h2 id="patchnote-writing-title">Rédaction</h2>
@@ -44,7 +44,7 @@
         </div>
         <p>En brouillon, aucune date de publication n’est conservée. Une note publiée avec une date future apparaîtra aux joueurs à partir de cette date.</p>
     </section>
-    <div class="admin-patchnote-actions">
+    <div class="admin-patchnote-actions admin-design-actions">
         <button class="primary">{{ editing ? 'Enregistrer la patchnote' : 'Créer la patchnote' }}</button>
         <a class="secondary" href="{{ path('app_admin_patchnotes') }}">Annuler et revenir à la liste</a>
     </div>
