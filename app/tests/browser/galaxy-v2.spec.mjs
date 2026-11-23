@@ -337,14 +337,20 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   const selected = current.systems.slice(1).find(system => system.number === 49) ?? current.systems[1];
   expect(selected, 'la fixture doit proposer un système différent du système par défaut').toBeTruthy();
   const coordinates = selected.galaxy + ':' + selected.number;
+  const assertListSelection = async surface => {
+    const details = surface.getByRole('region', { name: 'Informations du système', exact: true });
+    await expect(details).toBeVisible();
+    await expect(details.locator('header strong')).toHaveText(coordinates + ' · ' + selected.name);
+    await expect(surface.locator('.galaxy-index-table a[aria-current="true"]')).toHaveAccessibleName('Sélectionné ' + coordinates);
+    await expect(surface.getByLabel('Système', { exact: true })).toHaveValue(String(selected.id));
+  };
   await page.getByRole('searchbox', { name: 'Rechercher un système ou une planète connue' }).fill(selected.name);
   await page.locator('.gv2-search-results button').filter({ hasText: selected.name }).first().click();
   await expect(page.locator('.gv2-system-panel').getByRole('heading', { name: coordinates, exact: true })).toBeVisible();
   const list = page.getByRole('link', { name: 'Liste des systèmes', exact: true });
   await expect(list).toHaveAttribute('href', new RegExp('[?&]system='+selected.id+'$'));
   await list.click();
-  await expect(page.locator('#selected-system-title')).toContainText(coordinates + ' ·');
-  await expect(page.getByLabel('Système', { exact: true })).toHaveValue(String(selected.id));
+  await assertListSelection(page);
   const listUrl = page.url();
   await page.getByRole('link', { name: 'Carte interactive', exact: true }).click();
   await expect(page.locator('.gv2-system-panel').getByRole('heading', { name: coordinates, exact: true })).toBeVisible();
@@ -356,10 +362,10 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   try {
     const fallback = await native.newPage();
     await fallback.goto(listUrl);
-    await expect(fallback.locator('#selected-system-title')).toContainText(coordinates + ' ·');
+    await assertListSelection(fallback);
     await fallback.getByRole('link', { name: 'Carte interactive', exact: true }).click();
     await fallback.getByRole('link', { name: 'Liste des systèmes', exact: true }).click();
-    await expect(fallback.locator('#selected-system-title')).toContainText(coordinates + ' ·');
+    await assertListSelection(fallback);
   } finally {
     await native.close();
   }
