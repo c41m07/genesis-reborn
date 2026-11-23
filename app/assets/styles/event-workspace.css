@@ -315,3 +315,32 @@ body.authenticated .event-redesign > .inline-link {
         radial-gradient(ellipse at 70% 82%, #4daeba 0%, #263051 25%, transparent 51%),
         linear-gradient(160deg, #0e1529, #182337 70%, #101725);
 }
+
+.advent-universe {
+    margin-block: 1rem;
+}
+
+.advent-choice {
+    display: grid;
+    gap: .5rem;
+    min-inline-size: 0;
+}
+
+.advent-choice label {
+    display: flex;
+    align-items: start;
+    gap: .65rem;
+    min-block-size: 44px;
+    padding-block: .45rem;
+    overflow-wrap: anywhere;
+}
+
+.advent-admin-brackets {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+}
+
+.advent-admin-brackets li + li {
+    margin-block-start: .65rem;
+}

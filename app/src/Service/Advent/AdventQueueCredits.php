@@ -53,6 +53,31 @@ final readonly class AdventQueueCredits
             throw new \DomainException('Remise de l’Avent indisponible ou déjà utilisée.');
         }
         $offer = json_decode($row['award'], true, 512, JSON_THROW_ON_ERROR);
+        $payment = $this->payment($offer, $group, $slug, $tier, $level, $quantity, $fromCompletedLevel, $costs);
+
+        return ['claim' => $this->em->find(AdventClaim::class, $id), 'paid' => $payment['paid']];
+    }
+
+    /** @return array<string,mixed>|null */
+    public function offer(PlayerUniverse $membership, int $editionId, int $claimId): ?array
+    {
+        if (!$this->editions->enabled || $membership->player?->id === null) {
+            return null;
+        }
+        $row = $this->em->getConnection()->fetchOne(
+            'SELECT c.award FROM advent_claim c
+             JOIN advent_binding b ON b.advent_edition_id = c.advent_edition_id AND b.player_id = c.player_id
+             WHERE c.id = ? AND c.advent_edition_id = ? AND c.player_id = ? AND b.universe_id = ? AND c.delivered_at IS NULL',
+            [$claimId, $editionId, $membership->player->id, $membership->universe->id],
+        );
+        $offer = $row === false || $row === null ? null : json_decode($row, true, 512, JSON_THROW_ON_ERROR);
+
+        return in_array($offer['kind'] ?? null, ['research_discount', 'ship_voucher'], true) ? $offer : null;
+    }
+
+    /** @param array<string,int> $costs @return array{paid:array<string,int>,discount:array<string,int>} */
+    public function payment(array $offer, string $group, string $slug, string $tier, int $level, int $quantity, bool $fromCompletedLevel, array $costs): array
+    {
         $research = ($offer['kind'] ?? null) === 'research_discount' && $group === 'technologies'
             && $fromCompletedLevel && !($slug === 'colonial_expansion' && $level === 1);
         $ship = ($offer['kind'] ?? null) === 'ship_voucher' && $group === 'ships'
@@ -65,7 +90,15 @@ final readonly class AdventQueueCredits
             throw new \DomainException('Cette commande ne permet pas d’utiliser votre remise de l’Avent.');
         }
 
-        return ['claim' => $this->em->find(AdventClaim::class, $id), 'paid' => $payment['paid']];
+        return $payment;
+    }
+
+    /** @param array<string,int> $paid */
+    public static function quoteKey(int $claim, int $membership, int $planet, string $group, string $slug, string $tier, int $level, int $seconds, array $paid): string
+    {
+        ksort($paid);
+
+        return hash('sha256', json_encode([$claim, $membership, $planet, $group, $slug, $tier, $level, $seconds, $paid], JSON_THROW_ON_ERROR));
     }
 
     public function completeLocked(AdventClaim $claim, QueueItem $item, Planet $destination): void

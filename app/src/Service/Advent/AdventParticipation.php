@@ -27,6 +27,17 @@ final readonly class AdventParticipation
         return $this->em->getRepository(AdventBinding::class)->findOneBy(['player' => $player, 'adventEdition' => $edition]);
     }
 
+    /** @return array{bracket:string,observed_at:string,origin:string}|null */
+    public function progression(Player $player, AdventEdition $edition, int $universeId): ?array
+    {
+        $row = $this->em->getConnection()->fetchAssociative(
+            'SELECT bracket, observed_at, origin FROM advent_progression WHERE player_id = ? AND advent_edition_id = ? AND universe_id = ?',
+            [$player->id, $edition->id, $universeId],
+        );
+
+        return $row === false ? null : $row;
+    }
+
     public function bind(Player $player, PlayerUniverse $membership, AdventEdition $edition): void
     {
         $this->manager->transaction(function () use ($player, $membership, $edition): void {

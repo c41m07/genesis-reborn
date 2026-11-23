@@ -8,6 +8,7 @@ use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Requirement\RequirementChecker;
 use App\Service\Colony\{ResourceService, ActionGuard, ResourceWaitEstimate};
+use App\Service\Advent\AdventQueueCredits;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
 use App\Service\Player\FirstStepRewardPolicy;
@@ -36,7 +37,7 @@ final class QueueService
         private \App\Service\Colony\EconomicUnitCapacity $economicUnits,
         private \App\Service\Combat\LocalGarrison $garrison,
         private FirstSteps $firstSteps,
-        private \App\Service\Advent\AdventQueueCredits $adventCredits,
+        private AdventQueueCredits $adventCredits,
     )
     {
     }
@@ -51,9 +52,10 @@ final class QueueService
         string $tier = 'basic',
         bool $guided = false,
         ?int $adventCreditId = null,
+        ?string $adventQuote = null,
     ): int
     {
-        return $this->manager->transaction(function () use ($membership, $planet, $group, $slug, $quantity, $requestKey, $tier, $guided, $adventCreditId) {
+        return $this->manager->transaction(function () use ($membership, $planet, $group, $slug, $quantity, $requestKey, $tier, $guided, $adventCreditId, $adventQuote) {
             $this->guard->lock($membership, $planet);
             $this->vacations->assertCanManageQueues($membership);
             // Les niveaux et les stocks doivent tenir compte des commandes déjà échues avant tout nouvel achat.
@@ -140,6 +142,11 @@ final class QueueService
             );
             // L’annulation utilise paidCosts, jamais le tarif avant la remise.
             $paidCosts = $credit['paid'] ?? $plan['costs'];
+            if ($credit !== null && $adventQuote !== null && !hash_equals(
+                AdventQueueCredits::quoteKey($adventCreditId, $membership->id, $planet->id, $group, $slug, $tier, $level, $duration, $paidCosts), $adventQuote,
+            )) {
+                throw new \DomainException('Le devis a changé. Vérifiez le coût et la durée avant de confirmer. Votre remise est conservée.');
+            }
             $this->resources->consume($planet, $paidCosts);
             $item = new QueueItem();
             $item->planet = $planet;
@@ -301,6 +308,52 @@ final class QueueService
             'reason' => $reason,
             'unavailableLabel' => $maximum === 0 ? $missing ? 'Manque ' . implode(' · ', $missing) : $reason : '',
         ];
+    }
+
+    /**
+     * Aperçu Avent sans synchronisation ni reçu : l’achat répète les
+     * contrôles et compare le devis sous les verrous de la file.
+     * @param array<string,mixed> $offer
+     * @return array{level:int,duration:int,paid:array<string,int>,discount:array<string,int>,affordable:bool}
+     */
+    public function adventPreview(PlayerUniverse $membership, Planet $planet, string $group, string $slug, string $tier, array $offer): array
+    {
+        if (!in_array($group, ['technologies', 'ships'], true) || !in_array($tier, GameCatalog::TIERS, true)
+            || $planet->owner?->id !== $membership->id || !isset($this->catalog->all($group)[$slug])) {
+            throw new \DomainException('Commande de l’Avent inaccessible.');
+        }
+        $definition = $this->catalog->getTierForUniverse($membership->universe, $group, $slug, $tier);
+        $buildings = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]);
+        $technologies = $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]);
+        $research = $group === 'technologies';
+        $queue = $research ? $this->repo->researchQueue($membership) : $this->repo->queue($planet, 'shipyard');
+        if (count($queue) >= 30 || ($research && !$this->access->hasLocalResearchLaboratory($buildings, $tier))) {
+            throw new \DomainException('La file ou le laboratoire de cette colonie ne permet pas encore cette commande.');
+        }
+        $level = $research ? 1 + ($technologies[$slug][$tier] ?? 0) : 1;
+        $levelCap = (int) ($definition['effect']['tier_max_levels'][$tier] ?? $definition['max_level'] ?? PHP_INT_MAX);
+        if ($research && $level > $levelCap) {
+            throw new \DomainException('Niveau maximum atteint.');
+        }
+        if ($research) {
+            foreach ($queue as $item) {
+                if ($item->itemSlug === $slug && $item->tier === $tier) {
+                    throw new \DomainException('Attendez la fin des recherches déjà inscrites pour ce niveau.');
+                }
+            }
+        } elseif ($this->unitCapacity($membership, $planet, $group, $slug, $tier, $definition, $buildings) < 1) {
+            throw new \DomainException('Cette colonie ne peut pas accueillir cette coque dans sa file.');
+        }
+        $failures = $this->access->failures($membership, $planet, $group, $definition, $tier, $buildings, $technologies);
+        if ($failures) {
+            throw new \DomainException('Prérequis : '.implode(', ', array_unique($failures)).'.');
+        }
+        $plan = $this->calculator->calculate($definition, $group, $level, 1, $buildings, $this->catalog->forUniverse($membership->universe), $technologies);
+        $pay = $this->adventCredits->payment($offer, $group, $slug, $tier, $level, 1, true, $plan['costs']);
+        $stocks = $this->resources->snapshot($planet);
+        $missing = ResourceWaitEstimate::forCosts($pay['paid'], $stocks, $this->clock->now())['missing'];
+
+        return $pay + ['level' => $level, 'duration' => $plan['duration'], 'affordable' => $missing === []];
     }
 
     private function unitMaximum(
