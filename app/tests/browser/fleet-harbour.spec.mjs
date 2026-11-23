@@ -1,6 +1,7 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { prepareOwnedColony, revealVirginPlanet, runIsolatedSql, queryIsolatedSql } from './support/game-fixtures.mjs';
 import AxeBuilder from '@axe-core/playwright';
+import { captureDecision } from './support/fleet-decision-view.mjs';
 
 async function enter(page, name) {
   const suffix = crypto.randomUUID().slice(0, 8);
@@ -152,4 +153,32 @@ test('L2B A : contextes, confidentialité, actualisation des demandes et stocks 
       expect(queryIsolatedSql(project, `SELECT status FROM fleet WHERE id=${held[1]}`)).toBe('returning');
     } finally { await plainContext.close(); }
   } finally { await peerContext.close(); }
+});
+
+
+test('Reprise de stationnement : deux panneaux, devis natif et état sans colonie', async ({ page, browser, baseURL }, info) => {
+  const owner = await enter(page, 'Reprise');
+  const target = revealVirginPlanet(owner.project, owner.email);
+  const held = fixtureFleet(owner, owner.home, target.id, 'station', 'station_waiting', { station: { position_planet_id: target.id } }, 'harbour-decision');
+  const url = '/flottes/' + held + '/reprendre';
+  await captureDecision(page, owner, info, 'reprise', url + '?planet=' + owner.home);
+  const context = await browser.newContext({ baseURL, storageState: await page.context().storageState(), javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
+  try {
+    const plain = await context.newPage();
+    runIsolatedSql(owner.project, 'UPDATE planet SET owner_id=NULL WHERE id=' + owner.home);
+    expect((await plain.goto(url)).status()).toBe(200);
+    await expect(plain.getByLabel('Colonie de destination', { exact: true })).toBeDisabled();
+    await expect(plain.getByRole('button', { name: 'Calculer le trajet', exact: true })).toBeDisabled();
+    await expect(plain.getByText('Aucune colonie disponible. La flotte reste en attente, sans perte automatique.', { exact: true })).toBeVisible();
+    await expect(plain.locator('.fleet-decision-quote')).toHaveCount(0);
+    await plain.screenshot({ path: info.outputPath('reprise-sans-destination-390.png'), fullPage: true, animations: 'disabled' });
+    expect(queryIsolatedSql(owner.project, 'SELECT status FROM fleet WHERE id=' + held)).toBe('station_waiting');
+    runIsolatedSql(owner.project, 'UPDATE planet SET owner_id=' + owner.member + ' WHERE id=' + owner.home);
+    await plain.reload();
+    await plain.getByLabel('Colonie de destination', { exact: true }).selectOption(String(owner.home));
+    await plain.getByRole('button', { name: 'Calculer le trajet', exact: true }).click();
+    await expect(plain.getByRole('heading', { name: 'Devis de reprise', exact: true })).toBeVisible();
+    await expect(plain.getByRole('button', { name: 'Confirmer la reprise', exact: true })).toBeEnabled();
+    expect(queryIsolatedSql(owner.project, 'SELECT status FROM fleet WHERE id=' + held)).toBe('station_waiting');
+  } finally { await context.close(); }
 });

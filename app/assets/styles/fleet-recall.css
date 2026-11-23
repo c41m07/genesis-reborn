@@ -19,3 +19,42 @@
 .flight-operations .flight-operation[data-mission=attack],.flight-operations .flight-operation[data-mission=conquer]{border-inline-start-color:var(--gold)}
 .flight-operations .flight-operation[data-mission=explore],.flight-operations .flight-operation[data-mission=spy]{border-inline-start-style:dashed}
 .flight-operations .flight-operation[data-mission=transport],.flight-operations .flight-operation[data-mission=colonize]{border-inline-start-style:double;border-inline-start-width:5px}
+
+/* Deux actions séparées, même ordre dans le document et au clavier : choix, devis, puis confirmation. */
+.fleet-redesign.fleet-decision .fleet-decision-kicker{color:var(--accent);font-size:.75rem;font-weight:750;letter-spacing:.12em;text-transform:uppercase}
+.fleet-redesign.fleet-decision .fleet-decision-layout{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:14px;padding:0}
+.fleet-decision .fleet-decision-layout>.panel{min-width:0;padding:clamp(12px,1.3vw,24px);border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.fleet-decision .fleet-decision-layout h2{display:flex;align-items:center;gap:10px;margin:0 0 10px;font-size:clamp(1.15rem,1.4vw,1.65rem);line-height:1.2}
+.fleet-decision .fleet-decision-layout h2 .icon{flex:none;width:1.05em;height:1.05em;color:var(--accent)}
+.fleet-decision .fleet-decision-note{margin:0;padding:8px 10px;border:1px solid color-mix(in srgb,var(--accent) 32%,var(--line));border-radius:6px;background:color-mix(in srgb,var(--accent) 9%,var(--panel));color:var(--text);overflow-wrap:anywhere}
+.fleet-decision .fleet-decision-note span{display:block;color:var(--muted)}
+.fleet-decision .fleet-decision-note--warning{border-color:color-mix(in srgb,var(--danger) 40%,var(--line));background:color-mix(in srgb,var(--danger) 12%,var(--panel))}
+.fleet-decision .fleet-decision-note[role=status]{margin-block-start:10px}
+.fleet-decision .fleet-decision-layout .fleet-decision-choice{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;margin:12px 0 0}
+.fleet-decision .fleet-decision-choice label{margin:0;font-weight:700;color:var(--text)}
+.fleet-decision .fleet-decision-choice select{width:100%;min-width:0;min-height:44px;font-size:1rem}
+.fleet-redesign.fleet-decision .fleet-decision-layout :is(button,select):disabled{opacity:.7;cursor:not-allowed}
+.fleet-decision .fleet-decision-layout button{min-height:44px;width:100%;font-weight:750}
+.fleet-decision .fleet-decision-facts{display:grid;grid-template-columns:minmax(0,1fr);margin:5px 0 0}
+.fleet-decision .fleet-decision-facts>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:8px;align-items:baseline;padding:8px 0;border-block-end:1px solid var(--line)}
+.fleet-decision .fleet-decision-facts :is(dt,dd){margin:0;font-size:clamp(.75rem,1vw,.94rem);line-height:1.3;overflow-wrap:anywhere}
+.fleet-decision .fleet-decision-facts dt{color:var(--muted)}
+.fleet-decision .fleet-decision-facts dd{font-weight:700;color:var(--text);text-align:end}
+.fleet-decision .fleet-decision-quote h3{margin:8px 0 4px;font-size:.95rem}
+.fleet-decision .fleet-decision-freight{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px;padding:0;list-style:none}
+.fleet-decision .fleet-decision-freight li{padding:3px 7px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--text);font-size:.8rem}
+.fleet-decision .fleet-decision-layout .fleet-decision-confirm{display:grid;margin:10px 0 0}
+.fleet-decision .fleet-decision-layout .fleet-decision-danger{border:1px solid color-mix(in srgb,var(--danger) 60%,var(--line));border-radius:6px;background:color-mix(in srgb,var(--danger) 25%,var(--panel));color:var(--text)}
+.fleet-decision .fleet-decision-layout .fleet-decision-danger:hover{background:color-mix(in srgb,var(--danger) 38%,var(--panel))}
+.fleet-decision .fleet-decision-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;color:var(--accent);font-weight:700}
+.fleet-decision :is(a,button,select):focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(min-width:1101px){
+    .fleet-redesign.fleet-decision .fleet-decision-layout{grid-template-columns:minmax(0,1.36fr) minmax(0,1fr)}
+    .fleet-decision .fleet-decision-selection{min-height:235px}
+    .fleet-decision .fleet-decision-layout .fleet-decision-choice{grid-template-columns:minmax(0,1fr) auto;max-width:700px;column-gap:9px}
+    .fleet-decision .fleet-decision-choice label{grid-column:1/-1}
+    .fleet-decision .fleet-decision-layout .fleet-decision-confirm{margin-block-start:16px}
+}
+@media(max-width:740px){
+    .fleet-decision .fleet-decision-kicker span{display:none}
+}

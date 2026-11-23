@@ -1,43 +1,44 @@
 {% extends 'base.html.twig' %}
+{% import 'ui/macros.html.twig' as ui %}
 {% block title %}Reprendre le stationnement · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="fleet-redesign fleet-harbour fleet-resume-page" data-page-sections="disabled">
-<div class="page-heading"><div><h1>Reprendre le stationnement</h1><p>Les vaisseaux restent indisponibles jusqu’à leur installation sur une colonie possédée.</p></div></div>
-{% include 'ui/fleet_navigation.html.twig' %}
-<div class="fleet-resume-layout">
-    <section class="panel fleet-resume-selection" aria-labelledby="station-resume-title">
-        <h2 id="station-resume-title">Choisir une nouvelle base</h2>
-        <p>Réserve disponible : {{ fleet.reservedFuel|quantity(2) }} hydrogène. Le fret d’hydrogène ne sert pas de carburant.</p>
-        <form method="get">
-            <label for="station-planet">Colonie de destination</label>
-            <select id="station-planet" name="planet" required>
-                <option value="">Choisir une colonie</option>
-                {% for planet in planets %}<option value="{{ planet.id }}" {{ target_id==planet.id?'selected':'' }}>{{ planet.name }} · {{ planet.coordinates() }}</option>{% endfor %}
-            </select>
-            <button class="secondary">Calculer le trajet</button>
-        </form>
-        {% if planets is empty %}<p role="status">Aucune colonie disponible. La flotte reste en attente, sans perte automatique.</p>{% endif %}
-        {% if error %}<p class="flash error" role="alert">{{ error }}</p>{% endif %}
-    </section>
-    {% if quote %}
-        <section class="panel fleet-resume-quote" aria-labelledby="station-quote-title">
-            <h2 id="station-quote-title">Devis de reprise</h2>
-            <p id="station-quote-destination">Destination du stationnement : <strong>{{ quote.target.name }}</strong>.</p>
-            <dl class="report-facts">
-                <div><dt>Nouvelle base</dt><dd>{{ quote.target.name }} · {{ quote.target.coordinates() }}</dd></div>
-                <div><dt>Durée</dt><dd>{{ duration_label(quote.seconds) }}</dd></div>
-                <div><dt>Carburant consommé à l’arrivée</dt><dd>{{ quote.one_way_fuel|quantity(2) }} hydrogène</dd></div>
-            </dl>
-            <form method="post">
-                <input type="hidden" name="_token" value="{{ csrf_token('fleet_resume_'~fleet.id) }}">
-                <input type="hidden" name="request_key" value="{{ request_key() }}">
-                <input type="hidden" name="version" value="{{ quote.version }}">
-                <input type="hidden" name="planet" value="{{ quote.target.id }}">
-                <button class="primary" aria-describedby="station-quote-destination">Confirmer la reprise</button>
+<div class="fleet-redesign fleet-harbour fleet-resume-page fleet-decision" data-page-sections="disabled">
+    <div class="page-heading"><div><p class="fleet-decision-kicker">Flottes <span> / À quai et stationnements</span></p><h1>Reprendre le stationnement</h1><p>Les vaisseaux restent indisponibles jusqu’à leur installation sur une colonie possédée.</p></div></div>
+    {% include 'ui/fleet_navigation.html.twig' %}
+    <div class="fleet-decision-layout">
+        <section class="panel fleet-decision-selection" aria-labelledby="station-resume-title">
+            <h2 id="station-resume-title">{{ ui.icon('galaxy') }} Choisir une nouvelle base</h2>
+            <p class="fleet-decision-note"><strong>Réserve disponible : {{ fleet.reservedFuel|quantity(2) }} hydrogène.</strong><span>Le fret d’hydrogène ne sert pas de carburant.</span></p>
+            <form method="get" class="fleet-decision-choice">
+                <label for="station-planet">Colonie de destination</label>
+                <select id="station-planet" name="planet" required{% if planets is empty %} disabled aria-describedby="station-no-destination"{% endif %}>
+                    <option value="">Choisir une colonie</option>
+                    {% for planet in planets %}<option value="{{ planet.id }}" {{ target_id==planet.id?'selected':'' }}>{{ planet.name }} · {{ planet.coordinates() }}</option>{% endfor %}
+                </select>
+                <button type="submit" class="secondary"{% if planets is empty %} disabled{% endif %}>Calculer le trajet</button>
             </form>
+            {% if planets is empty %}<p id="station-no-destination" class="fleet-decision-note" role="status">Aucune colonie disponible. La flotte reste en attente, sans perte automatique.</p>{% endif %}
+            {% if error %}<p class="flash error" role="alert">{{ error }}</p>{% endif %}
         </section>
-    {% endif %}
-</div>
-<p><a href="{{ path('app_fleet_holds') }}">Revenir aux flottes</a></p>
+        {% if quote %}
+            <section class="panel fleet-decision-quote" aria-labelledby="station-quote-title">
+                <h2 id="station-quote-title">{{ ui.icon('clock') }} Devis de reprise</h2>
+                <p id="station-quote-destination">Destination du stationnement : <strong>{{ quote.target.name }}</strong>.</p>
+                <dl class="fleet-decision-facts">
+                    <div><dt>Nouvelle base</dt><dd>{{ quote.target.name }} · {{ quote.target.coordinates() }}</dd></div>
+                    <div><dt>Durée</dt><dd>{{ duration_label(quote.seconds) }}</dd></div>
+                    <div><dt>Carburant consommé à l’arrivée</dt><dd>{{ quote.one_way_fuel|quantity(2) }} hydrogène</dd></div>
+                </dl>
+                <form method="post" class="fleet-decision-confirm">
+                    <input type="hidden" name="_token" value="{{ csrf_token('fleet_resume_'~fleet.id) }}">
+                    <input type="hidden" name="request_key" value="{{ request_key() }}">
+                    <input type="hidden" name="version" value="{{ quote.version }}">
+                    <input type="hidden" name="planet" value="{{ quote.target.id }}">
+                    <button type="submit" class="primary" aria-describedby="station-quote-destination">Confirmer la reprise</button>
+                </form>
+            </section>
+        {% endif %}
+    </div>
+    <a class="fleet-decision-back" href="{{ path('app_fleet_holds') }}"><span aria-hidden="true">←</span> Revenir aux flottes</a>
 </div>
 {% endblock %}
