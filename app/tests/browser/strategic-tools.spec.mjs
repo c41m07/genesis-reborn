@@ -42,8 +42,30 @@ test('P13 : scénario du simulateur avec deux camps et contrôles natifs', async
    await page.setViewportSize(viewport);
    await page.goto('/simulateur');
    await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
-   const guide=page.locator('[data-controller~="first-steps"]').getByRole('button',{name:/Réduire|Fermer/});
-   if (await guide.count() && await guide.first().isVisible()) await guide.first().click();
+   const guide=page.locator('.first-steps-popup-enhanced');
+   const toggle=guide.locator(':scope > summary');
+   const checkbox=page.getByRole('checkbox',{name:/Je confirme les hypothèses/});
+   const submit=page.getByRole('button',{name:'Simuler 10 combats'});
+   await expect(toggle).toBeVisible();
+   if (await guide.getAttribute('open')===null) await toggle.press('Enter');
+   await expect(guide).toHaveAttribute('open','');
+   const panel=guide.locator('.first-steps-popup-mount');
+   await expect(panel).toBeVisible();
+   const options=page.locator('.simulation-board-options');
+   const panelRect=await panel.boundingBox();
+   const optionsRect=await options.boundingBox();
+   expect(panelRect.y).toBeGreaterThanOrEqual(optionsRect.y+optionsRect.height);
+   for (const control of [checkbox, submit]) {
+    await control.evaluate(element=>element.scrollIntoView({block:'center',behavior:'instant'}));
+    await expect.poll(()=>control.evaluate(element=>{
+     const r=element.getBoundingClientRect();
+     const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+     return element===hit || element.contains(hit);
+    })).toBe(true);
+   }
+   await page.screenshot({path:testInfo.outputPath('P13-guide-ouvert-'+theme+'-'+viewport.width+'.png'),scale:'css',animations:'disabled'});
+   await toggle.press('Enter');
+   await expect(guide).not.toHaveAttribute('open','');
    await expect(page.getByRole('heading',{name:'Simulateur de combat'})).toBeVisible();
    const attacker=page.locator('#sim-attacker-ships-fighter-basic');
    const defender=page.locator('#sim-defender-ships-fighter-basic');
@@ -54,6 +76,7 @@ test('P13 : scénario du simulateur avec deux camps et contrôles natifs', async
    await expect(page.getByRole('button',{name:'Simuler 10 combats'})).toBeEnabled();
    await expect(page.locator('#simulation-result')).toHaveCount(0);
    await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+   await page.locator('.simulation-board-unit-scroll:visible').evaluateAll(elements=>elements.forEach(element=>element.scrollTo({top:0,left:0,behavior:'instant'})));
    await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
    await page.screenshot({path:testInfo.outputPath('P13-scenario-'+theme+'-'+viewport.width+'.png'),scale:'css',animations:'disabled'});
    if (viewport.width===390) {
@@ -72,7 +95,12 @@ test('P13 : scénario du simulateur avec deux camps et contrôles natifs', async
   await summary.focus();
   await tab.keyboard.press('Enter');
   await expect(options).toHaveAttribute('open','');
-  await tab.getByRole('button',{name:'Charger mes forces'}).click();
+  const nativeImport=tab.getByRole('button',{name:'Charger mes forces'});
+  await expect(nativeImport).toHaveAttribute('form','simulation-own-forces');
+  const request=tab.waitForRequest(request=>new URL(request.url()).searchParams.get('own_planet')===String(owner.planet));
+  await nativeImport.click();
+  expect((await request).method()).toBe('GET');
+  await expect(tab).toHaveURL(/own_planet=/);
   await expect(tab.locator('#sim-attacker-ships-fighter-basic')).toHaveValue('2');
  } finally { await context.close(); }
 });

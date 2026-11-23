@@ -76,3 +76,24 @@ body[data-theme=light] .simulation-workspace .simulation-survivors { color:#1767
 .player-simulation-board .simulation-trial-summary :is(th,td) { padding:.55rem .75rem; font-variant-numeric:tabular-nums; }
 .player-simulation-board .simulation-trial-summary td:nth-child(n+3) { text-align:end; }
 .player-simulation-board .simulation-trial > summary { scroll-margin-top:180px; }
+
+/* P13 : le scénario manuel dispose de deux cartes et d’un bloc de validation séparé. */
+.player-simulation-board--scenario .simulation-form { padding:0; border:0; background:none; box-shadow:none; }
+.player-simulation-board--scenario .simulation-form > .strategic-grid > section { padding:clamp(.85rem,1.25vw,1.4rem); }
+.player-simulation-board--scenario .strategic-grid input[id^="arrival-"] { width:min(100%,15rem); }
+.player-simulation-board--scenario .simulation-board-load { margin-block:0 .25rem; }
+.player-simulation-board--scenario .simulation-board-load label { flex-basis:100%; }
+.player-simulation-board--scenario .simulation-board-load select { min-width:0; max-width:100%; }
+.player-simulation-board--scenario .simulation-board-options { padding:clamp(.85rem,1.25vw,1.4rem); margin-top:1rem; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+.player-simulation-board--scenario .simulation-board-options > div { max-width:20rem; }
+.player-simulation-board--scenario .simulation-board-assumptions { display:flex; gap:.7rem; align-items:flex-start; margin:0; }
+.player-simulation-board--scenario .simulation-board-assumptions input { flex:none; margin-block:.18em 0; }
+.player-simulation-board--scenario .simulation-board-options > .simulation-board-note { grid-column:1 / -1; margin:0; }
+
+/* Le guide déplié suit ce scénario, au lieu de recouvrir la confirmation. */
+.app-frame:has(> .shell .player-simulation-board--scenario) > .first-steps-popup-enhanced[open] {
+    position:relative;
+    inset:auto;
+    margin:0 0 8px auto;
+    max-width:100%;
+}
