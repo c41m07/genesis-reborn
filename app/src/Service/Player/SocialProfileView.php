@@ -47,10 +47,9 @@ final class SocialProfileView
             ];
         }
         $guild = $this->relations->guild($target);
-        return [
+        $profile = [
             'id' => $target->id,
             'username' => $target->player->username,
-            'cosmetics' => $this->cosmetics->display($target->player),
             'scores' => $scores,
             'updated_at' => $daily['updated_at'],
             'guild' => $guild ? [
@@ -60,6 +59,14 @@ final class SocialProfileView
                 'can_view' => $this->guildsEnabled($viewer),
             ] : null,
         ];
+
+        // Étendre la liste publique uniquement si le commandant montre un élément.
+        $equipped = $this->cosmetics->display($target->player);
+        if ($equipped !== []) {
+            $profile['cosmetics'] = $equipped;
+        }
+
+        return $profile;
     }
 
     public function accessibleGuild(PlayerUniverse $viewer, int $id): Guild
