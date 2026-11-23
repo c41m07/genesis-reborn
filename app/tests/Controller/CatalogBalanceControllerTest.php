@@ -110,6 +110,11 @@ final class CatalogBalanceControllerTest extends WebTestCase
   self::assertResponseRedirects($url);
   $this->client->followRedirect();
   self::assertSelectorTextContains('#preview-heading', 'non enregistrée');
+  $comparison = $this->client->getCrawler()->filter('table.admin-design-comparison');
+  self::assertSame(['Élément', 'Actuel', 'Proposé'], $comparison->filter('th[scope="col"]')->each(static fn($header) => $header->text()));
+  $durations = $comparison->filter('tbody tr')->first()->filter('td')->each(static fn($cell) => $cell->text());
+  self::assertCount(2, $durations);
+  self::assertNotSame($durations[0], $durations[1]);
   self::assertSelectorTextContains('.admin-catalogue-editor', 'stocks disponibles');
   self::assertSelectorExists('input[name="values[build_time_base]"][value="900"]');
   $em = static::getContainer()->get(EntityManagerInterface::class);
