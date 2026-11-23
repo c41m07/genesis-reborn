@@ -104,6 +104,16 @@ test('L7A A : colonies, renommage, comparaison et bilan complets sur quatre form
       await expect(card.locator('.planet-production dl')).not.toBeEmpty();
       await page.goto('/planetes?view=table&resource=metal');
       await expect(page.locator('.colony-comparison tbody tr')).toHaveCount(2);
+      const shortcuts = page.locator('.colony-comparison-cards');
+      const horizon = shortcuts.getByRole('article', { name: 'Horizon' });
+      const orion = shortcuts.getByRole('article', { name: 'Orion' });
+      await expect(horizon).toContainText('Colonie active');
+      await expect(horizon).toContainText('Mine à ciel ouvert');
+      await expect(horizon).toContainText('Niveau 5');
+      await expect(horizon.locator('.planet-index-art img')).toHaveAttribute('src', /colony-overview\.webp/);
+      await expect(orion).toContainText('Aucune opération en cours');
+      await expect(orion.locator('.planet-index-art img')).toHaveAttribute('src', /planet-desert\.webp/);
+      await expect(orion.getByRole('link', { name: /Ouvrir cette colonie/ })).toHaveAttribute('href', '/planetes/' + other.id);
       if (width === 1440) await expect(page.locator('.colony-comparison td[data-resource="nano"]').first()).toBeVisible();
       else await expect(page.locator('.colony-comparison td[data-resource="nano"]').first()).toBeHidden();
       const horizonWork = page.locator('.colony-comparison tbody tr')
