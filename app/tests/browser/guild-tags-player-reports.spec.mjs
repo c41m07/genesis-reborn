@@ -38,7 +38,11 @@ test('Tag obligatoire, choix du commandant et préfixe limité au classement', a
   expect(Number(queryIsolatedSql(process.env.BROWSER_ROUTER,'SELECT COUNT(*) FROM guild'))).toBe(0);
   await page.getByLabel('Tag de la guilde',{exact:true}).fill('alpha');
   await page.getByRole('button',{name:'Fonder une guilde',exact:true}).click();
-  await expect(page.getByRole('heading',{name:'Guilde-'+author.playerId,exact:true})).toBeVisible();
+  const guildIdentity='[ALPHA] Guilde-'+author.playerId;
+  const guildHeading=page.getByRole('region',{name:'Centre de guilde',exact:true})
+    .getByRole('heading',{name:guildIdentity,exact:true});
+  await expect(guildHeading).toBeVisible();
+  await expect(guildHeading.getByRole('link',{name:guildIdentity,exact:true})).toHaveAttribute('href',/^\/guildes\/\d+$/);
   await page.goto('/classement');
   const ownRow=page.getByRole('row').filter({hasText:author.username});
   await expect(ownRow.locator('th')).toContainText('[ALPHA] '+author.username);
