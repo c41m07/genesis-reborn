@@ -318,16 +318,149 @@ body.authenticated .social-workspace .social-profile-scores dt {
     max-width: none;
 }
 
-.public-player-profile > .panel {
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
+.public-player-profile .commander-profile-navigation {
+    margin-block-end: 8px;
 }
 
-.public-player-profile > .panel h2 {
+.public-player-profile .panel {
+    margin-block-end: 0;
+}
+
+.public-player-profile .commander-profile-identity {
+    align-items: end;
+    gap: 20px;
+    padding: clamp(16px, 2vw, 28px);
+}
+
+.public-player-profile .commander-profile-identity > div {
+    min-width: 0;
+}
+
+.public-player-profile .commander-profile-identity .eyebrow {
+    color: var(--accent);
+    font-size: 11px;
+    margin-block-end: 6px;
+}
+
+.public-player-profile .commander-profile-identity h1 {
+    font-size: clamp(27px, 2.6vw, 46px);
+}
+
+.public-player-profile .commander-profile-identity > div > p:not(.eyebrow) {
+    font-size: 14px;
+    margin-block-start: 6px;
+}
+
+.public-player-profile .commander-profile-identity .commander-profile-title {
+    color: var(--gold);
+    background: color-mix(in srgb, var(--gold) 12%, var(--panel));
+    border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
+    white-space: normal;
+    font-size: 12px;
+    margin-block-end: 0;
+}
+
+.public-player-profile .commander-profile-write {
+    flex-shrink: 0;
+    justify-content: center;
+    max-inline-size: min(100%, 34ch);
+    text-align: center;
+    text-decoration: none;
+}
+
+.public-player-profile .commander-profile-details {
+    display: grid;
+    grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+    margin-block-start: 16px;
+}
+
+.public-player-profile .commander-profile-details .panel {
+    padding: clamp(14px, 1.6vw, 24px);
+}
+
+.public-player-profile .commander-profile-details h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 20px;
+    margin-block-end: 6px;
+}
+
+.public-player-profile .commander-profile-details h2 .icon {
+    color: var(--accent);
+}
+
+.public-player-profile .commander-profile-details p {
+    color: var(--muted);
+    margin-block-end: 8px;
+}
+
+.public-player-profile .commander-profile-guild-link {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 44px;
+    font-weight: 700;
+}
+
+body.authenticated .public-player-profile .social-profile-scores > div {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding: 9px 10px;
+    gap: 8px;
+}
+
+body.authenticated .public-player-profile .social-profile-scores .commander-profile-score-total {
+    background: color-mix(in srgb, var(--accent) 11%, var(--panel));
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    font-weight: 700;
+}
+
+body.authenticated .public-player-profile .social-profile-scores dd {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: end;
+    align-items: baseline;
+    column-gap: 14px;
+    font-variant-numeric: tabular-nums;
+}
+
+.public-player-profile .social-profile-scores dd span {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.public-player-profile .social-profile-scores dd strong {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+    .public-player-profile .commander-profile-identity {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .public-player-profile .commander-profile-write {
+        max-inline-size: none;
+    }
+
+    .public-player-profile .commander-profile-details {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        margin-block-start: 10px;
+    }
+
+    .public-player-profile .commander-profile-details h2 {
+        font-size: 18px;
+    }
+
+    body.authenticated .public-player-profile .social-profile-scores dd {
+        column-gap: 7px;
+    }
 }
 
 .message-search-workspace .search-filters {

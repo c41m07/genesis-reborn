@@ -38,16 +38,33 @@ test('Profils : accès depuis classement, messages et membres, données publique
     await page.goto('/classement');await page.getByRole('link',{name:peer.name,exact:true}).click();
     await expect(page).toHaveURL(new RegExp('/joueurs/'+peer.member+'$'));await expect(page.getByRole('heading',{level:1,name:peer.name})).toBeVisible();
     await expect(page.locator('.social-profile-scores > div')).toHaveCount(5);expect(await page.content()).not.toContain(peer.email);
-    await page.getByRole('link',{name:'Écrire à '+peer.name,exact:true}).click();
+    await expect(page.getByRole('region',{name:'Guilde',exact:true}).getByRole('link',{name:'[PUB] '+guild.name})).toHaveAttribute('href','/guildes/'+guild.id);
+    await page.getByRole('navigation',{name:'Retour au classement'}).getByRole('link',{name:'Classement'}).focus();
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('link',{name:'Écrire à '+peer.name,exact:true})).toBeFocused();
+    await page.keyboard.press('Enter');
     await page.getByRole('heading',{name:'Conversation avec '+peer.name}).getByRole('link',{name:peer.name,exact:true}).click();
     await expect(page).toHaveURL(new RegExp('/joueurs/'+peer.member+'$'));
     await page.goto('/diplomatie?tab=members');await page.locator('.guild-members-table').getByRole('link',{name:peer.name,exact:true}).click();
     await expect(page).toHaveURL(new RegExp('/joueurs/'+peer.member+'$'));
     for(const value of ['dark','light']) {
       await theme(page,value);await page.goto('/joueurs/'+peer.member);
-      for(const width of [320,390,1440]) {await page.setViewportSize({width,height:900});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);if(width===320) await page.screenshot({path:testInfo.outputPath('profil-'+value+'-mobile.png'),fullPage:true,animations:'disabled'});}
-      expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
-      await page.screenshot({path:testInfo.outputPath('profil-'+value+'.png'),fullPage:true,animations:'disabled'});
+      for(const width of [320,390,1440,1920]) {
+        await page.setViewportSize({width,height:width===1920?1080:900});
+        await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+        const scores=page.getByRole('region',{name:'Classement quotidien'});
+        const guildCard=page.getByRole('region',{name:'Guilde',exact:true});
+        // Les cartes gardent le même ordre de lecture sur mobile et sur bureau.
+        await expect.poll(async()=>{
+          const [a,b]=await Promise.all([scores.boundingBox(),guildCard.boundingBox()]);
+          if(!a||!b) return false;
+          return width<=390 ? b.y>=a.y+a.height : Math.abs(a.y-b.y)<2 && b.x>=a.x+a.width;
+        }).toBe(true);
+        if(width===390 || width===1920) {
+          expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
+          await page.screenshot({path:testInfo.outputPath('profil-'+value+'-'+width+'.png'),fullPage:width===390,animations:'disabled'});
+        }
+      }
     }
     await peerPage.goto('/guildes/'+guild.id);
     await expect(peerPage.getByRole('heading',{level:1,name:'Présentation de guilde',exact:true})).toBeVisible();
