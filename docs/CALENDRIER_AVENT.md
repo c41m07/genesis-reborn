@@ -16,6 +16,8 @@ Le calendrier présente les 24 portes et ouvre le détail du jour à côté sur 
 
 Sur grand écran, lorsque J6 permet réellement de choisir un cadeau, son récapitulatif et le contexte d’univers sont rapprochés sans cacher le plafond ni le relevé. La porte visée est identifiable dans la grille. L’aperçu J24 avec les deux cosmétiques garde des libellés clairs sur le panorama sombre, y compris lorsque le thème du jeu est clair.
 
+Les devis J6 (bon de construction) et J12 (remise de recherche) affichent séparément la sélection et le résultat, côte à côte sur grand écran et dans l’ordre sur mobile. Aucun prix n’est annoncé avant le calcul. Le montant remisé, le reste à payer et la durée viennent du devis natif ; le stock insuffisant conserve l’explication sans afficher de confirmation. Les autres avoirs conservent la présentation habituelle.
+
 ## Administration
 
 - Aucune édition n’est créée ni activée à l’installation. La fonctionnalité est désactivée par défaut (`ADVENT_ENABLED=0`).

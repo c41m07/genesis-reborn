@@ -295,3 +295,133 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
     await expect(finaleDoor.getByText('Bon à utiliser', { exact: true })).toBeVisible();
     expect(Number(queryIsolatedSql(project, "SELECT COUNT(*) FROM profile_cosmetic WHERE player_id=(SELECT id FROM player WHERE email='" + email + "') AND equipped=0"))).toBe(2);
 });
+
+test('Avent : devis J6 et J12 maquetés, calcul et confirmation séparés', async ({ page, browser, baseURL }) => {
+    test.skip(process.env.ADVENT_BROWSER_FIXTURE !== '1', 'Édition positive uniquement dans la recette isolée.');
+    test.setTimeout(90_000);
+    const project = process.env.BROWSER_ROUTER;
+    const marker = crypto.randomUUID().slice(0, 8);
+    const email = 'advent-quotes-' + marker + '@example.test';
+    const password = crypto.randomUUID() + 'Aa!';
+    const now = Date.now();
+    const doors = Object.fromEntries(Array.from({ length: 24 }, (_, index) => [index + 1, {
+        opens_at: new Date(now + (index - 1) * 86400000).toISOString(),
+        options: { beginner: [{ kind: 'resources', resources: { metal: 7 } }] },
+    }]));
+    for (const day of [6, 12, 24]) doors[day].opens_at = new Date(now - 60_000).toISOString();
+    doors[6].options.beginner = [{ kind: 'ship_voucher', slug: 'transport', tier: 'basic', quantity: 1, budget_metal: 6000 }];
+    doors[12].options.beginner = [{ kind: 'research_discount', percent: 50, budget_metal: 7500 }];
+    doors[24].options.beginner = [{ kind: 'ship_voucher', slug: 'cruiser', tier: 'basic', quantity: 1, budget_metal: 16000 }];
+    runIsolatedSql(project, "INSERT INTO advent_edition (season,name,starts_at,closes_at,doors,published_at,plan) VALUES (2101,'Avent Devis','" + new Date(now - 86400000).toISOString().slice(0, 19).replace('T', ' ') + "',UTC_TIMESTAMP() + INTERVAL 30 DAY,'" + JSON.stringify(doors) + "',UTC_TIMESTAMP(),'consolidated')");
+    const edition = Number(queryIsolatedSql(project, 'SELECT id FROM advent_edition WHERE season=2101'));
+    await page.goto('/inscription');
+    await page.getByLabel('Adresse email').fill(email);
+    await page.getByLabel('Nom de commandant').fill('AventDevis-' + marker);
+    await page.getByLabel('Mot de passe (12 caractères minimum)', { exact: true }).fill(password);
+    await page.getByLabel('Confirmer le mot de passe').fill(password);
+    await page.getByRole('button', { name: 'Créer mon compte' }).click();
+    await expect(page).toHaveURL(/connexion/);
+    await page.getByLabel('Adresse email').fill(email);
+    await page.getByLabel('Mot de passe', { exact: true }).fill(password);
+    await page.getByRole('button', { name: /Connexion/ }).click();
+    await page.locator('.universe-card').filter({ has: page.getByRole('heading', { name: /Omega/ }) }).getByRole('button').click();
+    await expect(page).toHaveURL(/planetes\/\d+$/);
+    const colony = Number(new URL(page.url()).pathname.split('/').pop());
+    const native = await browser.newContext({
+        baseURL, javaScriptEnabled: false, viewport: { width: 390, height: 844 },
+        storageState: await page.context().storageState(),
+    });
+    const proof = process.env.GR_AVENT_QUOTE_PROOF_DIRECTORY;
+    const quoteUrl = {};
+    const heading = { 6: 'Bon de construction', 12: 'Remise de recherche' };
+    const rowName = { 6: /Cargo de ligne.*Basique/, 12: /niveau 1/ };
+    const countQueue = () => Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM queue_item'));
+    function setStocks(amount) {
+        runIsolatedSql(project, "UPDATE planet_resource SET last_updated_at=UTC_TIMESTAMP(), current_stock=" + amount + ' WHERE planet_id=' + colony);
+    }
+    const submit = (view) => view.getByRole('button', { name: 'Confirmer et utiliser la remise' });
+    async function pick(view, day) {
+        await view.getByLabel('Colonie destinataire').selectOption(String(colony));
+        if (day === 12) await view.getByLabel('Technologie et rang').selectOption('engineering_foundations:basic');
+        const calculate = view.getByRole('button', { name: 'Calculer le devis' });
+        await calculate.focus();
+        await expect(calculate).toBeFocused();
+        await calculate.press('Enter');
+        await expect(view.getByRole('heading', { name: rowName[day] })).toBeVisible();
+        await expect(view.getByRole('columnheader', { name: 'Remise' })).toBeVisible();
+        await expect(view.getByRole('columnheader', { name: 'À payer' })).toBeVisible();
+        await expect(view.getByLabel('Colonie destinataire')).toHaveValue(String(colony));
+    }
+    try {
+        const mobile = await native.newPage();
+        await mobile.goto('/evenements/avent/' + edition);
+        await mobile.getByRole('button', { name: /Confirmer .* pour cette édition/ }).press('Enter');
+        for (const day of [6, 12, 24]) {
+            await mobile.getByRole('link', { name: new RegExp('^Porte ' + day + ',') }).press('Enter');
+            const door = mobile.locator('#advent-door-' + day);
+            await door.getByRole('radio').press('Space');
+            await door.getByLabel('Colonie destinataire').selectOption(String(colony));
+            await door.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).press('Enter');
+            await door.getByRole('link', { name: 'Voir le devis de cette remise' }).press('Enter');
+            quoteUrl[day] = mobile.url();
+            expect(countQueue()).toBe(0);
+            await expect(mobile.getByRole('table')).toHaveCount(0);
+            await expect(submit(mobile)).toHaveCount(0);
+            if (day === 24) {
+                await expect(mobile.locator('[data-advent-credit-day]')).toHaveCount(0);
+            } else {
+                await expect(mobile.getByRole('heading', { level: 1, name: heading[day] })).toBeVisible();
+                await expect(mobile.locator('[data-advent-credit-day="' + day + '"]')).toBeVisible();
+                if (proof && day === 6) {
+                    await mobile.screenshot({ path: proof + '/AVENT_J6_AVANT_CHOIX_390.png', fullPage: true });
+                }
+            }
+            await mobile.getByRole('link', { name: 'Retour au calendrier', exact: true }).press('Enter');
+        }
+
+        // On donne au compte synthétique les déblocages et le laboratoire de la recette PHP.
+        runIsolatedSql(project, "INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (" + colony + ",'lab','basic',1) ON DUPLICATE KEY UPDATE level=1");
+        runIsolatedSql(project, "UPDATE player_universe pu JOIN player p ON p.id=pu.player_id SET pu.catalog_unlocks=JSON_SET(COALESCE(pu.catalog_unlocks,JSON_OBJECT()), '$.\"v2:planet:" + colony + ":ships:transport:basic\"', true, '$.\"v2:universe:technologies:engineering_foundations:basic\"', true) WHERE p.email='" + email + "'");
+        setStocks(0);
+        await mobile.goto(quoteUrl[12]);
+        await pick(mobile, 12);
+        await expect(mobile.getByText('Le stock de la colonie ne suffit pas.', { exact: false })).toBeVisible();
+        await expect(submit(mobile)).toHaveCount(0);
+        if (proof) {
+            await mobile.screenshot({ path: proof + '/AVENT_J12_STOCK_INSUFFISANT_390.png', fullPage: true });
+        }
+        setStocks(9900);
+        expect(countQueue()).toBe(0);
+
+        for (const theme of ['dark', 'light']) {
+            runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(IF(JSON_TYPE(preferences)='OBJECT',preferences,JSON_OBJECT()),'$.theme','" + theme + "') WHERE email='" + email + "'");
+            for (const [width, height] of [[1920, 1080], [390, 844], [360, 800]]) {
+                await mobile.setViewportSize({ width, height });
+                for (const day of [6, 12]) {
+                    await openAdventDocument(mobile, quoteUrl[day]);
+                    await expect(mobile.locator('body')).toHaveAttribute('data-theme', theme);
+                    await expect(mobile.getByLabel('Technologie et rang')).toHaveCount(day === 12 ? 1 : 0);
+                    await pick(mobile, day);
+                    await expect(submit(mobile)).toBeVisible();
+                    await expect(submit(mobile)).toHaveAttribute('aria-describedby', 'advent-credit-usage');
+                    const layout = await mobile.locator('.advent-credit-grid').evaluate((grid) => {
+                        const [choice, result] = [...grid.children].map((panel) => panel.getBoundingClientRect());
+                        return { stacked: result.top >= choice.bottom, inline: choice.right <= result.left && Math.abs(choice.top - result.top) <= 2 };
+                    });
+                    expect(width === 1920 ? layout.inline : layout.stacked).toBe(true);
+                    expect(await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
+                    if (proof && width !== 360) {
+                        await mobile.screenshot({ path: proof + '/AVENT_J' + day + '_DEVIS_' + width + '_' + theme + '.png', fullPage: width === 390 });
+                    }
+                }
+            }
+        }
+        expect(countQueue()).toBe(0);
+        await submit(mobile).press('Enter');
+        await expect(mobile).toHaveURL(new RegExp('/evenements/avent/' + edition + '$'));
+        expect(countQueue()).toBe(1);
+        expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM advent_claim WHERE redeemed_queue_id IS NOT NULL AND door=12'))).toBe(1);
+    } finally {
+        await native.close();
+    }
+});

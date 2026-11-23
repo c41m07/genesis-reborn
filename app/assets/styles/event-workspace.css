@@ -724,3 +724,150 @@ body.authenticated .advent-board .advent-door-subtitle {
     font-size: 1rem;
     font-weight: 750;
 }
+
+/* Devis autonomes J6 et J12 validés : les autres bons gardent le gabarit natif.
+   Les états sans résultat et sans stock n'ajoutent aucun formulaire. */
+body.authenticated .advent-credit-board {
+    --advent-credit-border: color-mix(in srgb, var(--line) 78%, var(--accent));
+    --advent-credit-surface: color-mix(in srgb, var(--panel) 94%, var(--accent));
+    --advent-credit-ink: var(--text);
+}
+body.authenticated .advent-credit-board .page-heading {
+    gap: 1rem 1.5rem;
+    margin-block-end: 1.15rem;
+}
+body.authenticated .advent-credit-board .page-heading h1 {
+    margin: .12rem 0 .45rem;
+    font-size: clamp(1.65rem, 3.1vw, 2.85rem);
+    overflow-wrap: anywhere;
+}
+body.authenticated .advent-credit-board .page-heading p {
+    margin: .45rem 0 0;
+}
+body.authenticated .advent-credit-board .advent-credit-context {
+    color: var(--accent);
+    font-size: .75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .11em;
+}
+body.authenticated .advent-credit-board .advent-credit-day {
+    display: inline-block;
+    margin-block: 0 .35rem;
+    padding: .27rem .62rem;
+    border: 1px solid color-mix(in srgb, var(--line) 65%, var(--gold));
+    border-radius: .3rem;
+    background: color-mix(in srgb, var(--panel) 89%, var(--gold));
+    color: var(--advent-credit-ink);
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+body.authenticated .advent-credit-board .advent-credit-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 38fr) minmax(0, 62fr);
+    align-items: start;
+    gap: 1rem;
+}
+body.authenticated .advent-credit-board .advent-credit-grid > .panel {
+    min-width: 0;
+    display: grid;
+    gap: .65rem;
+    padding: clamp(.9rem, 1.5vw, 1.4rem);
+    border: 1px solid var(--advent-credit-border);
+    border-radius: .6rem;
+    background: linear-gradient(155deg, var(--advent-credit-surface), var(--panel));
+    overflow-wrap: anywhere;
+}
+body.authenticated .advent-credit-board .advent-credit-grid > .panel h2 {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    margin: 0;
+    font-size: clamp(1.05rem, 1.7vw, 1.65rem);
+}
+body.authenticated .advent-credit-board h2 .icon {
+    flex: 0 0 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    color: var(--accent);
+}
+body.authenticated .advent-credit-board .advent-credit-grid p {
+    margin: 0;
+}
+body.authenticated .advent-credit-board .advent-door-form {
+    gap: .65rem;
+}
+body.authenticated .advent-credit-board .advent-door-form label {
+    color: var(--advent-credit-ink);
+    font-weight: 750;
+}
+body.authenticated .advent-credit-board .advent-door-form select,
+body.authenticated .advent-credit-board button,
+body.authenticated .advent-credit-board .page-heading a {
+    min-height: 44px;
+}
+body.authenticated .advent-credit-board button {
+    justify-self: start;
+    min-inline-size: min(14rem, 100%);
+    text-align: center;
+    white-space: normal;
+}
+body.authenticated .advent-credit-board table {
+    width: 100%;
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    font-variant-numeric: tabular-nums;
+}
+body.authenticated .advent-credit-board table :is(th, td) {
+    padding: .55rem .65rem;
+    border-block-end: 1px solid var(--advent-credit-border);
+    background: var(--advent-credit-surface);
+    text-align: end;
+}
+body.authenticated .advent-credit-board table :is(th, td):first-child {
+    width: 44%;
+    text-align: start;
+}
+body.authenticated .advent-credit-board thead th {
+    background: color-mix(in srgb, var(--panel) 87%, var(--accent));
+    color: var(--advent-credit-ink);
+}
+body.authenticated .advent-credit-board tbody td:last-child {
+    color: var(--advent-credit-ink);
+    font-weight: 800;
+}
+body.authenticated .advent-credit-board :is(.advent-credit-note, .advent-credit-stock-warning) {
+    padding: .65rem .75rem;
+    border: 1px solid var(--advent-credit-border);
+    border-radius: .35rem;
+    background: var(--advent-credit-surface);
+    color: var(--advent-credit-ink);
+}
+body.authenticated .advent-credit-board .advent-credit-stock-warning {
+    border-color: color-mix(in srgb, var(--line) 52%, var(--danger));
+    background: color-mix(in srgb, var(--panel) 91%, var(--danger));
+}
+body.authenticated .advent-credit-board :is(a, select, button):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+@media (max-width: 850px) {
+    body.authenticated .advent-credit-board .advent-credit-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    body.authenticated .advent-credit-board .page-heading a {
+        justify-self: start;
+    }
+    body.authenticated .advent-credit-board button {
+        width: 100%;
+    }
+}
+@media (max-width: 480px) {
+    body.authenticated .advent-credit-board table :is(th, td) {
+        padding-inline: .32rem;
+    }
+}
