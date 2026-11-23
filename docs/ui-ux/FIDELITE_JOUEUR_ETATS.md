@@ -8,7 +8,7 @@ d’une route ou un test vert ne prouve pas une reproduction pixel à pixel.
 | Planche | Vue / état pertinent | Correctif ou écart conservé |
 | --- | --- | --- |
 | P01 | Rapports : centre / filtré | Type Transport visible dans les résultats ; la séparation reste dans les badges et non un nouveau filtre. Économie conserve ses types réels. |
-| P02 | Rapport combat produit + pertes / détail dépliable | Structure conservée. Fixture du rapport complet et capture FHD propre : aucune déduction à partir de la liste de rapports. |
+| P02 | Rapport combat produit + pertes / détail dépliable | Verdict et trois chiffres réunis dans le bilan, lien Butin même sans ressources, rounds à droite. Fixture du rapport complet et capture FHD propre : aucune déduction à partir de la liste de rapports. |
 | P03 | Renseignements valides / espionnage détecté | Résumé uniquement sur les ressources réellement observées et toujours masqué si détecté. Les catégories inconnues ne sont pas déduites. |
 | P04 | Événements / défi collectif et contribution | Progression et contribution de deux défis actifs visibles au plus, obtenues par la lecture déjà autorisée. L’Avent et ses réserves restent en place. |
 | P05 | Campagne pirate / reconnaissance reçue | Résumé central et lien focalisable vers les renseignements complets. Pas de valeur de danger fictive ni de mélange entre découverte et rapport transmis. |
