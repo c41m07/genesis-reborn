@@ -554,3 +554,10 @@ body.authenticated .fleet-redesign .fleet-form:has(.core-fleet-composition-layou
 @media(min-width:1200px) {
     .core-fleet-steps { min-height:100%; }
 }
+
+@media(min-width:1200px) {
+    body.authenticated .fleet-redesign .core-fleet-steps .fleet-wizard-steps { padding-bottom:8px; }
+    body.authenticated .fleet-redesign .core-fleet-steps .fleet-wizard-panel[data-step="1"] { padding-top:8px; }
+    body.authenticated .fleet-redesign .core-fleet-steps .fleet-wizard-panel[data-step="1"] h3 { margin-bottom:5px; }
+    body.authenticated .fleet-redesign .core-fleet-steps .fleet-composition-table tbody > tr > * { padding-block:9px; }
+}
