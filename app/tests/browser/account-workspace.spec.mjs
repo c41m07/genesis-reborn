@@ -325,3 +325,83 @@ test('P06 : mes identifiants et refus sans modification du compte', async ({ pag
     await expect(tab.locator('.profile-password')).not.toHaveAttribute('open');
   } finally { await context.close(); }
 });
+
+
+test('P17 : consulter la suppression et revenir sans aucune soumission', async ({ page, browser, baseURL }, info) => {
+  test.setTimeout(120000);
+  const id = crypto.randomUUID().slice(0,8);
+  const email = 'p17-' + id + '@example.test';
+  const name = 'Horizon-' + id;
+  const password = crypto.randomUUID() + 'aA1!';
+  await page.goto('/inscription');
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Nom de commandant').fill(name);
+  await page.getByLabel('Mot de passe (12 caractères minimum)',{exact:true}).fill(password);
+  await page.getByLabel('Confirmer le mot de passe').fill(password);
+  await page.getByRole('button',{name:'Créer mon compte'}).click();
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Mot de passe',{exact:true}).fill(password);
+  await page.getByRole('button',{name:/Connexion/}).click();
+  await page.locator('.universe-card').filter({has:page.getByRole('heading',{name:/Omega/})}).getByRole('button').click();
+  await expect(page).toHaveURL(/planetes\/\d+$/);
+  const project=process.env.BROWSER_ROUTER;
+  const account=()=>queryIsolatedSql(project,`SELECT username FROM player WHERE email='${email}'`);
+  expect(account()).toBe(name);
+  const attempted=[];
+  const preventDeletion=async route=>{
+    if(route.request().method()==='GET') return route.continue();
+    attempted.push(route.request().method());
+    return route.abort();
+  };
+  await page.route('**/profil/supprimer',preventDeletion);
+  for(const theme of ['dark','light']){
+    runIsolatedSql(project,`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
+    for(const viewport of [{width:1920,height:1080},{width:390,height:844}]){
+      await page.setViewportSize(viewport);
+      await page.goto('/profil');
+      await page.getByRole('link',{name:'Voir la confirmation',exact:true}).press('Enter');
+      await expect(page).toHaveURL(/profil\/supprimer$/);
+      await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
+      const warning=page.locator('.account-deletion-page .sensitive-actions');
+      const form=page.locator('.account-delete-form');
+      await expect(warning).toContainText('Action définitive · tous les univers');
+      await expect(warning).toContainText('empires oubliés');
+      await expect(warning).toContainText('historiques de jeu et messages sont conservés');
+      await expect(form).toContainText('tous les univers');
+      await expect(form).toHaveAttribute('method','post');
+      const field=form.getByLabel('Mot de passe pour supprimer le compte',{exact:true});
+      const confirmation=form.getByRole('checkbox');
+      const submit=form.getByRole('button',{name:'Supprimer définitivement mon compte',exact:true});
+      await expect(field).toHaveValue('');
+      await expect(field).toHaveAttribute('required','');
+      await expect(confirmation).not.toBeChecked();
+      await expect(confirmation).toHaveAttribute('required','');
+      await field.focus();
+      await page.keyboard.press('Tab');
+      await expect(confirmation).toBeFocused();
+      await page.keyboard.press('Tab');
+      await expect(submit).toBeFocused();
+      await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'});});
+      await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+      await page.screenshot({path:info.outputPath(`P17-B-confirmation-${theme}-${viewport.width}.png`),animations:'disabled',scale:'css'});
+      if(viewport.width===390){
+        await submit.evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));
+        await page.screenshot({path:info.outputPath(`P17-B-commandes-${theme}-390.png`),animations:'disabled',scale:'css'});
+      }
+      expect(account()).toBe(name);
+    }
+  }
+  const native=await browser.newContext({baseURL,storageState:await page.context().storageState(),javaScriptEnabled:false});
+  try{
+    const tab=await native.newPage();
+    await tab.route('**/profil/supprimer',preventDeletion);
+    await tab.goto('/profil/supprimer');
+    await expect(tab.getByRole('heading',{name:'Suppression du compte',exact:true})).toBeVisible();
+    const menu=tab.locator('.space-navigation-menu > summary');
+    if(await menu.isVisible()) await menu.press('Enter');
+    await tab.getByRole('navigation',{name:'Compte et préférences'}).getByRole('link',{name:'Mes identifiants',exact:true}).press('Enter');
+    await expect(tab).toHaveURL(/profil$/);
+  } finally { await native.close(); }
+  expect(attempted).toEqual([]);
+  expect(account()).toBe(name);
+});
