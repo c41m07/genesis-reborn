@@ -226,7 +226,7 @@ body.authenticated .guild-discovery .guild-create button {
     margin-bottom: 24px;
 }
 
-.guild-discovery--profile .guild-public-heading h1 {
+.guild-discovery--profile .guild-public-heading h2 {
     margin-block: 0 16px;
 }
 

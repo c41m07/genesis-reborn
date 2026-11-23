@@ -118,7 +118,7 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
             if (width >= 1440) expect(form.x).toBeGreaterThan(intro.x);
             else expect(intro.y).toBeGreaterThanOrEqual(form.y + form.height);
           } else {
-            await expect(page.getByRole('heading', { level: 1 })).toContainText(guildName);
+            await expect(page.locator('.guild-public-heading').getByRole('heading', { level: 2 })).toContainText(guildName);
             await expect(page.getByRole('link', { name: 'Personnaliser la guilde', exact: true })).toHaveCount(0);
             await expect(page.locator('.guild-public-banner')).toBeVisible();
             const description = await page.locator('section[aria-labelledby="guild-public-description"]').boundingBox();
@@ -177,7 +177,7 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
       await first.locator('summary').click();
       await expect(first.locator('details li')).toContainText('Orion-' + suffix);
       await first.getByRole('link', { name: 'Consulter la présentation', exact: true }).click();
-      await expect(native.getByRole('heading', { level: 1 })).toContainText(guildName);
+      await expect(native.locator('.guild-public-heading').getByRole('heading', { level: 2 })).toContainText(guildName);
       await native.getByRole('navigation', { name: 'Navigation de guilde' })
         .getByRole('link', { name: 'Créer une guilde', exact: true }).click();
       await native.getByRole('navigation', { name: 'Navigation de guilde' })
