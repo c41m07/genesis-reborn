@@ -1,13 +1,13 @@
 {% extends 'base.html.twig' %}
 {% block title %}Hall de guilde · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="page-refinement guild-project-space project-redesign" data-page-sections="disabled">
+<div class="page-refinement guild-project-space project-redesign social-board social-board--guild-hall" data-page-sections="disabled">
     <div class="page-heading"><div><h1>Hall de guilde</h1><p>Une construction collective pour {{ guild.name }} dans cet univers.</p></div></div>
     {% include 'ui/guild_navigation.html.twig' with {compactNavigation:true} %}
     <div class="guild-project-detail{% if (maximum > 0 and colonies) or may_place %} project-active-layout{% endif %}">
         <section class="panel" aria-labelledby="hall-progress-title">
             <h2 id="hall-progress-title">Progression de la construction</h2>
-            <p>{{ (required - remaining)|number_format(0, ',', ' ') }} / {{ required|number_format(0, ',', ' ') }} unités de force</p>
+            <p class="hall-progress-value">{{ (required - remaining)|number_format(0, ',', ' ') }} / {{ required|number_format(0, ',', ' ') }} unités de force</p>
             <progress aria-labelledby="hall-progress-title" max="{{ required }}" value="{{ required - remaining }}">{{ (required - remaining)|number_format(0, ',', ' ') }} sur {{ required|number_format(0, ',', ' ') }}</progress>
             <h3 id="hall-donors-title">Donateurs qualifiés</h3>
             <p>{{ qualified_donors }} / {{ required_donors }} personnes ont donné au moins {{ minimum_donor_strength|number_format(0, ',', ' ') }} points chacun en étant membres de la guilde.</p>
@@ -40,11 +40,13 @@
                         <select id="hall-colony" name="planet_id" required>
                             {% for planet in colonies %}<option value="{{ planet.id }}">{{ planet.name }} · {{ planet.coordinates() }}</option>{% endfor %}
                         </select>
-                        <fieldset>
+                        <fieldset class="hall-resource-fields">
                             <legend>Ressources à donner</legend>
                             {% for resource, field in resource_fields %}
+                                <div>
                                 <label for="hall-{{ resource }}">{{ field.label }}</label>
                                 <input id="hall-{{ resource }}" name="resources[{{ resource }}]" type="number" inputmode="numeric" min="0" step="1" placeholder="0" max="{{ field.maximum }}">
+                                </div>
                             {% endfor %}
                         </fieldset>
                         <p>Les dons sont volontaires. Une part entière reste réservée à chaque donateur qui doit encore se qualifier.</p>
