@@ -59,7 +59,7 @@
                 <input type="hidden" name="membership_id" value="{{ vacation_membership.id }}">
                 {% if vacation_state.can_start %}<p class="preference-toggle"><input id="vacation-confirm" type="checkbox" name="confirm" value="1" required aria-describedby="vacation-rules"><label for="vacation-confirm">J’ai lu ces conditions et je souhaite activer les vacances pour cet univers.</label></p>{% endif %}
                 <div class="vacation-start-actions">
-                    <button class="primary full" {% if not vacation_state.can_start %}disabled aria-describedby="vacation-start-blocker"{% else %}aria-describedby="vacation-rules"{% endif %}>Activer le mode vacances dans cet univers</button>
+                    <button class="primary full" aria-label="Activer le mode vacances dans cet univers" {% if not vacation_state.can_start %}disabled aria-describedby="vacation-start-blocker"{% else %}aria-describedby="vacation-rules"{% endif %}>Activer le mode vacances</button>
                     <a class="secondary" href="{{ path('app_preferences') }}">Retour aux préférences</a>
                 </div>
             </form>

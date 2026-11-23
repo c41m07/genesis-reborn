@@ -30,6 +30,17 @@ test('P17 A : consulter les restrictions et le refus natif sans activer les vaca
     return route.abort();
   };
   await page.route('**/profil/preferences/vacances/**',preventMutation);
+  await page.goto('/profil/vacances');
+  // La suite standard peut tourner avec la fonctionnalité indisponible.
+  // Le harnais P17-A l'exige seulement pour l'exercice visuel avec opt-in.
+  if (await page.locator('#vacation-rules').count() === 0) {
+    expect(process.env.P17A_REQUIRE_VACATION).not.toBe('1');
+    await expect(page.locator('#vacances-info')).toContainText('n’est pas disponible');
+    await expect(page.locator('form[action*="/vacances/"]')).toHaveCount(0);
+    expect(vacationCount()).toBe('0');
+    expect(attempted).toEqual([]);
+    return;
+  }
   for (const blocked of [false,true]) {
     if (blocked) {
       // Même cause que le test Controller : un retour synthétique déjà en cours, sans départ de flotte ni worker.
@@ -58,6 +69,10 @@ test('P17 A : consulter les restrictions et le refus natif sans activer les vaca
         const submit=form.getByRole('button',{name:'Activer le mode vacances dans cet univers',exact:true});
         const safeBack=form.getByRole('link',{name:'Retour aux préférences',exact:true});
         await expect(safeBack).toHaveAttribute('href','/profil/preferences');
+        const [primary, alternate] = await Promise.all([submit.boundingBox(),safeBack.boundingBox()]);
+        expect(primary.height).toBeGreaterThanOrEqual(44);
+        expect(alternate.height).toBeGreaterThanOrEqual(44);
+        expect(alternate.x >= primary.x+primary.width-1 || alternate.y >= primary.y+primary.height-1).toBe(true);
         if(blocked){
           await expect(page.locator('#vacation-start-blocker')).toContainText('Activation indisponible');
           await expect(page.locator('#vacation-start-blocker')).toContainText('Toutes vos flottes doivent être rentrées');
