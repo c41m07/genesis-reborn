@@ -255,3 +255,7 @@
     }
     .gv2-workspace .gv2-map-controls button { padding-inline:4px; font-size:12px; white-space:normal; }
 }
+
+/* Dans la liste, retrouver tous les contrôles de contexte dans le même bandeau. */
+.galaxy-list-toolbar .galaxy-index-filter:not([hidden]) { flex:1 1 min(100%,14rem); }
+.galaxy-list-toolbar .galaxy-index-filter input { min-width:0; width:100%; }

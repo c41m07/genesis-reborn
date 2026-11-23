@@ -606,3 +606,9 @@ body.authenticated .fleet-redesign .fleet-mission-summary .fleet-review-units :i
 body.authenticated .fleet-redesign .fleet-mission-summary .fleet-review-units caption {
     padding:0 0 5px;
 }
+
+/* L'action suit les missions qu'elle complète, et subsiste hors fragment actualisé. */
+.fleet-redesign .core-fleet-prepare-shortcut {
+    display:inline-flex; align-items:center; min-height:44px; width:fit-content;
+    margin-top:12px; max-width:100%; white-space:normal;
+}

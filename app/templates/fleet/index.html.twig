@@ -4,7 +4,7 @@
 {% block incoming_fleets %}{% endblock %}
 {% block body %}
 <div class="fleet-page-layout fleet-space fleet-redesign{{ fleet_page in ['orbits','holds'] ? ' fleet-harbour' : '' }}" data-page-sections="disabled" data-fleet-colony="{{ fleet_planet ? fleet_planet.id : 0 }}" data-controller="colony-live" data-colony-live-url-value="{{ path(app.request.attributes.get('_route')) }}">
-<div class="page-heading"><div>{% if fleet_page == 'prepare' %}<p class="core-fleet-kicker">Console de navigation</p>{% endif %}<h1>{{ pageTitle }}</h1>{% if fleet_planet %}<p class="muted fleet-colony-scope">Colonie active : {{ fleet_planet.name }} · {{ fleet_planet.coordinates() }}</p>{% endif %}</div>{% if fleet_page=='missions' %}<a class="primary" href="{{ path('app_fleet_prepare') }}">Nouvelle mission</a>{% endif %}</div>
+<div class="page-heading"><div>{% if fleet_page == 'prepare' %}<p class="core-fleet-kicker">Console de navigation</p>{% endif %}<h1>{{ pageTitle }}</h1>{% if fleet_planet %}<p class="muted fleet-colony-scope">Colonie active : {{ fleet_planet.name }} · {{ fleet_planet.coordinates() }}</p>{% endif %}</div></div>
 {% include 'fleet/_counts.html.twig' %}
 {% if fleet_page=='prepare' %}
 {% if fuel_pending %}<p class="flash" role="status">Les départs attendent la validation de la règle de consommation de carburant.</p>{% endif %}
@@ -14,6 +14,7 @@
     <div class="core-fleet-tracking-list">
         {% include 'fleet/_pagination.html.twig' %}
         {% include 'ui/flights.html.twig' %}
+        <a class="primary core-fleet-prepare-shortcut" href="{{ path('app_fleet_prepare') }}">Nouvelle mission</a>
     </div>
     <aside class="core-fleet-incoming" aria-label="Arrivées et informations de composition autorisées">
         {% include 'ui/incoming_attacks.html.twig' %}
