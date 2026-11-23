@@ -9,7 +9,11 @@
     {{ form_errors(form) }}
     {{ form_row(form.email) }}
     {{ form_row(form.username, {help: '3 à 40 lettres, chiffres, espaces, tirets ou tirets bas.'}) }}
-    {{ form_row(form.plainPassword) }}
+    <div class="entry-password-pair">
+        {{ form_errors(form.plainPassword) }}
+        {{ form_row(form.plainPassword.first) }}
+        {{ form_row(form.plainPassword.second) }}
+    </div>
     <button class="primary full" type="submit">Créer mon compte</button>
 {{ form_end(form) }}
 <p class="auth-back"><a href="{{ path('app_login') }}">Retour à la connexion</a></p>
