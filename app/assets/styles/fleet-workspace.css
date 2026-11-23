@@ -448,8 +448,8 @@ body.authenticated .fleet-redesign .core-fleet-workspace > .fleet-operations-rai
 .core-fleet-side { display:grid; gap:14px; align-content:start; }
 .core-fleet-side .fleet-mission-summary-card { padding:14px; }
 .core-fleet-recap { padding:18px; min-width:0; align-self:start; }
-.core-fleet-recap h3 { display:flex; align-items:center; gap:7px; margin:0 0 12px; font-size:19px; }
-.core-fleet-recap h3 .icon { width:18px; height:18px; color:var(--accent); }
+.core-fleet-recap h2 { display:flex; align-items:center; gap:7px; margin:0 0 12px; font-size:19px; }
+.core-fleet-recap h2 .icon { width:18px; height:18px; color:var(--accent); }
 .core-fleet-recap-total {
     display:flex;
     align-items:baseline;
@@ -483,7 +483,7 @@ body.authenticated .fleet-redesign .core-fleet-workspace > .fleet-operations-rai
 .core-fleet-recap-actions .fleet-wizard-actions > .primary { grid-row:1; }
 .core-fleet-recap .core-fleet-recap-notice { margin:10px 0 0; font-size:12px; }
 .core-fleet-recap-quote .core-fleet-quote { padding-top:10px; margin-top:10px; border-top:1px solid var(--line); }
-.core-fleet-recap-quote .core-fleet-quote h4 { margin:0 0 8px; font-size:14px; }
+.fleet-redesign .core-fleet-quote .core-fleet-quote-title { margin:0 0 8px; font-size:14px; }
 .fleet-wizard-ready .fleet-review-grid { grid-template-columns:minmax(0,1fr); }
 .fleet-redesign .fleet-composition-table {
     border-collapse:separate;

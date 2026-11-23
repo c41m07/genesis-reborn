@@ -21,8 +21,11 @@ test('Thème sombre par défaut : dashboard structuré et navigation responsive'
   await expect.poll(() => page.locator('.dashboard-layout').evaluate(el => getComputedStyle(el).display)).toBe('grid');
   const metrics = page.locator('.dashboard-metrics .metric-card');
   await expect(metrics).toHaveCount(4);
-  await expect(metrics.nth(1)).toContainText('Classement');
-  await expect(metrics.nth(1).locator('strong')).toHaveText(/^#\d+$/);
+  await expect(metrics.nth(0)).toContainText('Planètes');
+  await expect(metrics.nth(1)).toContainText('Points d’empire');
+  await expect(metrics.nth(2)).toContainText('Classement');
+  await expect(metrics.nth(2)).toHaveAttribute('href', '/classement');
+  await expect(metrics.nth(2).locator('strong')).toHaveText(/^#\d+$/);
   await expect(metrics.nth(3)).toContainText('Guilde');
   await expect(metrics.nth(3)).toHaveAttribute('href', '/guildes');
   await page.setViewportSize({ width: 1440, height: 900 });
