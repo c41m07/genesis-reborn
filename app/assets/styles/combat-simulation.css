@@ -53,8 +53,11 @@ body[data-theme=light] .simulation-workspace .simulation-survivors { color:#1767
 /* À grand écran, les réglages avancés fermés partagent une ligne. Une
    section ouverte retrouve toute la largeur, sans superposer de commandes. */
 @media (min-width: 1180px) and (min-height: 850px) {
+    .player-simulation-board .simulation-board-nav { margin-block:.55rem; }
+    .player-simulation-board .simulation-form { padding-block:.65rem; }
     .player-simulation-board .simulation-form > .strategic-grid > section {
-        display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-content:start; align-items:start; gap:.35rem .6rem;
+        display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-content:start; align-items:start; gap:.25rem .6rem;
+        padding-block:.65rem;
     }
     .player-simulation-board .simulation-form > .strategic-grid > section > * { grid-column:1 / -1; }
     .player-simulation-board .simulation-form > .strategic-grid > section > details:not([open]):not(:first-of-type) { grid-column:auto; }
@@ -62,11 +65,12 @@ body[data-theme=light] .simulation-workspace .simulation-survivors { color:#1767
     .player-simulation-board .simulation-form > .strategic-grid > section > details > summary { padding:.35rem 0; overflow-wrap:anywhere; }
     .player-simulation-board .simulation-form > .strategic-grid > section > label { margin:.2rem 0 0; }
     .player-simulation-board .simulation-board-source-link { margin:0 0 .1rem; }
-    .player-simulation-board .simulation-board-unit-scroll { max-height:clamp(10rem,18vh,12rem); }
-    .player-simulation-board .simulation-board-options { gap:.45rem .85rem; margin:.75rem 0 0; }
+    .player-simulation-board .simulation-board-unit-scroll { max-height:clamp(9.5rem,15.5vh,10.5rem); }
+    .player-simulation-board .simulation-board-unit-scroll :is(td,th) { padding-block:.33rem; }
+    .player-simulation-board .simulation-board-options { gap:.4rem .85rem; margin:.55rem 0 0; }
     .player-simulation-board .simulation-board-options > div > label { margin:0 0 .3rem; }
     .player-simulation-board .simulation-board-options > div > p { margin:.3rem 0 0; }
-    .player-simulation-board .simulation-board-assumptions { margin:0; }
+    .player-simulation-board .simulation-board-assumptions { margin:0; padding-block:.65rem; }
 }
 .player-simulation-board .simulation-trial-summary { margin:1rem 0; }
 .player-simulation-board .simulation-trial-summary :is(th,td) { padding:.55rem .75rem; font-variant-numeric:tabular-nums; }
