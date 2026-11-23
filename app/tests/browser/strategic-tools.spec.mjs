@@ -78,6 +78,21 @@ test('P13 : scénario du simulateur avec deux camps et contrôles natifs', async
    await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
    await page.locator('.simulation-board-unit-scroll:visible').evaluateAll(elements=>elements.forEach(element=>element.scrollTo({top:0,left:0,behavior:'instant'})));
    await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+   if (viewport.width===1920) {
+    const attackerRound=await page.locator('#arrival-attacker').boundingBox();
+    const defenderRound=await page.locator('#arrival-defender').boundingBox();
+    expect(Math.abs(attackerRound.y-defenderRound.y)).toBeLessThanOrEqual(4);
+    await expect(submit).toBeInViewport({ratio:1});
+    const shipTables=page.locator('.strategic-grid section > details:first-of-type .simulation-board-unit-scroll');
+    await expect(shipTables).toHaveCount(2);
+    for (const table of await shipTables.all()) {
+     expect(await table.evaluate(element=>{
+      const first=element.querySelector('tbody input').getBoundingClientRect();
+      const region=element.getBoundingClientRect();
+      return first.top>=region.top && first.bottom<=region.bottom;
+     })).toBe(true);
+    }
+   }
    await page.screenshot({path:testInfo.outputPath('P13-scenario-'+theme+'-'+viewport.width+'.png'),scale:'css',animations:'disabled'});
    if (viewport.width===390) {
     await page.getByRole('button',{name:'Simuler 10 combats'}).scrollIntoViewIfNeeded();
