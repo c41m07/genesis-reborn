@@ -156,3 +156,68 @@ test('L4 A : compte structuré, confirmations et états sensibles sur ordinateur
   await verifyView(page, info, 'profile-erreur', 'light', 390);
   expect(errors).toEqual([]);
 });
+
+
+test('P07 : réglages enregistrés et vacances inactives', async ({ page, browser, baseURL }, info) => {
+  test.setTimeout(120000);
+  const id = crypto.randomUUID().slice(0, 8);
+  const email = 'p07-' + id + '@example.test';
+  const password = crypto.randomUUID() + 'aA1!';
+  await page.goto('/inscription');
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Nom de commandant').fill('Cadet-' + id);
+  await page.getByLabel('Mot de passe (12 caractères minimum)', {exact:true}).fill(password);
+  await page.getByLabel('Confirmer le mot de passe').fill(password);
+  await page.getByRole('button', {name:'Créer mon compte'}).click();
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Mot de passe', {exact:true}).fill(password);
+  await page.getByRole('button', {name:/Connexion/}).click();
+  await page.locator('.universe-card').filter({has:page.getByRole('heading',{name:/Omega/})}).getByRole('button').click();
+  await expect(page).toHaveURL(/planetes\/\d+$/);
+  const project = process.env.BROWSER_ROUTER;
+  const member = Number(queryIsolatedSql(project, `SELECT current_player_universe_id FROM player WHERE email='${email}'`));
+  expect(member).toBeGreaterThan(0);
+  const vacations = () => queryIsolatedSql(project, `SELECT COUNT(*) FROM vacation_period WHERE membership_id=${member}`);
+  const route = '/profil/preferences';
+  for (const theme of ['dark', 'light']) {
+    for (const viewport of [{width:1920,height:1080},{width:390,height:844}]) {
+      await page.setViewportSize(viewport);
+      await page.goto(route);
+      const settings = page.locator('.account-preferences-form');
+      const guide = page.locator('.first-steps-preference-form');
+      await expect(guide.getByLabel('Afficher le guide Premiers pas', {exact:true})).toBeChecked();
+      await expect(page.locator('.account-board-rail')).toContainText('Pas de vacances actives');
+      await settings.getByLabel('Thème de l’interface').selectOption(theme);
+      await settings.getByLabel('Fuseau horaire de l’horloge').selectOption('Europe/Paris');
+      for (const action of ['espionnage', 'colonisation']) {
+        await settings.getByLabel(new RegExp('Vitesse par défaut.*'+action)).selectOption({label:'100 %'});
+      }
+      await settings.getByLabel('Accepter les ressources envoyées par').selectOption('allies');
+      const submitted = page.waitForResponse(r=>r.request().method()==='POST' && new URL(r.url()).pathname===route);
+      await settings.getByRole('button',{name:'Enregistrer les paramètres',exact:true}).press('Enter');
+      expect((await submitted).status()).toBe(302);
+      await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
+      const confirmation = page.getByText('Préférences enregistrées.', {exact:true});
+      await expect(confirmation).toBeVisible();
+      await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+      await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+      await page.screenshot({path:info.outputPath(`P07-preferences-${theme}-${viewport.width}.png`),animations:'disabled',scale:'css'});
+      if (viewport.width===390) {
+        await confirmation.evaluate(element=>element.scrollIntoView({block:'center',behavior:'instant'}));
+        await page.screenshot({path:info.outputPath(`P07-confirmation-${theme}-390.png`),animations:'disabled',scale:'css'});
+      }
+      await expect(guide.getByLabel('Afficher le guide Premiers pas',{exact:true})).toBeChecked();
+      expect(vacations()).toBe('0');
+    }
+  }
+  expect(queryIsolatedSql(project,`SELECT JSON_EXTRACT(preferences,'$.theme') FROM player WHERE email='${email}'`)).toBe('"light"');
+  const native = await browser.newContext({baseURL,storageState:await page.context().storageState(),javaScriptEnabled:false});
+  try {
+    const tab = await native.newPage();
+    await tab.goto(route);
+    await tab.getByRole('link',{name:'Examiner les restrictions',exact:true}).press('Enter');
+    await expect(tab).toHaveURL(/profil\/vacances$/);
+    await expect(tab.getByRole('heading',{name:'Mode vacances',exact:true})).toBeVisible();
+  } finally { await native.close(); }
+  expect(vacations()).toBe('0');
+});
