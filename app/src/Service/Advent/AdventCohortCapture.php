@@ -7,6 +7,7 @@ namespace App\Service\Advent;
 use App\Entity\Universe;
 use App\Service\Catalog\GameCatalog;
 use Doctrine\DBAL\{ArrayParameterType, Connection};
+use Doctrine\DBAL\Exception\RetryableException;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 
@@ -64,36 +65,57 @@ final readonly class AdventCohortCapture
             $db->rollBack();
             throw $error;
         }
-        $count = $db->transactional(function (Connection $connection) use ($edition, $profiles, $observedAt, $late): ?int {
-            $prior = $connection->fetchOne('SELECT cohort_captured_at FROM advent_edition WHERE id = ? FOR UPDATE', [$edition]);
-            if ($prior === false) {
-                throw new \DomainException('L’édition n’existe plus.');
-            }
-            if ($prior !== null) {
-                return null;
-            }
-            $written = 0;
-            // Publier le résultat entier ou rien. Le relevé calculé ne
-            // réinsère pas un compte effacé ou verrouillé depuis la lecture.
-            foreach (array_chunk($profiles, self::PAGE_SIZE) as $batch) {
-                $rows = [];
-                $args = [];
-                foreach ($batch as [$player, $universe, $bracket]) {
-                    $rows[] = 'SELECT ? AS player_id, ? AS universe_id, ? AS bracket';
-                    array_push($args, $player, $universe, $bracket);
+        // Les inscriptions tiennent le compte avant d’écrire une observation
+        // liée à l’édition. Respecter ce même ordre, sans prendre de verrou de
+        // jeu ni patienter si un compte a déjà une transaction active.
+        try {
+            $db->executeStatement('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+            $count = $db->transactional(function (Connection $connection) use ($edition, $profiles, $observedAt, $late): ?int {
+                $players = array_values(array_unique(array_column($profiles, 0)));
+                sort($players, SORT_NUMERIC);
+                $eligible = [];
+                foreach (array_chunk($players, self::PAGE_SIZE) as $batch) {
+                    foreach ($connection->fetchFirstColumn(
+                        'SELECT id FROM player WHERE id IN (?) AND locked_at IS NULL ORDER BY id LOCK IN SHARE MODE NOWAIT',
+                        [$batch], [ArrayParameterType::INTEGER],
+                    ) as $id) {
+                        $eligible[(int) $id] = true;
+                    }
                 }
-                $written += $connection->executeStatement(
-                    'INSERT INTO advent_progression (advent_edition_id, player_id, universe_id, bracket, observed_at, origin)
-                     SELECT ?, selected.player_id, selected.universe_id, selected.bracket, ?, ?
-                     FROM ('.implode(' UNION ALL ', $rows).') selected
-                     INNER JOIN player p ON p.id = selected.player_id AND p.locked_at IS NULL
-                     ON DUPLICATE KEY UPDATE id = advent_progression.id',
-                    [$edition, $observedAt, $late ? 'late_cohort' : 'cohort', ...$args],
-                );
-            }
-            $connection->executeStatement('UPDATE advent_edition SET cohort_captured_at = ? WHERE id = ?', [$observedAt, $edition]);
-            return $written;
-        });
+                $prior = $connection->fetchOne('SELECT cohort_captured_at FROM advent_edition WHERE id = ? FOR UPDATE', [$edition]);
+                if ($prior === false) {
+                    throw new \DomainException('L’édition n’existe plus.');
+                }
+                if ($prior !== null) {
+                    return null;
+                }
+
+                $written = 0;
+                // Tout ou rien ; aucune écriture de partie n’est exécutée.
+                foreach (array_chunk($profiles, self::PAGE_SIZE) as $batch) {
+                    $rows = [];
+                    $args = [];
+                    foreach ($batch as [$player, $universe, $bracket]) {
+                        if (isset($eligible[$player])) {
+                            $rows[] = '(?, ?, ?, ?, ?, ?)';
+                            array_push($args, $edition, $player, $universe, $bracket, $observedAt, $late ? 'late_cohort' : 'cohort');
+                        }
+                    }
+                    if ($rows !== []) {
+                        $written += $connection->executeStatement(
+                            'INSERT INTO advent_progression (advent_edition_id, player_id, universe_id, bracket, observed_at, origin)
+                             VALUES '.implode(', ', $rows).' ON DUPLICATE KEY UPDATE id = advent_progression.id',
+                            $args,
+                        );
+                    }
+                }
+                $connection->executeStatement('UPDATE advent_edition SET cohort_captured_at = ? WHERE id = ?', [$observedAt, $edition]);
+
+                return $written;
+            });
+        } catch (RetryableException $error) {
+            throw new \DomainException('Un compte est en cours de modification pendant le relevé. Aucun profil n’a été publié ; réessayez.', previous: $error);
+        }
 
         return [
             'state' => $count === null ? 'already' : ($late ? 'late' : 'captured'),

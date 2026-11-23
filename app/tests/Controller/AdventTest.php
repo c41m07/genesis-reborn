@@ -396,6 +396,39 @@ final class AdventTest extends WebTestCase
         self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_claim'));
     }
 
+    public function testCaptureDefersWithoutTakingTheEditionWhileAccountIsChangingUniverse(): void
+    {
+        $member = $this->player('AdventCohortBusyMember');
+        $admin = $this->player('AdventCohortBusyAdmin', admin: true);
+        $edition = $this->publishConsolidated($admin);
+        $this->clock->sleep(8 * 3600);
+        $db = $this->em->getConnection();
+        $args = ['action' => 'capture', 'edition' => $edition, 'when' => '2026-11-30 23:00:00'];
+        $worker = new Process([PHP_BINARY, dirname(__DIR__).'/Support/concurrent_advent_open.php', json_encode($args, JSON_THROW_ON_ERROR)]);
+        $worker->setTimeout(15);
+        try {
+            $db->beginTransaction();
+            $db->fetchOne('SELECT id FROM player WHERE id = ? FOR UPDATE', [$member->id]);
+            // Un deuxième processus tente réellement de publier pendant que
+            // le verrou compte est tenu, comme lors du choix d’un univers.
+            self::assertSame(0, $worker->run(), $worker->getErrorOutput());
+            self::assertSame('deferred', trim($worker->getOutput()));
+            self::assertNull($db->fetchOne('SELECT cohort_captured_at FROM advent_edition WHERE id = ? LOCK IN SHARE MODE NOWAIT', [$edition]));
+            self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_progression WHERE advent_edition_id = ?', [$edition]));
+            $db->commit();
+        } finally {
+            if ($db->isTransactionActive()) {
+                $db->rollBack();
+            }
+            $worker->stop(0);
+        }
+
+        $report = static::getContainer()->get(AdventCohortCapture::class)->capture($edition);
+        self::assertSame('captured', $report['state']);
+        self::assertSame(2, $report['profiles']);
+        self::assertSame('already', static::getContainer()->get(AdventCohortCapture::class)->capture($edition)['state']);
+    }
+
     public function testTwoUniverseTabsCannotElectTwoProfilesForOneAccount(): void
     {
         $member = $this->player('AdventRaceElection');

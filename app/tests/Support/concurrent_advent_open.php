@@ -6,7 +6,7 @@ require dirname(__DIR__).'/bootstrap.php';
 
 use App\Entity\{AdventEdition, Planet, Player, PlayerUniverse};
 use App\Kernel;
-use App\Service\Advent\{AdventParticipation, AdventRewards};
+use App\Service\Advent\{AdventCohortCapture, AdventParticipation, AdventRewards};
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Clock\MockClock;
 
@@ -22,6 +22,19 @@ $params = $connection->getParams();
 if (($params['host'] ?? '') !== 'database-test' || ($params['dbname'] ?? '') !== 'genesis_v2_test') {
     throw new RuntimeException('Base de recette non isolée.');
 }
+if (($input['action'] ?? 'open') === 'capture') {
+    try {
+        $container->get(AdventCohortCapture::class)->capture($input['edition']);
+        echo "captured\n";
+    } catch (DomainException $error) {
+        if (!str_contains($error->getMessage(), 'Un compte est en cours de modification')) {
+            throw $error;
+        }
+        echo "deferred\n";
+    }
+    return;
+}
+
 $player = $em->find(Player::class, $input['player']);
 $membership = $em->find(PlayerUniverse::class, $input['membership']);
 $planet = isset($input['planet']) ? $em->find(Planet::class, $input['planet']) : null;
