@@ -531,7 +531,7 @@ body.authenticated .advent-board :is(.advent-day-tile, .advent-state)[data-state
 
 /* Planche 08-01 : la porte 6 sélectionnée et réellement disponible reste
    repérable sur la grille ; les autres états gardent leur présentation. */
-.advent-board:has(#advent-door-6:target .advent-choice, .advent-layout:not(:has(.advent-door:target)) #advent-door-6[data-default] .advent-choice)
+.advent-board:is(:has(#advent-door-6:target .advent-choice), :not(:has(.advent-door:target)):has(#advent-door-6[data-default] .advent-choice))
     .advent-day-tile[href="#advent-door-6"] {
     border-color: var(--advent-open);
     background: color-mix(in srgb, var(--advent-open) 11%, var(--panel));
@@ -540,15 +540,15 @@ body.authenticated .advent-board :is(.advent-day-tile, .advent-state)[data-state
 @media (min-width: 1021px) {
     /* Le récapitulatif et le contexte d'univers restent visibles sans ouvrir
        une seconde boîte. Premiers pas garde sa place et ses commandes. */
-    body.authenticated .advent-board:has(#advent-door-6:target .advent-choice, .advent-layout:not(:has(.advent-door:target)) #advent-door-6[data-default] .advent-choice)
+    body.authenticated .advent-board:is(:has(#advent-door-6:target .advent-choice), :not(:has(.advent-door:target)):has(#advent-door-6[data-default] .advent-choice))
         :is(.advent-board-heading, .advent-destination, .advent-universe) {
         margin-block: .45rem;
     }
-    body.authenticated .advent-board:has(#advent-door-6:target .advent-choice, .advent-layout:not(:has(.advent-door:target)) #advent-door-6[data-default] .advent-choice)
+    body.authenticated .advent-board:is(:has(#advent-door-6:target .advent-choice), :not(:has(.advent-door:target)):has(#advent-door-6[data-default] .advent-choice))
         .advent-universe {
         padding: .55rem .85rem;
     }
-    body.authenticated .advent-board:has(#advent-door-6:target .advent-choice, .advent-layout:not(:has(.advent-door:target)) #advent-door-6[data-default] .advent-choice)
+    body.authenticated .advent-board:is(:has(#advent-door-6:target .advent-choice), :not(:has(.advent-door:target)):has(#advent-door-6[data-default] .advent-choice))
         .advent-universe :is(p, h2) {
         margin: .2rem 0;
         line-height: 1.4;
