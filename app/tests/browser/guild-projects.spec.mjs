@@ -211,26 +211,36 @@ test('Projets sans JavaScript : lancement, don et historique restent accessibles
     await expect(recap).toContainText('Minimums atteints');
     await expect(page.locator('.guild-stage-progress progress')).toHaveAttribute('value', '2');
     await expect(page.getByLabel('Don Métal', { exact: true })).toHaveAttribute('max', '8');
-    for (const theme of ['dark', 'light']) {
-      runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(IF(JSON_TYPE(preferences)='OBJECT',preferences,JSON_OBJECT()),'$.theme','${theme}','$.firstStepsGuide',false) WHERE email='native-project-${id}@example.test'`);
-      for (const [width,height] of [[1920, 1080], [390, 844]]) {
-        await page.setViewportSize({ width, height });
-        await page.reload();
-        await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
-        await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-        const progress = await page.locator('.project-overview').boundingBox();
-        const donation = await page.locator('#project-donation').boundingBox();
-        if (width === 1920) expect(donation.x).toBeGreaterThanOrEqual(progress.x + progress.width);
-        else expect(donation.y).toBeGreaterThanOrEqual(progress.y + progress.height);
-        await page.screenshot({ path: testInfo.outputPath(`S09-en-cours-${theme}-${width}.png`), animations:'disabled' });
-        if (width===390) {
-          await page.getByRole('heading', {name:'Contribuer au palier'}).scrollIntoViewIfNeeded();
-          await page.screenshot({ path: testInfo.outputPath(`S09-don-${theme}-${width}.png`), animations:'disabled' });
+    const auditContext = await browser.newContext({ baseURL, storageState: await context.storageState() });
+    try {
+      const auditPage = await auditContext.newPage();
+      for (const theme of ['dark', 'light']) {
+        runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(IF(JSON_TYPE(preferences)='OBJECT',preferences,JSON_OBJECT()),'$.theme','${theme}','$.firstStepsGuide',false) WHERE email='native-project-${id}@example.test'`);
+        for (const [width,height] of [[1920, 1080], [390, 844]]) {
+          await page.setViewportSize({ width, height });
+          await page.reload();
+          await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+          await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+          const progress = await page.locator('.project-overview').boundingBox();
+          const donation = await page.locator('#project-donation').boundingBox();
+          if (width === 1920) expect(donation.x).toBeGreaterThanOrEqual(progress.x + progress.width);
+          else expect(donation.y).toBeGreaterThanOrEqual(progress.y + progress.height);
+          await page.screenshot({ path: testInfo.outputPath(`S09-en-cours-${theme}-${width}.png`), animations:'disabled' });
+          if (width===390) {
+            await page.getByRole('heading', {name:'Contribuer au palier'}).scrollIntoViewIfNeeded();
+            await page.screenshot({ path: testInfo.outputPath(`S09-don-${theme}-${width}.png`), animations:'disabled' });
+          }
+          // Axe a besoin de JavaScript ; les dons et captures restent natifs dans
+          // le premier contexte, sur la même session et le même projet.
+          await auditPage.setViewportSize({ width, height });
+          await auditPage.goto(page.url());
+          await expect(auditPage.locator('.project-personal-recap')).toContainText('Métal : 2 / 2');
+          await expect(auditPage.locator('body')).toHaveAttribute('data-theme', theme);
+          const result = await new AxeBuilder({ page: auditPage }).include('.guild-project-detail').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
+          expect(result.violations).toEqual([]);
         }
-        const result = await new AxeBuilder({ page }).include('.guild-project-detail').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
-        expect(result.violations).toEqual([]);
       }
-    }
+    } finally { await auditContext.close(); }
     await page.getByLabel('Don Métal', { exact: true }).fill('8');
     await page.getByRole('button', { name: 'Donner ces ressources', exact: true }).click();
     await expect(page.locator('.flash.success')).toContainText('Le projet est terminé');
