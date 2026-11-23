@@ -61,7 +61,8 @@ export default class extends Controller {
 
     closeReport(event) {
         const report = event.currentTarget.closest('.message-report');
-        if (!report) return;
+        if (!report?.open) return;
+        event.preventDefault();
         report.open = false;
         report.querySelector('summary')?.focus();
     }

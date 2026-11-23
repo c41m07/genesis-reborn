@@ -1446,3 +1446,8 @@ body.authenticated .social-board :is(.guild-hall-closed, .social-feedback-guidan
 body.authenticated .social-board :is(.guild-hall-closed, .social-feedback-guidance) :is(h2, h3) {
     margin-block: 0 8px;
 }
+
+body.authenticated .social-board--messages .inbox-item--unavailable .inbox-guild-hint {
+    margin: 3px 0 0;
+    padding: 0;
+}

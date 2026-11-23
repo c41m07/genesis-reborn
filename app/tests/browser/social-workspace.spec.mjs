@@ -46,6 +46,18 @@ test('L7E A : recherche, actualisation des non-lus et rédaction restent indépe
         await expect(page.locator('.message-day time')).toHaveCount(1);
         await page.setViewportSize({ width: 1920, height: 1080 });
         await page.screenshot({ path: info.outputPath('social-S12-messagerie-1920x1080.png'), animations: 'disabled' });
+        await page.setViewportSize({ width: 390, height: 844 });
+        await expect(page.getByRole('link', { name: 'Retour à la messagerie' })).toHaveAttribute('href', '/messages');
+        const report = page.locator('.message-report');
+        await report.locator('summary').focus();
+        await page.keyboard.press('Enter');
+        await expect(report).toHaveAttribute('open', '');
+        await expect(report.getByRole('button', { name: 'Fermer', exact: true })).toBeVisible();
+        await page.screenshot({ path: info.outputPath('social-S16-signalement-390x844.png'), animations: 'disabled' });
+        await page.keyboard.press('Escape');
+        await expect(report).not.toHaveAttribute('open', '');
+        await expect(report.locator('summary')).toBeFocused();
+        await page.setViewportSize({ width: 1920, height: 1080 });
         const textarea = page.getByLabel('Votre message', { exact: true });
         await textarea.fill('Brouillon conservé pendant les actualisations.');
         await textarea.focus();
