@@ -19,10 +19,11 @@ export default class extends Controller {
             this.element.scrollTop = this.element.scrollHeight;
             // Le seuil suit la disposition empilée contacts/conversation du lot L7E.
             this.frame = window.requestAnimationFrame(() => {
+                // Un ancien empire n'a pas de formulaire, mais son fil reste consultable sur mobile.
                 const form = pane?.querySelector('.message-compose');
-                if (!form) return;
-                const rect = form.getBoundingClientRect();
-                if (window.matchMedia('(max-width: 1050px)').matches || rect.bottom > window.innerHeight) {
+                if (window.matchMedia('(max-width: 1050px)').matches) {
+                    (form ?? this.element).scrollIntoView({ block: 'end', behavior: 'instant' });
+                } else if (form && form.getBoundingClientRect().bottom > window.innerHeight) {
                     form.scrollIntoView({ block: 'end', behavior: 'instant' });
                 }
             });
