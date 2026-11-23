@@ -15,15 +15,20 @@
 {% for type in queueTypes %}{% set label = queueLabels[type] %}
 {% set items=queues[type]|default([]) %}{% set head=items|first %}
 {% if catalogue %}
-<details class="scene-operation catalog-disclosure{{ type == selectedQueue ? ' catalog-queue-current' : '' }}" data-queue-type="{{ type }}" data-catalog-disclosure="queue-{{ type }}">
+<details class="scene-operation catalog-disclosure{{ type == selectedQueue ? ' catalog-queue-current' : '' }}" data-queue-type="{{ type }}" data-catalog-disclosure="queue-{{ type }}" data-queue-occupied="{{ head ? 'true' : 'false' }}">
     <summary class="catalog-follow-summary">
-        <strong>{{ {building:'Bâtiments', research:'Recherche commune', shipyard:'Vaisseaux et défenses'}[type] }}{% if head %} · {{ items|length }}/30{% endif %}</strong>
+        {% set runningCount = items|filter(row => row.item.startedAt)|length %}
+        <strong>{{ {building:'Bâtiments', research:'Recherche commune', shipyard:'Vaisseaux et défenses'}[type] }}</strong>
+        {% if head %}<small class="catalog-queue-state">
+            {% if vacation %}En pause{% elseif runningCount %}{{ runningCount }} en cours{% else %}En attente{% endif %}
+            {% if items|length > runningCount and runningCount %} · {{ items|length - runningCount }} en attente{% endif %}
+        </small>{% endif %}
         <span>{% if head %}{{ head.label }}{% if head.item.itemLevel %} · niv. {{ head.item.itemLevel }}{% else %} × {{ head.item.quantity|quantity }}{% endif %}{% else %}File disponible{% endif %} <span aria-hidden="true">⌄</span></span>
-        {% if head and not vacation %}{{ ui.progress(head.item.startedAt,head.finish,'Progression : '~label) }}{% elseif vacation %}<small>En pause</small>{% endif %}
+        {% if head and head.item.startedAt and not vacation %}{{ ui.progress(head.item.startedAt,head.finish,'Progression : '~label) }}{% endif %}
     </summary>
     <div class="catalog-follow-panel">
 {% else %}<div class="scene-operation" data-queue-type="{{ type }}">{% endif %}
-<div class="operation-heading"><span class="operation-type">{{ ui.icon(type=='building'?'buildings':(type=='research'?'research':'fleet')) }}{{ label }}</span>{% if items|length>1 %}<span class="queue-extra" title="{{ items|length-1 }} {{ type=='research' ? 'autres recherches dans la file commune' : 'commandes supplémentaires en attente' }}">+{{ items|length-1 }}</span>{% endif %}</div>
+<div class="operation-heading"><span class="operation-type">{{ ui.icon(type=='building'?'buildings':(type=='research'?'research':'fleet')) }}{{ label }}</span>{% if catalogue and head %}<span class="queue-capacity">{{ items|length }}/30 commandes</span>{% endif %}{% if items|length>1 %}<span class="queue-extra" title="{{ items|length-1 }} {{ type=='research' ? 'autres recherches dans la file commune' : 'commandes supplémentaires en attente' }}">+{{ items|length-1 }}</span>{% endif %}</div>
 {% if type=='research' %}<p class="muted">File commune à vos colonies de cet univers.{% if head %} Recherche en cours depuis {{ head.item.planet.name }}.{% endif %}</p>{% if research_parallel_count|default(0)>1 %}<p role="status">Les recherches déjà commencées se terminent. Les suivantes attendent dans la file commune.</p>{% endif %}{% endif %}
 {% if head %}<div class="operation-name"><strong>{{ head.label }}</strong><small>{% if head.item.itemLevel %}Niveau {{ head.item.itemLevel }}{% else %}× {{ head.item.quantity|quantity }}{% endif %}</small></div>
 {% if vacation %}

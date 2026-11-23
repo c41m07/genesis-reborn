@@ -53,7 +53,7 @@ export default class extends Controller {
             this.submitTarget.classList.toggle('secondary', maximum === 0);
             const missing = Object.values(data.missingResources ?? {});
             this.submitTarget.classList.toggle('has-missing-resources', missing.length > 0);
-            this.labelTarget.replaceChildren(document.createTextNode(maximum === 0 ? (missing.length ? 'Il manque :' : data.unavailableLabel) : `${this.submitTarget.dataset.actionLabel} ${exactNumber(data.quantity)}`));
+            this.labelTarget.replaceChildren(document.createTextNode(maximum === 0 ? (missing.length ? 'Il manque :' : data.unavailableLabel) : this.orderLabel(data.quantity)));
             for (const resource of missing) {
                 const line = document.createElement('span');
                 line.className = 'catalog-missing-resource';
@@ -73,6 +73,13 @@ export default class extends Controller {
         } finally {
             if (this.abort === abort) this.maxTarget.disabled = this.maximumUnavailable;
         }
+    }
+
+    orderLabel(quantity) {
+        // Le bandeau de la colonie est rafraîchi indépendamment d’un formulaire modifié.
+        const queue = this.element.closest('.catalog-workspace')?.querySelector('[data-queue-type="shipyard"]');
+        const occupied = (queue?.dataset.queueOccupied ?? this.submitTarget.dataset.queueOccupied) === 'true';
+        return (occupied ? 'Ajouter à la file' : 'Construire') + ' : ' + this.submitTarget.dataset.orderName + ' × ' + exactNumber(quantity);
     }
 
     updateWait(text, estimate = null) {

@@ -653,3 +653,73 @@ body[data-theme="light"] .core-catalogue-header--technologies .core-catalogue-ki
         box-shadow: 0 6px 16px #0005;
     }
 }
+
+
+/* Le bandeau reprend le panoramique orbital du Pont d’ingénierie, sans texte dans l’image. */
+.core-catalogue-header--buildings .core-catalogue-header-art {
+    width: 100%;
+    object-position: center 50%;
+    opacity: .82;
+}
+.catalog-workspace .catalog-queue-ribbon .catalog-queue-state {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+.catalog-workspace .catalog-queue-ribbon .operation-heading {
+    flex-wrap: wrap;
+}
+.catalog-workspace .catalog-queue-ribbon .queue-capacity { color: var(--muted); font-size: 11px; }
+.catalog-workspace .catalogue-next-rank {
+    margin: 3px 0 0;
+    font-size: 12px;
+}
+.catalog-workspace .catalogue-next-rank > a {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    min-height: 32px;
+    font-weight: 700;
+}
+.catalog-workspace .catalogue-next-rank .icon { flex-shrink: 0; }
+.catalog-workspace .catalogue-next-rank > a:focus-visible { outline-offset: 2px; }
+/* Quand le contenu le permet, retrouver les tuiles de coût de la planche.
+   Les lots à quatre ou cinq ressources gardent leur disposition verticale compacte. */
+@container (min-width: 340px) {
+    .catalog-workspace section:not(.catalog-condensed) .building-card
+        .building-costs:not(:has(> span:nth-child(4))) > span {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        justify-items: start;
+        justify-content: start;
+        align-items: center;
+        text-align: start;
+        gap: 5px;
+        min-height: 44px;
+        padding: 4px 6px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        background: var(--bg);
+    }
+    .catalog-workspace section:not(.catalog-condensed) .building-card
+        .building-costs:not(:has(> span:nth-child(4))) > span.insufficient {
+        border-color: currentColor;
+    }
+    .catalog-workspace section:not(.catalog-condensed) .building-card
+        .building-costs:not(:has(> span:nth-child(4))) > span[hidden] {
+        display: none;
+    }
+}
+@media (max-width: 600px) {
+    .catalog-workspace .catalogue-next-rank > a { min-height: 44px; }
+    .catalog-workspace .catalog-queue-ribbon .scene-operation > .catalog-follow-summary {
+        min-height: 44px;
+        padding: 5px 7px;
+    }
+    .catalog-workspace .catalog-queue-ribbon .catalog-follow-summary .progress-times { display: block; }
+    .catalog-workspace .catalog-follow-summary .progress-times strong { font-size: 10px; }
+    .catalog-workspace .catalog-flight-followups .catalog-follow-summary {
+        min-height: 44px;
+        padding-block: 3px;
+    }
+}

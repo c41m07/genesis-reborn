@@ -328,7 +328,9 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
         await page.setViewportSize({ width: 1920, height: 1000 });
         await page.screenshot({ path: `output/playwright/catalogue-${group}-tabs.png`, fullPage: true });
         if (group === 'defenses') {
-            await panel('basic').getByRole('button', { name: /^Construire(?: 3)?$/ }).click();
+            const order = panel('basic').getByRole('button', { name: 'Construire : Canon laser anti-léger × 3', exact: true });
+            await expect(order).toBeEnabled();
+            await order.click();
             await expect.poll(() => queryIsolatedSql(process.env.BROWSER_ROUTER, `SELECT quantity FROM queue_item WHERE planet_id=${planet} AND item_slug='ground_turret_anti_light' AND tier='basic'`)).toBe('3');
         }
         await page.goto(`${path}?section=${group}&showLockedItems=0#item-${slug}-superior`);

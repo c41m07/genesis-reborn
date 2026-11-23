@@ -96,7 +96,8 @@ test('L7B : manques multiples, devis de lot et suivi dépliable conservés aprè
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto(`${user.path}?section=ships`);
     const ship = page.locator('#item-fighter-basic');
-    await expect(ship.locator('[data-catalogue-main-gain]')).toContainText('Attaque');
+    await expect(ship.locator('[data-catalogue-main-gain]')).toContainText('Attaque par tir');
+    await expect(ship.getByRole('button', { name: 'Construire : Chasseur de patrouille × 1', exact: true })).toBeVisible();
     await expect(ship.locator('.core-unit-price')).toBeHidden();
     const unitMetalPrice = Number((await ship.locator('.building-costs>[data-resource=metal]').getAttribute('title')).split(' : ')[1].replace(/\s/g, ''));
     await ship.getByLabel('Quantité', { exact: true }).fill('5');
@@ -117,8 +118,11 @@ test('L7B : manques multiples, devis de lot et suivi dépliable conservés aprè
     await page.evaluate(() => window.dispatchEvent(new Event('genesis:refresh')));
     await expect(ship.getByLabel('Quantité', { exact: true })).toHaveValue('5');
     await capture(page, info, 'lot-cinq-unites', 1440);
-    await ship.getByRole('button', { name: 'Construire 5', exact: true }).click();
+    await ship.getByRole('button', { name: 'Construire : Chasseur de patrouille × 5', exact: true }).click();
     const queue = page.locator('[data-catalog-disclosure=queue-shipyard]');
+    await expect(queue).toHaveAttribute('data-queue-occupied', 'true');
+    await expect(queue.locator(':scope>summary')).toContainText('1 en cours');
+    await expect(ship.getByRole('button', { name: 'Ajouter à la file : Chasseur de patrouille × 1', exact: true })).toBeVisible();
     await queue.locator(':scope>summary').click();
     await expect(queue.locator('.queue-detail-list')).toContainText('× 5');
     await expect(queue.getByRole('link', { name: /Préparer l’annulation/ })).toBeVisible();
@@ -199,6 +203,11 @@ test('Fidélité catalogues : même composition en Full HD et actions lisibles s
                 const widthDelta = (await rail.boundingBox()).width - (await queues.boundingBox()).width;
                 expect(Math.abs(widthDelta)).toBeLessThanOrEqual(1);
                 await expect(rail.locator('[data-catalog-disclosure="incoming"] > summary')).toBeVisible();
+                if (section === 'buildings') {
+                    const banner = page.locator('.core-catalogue-header-art');
+                    await expect(banner).toHaveAttribute('src', /catalogue-engineering-orbital[.]webp$/);
+                    expect(await banner.evaluate(async image => { await image.decode(); return image.naturalWidth; })).toBe(1448);
+                }
                 const cards = catalog.locator('.building-card:visible');
                 const panel = cards.first().getByRole('tabpanel');
                 await expect(panel.locator('.catalogue-level-badge')).toBeVisible();
@@ -236,4 +245,8 @@ test('Fidélité catalogues : même composition en Full HD et actions lisibles s
     await expect(maximum.locator('[data-catalogue-main-gain]')).toContainText('Effet acquis');
     await expect(maximum.locator('.catalogue-no-quote dd')).toHaveText(['—', '—']);
     await expect(maximum.locator('.catalog-blocked-action')).toBeDisabled();
+    const next = maximum.getByRole('link', { name: /^Rang suivant :/ });
+    await expect(next).toHaveAttribute('href', /#item-colonial_expansion-intermediate$/);
+    await next.press('Enter');
+    await expect(page.locator('#building-tab-colonial_expansion-intermediate')).toHaveAttribute('aria-selected', 'true');
 });
