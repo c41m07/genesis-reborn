@@ -681,6 +681,9 @@ body.ui-refined[data-ui-page="feedback"] .feedback-workspace.social-board {
 .feedback-workspace.social-board .feedback-errors { scroll-margin-top:1rem; }
 @media (min-width: 1280px) and (min-height: 900px) {
     .feedback-workspace.social-board .feedback-primary > .account-grid { margin-block:.75rem; }
+    .feedback-workspace.social-board .feedback-primary > p:first-of-type { margin-block:.35rem .6rem; }
+    .feedback-workspace.social-board .feedback-primary > .account-grid label { margin-top:0; }
+    .feedback-workspace.social-board .feedback-actions { margin-top:.55rem; padding-top:.55rem; }
     .feedback-workspace.social-board .feedback-primary textarea { height:9rem; min-height:9rem; }
     .feedback-workspace.social-board .feedback-optional-fields {
         display:grid;

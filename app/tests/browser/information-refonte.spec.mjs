@@ -254,6 +254,12 @@ test('P20 : feedback non envoyé et deux patchnotes publiées', async ({ page, b
   const native = await browser.newContext({ baseURL, storageState: await page.context().storageState(), javaScriptEnabled: false });
   try {
     const tab = await native.newPage();
+    await tab.goto('/feedback');
+    await fillFeedback(tab);
+    await tab.getByLabel('Titre', { exact: true }).fill('   ');
+    await tab.getByRole('button', { name: 'Envoyer mon retour' }).press('Enter');
+    await expect(tab.locator('.feedback-errors')).toBeFocused();
+    await expect(tab.getByLabel('Description détaillée')).toHaveValue('Je consulte la page puis je recharge. Voici les étapes et le résultat attendu.');
     await tab.goto('/patchnotes');
     const details = tab.locator('.patchnote-details').first();
     await details.locator('summary').press('Enter');
