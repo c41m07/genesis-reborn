@@ -4,7 +4,7 @@
 {% block body %}
 <div class="{{ section == 'overview' ? 'overview-page' : '' }}" data-controller="colony-live" data-colony-live-url-value="{{ path('app_colony',{id:planet.id}) }}">
 {% set catalogueHeader = {
-    buildings: {title:'Pont d’ingénierie', intro:'Énergie, extraction et infrastructures de cette colonie.', art:'art/colony-overview.webp'},
+    buildings: {title:'Pont d’ingénierie', intro:'Énergie, extraction et infrastructures de cette colonie.', art:'art/catalogue-engineering-orbital.webp'},
     technologies: {title:'Laboratoire colonial', intro:'Développez les technologies partagées par vos colonies dans cet univers.', art:'images/catalog/buildings/lab__basic-768.webp'},
     ships: {title:'Hangar d’assemblage', intro:'Assemblez les vaisseaux de reconnaissance, de transport et de combat.', art:'images/catalog/buildings/shipyard__basic.webp'},
     defenses: {title:'Poste de défense planétaire', intro:'Installez les défenses adaptées aux menaces de cette colonie.', art:'images/catalog/buildings/fortress__basic.webp'},

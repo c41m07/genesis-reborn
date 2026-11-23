@@ -8,12 +8,20 @@
 {% set families = {} %}
 {% set leveled = group in ['buildings', 'technologies'] %}
 {% set queueType = group == 'buildings' ? 'building' : (group == 'technologies' ? 'research' : 'shipyard') %}
-{% set queueFull = queues[queueType]|default([])|length >= 30 %}
+{% set currentQueue = queues[queueType]|default([]) %}
+{% set queueFull = currentQueue|length >= 30 %}
 {% for card in items %}
     {% set slug = card.definition.slug %}
     {% set families = families|merge({(slug): (families[slug]|default([]))|merge([card])}) %}
 {% endfor %}
-{% for slug, ranks in families %}
+{# La première ligne présente les familles représentatives des planches ; aucune entrée n’est ajoutée au catalogue. #}
+{% set highlightedFamilies = {
+    technologies: ['engineering_foundations','naval_engineering','nanomaterial_synthesis','colonial_expansion'],
+    ships: ['fighter','probe','transport','interceptor'],
+}[group]|default([])|filter(key => families[key] is defined) %}
+{% set orderedFamilies = highlightedFamilies|merge(families|keys|filter(key => key not in highlightedFamilies)) %}
+{% for slug in orderedFamilies %}
+    {% set ranks = families[slug] %}
     {% set definition = (ranks|first).definition %}
     {% set category = (ranks|first).filter_category %}
     {% set accessible = ranks|filter(card => not card.failures or card.maximum) %}
@@ -62,7 +70,7 @@
         {% for card in ranks %}
             {% set d = card.definition %}
             {% set maximumPending = leveled and card.maximum and card.level < card.max_level %}
-            {% set cardState = card.maximum ? (maximumPending ? 'queued' : 'maximum') : ((card.failures or card.missing_research_laboratory|default(null)) ? 'locked' : (vacation ? 'paused' : ((leveled and (card.payment.missing|default([]))) ? 'shortage' : 'ready'))) %}
+            {% set cardState = card.maximum ? (maximumPending ? 'queued' : 'maximum') : ((card.failures or card.missing_research_laboratory|default(null)) ? 'locked' : (vacation ? 'paused' : ((card.payment.missing|default([])) ? 'shortage' : 'ready'))) %}
             <div id="item-{{ slug }}-{{ card.tier }}" class="building-rank {{ card.failures and not card.maximum ? 'is-locked' : '' }}" data-building-catalog-target="panel" data-tier="{{ card.tier }}"{% if not leveled and not card.failures and not vacation %} data-controller="construction-quantity" data-construction-quantity-url-value="{{ path('app_construction_maximum', {id: planet.id}) }}"{% endif %} {% if card.failures and not card.maximum and not show_locked_items %}hidden{% endif %}>
                 {% set imagePath = 'images/catalog/'~group~'/'~slug~'__'~card.tier %}
                 {% set imageVariant = d.artwork|default('') is empty and card.tier == 'basic' and slug in (cardVariants[group]|default([])) %}
@@ -96,7 +104,7 @@
                     </div>
                     {% set guidedCard = training_hint is defined and training_hint is not null and training_hint.item == slug and card.tier == 'basic' %}
                     {% if guidedCard %}{% include 'player/_first_steps_catalog_hint.html.twig' %}{% endif %}
-                    <p class="catalog-level">{% if leveled %}{{ maximumPending ? 'Dernier niveau en file' : (card.maximum ? 'Aucune amélioration pour ce rang' : 'Objectif : niveau ' ~ card.target) }}{% else %}{{ group == 'defenses' ? 'Défense de cette colonie' : 'Hangar de cette colonie' }}{% if group == 'defenses' and card.quantity > 1 %}s{% endif %}{% if card.failures %} · Verrouillé{% endif %}{% endif %}</p>
+                    <p class="catalog-level">{% if leveled %}{{ maximumPending ? 'Dernier niveau en file' : (card.maximum ? 'Aucune amélioration pour ce rang' : 'Objectif : niveau ' ~ card.target) }}{% else %}{% if d.countered_ship_labels|default([]) %}Cibles : {{ d.countered_ship_labels|join(', ') }}{% else %}{{ group == 'defenses' ? 'Défense de cette colonie' : (slug == 'probe' ? 'Reconnaissance et espionnage' : (category == 'transport' ? 'Transport de ressources' : 'Hangar de cette colonie')) }}{% endif %}{% if card.failures %} · Verrouillé{% endif %}{% endif %}</p>
                     {% if card.queued %}<p class="catalog-queued">{{ card.target-card.level-1 }} niveau{{ card.target-card.level-1 > 1 ? 'x' : '' }} en file</p>{% endif %}
                     {% if not leveled or not card.maximum %}
                     <div class="build-duration">{{ ui.icon('clock') }} <small>Durée estimée</small> <span{% if not leveled %} data-construction-quantity-target="duration"{% endif %}>{{ duration_label(card.duration) }}</span></div>
@@ -130,6 +138,11 @@
                         {% endif %}
                     {% endif %}
                     {% if card.maximum %}<p class="requirement{{ maximumPending ? '' : ' complete' }}">{{ ui.icon(maximumPending ? 'clock' : 'check') }} {{ maximumPending ? 'Dernier niveau programmé' : 'Niveau maximum atteint' }}</p>
+                        {% set nextTier = {basic:'intermediate',intermediate:'superior'}[card.tier]|default(null) %}
+                        {% set nextRank = ranks|filter(rank => rank.tier == nextTier)|first %}
+                        {% if nextRank and not maximumPending %}
+                            <p class="catalogue-next-rank"><a href="{{ catalogue_item_url(planet.id, group, slug, nextRank.tier) }}">Rang suivant : {{ nextRank.definition.label }} · {{ nextRank.definition._tier_label }} {{ ui.icon('arrow') }}</a></p>
+                        {% endif %}
                     {% elseif card.failures %}<p class="requirement">{{ ui.icon('diplomacy') }} <span>Nécessite : {% for requirement in card.details.requirements|filter(requirement => not requirement.met) %}<a href="{{ catalogue_item_url(planet.id, requirement.group, requirement.slug, requirement.rank) }}">{{ requirement.label }} · {{ requirement.tier }}{% if requirement.required is not null %} · niveau {{ requirement.required }}{% endif %}</a>{% if not loop.last %}, {% endif %}{% else %}{{ card.failures|join(', ') }}{% endfor %}</span></p>
                     {% elseif card.missing_research_laboratory|default(null) %}
                         <p class="requirement">
@@ -144,7 +157,7 @@
                         {% set missingResources = card.payment.missing %}
                         {% set wait = not queueFull ? card.payment.paymentWait : null %}
                         {% set estimate = wait ? card.payment.paymentEstimate : null %}
-                        {% set actionLabel = group=='buildings' ? 'Améliorer au niveau '~card.target : (group=='technologies' ? 'Rechercher le niveau '~card.target : 'Construire') %}
+                        {% set actionLabel = group=='buildings' ? 'Améliorer au niveau '~card.target : (group=='technologies' ? 'Rechercher le niveau '~card.target : ((currentQueue ? 'Ajouter à la file' : 'Construire') ~ ' : ' ~ d.label ~ ' × 1')) %}
                         {% set blocked = missingResources is not empty or queueFull or card.capacity_full|default(false) %}
                         <form method="post" action="{{ path('app_queue_add', {id: planet.id}) }}"{% if not leveled %} data-construction-quantity-target="form"{% endif %}>
                             <input type="hidden" name="_token" value="{{ csrf_token('build'~planet.id) }}">
@@ -161,7 +174,7 @@
                                 </div>
                             {% endif %}
                             <div class="catalog-payment">
-                                <button class="{{ not blocked ? 'primary' : 'secondary' }} full catalog-build-action{{ missingResources and not queueFull ? ' has-missing-resources' : '' }}"{% if blocked %} disabled{% endif %}{% if not leveled %} data-construction-quantity-target="submit" data-action-label="{{ actionLabel }}"{% endif %}><span class="catalog-action-label"{% if not leveled %} data-construction-quantity-target="label"{% endif %}>{% if queueFull %}File pleine{% elseif missingResources %}Il manque :{% for missing in missingResources %}<span class="catalog-missing-resource">{{ missing.label }} : {{ missing.amount|number_format(0, ',', ' ') }}</span>{% endfor %}{% elseif card.capacity_full|default(false) %}Aucune place disponible{% else %}{{ actionLabel }}{% endif %}</span><span{% if blocked %} hidden{% endif %}{% if not leveled %} data-construction-quantity-target="arrow"{% endif %}>{{ ui.icon('arrow') }}</span></button>
+                                <button class="{{ not blocked ? 'primary' : 'secondary' }} full catalog-build-action{{ missingResources and not queueFull ? ' has-missing-resources' : '' }}"{% if blocked %} disabled{% endif %}{% if not leveled %} data-construction-quantity-target="submit" data-order-name="{{ d.label }}" data-queue-occupied="{{ currentQueue ? 'true' : 'false' }}"{% endif %}><span class="catalog-action-label"{% if not leveled %} data-construction-quantity-target="label"{% endif %}>{% if queueFull %}File pleine{% elseif missingResources %}Il manque :{% for missing in missingResources %}<span class="catalog-missing-resource">{{ missing.label }} : {{ missing.amount|number_format(0, ',', ' ') }}</span>{% endfor %}{% elseif card.capacity_full|default(false) %}Aucune place disponible{% else %}{{ actionLabel }}{% endif %}</span><span{% if blocked %} hidden{% endif %}{% if not leveled %} data-construction-quantity-target="arrow"{% endif %}>{{ ui.icon('arrow') }}</span></button>
                                 {% if wait or not leveled %}
                                     {% set wait_id = 'catalog-wait-' ~ group ~ '-' ~ slug ~ '-' ~ card.tier %}
                                     <div class="catalog-wait"{% if not wait %} hidden{% endif %} data-construction-quantity-target="wait" data-controller="hover-details"

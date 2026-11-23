@@ -4,7 +4,7 @@
 {% set benefit = preferred ?: (positive|first) %}
 {% if benefit %}
     <div class="core-catalogue-gain core-unit-gain" data-catalogue-main-gain>
-        <span>{{ benefit.label }}</span>
+        <span>{{ benefit.label }}{% if benefit.label == 'Attaque' %} par tir{% endif %}</span>
         <strong>{% include 'ui/catalogue_benefit_value.html.twig' with {benefit:benefit} only %}</strong>
     </div>
 {% endif %}
