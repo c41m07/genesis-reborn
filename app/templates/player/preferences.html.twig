@@ -1,4 +1,16 @@
 {% extends 'base.html.twig' %}
+{# Seule la confirmation des réglages généraux suit leur formulaire. Les autres messages restent à leur emplacement habituel. #}
+{% set preferenceFlashes = app.flashes %}
+{% set settingsSuccess = 'Préférences enregistrées.' %}
+{% block flash_messages %}
+    {% for type, messages in preferenceFlashes %}
+        {% for message in messages %}
+            {% if type != 'success' or message != settingsSuccess %}
+                <div class="flash {{ type }}" role="{{ type == 'error' ? 'alert' : 'status' }}">{{ message }}</div>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+{% endblock %}
 {% block title %}Préférences · Genesis Reborn{% endblock %}
 {% block body %}
 <div class="page-refinement account-space preferences-page account-redesign player-account-board" data-page-sections="disabled">
@@ -27,6 +39,9 @@
         </fieldset>
     </section>
     <button class="primary account-preferences-save">Enregistrer les paramètres</button>
+    {% if settingsSuccess in preferenceFlashes.success|default([]) %}
+        <p class="flash success account-preferences-confirmation" role="status">{{ settingsSuccess }}</p>
+    {% endif %}
 {{ form_end(form) }}
 <aside class="account-board-rail" aria-label="Guide et mode vacances">
 <form method="post" action="{{ path('app_first_steps_preference') }}" class="panel account-panel first-steps-preference-form account-board-card" data-turbo="false">
@@ -44,12 +59,16 @@
         <button class="secondary" type="submit">Enregistrer le réglage du guide</button>
     </fieldset>
 </form>
-<section class="panel account-board-card">
+<section class="panel account-board-card account-vacation-card">
     <h2>Mode vacances</h2>
     {% if chrome.membership %}
-        <p class="badge">{{ chrome.vacation ? 'Vacances actives' : 'Pas de vacances actives' }}</p>
+        <div class="account-vacation-summary{{ chrome.vacation ? '' : ' account-vacation-summary--inactive' }}">
+            <p><strong>{{ chrome.vacation ? 'Vacances actives' : 'Pas de vacances actives' }}</strong></p>
+            <p>Les restrictions et l’état de votre protection sont propres à l’univers sélectionné.</p>
+        </div>
+    {% else %}
+        <p>Les restrictions et l’état de votre protection sont propres à l’univers sélectionné.</p>
     {% endif %}
-    <p>Les restrictions et l’état de votre protection sont propres à l’univers sélectionné.</p>
     <a class="secondary" href="{{ path('app_vacation') }}">Examiner les restrictions</a>
 </section>
 </aside>

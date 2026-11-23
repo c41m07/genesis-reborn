@@ -312,3 +312,43 @@ body.authenticated .player-account-board .account-board-settings .preference-tog
 body.authenticated .player-account-board .account-board-danger strong { color:var(--account-danger); }
 body.authenticated .player-account-board .account-board-card .danger { display:inline-flex; align-items:center; padding:.45rem .8rem; min-height:44px; border:1px solid var(--account-danger); color:var(--account-danger); border-radius:5px; }
 body.authenticated .account-redesign:is(.account-deletion-page,.vacation-page) .account-workspace { max-width:85rem; margin-inline:auto; }
+
+
+/* P07 : le résultat d’enregistrement accompagne le bouton sans déplacer les autres alertes. */
+.preferences-page .account-preferences-confirmation {
+    margin:0;
+    padding:.75rem 1rem;
+    font-weight:700;
+    color:var(--text);
+}
+.preferences-page .first-steps-preference-form .preference-toggle {
+    gap:.65rem;
+    margin-block:.55rem;
+    padding:.6rem .7rem;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:color-mix(in srgb,var(--accent) 5%,var(--panel));
+}
+.preferences-page .account-vacation-summary {
+    margin-block:.65rem 1rem;
+    padding:.7rem .85rem;
+    border:1px solid var(--line);
+    border-radius:6px;
+}
+.preferences-page .account-vacation-summary--inactive {
+    border-color:color-mix(in srgb,#af7933 65%,var(--line));
+    background:color-mix(in srgb,#af7933 12%,var(--panel));
+}
+.preferences-page .account-vacation-summary p { margin:0; color:var(--text); }
+.preferences-page .account-vacation-summary p + p { margin-top:.4rem; }
+.preferences-page .account-vacation-card > a { justify-self:start; width:auto; }
+
+@media (min-width: 1500px) and (min-height: 950px) {
+    .preferences-page .account-board-grid .account-board-settings { gap:.6rem; }
+    .preferences-page .account-board-settings .account-shortcuts {
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:.65rem;
+    }
+    body.authenticated .preferences-page .account-board-settings .account-section legend { margin-bottom:.35rem; }
+}

@@ -199,8 +199,19 @@ test('P07 : réglages enregistrés et vacances inactives', async ({ page, browse
       await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
       const confirmation = page.getByText('Préférences enregistrées.', {exact:true});
       await expect(confirmation).toBeVisible();
+      await expect(settings.getByRole('status').filter({ hasText:'Préférences enregistrées.' })).toHaveCount(1);
+      const settingsBox = await settings.getByRole('button',{name:'Enregistrer les paramètres',exact:true}).boundingBox();
+      const confirmationBox = await confirmation.boundingBox();
+      expect(confirmationBox.y).toBeGreaterThanOrEqual(settingsBox.y+settingsBox.height);
+      await expect(page.locator('.account-vacation-summary--inactive')).toContainText('Pas de vacances actives');
+      if (viewport.width === 390) {
+        expect((await new AxeBuilder({page}).include('.account-preferences-confirmation').include('.account-vacation-summary').analyze()).violations).toEqual([]);
+      }
       await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
       await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+      if (viewport.width === 1920) {
+        await expect(confirmation).toBeInViewport({ ratio:1 });
+      }
       await page.screenshot({path:info.outputPath(`P07-preferences-${theme}-${viewport.width}.png`),animations:'disabled',scale:'css'});
       if (viewport.width===390) {
         await confirmation.evaluate(element=>element.scrollIntoView({block:'center',behavior:'instant'}));
@@ -215,6 +226,16 @@ test('P07 : réglages enregistrés et vacances inactives', async ({ page, browse
   try {
     const tab = await native.newPage();
     await tab.goto(route);
+    const guide = tab.locator('.first-steps-preference-form');
+    await guide.getByLabel('Afficher le guide Premiers pas', {exact:true}).uncheck();
+    await guide.getByRole('button',{name:'Enregistrer le réglage du guide',exact:true}).press('Enter');
+    await expect(tab.getByText(/Guide désactivé/)).toBeVisible();
+    await expect(tab.locator('.account-preferences-confirmation')).toHaveCount(0);
+    await expect(tab.locator('body')).toHaveAttribute('data-theme','light');
+    await guide.getByLabel('Afficher le guide Premiers pas',{exact:true}).check();
+    await guide.getByRole('button',{name:'Enregistrer le réglage du guide',exact:true}).press('Enter');
+    await expect(tab.getByText(/Guide réactivé/)).toBeVisible();
+    await expect(tab.locator('.account-preferences-confirmation')).toHaveCount(0);
     await tab.getByRole('link',{name:'Examiner les restrictions',exact:true}).press('Enter');
     await expect(tab).toHaveURL(/profil\/vacances$/);
     await expect(tab.getByRole('heading',{name:'Mode vacances',exact:true})).toBeVisible();
