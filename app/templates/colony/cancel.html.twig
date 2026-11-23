@@ -46,7 +46,7 @@
     <input type="hidden" name="request_key" value="{{ request_key() }}">
     <input type="hidden" name="section" value="{{ section }}">
     <a class="secondary" href="{{ path('app_colony',{id:planet.id,section:section}) }}">Conserver les commandes</a>
-    <button class="danger" type="submit" aria-describedby="catalogue-cancel-warning">Confirmer l’annulation de ces {{ rows|length }} commandes</button>
+    <button class="danger" type="submit" aria-describedby="catalogue-cancel-warning">{{ rows|length == 1 ? 'Confirmer l’annulation de cette commande' : 'Confirmer l’annulation de ces ' ~ rows|length ~ ' commandes' }}</button>
 </form>
 </section>
 {% endblock %}
