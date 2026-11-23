@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\{AdventClaim, AdventEdition, Planet, Player, Universe};
-use App\Service\Advent\{AdventCohortCapture, AdventEditions};
+use App\Service\Advent\{AdventCohortCapture, AdventEditions, AdventParticipation, AdventRewards};
 use App\Service\Universe\{UniverseImporter, UniverseService};
 use App\Service\Colony\ResourceService;
 use App\Service\Player\RegistrationService;
@@ -393,6 +393,49 @@ final class AdventTest extends WebTestCase
         self::assertSame(['metal' => 3600, 'nano' => 1800], json_decode($db->fetchOne('SELECT credited_resources FROM advent_claim'), true));
         self::assertNotNull($db->fetchOne('SELECT delivered_at FROM advent_claim'));
         self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_claim'));
+    }
+
+    public function testLockedHullPackCanBeDeliveredLaterAndCosmeticsDoNotDependOnAHeavyHull(): void
+    {
+        $admin = $this->player('AdventShipAdmin', admin: true);
+        $id = $this->publishConsolidated($admin);
+        $this->clock->sleep(8 * 3600);
+        $member = $this->player('AdventShipPlayer');
+        $membership = $member->currentPlayerUniverse;
+        $planet = $this->planet($member);
+        $edition = $this->em->find(AdventEdition::class, $id);
+        static::getContainer()->get(AdventParticipation::class)->bind($member, $membership, $edition);
+        $this->clock->sleep(5 * 86400);
+        $rewards = static::getContainer()->get(AdventRewards::class);
+        $db = $this->em->getConnection();
+        self::assertSame('ships_reserved', $rewards->open($member, $membership, $planet, $edition, 6, 0)['state']);
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM fleet_ship WHERE slug = 'probe'"));
+        $membership->catalogUnlocks['v2:planet:'.$planet->id.':ships:probe:basic'] = true;
+        $this->em->flush();
+        self::assertSame('delivered', $rewards->open($member, $membership, $planet, $edition, 6, 0)['state']);
+        self::assertSame('already', $rewards->open($member, $membership, $planet, $edition, 6, 0)['state']);
+        self::assertSame(12, (int) $db->fetchOne("SELECT quantity FROM fleet_ship WHERE slug = 'probe' AND tier = 'basic'"));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM queue_item'));
+
+        $this->clock->sleep(18 * 86400);
+        self::assertSame('credit_ready', $rewards->open($member, $membership, $planet, $edition, 24, 2)['state']);
+        self::assertSame(['guardian_of_stars', 'polar_night'], $db->fetchFirstColumn('SELECT code FROM profile_cosmetic ORDER BY code'));
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM fleet_ship WHERE slug = 'capital'"));
+        self::assertNull($db->fetchOne('SELECT delivered_at FROM advent_claim WHERE door = 24'));
+        $this->client->getCookieJar()->clear();
+        $this->client->loginUser($member);
+        $crawler = $this->client->request('GET', '/profil');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('#profile-cosmetics', 'Apparence du profil');
+        foreach ([['guardian_of_stars', 'polar_night'], []] as $codes) {
+            $this->client->request('POST', '/profil/cosmetiques', [
+                '_token' => $crawler->filter('.profile-cosmetics input[name="_token"]')->attr('value'),
+                'equipped' => $codes,
+            ]);
+            self::assertResponseRedirects('/profil#profile-cosmetics', 303);
+            self::assertSame(count($codes), (int) $db->fetchOne('SELECT COUNT(*) FROM profile_cosmetic WHERE equipped = 1'));
+            $crawler = $this->client->followRedirect();
+        }
     }
 
     public function testLateCaptureNeverPretendsToBeMidnight(): void
