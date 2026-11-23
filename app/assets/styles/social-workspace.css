@@ -1654,8 +1654,8 @@ body.authenticated .social-board--guild-hall .guild-hall-placement .guild-hall-c
 }
 body.authenticated .social-board--guild-hall .guild-hall-placement .guild-hall-confirm input[type="checkbox"] {
     flex: 0 0 auto;
-    width: 1.15rem;
-    height: 1.15rem;
+    width: 18px;
+    height: 18px;
     min-height: 0;
     margin: 0;
 }
