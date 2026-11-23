@@ -10,8 +10,9 @@
                     <a class="primary" href="{{ path('app_guild_ranks',{rank:0}) }}"{% if not selectedRank %} aria-current="page"{% endif %}>Créer un grade</a>
                 {% endif %}
                 {% for rank in ranks %}
-                    <a class="secondary" href="{{ path('app_guild_ranks',{rank:rank.id}) }}"{% if selectedRank and selectedRank.id == rank.id %} aria-current="page"{% endif %}>
-                        {{ rank.name }} <small>· priorité {{ rank.position }}</small>
+                    <a class="secondary guild-rank-choice" href="{{ path('app_guild_ranks',{rank:rank.id}) }}"{% if selectedRank and selectedRank.id == rank.id %} aria-current="page"{% endif %}>
+                        <span>{{ rank.name }}</span>
+                        <small>· priorité {{ rank.position }}</small>
                     </a>
                 {% endfor %}
             </nav>

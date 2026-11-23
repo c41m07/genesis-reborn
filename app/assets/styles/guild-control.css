@@ -90,9 +90,22 @@ body.authenticated .guild-control .guild-rank-navigation a[aria-current="page"] 
     background: color-mix(in srgb, var(--accent) 16%, var(--panel));
 }
 
-.guild-control .guild-rank-navigation a small {
+/* La priorité garde sa propre ligne : seul le nom libre du grade peut se couper. */
+.guild-control .guild-rank-navigation .guild-rank-choice {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+}
+
+.guild-control .guild-rank-choice > span {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.guild-control .guild-rank-choice > small {
     font-weight: 400;
     color: var(--muted);
+    white-space: nowrap;
 }
 
 .guild-control .guild-rank-editor h3 {

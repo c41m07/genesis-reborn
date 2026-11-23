@@ -125,7 +125,26 @@ test('L1C A : rôles, formulaires, traités et confirmations natives de gestion'
             await expect(page.getByLabel('Nom du grade', { exact: true })).toHaveValue(rankName);
             await expect(page.locator('.guild-rank-editor input[type="checkbox"]')).toHaveCount(7);
             await expect(page.getByRole('navigation', { name: 'Grades de la guilde' }).locator('a').first()).toHaveText('Créer un grade');
-            await expect(page.locator('.guild-rank-navigation [aria-current="page"]')).toContainText(rankName);
+            const selectedRank = page.locator('.guild-rank-navigation [aria-current="page"]');
+            await expect(selectedRank).toHaveText(rankName + ' · priorité 10');
+            expect(await selectedRank.evaluate((link) => {
+              const title = link.querySelector('span').getBoundingClientRect();
+              const priority = link.querySelector('small');
+              const priorityBounds = priority.getBoundingClientRect();
+              const card = link.getBoundingClientRect();
+              const range = document.createRange();
+              range.selectNodeContents(priority);
+              return {
+                belowName: priorityBounds.top >= title.bottom,
+                fitsCard: priorityBounds.left >= card.left && priorityBounds.right <= card.right,
+                textLines: range.getClientRects().length,
+              };
+            })).toEqual({ belowName: true, fitsCard: true, textLines: 1 });
+            if (width === 1920 || width === 390) {
+              const guide = page.locator('.first-steps-popup');
+              await expect(guide.locator('summary[aria-label="Ouvrir Premiers pas"]')).toBeVisible();
+              await expect(page.getByRole('button', { name: 'Enregistrer le grade' })).toBeEnabled();
+            }
             const directory = await page.getByRole('region', { name: 'Grades de la guilde' }).boundingBox();
             const editor = await page.getByRole('region', { name: rankName, exact: true }).boundingBox();
             const name = await page.getByLabel('Nom du grade', { exact: true }).boundingBox();
