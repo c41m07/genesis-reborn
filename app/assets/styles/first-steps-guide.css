@@ -181,6 +181,17 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
     max-width: 100%;
 }
 
+/* Le panneau de l’objectif n’est pas modal sur grand écran. L’aide reste
+   dépliée sous la page de détail, sans recouvrir l’action ni les prérequis. */
+@media (min-width: 901px) {
+    .app-frame:has(> .shell #technology-detail:not([hidden])) > .first-steps-popup-enhanced {
+        position: relative;
+        inset: auto;
+        margin: 0 0 8px auto;
+        max-width: 100%;
+    }
+}
+
 /* Carte, composeur et choix de cadeau gardent leur espace : l’aide reste au-dessus dans le flux. */
 :is(.shell--galaxy-v2, .shell--messaging, .shell--advent, .shell--fleet-decision) > .first-steps-popup-enhanced {
     position: relative;
