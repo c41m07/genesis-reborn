@@ -467,9 +467,15 @@ body.authenticated .social-workspace .social-profile-scores dt {
         white-space: normal;
     }
 
+    /* Le filet de variation peut être plus large que la cellule Rang (notamment « (= 0) »). */
+    body.authenticated .social-workspace .ranking-table--players tbody td:first-child,
+    body.authenticated .social-workspace .ranking-table--players .ranking-change {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
     body.authenticated .social-workspace .ranking-table--players .ranking-change {
         font-size: 10px;
-        white-space: nowrap;
     }
 
     body.authenticated .social-workspace .ranking-table--guilds {

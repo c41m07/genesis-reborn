@@ -95,12 +95,18 @@ test('L7E A : tableaux complets, protection au clavier et colonnes des guildes s
         await page.getByLabel('Nom de votre nouvelle guilde').fill('La confrérie des explorateurs des mondes lointains');
         await page.getByLabel('Tag de la guilde', { exact: true }).fill('L7E');
         await page.getByRole('button', { name: 'Fonder une guilde' }).click();
-        runIsolatedSql(process.env.BROWSER_ROUTER, 'UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(),INTERVAL 2 DAY)');
+        // Deux calculs avec les mêmes joueurs garantissent une variation visible « (= 0) ».
+        // Sans cet état, la première lecture peut ne montrer que « (—) » et masquer un débordement.
+        const expireRanking = () => runIsolatedSql(process.env.BROWSER_ROUTER, 'UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(),INTERVAL 2 DAY)');
+        expireRanking();
+        await page.goto('/classement');
+        expireRanking();
         for (const theme of ['dark', 'light']) {
             await setTheme(page, owner.name, theme);
             await page.goto('/classement');
             const ownRow = page.getByRole('row').filter({ hasText: owner.name });
             await expect(ownRow).toHaveAttribute('aria-current', 'true');
+            await expect(ownRow.locator('td').first().locator('.ranking-change')).toHaveText('(= 0)');
             await expect(ownRow.locator('.leaderboard-contact,.leaderboard-report')).toHaveCount(0);
             const peerRow = page.getByRole('row').filter({ hasText: peer.name });
             const protection = peerRow.locator('.ranking-protection summary');
