@@ -130,8 +130,6 @@
 }
 @media(max-width:1000px) {
     .gv2-workspace .core-galaxy-toolbar .gv2-hud { flex-basis:100%; }
-    .gv2-workspace[data-view=galaxy] .gv2-map-stage { grid-template-rows:132px auto auto; }
-    .gv2-workspace[data-view=galaxy] .gv2-map-stage > :is(.gv2-system-panel,.gv2-preview-placeholder) { max-height:132px; }
     .gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-map-stage:has(.gv2-planet-panel:not([hidden]),.gv2-system-panel:not([hidden])) {
         grid-template-columns:minmax(0,1fr);
         grid-template-rows:auto auto;

@@ -74,7 +74,7 @@ test('Proposition B : pages de guilde, cartes, menus mobiles et aperçu sans lec
     await memberPage.getByRole('button', { name: 'Rejoindre · recrutement ouvert' }).click();
     await memberPage.getByRole('link', { name: 'Ouvrir le canal de guilde' }).click();
     for (const message of ['Premier échange de test', 'Les projets sont disponibles.', 'La discussion continue dans le canal.', 'Bienvenue aux nouveaux commandants !']) {
-      await memberPage.getByLabel('Message pour la guilde').fill(message);
+      await memberPage.getByRole('textbox', { name: 'Message pour le canal de guilde', exact: true }).fill(message);
       await memberPage.getByRole('button', { name: 'Envoyer', exact: true }).click();
     }
 

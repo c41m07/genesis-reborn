@@ -65,7 +65,9 @@ test('Renseignements : rangs actuels, ancien format, ressources et détection', 
   delete snapshot.fleets;
   runIsolatedSql(project, `UPDATE espionage_report SET snapshot=${quote(JSON.stringify(snapshot))}, intel_categories=3 WHERE id=${Number(id)}`);
   await page.reload();
-  await expect(page.locator('.intel-unknown')).toContainText('Recherches, Flottes');
+  const unknownIntel = page.locator('.intel-unknown');
+  await expect(unknownIntel.getByText('Recherches : inconnu', { exact: true })).toBeVisible();
+  await expect(unknownIntel.getByText('Flottes : inconnu', { exact: true })).toBeVisible();
   await expect(page.locator('.intel-section')).toHaveCount(3);
   runIsolatedSql(project, `UPDATE espionage_report SET result='detected', intel_categories=0, snapshot='{}' WHERE id=${Number(id)}`);
   await page.reload();

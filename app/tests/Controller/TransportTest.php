@@ -314,7 +314,7 @@ final class TransportTest extends WebTestCase
 
         $this->client->request('GET', $reportPath);
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('h2', 'Transport en route');
+        self::assertSelectorTextContains('.core-report-state', 'Transport en route');
         $amounts = $this->client->getCrawler()->filter('.report-resource-table td[data-label="Envoyé"]')->each(
             static fn (\Symfony\Component\DomCrawler\Crawler $amount): string => $amount->text(),
         );

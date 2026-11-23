@@ -233,7 +233,7 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await expect(memberPage.getByText('Gérer le commandement', { exact: true })).toHaveCount(0);
   await memberPage.goto('/guildes/creer');
   await memberPage.getByRole('link', { name: 'Ouvrir le canal de guilde' }).click();
-  await memberPage.getByLabel('Message pour la guilde').fill('Préparons notre prochaine expédition.');
+  await memberPage.getByRole('textbox', { name: 'Message pour le canal de guilde', exact: true }).fill('Préparons notre prochaine expédition.');
   await memberPage.getByRole('button', { name: 'Envoyer', exact: true }).click();
   await page.goto('/guildes/creer');
   await expect(page.locator('.guild-message-preview')).toContainText('Préparons notre prochaine expédition.');

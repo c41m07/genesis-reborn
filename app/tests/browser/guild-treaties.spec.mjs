@@ -39,25 +39,26 @@ test('Les trois traités ont deux signatures, des droits distincts et une paix b
     await cardA.getByLabel('Traité à proposer').selectOption('non_aggression');
     await cardA.getByRole('button', { name: 'Proposer le traité' }).focus();
     await page.keyboard.press('Enter');
-    await expect(cardA).toContainText('proposition envoyée');
+    await expect(cardA.getByText(/^Proposition envoyée : Pacte de non-agression/)).toBeVisible();
+    await expect(cardA.locator('.badge')).toHaveText('Relation actuelle : Neutre');
     await expect(cardA.getByRole('button', { name: 'Accepter le traité' })).toHaveCount(0);
     const stale = await cardA.locator('form').filter({ hasText: 'Retirer la proposition' }).evaluate(form => Object.fromEntries(new FormData(form)));
     let cardB = await guildCard(other, guildA);
     await cardB.getByRole('button', { name: 'Accepter le traité' }).click();
-    await expect(cardB.locator('.badge')).toHaveText('Pacte de non-agression');
+    await expect(cardB.locator('.badge')).toHaveText('Relation actuelle : Pacte de non-agression');
     const staleResponse = await page.evaluate(async form => (await fetch('/diplomatie', {
       method: 'POST', body: new URLSearchParams({ ...form, treaty_action: 'decline' }),
     })).text(), stale);
     expect(staleResponse).toContain('La relation a changé');
 
     cardA = await guildCard(page, guildB);
-    await expect(cardA.locator('.badge')).toHaveText('Pacte de non-agression');
+    await expect(cardA.locator('.badge')).toHaveText('Relation actuelle : Pacte de non-agression');
     await cardA.getByLabel('Traité à proposer').selectOption('defense');
     await cardA.getByRole('button', { name: 'Proposer le traité' }).click();
-    await expect(cardA.locator('.badge')).toHaveText('Pacte de non-agression');
+    await expect(cardA.locator('.badge')).toHaveText('Relation actuelle : Pacte de non-agression');
     cardB = await guildCard(other, guildA);
     await cardB.getByRole('button', { name: 'Accepter le traité' }).click();
-    await expect(cardB.locator('.badge')).toHaveText('Pacte de défense');
+    await expect(cardB.locator('.badge')).toHaveText('Relation actuelle : Pacte de défense');
     await expect(cardB).toContainText('accord du propriétaire');
     await expect(cardB).toContainText('Aucun droit supplémentaire de transport');
 
@@ -66,20 +67,20 @@ test('Les trois traités ont deux signatures, des droits distincts et une paix b
     await cardA.getByRole('button', { name: 'Proposer le traité' }).click();
     cardB = await guildCard(other, guildA);
     await cardB.getByRole('button', { name: 'Accepter le traité' }).click();
-    await expect(cardB.locator('.badge')).toHaveText('Alliés');
+    await expect(cardB.locator('.badge')).toHaveText('Relation actuelle : Alliés');
     await cardB.getByText('Déclarer ennemis', { exact: true }).click();
     await cardB.getByRole('button', { name: 'Confirmer l’hostilité' }).click();
-    await expect(cardB.locator('.badge')).toHaveText('Ennemis');
+    await expect(cardB.locator('.badge')).toHaveText('Relation actuelle : Ennemis');
     await cardB.getByRole('button', { name: 'Proposer la paix' }).click();
-    await expect(cardB.locator('.badge')).toHaveText('Ennemis');
+    await expect(cardB.locator('.badge')).toHaveText('Relation actuelle : Ennemis');
     await expect(cardB.getByRole('button', { name: 'Accepter la paix' })).toHaveCount(0);
     cardA = await guildCard(page, guildB);
     await cardA.getByRole('button', { name: 'Refuser la proposition' }).click();
-    await expect(cardA.locator('.badge')).toHaveText('Ennemis');
+    await expect(cardA.locator('.badge')).toHaveText('Relation actuelle : Ennemis');
     await cardA.getByRole('button', { name: 'Proposer la paix' }).click();
     cardB = await guildCard(other, guildA);
     await cardB.getByRole('button', { name: 'Accepter la paix' }).click();
-    await expect(cardB.locator('.badge')).toHaveText('Neutre');
+    await expect(cardB.locator('.badge')).toHaveText('Relation actuelle : Neutre');
     await cardB.getByText('Historique des traités · 10 dernières actions maximum', { exact: true }).click();
     await expect(cardB).toContainText('Signature');
     await expect(cardB).toContainText('Refus ou retrait');
