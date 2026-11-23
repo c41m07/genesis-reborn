@@ -40,7 +40,7 @@ body.authenticated .guild-control .space-navigation.space-navigation > a[aria-cu
 }
 
 .guild-control .guild-rank-layout {
-    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-columns: minmax(250px, 22%) minmax(0, 1fr);
     gap: 20px;
     margin-top: 24px;
 }
@@ -50,8 +50,48 @@ body.authenticated .guild-control .space-navigation.space-navigation > a[aria-cu
     border-radius: 5px;
 }
 
-.guild-control .guild-rank-editor {
-    padding: 24px;
+/* Les cartes S04 alignent le répertoire et l’éditeur, sans réduire les permissions réellement disponibles. */
+.guild-control .guild-rank-layout > .panel,
+.guild-control .guild-management-layout > .panel {
+    min-width: 0;
+    margin: 0;
+    padding: clamp(16px, 2vw, 24px);
+}
+
+.guild-control .guild-control-context {
+    margin: 0 0 20px;
+    color: var(--muted);
+}
+
+.guild-control .guild-rank-directory h3 {
+    margin: 0 0 4px;
+    font-size: 22px;
+}
+
+.guild-control .guild-rank-context {
+    margin-top: 20px;
+    padding: 12px;
+    border-inline-start: 3px solid var(--accent);
+    background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+}
+
+.guild-control .guild-rank-context p {
+    margin: 0;
+}
+
+.guild-control .guild-rank-context p + p {
+    margin-top: .5rem;
+}
+
+body.authenticated .guild-control .guild-rank-navigation a[aria-current="page"] {
+    border: 1px solid var(--accent);
+    color: var(--text);
+    background: color-mix(in srgb, var(--accent) 16%, var(--panel));
+}
+
+.guild-control .guild-rank-navigation a small {
+    font-weight: 400;
+    color: var(--muted);
 }
 
 .guild-control .guild-rank-editor h3 {
@@ -63,13 +103,20 @@ body.authenticated .guild-control .space-navigation.space-navigation > a[aria-cu
     gap: 24px;
 }
 
-.guild-control .guild-rank-editor form > div {
+.guild-control .guild-rank-fields {
     display: grid;
-    gap: 10px;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 16px;
+    max-width: 850px;
+}
+
+.guild-control .guild-rank-fields > div {
+    display: grid;
+    gap: 8px;
     min-width: 0;
 }
 
-.guild-control .guild-rank-editor form > div > :is(label, input) {
+.guild-control .guild-rank-fields :is(label, input) {
     margin: 0;
 }
 
@@ -82,6 +129,7 @@ body.authenticated .guild-control .space-navigation.space-navigation > a[aria-cu
 }
 
 .guild-control .guild-rank-editor fieldset {
+    max-width: 1020px;
     border: 0;
     padding: 0;
     margin: 0;
@@ -96,7 +144,32 @@ body.authenticated .guild-control .space-navigation.space-navigation > a[aria-cu
 .guild-control .guild-rank-editor fieldset label {
     gap: 14px;
     margin: 0;
-    padding-block: 10px;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+    cursor: pointer;
+}
+
+.guild-control .guild-rank-editor fieldset label + label {
+    margin-top: 6px;
+}
+
+.guild-control .guild-rank-editor fieldset label:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.guild-control .guild-rank-editor fieldset label span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.guild-control .guild-rank-submit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
 }
 
 .guild-control .guild-management-layout {
@@ -106,9 +179,19 @@ body.authenticated .guild-control .space-navigation.space-navigation > a[aria-cu
     align-items: start;
 }
 
-.guild-control .guild-hub-management > .panel {
-    padding: 24px;
-    margin-block: 0 20px;
+/* Un choix de commandement reste distinct de la validation d’une action sensible. */
+.guild-control .guild-management-layout--member {
+    grid-template-columns: minmax(0, 600px);
+}
+
+.guild-control .guild-transfer-settings {
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+}
+
+.guild-control .guild-management-layout h4 {
+    margin: 0 0 8px;
 }
 
 .guild-control .guild-hub-management {
@@ -153,8 +236,19 @@ body.authenticated .guild-control .space-navigation.space-navigation > a[aria-cu
     margin-bottom: 16px;
 }
 
-.guild-control .guild-management-danger h3 {
+.guild-control .guild-management-danger {
+    padding: 14px;
+    border: 1px solid color-mix(in srgb, var(--guild-management-danger) 35%, var(--line));
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--guild-management-danger) 8%, var(--panel));
+}
+
+.guild-control .guild-management-danger h4 {
     color: var(--guild-management-danger);
+}
+
+.guild-control .guild-management-danger p {
+    margin-block: 0 .75rem;
 }
 
 body.authenticated .guild-control .guild-danger-button {
@@ -318,6 +412,10 @@ body.authenticated .guild-control .relation-search button {
 
 @media (max-width: 900px) {
     .guild-control :is(.guild-rank-layout, .guild-management-layout) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .guild-control .guild-rank-fields {
         grid-template-columns: minmax(0, 1fr);
     }
 
