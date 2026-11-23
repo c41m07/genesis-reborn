@@ -26,7 +26,7 @@
                 {% if not destinationsAllowed %}<p>Revenez dans cet univers pour retirer vos cadeaux. Le choix ne peut pas être transféré.</p><a class="secondary" href="{{ path('app_universes') }}">Changer d’univers actif</a>{% endif %}
                 <p>Vos versements en matériaux restent plafonnés à 2 000 métal et 1 000 nano durant les 48 premières heures dans cet univers. Le reliquat reste acquis.</p>
             {% elseif openPeriod and progression %}
-                <p>Choisissez une seule fois. Tous les retraits de l’édition se feront ensuite dans cet univers.</p>
+                <p>Tranche dans cet univers : <strong>{{ bracketLabels[progression.bracket] }}</strong>. Choisissez une seule fois : tous les retraits de l’édition se feront ici.</p>
                 <form method="post" action="{{ path('app_advent_bind', {id: edition.id}) }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('advent_bind_' ~ edition.id ~ '_' ~ membership.id) }}">
                     <button class="primary">Confirmer {{ membership.universe.name }} pour cette édition</button>
@@ -96,7 +96,7 @@
                         </form>
                     </details>
                 {% elseif claim and not claim.deliveredAt %}
-                    <p>Le lot reste réservé. Choisissez un univers où vous contrôlez une colonie.</p>
+                    <p>Le lot reste réservé. {{ consolidated ? 'Revenez dans l’univers fixé et choisissez une de vos colonies.' : 'Choisissez un univers où vous contrôlez une colonie.' }}</p>
                 {% endif %}
             </li>
         {% endfor %}
