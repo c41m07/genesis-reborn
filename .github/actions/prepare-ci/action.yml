@@ -1,14 +1,14 @@
 name: Préparer un runner de test
 description: Installer les dépendances verrouillées et configurer le projet Docker du job.
 inputs:
-  assets:
-    description: Compiler les assets pour les parcours et les contrôles de rendu.
-    default: 'true'
+  frontend:
+    description: Préparation frontend (build, install ou none).
+    default: build
 runs:
   using: composite
   steps:
     - name: Set up Node.js and npm cache
-      if: inputs.assets == 'true'
+      if: inputs.frontend != 'none'
       uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
       with:
         node-version: '24'
@@ -48,9 +48,12 @@ runs:
     - name: Install locked PHP dependencies
       shell: bash
       run: make install-php
-    - name: Build production assets
-      if: inputs.assets == 'true'
+    - name: Install locked frontend dependencies
+      if: inputs.frontend != 'none'
       shell: bash
-      run: |
-        (cd app && npm ci)
-        make assets
+      working-directory: app
+      run: npm ci
+    - name: Build production assets
+      if: inputs.frontend == 'build'
+      shell: bash
+      run: make assets
