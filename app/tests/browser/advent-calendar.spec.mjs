@@ -160,8 +160,22 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
         expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM advent_binding WHERE advent_edition_id=' + edition))).toBe(1);
         expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM advent_claim WHERE delivered_at IS NOT NULL AND advent_edition_id=' + edition))).toBe(1);
 
+        // L’aide est ouverte par défaut pour un nouveau joueur, sans recouvrir le cadeau.
+        for (const [width, height] of [[1920, 1080], [390, 844]]) {
+            await page.setViewportSize({ width, height });
+            await openAdventDocument(page, '/evenements/avent/' + edition + '#advent-door-6');
+            const help = page.locator('main.shell--advent .first-steps-popup[open] .first-steps-preview');
+            const action = page.locator('#advent-door-6').getByRole('button', { name: 'Confirmer le cadeau et la destination' });
+            await expect(help).toBeVisible();
+            await action.click({ trial: true });
+            const [helpBounds, actionBounds] = await Promise.all([help.boundingBox(), action.boundingBox()]);
+            expect(helpBounds.y + helpBounds.height).toBeLessThanOrEqual(actionBounds.y);
+        }
+
         const proof = process.env.GR_AVENT_PROOF_DIRECTORY;
         if (proof) {
+            // Les planches de comparaison montrent un compte dont l’aide est fermée.
+            runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(preferences,'$.firstStepsGuide',false) WHERE email='${email}'`);
             await page.setViewportSize({ width: 1920, height: 1080 });
             for (const theme of ['dark', 'light']) {
                 runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(IF(JSON_TYPE(preferences)='OBJECT', preferences, JSON_OBJECT()), '$.theme', '" + theme + "') WHERE email='" + email + "'");
