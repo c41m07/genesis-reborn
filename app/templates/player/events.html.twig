@@ -1,8 +1,8 @@
 {% extends 'base.html.twig' %}
 {% block title %}Événements et bonus · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="page-refinement events-space event-redesign" data-page-sections="disabled">
-<div class="page-heading"><div><h1>Événements et bonus</h1><p>Les rendez-vous en cours et à venir dans votre univers. Horaires : {{ preferences.timezone }}.</p></div></div>
+<div class="page-refinement events-space event-redesign player-event-board" data-page-sections="disabled">
+<div class="page-heading"><div><p class="event-board-eyebrow">Opérations · {{ membership.universe.name }}</p><h1>Événements et bonus</h1><p>Les rendez-vous en cours et à venir dans votre univers. Horaires : {{ preferences.timezone }}.</p></div></div>
 {% include 'ui/event_navigation.html.twig' %}
 {% if adventEditions %}
     <section class="panel event-card" aria-labelledby="advent-link-title">
@@ -10,21 +10,20 @@
         <a class="secondary" href="{{ path('app_advent') }}">Ouvrir le calendrier de l’Avent</a>
     </section>
 {% endif %}
-{% if pirateCampaignAvailable|default(false) %}
-    <section class="campaign-transition" aria-label="Campagne pirate">
-        <span>La campagne pirate se trouve désormais sous <strong>Flottes</strong> dans le menu.</span>
-        <a class="inline-link" href="{{ path('app_pirate_campaign') }}">Ouvrir le dossier de campagne</a>
-    </section>
-{% endif %}
 {% set typeLabels = {'production_bonus':'Bonus de production','construction_speed':'Vitesse de construction','research_speed':'Vitesse de recherche','fleet_speed':'Vitesse des flottes','special':'Événement spécial','reward':'Récompense','announcement':'Annonce'} %}
 <p class="core-event-context">Annonces et bonus applicables à votre empire dans <strong>{{ membership.universe.name }}</strong>.</p>
-<div class="event-list">
+<nav class="event-board-periods" aria-label="Périodes de programmation">
+    <a href="#events-current">En cours · {{ eventGroups.current.total }}</a>
+    <a href="#events-upcoming">À venir · {{ eventGroups.upcoming.total }}</a>
+</nav>
+<div class="event-list player-event-columns">
 {% for eventGroup,groupLabel in {current:'En cours',upcoming:'À venir'} %}
 {% set listing=eventGroups[eventGroup] %}
-<section aria-labelledby="events-{{ eventGroup }}">
+<section class="panel player-event-period player-event-period--{{ eventGroup }}" aria-labelledby="events-{{ eventGroup }}">
     <div class="core-event-group-heading"><h2 id="events-{{ eventGroup }}" tabindex="-1">{{ groupLabel }}</h2>
         <span class="badge">{{ listing.total }} événement{{ listing.total > 1 ? 's' : '' }}</span>
     </div>
+    <p class="muted">{{ eventGroup == 'current' ? 'Consultez la période et les effets de chaque événement.' : 'Les dates annoncées sont affichées dans votre fuseau horaire.' }}</p>
 {% for event in listing.rows %}
     {% set upcoming = eventGroup=='upcoming' %}
     <article class="panel event-card" aria-labelledby="event-{{ event.id }}-title">
@@ -38,6 +37,20 @@
     </article>
 {% else %}<p class="panel core-event-empty">{{ eventGroup=='current' ? 'Aucun événement en cours dans cet univers.' : 'Aucun événement à venir annoncé.' }}</p>
 {% endfor %}
+{% if eventGroup == 'current' and pirateCampaignAvailable|default(false) %}
+    <article class="panel player-event-pirate" aria-labelledby="event-pirate-title">
+        <h3 id="event-pirate-title">Campagne pirate</h3>
+        <p>Progression individuelle · Retrouvez votre dossier depuis Flottes.</p>
+        <a class="secondary" href="{{ path('app_pirate_campaign') }}">Ouvrir le dossier de campagne</a>
+    </article>
+{% endif %}
+{% if eventGroup == 'upcoming' %}
+    <div class="player-event-more">
+        <h3>Défis et rotations</h3>
+        <p>Consultez vos objectifs et votre participation dans l’espace des défis.</p>
+        <a class="secondary" href="{{ path('app_game_challenges') }}">Ouvrir les défis</a>
+    </div>
+{% endif %}
 {% include 'ui/event_pagination.html.twig' with {pagination:listing,pageParameter:eventGroup~'_page',fragment:'events-'~eventGroup,paginationLabel:'Pagination des événements '~groupLabel|lower} %}
 </section>
 {% endfor %}

@@ -418,3 +418,10 @@ body[data-theme=light] .information-workspace a:not(.primary) {
 .information-workspace.legal-page .legal-contents + h2 {
     margin-top: 0;
 }
+
+/* P20 : version, titre et date forment le repère stable d'une patchnote ; le contenu garde son dépliable natif. */
+.player-patchnotes-board .patchnotes-board-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+.player-patchnotes-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+.player-patchnotes-board .patchnote-card .section-heading { gap:.45rem; }
+.player-patchnotes-board .patchnote-card .section-heading .badge { display:inline-flex; margin:0 0 .45rem; }
+.player-patchnotes-board .patchnote-card .section-heading h2 { margin:0; }

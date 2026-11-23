@@ -1,16 +1,29 @@
 {% extends report_layout|default('base.html.twig') %}
 {% block title %}Rapport d’espionnage · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="mission-report report-workspace">
+{% set playerBoard = not monitoring_context|default(null) %}
+<div class="mission-report report-workspace{{ playerBoard ? ' player-report-detail' : '' }}">
 {% if monitoring_context|default(null) %}<p class="admin-monitor-note">{{ monitoring_context }}</p>{% endif %}
 {% include 'ui/report_back_link.html.twig' %}
 <header class="report-heading"><p class="report-eyebrow">RENSEIGNEMENTS · N° {{ report.id }}</p><h1>Rapport d’espionnage</h1><p>{{ report.target.name }} · {{ report.target.coordinates() }} · {{ report.createdAt|date('d/m/Y H:i') }}</p></header>
 {% if app.request.attributes.get('_route') == 'app_espionage_report' %}{% include 'ui/report_notice_form.html.twig' with {report_notice_kind:'espionage'} %}{% endif %}
 <section class="panel report-summary {{ report.result == 'detected' ? 'report-summary--detected' : '' }}" role="status"><h2>{{ report.result == 'detected' ? 'Sondes détectées' : 'Renseignements obtenus' }}</h2>
 {% if report.result == 'detected' %}<p>Le propriétaire a été averti et aucun renseignement n’a été obtenu.</p>{% else %}<p>{{ report.intelCategories }} catégorie(s) de renseignements obtenue(s).</p>{% endif %}<p class="muted">{{ report.probesSent|quantity }} sonde(s) envoyée(s) · Risque de détection estimé : {{ report.detectionChance }} %</p></section>
-{% if not monitoring_context|default(null) %}<p><a class="secondary" href="{{ path('app_combat_simulation',{report:report.id}) }}">Reprendre ces renseignements dans le simulateur</a></p>{% endif %}
+{% if report.result == 'detected' %}{% if not monitoring_context|default(null) %}<p><a class="secondary" href="{{ path('app_combat_simulation',{report:report.id}) }}">Reprendre ces renseignements dans le simulateur</a></p>{% endif %}
+{% endif %}
 {% if report.result != 'detected' %}
-<section class="panel"><h2>Renseignements détaillés</h2>
+{% set unknown_categories = [] %}
+{% for category,title in {resources:'Ressources et production', buildings:'Bâtiments', research:'Recherches', fleets:'Flottes', defenses:'Défenses fixes'} %}
+    {% if report.snapshot[category] is not defined %}{% set unknown_categories = unknown_categories|merge([title]) %}{% endif %}
+{% endfor %}
+{% if playerBoard %}
+    <nav class="ui-tabs report-section-nav" aria-label="Sections du rapport">
+        <a href="#intel-details">Renseignements détaillés</a>
+        {% if unknown_categories %}<a href="#intel-missing">Catégories non obtenues</a>{% endif %}
+    </nav>
+{% endif %}
+<div class="player-intel-layout">
+<section class="panel player-intel-core" aria-labelledby="intel-details"><h2 id="intel-details">Renseignements détaillés</h2>
 {% for category, title in {resources:'Ressources et production', buildings:'Bâtiments', research:'Recherches', fleets:'Flottes', defenses:'Défenses fixes'} %}
 {% if report.snapshot[category] is defined %}
 <details class="intel-section" open><summary><h3>{{ title }}</h3></summary>{% set items = report.snapshot[category] %}
@@ -28,11 +41,11 @@
     {% endfor %}
 {% endfor %}</div>{% else %}<p>Aucun élément détecté dans cette catégorie.</p>{% endif %}</details>
 {% endif %}{% endfor %}</section>
-{% set unknown_categories = [] %}
-{% for category,title in {resources:'Ressources et production', buildings:'Bâtiments', research:'Recherches', fleets:'Flottes', defenses:'Défenses fixes'} %}
-    {% if report.snapshot[category] is not defined %}{% set unknown_categories = unknown_categories|merge([title]) %}{% endif %}
-{% endfor %}
-{% if unknown_categories %}<section class="intel-unknown"><h2>Catégories non obtenues</h2><p>Renseignements inconnus, sans confirmation d’absence. Ce n’est pas une valeur nulle.</p><ul>{% for category in unknown_categories %}<li><strong>{{ category }}</strong> : inconnu</li>{% endfor %}</ul></section>{% endif %}
+<aside class="panel player-intel-aside">
+{% if unknown_categories %}<section class="intel-unknown" aria-labelledby="intel-missing"><h2 id="intel-missing">Catégories non obtenues</h2><p>Renseignements inconnus, sans confirmation d’absence. Ce n’est pas une valeur nulle.</p><ul>{% for category in unknown_categories %}<li><strong>{{ category }}</strong> : inconnu</li>{% endfor %}</ul></section>{% endif %}
+{% if not monitoring_context|default(null) %}<p><a class="secondary" href="{{ path('app_combat_simulation',{report:report.id}) }}">Reprendre ces renseignements dans le simulateur</a></p>{% endif %}
+</aside>
+</div>
 {% endif %}
 </div>
 {% endblock %}
