@@ -210,7 +210,7 @@ test('Premiers pas : la prochaine action précède deux remboursements natifs di
     }
 });
 
-test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', async ({ page, browser, baseURL }) => {
+test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', async ({ page, browser, baseURL }, info) => {
     test.setTimeout(120000);
     const route = '/premiers-pas/exercice-pirate';
     const guest = await page.goto(route);
@@ -273,6 +273,12 @@ test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', a
             expect(values[1]).toMatch(/^[0-2]$/);
             expect(Number(values[0][0]) + Number(values[1])).toBe(2);
         }
+        for (const viewport of [{ width: 390, height: 844 }, { width: 1920, height: 1080 }]) {
+            await view.setViewportSize(viewport);
+            await view.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+            await view.screenshot({ path: info.outputPath('P21-B-resultat-' + viewport.width + '.png'), animations: 'disabled', scale: 'css' });
+        }
+        await view.setViewportSize({ width: 390, height: 844 });
         await report.getByText('Comprendre les tirs manche par manche', { exact: true }).click();
         await expect(report.getByText(/Manche 1 :/)).toBeVisible();
         await expect.poll(() => view.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
