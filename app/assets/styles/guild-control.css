@@ -77,6 +77,7 @@ body.authenticated .guild-control .space-navigation.space-navigation > a[aria-cu
 
 .guild-control .guild-rank-context p {
     margin: 0;
+    color: var(--text);
 }
 
 .guild-control .guild-rank-context p + p {
