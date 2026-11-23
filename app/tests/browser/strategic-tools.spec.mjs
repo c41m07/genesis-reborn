@@ -196,7 +196,12 @@ test('Simulateur : dix combats reproductibles, détails accessibles et aucune mu
    await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
    await result.evaluate(element=>element.scrollIntoView({block:'start',behavior:'instant'}));
    if(width===1920 || width===390) {
-    await expect(result.getByRole('heading',{name:'Estimation sur 10 combats'})).toBeInViewport({ratio:1});
+    const heading=result.getByRole('heading',{name:'Estimation sur 10 combats'});
+    await expect(heading).toBeInViewport({ratio:1});
+    await expect.poll(()=>heading.evaluate(element=>{
+     const r=element.getBoundingClientRect();
+     return element===document.elementFromPoint(r.left+8,r.top+r.height/2);
+    })).toBe(true);
     await expect.poll(()=>result.locator('.simulation-outcome').first().evaluate(card=>{
      const label=card.querySelector('dt').getBoundingClientRect();
      const value=card.querySelector('dd').getBoundingClientRect();

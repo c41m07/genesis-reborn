@@ -130,6 +130,10 @@ body[data-theme=light] .simulation-workspace .simulation-survivors { color:#1767
 
 /* P21 : des libellés restent associés aux couleurs et les quatre issues réelles restent visibles. */
 .player-simulation-board #simulation-result { margin-top:1rem; padding:clamp(.85rem,1.6vw,1.65rem); scroll-margin-top:1rem; }
+@media (min-width: 741px) {
+    /* Garder le titre sous le bandeau fixe, y compris après redimensionnement. */
+    .player-simulation-board #simulation-result { scroll-margin-top:6rem; }
+}
 .simulation-result-heading > p { margin:0 0 .5rem; }
 .simulation-result-heading > h2 { margin:.1rem 0 .4rem; font-size:clamp(1.45rem,2vw,2rem); }
 .player-simulation-board .simulation-outcomes { grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr)); }
