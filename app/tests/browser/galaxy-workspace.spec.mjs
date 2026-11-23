@@ -124,5 +124,20 @@ test('L7C : système et globe conservent clic, rotation, zoom, gestes tactiles e
     await page.getByRole('button',{name:'Zoomer',exact:true}).tap();
     await page.getByRole('button',{name:'Dézoomer',exact:true}).tap();
     await expect(panel).toBeVisible();
+
+    const selected = unknown.id;
+    await page.locator('.core-galaxy-toolbar').getByRole('link', { name: 'Liste des systèmes' }).click();
+    await expect(page).toHaveURL(url => url.pathname === '/carte' && Number(url.searchParams.get('system')) === selected);
+    await expect(page.locator('.galaxy-index-table .active-row')).toContainText(unknown.name);
+    await expect(page.locator('.galaxy-system-panel')).toContainText('ses planètes ne sont pas encore révélées');
+    await expect(page.locator('.galaxy-index-planets')).toHaveCount(0);
+    const filter = page.getByRole('searchbox', { name: 'Rechercher dans la liste' });
+    await filter.fill('nom inexistant de recette');
+    await expect(page.locator('.galaxy-index-results')).toHaveText('Aucun système trouvé.');
+    await filter.fill(unknown.name);
+    await expect(page.locator('.galaxy-index-table .active-row')).toBeVisible();
+    await page.getByRole('link', { name: /Ouvrir la fiche sur la carte/ }).click();
+    await expect(page).toHaveURL(url => url.pathname === '/carte-v2' && Number(url.searchParams.get('system')) === selected);
+    await expect(page.locator('.gv2-system-panel')).toContainText('aucune planète révélée');
     expect(errors).toEqual([]);
 });
