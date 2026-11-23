@@ -181,6 +181,15 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
     max-width: 100%;
 }
 
+/* Le hub Événements garde ses dates et ses liens entièrement accessibles.
+   Seule l’aide ouverte de cette page passe dans le flux, après le tableau. */
+.app-frame:has(> .shell .player-event-board) > .first-steps-popup-enhanced[open] {
+    position: relative;
+    inset: auto;
+    margin: 0 0 8px auto;
+    max-width: 100%;
+}
+
 /* Le panneau de l’objectif n’est pas modal sur grand écran. L’aide reste
    dépliée sous la page de détail, sans recouvrir l’action ni les prérequis. */
 @media (min-width: 901px) {
