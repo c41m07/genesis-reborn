@@ -24,6 +24,8 @@ test('Planches joueur : rails de décision sur grand écran et flux mobile sans 
         ['/premiers-pas', 'P08', '.first-steps-board-layout > .first-steps', '.first-steps-board-rail'],
         ['/boosts', 'P11', '.inventory-board-stock', '.inventory-boost-use'],
         ['/classement', 'P14', '.ranking-board-main', '.ranking-board-help'],
+        ['/wiki', 'P15', '.wiki-chapters', '.wiki-navigation'],
+
     ];
 
     // Les mesures sont prises en pixels CSS à l’échelle 1, pas sur des captures recadrées.
@@ -36,15 +38,38 @@ test('Planches joueur : rails de décision sur grand écran et flux mobile sans 
         await expect(first).toBeVisible();
         await expect(second).toBeVisible();
         const [a, b] = await Promise.all([first.boundingBox(), second.boundingBox()]);
-        expect(a.x + a.width, model).toBeLessThan(b.x);
+        expect(model === 'P15' ? b.x + b.width : a.x + a.width, model).toBeLessThan(model === 'P15' ? a.x : b.x);
         expect(a.width, model).toBeGreaterThan(b.width);
         expect(await page.evaluate(() => [window.innerWidth, window.innerHeight]), model).toEqual([1920, 1080]);
         await page.screenshot({ path: info.outputPath(model + '-1920x1080.png'), scale: 'css', animations: 'disabled' });
 
         await page.setViewportSize({ width: 390, height: 844 });
         const [m, n] = await Promise.all([first.boundingBox(), second.boundingBox()]);
-        expect(m.y + m.height, model).toBeLessThan(n.y);
+        expect(model === 'P15' ? n.y + n.height : m.y + m.height, model).toBeLessThan(model === 'P15' ? m.y : n.y);
         expect(await page.evaluate(() => document.documentElement.scrollWidth), model).toBeLessThanOrEqual(390);
         await page.screenshot({ path: info.outputPath(model + '-390x844.png'), scale: 'css', animations: 'disabled' });
+    }
+
+    const additional = [
+        ['/evenements/campagne-pirate', 'P05', '.player-campaign-board'],
+        ['/planetes', 'P10', '.planet-board-hero'],
+        ['/technologies', 'P12', '.player-technology-board'],
+        ['/simulateur', 'P13', '.simulation-board-options'],
+        ['/profil/supprimer', 'P17', 'form'],
+        ['/recompense-quotidienne', 'P18', '.daily-board-cycle'],
+        ['/planetes?view=table', 'P19', '.colony-comparison-panel'],
+        ['/patchnotes', 'P20', '.player-patchnotes-board'],
+        ['/premiers-pas/exercice-pirate', 'P21', 'h1'],
+    ];
+    for (const [path, model, landmark] of additional) {
+        for (const [width, height] of [[1920, 1080], [390, 844]]) {
+            await test.step(model + ' · ' + width, async () => {
+                await page.setViewportSize({ width, height });
+                expect.soft((await page.goto(path))?.status(), path).toBe(200);
+                await expect.soft(page.locator(landmark).first()).toBeVisible({ timeout: 3000 });
+                expect.soft(await page.evaluate(() => document.documentElement.scrollWidth), model).toBeLessThanOrEqual(width);
+                await page.screenshot({ path: info.outputPath(model + '-' + width + 'x' + height + '.png'), scale: 'css', animations: 'disabled' });
+            });
+        }
     }
 });
