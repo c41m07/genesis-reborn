@@ -1519,6 +1519,30 @@ body.authenticated .social-board :is(.social-report-actions, .message-report-act
     margin-top: 12px;
 }
 
+/* S07 : l’alerte des propositions reçues relie la recherche aux relations
+   existantes. Elle ne remplace ni le statut actif ni les commandes de la carte. */
+body.authenticated .guild-control--diplomacy .guild-treaty-notice {
+    margin-block: 1rem;
+    padding: .75rem 1rem;
+    border: 1px solid var(--social-border);
+    border-inline-start: 3px solid var(--gold);
+    background: var(--social-panel);
+}
+
+body.authenticated .guild-control--diplomacy .guild-treaty-notice p {
+    margin: 0;
+    color: var(--text);
+}
+
+body.authenticated .guild-control--diplomacy .guild-treaty-notice p + p { margin-block-start: .3rem; }
+body.authenticated .guild-control--diplomacy .guild-treaty-notice strong { color: color-mix(in srgb, var(--text) 55%, var(--gold)); }
+body.authenticated .guild-control--diplomacy .guild-treaty-search .relation-heading h2 > .icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    color: var(--accent);
+    vertical-align: -.12em;
+}
+
 body.authenticated .social-board .guild-relations-list .guild-treaty-no-proposal {
     grid-column: 2;
     margin: 0;

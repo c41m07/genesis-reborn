@@ -22,7 +22,6 @@
 } only %}
 {% else %}{% include 'ui/guild_navigation.html.twig' with {compactNavigation: guildWorkspace or guildControl} %}{% endif %}
 {% if incomingPersonalCount %}<p class="panel received-proposals"><a href="#alliance-members">{{ incomingPersonalCount }} proposition{{ incomingPersonalCount > 1 ? 's' : '' }} personnelle{{ incomingPersonalCount > 1 ? 's' : '' }} à traiter</a></p>{% endif %}
-{% if incomingGuildCount %}<p class="panel received-proposals">{{ incomingGuildCount }} proposition{{ incomingGuildCount > 1 ? 's' : '' }} de guilde reçue{{ incomingGuildCount > 1 ? 's' : '' }} à traiter</p>{% endif %}
 {% if tab=='relations' %}
 <section aria-label="Relations entre commandants">
     <div class="panel relation-heading"><div><h2>Alliances et rivalités</h2><p>Vos alliances et propositions en cours. Une alliance personnelle nécessite l’accord des deux commandants.</p></div>
@@ -62,11 +61,17 @@
 <section aria-label="Diplomatie des guildes">
 <div class="guild-treaty-search">
     <section class="panel relation-heading">
-        <div><h2>Traités et propositions</h2><p>Vos alliances, propositions et hostilités de guilde.</p></div>
+        <div><h2>{{ ui.icon('diplomacy') }} Traités et propositions</h2><p>Vos alliances, propositions et hostilités de guilde.</p></div>
         {% include 'player/_guild_search.html.twig' with {showGuildSearchResults: false} %}
     </section>
     {% include 'player/_guild_search_results.html.twig' %}
 </div>
+{% if incomingGuildCount %}
+    <aside class="panel guild-treaty-notice" aria-labelledby="guild-treaty-notice-title">
+        <p id="guild-treaty-notice-title"><strong>{{ incomingGuildCount }} proposition{{ incomingGuildCount > 1 ? 's' : '' }} de guilde reçue{{ incomingGuildCount > 1 ? 's' : '' }}</strong></p>
+        <p>La relation actuelle reste applicable tant qu’une proposition n’a pas été acceptée.</p>
+    </aside>
+{% endif %}
 <div class="section-heading"><h3>Relations de votre guilde</h3><span class="badge">{{ guildRelations|length }}</span></div>
 <div class="guild-relations-list">{% for row in guildRelations %}{% include 'player/_guild_diplomacy_card.html.twig' with {cardContext:'existing'} %}{% else %}<section class="panel"><h3>Aucune relation de guilde établie</h3><p>Recherchez une guilde pour consulter son équipage et établir une relation diplomatique.</p></section>{% endfor %}</div>
 </section>

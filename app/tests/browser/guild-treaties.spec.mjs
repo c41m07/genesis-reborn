@@ -43,9 +43,17 @@ test('Les trois traités ont deux signatures, des droits distincts et une paix b
     await expect(cardA.locator('.badge')).toHaveText('Relation actuelle : Neutre');
     await expect(cardA.getByRole('button', { name: 'Accepter le traité' })).toHaveCount(0);
     const stale = await cardA.locator('form').filter({ hasText: 'Retirer la proposition' }).evaluate(form => Object.fromEntries(new FormData(form)));
+    await expect(page.locator('.guild-treaty-notice')).toHaveCount(0);
     let cardB = await guildCard(other, guildA);
+    const notice = other.locator('.guild-treaty-notice');
+    await expect(notice).toContainText('1 proposition de guilde reçue');
+    await expect(notice).toContainText('La relation actuelle reste applicable');
+    await expect(other.locator('.guild-treaty-search + .guild-treaty-notice + .section-heading')).toContainText('Relations de votre guilde');
+    await expect(cardB.locator('.badge')).toHaveText('Relation actuelle : Neutre');
+    await expect(cardB).toContainText('Proposition reçue : Pacte de non-agression');
     await cardB.getByRole('button', { name: 'Accepter le traité' }).click();
     await expect(cardB.locator('.badge')).toHaveText('Relation actuelle : Pacte de non-agression');
+    await expect(notice).toHaveCount(0);
     const staleResponse = await page.evaluate(async form => (await fetch('/diplomatie', {
       method: 'POST', body: new URLSearchParams({ ...form, treaty_action: 'decline' }),
     })).text(), stale);
