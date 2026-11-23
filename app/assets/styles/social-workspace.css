@@ -1556,6 +1556,11 @@ body.authenticated .social-board .guild-treaty-review {
     gap: 6px 12px;
 }
 
+/* Le gris de la liste historique est prévu pour le fond sombre. */
+body.authenticated[data-theme="light"] .guild-control--diplomacy .guild-treaty-review > details > ol > li {
+    color: var(--text);
+}
+
 body.authenticated .social-board .guild-treaty-review:empty {
     display: none;
 }
