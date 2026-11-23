@@ -250,6 +250,7 @@ body.authenticated .guild-control .guild-rank-navigation a[aria-current="page"] 
 
 .guild-control .guild-management-danger p {
     margin-block: 0 .75rem;
+    color: var(--text);
 }
 
 body.authenticated .guild-control .guild-danger-button {
