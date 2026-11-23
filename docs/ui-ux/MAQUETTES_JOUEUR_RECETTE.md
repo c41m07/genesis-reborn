@@ -27,3 +27,56 @@ Vérifications à effectuer sur fixtures : CSS 1920×1080 à l’échelle 1, 390
 sur les ponts de mise en page, thème clair/sombre, navigation native, nouveaux
 messages/appels et refus existants. Les silhouettes de démonstration de
 l’archive ne donnent aucune valeur à injecter dans le jeu.
+
+## Recette vérifiée
+
+Recette Chromium avec compte synthétique, base MariaDB éphémère et SMTP désactivé.
+Dimensions CSS et PNG vérifiées, échelle 1 : 1920 × 1080 et 390 × 844.
+Les captures sont des états réels de l’application, non recadrés ; les
+maquettes demeurent des références, pas des captures de la version précédente.
+
+- 253 gabarits Twig valides et compilation Encore de production réussie.
+- `player-board-layout.spec.mjs` : 16 vues sur les deux formats ; colonnes
+  contrôlées en FHD, empilement mobile et largeur du document contrôlés.
+- `event-workspace.spec.mjs` : annonces, défis, classement et récompenses
+  dans les états de la fixture ; deux thèmes sur 1440/768/390/320 et Axe
+  sur le format mobile.
+- `advent-calendar.spec.mjs` (cas de reprise) : depuis Événements, le
+  cadeau réservé reste récupérable après clôture sans JavaScript.
+- `report-workspace.spec.mjs` : scénario échoué initialement sur le
+  contraste du rapport Transport clair ; relancé sans changer Axe et réussi
+  après correction. Transport, retour filtré, effacement du journal et
+  lecture des rapports sans JavaScript, espionnage détecté inclus.
+- Vérification statique des formulaires et CSRF comparés à la base :
+  seule nouvelle action de formulaire, la recherche GET Classement.
+
+| Planche | Couverture au navigateur ou statique | Limite de la preuve |
+| --- | --- | --- |
+| P01 | FHD + mobile, parcours et captures | Centre avec transport et espionnage détecté. |
+| P02 | Statique : Twig et styles | Rapport de combat complet non rejoué. |
+| P03 | Navigateur : espionnage détecté sans JavaScript ; détail positif statique | Pas de capture d’espionnage réussi. |
+| P04 | FHD + mobile, captures ; états d’annonces et de défis natifs | La progression d’un défi reste sur sa propre page. |
+| P05 | FHD + mobile, captures | Première mission sans sonde, verrouillages visibles. |
+| P06 | FHD + mobile, captures | Nouveau profil ; formulaire de cosmétiques possédés vérifié statiquement. |
+| P07 | FHD + mobile, captures | Affichage des préférences, pas de changement en production. |
+| P08 | FHD + mobile, captures | Nouveau compte, chapitre Mine et aucun remboursement disponible. |
+| P09 | Statique : aperçu non modal existant, diapos et commandes intactes | Pas de preuve de la galerie et du retour focus dans cette recette. |
+| P10 | FHD + mobile, captures | Une seule colonie de départ créée, pas de reproduction fictive des trois colonies de la maquette. |
+| P11 | FHD + mobile, captures | Stock vide ; le devis d’utilisation active reste natif et n’a pas été rejoué. |
+| P12 | FHD + mobile, captures | Entrée du guide ; pas de preuve de tous les déblocages. |
+| P13 | FHD + mobile, captures | Écran de saisie ; aucun calcul de combat déclenché pour cette capture. |
+| P14 | FHD + mobile, captures | Classement joueurs, tri et mode guildes conservés. |
+| P15 | FHD + mobile, captures | Accueil Wiki et barre de recherche ; pas tous les chapitres. |
+| P16 | FHD + capture, mobiles testés par Rapports | Transport complet avec données et pertes synthétiques ; Axe clair/sombre. |
+| P17 | FHD + mobile, captures | Confirmation sans supprimer le compte ; mode vacances préservé sur sa route. |
+| P18 | FHD + mobile, captures de la dotation ; parcours Défis + Avent | La dotation visible ne prétend pas prouver un versement quotidien. |
+| P19 | FHD + mobile, captures | Stock, capacité, production et trois types d’activités affichés pour une colonie. |
+| P20 | FHD + mobile, captures | Patchnotes seules ; Feedback relève du lot 03. |
+| P21 | FHD + mobile, captures de l’exercice avant résultat ; résultat statique | Le résultat n’est pas fabriqué dans la page de revue. |
+| P22 | FHD + mobile sur le dossier verrouillé ; autres états statiques | Escorte, convoi et repli n’ont pas été rejoués bout en bout. |
+
+À titre d’amélioration distincte, on pourrait montrer les éléments classés par
+type de rapport dans un nouveau filtre, ajouter un comparatif chiffré de durée
+des boosts à partir du devis serveur, ou ajouter un exemple de chronologie dans
+l’aide de la campagne. Ces idées nécessitent des données ou un besoin joueur
+explicite ; elles n’ont pas été simulées avec des chiffres de maquette.
