@@ -34,13 +34,16 @@
                 <figure class="feedback-preview" data-feedback-attachment-target="preview" hidden>
                     <img alt="Aperçu de la capture choisie" data-feedback-attachment-target="image">
                     <figcaption data-feedback-attachment-target="filename"></figcaption>
-                    <button class="secondary" type="button" data-action="feedback-attachment#open">Agrandir la capture</button>
                 </figure>
-                <button class="secondary" type="button" data-feedback-attachment-target="remove" data-action="feedback-attachment#clear" hidden>Retirer la capture</button>
-                <dialog class="feedback-preview-dialog" aria-labelledby="feedback-preview-title" data-feedback-attachment-target="dialog">
+                <div class="feedback-preview-actions">
+                    <button class="secondary" type="button" data-feedback-attachment-target="zoom" data-action="feedback-attachment#open" hidden>Agrandir la capture</button>
+                    <button class="secondary" type="button" data-feedback-attachment-target="remove" data-action="feedback-attachment#clear" hidden>Retirer la capture</button>
+                </div>
+                <dialog class="feedback-preview-dialog" aria-labelledby="feedback-preview-title" aria-describedby="feedback-preview-keyboard-help" data-feedback-attachment-target="dialog">
                     <h2 id="feedback-preview-title">Capture choisie</h2>
                     <img alt="Capture choisie agrandie" data-feedback-attachment-target="enlarged">
-                    <button class="secondary" type="button" data-action="feedback-attachment#close">Fermer</button>
+                    <button class="secondary feedback-preview-close" type="button" data-action="feedback-attachment#close">Fermer</button>
+                    <p id="feedback-preview-keyboard-help" class="feedback-preview-keyboard-help">Appuyez sur Échap pour fermer l’aperçu et revenir au bouton « Agrandir la capture ».</p>
                 </dialog>
             </section>
             <aside class="account-section social-feedback-guidance" aria-labelledby="feedback-player-report-title">
