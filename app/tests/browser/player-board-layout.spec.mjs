@@ -55,11 +55,11 @@ test('Planches joueur : rails de décision sur grand écran et flux mobile sans 
         ['/planetes', 'P10', '.planet-board-hero'],
         ['/technologies', 'P12', '.player-technology-board'],
         ['/simulateur', 'P13', '.simulation-board-options'],
-        ['/profil/supprimer', 'P17', 'form'],
+        ['/profil/supprimer', 'P17', '.account-delete-form'],
         ['/recompense-quotidienne', 'P18', '.daily-board-cycle'],
         ['/planetes?view=table', 'P19', '.colony-comparison-panel'],
         ['/patchnotes', 'P20', '.player-patchnotes-board'],
-        ['/premiers-pas/exercice-pirate', 'P21', 'h1'],
+        ['/premiers-pas/exercice-pirate', 'P21', '.first-steps-exercise-board'],
     ];
     for (const [path, model, landmark] of additional) {
         for (const [width, height] of [[1920, 1080], [390, 844]]) {
