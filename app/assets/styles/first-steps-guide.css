@@ -163,6 +163,15 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
     max-width: 100%;
 }
 
+/* Sur Boosts uniquement, sortir le guide de l’aperçu quand une opération
+   peut être accélérée. Ne pas fermer l’aide ni modifier les autres onglets. */
+.app-frame:has(> .shell .inventory-boost-use form button) > .first-steps-popup-enhanced {
+    position: relative;
+    inset: auto;
+    margin: 0 0 8px auto;
+    max-width: 100%;
+}
+
 /* Carte, composeur et choix de cadeau gardent leur espace : l’aide reste au-dessus dans le flux. */
 :is(.shell--galaxy-v2, .shell--messaging, .shell--advent, .shell--fleet-decision) > .first-steps-popup-enhanced {
     position: relative;
