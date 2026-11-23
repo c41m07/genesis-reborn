@@ -14,3 +14,12 @@ Base ciblée : `dev` après l’Avent (`cca8c6b`). Références approuvées S01�
 | S18 | Présentation et commandant côte à côte ; identité, bannière et logo réels uniquement. |
 
 Vérifier sur la pile de test isolée, aux vrais viewports CSS, sans redimensionner les captures : 1920 × 1080, 1440 × 900, 768 × 900, 390 × 900 et 320 × 900. Capturer le même scénario et le même thème lors d’une comparaison. Ne pas traiter un PNG d’exemple (noms/données d’illustration) comme un oracle pixel-par-pixel. Les scénarios de messagerie couvrent le focus, la fermeture mobile, le positionnement du formulaire et le parcours natif sans JavaScript.
+
+## Passe de fidélité après intégration
+
+- **S01–S03** : les six cartes au plus reprennent le tag, l’effectif agrégé et la présentation déjà publique de la guilde, sans charger les équipages. Le centre affiche le commandant, le nombre de relations neutres **enregistrées** (pas toutes les guildes sans relation) et l’avancement du dernier palier actif si un projet existe. Les attributions reprennent les sélections et droits natifs directement sur les lignes concernées.
+- **S06–S09** : l’édition affiche les médias existants ; les actions de diplomatie secondaires sont regroupées sans masquer les confirmations ; le projet détaillé affiche les jauges et valeurs réelles du palier par ressource.
+- **S12–S16** : initiale, heure du dernier échange et nombre de non-lus proviennent des conversations de la personne connectée. La boîte et son fragment d’actualisation n’exposent aucun extrait du message. Les heures et en-têtes de date suivent le fuseau des préférences lorsqu’il est disponible. La variante mobile dispose d’un retour vers la boîte et conserve le dépliable natif ; le signalement gagne une fermeture avec retour du focus, sans retirer le résumé utilisable sans JavaScript.
+- **S18/S20** : fiche commandant et identité de la personne signalée sont présentées en cartes ; seules les actions déjà existantes restent disponibles.
+
+Ne pas ajouter d’extraits privés aux notifications ni en page d’accueil de la boîte sans une décision explicite. Aucun changement de permission, des routes ou des règles de guilde. Vérifier dans les deux thèmes, avec un projet actif, un membre pouvant attribuer un grade, des messages reçus et un profil avec bannière.

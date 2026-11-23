@@ -16,14 +16,14 @@ final class GameRepository
     }
 
     /** @return list<GuildProject> Une ligne supplémentaire permet de proposer la page suivante. */
-    public function guildProjectsPage(Guild $guild, bool $history, int $beforeId): array
+    public function guildProjectsPage(Guild $guild, bool $history, int $beforeId, int $limit = 26): array
     {
         $query = $this->em->createQueryBuilder()->select('project')->from(GuildProject::class, 'project')
             ->where('project.guildId = :guild')->andWhere('project.universe = :universe')
             ->andWhere($history ? 'project.status != :active' : 'project.status = :active')
             ->setParameter('guild', $guild->id)->setParameter('universe', $guild->universe)->setParameter('active', 'active');
         if ($beforeId > 0) $query->andWhere('project.id < :before')->setParameter('before', $beforeId);
-        return $query->orderBy('project.id', 'DESC')->setMaxResults(26)->getQuery()->getResult();
+        return $query->orderBy('project.id', 'DESC')->setMaxResults(max(1, min(26, $limit)))->getQuery()->getResult();
     }
 
     /** @return list<GuildProjectDefinition> Les modèles déjà lancés restent exclus, quel que soit leur état. */
@@ -253,13 +253,17 @@ final class GameRepository
         return array_map('intval', array_column($rows, 'total', 'status'));
     }
 
-    /** @return list<array{id: int, name: string}> */
+    /** @return list<array{id: int, name: string, tag: ?string, description: ?string, members: int}> */
     public function recruitingGuildDirectory(PlayerUniverse $viewer): array
     {
-        // Dans le modèle actuel, le recrutement est ouvert aux guildes actives
-        // du même univers. La découverte ne charge ni dirigeants ni membres.
-        return $this->em->createQueryBuilder()->select('guild.id AS id', 'guild.name AS name')
-            ->from(\App\Entity\Guild::class, 'guild')
+        // Uniquement les informations déjà visibles sur la fiche de ces guildes : l’effectif
+        // est un agrégat, ni les membres ni leurs identités ne sont hydratés.
+        $memberCount = $this->em->createQueryBuilder()->select('COUNT(member.id)')
+            ->from(\App\Entity\GuildMember::class, 'member')->where('member.guild = guild');
+        return $this->em->createQueryBuilder()->select('guild.id AS id', 'guild.name AS name', 'guild.tag AS tag', 'profile.description AS description')
+            ->addSelect('('.$memberCount->getDQL().') AS members')
+            ->from(Guild::class, 'guild')
+            ->leftJoin(\App\Entity\GuildProfile::class, 'profile', 'WITH', 'profile.guild = guild')
             ->where('guild.universe = :universe')->andWhere('guild.archivedAt IS NULL')
             ->setParameter('universe', $viewer->universe)->orderBy('guild.id', 'ASC')
             ->setMaxResults(6)->getQuery()->getArrayResult();
@@ -913,6 +917,23 @@ final class GameRepository
         }
         $contacts = array_filter($contacts, static fn(array $contact): bool => $contact['member']?->universe->id === $viewer->universe->id);
         usort($contacts, static fn(array $a, array $b): int => [(int) ($b['unread'] > 0), $b['latest']] <=> [(int) ($a['unread'] > 0), $a['latest']]);
+        if ($contacts === []) {
+            return [];
+        }
+
+        // Lire uniquement l’horodatage des identifiants privés autorisés par les contacts
+        // ci-dessus. Le contenu ne doit jamais être ajouté au fragment de notifications.
+        $latestDates = $this->em->createQueryBuilder()->select('message.id AS id', 'message.createdAt AS sentAt')
+            ->from(\App\Entity\SocialMessage::class, 'message')
+            ->where('message.id IN (:ids)')->andWhere('message.guild IS NULL AND message.recipient IS NOT NULL')
+            ->andWhere('(message.sender = :viewer OR message.recipient = :viewer)')
+            ->setParameter('ids', array_column($contacts, 'latest'))->setParameter('viewer', $viewer)
+            ->getQuery()->getArrayResult();
+        $latestById = array_column($latestDates, 'sentAt', 'id');
+        foreach ($contacts as &$contact) {
+            $contact['sentAt'] = $latestById[$contact['latest']] ?? null;
+        }
+        unset($contact);
         return $contacts;
     }
 

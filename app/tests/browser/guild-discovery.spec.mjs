@@ -199,7 +199,7 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
   }
 });
 
-test('Annuaire initial : seuls les profils actifs du même univers sont proposés', async ({ page, browser, baseURL }) => {
+test('Annuaire initial : seuls les profils actifs du même univers sont proposés', async ({ page, browser, baseURL }, testInfo) => {
   const suffix = crypto.randomUUID().slice(0, 8);
   const project = process.env.BROWSER_ROUTER;
   const ownerContext = await browser.newContext({ baseURL });
@@ -211,9 +211,15 @@ test('Annuaire initial : seuls les profils actifs du même univers sont proposé
     const archivedName = 'Guilde archivée ' + suffix;
     const foreignName = 'Guilde hors univers ' + suffix;
     await enterUniverse(owner, 'Annuaire-' + suffix, 'annuaire-owner-' + suffix + '@example.test');
-    await createGuild(owner, guildName, 'A' + suffix.slice(0, 4));
+    const tag = 'A' + suffix.slice(0, 4).toUpperCase();
+    await createGuild(owner, guildName, tag);
     const guildId = Number(queryIsolatedSql(project, "SELECT id FROM guild WHERE name='"+guildName+"'"));
     expect(guildId).toBeGreaterThan(0);
+    await owner.goto('/guildes/' + guildId + '/personnaliser');
+    const description = 'Cette présentation publique décrit la guilde.';
+    await owner.getByLabel('Description', { exact: true }).fill(description);
+    await owner.getByRole('button', { name: 'Enregistrer la présentation' }).click();
+    await expect(owner.locator('.guild-public-description')).toHaveText(description);
     runIsolatedSql(project, "INSERT INTO guild(universe_id,leader_id,name,archived_at) SELECT universe_id,leader_id,'"+archivedName+"',UTC_TIMESTAMP() FROM guild WHERE id="+guildId);
     const foreignEmail = 'annuaire-foreign-' + suffix + '@example.test';
     await enterUniverse(foreign, 'Étranger-' + suffix, foreignEmail, /Turbo/);
@@ -224,6 +230,12 @@ test('Annuaire initial : seuls les profils actifs du même univers sont proposé
     await page.goto('/guildes');
     const directory = page.getByRole('region', { name: 'Guildes qui recrutent', exact: true });
     await expect(directory.getByRole('link', { name: 'Voir la guilde ' + guildName, exact: true })).toHaveAttribute('href', '/guildes/' + guildId);
+    const card = directory.locator('.guild-recruitment-card').filter({ hasText: guildName });
+    await expect(card).toContainText('[' + tag + ']');
+    await expect(card).toContainText('1 membre');
+    await expect(card).toContainText(description);
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.screenshot({ path: testInfo.outputPath('social-S01-annuaire-1920x1080.png'), animations: 'disabled' });
     await expect(directory).not.toContainText(archivedName);
     await expect(directory).not.toContainText(foreignName);
     await expect(directory).not.toContainText('Annuaire-' + suffix);

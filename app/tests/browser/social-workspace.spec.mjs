@@ -37,14 +37,23 @@ test('L7E A : recherche, actualisation des non-lus et rédaction restent indépe
         runIsolatedSql(process.env.BROWSER_ROUTER,
             `INSERT INTO social_message(sender_id,recipient_id,content,created_at) VALUES(${peer.member},${owner.member},'Transport reçu. Merci pour les ressources.',UTC_TIMESTAMP())`);
         const conversationUrl = `/messages?with=${peer.member}`;
+        await page.goto('/messages');
+        const contact = page.getByRole('link', { name: new RegExp(peer.name) }).first();
+        await expect(contact.locator('.inbox-contact-meta time')).toHaveAttribute('datetime', /T/);
+        await expect(contact.locator('.inbox-unread-count')).toHaveText('1 message non lu');
+        await expect(contact).not.toContainText('Transport reçu. Merci pour les ressources.');
         await page.goto(conversationUrl);
+        await expect(page.locator('.message-day time')).toHaveCount(1);
+        await page.setViewportSize({ width: 1920, height: 1080 });
+        await page.screenshot({ path: info.outputPath('social-S12-messagerie-1920x1080.png'), animations: 'disabled' });
         const textarea = page.getByLabel('Votre message', { exact: true });
         await textarea.fill('Brouillon conservé pendant les actualisations.');
         await textarea.focus();
         const before = await page.locator('.message-thread').evaluate(node => node.scrollTop);
         const refreshed = page.waitForResponse(response => response.url().includes('/messages/non-lus'));
         await page.evaluate(() => window.dispatchEvent(new Event('genesis:refresh')));
-        await refreshed;
+        const update = await (await refreshed).json();
+        expect(update.conversations).not.toContain('Transport reçu. Merci pour les ressources.');
         await expect(textarea).toBeFocused();
         await expect(textarea).toHaveValue('Brouillon conservé pendant les actualisations.');
         expect(await page.locator('.message-thread').evaluate(node => node.scrollTop)).toBe(before);

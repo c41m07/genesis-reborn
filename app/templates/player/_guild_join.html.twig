@@ -9,14 +9,17 @@
     <h2 id="guild-recruitment-title">Guildes qui recrutent</h2>
     {% if recruitingGuilds %}
         <p>Quelques guildes ouvertes au recrutement dans cet univers. Utilisez la recherche pour en trouver d’autres.</p>
-        {# La requête d'annuaire charge uniquement l'identifiant et le nom. #}
         <ul class="guild-recruitment-grid">
             {% for guild in recruitingGuilds %}
                 <li class="panel guild-recruitment-card">
                     <header>
                         <span class="guild-recruitment-initial" aria-hidden="true">{{ guild.name|first|upper }}</span>
-                        <h3>{{ guild.name }}</h3>
+                        <div>
+                            <h3>{% if guild.tag %}[{{ guild.tag }}] {% endif %}{{ guild.name }}</h3>
+                            <p>{{ guild.members|quantity(0) }} membre{{ guild.members == 1 ? '' : 's' }}</p>
+                        </div>
                     </header>
+                    <p class="guild-recruitment-description">{{ guild.description ?: 'Cette guilde n’a pas encore ajouté de présentation.' }}</p>
                     <div class="guild-recruitment-actions">
                         <span class="badge">Recrutement ouvert</span>
                         <a class="secondary" href="{{ path('app_guild_public_profile', {id:guild.id}) }}" aria-label="Voir la guilde {{ guild.name }}">Voir la guilde</a>

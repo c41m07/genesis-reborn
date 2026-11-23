@@ -55,7 +55,7 @@ test('Le dirigeant crée un grade, le délègue et les droits restent contrôlé
     await memberPage.goto('/diplomatie?tab=diplomacy&q=' + encodeURIComponent(guildName));
     await memberPage.getByRole('button', { name: 'Rejoindre · recrutement ouvert' }).click();
     await page.goto('/diplomatie?tab=members');
-    await page.getByText('Attribuer un grade',{exact:true}).click();
+    await expect(page.getByRole('row').filter({ hasText: memberName }).getByLabel('Grade de '+memberName, { exact: true })).toBeVisible();
     await page.getByLabel('Grade de ' + memberName, { exact: true }).selectOption({ label: 'Diplomate' });
     await page.getByRole('button', { name: 'Attribuer le grade à ' + memberName, exact: true }).click();
     await memberPage.goto('/guildes/creer');

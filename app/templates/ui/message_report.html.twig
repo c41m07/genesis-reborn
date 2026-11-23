@@ -7,6 +7,9 @@
         {% if peer_id %}<input type="hidden" name="with" value="{{ peer_id }}">{% endif %}
         <label for="message-reason-{{ message.id }}">Motif du signalement</label>
         <input id="message-reason-{{ message.id }}" name="reason" maxlength="500" required>
-        <button class="secondary">Signaler</button>
+        <div class="message-report-actions">
+            <button type="submit" class="primary">Signaler</button>
+            <button type="button" class="secondary" data-message-report-close data-action="message-thread#closeReport" hidden>Fermer</button>
+        </div>
     </form>
 </details>
