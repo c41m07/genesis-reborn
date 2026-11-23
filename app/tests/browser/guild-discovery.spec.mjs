@@ -83,8 +83,8 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
 
     for (const theme of ['dark', 'light']) {
       runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
-      for (const width of [1440, 768, 390, 320]) {
-        await page.setViewportSize({ width, height: 900 });
+      for (const width of [1920, 1440, 768, 390, 320]) {
+        await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
         for (const [url, key] of [['/guildes?q=Vig', 'recherche'], ['/guildes/creer', 'creation'], ['/guildes/' + guildId, 'presentation']]) {
           expect((await page.goto(url)).status()).toBe(200);
           await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
@@ -105,7 +105,7 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
             const second = await cards[1].boundingBox();
             expect(second.y).toBeGreaterThanOrEqual(first.y + first.height);
             const tops = await cards[0].locator('.guild-result-actions > *').evaluateAll(elements => elements.map(element => element.getBoundingClientRect().top));
-            if (width === 1440) {
+            if (width >= 1440) {
               expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(2);
             } else if (width <= 390) {
               expect(tops[2]).toBeGreaterThan(tops[1]);
@@ -115,7 +115,7 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
             await expect(page.getByLabel('Nom de votre nouvelle guilde')).toHaveValue('Les Éclaireurs d’Orion ' + suffix);
             const intro = await page.locator('.guild-foundation-intro').boundingBox();
             const form = await page.locator('.guild-create').boundingBox();
-            if (width === 1440) expect(form.x).toBeGreaterThan(intro.x);
+            if (width >= 1440) expect(form.x).toBeGreaterThan(intro.x);
             else expect(intro.y).toBeGreaterThanOrEqual(form.y + form.height);
           } else {
             await expect(page.getByRole('heading', { level: 1 })).toContainText(guildName);
@@ -123,12 +123,20 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
             await expect(page.locator('.guild-public-banner')).toBeVisible();
             const description = await page.locator('section[aria-labelledby="guild-public-description"]').boundingBox();
             const leader = await page.locator('section[aria-labelledby="guild-public-leader"]').boundingBox();
-            expect(leader.y).toBeGreaterThanOrEqual(description.y + description.height);
+            if (width > 850) {
+              expect(Math.abs(leader.y - description.y)).toBeLessThan(2);
+              expect(leader.x).toBeGreaterThanOrEqual(description.x + description.width);
+            } else {
+              expect(leader.y).toBeGreaterThanOrEqual(description.y + description.height);
+            }
           }
           if (width === 390) {
             expect((await new AxeBuilder({ page }).include('.guild-discovery')
               .withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()).violations).toEqual([]);
             await page.screenshot({ path: testInfo.outputPath(`jeu-L1B-A-${key}-${theme}-${width}-ecran.png`), animations: 'disabled' });
+          }
+          if (width === 1920) {
+            await page.screenshot({ path: testInfo.outputPath(`social-guild-${key}-${theme}-1920x1080.png`), animations: 'disabled' });
           }
           if (width !== 320) {
             await page.screenshot({ path: testInfo.outputPath(`jeu-L1B-A-${key}-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });

@@ -723,14 +723,47 @@ body.authenticated .social-board .guild-overview-layout {
 
 body.authenticated .social-board .guild-overview-details {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--social-gap);
     min-width: 0;
 }
 
 body.authenticated .social-board .guild-overview-conversation,
 body.authenticated .social-board .guild-overview-details > .panel {
+    height: auto;
     margin: 0;
     min-width: 0;
+}
+
+body.authenticated .social-board .guild-overview-conversation .guild-message-preview {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    align-items: start;
+    gap: 14px;
+}
+
+body.authenticated .social-board .guild-message-initial {
+    display: grid;
+    place-items: center;
+    min-height: 42px;
+    border: 1px solid var(--social-border);
+    border-radius: 7px;
+    background: var(--social-panel);
+    color: var(--accent);
+    font-weight: 750;
+}
+
+body.authenticated .social-board .guild-message-preview .guild-message-preview-body {
+    display: block;
+    min-width: 0;
+}
+
+body.authenticated .social-board .guild-message-preview-body header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px 12px;
 }
 
 body.authenticated .social-board .guild-overview-relations {

@@ -88,9 +88,9 @@ test('L9 A : aperçu local, agrandissement, retrait et reconnexion', async ({ pa
   await page.getByLabel('Joindre une capture').setInputFiles(capturePath);
   await expect(page.locator('.feedback-preview')).toBeVisible();
   const lastUrl = await page.locator('.feedback-preview img').getAttribute('src');
-  await page.locator('[data-controller="feedback-attachment"]').evaluate(element => { window.removedCapture = element; element.remove(); });
+  await page.locator('[data-controller="feedback-attachment"]').evaluate(element => { window.captureParent = element.parentElement; window.removedCapture = element; element.remove(); });
   await expect.poll(() => page.evaluate(url => window.captureUrls.revoked.includes(url), lastUrl)).toBe(true);
-  await page.locator('.feedback-context').evaluate(element => element.append(window.removedCapture));
+  await page.evaluate(() => window.captureParent.append(window.removedCapture));
   await expect(page.locator('.feedback-preview')).toBeVisible();
   await page.getByLabel('Joindre une capture').setInputFiles({ name: 'invalide.png', mimeType: 'image/png', buffer: Buffer.from('Ce fichier n’est pas une image.') });
   await expect(page.locator('[data-feedback-attachment-target=status]')).toContainText('Impossible d’afficher cet aperçu');
@@ -107,9 +107,9 @@ test('L9 A : aperçu local, agrandissement, retrait et reconnexion', async ({ pa
   });
   await page.getByLabel('Joindre une capture').setInputFiles(capturePath);
   const pendingUrl = await page.locator('[data-feedback-attachment-target=image]').getAttribute('src');
-  await page.locator('[data-controller="feedback-attachment"]').evaluate(element => { window.removedCapture = element; element.remove(); });
+  await page.locator('[data-controller="feedback-attachment"]').evaluate(element => { window.captureParent = element.parentElement; window.removedCapture = element; element.remove(); });
   await expect.poll(() => page.evaluate(url => window.captureUrls.revoked.includes(url), pendingUrl)).toBe(true);
-  await page.locator('.feedback-context').evaluate(element => element.append(window.removedCapture));
+  await page.evaluate(() => window.captureParent.append(window.removedCapture));
   await expect(page.getByRole('button', { name: 'Retirer la capture' })).toBeVisible();
   await page.getByLabel('Joindre une capture').setInputFiles({ ...payload, name: 'capture-recente.png' });
   await expect(page.locator('.feedback-preview figcaption')).toHaveText('capture-recente.png');

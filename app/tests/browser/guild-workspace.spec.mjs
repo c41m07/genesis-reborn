@@ -133,7 +133,7 @@ test('Proposition B : pages de guilde, cartes, menus mobiles et aperçu sans lec
           if (width !== 320) {
             await page.screenshot({ path: testInfo.outputPath(`jeu-B-${key}-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });
           }
-          if (width === 390) {
+          if (width === 390 || width === 1920) {
             await page.screenshot({ path: testInfo.outputPath(`jeu-B-${key}-${theme}-${width}-ecran.png`), animations: 'disabled' });
           }
         }
