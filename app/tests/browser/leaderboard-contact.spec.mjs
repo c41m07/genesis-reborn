@@ -279,7 +279,7 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
 });
 
 
-test('Classement quotidien : points figés, gains, pertes et signe égal accessibles', async ({ page }, testInfo) => {
+test('Classement quotidien : points figés, gains, pertes et signe égal accessibles', async ({ page, browser, baseURL }, testInfo) => {
   test.setTimeout(120000);
   const name = await registerAndJoin(page, 'Daily');
   const colonyUrl = page.url();
@@ -303,7 +303,18 @@ test('Classement quotidien : points figés, gains, pertes et signe égal accessi
   await page.reload();
   await expect(row.locator('[data-category="points"] .ranking-change')).toHaveText(/\(\+\d/);
   await expect(row.locator('td').first().locator('.ranking-change')).toHaveText('(= 0)');
+  const ownPosition = page.locator('.ranking-board-main .ranking-board-own');
+  const rank = (await row.locator('td').first().innerText()).match(/#\d+/)?.[0];
+  expect(rank).toBeTruthy();
+  await expect(ownPosition.locator('dt')).toHaveText('Votre position');
+  await expect(ownPosition.locator('dd')).toHaveText(rank);
+  expect(await ownPosition.evaluate(position => {
+    const preceding = position.previousElementSibling;
+    return Boolean(preceding?.querySelector('.ranking-table') && position.nextElementSibling?.matches('nav'));
+  })).toBe(true);
   const help = page.getByRole('complementary', { name: 'Lire le classement' });
+  await expect(help.getByRole('heading', { name: 'Protection active', exact: true })).toBeVisible();
+  await expect(help.getByRole('heading', { name: 'État sans variation', exact: true })).toBeVisible();
   const headingHelp = page.getByRole('link', { name: 'Comment lire le classement' });
   await headingHelp.focus();
   await page.keyboard.press('Enter');
@@ -315,10 +326,30 @@ test('Classement quotidien : points figés, gains, pertes et signe égal accessi
   await expect(page.getByText('Actualisation chaque jour à 00 h', { exact: false })).toBeVisible();
   const gained = await page.evaluate(() => fetch('/api/classement').then(response => response.json()));
   expect(gained.players.find(player => player.username === name).score_changes.points).toBeGreaterThan(0);
-  for (const width of [320, 390, 768, 1440]) {
-    await page.setViewportSize({ width, height: 900 });
+  for (const width of [320, 390, 768, 1440, 1920]) {
+    await page.setViewportSize({ width, height: width === 1920 ? 1080 : width === 390 ? 844 : 900 });
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    const mainBox = await page.locator('.ranking-board-main').boundingBox();
+    const helpBox = await help.boundingBox();
+    if (width === 1920) expect(helpBox.x).toBeGreaterThanOrEqual(mainBox.x + mainBox.width);
+    if (width === 390) expect(helpBox.y).toBeGreaterThanOrEqual(mainBox.y + mainBox.height);
     await page.screenshot({ path: testInfo.outputPath(`daily-ranking-${width}.png`), animations: 'disabled' });
+  }
+  const native = await browser.newContext({ baseURL, storageState: await page.context().storageState(), javaScriptEnabled: false });
+  try {
+    const fallback = await native.newPage();
+    await fallback.goto('/classement');
+    await fallback.getByLabel('Catégorie', { exact: true }).selectOption('research');
+    await fallback.getByLabel('Trier', { exact: true }).selectOption('asc');
+    await fallback.getByRole('button', { name: 'Appliquer', exact: true }).click();
+    const query = new URL(fallback.url()).searchParams;
+    expect(query.get('category')).toBe('research');
+    expect(query.get('direction')).toBe('asc');
+    await expect(fallback.getByRole('columnheader', { name: 'Classer par Points de recherche', exact: true })).toHaveAttribute('aria-sort', 'ascending');
+    await expect(fallback.locator('.ranking-board-own dd')).toHaveText(rank);
+  } finally {
+    await native.close();
   }
   expire();
   await page.reload();
@@ -352,6 +383,8 @@ test('Classement : tri global avant pagination et catégorie conservée', async 
     UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(),INTERVAL 2 DAY) WHERE universe_id=${universe}`);
   await page.goto('/classement?category=research');
   await expect(page.locator('.ranking-table tbody tr')).toHaveCount(50);
+  await expect(page.getByRole('row').filter({ hasText: ownName })).toHaveCount(0);
+  await expect(page.locator('.ranking-board-main .ranking-board-own dd')).toHaveText('#52');
   const snapshot = await page.evaluate(() => fetch('/api/classement').then(response => response.json()));
   await page.getByRole('link', { name: 'Classer par Points de recherche', exact: true }).click();
   await expect(page.getByRole('columnheader', { name: 'Classer par Points de recherche', exact: true })).toHaveAttribute('aria-sort', 'ascending');

@@ -29,6 +29,23 @@
 
 /* Le raccourci d'aide reste utilisable lorsque le tableau passe avant l'aide en mobile. */
 #ranking-board-help { scroll-margin-block-start: var(--shell-sticky-top, 9rem); }
-.ranking-board-help .ranking-board-own { margin:.6rem 0; }
-.ranking-board-help .ranking-board-own > div { gap:.7rem; padding:.65rem; border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 8%,var(--panel)); }
-.ranking-board-help .ranking-board-own dd { margin:0; text-align:end; font-weight:750; font-variant-numeric:tabular-nums; }
+/* Le rang publié reste près du tableau, y compris si la ligne du joueur est sur une autre page. */
+.ranking-board-main-title { margin: 0 0 .85rem; }
+.ranking-board-main .ranking-board-own { margin: .9rem 0; }
+.ranking-board-main .ranking-board-own > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .2rem .65rem;
+    color: var(--accent);
+}
+.ranking-board-main .ranking-board-own dd { margin: 0; font-weight: 750; font-variant-numeric: tabular-nums; }
+.ranking-board-help-facts { display: grid; gap: .7rem; margin-top: .85rem; }
+.ranking-board-help-fact {
+    padding: .8rem .9rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+}
+.ranking-board-help-fact h3 { margin: 0 0 .3rem; color: var(--accent); font-size: .95rem; }
+.ranking-board-help-fact p { margin: 0; }
