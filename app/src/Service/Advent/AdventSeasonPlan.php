@@ -25,17 +25,16 @@ final readonly class AdventSeasonPlan
             'beginner' => [
                 [['transport', 'B', 1]],
                 [['probe', 'B', 12]],
-                [['solar_satellite', 'B', 5], ['probe', 'B', 4]],
             ],
             'intermediate' => [
                 [['transport', 'I', 2], ['probe', 'I', 7], ['probe', 'B', 3]],
                 [['colony_ship', 'B', 1], ['transport', 'I', 1], ['probe', 'B', 1]],
-                [['transport', 'I', 1], ['solar_satellite', 'I', 10], ['hydrogen_collector', 'I', 10], ['solar_satellite', 'B', 1]],
+                [['transport', 'I', 1], ['probe', 'I', 31], ['probe', 'B', 3]],
             ],
             'veteran' => [
                 [['transport', 'S', 7], ['probe', 'S', 16]],
                 [['colony_ship', 'S', 2], ['transport', 'S', 4], ['probe', 'S', 5], ['probe', 'B', 5]],
-                [['transport', 'S', 6], ['solar_satellite', 'S', 10], ['hydrogen_collector', 'S', 15]],
+                [['transport', 'S', 5], ['probe', 'S', 60], ['probe', 'B', 6]],
             ],
         ],
         18 => [

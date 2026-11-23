@@ -45,6 +45,17 @@ final class AdventSeasonPlanTest extends TestCase
             }
         }
         self::assertSame([[6, 'beginner', 0, 24000]], $over);
+        self::assertSame(71878, $doors[6]['options']['intermediate'][2]['value_twice_metal']);
+        self::assertSame(287860, $doors[6]['options']['veteran'][2]['value_twice_metal']);
+        foreach ($doors as $door) {
+            foreach ($door['options'] as $choices) {
+                foreach ($choices as $option) {
+                    foreach ($option['units'] ?? [] as $unit) {
+                        self::assertNotContains($unit['slug'], ['solar_satellite', 'hydrogen_collector']);
+                    }
+                }
+            }
+        }
     }
 
     public function testResearchDiscountUsesWholeMaterialUnitsAndDoesNotChangeEnergy(): void
