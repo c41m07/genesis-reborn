@@ -388,6 +388,7 @@ body.authenticated .profile-page .profile-validation-notice {
     border:1px solid color-mix(in srgb,var(--account-danger) 38%,var(--line));
     background:color-mix(in srgb,var(--account-danger) 11%,var(--panel));
 }
+body.authenticated .profile-page .profile-danger-card .account-board-danger p { color:var(--text); }
 @media (min-width: 1280px) {
     .profile-page .account-profile-confirmation { max-width:64%; }
 }
