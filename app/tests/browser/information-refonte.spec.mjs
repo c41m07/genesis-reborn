@@ -211,6 +211,9 @@ test('P20 : feedback non envoyé et deux patchnotes publiées', async ({ page, b
       await description.fill(descriptionText);
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+      if (viewport.width === 1920) {
+        await expect(page.getByRole('button', { name: 'Envoyer mon retour' })).toBeInViewport({ ratio: 1 });
+      }
       await page.screenshot({ path: info.outputPath(`P20-A-feedback-${theme}-${viewport.width}.png`), animations:'disabled', scale:'css' });
       if (viewport.width === 390) {
         await page.getByRole('button', { name: 'Envoyer mon retour' }).scrollIntoViewIfNeeded();
@@ -220,6 +223,11 @@ test('P20 : feedback non envoyé et deux patchnotes publiées', async ({ page, b
       await page.getByRole('button', { name: 'Envoyer mon retour' }).press('Enter');
       const errors = page.locator('.feedback-errors');
       await expect(errors).toContainText('Le titre est obligatoire');
+      await expect(errors).toBeFocused();
+      await expect.poll(() => errors.getByRole('heading').evaluate(element => {
+        const box = element.getBoundingClientRect();
+        return document.elementFromPoint(box.x + 8, box.y + box.height / 2) === element;
+      })).toBe(true);
       await expect(description).toHaveValue(descriptionText);
       await expect(page.getByLabel('Type', { exact: true })).toHaveValue('improvement');
       expect(count()).toBe('0');
@@ -229,6 +237,9 @@ test('P20 : feedback non envoyé et deux patchnotes publiées', async ({ page, b
       const journal = page.locator('.player-patchnotes-board');
       await expect(journal.getByRole('heading', { level: 2 })).toHaveText(['Lisibilité des rapports', 'Classement et navigation']);
       await expect(journal.locator('time[datetime]')).toHaveCount(2);
+      await expect(journal.locator('.patchnote-version')).toHaveText(['Version 0.9.2','Version 0.9.1']);
+      await expect(journal.locator('.patchnote-version--current')).toHaveText('Version 0.9.2');
+      expect((await new AxeBuilder({ page }).include('.patchnote-version').analyze()).violations).toEqual([]);
       const details = journal.locator('summary').first();
       await details.press('Enter');
       await expect(journal.locator('details').first()).toHaveAttribute('open','');

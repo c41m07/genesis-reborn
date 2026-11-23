@@ -674,3 +674,32 @@ body.ui-refined[data-ui-page="feedback"] .feedback-workspace.social-board {
 .player-patchnotes-board .stack-list { max-width:72rem; display:grid; gap:.8rem; }
 .player-patchnotes-board .patchnote-card { padding:clamp(1rem,1.5vw,1.5rem); }
 .player-patchnotes-board .patchnote-card .section-heading { margin-block:0 .65rem; }
+
+
+/* P20 : le lien facultatif reste disponible sans éloigner la capture et l’envoi. */
+.feedback-workspace.social-board .feedback-optional-fields > * { min-width:0; }
+.feedback-workspace.social-board .feedback-errors { scroll-margin-top:1rem; }
+@media (min-width: 1280px) and (min-height: 900px) {
+    .feedback-workspace.social-board .feedback-primary > .account-grid { margin-block:.75rem; }
+    .feedback-workspace.social-board .feedback-primary textarea { height:9rem; min-height:9rem; }
+    .feedback-workspace.social-board .feedback-optional-fields {
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:1rem;
+    }
+    .feedback-workspace.social-board .feedback-actions .primary { width:auto; min-width:min(12rem,100%); }
+}
+
+/* Le journal reste une colonne de lecture ; la dernière version n’est pas un état de non-lu. */
+.player-patchnotes-board .stack-list { max-width:60rem; gap:.9rem; }
+.player-patchnotes-board .patchnote-card { margin-bottom:0; }
+.player-patchnotes-board .patchnote-card .patchnote-version {
+    color:var(--text);
+    background:var(--panel);
+    border:1px solid var(--line);
+}
+.player-patchnotes-board .patchnote-card .patchnote-version--current {
+    color:var(--text);
+    background:color-mix(in srgb,var(--accent) 15%,var(--panel));
+    border-color:color-mix(in srgb,var(--accent) 65%,var(--line));
+}
