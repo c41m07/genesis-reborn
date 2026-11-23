@@ -180,19 +180,21 @@ body.ui-refined[data-ui-page="accueil-public"] .entry-home .public-hero-preview 
 }
 
 body.ui-refined[data-ui-page="accueil-public"] .entry-home .public-previews article {
-    display: grid;
-    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
-    gap: 48px;
-    align-items: center;
+    display: block;
     padding: 0;
     border: 0;
     background: transparent;
 }
 
-body.ui-refined[data-ui-page="accueil-public"] .entry-home .public-previews article > a {
-    grid-area: auto;
-    display: block;
+body.ui-refined[data-ui-page="accueil-public"] .entry-home .public-previews .entry-galaxy-preview {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: center;
+    gap: 48px;
+    color: inherit;
+    text-decoration: none;
 }
+.entry-galaxy-preview:is(:hover, :focus-visible) .entry-exploration-link { text-decoration: underline; }
 
 .entry-exploration-copy {
     min-width: 0;
@@ -581,7 +583,7 @@ body[data-theme=light] .entry-universe-state--open {
         margin-top: 42px;
     }
 
-    body.ui-refined[data-ui-page="accueil-public"] .entry-home .public-previews article {
+    body.ui-refined[data-ui-page="accueil-public"] .entry-home .public-previews .entry-galaxy-preview {
         grid-template-columns: minmax(0,1fr);
         gap: 20px;
     }
@@ -860,15 +862,13 @@ body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previe
 }
 
 body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previews article {
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-    align-items: center;
-    gap: clamp(18px, 1.65vw, 32px);
     padding: 16px;
     height: 100%;
 }
-
-body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previews article > a {
-    grid-area: auto;
+body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previews .entry-galaxy-preview {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: clamp(18px, 1.65vw, 32px);
+    height: 100%;
 }
 
 body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previews article img {
@@ -1201,7 +1201,7 @@ body[data-theme=light] .entry-universes--audit .entry-universe-state--scheduled 
         min-height: 48px;
     }
 
-    body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previews article {
+    body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previews .entry-galaxy-preview {
         grid-template-columns: minmax(0, 1fr);
     }
 
