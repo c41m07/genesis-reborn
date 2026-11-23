@@ -58,8 +58,7 @@
             </details>
 
         </div>
-        <div class="gv2-scene" data-galaxy-v2-target="scene">
-            <div class="gv2-locator"><span class="gv2-live-dot"></span><span data-galaxy-v2-target="location">{{ selected_galaxy.name|default(membership.universe.name) }}</span></div>
+        <div class="gv2-stage-surface">
             <div class="gv2-map-controls">
                 <button type="button" aria-label="Zoomer" data-action="click->galaxy-v2#zoomIn">+</button>
                 <button type="button" aria-label="Dézoomer" data-action="click->galaxy-v2#zoomOut">−</button>
@@ -67,13 +66,16 @@
                 <button type="button" data-action="click->galaxy-v2#fitView">Vue entière</button>
                 <button type="button" class="gv2-home" data-action="click->galaxy-v2#centerHome">Ma colonie</button>
             </div>
-            <canvas class="gv2-canvas gv2-canvas--galaxy is-active" data-galaxy-v2-target="galaxyCanvas" aria-label="Carte animée de la galaxie. Glissez pour déplacer, molette pour zoomer, cliquez sur un système pour afficher sa fiche."></canvas>
-            <canvas class="gv2-canvas gv2-canvas--system" data-galaxy-v2-target="systemCanvas" aria-label="Vue du système solaire. Cliquez sur une planète pour ouvrir sa vue rapprochée ; sa fiche est accessible dans la liste."></canvas>
-            <canvas class="gv2-canvas gv2-canvas--planet" data-galaxy-v2-target="planetCanvas" aria-label="Vue rapprochée de la planète"></canvas>
-            <div class="gv2-scanlines" aria-hidden="true"></div><div class="gv2-vignette" aria-hidden="true"></div>
-            <div class="gv2-tooltip" role="status" data-galaxy-v2-target="tooltip" hidden></div>
+            <div class="gv2-scene" data-galaxy-v2-target="scene">
+                <div class="gv2-locator"><span class="gv2-live-dot"></span><span data-galaxy-v2-target="location">{{ selected_galaxy.name|default(membership.universe.name) }}</span></div>
+                <canvas class="gv2-canvas gv2-canvas--galaxy is-active" data-galaxy-v2-target="galaxyCanvas" aria-label="Carte animée de la galaxie. Glissez pour déplacer, molette pour zoomer, cliquez sur un système pour afficher sa fiche."></canvas>
+                <canvas class="gv2-canvas gv2-canvas--system" data-galaxy-v2-target="systemCanvas" aria-label="Vue du système solaire. Cliquez sur une planète pour ouvrir sa vue rapprochée ; sa fiche est accessible dans la liste."></canvas>
+                <canvas class="gv2-canvas gv2-canvas--planet" data-galaxy-v2-target="planetCanvas" aria-label="Vue rapprochée de la planète"></canvas>
+                <div class="gv2-scanlines" aria-hidden="true"></div><div class="gv2-vignette" aria-hidden="true"></div>
+                <div class="gv2-tooltip" role="status" data-galaxy-v2-target="tooltip" hidden></div>
 
-            <div class="gv2-map-help" data-galaxy-v2-target="mapHelp">Glisser pour naviguer · Molette pour zoomer · Cliquer sur un système pour afficher sa fiche</div>
+                <div class="gv2-map-help" data-galaxy-v2-target="mapHelp">Glisser pour naviguer · Molette pour zoomer · Cliquer sur un système pour afficher sa fiche</div>
+            </div>
         </div>
     </div>
     <ul class="gv2-visible-legend" aria-label="Repères de la carte">
