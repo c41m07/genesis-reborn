@@ -43,6 +43,11 @@ test('P17 A : consulter les restrictions et le refus natif sans activer les vaca
         expect(response.status()).toBe(200);
         await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
         await expect(page.getByRole('heading',{name:'Mode vacances',exact:true})).toBeVisible();
+        const status = page.locator('.vacation-inactive-notice');
+        const universe = page.getByRole('heading',{name:'Univers concerné',exact:true});
+        await expect(status).toContainText('Mode vacances inactif');
+        await expect(universe.locator('xpath=following-sibling::*[1]')).toContainText('Omega');
+        await expect(page.getByRole('heading',{name:'Restrictions avant activation',exact:true})).toBeVisible();
         const rules=page.locator('#vacation-rules');
         await expect(rules.getByRole('listitem')).toHaveCount(5);
         for(const detail of ['Production et files suspendues','48 heures minimum','90 jours maximum','15 jours','Toutes vos flottes','inactivité']){
@@ -51,8 +56,12 @@ test('P17 A : consulter les restrictions et le refus natif sans activer les vaca
         const form=page.locator('form[action="/profil/preferences/vacances/activer"]');
         const confirmation=form.getByRole('checkbox');
         const submit=form.getByRole('button',{name:'Activer le mode vacances dans cet univers',exact:true});
+        const safeBack=form.getByRole('link',{name:'Retour aux préférences',exact:true});
+        await expect(safeBack).toHaveAttribute('href','/profil/preferences');
         if(blocked){
+          await expect(page.locator('#vacation-start-blocker')).toContainText('Activation indisponible');
           await expect(page.locator('#vacation-start-blocker')).toContainText('Toutes vos flottes doivent être rentrées');
+          await expect(submit).toHaveAttribute('aria-describedby','vacation-start-blocker');
           await expect(submit).toBeDisabled();
           await expect(confirmation).toHaveCount(0);
         }else{
@@ -62,6 +71,8 @@ test('P17 A : consulter les restrictions et le refus natif sans activer les vaca
           await confirmation.focus();
           await page.keyboard.press('Tab');
           await expect(submit).toBeFocused();
+          await page.keyboard.press('Tab');
+          await expect(safeBack).toBeFocused();
         }
         await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
         if(viewport.width===390){
@@ -78,6 +89,15 @@ test('P17 A : consulter les restrictions et le refus natif sans activer les vaca
       }
     }
   }
+  const native = await browser.newContext({baseURL,storageState:await page.context().storageState(),javaScriptEnabled:false});
+  try {
+    const tab=await native.newPage();
+    await tab.route('**/profil/preferences/vacances/**',preventMutation);
+    await tab.goto('/profil/vacances');
+    await expect(tab.locator('#vacation-start-blocker')).toContainText('Toutes vos flottes doivent être rentrées');
+    await tab.getByRole('link',{name:'Retour aux préférences',exact:true}).press('Enter');
+    await expect(tab).toHaveURL(/profil\/preferences$/);
+  } finally { await native.close(); }
   expect(attempted).toEqual([]);
   expect(vacationCount()).toBe('0');
 });
