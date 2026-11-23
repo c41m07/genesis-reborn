@@ -324,18 +324,14 @@ body[data-theme=light] .catalog-workspace .catalog-build-action.primary:not(:dis
 .core-unit-price li { margin:4px 0; }
 .catalog-workspace .catalog-condensed .core-construction-order { grid-template-columns:minmax(0,1fr); }
 .catalog-workspace .catalog-condensed .core-unit-gain { grid-area:1/2; }
-.catalog-workspace .catalog-condensed .core-unit-details { grid-area:2/2; }
-.catalog-workspace .catalog-condensed .core-unit-details .card-benefits { grid-area:auto; }
 .catalog-workspace .catalog-condensed .core-construction-cost :is(.catalog-cost-heading,.building-costs) { grid-area:auto; }
 @media(max-width:1199px) {
     .catalog-workspace .catalog-condensed .core-unit-gain { grid-area:4/1/5/3; }
-    .catalog-workspace .catalog-condensed .core-unit-details { grid-area:7/1/8/3; }
 }
 @container(max-width:322px) { .core-construction-order { grid-template-columns:minmax(0,1fr); } }
 @media(max-width:600px) {
     .core-construction-order { grid-template-columns:minmax(0,1fr); }
     .core-construction-quantity .quantity-status { max-width:none; }
-    .catalog-workspace .catalog-condensed .core-unit-details { grid-area:8/1/9/3; }
 }
 
 .catalog-workspace .core-construction-cost .building-costs > span > span { min-width:0; max-width:100%; overflow-wrap:anywhere; }
@@ -400,13 +396,15 @@ body[data-ui-page="catalogues"] .catalog-workspace .catalog-operations-rail {
 .catalog-workspace .catalog-flight-followups .has-hostile > .catalog-follow-summary { border-color: #a65b63; }
 .catalog-workspace .catalog-queue-ribbon .catalog-follow-summary:focus-visible { outline-offset: -2px; }
 
-/* Sous-grille : la même image reste dans son panneau de rang. Seul l’ordre visuel change ;
-   le focus suit toujours le tab principal avant ses commandes, et les liens natifs restent utilisables. */
+/* Les rangées d’illustration, d’onglets, d’action et de détails sont partagées :
+   ouvrir une fiche ne déplace pas l’action de sa carte par rapport à celles de la rangée. */
 @supports (grid-template-rows: subgrid) {
     .catalog-workspace section:not(.catalog-condensed) .building-card:has(.building-rank[role="tabpanel"]) {
         display: grid;
+        grid-row: span 4;
         grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: auto auto minmax(0, 1fr);
+        grid-template-rows: subgrid;
+        row-gap: 0;
     }
     .catalog-workspace section:not(.catalog-condensed) .building-card > .building-rank-tabs {
         grid-area: 2 / 1;
@@ -414,12 +412,15 @@ body[data-ui-page="catalogues"] .catalog-workspace .catalog-operations-rail {
     }
     body[data-ui-page="catalogues"] :is(#panel-buildings, #panel-technologies, #panel-ships, #panel-defenses):not(.catalog-condensed) .building-rank[role="tabpanel"] {
         display: grid;
-        grid-area: 1 / 1 / 4 / 2;
+        grid-area: 1 / 1 / 5 / 2;
         grid-template: subgrid / minmax(0, 1fr);
         min-width: 0;
+        margin: 0;
+        row-gap: 0;
     }
     .catalog-workspace section:not(.catalog-condensed) .building-rank > .catalogue-card-visual { grid-row: 1; }
     .catalog-workspace section:not(.catalog-condensed) .building-rank > .card-body { grid-row: 3; }
+    .catalog-workspace section:not(.catalog-condensed) .building-rank > .core-unit-details { grid-row: 4; }
 }
 .catalog-workspace .building-card .catalogue-card-visual {
     position: relative;
@@ -529,7 +530,7 @@ body[data-theme="light"] .core-catalogue-header--technologies .core-catalogue-ki
 }
 .catalogue-no-quote dd { margin: 0; }
 .catalog-workspace .catalog-condensed .catalogue-no-quote { grid-area: 1 / 3; }
-.catalog-workspace .building-card .core-unit-details { margin-top: 7px; }
+.catalog-workspace .building-card .core-unit-details { padding: 0 14px 12px; min-width: 0; }
 .catalog-workspace .building-card .core-unit-details .card-benefits { margin: 0; padding: 5px 9px; }
 .catalog-workspace .building-card .core-unit-details summary { min-height: 27px; }
 .catalogue-ships-empty {
@@ -581,4 +582,43 @@ body[data-theme="light"] .core-catalogue-header--technologies .core-catalogue-ki
     .catalog-workspace .catalog-condensed .catalogue-no-quote { grid-area: 5 / 1 / 6 / 3; }
     .catalog-workspace .building-card .core-unit-details summary { min-height: 44px; }
     .catalogue-cancel-actions > :is(a, button) { flex: 1 1 100%; }
+}
+
+/* Densité Full HD de la planche : garder les choix du premier rang près du haut,
+   sans retirer les informations de suivi ni réduire les cibles tactiles. */
+.catalog-workspace .build-duration > small { margin-inline-end: auto; font-size: inherit; color: var(--muted); }
+@media (min-width: 1200px) {
+    body[data-ui-page="catalogues"] .page-heading.core-catalogue-header { margin-bottom: 0; }
+    body[data-ui-page="catalogues"] .colony-catalog-workspace.catalog-workspace { margin-top: 8px; }
+    body[data-ui-page="catalogues"] .catalog-workspace .catalog-operations-rail { padding-block: 0; }
+    .catalog-workspace .catalog-flight-followups .catalog-follow-summary { min-height: 28px; }
+    .catalog-workspace > .colony-catalog { margin-top: 5px; }
+    .catalog-workspace .colony-catalog .catalog-section-title { margin-bottom: 4px; }
+    .catalog-workspace .catalog-section-title .building-visibility { margin-block: 0; }
+    .catalog-workspace .catalog-filters { margin: 0 0 12px; padding-block-end: 0; }
+    .catalog-workspace .catalog-filters button { border-radius: 5px; background: var(--panel); }
+    .catalog-workspace section:not(.catalog-condensed) .building-card .card-body { padding-bottom: 7px; }
+    .catalog-workspace section:not(.catalog-condensed) .building-card .build-duration { min-height: 20px; margin-block: 3px; }
+    .catalog-workspace section:not(.catalog-condensed) .building-card .catalog-level { margin-bottom: 4px; font-size: 12px; }
+    .catalog-workspace section:not(.catalog-condensed) .catalog-cost-heading { border: 0; padding: 0; margin-bottom: 5px; }
+    .catalog-workspace section:not(.catalog-condensed) .building-card .card-body > .building-costs {
+        margin-bottom: 7px;
+        border: 0;
+        padding: 0;
+    }
+    .catalog-workspace section:not(.catalog-condensed) .building-card .card-body > .building-costs > span {
+        display: flex;
+        justify-content: flex-start;
+        min-height: 44px;
+        padding: 5px 7px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        background: var(--bg);
+        overflow-wrap: anywhere;
+    }
+    .catalog-workspace section:not(.catalog-condensed) .building-card .card-body > .building-costs > span.insufficient {
+        border-color: currentColor;
+    }
+    .catalog-workspace section:not(.catalog-condensed) .building-card .card-body > form { padding-top: 3px; }
+    .catalog-workspace section:not(.catalog-condensed) .core-catalogue-gain { gap: 2px 7px; padding-block: 4px; }
 }

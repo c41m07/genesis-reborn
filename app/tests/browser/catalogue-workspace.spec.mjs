@@ -189,6 +189,8 @@ test('Fidélité catalogues : même composition en Full HD et actions lisibles s
                 const catalog = page.locator('.catalog-workspace');
                 await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
                 await expect(catalog.locator('.building-catalog-ready')).toBeVisible();
+                const guide = page.locator('.first-steps-popup[open] > summary');
+                if (await guide.isVisible()) await guide.click();
                 await expect(page.locator('.core-catalogue-header .development-navigation')).toHaveCount(0);
                 const rail = catalog.locator('.catalog-operations-rail');
                 const queues = rail.locator('.catalog-queue-ribbon');
@@ -208,12 +210,23 @@ test('Fidélité catalogues : même composition en Full HD et actions lisibles s
                     const firstRow = await cards.evaluateAll(nodes => nodes.slice(0, 4).map(node => node.getBoundingClientRect().top));
                     expect(firstRow).toHaveLength(4);
                     expect(new Set(firstRow).size).toBe(1);
+                    expect(firstRow[0], 'Les quatre premières illustrations commencent dans la première moitié de l’écran').toBeLessThanOrEqual(560);
+                    if (section === 'buildings') {
+                        const action = panel.locator('button.catalog-build-action');
+                        await expect(action).toBeVisible();
+                        const box = await action.boundingBox();
+                        expect(box.y + box.height, 'La première action de construction tient dans le viewport').toBeLessThanOrEqual(1080);
+                    }
                 }
                 // Une capture correspond à la taille CSS affichée, pas à la page déroulée.
                 await cards.locator('.building-rank:not([hidden]) .catalog-card-art img').evaluateAll(images =>
                     Promise.all(images.slice(0, 4).map(image => image.decode())),
                 );
                 await page.screenshot({ path: info.outputPath('CATALOGUE_' + section + '_' + theme + '_' + width + '.png'), animations: 'disabled', fullPage: false, scale: 'css' });
+                if (width === 390 && theme === 'dark') {
+                    await panel.locator('.catalogue-card-identity').scrollIntoViewIfNeeded();
+                    await page.screenshot({ path: info.outputPath('CATALOGUE_' + section + '_dark_390_CARD.png'), animations: 'disabled', fullPage: false, scale: 'css' });
+                }
             }
         }
     }

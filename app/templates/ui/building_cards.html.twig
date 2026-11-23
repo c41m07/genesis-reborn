@@ -99,7 +99,7 @@
                     <p class="catalog-level">{% if leveled %}{{ maximumPending ? 'Dernier niveau en file' : (card.maximum ? 'Aucune amélioration pour ce rang' : 'Objectif : niveau ' ~ card.target) }}{% else %}{{ group == 'defenses' ? 'Défense de cette colonie' : 'Hangar de cette colonie' }}{% if group == 'defenses' and card.quantity > 1 %}s{% endif %}{% if card.failures %} · Verrouillé{% endif %}{% endif %}</p>
                     {% if card.queued %}<p class="catalog-queued">{{ card.target-card.level-1 }} niveau{{ card.target-card.level-1 > 1 ? 'x' : '' }} en file</p>{% endif %}
                     {% if not leveled or not card.maximum %}
-                    <div class="build-duration">{{ ui.icon('clock') }} <span{% if not leveled %} data-construction-quantity-target="duration"{% endif %}>{{ duration_label(card.duration) }}</span></div>
+                    <div class="build-duration">{{ ui.icon('clock') }} <small>Durée estimée</small> <span{% if not leveled %} data-construction-quantity-target="duration"{% endif %}>{{ duration_label(card.duration) }}</span></div>
                     {% set costsOverview %}
                     <p class="catalog-cost-heading"{% if not leveled %} data-construction-quantity-target="costHeading"{% endif %}>{{ leveled ? 'Coût du niveau '~card.target : 'Coût du lot × 1' }}</p>
                     <div class="costs building-costs" aria-label="{{ leveled ? 'Coût du prochain niveau' : 'Coût du lot' }}">
@@ -178,10 +178,10 @@
                         </form>
                     {% endif %}
                     {% if card.maximum or card.failures or vacation %}<button type="button" class="secondary full catalog-blocked-action" disabled>{{ card.maximum ? (maximumPending ? 'Niveau maximum en file' : 'Niveau maximum atteint') : (card.failures ? 'Prérequis manquants' : 'Mode vacances') }}</button></div>{% endif %}
-                    {% if not leveled or (not card.maximum and card.benefits) %}
-                        <div class="core-unit-details">{% include 'ui/catalogue_benefits.html.twig' %}</div>
-                    {% endif %}
                 </div>
+                {% if not leveled or (not card.maximum and card.benefits) %}
+                    <div class="core-unit-details">{% include 'ui/catalogue_benefits.html.twig' %}</div>
+                {% endif %}
             </div>
         {% endfor %}
     </article>
