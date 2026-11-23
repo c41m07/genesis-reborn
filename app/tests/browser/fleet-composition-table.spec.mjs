@@ -97,7 +97,18 @@ test('Flottes : les trois rangs restent alignés et arrivent ensemble au devis, 
     expect(quoted.ship_adjusted).toBe(false);
     await form.getByRole('button', { name: /Vérifier la mission/ }).click();
     await expect(form.getByRole('heading', { name: 'Confirmez votre mission' })).toBeFocused();
-    await expect(form.locator('[data-fleet-wizard-target="summary"]')).toContainText('2 × Chasseur de patrouille, 2 × Chasseur multirôle, 3 × Chasseur d’assaut orbital');
+    const reviewTable = form.locator('[data-fleet-wizard-target="summary"]').getByRole('table', { name: 'Composition', exact: true });
+    await expect(reviewTable).toBeVisible();
+    await expect(reviewTable.getByRole('columnheader')).toHaveText(['Unité', 'Rang', 'Quantité']);
+    await expect(reviewTable.getByRole('row')).toHaveCount(4);
+    for (const [name, rank, quantity] of [
+        ['Chasseur de patrouille', 'Basique', '2'],
+        ['Chasseur multirôle', 'Intermédiaire', '2'],
+        ['Chasseur d’assaut orbital', 'Supérieur', '3'],
+    ]) {
+        const row = reviewTable.getByRole('row').filter({ has: reviewTable.getByRole('rowheader', { name, exact: true }) });
+        await expect(row.getByRole('cell')).toHaveText([rank, quantity]);
+    }
 
     await expect(recap.getByRole('button', { name: /Envoyer la flotte/ })).toBeVisible();
     await expect(recap.getByRole('heading', { name: 'Estimation du trajet' })).toBeVisible();
