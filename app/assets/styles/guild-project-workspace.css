@@ -262,6 +262,7 @@ body.authenticated .social-board--guild-project .project-personal-recap--qualifi
 body.authenticated .social-board--guild-project .project-personal-recap :is(h3, ul, p) {
     margin: 0;
 }
+body.authenticated .social-board--guild-project .project-personal-recap > p { color: var(--text); }
 body.authenticated .social-board--guild-project .project-personal-recap ul {
     display: flex;
     flex-wrap: wrap;
