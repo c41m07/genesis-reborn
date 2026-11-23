@@ -6,11 +6,19 @@
         {% for day, door in draft.doors %}
             <li class="panel">
                 <h2>Porte {{ day }} · {{ door.opens_at|date('d/m/Y', 'Europe/Paris') }}</h2>
-                <ul>
-                    {% for option in door.options %}
-                        <li>{% for resource, amount in option %}{{ amount|quantity(0) }} {{ resources[resource] }}{{ loop.last ? '' : ' · ' }}{% endfor %}</li>
+                <div class="advent-admin-brackets">
+                    {% for bracket, offers in door.options %}
+                        <section aria-label="{{ brackets[bracket] }}">
+                            <h3>{{ brackets[bracket] }}</h3>
+                            <ol>
+                                {% for offer in offers %}
+                                    <li>{% include 'advent/_offer.html.twig' with {offer: offer, resources: resources, ships: ships} only %}</li>
+                                {% endfor %}
+                            </ol>
+                        </section>
                     {% endfor %}
-                </ul>
+                </div>
+                {% if door.cosmetics %}<p>Tous les joueurs qui ouvrent cette porte : <strong>Gardien des étoiles</strong> et <strong>Nuit polaire</strong>.</p>{% endif %}
             </li>
         {% endfor %}
     </ol>

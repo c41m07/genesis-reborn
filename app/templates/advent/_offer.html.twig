@@ -1,0 +1,10 @@
+{% set ranks = {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}
+{% if offer.kind == 'ship_pack' %}
+    {% for unit in offer.units %}{{ unit.quantity|quantity(0) }} × {{ ships[unit.slug].label }} · {{ ranks[unit.tier] }}{{ loop.last ? '' : ' ; ' }}{% endfor %}
+{% elseif offer.kind == 'ship_voucher' %}
+    Bon pour 1 × {{ ships[offer.slug].label }} · {{ ranks[offer.tier] }} : jusqu’à {{ offer.budget_metal|quantity(0) }} équivalents métal. Prérequis, reste à payer et délai habituels.
+{% elseif offer.kind == 'research_discount' %}
+    −50 % sur les matériaux du prochain niveau éligible, jusqu’à {{ offer.budget_metal|quantity(0) }} équivalents métal. Électricité et durée inchangées. Hors Colonisation niveau 1.
+{% else %}
+    {% for resource, amount in offer.resources %}{{ amount|quantity(0) }} {{ resources[resource] }}{{ loop.last ? '' : ' · ' }}{% endfor %}
+{% endif %}

@@ -1,7 +1,7 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}Calendrier de l’Avent · Administration{% endblock %}
 {% block body %}
-    <div class="page-heading"><div><h1>Préparer le calendrier de l’Avent</h1><p>24 portes, une édition commune à tous les univers accessibles. Dates en heure de Paris.</p></div><a class="secondary" href="{{ path('app_admin_game_events') }}">Liste des événements</a></div>
+    <div class="page-heading"><div><h1>Préparer le calendrier de l’Avent</h1><p>24 portes, une édition ouverte dans tous les univers accessibles. Chaque joueur fixe un seul univers pour l’édition. Dates en heure de Paris.</p></div><a class="secondary" href="{{ path('app_admin_game_events') }}">Liste des événements</a></div>
     {% if published %}
         <section class="panel" aria-labelledby="advent-published"><h2 id="advent-published">Édition publiée</h2><p>{{ published.name }} · Première porte le {{ published.startsAt|date('d/m/Y', 'Europe/Paris') }}. Son calendrier et ses choix ne peuvent plus être modifiés.</p></section>
     {% endif %}
@@ -16,25 +16,8 @@
             </div>
         </section>
         <section class="panel" aria-labelledby="advent-lots-title">
-            <h2 id="advent-lots-title">Cadeaux des 24 portes</h2>
-            <p>Configurez un à trois lots par porte. Laissez un choix vide pour ne pas le proposer. Aucun montant n’est ajouté automatiquement.</p>
-            {% for door in 1..doors %}
-                <details class="admin-rotation-toggle" {{ loop.first ? 'open' }}>
-                    <summary>Porte {{ door }}</summary>
-                    {% for choice in 0..(choices - 1) %}
-                        <fieldset>
-                            <legend>Choix {{ choice + 1 }}</legend>
-                            <div class="admin-rotation-fields">
-                                {% for resource, label in resources %}
-                                    {% set field = 'advent-' ~ door ~ '-' ~ choice ~ '-' ~ resource %}
-                                    {% set value = draft.options[door][choice][resource]|default('') %}
-                                    <div class="admin-rotation-field"><label for="{{ field }}">{{ label }}</label><input id="{{ field }}" type="number" min="0" max="999999999" step="1" name="options[{{ door }}][{{ choice }}][{{ resource }}]" value="{{ value is same as(true) or value is iterable ? '' : value }}"></div>
-                                {% endfor %}
-                            </div>
-                        </fieldset>
-                    {% endfor %}
-                </details>
-            {% endfor %}
+            <h2 id="advent-lots-title">Barème de l’édition</h2>
+            <p>Vérifiez les lots, les choix, les remises et leurs plafonds pour les trois tranches dans l’aperçu. La publication fige leur définition et ne lance aucun versement.</p>
         </section>
         <button class="primary">Vérifier l’aperçu des 24 portes</button>
     </form>

@@ -175,7 +175,7 @@ final readonly class AdventRewards
                     $credited[$resource] = ($credited[$resource] ?? 0) + $quantity;
                 }
                 $claim->creditedResources = $credited;
-                if ($credited !== $claim->resources) {
+                if (array_diff_assoc($claim->resources, $credited) !== []) {
                     return ['state' => 'partial'];
                 }
             }

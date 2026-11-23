@@ -16,6 +16,7 @@ final readonly class AdventEditions
     public function __construct(
         private AdventCalendar $calendar,
         private AdventGifts $gifts,
+        private AdventSeasonPlan $seasonPlan,
         private EntityManagerInterface $em,
         private GameManager $manager,
         private ClockInterface $clock,
@@ -43,6 +44,32 @@ final readonly class AdventEditions
         return ['name' => $name, 'first' => $first, 'last' => $last, 'doors' => $doors];
     }
 
+    /** @return array{name:string,first:string,last:string,plan:string,doors:array<int,array<string,mixed>>} */
+    public function prepareConsolidated(string $name, string $first, string $last): array
+    {
+        $name = trim($name);
+        if ($name === '' || mb_strlen($name) > 120) {
+            throw new \DomainException('Saisissez un nom d’édition de 120 caractères maximum.');
+        }
+        $dates = $this->calendar->schedule($first, $last);
+        if ($dates['startsAt'] <= $this->clock->now()) {
+            throw new \DomainException('Choisissez une première porte à une date future, à minuit heure de Paris.');
+        }
+        $doors = $this->seasonPlan->doors();
+        foreach ($dates['doors'] as $number => $opensAt) {
+            $doors[$number]['opens_at'] = $opensAt->format(DATE_ATOM);
+            foreach ($doors[$number]['options'] as $choices) {
+                foreach ($choices as $offer) {
+                    if ($offer['kind'] === 'ship_pack' && $offer['value_twice_metal'] > 2 * $offer['budget_metal']) {
+                        throw new \DomainException('La valeur d’un lot dépasse le plafond approuvé de la porte '.$number.'.');
+                    }
+                }
+            }
+        }
+
+        return ['name' => $name, 'first' => $first, 'last' => $last, 'plan' => 'consolidated', 'doors' => $doors];
+    }
+
     /** @param array{name: string, first: string, last: string, doors: array<int, array{opens_at: string, options: list<array<string, int>>}>} $preview */
     public function publish(Player $actor, array $preview): AdventEdition
     {
@@ -54,14 +81,22 @@ final readonly class AdventEditions
                 }
                 // Publication = instantané du brouillon validé côté serveur et stocké
                 // en session. Revalider en particulier le début après l’attente du verrou.
-                $prepared = $this->prepare($preview['name'], $preview['first'], $preview['last'], array_map(
-                    static fn (array $door): array => $door['options'],
-                    $preview['doors'],
-                ));
+                if (($preview['plan'] ?? null) === 'consolidated') {
+                    $prepared = $this->prepareConsolidated($preview['name'], $preview['first'], $preview['last']);
+                    if ($prepared !== $preview) {
+                        throw new \DomainException('Le barème a changé depuis votre aperçu. Préparez un nouvel aperçu.');
+                    }
+                } else {
+                    $prepared = $this->prepare($preview['name'], $preview['first'], $preview['last'], array_map(
+                        static fn (array $door): array => $door['options'],
+                        $preview['doors'],
+                    ));
+                }
                 $dates = $this->calendar->schedule($prepared['first'], $prepared['last']);
                 $event = new AdventEdition();
                 $event->season = (int) substr($prepared['first'], 0, 4);
                 $event->name = $prepared['name'];
+                $event->plan = $prepared['plan'] ?? 'custom';
                 $event->startsAt = $dates['startsAt'];
                 $event->closesAt = $dates['closesAt'];
                 $event->doors = $prepared['doors'];
@@ -74,7 +109,7 @@ final readonly class AdventEditions
                 $audit->action = 'advent_edition_published';
                 $audit->targetType = 'advent_edition';
                 $audit->targetId = $event->id;
-                $audit->details = ['season' => $event->season, 'starts_at' => $event->startsAt->format(DATE_ATOM), 'closes_at' => $event->closesAt->format(DATE_ATOM)];
+                $audit->details = ['season' => $event->season, 'plan' => $event->plan, 'starts_at' => $event->startsAt->format(DATE_ATOM), 'closes_at' => $event->closesAt->format(DATE_ATOM)];
                 $audit->createdAt = $event->publishedAt;
                 $this->manager->save($audit);
 

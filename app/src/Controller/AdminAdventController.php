@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Entity\Player;
 use App\Service\Advent\{AdventCalendar, AdventEditions, AdventGifts};
+use App\Service\Catalog\GameCatalog;
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
@@ -23,7 +24,7 @@ final class AdminAdventController extends AbstractController
         if (!$editions->enabled) {
             throw $this->createNotFoundException();
         }
-        $draft = $calendar->defaults($clock->now()) + ['name' => 'Calendrier de l’Avent', 'options' => []];
+        $draft = $calendar->defaults($clock->now()) + ['name' => 'Calendrier de l’Avent'];
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid(self::PREVIEW, $request->request->getString('_token'))) {
                 throw $this->createAccessDeniedException('Formulaire expiré.');
@@ -32,10 +33,9 @@ final class AdminAdventController extends AbstractController
                 'name' => $request->request->getString('name'),
                 'first' => $request->request->getString('first'),
                 'last' => $request->request->getString('last'),
-                'options' => $request->request->all('options'),
             ];
             try {
-                $prepared = $editions->prepare($draft['name'], $draft['first'], $draft['last'], $draft['options']);
+                $prepared = $editions->prepareConsolidated($draft['name'], $draft['first'], $draft['last']);
                 $key = bin2hex(random_bytes(16));
                 // Une seule prévisualisation bornée par session. Les lignes de
                 // cadeaux ne sont pas ressoumises par le bouton de publication.
@@ -48,21 +48,18 @@ final class AdminAdventController extends AbstractController
         } elseif ($request->query->getBoolean('edit')) {
             $preview = $request->getSession()->get(self::PREVIEW);
             if ($preview !== null) {
-                $draft = $preview['draft'] + ['options' => array_map(static fn (array $door): array => $door['options'], $preview['draft']['doors'])];
+                $draft = $preview['draft'];
             }
         }
 
         return $this->render('admin/advent_form.html.twig', [
             'draft' => $draft,
-            'doors' => AdventCalendar::DOORS,
-            'choices' => AdventGifts::OPTIONS_PER_DOOR,
-            'resources' => AdventGifts::RESOURCES,
             'published' => $editions->visible(),
         ], new Response(status: $request->isMethod('POST') ? 422 : 200));
     }
 
     #[Route('/admin/events/avent/apercu/{key}', name: 'app_admin_game_event_advent_preview', requirements: ['key' => '[a-f0-9]{32}'], methods: ['GET', 'POST'])]
-    public function preview(Request $request, string $key, AdventEditions $editions): Response
+    public function preview(Request $request, string $key, AdventEditions $editions, GameCatalog $catalog): Response
     {
         $saved = $request->getSession()->get(self::PREVIEW);
         if (!$editions->enabled || $saved === null || !hash_equals($saved['key'], $key)) {
@@ -88,7 +85,8 @@ final class AdminAdventController extends AbstractController
         }
 
         $response = $this->render('admin/advent_preview.html.twig', [
-            'draft' => $saved['draft'], 'key' => $key, 'resources' => AdventGifts::RESOURCES,
+            'draft' => $saved['draft'], 'key' => $key, 'resources' => AdventGifts::RESOURCES, 'ships' => $catalog->all('ships'),
+            'brackets' => ['beginner' => 'Débutant ×1', 'intermediate' => 'Intermédiaire ×6', 'veteran' => 'Vétéran ×24'],
         ], new Response(status: $request->isMethod('POST') ? 422 : 200));
         $response->setPrivate();
         $response->headers->addCacheControlDirective('no-store');
