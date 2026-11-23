@@ -12,6 +12,8 @@ Durant les 48 premières heures depuis l’arrivée dans l’univers choisi, le 
 
 Les bons J6 et J24 concernés financent une seule construction basique du type annoncé : il faut le déblocage ordinaire, payer la différence et attendre la durée normale. La remise J12 porte sur un prochain niveau éligible, pour 50 % de son coût matériel dans la limite affichée ; le premier niveau de Colonisation est exclu. Le droit est utilisé par une mise en file réussie. Annuler ne rend ni le bon ni la part non payée. L’ouverture J24 débloque aussi le titre « Gardien des étoiles » et la bannière « Nuit polaire » séparément, même si le lot principal reste réservé. Le joueur peut équiper ou retirer ces éléments sans effet de jeu.
 
+Le calendrier présente les 24 portes et ouvre le détail du jour à côté sur grand écran, sous la grille en largeur étroite. Les liens ancrés et les formulaires natifs restent utilisables sans JavaScript. « Cadeaux et réserves » réunit les étapes particulières et les droits encore à retirer ; les bons conservent leur devis séparé. L’illustration du J24 reprend le panorama de la planche approuvée : c’est un aperçu de l’Avent, pas une modification du profil équipé.
+
 ## Administration
 
 - Aucune édition n’est créée ni activée à l’installation. La fonctionnalité est désactivée par défaut (`ADVENT_ENABLED=0`).
