@@ -1623,3 +1623,33 @@ body.authenticated .social-board--guild-hall .guild-hall-funding-notice > p {
     margin: .35rem 0 0;
     color: var(--text);
 }
+
+
+/* S19 : une seule action existe dans chaque état du Hall. */
+body.authenticated .social-board--guild-hall :is(.guild-hall-placement, .guild-hall-installed) h2 .icon,
+body.authenticated .social-board--guild-hall .guild-hall-site-link .icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    vertical-align: -.1em;
+}
+body.authenticated .social-board--guild-hall :is(.guild-hall-placement, .guild-hall-installed) h2 .icon {
+    color: var(--accent);
+}
+body.authenticated .social-board--guild-hall .guild-hall-installed progress::-webkit-progress-value {
+    background: var(--project-positive);
+}
+body.authenticated .social-board--guild-hall .guild-hall-installed progress::-moz-progress-bar {
+    background: var(--project-positive);
+}
+body.authenticated .social-board--guild-hall .guild-hall-site-link {
+    min-height: 44px;
+}
+@media (min-width: 1021px) {
+    .social-board--guild-hall .guild-hall-placement .guild-hall-site-search {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: .5rem .7rem;
+        align-items: end;
+    }
+    .social-board--guild-hall .guild-hall-site-search label { grid-column: 1 / -1; }
+    body.authenticated .social-board--guild-hall .guild-hall-site-search input { margin: 0; }
+}

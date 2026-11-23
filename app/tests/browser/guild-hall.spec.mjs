@@ -66,6 +66,21 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
         await expect(screen.locator('[aria-labelledby="hall-donation-title"]')).toContainText('Les dons sont prélevés sur la colonie choisie.');
         await expect(screen.getByRole('link', { name: 'Hall de guilde' })).toHaveAttribute('aria-current', 'page');
         const proofUrl = screen.url();
+        async function capturePlacement(state) {
+            for (const theme of ['dark', 'light']) {
+                runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(IF(JSON_TYPE(preferences)='OBJECT',preferences,JSON_OBJECT()),'$.theme','" + theme + "','$.firstStepsGuide',false) WHERE email='fixture-hall-" + key + "@example.test'");
+                for (const [width, height] of [[1920, 1080], [390, 844]]) {
+                    await page.setViewportSize({ width, height });
+                    await page.goto(proofUrl);
+                    await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+                    const target = page.getByRole('heading', { name: state === 'pret' ? 'Placer le Hall' : 'Hall installé', exact: true });
+                    await expect(target).toBeVisible();
+                    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+                    if (width === 390) await target.scrollIntoViewIfNeeded();
+                    await page.screenshot({ path: testInfo.outputPath('S19-' + state + '-' + theme + '-' + width + '.png'), animations: 'disabled' });
+                }
+            }
+        }
         for (const theme of ['dark','light']) {
             runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(IF(JSON_TYPE(preferences)='OBJECT',preferences,JSON_OBJECT()),'$.theme','" + theme + "','$.firstStepsGuide',false) WHERE email='fixture-hall-" + key + "@example.test'");
             for (const [width,height] of [[1920,1080],[390,844]]) {
@@ -119,11 +134,23 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
         await expect(quorum).toHaveAttribute('value', '3');
         await expect(fundingNotice).toHaveCount(0);
         await expect(screen.getByRole('button', { name: 'Donner ces ressources' })).toHaveCount(0);
+        const placement = screen.getByRole('region', { name: 'Placer le Hall' });
+        await expect(screen.locator('.guild-project-detail > section').first()).toHaveAttribute('aria-labelledby', 'hall-placement-title');
+        await expect(screen.getByRole('heading', { name: 'Hall installé', exact: true })).toHaveCount(0);
+        await expect(placement.getByLabel('Je confirme l’emplacement de mon Hall.')).toHaveAttribute('required', '');
+        await capturePlacement('pret');
         await screen.getByLabel('Système à revendiquer').selectOption(String(system));
         await screen.getByLabel('Je confirme l’emplacement de mon Hall.').check();
         await screen.getByRole('button', { name: 'Installer le Hall' }).click();
         await expect(screen.getByText(/Installé à la position 0/)).toBeVisible();
+        const installed = screen.getByRole('region', { name: 'Hall installé' });
+        await expect(installed.getByRole('heading', { name: 'Dons clos' })).toBeVisible();
+        await expect(screen.getByRole('region', { name: 'Placer le Hall' })).toHaveCount(0);
         await expect(screen.getByRole('button', { name: 'Installer le Hall' })).toHaveCount(0);
+        await expect(screen.getByRole('button', { name: 'Donner ces ressources' })).toHaveCount(0);
+        await capturePlacement('installe');
+        await installed.getByRole('link', { name: 'Voir le système dans Galaxie' }).press('Enter');
+        await expect(screen).toHaveURL(/\/carte-v2\?/);
         await screen.goto('/carte?galaxy=' + galaxy + '&system=' + system);
         await expect(screen.locator('[data-system-guild-hall]')).toContainText('Position 0 · Hall de guilde · [HAL]');
     } finally {
