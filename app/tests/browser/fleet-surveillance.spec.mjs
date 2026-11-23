@@ -76,7 +76,7 @@ test('Le poste de commandement suit deux recherches et une attaque vers une autr
   await expect(watch.locator('li').last()).toContainText(data.target);
   await expect(watch).not.toContainText('Signature');
   await expect(watch).not.toContainText('Attaque entrante');
-  await page.getByRole('heading',{name:'Vue générale.',exact:true}).focus();
+  await page.getByRole('heading',{name:'Vue générale',exact:true}).focus();
   runIsolatedSql(project,`UPDATE fleet SET arrival_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 29 MINUTE) WHERE id=${data.fleet}`);
   await expect(watch.locator('li').first()).toContainText('Attaque entrante',{timeout:15000});
   await expect(watch.locator('li').first()).toContainText('Balcon de Nérée');
