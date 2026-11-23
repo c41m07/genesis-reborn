@@ -215,6 +215,7 @@ body.admin-console.admin-balance-workspace .admin-catalogue-reset {
 .admin-balance-workspace .admin-design-table thead th:nth-child(3) { width: 30%; }
 .admin-balance-workspace .admin-design-table tbody tr:nth-child(even) { background: color-mix(in srgb,var(--bg) 30%,var(--panel)); }
 .admin-balance-workspace .admin-design-table tbody th small { display: block; margin-top: 4px; font-weight: 400; }
+body.admin-console.admin-balance-workspace .admin-design-table tbody th code { color: var(--muted); }
 .admin-balance-workspace .admin-design-row-link { display: inline-flex; min-height: 44px; align-items: center; font-weight: 700; }
 .admin-balance-workspace .admin-catalogue-history-link { margin-block: 0 16px; }
 .admin-balance-workspace .admin-catalogue-history-link .secondary { width: fit-content; min-height: 44px; }
