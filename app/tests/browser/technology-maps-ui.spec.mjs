@@ -228,10 +228,16 @@ test('Liste des systèmes : systèmes connu/inconnu, tableau défilant et sans J
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
   const scroll = page.getByRole('region', { name: 'Liste des systèmes, zone défilante' });
+  // Après les changements de largeur, le focus peut encore faire défiler toute la
+  // page. Placer d’abord la région à l’écran isole le défilement interne au clavier.
+  await scroll.scrollIntoViewIfNeeded();
+  await expect(scroll).toBeInViewport({ ratio: 0.99 });
+  await expect.poll(() => scroll.evaluate(element => element.scrollHeight - element.clientHeight)).toBeGreaterThan(0);
   await scroll.focus();
   await expect(scroll).toBeFocused();
+  const initialScrollTop = await scroll.evaluate(element => element.scrollTop);
   await page.keyboard.press('ArrowDown');
-  await expect.poll(() => scroll.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
+  await expect.poll(() => scroll.evaluate(element => element.scrollTop)).toBeGreaterThan(initialScrollTop);
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   await page.screenshot({ path: testInfo.outputPath('map-classic-table-390.png'), fullPage: true, animations: 'disabled' });
   await planets.getByRole('link', { name: /Gérer/ }).focus();
