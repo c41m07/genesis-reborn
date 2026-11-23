@@ -70,10 +70,16 @@ test('Une recherche ajoutée depuis une autre colonie rejoint la même file et l
     }
     await page.setViewportSize({ width: 390, height: 900 });
     await queue.screenshot({ path: info.outputPath('common-research-390.png'), animations: 'disabled' });
-    const cancel = queue.locator('.queue-detail-item').first().getByRole('link', { name: /Préparer l’annulation/ });
-    await cancel.focus(); await page.keyboard.press('Enter');
+    // Après les redimensionnements et la capture, repartir du panneau courant, pas d’un ancien nœud.
+    await openQueue();
+    const firstCommand = queue.locator('.queue-detail-item').filter({ hasText: 'En cours · Aster' });
+    const cancel = firstCommand.getByRole('link', { name: /Préparer l’annulation/ });
+    await expect(cancel).toBeVisible();
+    await cancel.press('Enter');
+    await expect(page).toHaveURL(/\/file\/\d+\/annulation/);
     await expect(page.getByRole('heading',{name:'Commandes concernées'})).toBeVisible();
-    await expect(page.locator('main')).toContainText('Dépendance annulée');
+    await page.getByText('Détail des commandes', { exact: true }).press('Enter');
+    await expect(page.getByText('Dépendance annulée', { exact: false })).toBeVisible();
     await page.getByRole('button',{name:/Confirmer l’annulation/}).click();
     await expect(summary).toContainText('File disponible');
     await openQueue();

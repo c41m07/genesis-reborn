@@ -492,6 +492,15 @@ body[data-ui-page="catalogues"] .catalog-workspace .catalog-operations-rail {
     .catalog-workspace .building-rank-tabs .building-rank-full { display: inline; }
     .catalog-workspace .building-rank-tabs .building-rank-short { display: none; }
 }
+/* Une réservation de 1,25 M et le nom de rang gardent chacun leur ligne.
+   Les trois onglets restent de même largeur, sans masquer ni tronquer les effectifs. */
+.catalog-workspace :is(.card--ships, .card--defenses) .building-rank-tabs > .building-rank-tab {
+    flex-direction: column;
+    gap: 2px;
+    min-height: 52px;
+}
+.catalog-workspace .catalog-condensed :is(.card--ships, .card--defenses) .building-rank-full { display: none; }
+.catalog-workspace .catalog-condensed :is(.card--ships, .card--defenses) .building-rank-short { display: inline; }
 @media (max-width: 850px) {
     .catalog-workspace .catalog-queue-ribbon { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .catalog-workspace .catalog-queue-ribbon > .catalog-queue-caption {
