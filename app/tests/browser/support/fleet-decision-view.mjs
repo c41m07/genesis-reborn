@@ -11,7 +11,17 @@ export async function captureDecision(page, data, info, kind, url) {
       expect((await page.goto(url)).status()).toBe(200);
       await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
       await expect(cards.locator('form[method="get"] select')).toBeEnabled();
-      await expect(cards.locator('form[method="post"] button')).toBeEnabled();
+      const compute = cards.locator('form[method="get"] button');
+      const confirm = cards.locator('form[method="post"] button');
+      await expect(compute).toBeEnabled();
+      await expect(confirm).toBeEnabled();
+      const help = page.locator('.first-steps-popup-enhanced');
+      await expect(help).toHaveAttribute('open', '');
+      const bounds = await help.boundingBox();
+      for (const action of [compute, confirm]) {
+        const button = await action.boundingBox();
+        expect(bounds.y).toBeGreaterThanOrEqual(button.y + button.height);
+      }
       const selection = await cards.locator('.fleet-decision-selection').boundingBox();
       const quote = await cards.locator('.fleet-decision-quote').boundingBox();
       if (width >= 1101) {
@@ -25,6 +35,8 @@ export async function captureDecision(page, data, info, kind, url) {
       if (width !== 320) {
         expect((await new AxeBuilder({ page }).include('.fleet-decision-layout').analyze()).violations).toEqual([]);
         await page.screenshot({ path: info.outputPath(`${kind}-${theme}-${width}.png`), fullPage: width < 1101, animations: 'disabled' });
+        await compute.click({ trial: true });
+        await confirm.click({ trial: true });
       }
     }
   }

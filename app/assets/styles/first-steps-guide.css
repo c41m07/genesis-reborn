@@ -155,13 +155,13 @@
 body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: hidden; }
 
 /* Carte, composeur et choix de cadeau gardent leur espace : l’aide reste au-dessus dans le flux. */
-:is(.shell--galaxy-v2, .shell--messaging, .shell--advent) > .first-steps-popup-enhanced {
+:is(.shell--galaxy-v2, .shell--messaging, .shell--advent, .shell--fleet-decision) > .first-steps-popup-enhanced {
     position: relative;
     inset: auto;
     margin: 0 0 8px auto;
     max-width: 100%;
 }
-:is(.shell--galaxy-v2, .shell--messaging, .shell--advent) > .first-steps-popup-enhanced .first-steps-popup-panel { margin-top: 0; }
+:is(.shell--galaxy-v2, .shell--messaging, .shell--advent, .shell--fleet-decision) > .first-steps-popup-enhanced .first-steps-popup-panel { margin-top: 0; }
 
 /* Le tableau horizontal des guildes doit rester lisible sous l’aide ouverte sur téléphone. */
 @media (max-width: 740px) {
