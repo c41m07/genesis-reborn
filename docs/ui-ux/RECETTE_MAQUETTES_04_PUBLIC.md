@@ -24,3 +24,11 @@ Base : `cca8c6b`, direction visuelle validée dans le dossier `04_PUBLIC` de l�
 ## Recette
 
 Les captures de la recette `entry-maquettes.spec.mjs` sont en viewport CSS **1920 × 1080, DPR 1**, sans capture pleine page, puis **390 × 844** pour les cas mobiles. La recette de premier accès représente trois états dans le même viewport avec un compte sans empire : ouvert, planifié et fermé, uniquement dans une base de test jetable. Les autres états et comparaisons sont fonctionnels ; vérifier les largeurs 1440/768/390/320, les deux palettes, le clavier, les ancres, les liens et les messages natifs sur copie synthétique avant toute fusion. Le gabarit 500 est vérifié statiquement ; aucun incident n’est déclenché. Les résultats d’un passage portent sur le commit de la recette, pas sur l’application publiée.
+
+## Corrections après la comparaison planche par planche
+
+- 02/10 : densité de la connexion nominale rapprochée du cadrage approuvé ; l’erreur conserve ses liaisons aux champs, le focus et les liens tactiles. La scène reste décorative, avec l’emphase de la planche.
+- 03/04 : notices existantes intégrées à la carte du parcours. La réception est nommée sans dévoiler d’information sur le compte ; les rôles d’erreur et de succès restent accessibles, y compris la panne de livraison testée par transport simulé.
+- 05 : bandeaux constants et liens utiles dans le Twig d’erreur autonome, sans filtre, dépendance applicative ni état connecté. Le rendu 500 est testé dans le navigateur à partir du vrai Twig, sans provoquer un incident.
+- 06/07/10 : avertissement, sommaire et clauses suivent le même ordre de lecture sur téléphone ; sur bureau le sommaire reste à gauche et la notice reste intégrée au panneau juridique à droite. Tous les textes et toutes les ancres sont conservés.
+- 08/09 : variantes ouvertes, fermées et programmées, reprise et fermeture annoncée vérifiées avec des univers de la base de test. Le panneau vide et le compte à rebours partagent la présentation de l’archive ; aucun nouveau comportement n’est introduit.

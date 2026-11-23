@@ -4,6 +4,7 @@
 {% block title %}Inscription · Genesis Reborn{% endblock %}
 {% block access_content %}
 <h1 id="register-title">Rejoignez les étoiles.</h1>
+{% include 'security/_access_notices.html.twig' %}
 <p>Un compte vous permet de jouer dans plusieurs univers indépendants.</p>
 {{ form_start(form, {attr: {class: 'auth-form'}}) }}
     {{ form_errors(form) }}
