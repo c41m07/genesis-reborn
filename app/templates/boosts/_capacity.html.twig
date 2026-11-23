@@ -1,0 +1,5 @@
+<section class="panel inventory-capacity" aria-labelledby="boost-inventory-title">
+<div class="section-heading"><h2 id="boost-inventory-title">Emplacements utilisés</h2><span class="badge">{{ inventory_counts.available }} / {{ inventory_capacity }} emplacements</span></div>
+<progress class="boost-capacity" value="{{ inventory_counts.available }}" max="{{ inventory_capacity }}" aria-label="Emplacements utilisés dans l’inventaire">{{ inventory_counts.available }} / {{ inventory_capacity }}</progress>
+{% if inventory_counts.available>=inventory_capacity %}<p class="muted">Inventaire plein. Les nouvelles récompenses sont conservées en attente.</p>{% endif %}
+</section>

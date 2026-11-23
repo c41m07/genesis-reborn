@@ -2,8 +2,10 @@
 {% block title %}Récompense quotidienne · Genesis Reborn{% endblock %}
 {% block body %}
 {% import 'ui/macros.html.twig' as ui %}
+<div class="daily-reward-player-board">
 <div class="page-heading">
     <div>
+        <p class="daily-board-eyebrow">Opérations · progression</p>
         <h1>Récompense quotidienne</h1>
         <p>Un retrait par jour pour votre compte, tous univers confondus. Le jour change à minuit (heure de Paris).</p>
     </div>
@@ -11,6 +13,9 @@
 </div>
 <section class="panel account-panel" aria-labelledby="daily-reward-heading">
     <h2 id="daily-reward-heading" tabindex="-1">Jour {{ status.slot }} sur 7</h2>
+    <ol class="daily-board-cycle" aria-label="Les sept jours du cycle">
+        {% for day in 1..7 %}<li{{ day == status.slot ? ' aria-current="step"' }}><span>Jour {{ day }}</span></li>{% endfor %}
+    </ol>
     <p>Univers actif : <strong>{{ universe.name }}</strong>.</p>
     {% if status.claimed %}
         <p>Votre compte a déjà récupéré son lot du jour. Revenez après minuit (heure de Paris).</p>
@@ -33,4 +38,5 @@
         } only %}
     {% endif %}
 </section>
+</div>
 {% endblock %}

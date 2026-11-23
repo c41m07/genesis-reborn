@@ -190,3 +190,39 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
 .first-steps .first-steps-refunds button { min-height: 44px; }
 .first-steps-exercise-summary { margin-block: 12px; }
 .first-steps-exercise-summary :is(th,td):not(:first-child) { text-align: end; font-variant-numeric: tabular-nums; }
+
+/* P08/P09 : le guide et les remboursements restent deux actions, sans répétition des instructions. */
+.first-steps-player-board .first-steps-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+.first-steps-player-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+.first-steps-board-nav { display:flex; flex-wrap:wrap; gap:.45rem; margin-bottom:1.1rem; }
+.first-steps-board-nav a { display:inline-flex; align-items:center; min-height:44px; padding:.4rem .9rem; border:1px solid var(--line); border-radius:5px; background:var(--panel); color:var(--text); text-decoration:none; }
+.first-steps-board-nav a:first-child { border-color:var(--accent); box-shadow:inset 0 -2px var(--accent); }
+.first-steps-board-layout { display:grid; align-items:start; grid-template-columns:minmax(0,1.97fr) minmax(16rem,1fr); gap:1rem; }
+.first-steps-board-layout .account-panel { width:100%; max-width:none; min-width:0; margin:0; }
+.first-steps-player-board .first-steps-next { position:relative; isolation:isolate; overflow:hidden; min-height:12rem; display:grid; grid-template-columns:minmax(0,1fr); align-content:end; justify-items:start; color:var(--text); }
+.first-steps-next-art { position:absolute; inset:0; z-index:-2; width:100%; height:100%; object-fit:cover; object-position:center; border-radius:inherit; }
+.first-steps-player-board .first-steps-next::after { position:absolute; inset:0; z-index:-1; content:""; background:linear-gradient(90deg,var(--panel),color-mix(in srgb,var(--panel) 88%,transparent) 60%,color-mix(in srgb,var(--panel) 45%,transparent)); }
+.first-steps-player-board .first-steps-list { display:grid; grid-template-columns:minmax(0,1fr); }
+.first-steps-player-board .first-step details { min-width:0; }
+.first-steps-player-board .first-step summary { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.5rem; min-height:44px; cursor:pointer; color:var(--text); font-weight:700; }
+.first-steps-player-board .first-step summary span { color:var(--accent); font-size:.82rem; }
+.first-steps-player-board .first-step summary::after { content:"⌄"; color:var(--accent); }
+.first-steps-player-board .first-step details[open] summary::after { content:"⌃"; }
+.first-steps-board-rail .first-steps-refunds { margin:0 0 1rem; }
+.first-steps-board-rail > h2 { margin-top:0; }
+.first-steps-player-board :is(#first-steps-heading,#training-reward-title) { scroll-margin-top:180px; }
+@media (max-width:920px) {
+    .first-steps-board-layout { grid-template-columns:minmax(0,1fr); }
+}
+
+.first-steps-exercise-board .first-steps-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+.first-steps-exercise-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+.first-steps-exercise-layout { display:grid; gap:1rem; align-items:start; }
+.first-steps-exercise-layout.has-report { grid-template-columns:minmax(0,1.35fr) minmax(16rem,1fr); }
+.first-steps-exercise-layout .account-panel { width:100%; max-width:none; min-width:0; margin:0; }
+.first-steps-exercise-metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem; }
+.first-steps-exercise-metrics > div { padding:.8rem; border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 7%,var(--panel)); }
+.first-steps-exercise-metrics dd { margin:.3rem 0 0; color:var(--accent); font-size:1.4rem; font-weight:750; font-variant-numeric:tabular-nums; }
+@media(max-width:850px) {
+    .first-steps-exercise-layout.has-report { grid-template-columns:minmax(0,1fr); }
+}

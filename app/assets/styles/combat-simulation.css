@@ -22,3 +22,19 @@ body[data-theme=light] .simulation-workspace .simulation-survivors { color:#1767
     .simulation-workspace .simulation-losses td { text-align:left; padding:4px 0 10px; font-size:22px; }
     .simulation-workspace .simulation-losses td::before { content:attr(data-label); display:block; color:var(--muted); font-size:12px; }
 }
+
+/* P13/P21 : le scénario, les hypothèses et le résultat restent des sections nommées du même calcul. */
+.player-simulation-board .simulation-board-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+.player-simulation-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+.simulation-board-nav { display:flex; flex-wrap:wrap; gap:.5rem; margin:.8rem 0; }
+.simulation-board-nav a { display:inline-flex; align-items:center; min-height:44px; padding:.4rem .85rem; border:1px solid var(--line); border-radius:5px; background:var(--panel); color:var(--text); text-decoration:none; }
+.simulation-board-nav a:first-child { border-color:var(--accent); box-shadow:inset 0 -2px var(--accent); }
+.player-simulation-board .strategic-grid > section { min-width:0; border:1px solid var(--line); border-radius:8px; padding:1rem; background:color-mix(in srgb,var(--accent) 4%,var(--panel)); }
+.player-simulation-board .strategic-grid h2 { margin-top:0; }
+.simulation-board-options { display:grid; grid-template-columns:minmax(13rem,.65fr) minmax(0,1fr); gap:1rem; align-items:start; margin:1rem 0; }
+.simulation-board-assumptions { min-width:0; padding:.85rem; border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 8%,var(--panel)); }
+.player-simulation-board :is(#simulation-scenario,#simulation-result) { scroll-margin-top:180px; }
+.player-simulation-board .simulation-outcomes > div { padding:1rem; border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 8%,var(--panel)); }
+@media(max-width:800px) {
+    .simulation-board-options { grid-template-columns:minmax(0,1fr); }
+}

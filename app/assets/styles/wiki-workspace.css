@@ -211,3 +211,17 @@ body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-chapter > :is(p,ol,ul) {
 body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-search {
     margin-block-start: 12px;
 }
+
+/* P15 : sommaire durable à gauche, recherche dans le rail de lecture, aucun nouvel ordre du DOM par script. */
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-intro h1 { font-size:clamp(2rem,3vw,2.55rem); }
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-layout { grid-template-columns:minmax(13rem,.32fr) minmax(0,1fr); gap:1.1rem; }
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-chapters { min-width:0; }
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-search { grid-template-columns:minmax(0,1fr) auto; margin:0 0 1rem; }
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-search label { grid-column:1 / -1; }
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-summary a[aria-current] { background:color-mix(in srgb,var(--accent) 12%,var(--panel)); border-color:var(--accent); }
+@media(max-width:1099px) {
+    body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-layout { display:block; }
+}
+@media(max-width:560px) {
+    body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-search { grid-template-columns:minmax(0,1fr); }
+}
