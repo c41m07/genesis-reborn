@@ -93,7 +93,7 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
     const password = crypto.randomUUID() + 'Aa!';
     await page.goto('/inscription');
     await page.getByLabel('Adresse email').fill(email);
-    await page.getByLabel('Nom de commandant').fill('Étoile-' + marker);
+    await page.getByLabel('Nom de commandant').fill('AventChoix-' + marker);
     await page.getByLabel('Mot de passe (12 caractères minimum)', { exact: true }).fill(password);
     await page.getByLabel('Confirmer le mot de passe').fill(password);
     await page.getByRole('button', { name: 'Créer mon compte' }).click();
@@ -134,12 +134,16 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
         await native.close();
     }
 
-    for (const width of [360, 390, 1440, 1920]) {
-        await page.setViewportSize({ width, height: 900 });
-        await page.goto('/evenements/avent/' + edition);
-        await expect(page.getByRole('heading', { name: 'Avent des étoiles' })).toBeVisible();
-        await expect(page.locator('.advent-door')).toHaveCount(24);
-        const contentWidth = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
-        expect(contentWidth[0]).toBeLessThanOrEqual(contentWidth[1] + 2);
+    for (const theme of ['dark', 'light']) {
+        runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(preferences, '$.theme', '" + theme + "') WHERE email='" + email + "'");
+        for (const width of [360, 390, 1440, 1920]) {
+            await page.setViewportSize({ width, height: 900 });
+            await page.goto('/evenements/avent/' + edition);
+            await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+            await expect(page.getByRole('heading', { name: 'Avent des étoiles' })).toBeVisible();
+            await expect(page.locator('.advent-door')).toHaveCount(24);
+            const contentWidth = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+            expect(contentWidth[0]).toBeLessThanOrEqual(contentWidth[1] + 2);
+        }
     }
 });
