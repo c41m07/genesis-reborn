@@ -178,10 +178,10 @@
                         </form>
                     {% endif %}
                     {% if card.maximum or card.failures or vacation %}<button type="button" class="secondary full catalog-blocked-action" disabled>{{ card.maximum ? (maximumPending ? 'Niveau maximum en file' : 'Niveau maximum atteint') : (card.failures ? 'Prérequis manquants' : 'Mode vacances') }}</button></div>{% endif %}
+                    {% if not leveled or (not card.maximum and card.benefits) %}
+                        <div class="core-unit-details">{% include 'ui/catalogue_benefits.html.twig' %}</div>
+                    {% endif %}
                 </div>
-                {% if not leveled or (not card.maximum and card.benefits) %}
-                    <div class="core-unit-details">{% include 'ui/catalogue_benefits.html.twig' %}</div>
-                {% endif %}
             </div>
         {% endfor %}
     </article>

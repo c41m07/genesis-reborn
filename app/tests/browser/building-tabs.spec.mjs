@@ -10,7 +10,7 @@ async function checkLockedArtwork(page, panel, tab) {
     await expect(state).toContainText('Verrouillé');
     await expect(tab).toHaveAccessibleDescription(/Rang verrouillé, consulter les prérequis/);
     await expect(image).toHaveCSS('filter', 'none');
-    await image.hover();
+    await image.hover({ timeout: 3500 });
     await expect(state).toContainText('Verrouillé');
     await panel.locator('.requirement a').first().focus();
     await expect(state).toContainText('Verrouillé');
