@@ -46,6 +46,9 @@
 </form>
 <section class="panel account-board-card">
     <h2>Mode vacances</h2>
+    {% if chrome.membership %}
+        <p class="badge">{{ chrome.vacation ? 'Vacances actives' : 'Pas de vacances actives' }}</p>
+    {% endif %}
     <p>Les restrictions et l’état de votre protection sont propres à l’univers sélectionné.</p>
     <a class="secondary" href="{{ path('app_vacation') }}">Examiner les restrictions</a>
 </section>

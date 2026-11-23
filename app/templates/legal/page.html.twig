@@ -12,6 +12,8 @@
     'cookies': {'connexion-securite': 'Connexion et sécurité', 'memorisation': 'Se souvenir de moi', 'polices-services': 'Polices et autres services', 'choix': 'Vos choix'}
   } %}
   <div class="legal-audit-layout">
+    {# Même ordre de lecture et de clavier sur téléphone : avertissement, ancres, clauses. #}
+    <aside class="legal-warning" aria-label="État de cette information"><h2>Information provisoire et incomplète</h2><p>Cette page présente les informations disponibles à ce jour. Certains éléments obligatoires restent à compléter : cette publication ne signifie pas que les mentions légales ou l’information sur les données personnelles sont complètes.</p><p>Pour une question ou une demande : <a href="mailto:contact@genesis-reborn.fr">contact@genesis-reborn.fr</a>.</p></aside>
     <nav class="panel legal-contents" aria-labelledby="legal-contents-title">
       <h2 id="legal-contents-title">Dans cette page</h2>
       <ul>
@@ -22,7 +24,6 @@
       <a class="legal-back-top" href="#legal-title"><span aria-hidden="true">↑</span> Revenir en haut</a>
     </nav>
     <div class="panel legal-content">
-      <aside class="legal-warning" aria-label="État de cette information"><h2>Information provisoire et incomplète</h2><p>Cette page présente les informations disponibles à ce jour. Certains éléments obligatoires restent à compléter : cette publication ne signifie pas que les mentions légales ou l’information sur les données personnelles sont complètes.</p><p>Pour une question ou une demande : <a href="mailto:contact@genesis-reborn.fr">contact@genesis-reborn.fr</a>.</p></aside>
       {% include 'legal/' ~ page ~ '.html.twig' %}
       <a class="secondary legal-back-top" href="#legal-title">Revenir en haut</a>
     </div>

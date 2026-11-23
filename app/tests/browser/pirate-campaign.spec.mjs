@@ -99,6 +99,8 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     await nativePage.keyboard.press('Enter');
     await expect(nativePage).toHaveURL(/campagne-pirate\/1$/);
     await expect(nativePage.getByText('Reconnaissance en cours', { exact: true })).toBeVisible();
+    await nativePage.setViewportSize({ width: 1920, height: 1080 });
+    await nativePage.screenshot({ path: info.outputPath('P22-reconnaissance-en-cours-1920x1080.png'), scale: 'css', animations: 'disabled' });
     await expect(nativePage.getByText('Flotte pirate révélée', { exact: true })).toHaveCount(0);
     // Le vrai départ ci-dessus a figé la formation et le convoi. On avance seulement l’arrivée du fixture,
     // sans attendre l’horloge du worker ; ses garanties restent dans les tests d’intégration métier.
@@ -115,6 +117,9 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     const desktopBriefing = await briefing.boundingBox();
     expect((await intel.boundingBox()).x).toBeGreaterThanOrEqual(desktopBriefing.x + desktopBriefing.width);
     await page.screenshot({ path: info.outputPath('renseignement-1440.png'), fullPage: true, animations: 'disabled' });
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await expect(page.getByRole('link', { name: 'Voir les renseignements', exact: true })).toHaveAttribute('href', '#pirate-intelligence-title');
+    await page.screenshot({ path: info.outputPath('P05-rapport-recu-1920x1080.png'), scale: 'css', animations: 'disabled' });
     await page.setViewportSize({ width: 390, height: 900 });
     const mobileBriefing = await briefing.boundingBox();
     expect((await intel.boundingBox()).y).toBeGreaterThanOrEqual(mobileBriefing.y + mobileBriefing.height);

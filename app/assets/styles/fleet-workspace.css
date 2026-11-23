@@ -563,3 +563,52 @@ body.authenticated .fleet-redesign .fleet-form:has(.core-fleet-composition-layou
     body.authenticated .fleet-redesign .core-fleet-steps .fleet-wizard-panel[data-step="1"] h3 { margin-bottom:5px; }
     body.authenticated .fleet-redesign .core-fleet-steps .fleet-composition-table tbody > tr > * { padding-block:9px; }
 }
+
+/* À la confirmation, les données déjà présentes dans le tableau ne doublent
+   pas la hauteur du devis et ne repoussent pas l'action de départ. */
+.fleet-wizard-ready[data-fleet-step="3"] .core-fleet-recap :is(.core-fleet-recap-total,.core-fleet-recap-ranks,.core-fleet-recap-ships,.core-fleet-recap-facts) {
+    display:none;
+}
+body.authenticated .fleet-redesign .fleet-wizard-ready[data-fleet-step="3"] .core-fleet-recap-quote .core-fleet-quote {
+    border:0; margin:0; padding:0;
+}
+.fleet-wizard-ready[data-fleet-step="3"] .core-fleet-recap .flight-estimate { padding:12px; }
+.fleet-wizard-ready[data-fleet-step="3"] .core-fleet-recap-actions .fleet-wizard-actions { margin-block-start:12px; }
+.fleet-redesign .fleet-review-grid .fleet-mission-summary {
+    display:grid; gap:12px; min-width:0; overflow-wrap:anywhere;
+}
+.fleet-redesign .fleet-review-units { width:100%; margin:0; table-layout:fixed; }
+.fleet-redesign .fleet-review-units caption,
+.fleet-redesign .fleet-mission-summary h5 {
+    color:var(--text); text-align:left; font-size:14px; font-weight:700; margin:0;
+}
+.fleet-redesign .fleet-review-units :is(th,td) { padding:7px 8px; white-space:normal; }
+.fleet-redesign .fleet-review-units thead { background:color-mix(in srgb,var(--accent) 11%,var(--panel)); }
+.fleet-redesign .fleet-review-units th:first-child { width:52%; }
+.fleet-redesign .fleet-review-units :is(th,td):last-child { text-align:right; font-variant-numeric:tabular-nums; }
+.fleet-redesign .fleet-review-grid :is(.fleet-review-context,.fleet-review-cargo) {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(min(120px,100%),1fr)); gap:8px;
+}
+body.authenticated .fleet-redesign .fleet-review-grid :is(.fleet-review-context,.fleet-review-cargo) > div {
+    padding:8px; border:1px solid var(--line); border-radius:4px; background:var(--panel);
+}
+body.authenticated .fleet-redesign .fleet-review-grid :is(.fleet-review-context,.fleet-review-cargo) dd {
+    font-variant-numeric:tabular-nums; margin-block-start:2px;
+}
+@media (min-width:1200px) {
+    .fleet-redesign .fleet-review-grid .fleet-review-cargo { grid-template-columns:repeat(5,minmax(0,1fr)); }
+}
+
+/* Le tableau de lecture n'hérite pas des hautes cellules du tableau de saisie. */
+body.authenticated .fleet-redesign .fleet-mission-summary .fleet-review-units :is(th,td) {
+    min-height:0; height:auto; padding:7px 9px; line-height:1.3; border-bottom:1px solid var(--line);
+}
+body.authenticated .fleet-redesign .fleet-mission-summary .fleet-review-units caption {
+    padding:0 0 5px;
+}
+
+/* L'action suit les missions qu'elle complète, et subsiste hors fragment actualisé. */
+.fleet-redesign .core-fleet-prepare-shortcut {
+    display:inline-flex; align-items:center; min-height:44px; width:fit-content;
+    margin-top:12px; max-width:100%; white-space:normal;
+}

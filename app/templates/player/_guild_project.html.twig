@@ -6,7 +6,19 @@
         {% if row.rewarded %}<p>Vous avez déjà gagné le boost de ce modèle de projet. Il ne peut pas être gagné une seconde fois, même après changement de guilde ou création d’un nouvel empire.</p>{% elseif project.status=='active' %}<p>{{ row.qualified ? 'Minimums atteints. Restez membre jusqu’à la fin pour recevoir le boost.' : 'Atteignez tous les minimums et restez membre jusqu’à la fin pour recevoir le boost.' }}</p>{% endif %}
         {% if project.status=='active' %}
             <h3>Palier {{ project.stageIndex+1 }} sur {{ project.snapshot.stages|length }} · {{ project.snapshot.stages[project.stageIndex].name }}</h3>
-            <ul>{% for resource,remaining in row.remaining %}<li>{{ resources[resource] }} : {{ project.progress[resource]|default(0) }} / {{ project.snapshot.stages[project.stageIndex].costs[resource] }} · reste {{ remaining }}</li>{% endfor %}</ul>
+            <ul class="guild-stage-progress">
+                {% for resource, remaining in row.remaining %}
+                    {% set required = project.snapshot.stages[project.stageIndex].costs[resource] %}
+                    {% set contributed = project.progress[resource]|default(0) %}
+                    <li>
+                        <label for="guild-project-progress-{{ project.id }}-{{ resource }}">{{ resources[resource] }}</label>
+                        <span>{{ contributed|quantity(0) }} / {{ required|quantity(0) }} · reste {{ remaining|quantity(0) }}</span>
+                        {% if required > 0 %}
+                            <progress id="guild-project-progress-{{ project.id }}-{{ resource }}" value="{{ contributed }}" max="{{ required }}">{{ contributed }} sur {{ required }}</progress>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
 
         {% elseif project.status=='completed' %}
             <p>{{ project.rewardsDeliveredAt ? 'Distribution des récompenses terminée.' : 'Récompenses en cours de distribution.' }}</p>

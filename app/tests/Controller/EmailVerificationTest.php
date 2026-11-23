@@ -148,7 +148,7 @@ final class EmailVerificationTest extends WebTestCase
         self::assertNotNull($player);
         self::assertNull($player->emailVerifiedAt);
         $client->followRedirect();
-        self::assertSelectorTextContains('.flash.warning', 'Votre compte est créé');
+        self::assertSelectorTextContains('.entry-access-panel .flash.warning[role="alert"]', 'Votre compte est créé');
         self::assertSelectorExists('button');
     }
 

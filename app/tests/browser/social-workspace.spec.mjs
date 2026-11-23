@@ -37,14 +37,37 @@ test('L7E A : recherche, actualisation des non-lus et rédaction restent indépe
         runIsolatedSql(process.env.BROWSER_ROUTER,
             `INSERT INTO social_message(sender_id,recipient_id,content,created_at) VALUES(${peer.member},${owner.member},'Transport reçu. Merci pour les ressources.',UTC_TIMESTAMP())`);
         const conversationUrl = `/messages?with=${peer.member}`;
+        await page.goto('/messages');
+        const contact = page.getByRole('link', { name: new RegExp(peer.name) }).first();
+        await expect(contact.locator('.inbox-contact-meta time')).toHaveAttribute('datetime', /T/);
+        await expect(contact.locator('.inbox-unread-count')).toHaveText('1 message non lu');
+        await expect(contact).not.toContainText('Transport reçu. Merci pour les ressources.');
         await page.goto(conversationUrl);
+        await expect(page.locator('.message-day time')).toHaveCount(1);
+        const contactTime = await contact.locator('.inbox-contact-meta time').textContent();
+        expect(await page.locator('.message-meta time').textContent()).toContain(contactTime.slice(-5));
+        await page.setViewportSize({ width: 1920, height: 1080 });
+        await page.screenshot({ path: info.outputPath('social-S12-messagerie-1920x1080.png'), animations: 'disabled' });
+        await page.setViewportSize({ width: 390, height: 844 });
+        await expect(page.getByRole('link', { name: 'Retour à la messagerie' })).toHaveAttribute('href', '/messages');
+        const report = page.locator('.message-report');
+        await report.locator('summary').focus();
+        await page.keyboard.press('Enter');
+        await expect(report).toHaveAttribute('open', '');
+        await expect(report.getByRole('button', { name: 'Fermer', exact: true })).toBeVisible();
+        await page.screenshot({ path: info.outputPath('social-S16-signalement-390x844.png'), animations: 'disabled' });
+        await page.keyboard.press('Escape');
+        await expect(report).not.toHaveAttribute('open', '');
+        await expect(report.locator('summary')).toBeFocused();
+        await page.setViewportSize({ width: 1920, height: 1080 });
         const textarea = page.getByLabel('Votre message', { exact: true });
         await textarea.fill('Brouillon conservé pendant les actualisations.');
         await textarea.focus();
         const before = await page.locator('.message-thread').evaluate(node => node.scrollTop);
         const refreshed = page.waitForResponse(response => response.url().includes('/messages/non-lus'));
         await page.evaluate(() => window.dispatchEvent(new Event('genesis:refresh')));
-        await refreshed;
+        const update = await (await refreshed).json();
+        expect(update.conversations).not.toContain('Transport reçu. Merci pour les ressources.');
         await expect(textarea).toBeFocused();
         await expect(textarea).toHaveValue('Brouillon conservé pendant les actualisations.');
         expect(await page.locator('.message-thread').evaluate(node => node.scrollTop)).toBe(before);
@@ -143,9 +166,29 @@ test('L7E A : tableaux complets, protection au clavier et colonnes des guildes s
                 await page.setViewportSize({ width, height: 1000 });
                 expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
                 const region = page.getByRole('region', { name: 'Classement des guildes défilant horizontalement' });
+                await region.scrollIntoViewIfNeeded();
                 await region.focus();
-                await region.evaluate(node => { node.scrollLeft = node.scrollWidth; });
-                await expect(page.locator('.ranking-table--guilds tbody tr').first().locator('td').last()).toBeInViewport();
+                await expect(region).toBeFocused();
+                await region.evaluate(node => { node.scrollTo({ left: 0, behavior: 'instant' }); });
+                const maxScroll = await region.evaluate(node => node.scrollWidth - node.clientWidth);
+                if (width <= 390) {
+                    expect(maxScroll).toBeGreaterThan(0);
+                    await page.keyboard.press('ArrowRight');
+                    await expect.poll(() => region.evaluate(node => node.scrollLeft)).toBeGreaterThan(0);
+                }
+                await region.evaluate(node => { node.scrollTo({ left: node.scrollWidth, behavior: 'instant' }); });
+                await expect.poll(() => region.evaluate(node => Math.abs(node.scrollWidth - node.clientWidth - node.scrollLeft))).toBeLessThanOrEqual(1);
+                const lastCell = region.locator('tbody tr').first().locator('td').last();
+                await expect(lastCell).toBeInViewport({ ratio: 0.99 });
+                if (width <= 390) {
+                    const guide = page.locator('.first-steps-popup-enhanced');
+                    await expect(guide).toHaveAttribute('open', '');
+                    await expect(guide.getByRole('button', { name: 'Voir l’étape illustrée' })).toBeEnabled();
+                    await expect.poll(async () => {
+                        const [help, cell] = await Promise.all([guide.boundingBox(), lastCell.boundingBox()]);
+                        return help.y + help.height - cell.y;
+                    }).toBeLessThanOrEqual(0);
+                }
                 if (width === 1440 || width === 390) {
                     expect((await new AxeBuilder({ page }).include('.social-workspace').analyze()).violations).toEqual([]);
                     await page.screenshot({ path: info.outputPath(`guildes-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });

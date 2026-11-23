@@ -155,7 +155,9 @@ test('Demande de récupération : erreur serveur liée, correction et confirmati
   await expect(page.getByRole('button', { name: 'Envoyer le lien' })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/mot-de-passe\/oublie$/);
-  await expect(page.getByRole('status')).toHaveText('Si cette adresse correspond à un compte, un lien de réinitialisation va être envoyé.');
+  const receipt = page.getByRole('status');
+  await expect(receipt.locator('strong')).toHaveText('Demande reçue');
+  await expect(receipt.locator('span')).toHaveText('Si cette adresse correspond à un compte, un lien de réinitialisation va être envoyé.');
   const neutralMessage = await page.getByRole('status').textContent();
   await page.getByLabel('Adresse email').fill(knownEmail);
   await page.keyboard.press('Enter');

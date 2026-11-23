@@ -1219,3 +1219,236 @@ body.authenticated .social-board .guild-members-table {
         overflow-y: auto;
     }
 }
+
+/* Densité et hiérarchie des états S01–S03/S09, sans masquer les valeurs au lecteur d'écran. */
+body.authenticated .social-board :is(.guild-stage-progress, .guild-overview-project) progress {
+    display: block;
+    width: 100%;
+    height: 8px;
+    margin: 7px 0 4px;
+    accent-color: var(--accent);
+}
+
+body.authenticated .social-board .guild-stage-progress {
+    display: grid;
+    gap: 13px;
+    list-style: none;
+    padding-inline-start: 0;
+}
+
+body.authenticated .social-board .guild-stage-progress li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0 12px;
+}
+
+body.authenticated .social-board .guild-stage-progress progress {
+    grid-column: 1 / -1;
+}
+
+body.authenticated .social-board .guild-overview-relations {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 95px), 1fr));
+}
+
+body.authenticated .social-board .guild-overview-read-all {
+    display: table;
+    margin-top: 14px;
+}
+
+body.authenticated .social-board .guild-recruitment-description {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+body.authenticated .social-board .guild-row-rank {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+body.authenticated .social-board .guild-row-rank select {
+    width: 100%;
+    max-width: 18rem;
+    min-width: 0;
+}
+
+body.authenticated .social-board .guild-row-rank button {
+    min-height: 44px;
+}
+
+body.authenticated .social-board--messages .inbox-contact-initial {
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid var(--social-border);
+    border-radius: 7px;
+    color: var(--accent);
+    background: var(--social-panel);
+    font-weight: 700;
+}
+
+body.authenticated .social-board--messages .inbox-contact-meta {
+    display: grid;
+    justify-items: end;
+    gap: 4px;
+    flex: 0 0 auto;
+    margin-inline-start: auto;
+    color: var(--muted);
+    font-size: .7rem;
+    font-variant-numeric: tabular-nums;
+}
+
+body.authenticated .social-board--messages .inbox-unread-count {
+    padding: 2px 6px;
+    border: 1px solid var(--social-border);
+    border-radius: 5px;
+    color: var(--text);
+    background: var(--social-panel);
+    font-weight: 750;
+}
+
+body.authenticated .social-board--messages .inbox-item--unavailable {
+    cursor: default;
+}
+
+body.authenticated .social-board--messages .message-day {
+    align-self: stretch;
+    margin: 0 0 4px;
+    color: var(--muted);
+    text-align: center;
+    font-size: .75rem;
+}
+
+body.authenticated .social-board--messages .inbox-item--unavailable {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    margin-inline: 7px;
+    border: 1px solid var(--social-border);
+    border-radius: 6px;
+}
+
+body.authenticated .social-board .guild-edit-identity {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: end;
+    min-height: 140px;
+    max-width: 1080px;
+    margin-bottom: 18px;
+}
+
+body.authenticated .social-board .guild-edit-identity .guild-public-heading {
+    position: relative;
+    z-index: 1;
+}
+
+body.authenticated .social-board :is(.guild-public-commander, .social-report-identity) {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 10px 0 16px;
+}
+
+body.authenticated .social-board :is(.guild-public-commander, .social-report-identity) > span {
+    display: grid;
+    place-items: center;
+    flex: 0 0 42px;
+    height: 42px;
+    border: 1px solid var(--social-border);
+    border-radius: 6px;
+    background: var(--social-panel);
+    color: var(--accent);
+    font-weight: 750;
+}
+
+body.authenticated .social-board .social-report-privacy {
+    padding: 12px 16px;
+    border: 1px solid var(--social-border);
+    border-radius: 7px;
+    background: var(--social-panel);
+    margin-top: 18px;
+}
+
+body.authenticated .social-board .social-report-privacy :is(h3, p),
+body.authenticated .social-board .social-report-identity :is(h2, p) {
+    margin: 0;
+}
+
+body.authenticated .social-board :is(.social-report-actions, .message-report-actions) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+body.authenticated .social-board .guild-relations-list .guild-treaty-no-proposal {
+    grid-column: 2;
+    margin: 0;
+    color: var(--muted);
+}
+
+body.authenticated .social-board .guild-treaty-review {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    gap: 6px 12px;
+}
+
+body.authenticated .social-board .guild-treaty-review:empty {
+    display: none;
+}
+
+body.authenticated .social-board .guild-treaty-review > details {
+    margin: 0;
+    min-width: 0;
+}
+
+body.authenticated .social-board .guild-treaty-review > details[open] {
+    flex: 1 1 100%;
+}
+
+@media (max-width: 600px) {
+    body.authenticated .social-board .guild-relations-list .guild-treaty-no-proposal {
+        grid-column: 1 / -1;
+    }
+
+    body.authenticated .social-board .guild-member-rank-cell {
+        grid-column: 1 / -1;
+        grid-row: 4;
+    }
+}
+
+body.authenticated .social-board--messages .message-mobile-back {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    body.authenticated .social-board--messages .message-mobile-back {
+        display: inline-flex;
+        align-items: center;
+        align-self: start;
+        margin: 10px 12px 0;
+    }
+}
+
+body.authenticated .social-board :is(.guild-hall-closed, .social-feedback-guidance) {
+    margin-block: 18px 0;
+    padding: 12px 16px;
+    border: 1px solid var(--social-border);
+    border-radius: 7px;
+    background: var(--social-panel);
+}
+
+body.authenticated .social-board :is(.guild-hall-closed, .social-feedback-guidance) :is(h2, h3) {
+    margin-block: 0 8px;
+}
+
+body.authenticated .social-board--messages .inbox-item--unavailable .inbox-guild-hint {
+    margin: 3px 0 0;
+    padding: 0;
+}

@@ -49,7 +49,9 @@ test('Profils : accès depuis classement, messages et membres, données publique
       expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
       await page.screenshot({path:testInfo.outputPath('profil-'+value+'.png'),fullPage:true,animations:'disabled'});
     }
-    await peerPage.goto('/guildes/'+guild.id);await expect(peerPage.getByRole('heading',{level:1})).toContainText(guild.name);
+    await peerPage.goto('/guildes/'+guild.id);
+    await expect(peerPage.getByRole('heading',{level:1,name:'Présentation de guilde',exact:true})).toBeVisible();
+    await expect(peerPage.locator('.guild-public-hero').getByRole('heading',{level:2,name:'[PUB] '+guild.name,exact:true})).toBeVisible();
     await expect(peerPage.getByRole('link',{name:'Personnaliser la guilde'})).toHaveCount(0);
     expect(await peerPage.evaluate(url=>fetch(url).then(response=>response.status),'/guildes/'+guild.id+'/personnaliser')).toBe(403);
   } finally {await context.close();}

@@ -36,10 +36,23 @@ final class FirstStepsController extends AbstractController
         $levels = $planet === null ? [] : $repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]);
         $technologies = $repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]);
 
+        // La destination du remboursement n’est pas la colonie consultée pour les jalons.
+        // Elle reste limitée aux mêmes planètes possédées déjà chargées plus haut.
+        $rewardPlanet = $planet;
+        $rewardDestination = $request->query->getInt('reward_planet');
+        foreach ($planets as $candidate) {
+            if ($candidate->id === $rewardDestination) {
+                $rewardPlanet = $candidate;
+                break;
+            }
+        }
+
         return $this->render('player/first_steps.html.twig', [
             'training' => $view->progress($membership, $levels, $technologies),
             'trainingMembership' => $membership,
             'trainingPlanet' => $planet,
+            'rewardPlanet' => $rewardPlanet,
+            'rewardPlanets' => $planets,
             'trainingRewards' => $rewards->available($membership),
         ], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }

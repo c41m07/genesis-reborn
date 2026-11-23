@@ -40,7 +40,7 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
   await page.getByRole('navigation', { name: 'Console d’administration' }).getByRole('link', { name: 'Univers et activité', exact: true }).click();
   await page.getByRole('navigation', { name: 'Console d’administration' }).getByRole('link', { name: 'Univers', exact: true }).click();
   await expect(page.getByRole('link', { name: /Équilibrer les catalogues de cet univers/ }).first()).toBeVisible();
-  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.setViewportSize({ width: 1920, height: 1080 });
 
   await page.getByRole('link', { name: /Équilibrer les catalogues de cet univers/ }).first().click();
   await expect(page.getByRole('heading', { name: 'Bâtiments', exact: true })).toBeVisible();
@@ -49,6 +49,18 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
   await expect(breadcrumbs.locator('[aria-current="page"]')).toHaveText('Catalogue');
   await expect(page.locator('.admin-universe-navigation a')).toHaveCount(4);
   await expect(breadcrumbs.getByRole('link', { name: 'Univers', exact: true })).toHaveAttribute('href', '/admin/univers');
+  const browse = page.getByRole('link', { name: 'Aperçu de Mine à ciel ouvert', exact: true });
+  await browse.focus();
+  await page.keyboard.press('Enter');
+  const selection = page.getByRole('complementary', { name: 'Mine à ciel ouvert' });
+  await expect(selection.getByRole('link', { name: 'Ouvrir la fiche' })).toHaveAttribute('href', /\/buildings\/mine_metal$/);
+  await expect(selection.getByRole('link', { name: 'Consulter l’historique' })).toHaveAttribute('href', /\/buildings\/mine_metal\/historique$/);
+  await expect(page.locator('.admin-catalogue-composition')).toHaveClass(/--with-selection/);
+  await expect.poll(() => page.locator('.admin-catalogue-composition').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(2);
+  await page.evaluate(() => { window.scrollTo(0, 0); return document.fonts.ready; });
+  await page.screenshot({ path: testInfo.outputPath('catalogue-rail-1920x1080.png'), scale: 'css', animations: 'disabled' });
+  await selection.getByRole('link', { name: 'Fermer l’aperçu' }).click();
+  await expect(selection).toHaveCount(0);
 
   const unnamed = await page.locator('a[href],button,input:not([type="hidden"]),select,textarea').evaluateAll(nodes => nodes.flatMap(element => {
     const style = getComputedStyle(element);
@@ -84,10 +96,19 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
   await expect(page.locator('.core-admin-universe')).toContainText('Univers :');
   await expect(page.getByRole('navigation', { name: 'Fil d’Ariane' })).toContainText('Préparer une restauration');
   const tables = page.locator('.core-admin-restoration table');
-  await expect(tables).toHaveCount(2);
-  await expect(tables.nth(0).getByRole('columnheader')).toHaveText(['Champ','Actuel','Proposé']);
-  await expect(tables.nth(1).getByRole('columnheader')).toHaveText(['Élément','Actuel','Proposé']);
-  await expect(tables.nth(1).getByRole('rowheader', { name: 'Durée' })).toBeVisible();
+  await expect(tables).toHaveCount(1);
+  await expect(tables.getByRole('columnheader')).toHaveText(['Élément','Actuel','Proposé']);
+  await expect(tables.getByRole('rowheader', { name: 'Durée' })).toBeVisible();
+  await expect(tables.getByRole('rowheader', { name: 'Champs modifiables' })).toBeVisible();
+  await expect(page.getByText('Aperçu non publié', { exact: true })).toBeVisible();
+  const modes = page.getByRole('navigation', { name: 'Présentation de la restauration' });
+  await modes.getByRole('link', { name: 'Vue linéaire' }).click();
+  await expect(page.locator('.admin-restoration-layout')).toHaveCSS('grid-template-columns', /^\d+(?:\.\d+)?px$/);
+  await expect(page.locator('form.admin-catalogue-restore')).toHaveCount(1);
+  await expect(page.getByLabel('Motif de restauration')).toHaveValue('');
+  await page.evaluate(() => document.fonts.ready);
+  await page.screenshot({ path: testInfo.outputPath('restauration-lineaire-1920x1080.png'), scale: 'css', animations: 'disabled' });
+  await modes.getByRole('link', { name: 'Vue côte à côte' }).click();
   await expect(page.getByLabel('Motif de restauration')).toHaveValue('');
   for (const theme of ['dark', 'light']) {
     runIsolatedSql(project, `UPDATE player SET preferences=JSON_OBJECT('theme','${theme}') WHERE email='${email}'`);
@@ -200,6 +221,11 @@ test('Catalogue B : comparaison des rangs, thèmes et formulaires natifs des qua
   await native.getByRole('searchbox', { name: 'Rechercher dans toutes les familles' }).fill('Chasseur');
   await native.getByRole('button', { name: 'Rechercher', exact: true }).click();
   await expect(native.getByRole('table', { name: 'Fiches du catalogue' })).toContainText('Chasseur de patrouille');
+  await native.getByRole('link', { name: 'Aperçu de Chasseur de patrouille', exact: true }).click();
+  const selection = native.getByRole('complementary', { name: 'Chasseur de patrouille' });
+  await expect(selection).toBeVisible();
+  await expect(native.getByRole('searchbox')).toHaveValue('Chasseur');
+  await selection.getByRole('link', { name: 'Fermer l’aperçu' }).click();
   await native.reload();
   await expect(native.getByRole('searchbox')).toHaveValue('Chasseur');
   await native.getByRole('link', { name: 'Modifier Chasseur de patrouille', exact: true }).click();

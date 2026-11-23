@@ -15,11 +15,6 @@
     <input type="hidden" name="_token" value="{{ csrf_token('admin_catalogue_' ~ universe.id ~ '_' ~ group ~ '_' ~ item.slug) }}">
     <input type="hidden" name="revision" value="{{ item.revision }}">
     {% if item.draft|default(false) %}<p role="status">Votre saisie est conservée. Si le catalogue a changé, <a href="{{ path('app_admin_catalogue_edit', {id: universe.id, group: group, slug: item.slug, reload: 1}) }}">abandonnez cette saisie et rechargez les valeurs actuelles</a>.</p>{% endif %}
-    <div class="catalog-balance-grid">
-        {% for field in item.fields|filter(field => not (field.path starts with 'cost_profiles.')) %}
-            {{ editor.field(field, group, item.slug, field.label) }}
-        {% endfor %}
-    </div>
     {# Le schéma serveur reste la seule source des champs, y compris les coûts présents par rang. #}
     {% set costFields = item.fields|filter(field => field.path starts with 'cost_profiles.') %}
     {% if costFields %}
@@ -39,8 +34,14 @@
             {% endfor %}
         </div>
     {% endif %}
+    <h3>Propriétés de la fiche</h3>
+    <div class="catalog-balance-grid">
+        {% for field in item.fields|filter(field => not (field.path starts with 'cost_profiles.')) %}
+            {{ editor.field(field, group, item.slug, field.label) }}
+        {% endfor %}
+    </div>
     <div class="admin-catalogue-decision-layout">
-    <div class="admin-catalogue-publication">
+    <div class="admin-catalogue-publication" id="catalogue-publication" tabindex="-1">
     <h3>Enregistrer dans {{ universe.name }}</h3>
     <label for="catalogue-reason">Motif de la modification</label>
     <textarea id="catalogue-reason" name="reason" minlength="5" maxlength="1000" required>{{ item.reason|default('') }}</textarea>

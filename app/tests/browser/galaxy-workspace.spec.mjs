@@ -23,7 +23,7 @@ async function enter(page) {
     runIsolatedSql(project,`UPDATE solar_system SET coord_y=coord_y+FLOOR(coord_x/30)*3,coord_x=MOD(coord_x,30) WHERE galaxy_id=${galaxy} AND coord_x>=30`);
     const rows=Array.from({length:80},(_,i)=>`SELECT ${i+1} AS number,${i%10*3} AS grid_x,${Math.floor(i/10)*3} AS grid_y`).join(' UNION ALL ');
     runIsolatedSql(project,`INSERT INTO solar_system(galaxy_id,name,coord_x,coord_y) SELECT ${galaxy},CONCAT('Système test ',points.number),points.grid_x,points.grid_y FROM (${rows}) points WHERE NOT EXISTS(SELECT 1 FROM solar_system existing WHERE existing.galaxy_id=${galaxy} AND existing.coord_x=points.grid_x AND existing.coord_y=points.grid_y)`);
-    return{project,galaxy};
+    return{project,galaxy,email};
 }
 
 test('L7C : 80 systèmes, deux vues persistantes, distances communes et signaux privés sur quatre formats',async({page},info)=>{
@@ -83,6 +83,17 @@ test('L7C : système et globe conservent clic, rotation, zoom, gestes tactiles e
     await expect.poll(async()=>{const panel=await inspector.boundingBox(), canvas=await scene.boundingBox();return panel.x>=canvas.x+canvas.width;}).toBe(true);
     await page.setViewportSize({width:390,height:844});
     await expect.poll(async()=>{const panel=await inspector.boundingBox(), canvas=await scene.boundingBox();return panel.y+panel.height<=canvas.y;}).toBe(true);
+    await expect.poll(() => page.evaluate(() => {
+        const hud = document.querySelector('.gv2-hud');
+        const search = hud.querySelector('.gv2-search').getBoundingClientRect();
+        const coord = hud.querySelector('.gv2-coordinate');
+        const rectangle = coord.getBoundingClientRect();
+        const zoom = [...document.querySelectorAll('.gv2-map-controls button')].map(button => button.getBoundingClientRect());
+        const canvas = document.querySelector('.gv2-scene').getBoundingClientRect();
+        return rectangle.x >= search.right && rectangle.height < search.height
+          && coord.scrollWidth <= coord.clientWidth + 1
+          && zoom.every(button => Math.abs(button.y - zoom[0].y) <= 1 && button.width >= 44 && button.bottom <= canvas.top);
+    })).toBe(true);
     await inspector.getByRole('button',{name:'Fermer la fiche du système'}).focus();
     await page.keyboard.press('Tab');
     await expect(inspector.getByRole('button',{name:'Entrer dans le système',exact:true})).toBeFocused();
@@ -131,7 +142,7 @@ test('L7C : système et globe conservent clic, rotation, zoom, gestes tactiles e
     await expect(page.locator('.galaxy-index-table .active-row')).toContainText(unknown.name);
     await expect(page.locator('.galaxy-system-panel')).toContainText('ses planètes ne sont pas encore révélées');
     await expect(page.locator('.galaxy-index-planets')).toHaveCount(0);
-    const filter = page.getByRole('searchbox', { name: 'Rechercher dans la liste' });
+    const filter = page.locator('.galaxy-list-toolbar').getByRole('searchbox', { name: 'Rechercher dans la liste' });
     await filter.fill('nom inexistant de recette');
     await expect(page.locator('.galaxy-index-results')).toHaveText('Aucun système trouvé.');
     await filter.fill(unknown.name);
@@ -139,5 +150,11 @@ test('L7C : système et globe conservent clic, rotation, zoom, gestes tactiles e
     await page.getByRole('link', { name: /Ouvrir la fiche sur la carte/ }).click();
     await expect(page).toHaveURL(url => url.pathname === '/carte-v2' && Number(url.searchParams.get('system')) === selected);
     await expect(page.locator('.gv2-system-panel')).toContainText('aucune planète révélée');
+    await page.setViewportSize({width:360,height:800});
+    runIsolatedSql(user.project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','light') WHERE email='${user.email}'`);
+    await page.reload();
+    await expect(page.locator('body')).toHaveAttribute('data-theme', 'light');
+    await expect(page.getByRole('link', {name:'Liste des systèmes',exact:true})).toBeVisible();
+    expect((await new AxeBuilder({page}).include('.gv2-workspace .galaxy-view-tabs').withRules(['color-contrast']).analyze()).violations).toEqual([]);
     expect(errors).toEqual([]);
 });

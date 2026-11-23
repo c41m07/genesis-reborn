@@ -4,7 +4,7 @@
 {% block title %}Mesures · {{ universe.name }} · Genesis Reborn{% endblock %}
 {% block body %}
 <div class="universe-observations">
-<div class="page-heading"><div><h1>Mesures de l’univers</h1><p>{{ universe.name }} · Relevé du {{ metrics.observedAt|date('d/m/Y H:i:s', 'UTC') }} UTC.</p></div></div>
+<div class="page-heading admin-design-banner"><div><p class="eyebrow">Relevé horodaté · lecture seule</p><h1>Mesures de l’univers</h1><p>{{ universe.name }} · Relevé du {{ metrics.observedAt|date('d/m/Y H:i:s', 'UTC') }} UTC.</p></div></div>
 <div class="admin-balance-actions"><a class="secondary" href="{{ path('app_admin_universes') }}#admin-universe-{{ universe.id }}">Retour aux univers</a> <a class="secondary" href="{{ path('app_admin_universe_metrics', {id: universe.id, page: metrics.resources.page}) }}">Actualiser le relevé</a></div>
 <p>Observation en lecture seule. Ces mesures n’appliquent aucun changement d’équilibrage. Elles représentent les données encore conservées, pas un historique complet.</p>
 {% if metrics.closed %}<p role="status"><strong>Univers fermé.</strong> Les stocks conservés sont affichés sans simuler une production après fermeture. Les files restantes ne constituent pas un incident d’exploitation.</p>{% endif %}

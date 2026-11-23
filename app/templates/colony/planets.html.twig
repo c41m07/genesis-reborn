@@ -57,6 +57,9 @@
                                 <td data-resource="{{ slug }}" class="{{ comparison_resource==slug ? 'is-selected-resource' : '' }}">
                                     <strong>{{ resource.stock|quantity(0) }} / {{ resource.capacity|quantity(0) }}</strong>
                                     <span class="colony-comparison-rate">{{ (resource.rate*3600)|quantity(2) }} / h</span>
+                                    {% if resource.capacity > 0 and comparison_resource == slug %}
+                                        <small class="colony-comparison-percent">{{ (100 * resource.stock / resource.capacity)|number_format(0, ',', ' ') }} % du stockage</small>
+                                    {% endif %}
                                     {% if resource.stock>resource.capacity %}<span class="storage-warning">Stock supérieur à la capacité</span>{% endif %}
                                 </td>
                             {% endfor %}
@@ -82,6 +85,21 @@
             </table>
             </div>
         </div>
+        {% if planets is not empty %}
+        <section class="colony-comparison-quick" aria-labelledby="comparison-colonies-title">
+            <h2 id="comparison-colonies-title">Accès rapide à vos colonies</h2>
+            <div class="colony-comparison-cards">
+                {% for world in planets %}
+                <article class="panel">
+                    <h3>{{ world.name }}</h3>
+                    <p>{{ world.coordinates() }}{% if chrome.planet and chrome.planet.id == world.id %} · Colonie active{% endif %}</p>
+                    <a class="secondary" href="{{ path('app_colony',{id:world.id}) }}">Ouvrir cette colonie<span class="visually-hidden"> : {{ world.name }}</span></a>
+                    <a href="{{ path('app_planets',{_fragment:'planet-' ~ world.id}) }}">Renommer ou consulter ses bonus<span class="visually-hidden"> : {{ world.name }}</span></a>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
     {% else %}
         <div class="planet-index-grid">
             {% for world in planets %}

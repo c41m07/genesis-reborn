@@ -8,7 +8,10 @@
 Les règles globales, prérequis et bonus de colonie ne sont pas archivés ici : ces valeurs ne reconstituent pas un ancien devis et ne garantissent pas une restauration compatible.</p>
 {% for version in page.rows %}
 <section class="panel">
-<h2>Trace #{{ version.id }} · {{ version.created_at|date('d/m/Y H:i', 'Europe/Paris') }}</h2>
+<header class="admin-design-panel-heading admin-design-panel-heading--split">
+    <h2>Trace #{{ version.id }} · {{ version.created_at|date('d/m/Y H:i', 'Europe/Paris') }}</h2>
+    <p class="admin-design-badge{{ version.restorable ? '' : ' admin-design-badge--warning' }}">{{ version.restorable ? 'Version complète' : 'Trace de consultation' }}</p>
+</header>
 <p>{{ version.reason }}</p>
 {% if version.restorable %}<a class="secondary" href="{{ path('app_admin_catalogue_restore', {id: universe.id, group: group, slug: item.slug, source: version.id}) }}">Préparer la restauration de l’état après cette trace</a>{% else %}<p>Trace sans version complète : consultation uniquement.</p>{% endif %}
 <details><summary>Comparer avant, après et actuel</summary>

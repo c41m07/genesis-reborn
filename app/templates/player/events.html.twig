@@ -37,6 +37,29 @@
     </article>
 {% else %}<p class="panel core-event-empty">{{ eventGroup=='current' ? 'Aucun événement en cours dans cet univers.' : 'Aucun événement à venir annoncé.' }}</p>
 {% endfor %}
+{% if eventGroup == 'current' and activeChallenges is not empty %}
+    <section class="event-board-challenges" aria-labelledby="active-challenges-title">
+        <h3 id="active-challenges-title">Défis et rotations en cours</h3>
+        {% for challenge in activeChallenges %}
+        <article class="panel event-board-challenge" aria-labelledby="event-preview-{{ challenge.event.id }}-title">
+            <div>
+                <h4 id="event-preview-{{ challenge.event.id }}-title">{{ challenge.name }}</h4>
+                <p>{{ challenge.weekly ? 'Rotation hebdomadaire' : 'Défi collectif' }} · {{ challenge.objective.label }}</p>
+                {% if challenge.goal %}
+                    <p><strong>{{ challenge.event.totalContribution|quantity(2) }} / {{ challenge.goal|quantity(2) }}</strong></p>
+                    <progress class="challenge-progress" max="100" value="{{ challenge.progress }}" aria-label="Progression collective : {{ challenge.name }}"></progress>
+                {% endif %}
+            </div>
+            <div>
+                <p>{{ challenge.status_label }}</p>
+                <p>Fin prévue · <time datetime="{{ challenge.expected_end|date('c') }}">{{ challenge.expected_end|date('d/m/Y à H:i', preferences.timezone) }}</time></p>
+                <a class="secondary" href="{{ path('app_challenge',{id:challenge.event.id}) }}">Voir le défi<span class="visually-hidden"> : {{ challenge.name }}</span></a>
+            </div>
+        </article>
+        {% endfor %}
+        <a class="inline-link" href="{{ path('app_game_challenges') }}">Voir tous les défis et rotations</a>
+    </section>
+{% endif %}
 {% if eventGroup == 'current' and pirateCampaignAvailable|default(false) %}
     <section class="panel player-event-pirate" aria-labelledby="event-pirate-title">
         <h3 id="event-pirate-title">Campagne pirate</h3>
@@ -45,6 +68,17 @@
     </section>
 {% endif %}
 {% if eventGroup == 'upcoming' %}
+    {% if activeChallenges is not empty %}
+    <section class="event-board-participation" aria-labelledby="event-personal-progress-title">
+        <h3 id="event-personal-progress-title">Votre participation</h3>
+        <p>Votre contribution est distincte du résultat collectif.</p>
+        <dl>
+            {% for challenge in activeChallenges %}
+            <div><dt><a href="{{ path('app_challenge',{id:challenge.event.id}) }}">{{ challenge.name }}</a></dt><dd>{{ challenge.score|quantity(2) }}</dd></div>
+            {% endfor %}
+        </dl>
+    </section>
+    {% endif %}
     <div class="player-event-more">
         <h3>Défis et rotations</h3>
         <p>Consultez vos objectifs et votre participation dans l’espace des défis.</p>

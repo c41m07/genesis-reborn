@@ -1,8 +1,8 @@
 {% extends 'base.html.twig' %}
 {% block title %}Abandonner {{ planet.name }} · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="colony-redesign" data-page-sections="disabled">
-<div class="page-heading colony-abandon-heading"><div><h1>Abandonner {{ planet.name }}</h1><p>{{ planet.coordinates() }} · {{ membership.universe.name }}</p></div></div>
+<div class="colony-redesign colony-abandon-board" data-page-sections="disabled">
+<div class="page-heading colony-abandon-heading"><div><p class="colony-abandon-eyebrow">Commandement · décision irréversible</p><h1>Abandonner {{ planet.name }}</h1><p>{{ planet.coordinates() }} · {{ membership.universe.name }}</p></div></div>
 <a class="secondary colony-abandon-return" href="{{ path('app_planets') }}">Retour aux planètes</a>
 <div class="colony-abandon-layout">
 <section class="panel colony-abandon-panel" aria-labelledby="abandon-consequences">

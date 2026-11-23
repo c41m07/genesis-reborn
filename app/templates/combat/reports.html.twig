@@ -3,6 +3,7 @@
 {% block title %}{{ archived ? 'Archives des rapports' : 'Rapports' }} · Genesis Reborn{% endblock %}
 {% block body %}
 <div class="reports-workspace player-report-board">
+{% set reportKinds = {combat:'Combat', espionage:'Espionnage', economy:'Transport'} %}
 {% set reportFilters = {all: 'Tous', combat: 'Combats', economy: 'Économie', espionage: 'Espionnage'} %}
 {% set search_filters=search_filters|default({}) %}
 {% set view = archived ? 'archives' : '' %}
@@ -32,7 +33,7 @@
 <div class="report-list">
 {% for entry in entries %}{% set report = entry.report %}
 <div class="report-archive-entry">
-<label class="report-select" for="report-select-{{ entry.key }}"><input type="checkbox" id="report-select-{{ entry.key }}" name="selected[]" data-report-selection-target="item" data-action="change->report-selection#update" value="{{ entry.key }}"><span class="visually-hidden">Sélectionner le rapport {{ reportFilters[entry.kind] }} n° {{ report.id }}</span></label>
+<label class="report-select" for="report-select-{{ entry.key }}"><input type="checkbox" id="report-select-{{ entry.key }}" name="selected[]" data-report-selection-target="item" data-action="change->report-selection#update" value="{{ entry.key }}"><span class="visually-hidden">Sélectionner le rapport {{ reportKinds[entry.kind]|default(reportFilters[entry.kind]) }} n° {{ report.id }}</span></label>
 {% set entryNew = unread_report_keys[entry.key]|default(false) %}
 {% if entry.kind == 'combat' %}
     {% set routeName = 'app_combat_report' %}
@@ -61,11 +62,14 @@
 {% endif %}
 <a class="report-row{{ entryNew ? ' is-unread' : '' }}" href="{{ path(routeName,search_filters|merge({id:report.id,type:filter,view:view,page:page})) }}">
     <span class="report-copy"><strong>{{ title }}</strong>{% if entryNew %}<span class="report-new-label">Nouveau</span>{% endif %}{% if extra %}<small>{{ extra }}</small>{% endif %}</span>
-    <span class="badge core-report-state {{ stateClass }}">{{ state }}</span>
+    <span class="player-report-type">
+        <span class="player-report-kind">{{ reportKinds[entry.kind]|default('Rapport') }}</span>
+        <span class="badge core-report-state {{ stateClass }}">{{ state }}</span>
+    </span>
     <span class="player-report-location">{{ location }}</span>
     <time datetime="{{ occurredAt|date('c') }}">{{ occurredAt|date('d/m/Y H:i', preferences.timezone) }}</time>
 </a>
-<button type="submit" class="secondary report-archive-action" name="single" value="{{ entry.key }}" aria-label="{{ archived ? 'Restaurer' : 'Archiver' }} le rapport {{ reportFilters[entry.kind] }} n° {{ report.id }}">{{ archived ? 'Restaurer' : 'Archiver' }}</button>
+<button type="submit" class="secondary report-archive-action" name="single" value="{{ entry.key }}" aria-label="{{ archived ? 'Restaurer' : 'Archiver' }} le rapport {{ reportKinds[entry.kind]|default(reportFilters[entry.kind]) }} n° {{ report.id }}">{{ archived ? 'Restaurer' : 'Archiver' }}</button>
 </div>
 {% endfor %}
 </div>
@@ -78,6 +82,7 @@
 <aside class="panel player-report-help" aria-labelledby="player-report-help-title">
     <h2 id="player-report-help-title">{{ ui.icon('overview') }} Portée des filtres</h2>
     <p>Les filtres restent actifs en consultant un rapport.</p>
+    <p>Les transports figurent dans le filtre Économie.</p>
     <dl>
         <div><dt>Planète</dt><dd>Cible des combats et des espionnages, origine ou destination des transports.</dd></div>
         <div><dt>Participant</dt><dd>Commandant enregistré dans le rapport de combat, de renseignement ou de transport.</dd></div>

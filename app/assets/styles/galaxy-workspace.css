@@ -131,6 +131,11 @@
 }
 .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs { flex:0 1 auto; margin:0; gap:6px; }
 .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a { min-height:34px; border-radius:4px; }
+/* Le canevas et sa barre restent sombres en thème clair ; les liens suivent
+   leurs propres couleurs, pas les teintes des onglets sur fond clair. */
+body.authenticated .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a:not([aria-current="page"]) {
+    color:var(--text);
+}
 .gv2-workspace[data-view] .gv2-map-stage .gv2-scene .gv2-locator {
     position:absolute; z-index:3; inset:12px auto auto 12px;
     min-width:0; max-width:55%; padding:6px 10px; pointer-events:none;
@@ -229,3 +234,33 @@
     .galaxy-list-layout > * { padding:10px; }
     .galaxy-index-scroll { max-height:340px; }
 }
+
+/* À une main, conserver de vraies cibles tactiles hors canevas avec une seule
+   rangée de zoom. La fiche garde le même emplacement avant et après le clic. */
+@media(max-width:600px) {
+    .gv2-workspace .core-galaxy-toolbar { gap:4px; padding:4px; margin-bottom:6px; }
+    .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs { gap:4px; }
+    .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a { min-height:44px; }
+    .gv2-workspace .core-galaxy-toolbar .gv2-hud {
+        display:grid; grid-template-columns:minmax(0,26%) minmax(0,1fr) minmax(60px,max-content);
+        gap:4px; padding:0;
+    }
+    .gv2-workspace .gv2-galaxy-form { grid-area:1/1; min-width:0; margin:0; }
+    .gv2-workspace .gv2-galaxy-form select { width:100%; min-height:44px; padding-inline:4px 14px; }
+    .gv2-workspace .gv2-search { grid-area:1/2; width:100%; height:44px; min-width:0; }
+    .gv2-workspace .gv2-search-results { width:max(100%,min(240px,70vw)); inset-inline-start:auto; }
+    .gv2-workspace .gv2-coordinate { grid-area:1/3; min-width:0; font-size:11px; text-align:center; white-space:nowrap; }
+    .gv2-workspace .core-galaxy-toolbar .gv2-layout-modes { flex:1 1 auto; gap:4px; padding:0; }
+    .gv2-workspace .core-galaxy-toolbar .gv2-layout-modes button { min-width:0; padding:4px; font-size:12px; }
+    .gv2-workspace .core-galaxy-toolbar .gv2-layout-note { flex:1 1 100%; padding:1px 4px; font-size:11px; }
+    .gv2-workspace[data-view=galaxy] .gv2-map-stage { grid-template-rows:94px auto auto; }
+    .gv2-workspace[data-view=galaxy] .gv2-map-stage :is(.gv2-system-panel,.gv2-preview-placeholder) { max-height:94px; }
+    .gv2-workspace[data-view] .gv2-map-stage .gv2-stage-surface > .gv2-map-controls {
+        flex-wrap:nowrap; justify-content:space-between; gap:3px; padding-block-end:4px;
+    }
+    .gv2-workspace .gv2-map-controls button { padding-inline:4px; font-size:12px; white-space:normal; }
+}
+
+/* Dans la liste, retrouver tous les contrôles de contexte dans le même bandeau. */
+.galaxy-list-toolbar .galaxy-index-filter:not([hidden]) { flex:1 1 min(100%,14rem); }
+.galaxy-list-toolbar .galaxy-index-filter input { min-width:0; width:100%; }

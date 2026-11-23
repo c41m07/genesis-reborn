@@ -1,7 +1,7 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}Rotations hebdomadaires · Console{% endblock %}
 {% block body %}
-<div class="page-heading"><h1>Rotations hebdomadaires</h1></div>
+<div class="page-heading"><div><p class="eyebrow">Modèles et occurrences · {{ universe.name }}</p><h1>Rotations hebdomadaires</h1></div></div>
 <p class="admin-rotation-actions"><a class="primary" href="{{ path('app_admin_weekly_rotation_new', {universe: universe.id}) }}">Créer un modèle hebdomadaire</a></p>
 <p>Une occurrence par univers et par semaine, le lundi à 00 h UTC. Les modèles actifs alternent dans l’ordre ci-dessous. Les changements concernent les semaines non encore programmées ; les occurrences existantes gardent leurs règles et récompenses.</p>
 <form method="get" class="panel admin-rotation-universe">
@@ -13,7 +13,10 @@
 <div class="admin-rotation-models">
 {% for definition in definitions %}
     <article class="panel">
-        <h3>{{ definition.name }}</h3>
+        <header class="admin-design-panel-heading admin-design-panel-heading--split">
+            <h3>{{ definition.name }}</h3>
+            <p class="admin-design-badge{{ definition.enabled ? ' admin-design-badge--success' : '' }}">{{ definition.enabled ? 'Modèle actif' : 'Modèle désactivé' }}</p>
+        </header>
         <dl class="report-facts"><div><dt>Modèle</dt><dd>{{ definition.enabled ? 'Actif' : 'Désactivé' }}</dd></div><div><dt>Objectif</dt><dd>{{ objectives[definition.objective].label }}</dd></div><div><dt>Format</dt><dd>{{ formats[definition.format] }}</dd></div><div><dt>Durée par occurrence</dt><dd>{{ definition.duration_seconds / 3600 }} h</dd></div></dl>
         <p>{{ reward_modes[definition.reward_mode] }}{% if definition.global_goal|default(null) %} · Objectif global : {{ definition.global_goal|quantity(2) }}{% endif %}{% if definition.threshold_value|default(null) %} · Seuil individuel : {{ definition.threshold_value|quantity(2) }}{% endif %} · Un boost par participant éligible.</p>
         <a class="secondary" href="{{ path('app_admin_weekly_rotation_edit', {id: universe.id, key: definition.key}) }}">Modifier {{ definition.name }}</a>

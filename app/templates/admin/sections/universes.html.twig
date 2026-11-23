@@ -15,7 +15,7 @@
     </div>
     <button class="secondary">Rechercher</button>
 </form>
-<p>Vous pouvez planifier ou retirer une date de fermeture. Un univers déjà fermé reste fermé.</p>
+<p class="admin-design-notice">Vous pouvez planifier ou retirer une date de fermeture. Un univers déjà fermé reste fermé.</p>
 
 <div class="admin-universes-grid">
 {% for universe in universes %}{% set config = universeConfigs[universe.id] %}{% set selectedSpeedProfile = 'custom' %}{% set selectedSpeedProfileLabel = 'Personnalisé' %}

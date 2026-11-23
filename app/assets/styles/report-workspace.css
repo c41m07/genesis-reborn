@@ -219,8 +219,11 @@ body[data-theme=light] .core-report-state.is-risk { color:#92283a; }
 .player-report-detail :is(.player-combat-core,.player-transport-core,.player-intel-core,.player-intel-aside,#combat-rounds) { min-width:0; padding:1.3rem; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
 .player-report-detail .player-combat-core > .panel,
 .player-report-detail .player-transport-core > .panel { padding-inline:0; border:0; box-shadow:none; background:none; }
-.player-report-detail .player-combat-core > .report-summary { padding:.75rem 1rem; border:1px solid var(--line); border-inline-start:3px solid var(--green); background:color-mix(in srgb,var(--green) 8%,var(--panel)); }
-.player-report-detail .player-combat-core > .report-summary--defeat { border-inline-start-color:var(--danger); background:color-mix(in srgb,var(--danger) 8%,var(--panel)); }
+.player-report-detail .combat-board-heading { display:flex; align-items:start; justify-content:space-between; gap:.55rem 1rem; flex-wrap:wrap; margin-block-end:.8rem; }
+.player-report-detail .combat-board-heading :is(h2, p) { margin:0; }
+.player-report-detail .combat-board-heading h2 { margin-block-end:.3rem; }
+.player-report-detail .combat-board-verdict { flex:0 1 auto; padding:.35rem .7rem; border:1px solid var(--line); border-inline-start:3px solid var(--green); border-radius:5px; color:var(--text); background:color-mix(in srgb,var(--green) 12%,var(--panel)); font-weight:700; }
+.player-report-detail .combat-board-verdict--defeat { border-inline-start-color:var(--danger); background:color-mix(in srgb,var(--danger) 12%,var(--panel)); }
 .player-report-detail .report-totals > div { padding:1rem; border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 6%,var(--panel)); }
 .player-report-detail .report-totals > div:first-child dd { color:var(--accent); }
 .player-report-detail .player-report-note { padding:1rem; border:1px solid var(--line); border-inline-start:3px solid var(--accent); border-radius:6px; background:color-mix(in srgb,var(--accent) 10%,var(--panel)); color:var(--text); }
@@ -247,3 +250,24 @@ html[data-theme="light"] .player-report-detail {
     --accent: #24627a;
     --gold: #805419;
 }
+
+/* Le joueur lit d’abord le bilan ; les coordonnées et participants restent visibles. */
+.player-transport-detail .transport-board-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.65rem; margin:0 0 1rem; }
+.player-transport-detail .transport-board-metrics > div { display:block; min-width:0; border:1px solid var(--line); padding:.85rem; border-radius:6px; background:color-mix(in srgb,var(--accent) 8%,var(--panel)); }
+.player-transport-detail .transport-board-metrics dd { margin:.35rem 0 0; color:var(--text); font-size:clamp(1rem,1.55vw,1.45rem); overflow-wrap:anywhere; }
+.player-transport-detail .transport-board-metrics dd + dd { color:var(--muted); font-size:.86rem; }
+.player-transport-detail .transport-board-content { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(15rem,1fr); gap:.85rem; align-items:start; }
+.player-transport-detail .transport-board-content .panel { min-width:0; margin:0; padding:.85rem; }
+.player-transport-detail .transport-board-route .report-facts { margin:0; }
+.player-transport-detail .transport-board-route .report-facts > div { padding-block:.45rem; gap:.5rem; }
+@media(max-width:1000px) {
+    .player-transport-detail .transport-board-content { grid-template-columns:minmax(0,1fr); }
+}
+@media(max-width:560px) {
+    .player-transport-detail .transport-board-metrics { grid-template-columns:minmax(0,1fr); }
+}
+.player-report-detail .intel-board-summary { margin:.75rem 0; }
+.player-report-detail .intel-board-summary > div { border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 8%,var(--panel)); }
+.player-report-detail #combat-rounds .combat-round > summary { min-height:42px; padding-block:.55rem; }
+.player-report-board .player-report-type { min-width:0; display:grid; justify-items:start; gap:.2rem; }
+.player-report-board .player-report-kind { font-size:.82rem; color:var(--text); }

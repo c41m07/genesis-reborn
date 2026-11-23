@@ -2,7 +2,7 @@
 {% import 'ui/macros.html.twig' as ui %}
 {% block title %}Liste des systèmes · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="galaxy-list-workspace" data-page-sections="disabled">
+<div class="galaxy-list-workspace" data-page-sections="disabled" data-controller="galaxy-list-filter">
     <div class="page-heading">
         <div><p class="core-galaxy-kicker">Galaxie</p><h1>Liste des systèmes</h1><p>Retrouvez le système sélectionné entre la carte et la liste.</p></div>
         <span class="badge">{{ systems|length }} systèmes</span>
@@ -24,19 +24,19 @@
             </div>
             <button class="secondary">Afficher le système</button>
         </form>
+        <div class="galaxy-index-filter" data-galaxy-list-filter-target="field" hidden>
+            <label for="galaxy-list-query">Rechercher dans la liste</label>
+            <input id="galaxy-list-query" type="search" placeholder="Système ou coordonnées" aria-controls="galaxy-index-table" data-action="input->galaxy-list-filter#update">
+        </div>
     </div>
     <p class="map-origin-note">{% if map_origin %}Les missions rapides partent de <strong>{{ map_origin.name }}</strong> · {{ map_origin.coordinates() }}.{% else %}Sélectionnez une planète dans votre empire pour envoyer une mission rapide.{% endif %}</p>
     <div class="galaxy-list-layout">
-        <section class="panel galaxy-index" aria-labelledby="galaxy-index-title" data-controller="galaxy-list-filter">
+        <section class="panel galaxy-index" aria-labelledby="galaxy-index-title">
             <div class="section-heading">
                 <h2 id="galaxy-index-title">Systèmes de {{ selected_galaxy.name|default('la galaxie') }}</h2>
-                <div class="galaxy-index-filter" data-galaxy-list-filter-target="field" hidden>
-                    <label for="galaxy-list-query">Rechercher dans la liste</label>
-                    <input id="galaxy-list-query" type="search" placeholder="Système ou coordonnées" data-action="input->galaxy-list-filter#update">
-                </div>
             </div>
             <div class="table-scroll galaxy-index-scroll" role="region" tabindex="0" aria-label="Liste des systèmes, zone défilante">
-                <table class="data-table galaxy-index-table">
+                <table id="galaxy-index-table" class="data-table galaxy-index-table">
                     <thead><tr><th scope="col">Système</th><th scope="col">Découverte</th><th scope="col">Planètes</th><th scope="col">Action</th></tr></thead>
                     <tbody>
                     {% for row in systems %}

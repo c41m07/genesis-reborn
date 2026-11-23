@@ -216,7 +216,12 @@ test('L9 A : documents publics, ancres, métadonnées et contexte connecté', as
       const firstTopic = page.locator('.legal-content > h2').first();
       await expect(firstTopic).toBeVisible();
       if (path === '/confidentialite') await expect(firstTopic).toHaveAttribute('id', 'responsable-contact');
-      await expect(page.locator('.legal-content > aside.legal-warning + h2')).toHaveCount(1);
+      await expect(page.locator('.legal-audit-layout > aside.legal-warning')).toHaveCount(1);
+      const warningAndText = await page.locator('.legal-audit-layout').evaluate(node => ({
+        before: node.querySelector('.legal-warning').getBoundingClientRect().bottom,
+        after: node.querySelector('.legal-content > h2').getBoundingClientRect().top,
+      }));
+      expect(warningAndText.before).toBeLessThanOrEqual(warningAndText.after);
       expect(await firstTopic.evaluate(node => getComputedStyle(node).marginTop)).toBe('0px');
       await expect(page.locator('main nav[aria-label="Informations juridiques"] a[aria-current=page]')).toHaveCount(1);
       await layout(page, testInfo, `legal-${path.slice(1)}-${theme}`);

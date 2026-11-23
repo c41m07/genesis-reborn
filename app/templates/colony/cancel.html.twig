@@ -11,6 +11,7 @@
         <small>{{ item.startedAt ? 'Commande démarrée' : 'Commande en file' }}</small>
         <strong>{{ selected.label }} · {{ item.itemLevel ? 'niveau ' ~ item.itemLevel : 'quantité ' ~ item.quantity }}</strong>
         <span>{{ selected.item.planet.name }}</span>
+        {% if item.itemLevel %}<span>Le niveau déjà acquis reste inchangé.</span>{% endif %}
     </div>
 {% endif %}
 <p><strong>{{ rows|length }} {{ rows|length == 1 ? 'commande concernée' : 'commandes concernées' }}</strong> : la commande sélectionnée et ses niveaux dépendants.</p>

@@ -17,6 +17,8 @@ test('Planches joueur : rails de décision sur grand écran et flux mobile sans 
     await page.locator('.universe-card').filter({ has: page.getByRole('heading', { name: /Omega/ }) }).getByRole('button').click();
     await expect(page).toHaveURL(/planetes\/\d+$/);
 
+    const ownedPlanetPath = new URL(page.url()).pathname;
+
     const screens = [
         ['/evenements', 'P04', '.player-event-period--current', '.player-event-period--upcoming'],
         ['/profil', 'P06', '.account-profile-form', '.account-board-rail'],
@@ -57,7 +59,8 @@ test('Planches joueur : rails de décision sur grand écran et flux mobile sans 
         ['/simulateur', 'P13', '.simulation-board-options'],
         ['/profil/supprimer', 'P17', '.account-delete-form'],
         ['/recompense-quotidienne', 'P18', '.daily-board-cycle'],
-        ['/planetes?view=table', 'P19', '.colony-comparison-panel'],
+        ['/planetes?view=table', 'P10-comparaison', '.colony-comparison-panel'],
+        [ownedPlanetPath + '/abandonner', 'P19-abandon-bloque', '.colony-abandon-confirmation'],
         ['/patchnotes', 'P20', '.player-patchnotes-board'],
         ['/premiers-pas/exercice-pirate', 'P21', '.first-steps-exercise-board'],
     ];
@@ -68,7 +71,31 @@ test('Planches joueur : rails de décision sur grand écran et flux mobile sans 
                 expect.soft((await page.goto(path))?.status(), path).toBe(200);
                 await expect.soft(page.locator(landmark).first()).toBeVisible({ timeout: 3000 });
                 expect.soft(await page.evaluate(() => document.documentElement.scrollWidth), model).toBeLessThanOrEqual(width);
+                if (model === 'P13' && width === 1920) {
+                    const launch = page.getByRole('button', { name: 'Simuler 10 combats', exact: true });
+                    await expect(launch).toBeInViewport({ ratio: 1 });
+                    const grids = page.locator('.simulation-form .strategic-grid > section');
+                    await expect(grids).toHaveCount(2);
+                    for (const grid of await grids.all()) await expect(grid).toBeInViewport({ ratio: 0.9 });
+                }
                 await page.screenshot({ path: info.outputPath(model + '-' + width + 'x' + height + '.png'), scale: 'css', animations: 'disabled' });
+                if (model === 'P12') {
+                    const details = page.locator('#technology-detail');
+                    const item = page.locator('.technology-overview .tech-node:visible > summary').first();
+                    await expect(details).toBeHidden();
+                    await item.click();
+                    await expect(details).toBeVisible();
+                    await expect(details.getByRole('heading', { level: 2 })).toBeVisible();
+                    if (width === 1920) {
+                        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+                    } else {
+                        await details.scrollIntoViewIfNeeded();
+                    }
+                    await page.screenshot({ path: info.outputPath('P12-selection-' + width + 'x' + height + '.png'), scale: 'css', animations: 'disabled' });
+                    await details.getByRole('button', { name: 'Fermer les détails' }).click();
+                    await expect(details).toBeHidden();
+                    await expect(item).toBeFocused();
+                }
             });
         }
     }

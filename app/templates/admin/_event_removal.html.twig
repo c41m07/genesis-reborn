@@ -1,5 +1,6 @@
-<details class="account-section">
+<details class="account-section admin-design-danger">
     <summary>Supprimer {{ challengeRemoval ? 'ce défi' : 'cet événement' }}</summary>
+    <p class="admin-design-badge admin-design-badge--danger">Confirmation requise</p>
     <p>Un élément jamais démarré est supprimé définitivement. Sinon, il est retiré des listes courantes et arrêté s’il est encore en cours ; ses effets déjà acquis, contributions et récompenses restent dans l’historique.</p>
     <form method="post" action="{{ path(challengeRemoval ? 'app_admin_challenge_remove' : 'app_admin_game_event_remove',{id:removalId}) }}" class="admin-intervention-form event-removal-form">
         <input type="hidden" name="_token" value="{{ csrf_token((challengeRemoval ? 'admin_challenge_remove_' : 'game_event_remove_')~removalId) }}">

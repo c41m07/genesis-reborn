@@ -289,3 +289,6 @@ a.pirate-campaign-mission-title {
 @media (max-width:760px) {
     .campaign-board-layout { grid-template-columns:minmax(0,1fr); grid-template-areas:"dossier" "missions" "journal"; }
 }
+.player-campaign-board .campaign-board-briefing-summary { display:grid; gap:.5rem; margin:.8rem 0; }
+.player-campaign-board .campaign-board-briefing-summary > div { gap:.6rem; padding:.5rem .7rem; border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 6%,var(--panel)); }
+.player-campaign-board #pirate-intelligence-title { scroll-margin-top:180px; }

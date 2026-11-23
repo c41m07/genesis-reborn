@@ -52,9 +52,16 @@
 </div>
 <aside class="panel ranking-board-help" id="ranking-board-help" tabindex="-1" aria-labelledby="ranking-board-help-title">
     <h2 id="ranking-board-help-title">Lire le classement</h2>
+    {% if tab == 'players' %}
+        {% set ownRow = daily.players|filter(player => player.membership.id == membership.id)|first|default(null) %}
+        <dl class="ranking-board-own"><div>
+            <dt>Votre position</dt>
+            <dd>{% if ownRow %}#{{ ownRow.ranks[category] }}{% else %}En attente du prochain calcul{% endif %}</dd>
+        </div></dl>
+    {% endif %}
     <p>Les valeurs ne détaillent pas la composition de vos flottes.</p>
     <details><summary>Comprendre le classement</summary><p>Classement des commandants par catégorie. Les points suivent les ressources engagées dans les entités encore possédées. La flotte inclut les vaisseaux et les défenses fixes.</p><p>Actualisation chaque jour à 00 h, heure de Paris. Prochain : <time datetime="{{ daily.next_update|date('c') }}">{{ daily.next_update|date('d/m/Y à H:i', 'Europe/Paris') }}</time>.</p><p>{% if daily.comparison_at %}Évolutions depuis le calcul du {{ daily.comparison_at|date('d/m/Y à H:i', 'Europe/Paris') }} : + gain, − perte, = inchangé.{% else %}Premier calcul : les évolutions apparaîtront à la prochaine mise à jour.{% endif %} Les nouveaux joueurs et guildes rejoignent le classement au prochain calcul.</p></details>
-    <p>La protection temporaire est signalée près du commandant lorsqu’elle s’applique.</p>
+    <p>Un bouclier signale la protection près du commandant. « = 0 » signifie stable ; « — » indique qu’il n’y a pas de comparaison.</p>
 </aside>
 </div>
 </div>

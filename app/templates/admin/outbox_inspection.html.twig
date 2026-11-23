@@ -5,7 +5,7 @@
 <h1>Diagnostic du relais #{{ inspection.id }}</h1></div>
 <a class="secondary" href="{{ path('app_admin_operations') }}">Retour à l’exploitation</a></div>
 <section class="panel">
-<h2>État de la cible au moment du relevé</h2>
+<header class="admin-design-panel-heading admin-design-panel-heading--split"><h2>État de la cible au moment du relevé</h2><p class="admin-design-badge">Lecture seule</p></header>
 {% set stateLabels = {
     unsupported: 'Diagnostic non disponible pour ce type',
     target_absent: 'Cible absente du relevé',

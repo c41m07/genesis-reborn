@@ -21,20 +21,25 @@
 {% endif %}
     <nav class="ui-tabs report-section-nav" aria-label="Sections du rapport">
         <a href="#combat-overview">Bilan</a><a href="#combat-losses">Effectifs et pertes</a>
-        {% if loot_rows %}<a href="#combat-loot">Butin</a>{% endif %}
+        {% if loot_rows or playerBoard %}<a href="#combat-loot">Butin</a>{% endif %}
         {% if round_details %}<a href="#combat-rounds">Combat détaillé</a>{% endif %}
         {% if reconstruction %}<a href="#combat-reconstruction">Reconstruction</a>{% endif %}
     </nav>
     <div class="player-combat-layout">
         <div class="player-combat-core">
-            {% if playerBoard %}    <section class="panel report-summary {{ defeated ? 'report-summary--defeat' : '' }}" aria-labelledby="combat-result">
-        <h2 id="combat-result">{% if viewer_verdict|default(null) %}{{ {win:'Victoire de votre camp', loss:'Défaite de votre camp', hold:'Position maintenue', draw:'Égalité'}[viewer_verdict] }}{% else %}{{ {attacker_wins:'Victoire des attaquants', defender_wins:'Victoire de la défense', draw:'Égalité'}[report.outcome]|default('Combat terminé') }}{% endif %}</h2>
-        <p>Le combat sur {{ report.combatEvent.planet.name }} est terminé.{% if defeated %} Votre camp a perdu le combat.{% endif %}</p>
-        <p class="muted">{{ report.rounds|length }} round(s) enregistré(s){% if report.snapshot.max_rounds is defined %} · Limite : {{ report.snapshot.max_rounds }} rounds{% endif %}</p>
-    </section>
-{% endif %}
     <section id="combat-overview" aria-labelledby="combat-overview-title">
+        {% if playerBoard %}
+        <header class="combat-board-heading">
+            <div><h2 id="combat-overview-title">Bilan de votre camp</h2>
+                <p class="muted">Les chiffres ci-dessous sont ceux de votre camp.</p>
+            </div>
+            <p id="combat-result" class="combat-board-verdict{{ defeated ? ' combat-board-verdict--defeat' : '' }}">
+                {% if viewer_verdict|default(null) %}{{ {win:'Victoire de votre camp', loss:'Défaite de votre camp', hold:'Position maintenue', draw:'Égalité'}[viewer_verdict] }}{% else %}{{ {attacker_wins:'Victoire des attaquants', defender_wins:'Victoire de la défense', draw:'Égalité'}[report.outcome]|default('Combat terminé') }}{% endif %}
+            </p>
+        </header>
+        {% else %}
         <h2 id="combat-overview-title">Bilan de votre camp</h2>
+        {% endif %}
         <dl class="report-totals">
             <div><dt>Engagés</dt><dd>{{ totals.own.initial|quantity(0) }}</dd></div>
             <div><dt>Pertes</dt><dd class="{{ totals.own.lost ? 'report-loss' : 'muted' }}">{{ totals.own.lost ? '−' : '' }}{{ totals.own.lost|quantity(0) }}</dd></div>
@@ -52,12 +57,14 @@
         <section class="panel" id="combat-loot"><h2>Butin embarqué par vos flottes</h2><p class="muted">Ressources chargées à l’issue du combat.</p><dl class="report-metrics">{% for item in loot_rows %}<div><dt>{{ item.label }}</dt><dd>{{ item.amount|quantity(0) }}</dd></div>{% endfor %}</dl></section>
     {% endif %}
     {% if playerBoard and not loot_rows %}
-        <p class="player-report-note">Aucun butin embarqué par vos flottes dans ce rapport.</p>
+        <p class="player-report-note" id="combat-loot">Aucun butin embarqué par vos flottes dans ce rapport.</p>
     {% endif %}
         </div>
     <section class="panel" id="combat-rounds" aria-labelledby="combat-rounds-title">
         <h2 id="combat-rounds-title">Combat détaillé</h2>
-        <p class="muted">Statistiques par round, par flotte et par rang.</p>
+        {% if playerBoard %}
+        <p class="muted">{{ report.rounds|length }} round(s) enregistré(s){% if report.snapshot.max_rounds is defined %} · Limite : {{ report.snapshot.max_rounds }} rounds{% endif %}. Dépliez un round pour consulter les actions et effectifs.</p>
+        {% else %}<p class="muted">Statistiques par round, par flotte et par rang.</p>{% endif %}
         {% for round in round_details %}
             {% include 'combat/_report_round.html.twig' with {first_round: loop.first} %}
         {% else %}

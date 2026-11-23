@@ -366,3 +366,295 @@ body.authenticated .event-redesign.player-event-board #advent-link-title { margi
 @media (max-width:560px) {
     body.authenticated .event-redesign.player-event-board .player-event-period { padding:.85rem; }
 }
+
+/* Pas de contribution inventée pour les annonces : seuls les vrais défis alimentent cet aperçu. */
+.player-event-board .event-board-challenges { margin-block:1rem; }
+body.authenticated .player-event-board .event-board-challenge {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(12rem,.6fr);
+    align-items:start;
+    gap:.7rem 1.2rem;
+    margin:.55rem 0;
+    background:color-mix(in srgb,var(--accent) 5%,var(--panel));
+}
+.player-event-board .event-board-challenge h4 { margin:0 0 .5rem; font-size:1.2rem; }
+.player-event-board .event-board-challenge p { margin:.35rem 0; }
+.player-event-board .event-board-participation { margin-block:1rem; padding:.85rem; border:1px solid var(--line); border-radius:6px; }
+.player-event-board .event-board-participation dl { margin:.35rem 0 0; }
+.player-event-board .event-board-participation dl > div { gap:.5rem; }
+@media(max-width:650px) {
+    body.authenticated .player-event-board .event-board-challenge { grid-template-columns:minmax(0,1fr); }
+}
+
+/* Les portes et leurs panneaux restent des ancres natives, y compris après
+   un retour de formulaire ou sans JavaScript. L'habillage ne concerne que l'Avent. */
+.event-redesign.advent-board {
+    --advent-line: color-mix(in srgb, var(--line) 72%, var(--accent));
+    --advent-open: color-mix(in srgb, var(--gold) 55%, var(--text));
+    --advent-delivered: color-mix(in srgb, var(--green) 55%, var(--text));
+    --advent-panel: color-mix(in srgb, var(--panel) 94%, var(--accent) 6%);
+}
+
+[data-theme="light"] .event-redesign.advent-board {
+    --advent-open: #644218;
+    --advent-delivered: #215a47;
+}
+
+.advent-board :is(.advent-links, .advent-meta) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .65rem;
+}
+
+.advent-board .advent-links a {
+    min-height: 44px;
+}
+
+.advent-board :is(.advent-layout, .advent-reward-layout) {
+    display: grid;
+    grid-template-columns: minmax(0, 2.15fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 1.25rem;
+    margin-block: 1.25rem;
+}
+
+.advent-board .advent-reward-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.authenticated .advent-board :is(.advent-calendar, .advent-door, .advent-moment, .advent-finale) {
+    min-width: 0;
+    padding: clamp(1rem, 1.35vw, 1.5rem);
+    border: 1px solid var(--advent-line);
+    border-radius: 9px;
+    background: linear-gradient(154deg, var(--advent-panel), var(--panel));
+    overflow-wrap: anywhere;
+}
+
+body.authenticated .advent-board :is(.advent-calendar, .advent-door, .advent-moment, .advent-finale) :is(h2, h3) {
+    margin: 0 0 .45rem;
+    font-size: clamp(1.15rem, 1.4vw, 1.55rem);
+}
+
+.advent-board .advent-meta {
+    margin: .7rem 0 1rem;
+    padding: 0;
+    list-style: none;
+}
+
+.advent-board .advent-doors {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: clamp(.45rem, .75vw, .9rem);
+    align-items: stretch;
+    margin: 0;
+}
+
+.advent-board .advent-day-tile {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    align-content: space-between;
+    gap: .15rem .25rem;
+    height: 100%;
+    min-height: 84px;
+    padding: .65rem .75rem;
+    border: 1px solid var(--advent-line);
+    border-block-start: 4px solid var(--advent-line);
+    border-radius: 8px;
+    background-color: var(--panel);
+    color: var(--text);
+    text-decoration: none;
+}
+
+.advent-board .advent-day-tile[data-milestone] {
+    border-block-start-color: var(--gold);
+}
+
+.advent-board .advent-day-tile:is(:hover, :focus-visible) {
+    border-color: var(--accent);
+}
+
+.advent-board .advent-day-number {
+    font-size: clamp(1.3rem, 1.7vw, 1.9rem);
+    font-weight: 800;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+}
+
+.advent-board .advent-day-status {
+    grid-column: 1 / -1;
+    font-size: .75rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+body.authenticated .advent-board :is(.advent-day-tile, .advent-state)[data-state="delivered"] { color: var(--advent-delivered); }
+body.authenticated .advent-board :is(.advent-day-tile, .advent-state)[data-state="reserved"] { color: var(--advent-open); }
+.advent-board .advent-milestone {
+    color: var(--advent-open);
+    font-size: .64rem;
+    font-weight: 800;
+    letter-spacing: .035em;
+    text-transform: uppercase;
+}
+
+.advent-board :is(.advent-door, .advent-rewards, #advent-calendar-title) {
+    scroll-margin-top: var(--game-sticky-offset, 10rem);
+}
+
+.advent-board .advent-door:target {
+    border-color: var(--accent);
+}
+
+.advent-board :is(a, summary, input, select, button, .advent-door, .advent-rewards):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+/* Sans prise en charge de :has, tous les panneaux restent consultables. */
+@supports selector(:has(*)) {
+    .advent-board .advent-selection:not(:has(.advent-door:target)) .advent-door:not([data-default]),
+    .advent-board .advent-selection:has(.advent-door:target) .advent-door:not(:target) {
+        display: none;
+    }
+
+    .advent-board .advent-layout:not(:has(.advent-door:target)) .advent-day-tile[data-default] {
+        border-color: var(--accent);
+        background: var(--advent-panel);
+    }
+
+    .advent-board .advent-selection:has(.advent-door:target),
+    .advent-board .advent-selection:has([data-default]) {
+        min-width: 0;
+    }
+}
+
+.advent-board .advent-choice {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.advent-board .advent-choice legend { margin-bottom: .5rem; }
+.advent-board .advent-choice label {
+    margin: 0;
+    padding: .65rem .7rem;
+    border: 1px solid var(--advent-line);
+    border-radius: 6px;
+    background-color: var(--panel);
+}
+.advent-board .advent-choice label:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--advent-panel);
+}
+.advent-board .advent-choice input {
+    flex: 0 0 auto;
+    width: 1rem;
+    min-height: 1rem;
+    margin-top: .2rem;
+}
+
+.advent-board :is(summary, .advent-door-form select, .advent-door-form .primary) {
+    min-height: 44px;
+}
+.advent-board summary { padding-block: .6rem; cursor: pointer; }
+.advent-board .advent-door-form .primary {
+    width: 100%;
+    white-space: normal;
+}
+body.authenticated .advent-board .advent-notice {
+    margin-block: .8rem;
+    padding: .7rem .85rem;
+    border-inline-start: 3px solid var(--accent);
+    background: var(--advent-panel);
+    color: var(--text);
+}
+
+.advent-board .advent-moments { display: grid; gap: .9rem; }
+.advent-board .advent-moment,
+.advent-board .advent-finale { display: grid; gap: .65rem; }
+body.authenticated .advent-board :is(.advent-moment, .advent-finale) p { margin: 0; }
+.advent-board :is(.advent-moment, .advent-finale) a { justify-self: start; min-height: 44px; }
+.advent-board .advent-finale > a { justify-self: stretch; justify-content: center; text-align: center; }
+
+.advent-board .advent-finale-preview {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    align-items: end;
+    min-height: 8rem;
+    padding: clamp(.9rem, 2vw, 1.4rem);
+    border: 1px solid var(--advent-line);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--panel);
+}
+.advent-board .advent-finale-preview--banner {
+    min-height: clamp(9rem, 15vw, 14rem);
+    background: #101e31;
+    color: #f5f8ff;
+}
+.advent-board .advent-finale-preview--banner::after {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: linear-gradient(97deg, rgba(10, 22, 41, .98), rgba(10, 22, 41, .90) 52%, rgba(10, 22, 41, .24));
+    content: "";
+}
+.advent-board .advent-finale-preview img {
+    position: absolute;
+    z-index: -2;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.advent-board .advent-banner-name {
+    color: #a7e8f5;
+    font-weight: 750;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.advent-board .advent-title-name {
+    font-size: clamp(1.45rem, 2.25vw, 2.25rem);
+    font-weight: 800;
+    line-height: 1.18;
+}
+.advent-board .advent-finale-status {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: .5rem;
+    padding: .65rem .8rem;
+    border: 1px solid var(--advent-line);
+    border-radius: 6px;
+    background: var(--panel);
+}
+
+@media (max-width: 1300px) {
+    .advent-board .advent-doors { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 1020px) {
+    .advent-board :is(.advent-layout, .advent-reward-layout) { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+    .advent-board .advent-doors { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .advent-board .advent-day-tile { min-height: 68px; padding: .45rem .4rem; }
+}
+
+body.authenticated .advent-board :is(.advent-meta .badge, .advent-state) {
+    padding: .2rem .48rem;
+    border: 1px solid var(--advent-line);
+    border-radius: 4px;
+    background: var(--advent-panel);
+    color: var(--text);
+    font-size: .8rem;
+}
+
+body.authenticated .advent-board .advent-door-subtitle {
+    margin-bottom: .5rem;
+    color: var(--accent);
+    font-size: 1rem;
+    font-weight: 750;
+}

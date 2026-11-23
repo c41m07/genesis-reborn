@@ -96,6 +96,15 @@ test('Les membres financent deux paliers et le traitement attribue les boosts un
     const card = page.locator('.guild-project');
     await expect(card.getByRole('heading', { name: /Palier 1 sur 2/ })).toBeVisible();
     const detailUrl = page.url();
+    await expect(card.locator('.guild-stage-progress progress')).toHaveAttribute('max', '10');
+    await expect(card.locator('.guild-stage-progress progress')).toHaveAttribute('value', '0');
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.screenshot({ path: testInfo.outputPath('social-S09-palier-1920x1080.png'), animations: 'disabled' });
+    await page.goto('/guildes');
+    await expect(page.locator('.guild-overview-project')).toContainText(projectName);
+    await expect(page.locator('.guild-overview-project progress')).toHaveAttribute('max', '10');
+    await page.screenshot({ path: testInfo.outputPath('social-S02-centre-1920x1080.png'), animations: 'disabled' });
+    await page.goto(detailUrl);
     for (const theme of ['dark', 'light']) {
       runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='proj-leader-${id}@example.test'`);
       for (const width of [1440, 390, 320]) {

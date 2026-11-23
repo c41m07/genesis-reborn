@@ -122,7 +122,22 @@ test('L2A A : missions en lignes, trois étapes, devis et rappel sur ordinateur 
       await expect(form.getByRole('heading', { name: 'Confirmez votre mission' })).toBeFocused();
       await expect(form.locator('[data-fleet-preview-target="result"]')).toContainText('Carburant aller-retour');
       await expect(form.getByRole('button', { name: /Envoyer la flotte/ })).toBeEnabled();
-      await expect(form.locator('[data-fleet-wizard-target="summary"]')).toContainText(/Métal\s*:\s*1\s*000/);
+      const review = form.locator('[data-fleet-wizard-target="summary"]');
+      const units = review.getByRole('table', { name: 'Composition' });
+      await expect(units.getByRole('columnheader')).toHaveText(['Unité', 'Rang', 'Quantité']);
+      await expect(units.getByRole('row').filter({ hasText: 'Cargo de ligne' }).getByRole('cell')).toHaveText(['Basique', '8']);
+      const freight = review.locator('.fleet-review-cargo');
+      await expect(freight.locator('dt')).toHaveText(['Métal', 'Nano', 'Hydrogène', 'Antimatière', 'Électricité']);
+      await expect(freight.locator('dd')).toHaveText([/1\s*000/, '0', '0', '0', '0']);
+      if (width === 1920) {
+        await page.evaluate(async () => {
+          await document.fonts.ready;
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        });
+        const send = form.getByRole('button', { name: /Envoyer la flotte/ });
+        await expect(send).toBeInViewport({ ratio: 1 });
+        await page.screenshot({ path: testInfo.outputPath(`confirmation-${theme}-1920x1080.png`), fullPage: false, scale: 'css' });
+      }
       await checkLayout(page, width);
       await capture(page, testInfo, 'confirmation', theme, width);
       await form.getByRole('button', { name: /Modifier la destination/ }).click();

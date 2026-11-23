@@ -95,7 +95,7 @@ final class DiplomacyPageView
             foreach ($data['ownRow']['members'] as $member) {
                 if ($ownMember && $this->access->canAssignRank($ownMember, $member, null)) {
                     $choices = array_filter($data['ranks'], fn(GuildRank $rank): bool => $this->access->canAssignRank($ownMember, $member, $rank));
-                    $data['rankAssignments'][] = ['member' => $member, 'choices' => array_values($choices)];
+                    $data['rankAssignments'][$member->id] = ['member' => $member, 'choices' => array_values($choices)];
                 }
             }
         }
@@ -103,6 +103,19 @@ final class DiplomacyPageView
             $data['guildRelationCounts'] = $this->repository->guildRelationCounts($own);
             $data['profile'] = $this->profiles->guild($membership, $own->id);
             $data['guildPreview'] = $this->repository->guildConversation($own, 3);
+            // Le tableau de bord n’affiche que le dernier projet et son palier courant.
+            $project = $this->repository->guildProjectsPage($own, false, 0, 1)[0] ?? null;
+            $stageCosts = $project ? ($project->snapshot['stages'][$project->stageIndex]['costs'] ?? []) : [];
+            if ($project && array_sum($stageCosts) > 0) {
+                $progress = 0;
+                foreach ($stageCosts as $resource => $required) {
+                    $progress += min($required, $project->progress[$resource] ?? 0);
+                }
+                $data['guildProjectPreview'] = [
+                    'name' => $project->snapshot['name'],
+                    'value' => $progress, 'maximum' => array_sum($stageCosts),
+                ];
+            }
         }
         if ($tab === 'join' && $search === '' && $membership->isPlayerControlled()) {
             $data['recruitingGuilds'] = $this->repository->recruitingGuildDirectory($membership);

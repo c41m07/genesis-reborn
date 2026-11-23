@@ -304,3 +304,11 @@ body.authenticated .account-redesign .form-error p {
 @media (max-width:850px) {
     .account-board-grid { grid-template-columns:minmax(0,1fr); }
 }
+
+/* Garder sous les yeux l’action principale sans raccourcir les explicatifs ni les confirmations. */
+body.authenticated .player-account-board .account-board-grid .account-section legend { margin-bottom:.75rem; }
+body.authenticated .player-account-board .account-board-grid .account-panel { padding:clamp(1rem,1.4vw,1.5rem); }
+body.authenticated .player-account-board .account-board-settings .preference-toggle { margin-block:.3rem; padding-block:.3rem; }
+body.authenticated .player-account-board .account-board-danger strong { color:var(--account-danger); }
+body.authenticated .player-account-board .account-board-card .danger { display:inline-flex; align-items:center; padding:.45rem .8rem; min-height:44px; border:1px solid var(--account-danger); color:var(--account-danger); border-radius:5px; }
+body.authenticated .account-redesign:is(.account-deletion-page,.vacation-page) .account-workspace { max-width:85rem; margin-inline:auto; }

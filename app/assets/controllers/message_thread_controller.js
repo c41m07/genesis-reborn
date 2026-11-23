@@ -3,6 +3,8 @@ import { Controller } from '@hotwired/stimulus';
 export default class extends Controller {
     async connect() {
         this.active = true;
+        // Sans JS, le résumé natif reste la commande de fermeture.
+        this.element.querySelectorAll('[data-message-report-close]').forEach(button => { button.hidden = false; });
         await document.fonts.ready;
         if (!this.active) return;
         this.onResize = () => this.fitViewport();
@@ -55,6 +57,14 @@ export default class extends Controller {
         this.element.style.setProperty('--message-thread-available', threadAvailable);
         this.element.style.maxHeight = threadAvailable;
         if (atBottom) this.element.scrollTop = this.element.scrollHeight;
+    }
+
+    closeReport(event) {
+        const report = event.currentTarget.closest('.message-report');
+        if (!report?.open) return;
+        event.preventDefault();
+        report.open = false;
+        report.querySelector('summary')?.focus();
     }
 
     disconnect() {

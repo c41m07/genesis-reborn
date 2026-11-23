@@ -3,10 +3,10 @@
          aria-labelledby="dashboard-journal-title">
     <div class="dashboard-section-heading">
         <div>
-            <h2 id="dashboard-journal-title">Journal de bord</h2>
+            <h2 id="dashboard-journal-title">{{ ui.icon('clock') }} Journal de bord</h2>
             <p>Les derniers événements d’absence. Le journal est marqué comme consulté lorsque ces événements deviennent visibles.</p>
         </div>
-        <span aria-hidden="true">{{ ui.icon('clock') }}</span>
+        <a class="dashboard-journal-link" href="{{ path('app_combat_reports') }}">Ouvrir les rapports <span aria-hidden="true">→</span></a>
     </div>
     {% if journal_page.notifications is not empty %}
         <ol class="dashboard-notifications">
@@ -30,5 +30,4 @@
     {% else %}
         <p class="dashboard-empty">Aucun événement d’absence à consulter. Le suivi commence à votre première ouverture de la vue générale ; les nouvelles activités seront proposées lors d’une prochaine ouverture.</p>
     {% endif %}
-    <a class="dashboard-journal-link" href="{{ path('app_combat_reports') }}">Ouvrir les rapports <span aria-hidden="true">→</span></a>
 </section>
