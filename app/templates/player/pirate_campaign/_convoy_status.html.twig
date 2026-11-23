@@ -47,7 +47,7 @@
             </p>
         {% endif %}
         {% set labels = {metal: 'Métal', nano: 'Nanos', antimatter: 'Antimatière', hydrogen: 'Hydrogène'} %}
-        <dl{{ visualState ? ' class="pirate-campaign-reward"' : '' }}>
+        <dl{% if visualState %} class="pirate-campaign-reward"{% endif %}>
             {% for resource, amount in reward.amounts %}
                 {% if visualState %}<div>{% endif %}
                 <dt>{{ labels[resource] }}</dt><dd>{{ amount }}</dd>

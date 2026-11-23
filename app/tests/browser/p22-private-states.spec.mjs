@@ -86,6 +86,8 @@ test('P22 : états privés de campagne en lecture seule', async ({ page, browser
   await snapshot(page,owner,'C-convoi',async tab=>{
     const convoy = tab.getByRole('region',{name:'Convoi de remerciement',exact:true});
     await expect(convoy).toHaveClass(/economy-card--transit/);
+    await expect(convoy.locator('dl')).toHaveClass('pirate-campaign-reward');
+    await expect(convoy.locator('dl')).toHaveCSS('display','grid');
     await expect(convoy).toContainText('En convoi');
     await expect(convoy.locator('dl > div')).toHaveCount(4);
     await expect(convoy).toContainText('Arrivée prévue');
@@ -107,6 +109,8 @@ test('P22 : états privés de campagne en lecture seule', async ({ page, browser
     await snapshot(other,full,'D-depot-empeche',async tab=>{
       const convoy = tab.getByRole('region',{name:'Convoi de remerciement',exact:true});
       await expect(convoy).toHaveClass(/economy-card--capacity/);
+      await expect(convoy.locator('dl')).toHaveClass('pirate-campaign-reward');
+      await expect(convoy.locator('dl')).toHaveCSS('display','grid');
       await expect(convoy).toContainText('Stockage insuffisant.');
       await expect(convoy).toContainText('espace insuffisant lors du dernier contrôle');
       await expect(convoy.getByRole('button',{name:'Retenter le dépôt dans la même colonie'})).toBeVisible();
