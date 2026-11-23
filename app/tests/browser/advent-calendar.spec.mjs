@@ -1,6 +1,13 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
 
+// Un changement de thème par fixture SQL se voit au prochain document HTTP.
+// Réouvrir une même ancre peut rester dans le document précédent.
+async function openAdventDocument(page, url) {
+    const response = await page.goto(url) ?? await page.reload();
+    expect(response?.ok()).toBe(true);
+}
+
 test('Avent : retrouver sans JavaScript un cadeau réservé après la clôture', async ({ page, browser, baseURL }) => {
     test.skip(process.env.ADVENT_BROWSER_FIXTURE !== '1', 'Édition positive uniquement dans la recette isolée.');
     const marker = crypto.randomUUID().slice(0, 8);
@@ -158,7 +165,7 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
             await page.setViewportSize({ width: 1920, height: 1080 });
             for (const theme of ['dark', 'light']) {
                 runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(IF(JSON_TYPE(preferences)='OBJECT', preferences, JSON_OBJECT()), '$.theme', '" + theme + "') WHERE email='" + email + "'");
-                await page.goto('/evenements/avent/' + edition + '#advent-door-6');
+                await openAdventDocument(page, '/evenements/avent/' + edition + '#advent-door-6');
                 await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
                 await expect(page.locator('#advent-door-6').getByRole('radio')).toHaveCount(2);
                 await page.evaluate(() => window.scrollTo(0, 0));
@@ -196,7 +203,7 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
         runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(IF(JSON_TYPE(preferences)='OBJECT', preferences, JSON_OBJECT()), '$.theme', '" + theme + "') WHERE email='" + email + "'");
         for (const width of [360, 390, 768, 1440, 1920]) {
             await page.setViewportSize({ width, height: 1080 });
-            await page.goto('/evenements/avent/' + edition);
+            await openAdventDocument(page, '/evenements/avent/' + edition);
             await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
             await expect(page.getByRole('heading', { name: 'Avent des étoiles' })).toBeVisible();
             await expect(page.locator('.advent-door')).toHaveCount(24);
