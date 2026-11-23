@@ -1,6 +1,6 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}Modèles de projets de guilde · Administration{% endblock %}
-{% block body %}<div class="page-heading"><div><h1>Modèles de projets de guilde</h1><p>Les conditions des projets déjà lancés restent figées.</p></div><a class="primary" href="{{ path('app_admin_guild_project_new') }}">Créer un modèle de projet</a></div>
+{% block body %}<div class="page-heading"><div><p class="eyebrow">Modèles et paliers</p><h1>Modèles de projets de guilde</h1><p>Les conditions des projets déjà lancés restent figées.</p></div><a class="primary" href="{{ path('app_admin_guild_project_new') }}">Créer un modèle de projet</a></div>
 <section aria-labelledby="project-models-title"><h2 id="project-models-title">Modèles enregistrés</h2>
 <div class="admin-project-list">
 {% for definition in listing.entries %}

@@ -45,12 +45,16 @@
     </div>
     <details class="admin-danger-zone">
         <summary>Zone de suppression définitive</summary>
-        <p>Cette action supprime l’univers et toutes ses données de jeu. Elle ne peut pas être annulée.</p>
+        <p class="admin-design-badge admin-design-badge--danger">Opération irréversible</p>
+        <p>Univers visé : <strong>{{ universe.name }}</strong>. Cette action supprime l’univers et toutes ses données de jeu. Elle ne peut pas être annulée.</p>
         <form method="post" action="{{ path('app_admin_universe_delete', {id: universe.id}) }}">
             <input type="hidden" name="_token" value="{{ csrf_token('admin_delete_universe_' ~ universe.id) }}">
             <label for="confirm-universe-{{ universe.id }}">Saisis <strong>{{ universe.name }}</strong> pour confirmer</label>
             <input id="confirm-universe-{{ universe.id }}" name="confirmation" type="text" autocomplete="off" required>
-            <button class="danger">Supprimer définitivement l’univers</button>
+            <div class="admin-design-actions">
+                <a class="secondary" href="{{ path('app_admin_universes') }}">Annuler et revenir aux univers</a>
+                <button class="danger">Supprimer définitivement l’univers</button>
+            </div>
         </form>
     </details>
 </article>

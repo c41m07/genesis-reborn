@@ -1,9 +1,9 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}Surveillance des missions · Console{% endblock %}
 {% block body %}
-<div class="page-heading"><div><h1>Surveillance des missions</h1><p>Suivre les flottes, leurs cargaisons et les rapports disponibles dans les univers.</p></div></div>
+<div class="page-heading"><div><p class="eyebrow">Observation des flottes</p><h1>Surveillance des missions</h1><p>Suivre les flottes, leurs cargaisons et les rapports disponibles dans les univers.</p></div></div>
 <section data-controller="admin-mission-monitor" aria-label="Suivi des missions">
-<form method="get" class="feedback-admin-filters">
+<form method="get" class="feedback-admin-filters admin-design-notice">
     <label for="mission-search">Joueur ou cible<input id="mission-search" name="q" type="search" maxlength="120" value="{{ filters.q }}" placeholder="Commandant, colonie, système…"></label>
     <label for="mission-universe">Univers<select id="mission-universe" name="universe"><option value="">Tous les univers</option>{% for universe in universes %}<option value="{{ universe.id }}" {{ filters.universe == universe.id ? 'selected' : '' }}>{{ universe.name }}</option>{% endfor %}</select></label>
     <label for="mission-type">Mission<select id="mission-type" name="mission"><option value="">Toutes les missions</option>{% for value,label in missions %}<option value="{{ value }}" {{ filters.mission == value ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select></label>

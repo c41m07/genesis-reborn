@@ -99,11 +99,19 @@ test('Audit console : repères de lecture et contexte visibles sans modifier les
   for (const { theme, width, height } of [{ theme: 'dark', width: 1920, height: 1080 }, { theme: 'light', width: 390, height: 844 }]) {
     runIsolatedSql(project, 'UPDATE player SET preferences=JSON_OBJECT(\'theme\',\'' + theme + '\') WHERE email=\'' + email + '\'');
     await page.setViewportSize({ width, height });
-    for (const route of ['/admin/permissions', '/admin/guildes', '/admin/juridique/cgu', '/admin/events', '/admin/universes/' + universe + '/boites', '/admin/universes/nouveau']) {
+    for (const route of ['/admin', '/admin/joueurs', '/admin/moderation', '/admin/feedbacks', '/admin/dossiers', '/admin/permissions', '/admin/guildes', '/admin/juridique/cgu', '/admin/events', '/admin/exploitation', '/admin/securite', '/admin/journal', '/admin/transports', '/admin/universes/' + universe + '/gerer', '/admin/universes/' + universe + '/boites', '/admin/universes/nouveau']) {
       expect((await page.goto(route)).status()).toBe(200);
       await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
       await expect(page.locator('h1')).toHaveCount(1);
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      if (route.endsWith('/gerer')) {
+        const danger = page.locator('.admin-danger-zone');
+        await danger.getByText('Zone de suppression définitive').click();
+        await expect(danger.getByText(contextName, { exact: true }).first()).toBeVisible();
+        await expect(danger.getByRole('button', { name: 'Supprimer définitivement l’univers' })).toBeVisible();
+        await danger.getByRole('link', { name: 'Annuler et revenir aux univers' }).click();
+        await expect(page).toHaveURL(/\/admin\/univers$/);
+      }
       if (route.endsWith('/permissions')) await expect(page.getByRole('heading', { name: 'Capacités raccordées · lecture seule' })).toBeVisible();
       if (route.endsWith('/juridique/cgu')) {
         await expect(page.getByText('Aperçu privé · non publié', { exact: true })).toBeVisible();

@@ -2,8 +2,8 @@
 {% block title %}Aperçu privé · {{ pageTitle }} · Genesis Reborn{% endblock %}
 {% block body %}
 <div class="admin-legal-preview">
-  <header class="page-heading"><div><p class="eyebrow">Aperçu privé · non publié</p><h1>{{ pageTitle }}</h1></div><a class="secondary" href="{{ path('app_admin_group', {group: 'ops'}) }}">Retour à l’exploitation</a></header>
-  <p class="flash">Aperçu réservé aux administrateurs. Brouillon du 7 novembre 2026 : texte non publié, champs à compléter et engagements à vérifier avant publication.</p>
+  <header class="page-heading admin-design-banner"><div><p class="eyebrow">Aperçu privé · non publié</p><h1>{{ pageTitle }}</h1></div><a class="secondary" href="{{ path('app_admin_group', {group: 'ops'}) }}">Retour à l’exploitation</a></header>
+  <p class="admin-design-notice">Aperçu réservé aux administrateurs. Brouillon du 7 novembre 2026 : texte non publié, champs à compléter et engagements à vérifier avant publication.</p>
   <nav class="panel" aria-label="Brouillons juridiques">
     <ul>{% for slug, label in pages %}<li><a href="{{ path('app_admin_legal_preview', {page: slug}) }}" {% if page == slug %}aria-current="page"{% endif %}>{{ label }}</a></li>{% endfor %}</ul>
   </nav>

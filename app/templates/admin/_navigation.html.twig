@@ -41,8 +41,11 @@
 {% endfor %}
 {% if placement == 'sidebar' %}
     <nav aria-label="Console d’administration">
+        <p class="admin-design-nav-caption" aria-hidden="true">Poste de contrôle</p>
         <a class="admin-primary-link" href="{{ path('app_admin_index') }}" {% if currentRoute == 'app_admin_index' %}aria-current="page"{% endif %}>{{ ui.icon('overview') }} <span>Vue d’ensemble</span></a>
+        {% set railLabels = {players: 'Personnes', universe: 'Plateforme', events: 'Contenu', ops: 'Exploitation'} %}
         {% for group in navigationGroups %}
+            <p class="admin-design-nav-caption" aria-hidden="true">{{ railLabels[group.key] }}</p>
             <a class="admin-primary-link" href="{{ path('app_admin_group',{group:group.key}) }}" {% if activeGroup and activeGroup.key == group.key %}aria-current="{{ activeItem ? 'location' : 'page' }}"{% endif %}>
                 {{ ui.icon(group.icon) }} <span>{{ group.label }}</span>
                 {% set categories = group.key == 'players' ? 'reports feedbacks' : (group.key == 'ops' ? 'security' : '') %}

@@ -1,5 +1,8 @@
 <section class="panel admin-section" id="admin-players" aria-labelledby="admin-players-title" data-controller="admin-list">
-<h2 id="admin-players-title">Comptes joueurs</h2><p>Les changements de rôle et les suspensions sont consignés dans le journal. Le compte courant est protégé dans cette liste.</p>
+<header class="admin-design-panel-heading">
+    <h2 id="admin-players-title">Comptes joueurs</h2>
+    <p>Les changements de rôle et les suspensions sont consignés dans le journal. Le compte courant est protégé dans cette liste.</p>
+</header>
 <form method="get" class="admin-search" data-admin-list-target="form" data-action="input->admin-list#schedule change->admin-list#search submit->admin-list#search">
 <div><label for="player-search">Rechercher</label><input id="player-search" name="q" type="search" placeholder="Pseudo, courriel…" maxlength="150" value="{{ listFilters.q }}"></div>
 <div><label for="player-state-filter">État</label><select id="player-state-filter" name="status"><option value="">Tous</option>{% for value,label in {active:'Non suspendu',suspended:'Suspendu'} %}<option value="{{ value }}" {{ listFilters.status == value ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select></div>
