@@ -166,9 +166,29 @@ test('L7E A : tableaux complets, protection au clavier et colonnes des guildes s
                 await page.setViewportSize({ width, height: 1000 });
                 expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
                 const region = page.getByRole('region', { name: 'Classement des guildes défilant horizontalement' });
+                await region.scrollIntoViewIfNeeded();
                 await region.focus();
-                await region.evaluate(node => { node.scrollLeft = node.scrollWidth; });
-                await expect(page.locator('.ranking-table--guilds tbody tr').first().locator('td').last()).toBeInViewport();
+                await expect(region).toBeFocused();
+                await region.evaluate(node => { node.scrollTo({ left: 0, behavior: 'instant' }); });
+                const maxScroll = await region.evaluate(node => node.scrollWidth - node.clientWidth);
+                if (width <= 390) {
+                    expect(maxScroll).toBeGreaterThan(0);
+                    await page.keyboard.press('ArrowRight');
+                    await expect.poll(() => region.evaluate(node => node.scrollLeft)).toBeGreaterThan(0);
+                }
+                await region.evaluate(node => { node.scrollTo({ left: node.scrollWidth, behavior: 'instant' }); });
+                await expect.poll(() => region.evaluate(node => Math.abs(node.scrollWidth - node.clientWidth - node.scrollLeft))).toBeLessThanOrEqual(1);
+                const lastCell = region.locator('tbody tr').first().locator('td').last();
+                await expect(lastCell).toBeInViewport({ ratio: 0.99 });
+                if (width <= 390) {
+                    const guide = page.locator('.first-steps-popup-enhanced');
+                    await expect(guide).toHaveAttribute('open', '');
+                    await expect(guide.getByRole('button', { name: 'Voir l’étape illustrée' })).toBeEnabled();
+                    await expect.poll(async () => {
+                        const [help, cell] = await Promise.all([guide.boundingBox(), lastCell.boundingBox()]);
+                        return help.y + help.height - cell.y;
+                    }).toBeLessThanOrEqual(0);
+                }
                 if (width === 1440 || width === 390) {
                     expect((await new AxeBuilder({ page }).include('.social-workspace').analyze()).violations).toEqual([]);
                     await page.screenshot({ path: info.outputPath(`guildes-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });

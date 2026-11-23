@@ -163,6 +163,17 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
 }
 :is(.shell--galaxy-v2, .shell--messaging, .shell--advent) > .first-steps-popup-enhanced .first-steps-popup-panel { margin-top: 0; }
 
+/* Le tableau horizontal des guildes doit rester lisible sous l’aide ouverte sur téléphone. */
+@media (max-width: 740px) {
+    body[data-ui-page="classements"] .shell > .first-steps-popup-enhanced {
+        position: relative;
+        inset: auto;
+        margin: 0 0 8px auto;
+        max-width: 100%;
+    }
+    body[data-ui-page="classements"] .shell > .first-steps-popup-enhanced .first-steps-popup-panel { margin-top: 0; }
+}
+
 .first-steps .first-steps-next,
 .first-steps .first-steps-refunds {
     margin-block: 18px;
