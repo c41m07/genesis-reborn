@@ -78,6 +78,26 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
                     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
                     if (width === 390) await target.scrollIntoViewIfNeeded();
                     await page.screenshot({ path: testInfo.outputPath('S19-' + state + '-' + theme + '-' + width + '.png'), animations: 'disabled' });
+                    if (state === 'pret') {
+                        const label = page.locator('.guild-hall-confirm');
+                        const checkbox = label.getByRole('checkbox', { name: 'Je confirme l’emplacement de mon Hall.' });
+                        const caption = label.getByText('Je confirme l’emplacement de mon Hall.', { exact: true });
+                        const [hitArea, box, text] = await Promise.all([label.boundingBox(), checkbox.boundingBox(), caption.boundingBox()]);
+                        expect(hitArea.height).toBeGreaterThanOrEqual(44);
+                        expect(box.width).toBeGreaterThanOrEqual(16);
+                        expect(box.width).toBeLessThanOrEqual(24);
+                        expect(box.height).toBeLessThanOrEqual(24);
+                        expect(text.x - (box.x + box.width)).toBeGreaterThan(0);
+                        expect(text.x - (box.x + box.width)).toBeLessThanOrEqual(20);
+                        expect(Math.abs((box.y + box.height / 2) - (text.y + text.height / 2))).toBeLessThanOrEqual(2);
+                        await expect(checkbox).not.toBeChecked();
+                        await checkbox.press('Space');
+                        await expect(checkbox).toBeFocused();
+                        await expect(checkbox).toBeChecked();
+                        await expect(checkbox).toHaveCSS('outline-style', 'solid');
+                        await caption.click();
+                        await expect(checkbox).not.toBeChecked();
+                    }
                 }
             }
         }
