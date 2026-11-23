@@ -1598,7 +1598,7 @@ body.authenticated .social-board--messages .message-mobile-back {
     }
 }
 
-body.authenticated .social-board :is(.guild-hall-closed, .social-feedback-guidance) {
+body.authenticated .social-board :is(.guild-hall-closed, .guild-hall-funding-notice, .social-feedback-guidance) {
     margin-block: 18px 0;
     padding: 12px 16px;
     border: 1px solid var(--social-border);
@@ -1606,11 +1606,20 @@ body.authenticated .social-board :is(.guild-hall-closed, .social-feedback-guidan
     background: var(--social-panel);
 }
 
-body.authenticated .social-board :is(.guild-hall-closed, .social-feedback-guidance) :is(h2, h3) {
+body.authenticated .social-board :is(.guild-hall-closed, .guild-hall-funding-notice, .social-feedback-guidance) :is(h2, h3) {
     margin-block: 0 8px;
 }
 
 body.authenticated .social-board--messages .inbox-item--unavailable .inbox-guild-hint {
     margin: 3px 0 0;
     padding: 0;
+}
+
+
+body.authenticated .social-board--guild-hall .guild-hall-funding-notice {
+    border-inline-start: 3px solid var(--gold);
+}
+body.authenticated .social-board--guild-hall .guild-hall-funding-notice > p {
+    margin: .35rem 0 0;
+    color: var(--text);
 }

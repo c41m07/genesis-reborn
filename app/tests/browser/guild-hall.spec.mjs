@@ -18,7 +18,7 @@ async function register(page, key) {
     await expect(page).toHaveURL(/planetes\/\d+$/);
 }
 
-test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Galaxie', async ({ page, browser, baseURL }) => {
+test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Galaxie', async ({ page, browser, baseURL }, testInfo) => {
     test.skip(process.env.GUILD_HALL_BROWSER_FIXTURE !== '1', 'Seuil positif réservé au pilote isolé.');
     const key = crypto.randomUUID().slice(0, 8);
     await page.addInitScript(() => {
@@ -60,6 +60,10 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
         const quorum = screen.getByRole('progressbar', { name: 'Donateurs qualifiés' });
         await expect(progress).toHaveAttribute('value', '0');
         await expect(quorum).toHaveAttribute('value', '0');
+        const fundingNotice = screen.locator('.guild-hall-funding-notice');
+        await expect(fundingNotice).toContainText('Le placement n’est pas encore disponible');
+        await expect(fundingNotice).toContainText('Le nombre minimal de donateurs qualifiés n’est pas encore atteint.');
+        await expect(screen.locator('[aria-labelledby="hall-donation-title"]')).toContainText('Les dons sont prélevés sur la colonie choisie.');
         await expect(screen.getByRole('link', { name: 'Hall de guilde' })).toHaveAttribute('aria-current', 'page');
         const hydrogen = screen.getByLabel('Hydrogène', { exact: true });
         await expect(hydrogen).toHaveAttribute('max', '16');
@@ -67,6 +71,25 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
         await screen.getByRole('button', { name: 'Donner ces ressources' }).click();
         await expect(progress).toHaveAttribute('value', '16');
         await expect(quorum).toHaveAttribute('value', '1');
+        await expect(fundingNotice).toContainText('16 unités de force à financer');
+        const proofUrl = screen.url();
+        for (const theme of ['dark','light']) {
+            runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(IF(JSON_TYPE(preferences)='OBJECT',preferences,JSON_OBJECT()),'$.theme','" + theme + "','$.firstStepsGuide',false) WHERE email='fixture-hall-" + key + "@example.test'");
+            for (const [width,height] of [[1920,1080],[390,844]]) {
+                await page.setViewportSize({ width, height });
+                await page.goto(proofUrl);
+                await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+                await expect(page.locator('.guild-hall-funding-notice')).toBeVisible();
+                const panels = page.locator('.guild-project-detail > section');
+                const main = await panels.first().boundingBox();
+                const donation = await panels.last().boundingBox();
+                if (width === 1920) expect(donation.x).toBeGreaterThanOrEqual(main.x + main.width);
+                else expect(donation.y).toBeGreaterThanOrEqual(main.y + main.height);
+                await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+                if (width === 390) await page.locator('.guild-hall-funding-notice').scrollIntoViewIfNeeded();
+                await page.screenshot({ path: testInfo.outputPath('S11-' + theme + '-' + width + '.png'), animations: 'disabled' });
+            }
+        }
         await expect(screen.getByText('Votre minimum personnel est atteint.', { exact: false })).toBeVisible();
         await expect(screen.getByRole('button', { name: 'Installer le Hall' })).toHaveCount(0);
 
@@ -92,10 +115,13 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
         await screen.reload();
         await expect(progress).toHaveAttribute('value', '32');
         await expect(quorum).toHaveAttribute('value', '3');
+        await expect(fundingNotice).toHaveCount(0);
+        await expect(screen.getByRole('button', { name: 'Donner ces ressources' })).toHaveCount(0);
         await screen.getByLabel('Système à revendiquer').selectOption(String(system));
         await screen.getByLabel('Je confirme l’emplacement de mon Hall.').check();
         await screen.getByRole('button', { name: 'Installer le Hall' }).click();
         await expect(screen.getByText(/Installé à la position 0/)).toBeVisible();
+        await expect(screen.getByRole('button', { name: 'Installer le Hall' })).toHaveCount(0);
         await screen.goto('/carte?galaxy=' + galaxy + '&system=' + system);
         await expect(screen.locator('[data-system-guild-hall]')).toContainText('Position 0 · Hall de guilde · [HAL]');
     } finally {
