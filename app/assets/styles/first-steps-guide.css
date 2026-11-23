@@ -311,3 +311,39 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
 }
 .first-steps-board-rail .first-steps-refund-destination { display:grid; gap:.5rem; margin-block:.7rem; }
 .first-steps-refund-destination :is(select,button) { min-height:44px; }
+
+
+/* P21-B : les données du rapport et son action de rejeu restent dans la même carte. */
+.first-steps-exercise-report-heading > p { margin:0 0 .75rem; }
+.first-steps-exercise-metrics > .first-steps-exercise-metric { display:block; }
+.first-steps-exercise-metric > dt { font-weight:750; }
+.first-steps-exercise-metrics .first-steps-exercise-metric--pirates > dd { color:#e9bc73; }
+body[data-theme=light] .first-steps-exercise-metrics .first-steps-exercise-metric--escort > dd { color:#12536b; }
+body[data-theme=light] .first-steps-exercise-metrics .first-steps-exercise-metric--pirates > dd { color:#784a00; }
+.first-steps-exercise-board .first-steps-exercise-metric > dd.first-steps-exercise-metric-caption {
+    color:color-mix(in srgb,var(--text) 75%,var(--muted));
+    font-size:.76rem;
+    font-weight:400;
+}
+.first-steps-exercise-layout.has-report .first-steps-exercise-summary :is(th,td) {
+    border-bottom:1px solid var(--line);
+    padding-inline:clamp(.35rem,1vw,.85rem);
+}
+.first-steps-exercise-notice {
+    margin-block:1rem;
+    padding:.85rem 1rem;
+    border:1px solid color-mix(in srgb,#3f9271 65%,var(--line));
+    border-radius:6px;
+    background:color-mix(in srgb,#3f9271 14%,var(--panel));
+}
+.first-steps-exercise-notice h3 { margin:0 0 .35rem; }
+.first-steps-exercise-notice p { margin:0; color:var(--text); }
+.first-steps-exercise-notice + form { margin-block:1rem; }
+
+/* Ne pas superposer les actions pédagogiques et le guide non modal une fois le résultat affiché. */
+.app-frame:has(> .shell .first-steps-exercise-layout.has-report) > .first-steps-popup-enhanced[open] {
+    position:relative;
+    inset:auto;
+    margin:0 0 8px auto;
+    max-width:100%;
+}

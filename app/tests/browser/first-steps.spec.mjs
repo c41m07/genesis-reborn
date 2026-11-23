@@ -263,7 +263,7 @@ test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', a
         await expect(report).toContainText('Le jalon d’apprentissage est validé quel que soit le résultat');
         const summary = report.getByRole('table', { name: 'Survivants et pertes par camp' });
         await expect(summary.getByRole('columnheader', { name: 'Survivants' })).toBeVisible();
-        await expect(summary.getByRole('columnheader', { name: 'Pertes' })).toBeVisible();
+        await expect(summary.getByRole('columnheader', { name: 'Pertes simulées' })).toBeVisible();
         for (const side of ['Escorte', 'Pirates']) {
             const row = summary.getByRole('row').filter({ has: view.getByRole('rowheader', { name: side, exact: true }) });
             await expect(row).toHaveCount(1);
@@ -273,12 +273,27 @@ test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', a
             expect(values[1]).toMatch(/^[0-2]$/);
             expect(Number(values[0][0]) + Number(values[1])).toBe(2);
         }
-        for (const viewport of [{ width: 390, height: 844 }, { width: 1920, height: 1080 }]) {
-            await view.setViewportSize(viewport);
-            await view.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-            await view.screenshot({ path: info.outputPath('P21-B-resultat-' + viewport.width + '.png'), animations: 'disabled', scale: 'css' });
-        }
-        await view.setViewportSize({ width: 390, height: 844 });
+        const captureReport = async (tab, theme) => {
+            await expect(tab.locator('body')).toHaveAttribute('data-theme', theme);
+            const resultCard = tab.getByRole('region', { name: 'Rapport d’exercice', exact: true });
+            await expect(resultCard.getByRole('heading', { name: 'Simulation pédagogique', exact: true })).toBeVisible();
+            await expect(tab.getByRole('button', { name: 'Rejouer la simulation', exact: true })).toHaveCount(1);
+            await expect(resultCard.getByRole('button', { name: 'Rejouer la simulation', exact: true })).toHaveAttribute('aria-describedby', 'training-rules');
+            await expect(resultCard.locator('.first-steps-exercise-metric > dd').filter({ hasText: /^[0-2] \/ 2$/ })).toHaveCount(2);
+            for (const viewport of [{ width: 390, height: 844 }, { width: 1920, height: 1080 }]) {
+                await tab.setViewportSize(viewport);
+                await expect.poll(() => tab.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+                await tab.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+                await tab.screenshot({ path: info.outputPath('P21-B-resultat-' + theme + '-' + viewport.width + '.png'), animations: 'disabled', scale: 'css' });
+                if (viewport.width === 390) {
+                    await resultCard.getByRole('button', { name: 'Rejouer la simulation', exact: true }).scrollIntoViewIfNeeded();
+                    await tab.screenshot({ path: info.outputPath('P21-B-actions-' + theme + '-390.png'), animations: 'disabled', scale: 'css' });
+                    expect((await new AxeBuilder({ page: tab }).include('.first-steps-exercise-notice').include('.first-steps-exercise-metrics').analyze()).violations).toEqual([]);
+                }
+            }
+            await tab.setViewportSize({ width: 390, height: 844 });
+        };
+        await captureReport(view, 'dark');
         await report.getByText('Comprendre les tirs manche par manche', { exact: true }).click();
         await expect(report.getByText(/Manche 1 :/)).toBeVisible();
         await expect.poll(() => view.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
@@ -287,6 +302,36 @@ test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', a
         expect(first).toMatch(/^\d{4}-\d{2}-\d{2} /);
         await view.getByRole('button', { name: 'Rejouer la simulation', exact: true }).click();
         await expect(report).toBeVisible();
+        expect(completed()).toBe(first);
+        expect(assets()).toBe(before);
+        await view.goto('/profil/preferences');
+        await view.getByLabel('Thème de l’interface').selectOption('light');
+        await view.getByRole('button', { name: 'Enregistrer les paramètres' }).click();
+        await expect(view.locator('body')).toHaveAttribute('data-theme', 'light');
+        await view.goto(route);
+        await view.getByRole('button', { name: 'Lancer la simulation', exact: true }).press('Enter');
+        await captureReport(view, 'light');
+
+        // Avec Stimulus actif le guide s’ouvre, mais le rejeu reste cliquable dans les deux tailles.
+        await page.goto(route);
+        await page.getByRole('button', { name: 'Lancer la simulation', exact: true }).click();
+        const guide = page.locator('.first-steps-popup-enhanced');
+        const toggle = guide.locator(':scope > summary');
+        await expect(toggle).toBeVisible();
+        if (await guide.getAttribute('open') === null) await toggle.press('Enter');
+        await expect(guide).toHaveAttribute('open', '');
+        const replay = page.getByRole('button', { name: 'Rejouer la simulation', exact: true });
+        for (const viewport of [{ width: 390, height: 844 }, { width: 1920, height: 1080 }]) {
+            await page.setViewportSize(viewport);
+            await replay.evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
+            await expect.poll(() => replay.evaluate(element => {
+                const button = element.getBoundingClientRect();
+                const hit = document.elementFromPoint(button.x + button.width / 2, button.y + button.height / 2);
+                const shell = document.querySelector('.first-steps-exercise-layout.has-report').getBoundingClientRect();
+                const guide = document.querySelector('.first-steps-popup-enhanced .first-steps-popup-mount').getBoundingClientRect();
+                return (element === hit || element.contains(hit)) && guide.top >= shell.bottom;
+            })).toBe(true);
+        }
         expect(completed()).toBe(first);
         expect(assets()).toBe(before);
         await view.getByRole('link', { name: 'Retour aux Premiers pas', exact: true }).click();

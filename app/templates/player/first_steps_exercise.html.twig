@@ -1,7 +1,24 @@
 {% extends 'base.html.twig' %}
 {% block title %}Exercice pirate · Genesis Reborn{% endblock %}
 
+{% macro rules(asNotice) %}
+    {% if asNotice %}
+        <div class="first-steps-exercise-notice">
+            <h3>Simulation pédagogique</h3>
+    {% endif %}
+    <p id="training-rules"><strong>Simulation sans perte réelle, sans carburant et sans butin.</strong> Aucun de vos vaisseaux n’est mobilisé. L’exercice reste privé et ne déclenche ni mission ni campagne. Vous pouvez le refaire ou l’ignorer.</p>
+    {% if asNotice %}</div>{% endif %}
+{% endmacro %}
+
+{% macro form(tokenId, label) %}
+    <form method="post" action="{{ path('app_first_steps_exercise') }}" data-turbo="false">
+        <input type="hidden" name="_token" value="{{ csrf_token(tokenId) }}">
+        <button type="submit" class="primary" aria-describedby="training-rules">{{ label }}</button>
+    </form>
+{% endmacro %}
+
 {% block body %}
+{% import _self as exercise %}
 <div class="first-steps-exercise-board">
 <div class="page-heading">
     <div>
@@ -14,7 +31,10 @@
 <div class="first-steps-exercise-layout{{ report ? ' has-report' : '' }}">
 {% if report is not null %}
     <section class="panel account-panel" aria-labelledby="training-report-title">
-        <h2 id="training-report-title">Rapport d’exercice</h2>
+        <header class="first-steps-exercise-report-heading">
+            <h2 id="training-report-title">Rapport d’exercice</h2>
+            <p>Exercice pirate · survivants et pertes par camp.</p>
+        </header>
         {% if report.outcome == 'defender_wins' %}
             <p><strong>L’escorte a tenu.</strong> Le convoi civil passe dans ce scénario.</p>
         {% elseif report.outcome == 'attacker_wins' %}
@@ -25,19 +45,27 @@
         <p>Le jalon d’apprentissage est validé quel que soit le résultat : l’objectif est de savoir lire le rapport.</p>
         <h3>Comparer les survivants et les pertes</h3>
         <dl class="first-steps-exercise-metrics">
-            <div><dt>Escorte · survivants</dt><dd>{{ report.escortSurvivors }} / 2</dd></div>
-            <div><dt>Pirates · survivants</dt><dd>{{ report.pirateSurvivors }} / 2</dd></div>
+            <div class="first-steps-exercise-metric first-steps-exercise-metric--escort">
+                <dt>Escorte</dt><dd>{{ report.escortSurvivors }} / 2</dd>
+                <dd class="first-steps-exercise-metric-caption">Survivants / engagés</dd>
+            </div>
+            <div class="first-steps-exercise-metric first-steps-exercise-metric--pirates">
+                <dt>Pirates</dt><dd>{{ report.pirateSurvivors }} / 2</dd>
+                <dd class="first-steps-exercise-metric-caption">Survivants / engagés</dd>
+            </div>
         </dl>
         <p>Le résultat résume le sort du convoi. Les pertes indiquent combien d’unités n’ont pas survécu, même dans le camp vainqueur.</p>
         <table class="data-table first-steps-exercise-summary" aria-label="Survivants et pertes par camp">
             <thead>
-                <tr><th scope="col">Camp</th><th scope="col">Survivants</th><th scope="col">Pertes</th></tr>
+                <tr><th scope="col">Camp</th><th scope="col">Survivants</th><th scope="col">Pertes simulées</th></tr>
             </thead>
             <tbody>
                 <tr><th scope="row">Escorte</th><td>{{ report.escortSurvivors }} sur 2</td><td>{{ report.escortLosses }}</td></tr>
                 <tr><th scope="row">Pirates</th><td>{{ report.pirateSurvivors }} sur 2</td><td>{{ report.pirateLosses }}</td></tr>
             </tbody>
         </table>
+        {{ exercise.rules(true) }}
+        {{ exercise.form(exerciseTokenId, 'Rejouer la simulation') }}
         <details>
             <summary>Comprendre les tirs manche par manche</summary>
             <p>Les tirs qui touchent entament d’abord le bouclier. Les dégâts qui passent atteignent la structure : c’est ce qui peut faire perdre une unité.</p>
@@ -54,11 +82,10 @@
 <section class="panel account-panel" aria-labelledby="training-brief-title">
     <h2 id="training-brief-title">Briefing : alerte civile</h2>
     <p>Dans ce scénario, un convoi civil signale une présence pirate. Deux appareils d’exercice l’escortent face à deux raiders fictifs. Observez les effets des tirs avant de commander une flotte réelle.</p>
-    <p id="training-rules"><strong>Simulation sans perte réelle, sans carburant et sans butin.</strong> Aucun de vos vaisseaux n’est mobilisé. L’exercice reste privé et ne déclenche ni mission ni campagne. Vous pouvez le refaire ou l’ignorer.</p>
-    <form method="post" action="{{ path('app_first_steps_exercise') }}" data-turbo="false">
-        <input type="hidden" name="_token" value="{{ csrf_token(exerciseTokenId) }}">
-        <button type="submit" class="primary" aria-describedby="training-rules">{{ report is null ? 'Lancer la simulation' : 'Rejouer la simulation' }}</button>
-    </form>
+    {% if report is null %}
+        {{ exercise.rules(false) }}
+        {{ exercise.form(exerciseTokenId, 'Lancer la simulation') }}
+    {% endif %}
 </section>
 </div>
 </div>
