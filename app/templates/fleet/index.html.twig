@@ -10,7 +10,15 @@
 {% if fuel_pending %}<p class="flash" role="status">Les départs attendent la validation de la règle de consommation de carburant.</p>{% endif %}
 <div class="fleet-workspace core-fleet-workspace" id="prepare-mission"><div class="fleet-composer">{% include 'fleet/_available.html.twig' %}</div><aside class="fleet-operations-rail">{% if idle is empty %}{% include 'fleet/_mission_summary.html.twig' %}{% endif %}{% include 'ui/incoming_attacks.html.twig' %}</aside></div>
 {% elseif fleet_page=='missions' %}
-<div id="active-missions">{% include 'fleet/_pagination.html.twig' %}{% include 'ui/flights.html.twig' %}{% include 'ui/incoming_attacks.html.twig' %}</div>
+<div id="active-missions" class="core-fleet-tracking">
+    <div class="core-fleet-tracking-list">
+        {% include 'fleet/_pagination.html.twig' %}
+        {% include 'ui/flights.html.twig' %}
+    </div>
+    <aside class="core-fleet-incoming" aria-label="Arrivées et informations de composition autorisées">
+        {% include 'ui/incoming_attacks.html.twig' %}
+    </aside>
+</div>
 {% elseif fleet_page=='orbits' %}
 {% include 'ui/orbit_requests.html.twig' %}{% include 'ui/incoming_attacks.html.twig' with {incoming_panel:false} %}
 {% elseif fleet_page=='holds' %}

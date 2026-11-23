@@ -525,3 +525,10 @@ body.authenticated .fleet-redesign .fleet-composition-control > .fleet-compositi
 body.authenticated .fleet-redesign .core-fleet-recap p.core-fleet-recap-total { color:var(--text); }
 body.authenticated .fleet-redesign .core-fleet-recap-ships > li,
 body.authenticated .fleet-redesign .core-fleet-recap-ships > li > strong { color:var(--text); }
+
+.core-fleet-tracking { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; }
+.core-fleet-tracking > * { min-width:0; }
+.core-fleet-tracking > .core-fleet-incoming .incoming-attacks { margin-block-start:0; }
+@media(min-width:1200px) {
+    .core-fleet-tracking { grid-template-columns:minmax(0,2fr) minmax(280px,1fr); align-items:start; }
+}
