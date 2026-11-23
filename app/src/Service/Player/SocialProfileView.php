@@ -13,6 +13,7 @@ final class SocialProfileView
         private DailyLeaderboard $leaderboard,
         private RelationResolver $relations,
         private GameCatalog $catalog,
+        private ProfileCosmetics $cosmetics,
     )
     {
     }
@@ -49,6 +50,7 @@ final class SocialProfileView
         return [
             'id' => $target->id,
             'username' => $target->player->username,
+            'cosmetics' => $this->cosmetics->display($target->player),
             'scores' => $scores,
             'updated_at' => $daily['updated_at'],
             'guild' => $guild ? [

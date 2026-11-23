@@ -47,6 +47,19 @@ final readonly class ProfileCosmetics
         return $cosmetics;
     }
 
+    /** @return array<string,string> Uniquement ce que le commandant a choisi d’équiper. */
+    public function display(Player $player): array
+    {
+        $result = [];
+        foreach ($this->owned($player) as $cosmetic) {
+            if ($cosmetic['equipped']) {
+                $result[$cosmetic['slot']] = $cosmetic['label'];
+            }
+        }
+
+        return $result;
+    }
+
     /** @param list<string> $codes */
     public function equip(Player $player, array $codes): void
     {
