@@ -546,7 +546,18 @@ body.authenticated .advent-board :is(.advent-day-tile, .advent-state)[data-state
     }
     body.authenticated .advent-board:is(:has(#advent-door-6:target .advent-choice), :not(:has(.advent-door:target)):has(#advent-door-6[data-default] .advent-choice))
         .advent-universe {
+        display: grid;
+        grid-template-columns: minmax(13rem, .65fr) minmax(0, 1.35fr);
+        align-items: baseline;
+        column-gap: 1rem;
         padding: .55rem .85rem;
+    }
+    /* Le mode J6 sélectionnable est déjà lié : identité à gauche,
+       plafond et origine du relevé à droite sans cacher de texte. */
+    body.authenticated .advent-board:has(#advent-door-6 .advent-choice):is(:has(#advent-door-6:target), :not(:has(.advent-door:target)):has(#advent-door-6[data-default]))
+        .advent-universe > p:nth-of-type(2) {
+        grid-column: 2;
+        grid-row: 1;
     }
     body.authenticated .advent-board:is(:has(#advent-door-6:target .advent-choice), :not(:has(.advent-door:target)):has(#advent-door-6[data-default] .advent-choice))
         .advent-universe :is(p, h2) {
@@ -556,8 +567,15 @@ body.authenticated .advent-board :is(.advent-day-tile, .advent-state)[data-state
     body.authenticated .advent-board #advent-door-6:has(.advent-choice) :is(h2, p, summary) {
         margin-block: .2rem;
     }
+    body.authenticated .advent-board #advent-door-6:has(.advent-choice) > :is(h2, p) {
+        display: inline-block;
+        margin-inline-end: .45rem;
+    }
     body.authenticated .advent-board #advent-door-6:has(.advent-choice) .advent-door-form {
         gap: .45rem;
+    }
+    body.authenticated .advent-board #advent-door-6:has(.advent-choice) .advent-notice {
+        padding: .4rem .65rem;
     }
 }
 
@@ -642,10 +660,10 @@ body.authenticated .advent-board :is(.advent-moment, .advent-finale) p { margin:
 body.authenticated .advent-board .advent-finale-preview--banner:has(.advent-banner-name):has(.advent-title-name) p {
     color: #c3d7eb;
 }
-body.authenticated .advent-board .advent-finale-preview--banner:has(.advent-title-name) .advent-banner-name {
+body.authenticated .advent-board .advent-finale-preview--banner:has(.advent-banner-name):has(.advent-title-name) .advent-banner-name {
     color: #a7e8f5;
 }
-body.authenticated .advent-board .advent-finale-preview--banner:has(.advent-banner-name) .advent-title-name {
+body.authenticated .advent-board .advent-finale-preview--banner:has(.advent-banner-name):has(.advent-title-name) .advent-title-name {
     color: #f5f8ff;
 }
 

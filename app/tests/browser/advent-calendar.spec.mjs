@@ -248,7 +248,7 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
     for (const theme of ['dark', 'light']) {
         runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(IF(JSON_TYPE(preferences)='OBJECT', preferences, JSON_OBJECT()), '$.theme', '" + theme + "') WHERE email='" + email + "'");
         for (const width of [360, 390, 768, 1440, 1920]) {
-            await page.setViewportSize({ width, height: 1080 });
+            await page.setViewportSize({ width, height: width <= 390 ? 844 : 1080 });
             await openAdventDocument(page, '/evenements/avent/' + edition);
             await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
             await expect(page.getByRole('heading', { name: 'Avent des étoiles' })).toBeVisible();
