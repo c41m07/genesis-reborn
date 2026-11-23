@@ -237,3 +237,13 @@ body[data-theme=light] .core-report-state.is-risk { color:#92283a; }
     .player-report-detail :is(.player-combat-core,.player-transport-core,.player-intel-core,.player-intel-aside,#combat-rounds) { padding:.85rem; }
     .player-report-detail .report-totals > div { padding:.55rem; }
 }
+
+/* Le changement de thème sur la racine synchronise aussi les nouvelles surfaces sans classe .panel. */
+html[data-theme="light"] .player-report-detail {
+    --panel: #fff;
+    --line: #d3dce5;
+    --text: #253748;
+    --muted: #526170;
+    --accent: #24627a;
+    --gold: #805419;
+}
