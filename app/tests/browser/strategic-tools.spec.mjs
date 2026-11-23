@@ -32,6 +32,51 @@ test('Compositions : refus, manques, chargement explicite et absence d’envoi a
  for(const theme of ['dark','light']){await setTheme(page,theme);await page.goto('/flottes/compositions');await expect(page.locator('body')).toHaveAttribute('data-theme',theme);for(const width of [1440,390,320]){await page.setViewportSize({width,height:900});await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);}expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);await page.screenshot({path:testInfo.outputPath(`compositions-${theme}.png`),fullPage:true});}
 });
 
+test('P13 : scénario du simulateur avec deux camps et contrôles natifs', async ({page,browser,baseURL},testInfo)=>{
+ test.setTimeout(180000);
+ const owner=await register(page);
+ ships(owner);
+ for (const theme of ['dark','light']) {
+  await setTheme(page,theme);
+  for (const viewport of [{width:1920,height:1080},{width:390,height:844}]) {
+   await page.setViewportSize(viewport);
+   await page.goto('/simulateur');
+   await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
+   const guide=page.locator('[data-controller~="first-steps"]').getByRole('button',{name:/Réduire|Fermer/});
+   if (await guide.count() && await guide.first().isVisible()) await guide.first().click();
+   await expect(page.getByRole('heading',{name:'Simulateur de combat'})).toBeVisible();
+   const attacker=page.locator('#sim-attacker-ships-fighter-basic');
+   const defender=page.locator('#sim-defender-ships-fighter-basic');
+   await attacker.fill('24');
+   await defender.fill('18');
+   await page.getByLabel('Graine de départ reproductible').fill('713040');
+   await page.getByRole('checkbox',{name:/Je confirme les hypothèses/}).check();
+   await expect(page.getByRole('button',{name:'Simuler 10 combats'})).toBeEnabled();
+   await expect(page.locator('#simulation-result')).toHaveCount(0);
+   await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+   await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+   await page.screenshot({path:testInfo.outputPath('P13-scenario-'+theme+'-'+viewport.width+'.png'),scale:'css',animations:'disabled'});
+   if (viewport.width===390) {
+    await page.getByRole('button',{name:'Simuler 10 combats'}).scrollIntoViewIfNeeded();
+    await page.screenshot({path:testInfo.outputPath('P13-actions-'+theme+'-390.png'),scale:'css',animations:'disabled'});
+   }
+  }
+ }
+ const state=await page.context().storageState();
+ const context=await browser.newContext({baseURL,storageState:state,javaScriptEnabled:false});
+ try {
+  const tab=await context.newPage();
+  await tab.goto('/simulateur');
+  const options=tab.locator('#simulation-scenario details').filter({hasText:'Recherches'}).first();
+  const summary=options.locator('summary');
+  await summary.focus();
+  await tab.keyboard.press('Enter');
+  await expect(options).toHaveAttribute('open','');
+  await tab.getByRole('button',{name:'Charger mes forces'}).click();
+  await expect(tab.locator('#sim-attacker-ships-fighter-basic')).toHaveValue('2');
+ } finally { await context.close(); }
+});
+
 test('Simulateur : dix combats reproductibles, détails accessibles et aucune mutation',async({page,browser,baseURL},testInfo)=>{
  test.setTimeout(180000);
  const owner=await register(page),p=process.env.BROWSER_ROUTER,errors=[];
