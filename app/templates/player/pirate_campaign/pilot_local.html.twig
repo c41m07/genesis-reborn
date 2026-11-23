@@ -49,7 +49,7 @@
     </section>
 
     <div class="campaign-board-layout">
-    <section class="panel pirate-campaign-dossier{{ hasIntel ? ' pirate-campaign-dossier--has-intel' : '' }}" aria-labelledby="pirate-mission-title">
+    <section class="panel pirate-campaign-dossier" aria-labelledby="pirate-mission-title">
         <div class="pirate-campaign-briefing">
             <h2 id="pirate-dossier-title">Dossier actif</h2>
             <p>{{ narrative.message }}</p>
@@ -81,9 +81,6 @@
             <p class="pirate-campaign-refresh"><a class="inline-link" href="{{ path('app_pirate_campaign', {missionNumber: dossier.selected}) }}">Actualiser le dossier</a></p>
         </div>
 
-        {% if hasIntel %}
-            {% include 'player/pirate_campaign/_intelligence.html.twig' with {briefing: briefing, has_durable_reward: dossier.convoy.selected_reward is not null} only %}
-        {% endif %}
     </section>
 
     <section class="panel pirate-campaign-missions" aria-labelledby="pirate-missions-title">
@@ -120,6 +117,10 @@
         </nav>
     </section>
 
+    <div class="campaign-board-side">
+        {% if hasIntel %}
+            {% include 'player/pirate_campaign/_intelligence.html.twig' with {briefing: briefing, has_durable_reward: dossier.convoy.selected_reward is not null} only %}
+        {% endif %}
     <aside class="panel campaign-board-log" aria-labelledby="pirate-journal-title">
         <h2 id="pirate-journal-title">Journal du dossier</h2>
         {% if briefing %}
@@ -129,6 +130,7 @@
             <p>Aucune étape chronométrée à afficher pour ce dossier.</p>
         {% endif %}
     </aside>
+    </div>
     </div>
 </div>
 {% endblock %}

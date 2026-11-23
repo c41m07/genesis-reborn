@@ -283,7 +283,6 @@ body.authenticated .account-redesign .form-error p {
 .account-board-grid { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(16rem,1fr); gap:1.1rem; align-items:start; }
 .account-board-grid > *,
 .account-board-grid .account-board-rail > * { min-width:0; width:100%; max-width:none; margin:0; }
-.player-account-board .account-board-grid .account-workspace { display:block; }
 .player-account-board .account-board-grid .account-identifiers { width:100%; max-width:none; }
 .account-board-rail { display:grid; gap:1rem; }
 .account-board-card { padding:clamp(1rem,2vw,1.5rem); }

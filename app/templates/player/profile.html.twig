@@ -5,10 +5,9 @@
 <div class="page-heading"><div><p class="account-board-eyebrow">Compte · portée sur tous les univers</p><h1>Mes identifiants</h1><p>Les identifiants de votre compte sont communs à tous vos univers.</p></div></div>
 {% include 'ui/account_navigation.html.twig' %}
 <div class="account-board-grid">
-{# Les deux panneaux appartiennent au même formulaire : le mot de passe actuel confirme toutes les modifications. #}
+{# Les champs et leur confirmation appartiennent au même formulaire ; les actions sensibles restent distinctes. #}
 {{ form_start(form, {attr: {class: 'account-profile-form'}}) }}
     {% if form.vars.submitted and not form.vars.valid %}<div class="form-error" role="alert"><strong>Profil non enregistré.</strong><p>Vérifiez les champs signalés puis réessayez.</p>{{ form_errors(form) }}</div>{% endif %}
-    <div class="account-workspace">
         <section class="panel account-panel account-identifiers" aria-label="Modifier mon profil">
             <fieldset class="account-section"><legend>Identifiants</legend><div class="account-grid">{{ form_row(form.email) }}{{ form_row(form.username) }}</div></fieldset>
             <details class="profile-password" {% if form.vars.submitted and not form.vars.valid %}open{% endif %}>
@@ -19,7 +18,6 @@
             <button class="primary">Enregistrer mes identifiants</button>
             <p class="profile-notice">Toute modification enregistrée ferme cette session : reconnectez-vous ensuite avec vos identifiants.</p>
         </section>
-    </div>
 {{ form_end(form) }}
 <aside class="account-board-rail" aria-label="Portée et actions sensibles">
     <section class="panel account-board-card">

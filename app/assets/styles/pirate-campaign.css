@@ -274,8 +274,9 @@ a.pirate-campaign-mission-title {
 .campaign-board-layout { display:grid; grid-template-columns:minmax(13rem, .7fr) minmax(0,1.58fr) minmax(16rem,1fr); grid-template-areas:"missions dossier journal"; gap:1.1rem; align-items:start; min-width:0; }
 .campaign-board-layout .pirate-campaign-dossier { grid-area:dossier; display:block; }
 .campaign-board-layout .pirate-campaign-missions { grid-area:missions; }
-.campaign-board-layout .campaign-board-log { grid-area:journal; padding:1.3rem; min-width:0; }
-.campaign-board-layout .pirate-campaign-intel { padding:1rem 0 0; margin-top:1rem; border:0; border-top:1px solid var(--line); }
+.campaign-board-side { grid-area:journal; display:grid; gap:1rem; min-width:0; }
+.campaign-board-side :is(.campaign-board-log,.pirate-campaign-intel) { padding:1.3rem; min-width:0; }
+.campaign-board-side .pirate-campaign-intel { margin:0; overflow-wrap:anywhere; }
 .campaign-board-layout .pirate-campaign-dates { display:grid; }
 .campaign-board-layout .pirate-campaign-dates > div { padding:.75rem; border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 7%,var(--panel)); overflow-wrap:anywhere; }
 .campaign-board-layout .pirate-campaign-dates dt { color:var(--accent); font-weight:750; }

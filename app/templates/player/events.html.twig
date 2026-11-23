@@ -38,11 +38,11 @@
 {% else %}<p class="panel core-event-empty">{{ eventGroup=='current' ? 'Aucun événement en cours dans cet univers.' : 'Aucun événement à venir annoncé.' }}</p>
 {% endfor %}
 {% if eventGroup == 'current' and pirateCampaignAvailable|default(false) %}
-    <article class="panel player-event-pirate" aria-labelledby="event-pirate-title">
+    <section class="panel player-event-pirate" aria-labelledby="event-pirate-title">
         <h3 id="event-pirate-title">Campagne pirate</h3>
         <p>Progression individuelle · Retrouvez votre dossier depuis Flottes.</p>
         <a class="secondary" href="{{ path('app_pirate_campaign') }}">Ouvrir le dossier de campagne</a>
-    </article>
+    </section>
 {% endif %}
 {% if eventGroup == 'upcoming' %}
     <div class="player-event-more">
