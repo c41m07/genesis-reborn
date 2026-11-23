@@ -366,3 +366,22 @@ body.authenticated .event-redesign.player-event-board #advent-link-title { margi
 @media (max-width:560px) {
     body.authenticated .event-redesign.player-event-board .player-event-period { padding:.85rem; }
 }
+
+/* Pas de contribution inventée pour les annonces : seuls les vrais défis alimentent cet aperçu. */
+.player-event-board .event-board-challenges { margin-block:1rem; }
+body.authenticated .player-event-board .event-board-challenge {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(12rem,.6fr);
+    align-items:start;
+    gap:.7rem 1.2rem;
+    margin:.55rem 0;
+    background:color-mix(in srgb,var(--accent) 5%,var(--panel));
+}
+.player-event-board .event-board-challenge h4 { margin:0 0 .5rem; font-size:1.2rem; }
+.player-event-board .event-board-challenge p { margin:.35rem 0; }
+.player-event-board .event-board-participation { margin-block:1rem; padding:.85rem; border:1px solid var(--line); border-radius:6px; }
+.player-event-board .event-board-participation dl { margin:.35rem 0 0; }
+.player-event-board .event-board-participation dl > div { gap:.5rem; }
+@media(max-width:650px) {
+    body.authenticated .player-event-board .event-board-challenge { grid-template-columns:minmax(0,1fr); }
+}
