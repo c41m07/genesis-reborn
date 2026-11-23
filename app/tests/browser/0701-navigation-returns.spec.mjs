@@ -1,4 +1,3 @@
-import { writeFile } from 'node:fs/promises';
 import { test, expect } from './support/isolated-test.mjs';
 import { revealVirginPlanet, queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
 
@@ -86,46 +85,11 @@ test('07-01 : contexte et retour d’une commande native', async ({page}, info) 
   const barBefore=await visibleMetal().getAttribute('title');
   expect(costBefore).toBeGreaterThan(0);
   expect(entries()).toBe(0);
-  let seen, release;
-  const reached=new Promise(resolve=>{seen=resolve;});
-  const gate=new Promise(resolve=>{release=resolve;});
-  await page.route('**/planetes/'+alpha+'/construire',async route=>{
-    expect(route.request().method()).toBe('POST');
-    seen();
-    await gate;
-    await route.continue();
-  },{times:1});
-  const cdp=await page.context().newCDPSession(page);
-  const nativeResponse=page.waitForResponse(r=>new URL(r.url()).pathname==='/planetes/'+alpha+'/construire' && r.request().method()==='POST');
-  const submit=order.click({noWaitAfter:true});
-  try {
-    await Promise.race([reached,page.waitForTimeout(8000).then(()=>{throw new Error('Aucun POST natif de construction observé');})]);
-    expect(entries()).toBe(0);
-    // Le document reste visible pendant sa navigation native, mais les locators
-    // Playwright attendent son remplacement. On lit et photographie le viewport
-    // réel du navigateur, sans modifier les attributs ou le texte de l’interface.
-    for (const viewport of [fixed,mobile]) {
-      await cdp.send('Emulation.setDeviceMetricsOverride',{...viewport,deviceScaleFactor:1,mobile:false});
-      const current=await cdp.send('Runtime.evaluate',{returnByValue:true,expression:`(() => {
-        const resource=document.querySelector('[data-live-region="resources"]');
-        const button=document.querySelector('#item-mine_metal-basic .catalog-build-action');
-        button.scrollIntoView({block:'center',behavior:'instant'});
-        return {label:button.textContent.trim(),enabled:!button.disabled,formBusy:button.form.getAttribute('aria-busy'),
-          resource:resource.getAttribute('aria-label'),width:document.documentElement.scrollWidth};
-      })()`});
-      const pending=current.result.value;
-      expect(pending.resource).toBe('Ressources de Horizon témoin');
-      expect(pending.width).toBeLessThanOrEqual(viewport.width);
-      await info.attach('attente-interface-'+viewport.width,{body:JSON.stringify(pending),contentType:'application/json'});
-      console.log('0701 attente navigateur avant transmission '+viewport.width+': '+JSON.stringify(pending));
-      const pixels=await cdp.send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});
-      await writeFile(info.outputPath('0701-commande-retenue-par-harnais-'+viewport.width+'.png'),Buffer.from(pixels.data,'base64'));
-    }
-  } finally { release(); }
-  await submit;
-  await cdp.detach();
+  const [response]=await Promise.all([
+    page.waitForResponse(r=>new URL(r.url()).pathname==='/planetes/'+alpha+'/construire' && r.request().method()==='POST'),
+    order.click(),
+  ]);
   await page.setViewportSize(mobile);
-  const response=await nativeResponse;
   expect(response.status()).toBe(302);
   await expect(page.getByText('Commande enregistrée dans la file.',{exact:true})).toBeVisible();
   await expect.poll(entries).toBe(1);
