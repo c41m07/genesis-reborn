@@ -344,3 +344,25 @@ body.authenticated .event-redesign > .inline-link {
 .advent-admin-brackets li + li {
     margin-block-start: .65rem;
 }
+
+/* P04/P18 : une programmation et des dates à venir distinctes, les défis gardant leurs données propres. */
+body.authenticated .event-redesign.player-event-board .event-board-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+body.authenticated .event-redesign.player-event-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+body.authenticated .event-redesign.player-event-board .event-board-periods { display:flex; flex-wrap:wrap; gap:.55rem; margin-block:.75rem 1rem; }
+body.authenticated .event-redesign.player-event-board .event-board-periods a { display:inline-flex; align-items:center; min-height:44px; padding:.4rem .95rem; border:1px solid var(--line); border-radius:5px; background:var(--panel); color:var(--text); text-decoration:none; }
+body.authenticated .event-redesign.player-event-board .event-board-periods a:first-child { border-color:var(--accent); box-shadow:inset 0 -2px var(--accent); }
+body.authenticated .event-redesign.player-event-board .player-event-columns { display:grid; grid-template-columns:minmax(0,2.53fr) minmax(17rem,1fr); gap:1.1rem; align-items:start; }
+body.authenticated .event-redesign.player-event-board .player-event-period { min-width:0; padding:1.3rem; }
+body.authenticated .event-redesign.player-event-board .player-event-period--upcoming .event-card { display:block; padding:1rem 0; border:0; border-radius:0; border-bottom:1px solid var(--line); box-shadow:none; }
+body.authenticated .event-redesign.player-event-board .player-event-period--upcoming .event-period { grid-template-columns:minmax(0,1fr); gap:.4rem; margin-top:.6rem; }
+body.authenticated .event-redesign.player-event-board .player-event-period--current .event-card { margin:.8rem 0; background:color-mix(in srgb,var(--accent) 5%,var(--panel)); }
+body.authenticated .event-redesign.player-event-board .player-event-pirate { padding:1.2rem; margin-top:.9rem; border-color:color-mix(in srgb,var(--accent) 28%,var(--line)); }
+body.authenticated .event-redesign.player-event-board .player-event-more { margin-top:1.3rem; padding-top:1rem; border-top:1px solid var(--line); }
+body.authenticated .event-redesign.player-event-board :is(#events-current,#events-upcoming) { scroll-margin-top:180px; }
+body.authenticated .event-redesign.player-event-board #advent-link-title { margin:0; }
+@media (max-width:960px) {
+    body.authenticated .event-redesign.player-event-board .player-event-columns { grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:560px) {
+    body.authenticated .event-redesign.player-event-board .player-event-period { padding:.85rem; }
+}

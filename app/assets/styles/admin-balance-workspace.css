@@ -3,7 +3,7 @@ body.admin-console.admin-balance-workspace .admin-content {
     overflow-wrap: anywhere;
 }
 
-body.admin-console.admin-balance-workspace :is(.admin-observation-comparison, .admin-observation-resources, .admin-catalogue-grid, .catalog-balance-grid) {
+body.admin-console.admin-balance-workspace :is(.admin-observation-comparison, .admin-observation-resources, .catalog-balance-grid) {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
@@ -20,8 +20,7 @@ body.admin-console.admin-balance-workspace :is(.panel, .admin-resource-observati
     border-radius: 6px;
 }
 
-body.admin-console.admin-balance-workspace .admin-observation-comparison > .panel,
-body.admin-console.admin-balance-workspace .admin-catalogue-grid > .panel {
+body.admin-console.admin-balance-workspace .admin-observation-comparison > .panel {
     margin: 0;
 }
 
@@ -71,7 +70,7 @@ body.admin-console.admin-balance-workspace :is(.admin-page-navigation, .admin-ba
     margin: 24px 0;
 }
 
-body.admin-console.admin-balance-workspace :is(.admin-page-navigation a, .admin-balance-actions a, .admin-catalogue-grid .secondary) {
+body.admin-console.admin-balance-workspace :is(.admin-page-navigation a, .admin-balance-actions a) {
     display: flex;
     align-items: center;
     min-height: 46px;
@@ -160,7 +159,7 @@ body.admin-console.admin-balance-workspace .admin-catalogue-reset {
 }
 
 @media (max-width: 1200px) {
-    body.admin-console.admin-balance-workspace :is(.admin-observation-comparison, .admin-observation-resources, .admin-catalogue-grid, .catalog-balance-grid, .admin-catalogue-costs) {
+    body.admin-console.admin-balance-workspace :is(.admin-observation-comparison, .admin-observation-resources, .catalog-balance-grid, .admin-catalogue-costs) {
         grid-template-columns: minmax(0, 1fr);
     }
 }
@@ -193,3 +192,162 @@ body.admin-console.admin-balance-workspace .admin-catalogue-reset {
 
 .admin-balance-workspace .admin-history-table { font-variant-numeric: tabular-nums; }
 .admin-balance-workspace .admin-history-revision { display: block; margin-top: 4px; color: var(--text); line-height: 1.35; }
+
+/* A : table de consultation native. En étroit les mêmes lignes se lisent
+   verticalement, sans dupliquer les liens ni les données. */
+.admin-balance-workspace .admin-design-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+    table-layout: fixed;
+}
+
+.admin-balance-workspace .admin-design-table :is(th,td) {
+    padding: 10px 14px;
+    text-align: start;
+    border-bottom: 1px solid var(--line);
+    overflow-wrap: anywhere;
+}
+
+.admin-balance-workspace .admin-design-table thead th { color: var(--muted); background: var(--admin-raised); }
+.admin-balance-workspace .admin-design-table thead th:nth-child(1) { width: 30%; }
+.admin-balance-workspace .admin-design-table thead th:nth-child(2) { width: 15%; }
+.admin-balance-workspace .admin-design-table thead th:nth-child(3) { width: 30%; }
+.admin-balance-workspace .admin-design-table tbody tr:nth-child(even) { background: color-mix(in srgb,var(--bg) 30%,var(--panel)); }
+.admin-balance-workspace .admin-design-table tbody th small { display: block; margin-top: 4px; font-weight: 400; }
+body.admin-console.admin-balance-workspace .admin-design-table tbody th code { color: var(--muted); }
+.admin-balance-workspace .admin-design-row-link { display: inline-flex; min-height: 44px; align-items: center; font-weight: 700; }
+.admin-balance-workspace .admin-catalogue-history-link { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.admin-balance-workspace .admin-catalogue-history-link .secondary { width: fit-content; min-height: 44px; }
+.admin-balance-workspace .admin-catalogue-list { margin-bottom: 12px; }
+
+body.admin-console.admin-balance-workspace .admin-page-search {
+    grid-template-columns: minmax(0, 40rem) max-content;
+    align-items: end;
+    justify-content: start;
+    margin: 16px 0 20px;
+}
+body.admin-console.admin-balance-workspace .admin-page-search label { grid-column: 1 / -1; }
+body.admin-console.admin-balance-workspace .admin-page-search button { min-height: 48px; }
+body.admin-console.admin-balance-workspace .admin-page-search > a { grid-column: 1 / -1; }
+
+/* B : la comparaison reste avant la décision dans le DOM et au clavier.
+   Sur tablette et mobile, le rail retourne dans le flux. */
+.admin-balance-workspace :is(.admin-restoration-layout,.admin-catalogue-decision-layout) {
+    display: grid;
+    grid-template-columns: minmax(0,2fr) minmax(19rem,1fr);
+    gap: 18px;
+    align-items: start;
+}
+.admin-balance-workspace .admin-restoration-layout > .panel { margin: 0; }
+.admin-balance-workspace .admin-design-restore-decision .secondary { min-height: 44px; margin-top: 12px; }
+.admin-balance-workspace .admin-design-restore-decision .primary { min-height: 46px; }
+.admin-balance-workspace .admin-catalogue-publication,
+body.admin-console.admin-balance-workspace .admin-catalogue-editor .admin-catalogue-preview-inputs,
+body.admin-console.admin-balance-workspace .admin-catalogue-costs fieldset {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--admin-raised);
+}
+/* Le texte de prudence reste lisible sur le panneau rehaussé, y compris en clair. */
+body.admin-console.admin-balance-workspace .admin-catalogue-preview-inputs > p { color: var(--muted); }
+body.admin-console.admin-balance-workspace .admin-catalogue-costs legend { padding: 0 7px; }
+body.admin-console.admin-balance-workspace .admin-catalogue-publication h3 { margin: 0; }
+.admin-balance-workspace .admin-design-comparison { width: 100%; table-layout: fixed; font-variant-numeric: tabular-nums; }
+.admin-balance-workspace .admin-design-comparison :is(th,td):nth-child(n+2) { text-align: end; width: 27%; }
+.admin-balance-workspace .admin-design-comparison :is(th,td) { overflow-wrap: anywhere; }
+
+@media (max-width: 1080px) {
+    .admin-balance-workspace :is(.admin-restoration-layout,.admin-catalogue-decision-layout) {
+        grid-template-columns: minmax(0,1fr);
+    }
+}
+
+@media (max-width: 760px) {
+    body.admin-console.admin-balance-workspace .admin-page-search { grid-template-columns: minmax(0,1fr); }
+    .admin-balance-workspace .admin-design-table :is(tbody, tr, th, td) { display: block; width: 100%; }
+    .admin-balance-workspace .admin-design-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+    .admin-balance-workspace .admin-design-table tbody tr { padding-block: 5px; border-bottom: 1px solid var(--line); }
+    .admin-balance-workspace .admin-design-table tbody :is(th,td) { border-bottom: 0; padding: 6px 10px; }
+    .admin-balance-workspace .admin-design-table td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        color: var(--muted);
+        font-size: .86em;
+    }
+}
+
+.admin-balance-workspace .admin-design-ranks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 12px;
+    color: var(--muted);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.admin-balance-workspace .admin-design-ranks strong { color: var(--text); }
+
+/* Le titre et les panneaux commencent sur la même verticale que le fil d’Ariane. */
+body.admin-console.admin-balance-workspace .admin-content > :is(.admin-task-heading,.admin-catalogue-list,.admin-catalogue-entry) {
+    max-width: none;
+    margin-inline: 0;
+}
+body.admin-console.admin-balance-workspace .admin-task-heading h1 { font-size: clamp(26px, 3vw, 42px); }
+.admin-balance-workspace .admin-restoration-layout .admin-ops-table :first-child:is(th,td) { text-align: start; }
+.admin-balance-workspace .admin-restoration-layout .admin-ops-table caption { text-align: start; padding-block: 6px; }
+
+.admin-balance-workspace .admin-design-restore-decision :is(form, .admin-design-restore-confirm) { display: grid; gap: 10px; }
+.admin-balance-workspace .admin-design-restore-decision textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 76px;
+    padding: 10px 12px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    resize: vertical;
+}
+.admin-balance-workspace .admin-design-restore-decision .admin-design-restore-confirm {
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: center;
+    min-height: 44px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--admin-raised);
+}
+.admin-balance-workspace .admin-design-restore-decision .admin-design-restore-confirm input {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    margin: 0;
+    accent-color: var(--accent);
+}
+.admin-balance-workspace .admin-design-restore-decision :is(button,a) { width: 100%; }
+
+/* Les accès existants restent tous visibles sans repousser inutilement les vraies données. */
+body.admin-console.admin-balance-workspace .core-admin-context .admin-page-navigation { margin: 0; }
+body.admin-console.admin-balance-workspace .admin-content > .admin-task-heading {
+    margin-block: 0 16px;
+    padding-block: clamp(12px, 1.2vw, 18px);
+}
+body.admin-console.admin-balance-workspace .admin-task-heading :is(h1,p:not(.eyebrow)) { margin-block: 4px 0; }
+body.admin-console.admin-balance-workspace .admin-content > .admin-task-heading + .admin-page-navigation { margin-block: 12px; }
+@media (min-width: 761px) {
+    body.admin-console.admin-balance-workspace .admin-task-heading + .admin-page-navigation {
+        grid-template-columns: repeat(4, minmax(0, max-content));
+    }
+}
+@media (max-width: 760px) {
+    .admin-balance-workspace .admin-catalogue-history-link { justify-content: flex-start; }
+}

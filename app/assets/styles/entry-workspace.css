@@ -629,3 +629,603 @@ body .entry-public-header .entry-public-navigation .public-login.secondary:hover
     padding-inline: 0;
     background: transparent;
 }
+
+/* Référence 04 : proportions des compositions publiques, sans modifier le
+   shell connecté ni les contrôles d’accès et le contenu des formulaires. */
+body.public-page:has(.entry-public-header) {
+    --entry-gutter: clamp(14px, 4.65vw, 90px);
+    background: radial-gradient(ellipse at 78% 12%, #182c45, transparent 72%), var(--bg);
+}
+
+body.public-page .entry-public-header {
+    min-height: 76px;
+    padding-inline: var(--entry-gutter);
+}
+
+body.public-page:has(.entry-public-header) .shell {
+    max-width: 1920px;
+    padding: 30px var(--entry-gutter) 48px;
+}
+
+body.public-page:has(.entry-public-header) .footer {
+    margin-inline: var(--entry-gutter);
+    font-size: 11px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+body[data-theme=light].public-page:has(.entry-public-header) {
+    background: var(--bg);
+}
+
+/* L’image de fond n’est pas une troisième capture du jeu. Les deux images
+   informatives gardent un lien direct à leur version pleine taille. */
+body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .entry-hero {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, .98fr);
+    gap: clamp(26px, 4.1vw, 79px);
+    min-height: clamp(430px, 30.4vw, 584px);
+    padding: clamp(29px, 3vw, 58px);
+    border: 1px solid #395167;
+    border-radius: 13px;
+    background: #101d30;
+    color: #e7eef6;
+}
+
+.entry-home--audit .entry-home-art,
+.entry-home--audit .entry-hero::before {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    border-radius: inherit;
+}
+
+.entry-home--audit .entry-home-art img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 56%;
+}
+
+.entry-home--audit .entry-hero::before {
+    content: "";
+    background: linear-gradient(95deg, #0b1525 0%, #0b1525f0 32%, #0d192d46 69%, #0d192d26);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.entry-home--audit .entry-hero::after {
+    content: "";
+    position: absolute;
+    inset: 36px auto auto 0;
+    width: 3px;
+    height: 170px;
+    background: #77d5e9;
+    border-radius: 2px;
+    pointer-events: none;
+}
+
+.entry-home--audit .entry-hero > :is(.entry-home-copy,.public-hero-preview) {
+    position: relative;
+    z-index: 1;
+}
+
+.entry-home--audit .entry-hero .entry-eyebrow {
+    color: #77d5e9;
+    letter-spacing: .18em;
+    font-size: 13px;
+}
+
+body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .entry-home-copy h1 {
+    font-size: clamp(40px, 3.6vw, 70px);
+    line-height: 1.07;
+    letter-spacing: -.04em;
+    color: #e7eef6;
+}
+
+.entry-home--audit .entry-home-copy h1 em {
+    color: #e7b76b;
+}
+
+.entry-home--audit .entry-home-copy .lead {
+    max-width: 46ch;
+    margin-block: 29px 34px;
+    color: #e7eef6;
+    font-size: clamp(16px, 1.05vw, 20px);
+    line-height: 1.55;
+}
+
+.entry-home--audit .entry-home-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 9px 20px;
+}
+
+.entry-home--audit .entry-home-actions .primary {
+    justify-content: space-between;
+    gap: 24px;
+    min-height: 57px;
+    min-width: min(100%, 253px);
+    font-size: 16px;
+}
+
+body .entry-home--audit .entry-home-actions .entry-text-link {
+    padding-inline: 0;
+    color: #91deee;
+    text-decoration: underline;
+    text-underline-offset: 5px;
+    font-size: 15px;
+}
+
+body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-hero-preview {
+    width: 100%;
+    max-width: 764px;
+    margin-inline: auto;
+    padding: clamp(11px, 1.09vw, 21px);
+    border-color: #4a718d;
+    border-radius: 11px;
+    background: #0b1525;
+    color: #e7eef6;
+}
+
+.entry-home--audit .entry-preview-tag {
+    display: inline-block;
+    padding: 5px 11px;
+    margin-bottom: 13px;
+    border: 1px solid #39536c;
+    border-radius: 5px;
+    background: #132537;
+    color: #91deee;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-hero-preview img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 8/3;
+    border-radius: 6px;
+    object-fit: cover;
+    object-position: center 37%;
+}
+
+.entry-home--audit .public-hero-preview figcaption {
+    display: grid;
+    gap: 5px;
+    margin-top: 15px;
+    color: #a4b5ca;
+    font-size: 13px;
+}
+
+.entry-home--audit .public-hero-preview figcaption strong {
+    color: #e7eef6;
+    font-size: 19px;
+}
+
+.entry-home--audit .entry-home-panels {
+    display: grid;
+    grid-template-columns: minmax(0, .72fr) minmax(0, 1fr);
+    gap: 22px;
+    margin-top: 26px;
+}
+
+.entry-home--audit .entry-game-introduction,
+body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previews article {
+    margin: 0;
+    padding: clamp(16px, 1.46vw, 28px);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--panel) 96%, var(--accent)), var(--panel));
+    min-width: 0;
+}
+
+.entry-home--audit .entry-game-introduction .entry-eyebrow {
+    color: var(--accent);
+    font-size: 11px;
+}
+
+.entry-home--audit .entry-game-introduction h2 {
+    margin: 9px 0 12px;
+}
+
+.entry-home--audit .entry-home-pillars {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 28px;
+    padding: 0;
+    margin: 26px 0 0;
+    list-style: none;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.entry-home--audit .entry-home-pillars .icon,
+.entry-home--audit .entry-exploration-link .icon {
+    margin-inline-end: 6px;
+    color: var(--accent);
+}
+
+body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previews {
+    display: block;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+
+body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previews article {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(18px, 1.65vw, 32px);
+    padding: 16px;
+    height: 100%;
+}
+
+body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previews article > a {
+    grid-area: auto;
+}
+
+body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previews article img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2.4;
+    border-radius: 7px;
+    object-fit: cover;
+    object-position: center 39%;
+}
+
+.entry-home--audit .entry-exploration-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 700;
+}
+
+/* L’ordre du DOM garde le formulaire avant la scène : seule la grille change.
+   Les validations longues étendent les panneaux au lieu de couper les aides. */
+.entry-access--audit .core-entry-access--task-first {
+    max-width: 1594px;
+    margin: clamp(20px, 2.6vw, 50px) auto 0;
+    grid-template-columns: minmax(0, .613fr) minmax(0, 1fr);
+    gap: clamp(22px, 2.1vw, 40px);
+    align-items: stretch;
+}
+
+.entry-access--audit .core-entry-access--compact {
+    grid-template-columns: minmax(0, 660px);
+    margin-top: clamp(18px, 2.4vw, 46px);
+}
+
+.entry-access--audit .entry-access-panel {
+    padding: clamp(24px, 2.25vw, 43px);
+    border-radius: 13px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--panel) 95%, var(--accent)), var(--panel));
+}
+
+.entry-access--audit .core-entry-access--task-first .entry-access-panel {
+    border-left: 3px solid var(--accent);
+}
+
+.entry-access--audit .entry-access-panel > .entry-eyebrow {
+    margin: 8px 0 26px;
+    font-size: 13px;
+    letter-spacing: .18em;
+    color: var(--accent);
+}
+
+.entry-access--audit .core-entry-access--task-first .entry-access-panel h1 {
+    margin-bottom: 26px;
+    font-size: clamp(31px, 2.45vw, 47px);
+    line-height: 1.09;
+    letter-spacing: -.032em;
+}
+
+.entry-access--audit #login-title span {
+    display: block;
+    color: var(--text);
+}
+
+.entry-access--audit .core-entry-access--compact .entry-access-panel h1 {
+    font-size: clamp(26px, 2.35vw, 42px);
+}
+
+.entry-access--audit .entry-access-panel > p:not(.entry-eyebrow,.auth-back,.flash) {
+    margin-bottom: 24px;
+    font-size: 16px;
+}
+
+.entry-access--audit .entry-access-panel .auth-form {
+    margin-block: 24px;
+    gap: clamp(9px, .9vw, 18px);
+}
+
+.entry-access--audit .entry-access-panel .auth-form label {
+    font-size: 14px;
+}
+
+.entry-access--audit .auth-form .entry-recovery-link {
+    justify-self: end;
+}
+
+.entry-access--audit .entry-access-panel .auth-form > .primary {
+    min-height: 55px;
+    justify-content: space-between;
+    font-size: 16px;
+}
+
+.entry-access--audit .entry-access-links {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--line);
+    padding-top: 7px;
+}
+
+.entry-access--audit .entry-access-links a {
+    border: 0;
+    padding: 3px 0;
+    background: transparent;
+    justify-self: start;
+}
+
+.entry-access--audit .core-entry-access--task-first .entry-access-context {
+    position: relative;
+    isolation: isolate;
+    min-width: 0;
+    min-height: 740px;
+    padding: clamp(26px, 2.4vw, 46px);
+    border: 1px solid #40516a;
+    border-radius: 13px;
+    background: #101b2b;
+    color: #e7eef6;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.entry-access--audit .entry-access-context picture {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    overflow: hidden;
+    border-radius: inherit;
+}
+
+.entry-access--audit .entry-access-context img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    margin: 0;
+    object-fit: cover;
+}
+
+.entry-access--audit .entry-access-context::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: linear-gradient(180deg, #0e1d3133, #0b142255 47%, #0c1524 94%);
+}
+
+.entry-access--audit .entry-context-brand {
+    color: #91deee;
+    font-size: 12px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.entry-access--audit .core-entry-access--task-first .entry-context-title {
+    margin: 0 0 13px;
+    color: #e7eef6;
+    font-size: clamp(26px, 2.32vw, 44px);
+    line-height: 1.12;
+    letter-spacing: -.035em;
+}
+
+.entry-access--audit .entry-context-title strong {
+    display: block;
+    color: #e7b76b;
+}
+
+.entry-access--audit .entry-context-copy > p:not(.entry-context-title) {
+    margin: 0;
+    color: #e7eef6;
+    font-size: 16px;
+}
+
+.entry-access--audit .entry-access-panel .auth-form > .entry-password-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    align-items: start;
+}
+
+.entry-access--audit .entry-password-pair > .auth-field-errors {
+    grid-column: 1 / -1;
+}
+
+.entry-denied .access-denied-panel {
+    border-left: 3px solid var(--accent);
+}
+
+.entry-denied .access-denied-panel .entry-eyebrow {
+    margin-bottom: 14px;
+    color: #ffb2a7;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+body[data-theme=light] .entry-denied .access-denied-panel .entry-eyebrow {
+    color: #943b34;
+}
+
+.entry-universes--audit .page-heading {
+    margin-block: 14px 42px;
+}
+
+.entry-universes--audit .page-heading .entry-eyebrow {
+    margin: 0 0 18px;
+    color: var(--accent);
+    letter-spacing: .16em;
+    font-weight: 700;
+}
+
+.entry-universes--audit .page-heading h1 {
+    font-size: clamp(29px, 3vw, 53px);
+}
+
+.entry-universes--audit .page-heading h1 + p {
+    font-size: 16px;
+}
+
+/* À largeur suffisante, les trois états sont comparables en une ligne.
+   auto-fit garde une carte lisible quand l’univers n’a que deux choix. */
+.entry-universes--audit .universe-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%,max(345px,calc((100% - 40px) / 3))),1fr));
+}
+
+.entry-universes--audit .universe-card {
+    padding: clamp(18px, 1.4vw, 27px);
+    border-radius: 10px;
+    box-shadow: inset 2px 0 color-mix(in srgb, var(--accent) 55%, var(--line));
+}
+
+.entry-universes--audit .universe-card h2 {
+    font-size: clamp(21px, 1.62vw, 31px);
+}
+
+.entry-universes--audit .entry-universe-status {
+    margin: 0 0 20px;
+}
+
+.entry-universes--audit .entry-universe-state {
+    padding: 5px 8px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    font-size: 11px;
+    letter-spacing: .05em;
+}
+
+.entry-universes--audit .entry-universe-state--scheduled {
+    color: var(--gold);
+}
+
+body[data-theme=light] .entry-universes--audit .entry-universe-state--scheduled {
+    color: #80541c;
+}
+
+.entry-universes--audit .universe-card > .universe-availability {
+    margin: 5px 0 0;
+}
+
+.entry-universes--audit .universe-rules h3 {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-size: 18px;
+}
+
+.entry-universes--audit .universe-rules dl {
+    margin-block: 0;
+}
+
+.entry-universes--audit .universe-rules dl > div {
+    padding-block: 8px;
+    border-bottom: 0;
+    font-size: 14px;
+}
+
+.entry-universes--audit .entry-universe-choice {
+    margin-top: 22px;
+}
+
+@media (max-width: 1050px) {
+    body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .entry-hero {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .entry-home--audit .entry-home-panels,
+    .entry-access--audit .core-entry-access--task-first {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .entry-access--audit .core-entry-access--task-first .entry-access-context {
+        display: none;
+    }
+}
+
+@media (max-width: 760px) {
+    body.public-page .entry-public-header {
+        min-height: 64px;
+    }
+
+    body.public-page:has(.entry-public-header) .shell {
+        padding-block: 14px 30px;
+    }
+
+    body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .entry-hero {
+        padding: 18px 15px 15px;
+        gap: 20px;
+    }
+
+    body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .entry-home-copy h1 {
+        font-size: clamp(29px, 8vw, 43px);
+    }
+
+    .entry-home--audit .entry-hero .entry-eyebrow {
+        font-size: 10px;
+        letter-spacing: .12em;
+        margin-bottom: 16px;
+    }
+
+    .entry-home--audit .entry-home-copy .lead {
+        margin-block: 16px 18px;
+    }
+
+    .entry-home--audit .entry-home-actions {
+        display: grid;
+        gap: 3px;
+    }
+
+    .entry-home--audit .entry-home-actions .primary {
+        min-width: 0;
+        min-height: 48px;
+    }
+
+    body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previews article {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-hero-preview img {
+        aspect-ratio: 16/9;
+    }
+
+    .entry-access--audit :is(.core-entry-access--task-first,.core-entry-access--compact) {
+        margin-top: 0;
+    }
+
+    .entry-access--audit .entry-access-panel {
+        padding: 22px 16px;
+    }
+
+    .entry-access--audit .entry-access-panel .auth-form > .entry-password-pair {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 9px;
+    }
+
+    .entry-universes--audit .page-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 11px;
+        margin-bottom: 20px;
+    }
+}

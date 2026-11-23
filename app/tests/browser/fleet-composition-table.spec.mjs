@@ -79,6 +79,9 @@ test('Flottes : les trois rangs restent alignés et arrivent ensemble au devis, 
     await expect(ship(table, 'intermediate')).toHaveValue('2');
     expect((await new AxeBuilder({ page }).include('.fleet-composition-table').analyze()).violations).toEqual([]);
 
+    const recap = form.getByRole('complementary', { name: 'Récapitulatif de mission' });
+    await expect(recap.getByRole('button', { name: /Choisir la destination/ })).toBeVisible();
+    await expect(form.getByRole('button', { name: /Choisir la destination/ })).toHaveCount(1);
     await form.getByRole('button', { name: /Choisir la destination/ }).click();
     const destination = form.getByRole('heading', { name: 'Choisissez la destination' });
     await expect(destination).toBeFocused();
@@ -95,6 +98,9 @@ test('Flottes : les trois rangs restent alignés et arrivent ensemble au devis, 
     await form.getByRole('button', { name: /Vérifier la mission/ }).click();
     await expect(form.getByRole('heading', { name: 'Confirmez votre mission' })).toBeFocused();
     await expect(form.locator('[data-fleet-wizard-target="summary"]')).toContainText('2 × Chasseur de patrouille, 2 × Chasseur multirôle, 3 × Chasseur d’assaut orbital');
+
+    await expect(recap.getByRole('button', { name: /Envoyer la flotte/ })).toBeVisible();
+    await expect(recap.getByRole('heading', { name: 'Estimation du trajet' })).toBeVisible();
 
     const native = await browser.newContext({ baseURL, javaScriptEnabled: false, storageState: await page.context().storageState() });
     try {

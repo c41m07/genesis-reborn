@@ -1,6 +1,8 @@
 <section id="inventory-boosts" class="inventory-bonuses" aria-labelledby="available-bonuses-title">
     <h2 id="available-bonuses-title" class="visually-hidden">Bonus disponibles</h2>
     <div class="inventory-boost-layout">
+        <div class="inventory-board-stock">
+        {% include 'boosts/_capacity.html.twig' %}
         <article class="panel mission-card inventory-boost-stock">
             {% if boost_count == 0 %}
                 <div class="empty-state"><h3>Aucun bonus disponible</h3><p>Les récompenses de vos missions, événements et projets de guilde apparaîtront ici.</p></div>
@@ -9,8 +11,19 @@
                 <span class="badge">Quantité : {{ boost_count }}</span>
             {% endif %}
         </article>
+        <article class="panel inventory-board-shortcut">
+            <h3>Boîtes de ressources</h3>
+            <p>Vérifiez le contenu puis choisissez la colonie qui le recevra.</p>
+            <a class="secondary" href="{{ path('app_inventory_boxes') }}">Voir mes boîtes</a>
+        </article>
+        <article class="panel inventory-board-shortcut">
+            <h3>Récompenses en attente</h3>
+            <p>Les récompenses conservées rejoignent l’inventaire quand une place se libère.</p>
+            <a class="secondary" href="{{ path('app_inventory_pending') }}">Voir les récompenses</a>
+        </article>
+</div>
 <section class="panel inventory-boost-use" aria-labelledby="boost-use-title">
-    <h2 id="boost-use-title">Utiliser un boost</h2>
+    <h2 id="boost-use-title">Aperçu avant utilisation</h2>
     {% if vacation %}<p role="status">Les accélérations sont indisponibles pendant les vacances.</p>
     {% elseif boost_count == 0 %}<p>Aucun boost de réduction de durée disponible pour accélérer une opération.</p>
     {% else %}

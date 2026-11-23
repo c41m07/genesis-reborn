@@ -21,7 +21,7 @@ async function registerAndLogin(page) {
   return { email, password };
 }
 
-test('Administration catalogue: accès, édition, sauvegarde et restauration responsive', async ({ page }) => {
+test('Administration catalogue: accès, édition, sauvegarde et restauration responsive', async ({ page }, testInfo) => {
   const { email, password } = await registerAndLogin(page);
   await page.goto('/admin');
   await expect(page).toHaveURL(/acces-refuse/);
@@ -89,9 +89,28 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
   await expect(tables.nth(1).getByRole('columnheader')).toHaveText(['Élément','Actuel','Proposé']);
   await expect(tables.nth(1).getByRole('rowheader', { name: 'Durée' })).toBeVisible();
   await expect(page.getByLabel('Motif de restauration')).toHaveValue('');
-  for (const width of [1920, 1440, 768, 390]) {
-    await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
-    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  for (const theme of ['dark', 'light']) {
+    runIsolatedSql(project, `UPDATE player SET preferences=JSON_OBJECT('theme','${theme}') WHERE email='${email}'`);
+    await page.reload();
+    await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+    for (const width of [1920, 1440, 768, 390]) {
+      const height = width === 1920 ? 1080 : 900;
+      await page.setViewportSize({ width, height });
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      const layout = page.locator('.admin-restoration-layout');
+      await expect.poll(() => layout.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(width >= 1440 ? 2 : 1);
+      await expect(layout.getByRole('heading', { name: 'Valeurs à réappliquer' })).toBeVisible();
+      const confirmation = layout.getByRole('checkbox', { name: /Je confirme ces valeurs/ });
+      await expect(confirmation).toBeVisible();
+      await expect(confirmation).toHaveCSS('width', '18px');
+      await expect(layout.getByRole('button', { name: 'Publier ces valeurs historiques' })).toBeVisible();
+      if (width === 1920 || width === 390) {
+        const accessibility = await new AxeBuilder({ page }).include('#admin-main').analyze();
+        expect(accessibility.violations).toEqual([]);
+        await page.evaluate(() => document.fonts.ready);
+        await page.screenshot({ path: testInfo.outputPath(`restauration-${theme}-${width}x${height}.png`), scale: 'css', animations: 'disabled' });
+      }
+    }
   }
   await page.getByRole('link', { name: 'Annuler et revenir à l’historique' }).click();
   await expect(page).toHaveURL(history);
@@ -113,19 +132,32 @@ test('Catalogue B : comparaison des rangs, thèmes et formulaires natifs des qua
   const before = queryIsolatedSql(project, `SELECT game_settings FROM universe WHERE id=${universe}`);
   for (const theme of ['dark', 'light']) {
     runIsolatedSql(project, `UPDATE player SET preferences=JSON_OBJECT('theme','${theme}') WHERE email='${email}'`);
-    for (const width of [1440, 768, 390]) {
-      await page.setViewportSize({ width, height: 900 });
+    for (const width of [1920, 1440, 768, 390]) {
+      const height = width === 1920 ? 1080 : 900;
+      await page.setViewportSize({ width, height });
       for (const [index, route] of [catalogue, `${catalogue}/buildings/power_plant`].entries()) {
         expect((await page.goto(route)).status()).toBe(200);
         await expect(page.locator('h1')).toHaveCount(1);
         await expect(page.locator('.page-contents')).toHaveCount(0);
         await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-        const grid = page.locator(index === 0 ? '.admin-catalogue-grid' : '.admin-catalogue-costs');
-        expect(await grid.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(width === 1440 ? (index === 0 ? 2 : 3) : 1);
+        if (index === 0) {
+          const table = page.getByRole('table', { name: 'Fiches du catalogue' });
+          await expect(table.getByRole('columnheader')).toHaveText(['Fiche', 'Famille', 'Rangs disponibles', 'Ouvrir']);
+          const row = table.getByRole('row').filter({ has: page.getByRole('link', { name: 'Modifier Mine à ciel ouvert', exact: true }) });
+          await expect(row.getByRole('rowheader')).toContainText('Mine à ciel ouvert');
+          await expect(row.getByRole('listitem')).toHaveText([/^Basique : Mine à ciel ouvert$/, /^Intermédiaire : .+/, /^Supérieur : .+/]);
+          await expect.poll(() => row.evaluate(element => getComputedStyle(element).display)).toBe(width <= 760 ? 'block' : 'table-row');
+        } else {
+          const grid = page.locator('.admin-catalogue-costs');
+          await expect.poll(() => grid.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(width >= 1440 ? 3 : 1);
+        }
         const accessibility = await new AxeBuilder({ page }).include('#admin-main').analyze();
         expect(accessibility.violations).toEqual([]);
-        await page.screenshot({ path: testInfo.outputPath(`catalogue-${index}-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });
+        if (width === 1920 || width === 390) {
+          await page.evaluate(() => document.fonts.ready);
+          await page.screenshot({ path: testInfo.outputPath(`catalogue-${index}-${theme}-${width}x${height}.png`), scale: 'css', animations: 'disabled' });
+        }
       }
     }
   }
@@ -167,7 +199,7 @@ test('Catalogue B : comparaison des rangs, thèmes et formulaires natifs des qua
   await native.goto(catalogue);
   await native.getByRole('searchbox', { name: 'Rechercher dans toutes les familles' }).fill('Chasseur');
   await native.getByRole('button', { name: 'Rechercher', exact: true }).click();
-  await expect(native.locator('.admin-catalogue-grid')).toContainText('Chasseur de patrouille');
+  await expect(native.getByRole('table', { name: 'Fiches du catalogue' })).toContainText('Chasseur de patrouille');
   await native.reload();
   await expect(native.getByRole('searchbox')).toHaveValue('Chasseur');
   await native.getByRole('link', { name: 'Modifier Chasseur de patrouille', exact: true }).click();

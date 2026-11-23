@@ -25,10 +25,15 @@ test('La Vue générale validée regroupe les accès et actualise les alertes sa
     await expect(page.locator('tr[aria-current="true"] .player-protection-shield')).toBeVisible();
     await page.goto(colonyUrl);
     const banner = page.locator('.empire-banner');
-    await expect(banner.locator('.empire-points dt')).toHaveText(['Planètes', 'Recherche', 'Flotte', 'Total']);
+    const scores = banner.locator('.overview-score-detail');
+    await expect(scores.locator('.empire-points')).not.toBeVisible();
+    await scores.locator('summary').press('Enter');
+    await expect(scores.locator('.empire-points dt')).toHaveText(['Bâtiments', 'Recherche', 'Flotte', 'Total']);
+    await scores.locator('summary').press('Enter');
     const metrics = page.locator('.dashboard-metrics');
     await expect(banner.locator('.metric-card')).toHaveCount(4);
-    await expect(metrics.locator('.metric-card')).toHaveCount(4);
+    await expect(metrics.locator('.metric-card small')).toHaveText(['Planètes', 'Points d’empire', 'Classement', 'Guilde']);
+    await expect(page.locator('.dashboard-secondary [data-live-region="overview-flight-metric"] strong')).toHaveText('0');
     const colony = Number(new URL(colonyUrl).pathname.split('/').at(-1));
     const project = process.env.BROWSER_ROUTER;
     const resourceStocks = stock => runIsolatedSql(project, `UPDATE planet_resource SET current_stock=${stock},last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${colony}`);

@@ -2,14 +2,12 @@
 {% set pageTitle = {boosts:'Boosts',boxes:'Boîtes de ressources',pending:'Récompenses en attente'}[inventory_page] %}
 {% block title %}{{ pageTitle }} · Inventaire · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="page-refinement inventory-page inventory-space inventory-redesign" data-page-sections="disabled"{% if inventory_page!='pending' %} data-controller="inventory-review"{% endif %}>
-<div class="page-heading"><div><h1>{{ pageTitle }}</h1><p>{{ {boosts:'Accélérez une opération active de votre empire.',boxes:'Choisissez la colonie qui recevra le contenu d’une boîte.',pending:'Consultez les récompenses conservées lorsque votre inventaire est plein.'}[inventory_page] }}</p></div></div>
+<div class="page-refinement inventory-page inventory-space inventory-redesign player-inventory-board" data-page-sections="disabled"{% if inventory_page!='pending' %} data-controller="inventory-review"{% endif %}>
+<div class="page-heading"><div><p class="inventory-board-eyebrow">Opérations · objets et récompenses</p><h1>{{ pageTitle }}</h1><p>{{ {boosts:'Accélérez une opération active de votre empire.',boxes:'Choisissez la colonie qui recevra le contenu d’une boîte.',pending:'Consultez les récompenses conservées lorsque votre inventaire est plein.'}[inventory_page] }}</p></div></div>
 {% include 'ui/inventory_navigation.html.twig' %}
-<section class="panel inventory-capacity" aria-labelledby="boost-inventory-title">
-<div class="section-heading"><h2 id="boost-inventory-title">Emplacements utilisés</h2><span class="badge">{{ inventory_counts.available }} / {{ inventory_capacity }} emplacements</span></div>
-<progress class="boost-capacity" value="{{ inventory_counts.available }}" max="{{ inventory_capacity }}" aria-label="Emplacements utilisés dans l’inventaire">{{ inventory_counts.available }} / {{ inventory_capacity }}</progress>
-{% if inventory_counts.available>=inventory_capacity %}<p class="muted">Inventaire plein. Les nouvelles récompenses sont conservées en attente.</p>{% endif %}
-</section>
+{% if inventory_page != 'boosts' %}
+{% include 'boosts/_capacity.html.twig' %}
+{% endif %}
 {% if inventory_page=='boosts' %}{% include 'boosts/_boosts.html.twig' %}
 {% elseif inventory_page=='boxes' %}
 <section id="inventory-boxes" class="inventory-boxes" aria-labelledby="inventory-boxes-title"><h2 id="inventory-boxes-title" class="visually-hidden">Boîtes disponibles</h2>

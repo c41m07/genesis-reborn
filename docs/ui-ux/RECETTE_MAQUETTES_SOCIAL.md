@@ -1,0 +1,16 @@
+# Refonte sur maquettes validées · Communauté
+
+Base ciblée : `dev` après l’Avent (`cca8c6b`). Références approuvées S01–S20. Ce lot ne change ni contrôleur, ni droits, ni route, ni donnée de jeu. Complexité : annuaire/hub 3, diplomatie/guilde/projets/Hall 3, messagerie responsive et retours natifs 4, formulaire Feedback et signalements 3.
+
+| Référence | Composition livrée et comportement à vérifier |
+| --- | --- |
+| S01 | Bandeau illustré, recherche sur panneau et cartes d’annuaire. Cette liste légère ne montre que le nom et le lien : ni tag, ni nombre de membres, ni résumé n’étaient fournis par la requête. Leur ajout requerrait une décision distincte sur les données à charger. La recherche détaillée conserve ses informations et actions. |
+| S02 | Bannière de la guilde, canal en action principale, échanges à gauche et état diplomatique/projets à droite. Le compteur neutre de la maquette n’est pas inventé ; seuls les alliés et ennemis réellement calculés sont affichés. Lire l’aperçu ne marque pas le canal comme lu. |
+| S03 à S06 | Membres et présence, attribution séparée et réservée aux rôles autorisés, grades avec tous leurs droits, création et personnalisation, transfert/dissolution protégés par leurs explications natives. L’attribution n’est pas incorporée à toutes les lignes comme en S03 : les formulaires et droits restent en une seule zone dépliable. |
+| S07 et S08 | Relation actuelle, proposition et actions distinguées. Historique, conditions, contact, recherche et actions sensibles conservés. Les libellés et effets continuent de venir des droits réels. Les relations personnelles utilisent des cartes et leur propre route. |
+| S09 à S11 et S19 | Progression et contribution côte à côte, repli à une colonne, ressources du Hall dans une grille. L’affichage suit toujours l’état réel : collecte, vacances, financement, vue sans permission de pose, choix d’un emplacement éligible et Hall installé. Les projets en cours/disponibles/historiques restent des pages distinctes. |
+| S12 à S16 | Trois canaux inchangés ; contact/recherche à gauche, conversation et rédaction à droite. Sur mobile à partir de 600 px et moins, les canaux ont un dépliable natif au-dessus de la conversation ; ouvert sans JS. Le composeur reste à la base, hors du défilement de l’historique ; les bulles et statuts gardent des libellés. Pas de nouvel extrait de message dans la liste, car ce n’est pas fourni par la préparation existante. Recherche et signalement conservent leurs champs, droits et réactions existants. |
+| S17 et S20 | Champs / URL / capture / envoi à gauche, aperçu à droite dans le même formulaire. Sans JavaScript le fichier reste joignable. L’agrandissement local de la capture et le signalement d’un commandant restent des gestes distincts ; seul le Feedback accepte une pièce jointe. |
+| S18 | Présentation et commandant côte à côte ; identité, bannière et logo réels uniquement. |
+
+Vérifier sur la pile de test isolée, aux vrais viewports CSS, sans redimensionner les captures : 1920 × 1080, 1440 × 900, 768 × 900, 390 × 900 et 320 × 900. Capturer le même scénario et le même thème lors d’une comparaison. Ne pas traiter un PNG d’exemple (noms/données d’illustration) comme un oracle pixel-par-pixel. Les scénarios de messagerie couvrent le focus, la fermeture mobile, le positionnement du formulaire et le parcours natif sans JavaScript.

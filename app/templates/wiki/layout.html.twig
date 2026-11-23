@@ -1,18 +1,11 @@
 {% extends 'base.html.twig' %}
 {% block body %}
-<article class="wiki-guide wiki-manual wiki-pages" data-controller="wiki-chapters" data-wiki-chapters-destinations-value="{{ chapterDestinations|json_encode|e('html_attr') }}" data-page-sections="disabled" id="wiki-top" aria-labelledby="{{ currentChapter ? 'wiki-title-'~currentChapter : 'wiki-title' }}">
+<article class="wiki-guide wiki-manual wiki-pages player-wiki-board" data-controller="wiki-chapters" data-wiki-chapters-destinations-value="{{ chapterDestinations|json_encode|e('html_attr') }}" data-page-sections="disabled" id="wiki-top" aria-labelledby="{{ currentChapter ? 'wiki-title-'~currentChapter : 'wiki-title' }}">
   <header class="wiki-intro">
     <p class="wiki-eyebrow">{% block wiki_eyebrow %}Le manuel du joueur{% endblock %}</p>
     <h1 id="{{ currentChapter ? 'wiki-title-'~currentChapter : 'wiki-title' }}">{% block wiki_heading %}Wiki du jeu{% endblock %}</h1>
     {% block wiki_intro %}{% endblock %}
   </header>
-  {% if app.request.attributes.get('_route') in ['app_wiki','app_wiki_search'] %}
-  <form class="panel wiki-search" method="get" action="{{ path('app_wiki_search') }}" role="search" aria-label="Recherche du manuel">
-    <label for="wiki-query">Rechercher dans le manuel</label>
-    <input id="wiki-query" name="q" type="search" maxlength="150" value="{{ query }}" placeholder="Ressources, colonisation, recherche…">
-    <button class="secondary">Rechercher</button>
-  </form>
-  {% endif %}
   <nav class="wiki-space-navigation" aria-label="Pages du wiki">
     <a href="{{ path('app_wiki') }}"{% if app.request.attributes.get('_route')=='app_wiki' %} aria-current="page"{% elseif currentChapter %} aria-current="location"{% endif %}>Accueil</a>
     <a href="{{ path('app_wiki_search',query ? {q:query} : {}) }}"{% if app.request.attributes.get('_route')=='app_wiki_search' %} aria-current="page"{% endif %}>Recherche globale</a>
@@ -23,7 +16,15 @@
     <aside id="wiki-summary" class="wiki-navigation" aria-label="Navigation des chapitres" tabindex="-1">
       {% include 'wiki/_summary.html.twig' %}
     </aside>
-    <div class="wiki-chapters">{% block wiki_content %}{% endblock %}</div>
+    <div class="wiki-chapters">
+  {% if app.request.attributes.get('_route') in ['app_wiki','app_wiki_search'] %}
+  <form class="panel wiki-search" method="get" action="{{ path('app_wiki_search') }}" role="search" aria-label="Recherche du manuel">
+    <label for="wiki-query">Rechercher dans le manuel</label>
+    <input id="wiki-query" name="q" type="search" maxlength="150" value="{{ query }}" placeholder="Ressources, colonisation, recherche…">
+    <button class="primary">Rechercher</button>
+  </form>
+  {% endif %}
+      {% block wiki_content %}{% endblock %}</div>
   </div>
 </article>
 {% endblock %}

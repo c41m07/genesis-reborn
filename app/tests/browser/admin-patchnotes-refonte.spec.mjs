@@ -49,8 +49,9 @@ test('Patchnotes A : quatre pages lisibles, thèmes, clavier et contenus longs',
     runIsolatedSql(project, `UPDATE patch_note SET title='${'Galaxie'.repeat(22)}',summary='${'Résumé long conservé. '.repeat(20)}' WHERE id=${id}`);
     for (const theme of ['dark', 'light']) {
         runIsolatedSql(project, `UPDATE player SET preferences=JSON_OBJECT('theme','${theme}') WHERE email=${quote(own.email)}`);
-        for (const width of [1440, 768, 390]) {
-            await page.setViewportSize({ width, height: 900 });
+        for (const width of [1920, 1440, 768, 390]) {
+            const height = width === 1920 ? 1080 : 900;
+            await page.setViewportSize({ width, height });
             for (const [index, route] of ['/admin/patchnotes', '/admin/patchnotes/nouvelle', `/admin/patchnotes/${id}`, `/admin/patchnotes/${id}/supprimer`].entries()) {
                 expect((await page.goto(route)).status()).toBe(200);
                 await expect(page.locator('h1')).toHaveCount(1);
@@ -62,8 +63,20 @@ test('Patchnotes A : quatre pages lisibles, thèmes, clavier et contenus longs',
                     await expect(page.locator('.admin-patchnote-form section')).toHaveCount(2);
                     await expect(page.locator('#note-content')).toBeVisible();
                 }
+                if (index === 3) {
+                    const confirmation = page.locator('.admin-patchnote-deletion');
+                    await expect(confirmation).toContainText('supprimée définitivement');
+                    const cancel = confirmation.getByRole('link', { name: 'Annuler et revenir à la fiche' });
+                    await cancel.focus();
+                    await page.keyboard.press('Tab');
+                    await expect(confirmation.getByRole('button', { name: 'Supprimer définitivement' })).toBeFocused();
+                }
                 expect((await new AxeBuilder({ page }).include('#admin-main').analyze()).violations).toEqual([]);
-                await page.screenshot({ path: testInfo.outputPath(`patchnotes-${index}-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });
+                if (width === 1920 || width === 390) {
+                    await page.evaluate(() => { document.activeElement?.blur(); window.scrollTo(0, 0); });
+                    await page.evaluate(() => document.fonts.ready);
+                    await page.screenshot({ path: testInfo.outputPath(`patchnotes-${index}-${theme}-${width}x${height}.png`), scale: 'css', animations: 'disabled' });
+                }
             }
         }
     }

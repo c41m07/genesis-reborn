@@ -525,3 +525,691 @@ body.authenticated .social-workspace .message-compose .message-compose-audience 
     font-weight: 700;
     overflow-wrap: anywhere;
 }
+
+/* Références S01–S20 : la composition reste locale aux écrans sociaux. */
+body.authenticated .social-board {
+    --social-gap: clamp(14px, 1.25vw, 22px);
+    --social-panel: color-mix(in srgb, var(--panel) 93%, var(--accent));
+    --social-border: color-mix(in srgb, var(--line) 86%, var(--accent));
+    min-width: 0;
+}
+
+body.authenticated .social-board .page-heading h1,
+body.authenticated .social-board--feedback > h1 {
+    font-size: clamp(27px, 2.05vw, 40px);
+    letter-spacing: -.025em;
+}
+
+body.authenticated .social-board .page-heading {
+    margin-block-end: clamp(14px, 1.3vw, 23px);
+}
+
+body.authenticated .social-board .space-navigation a {
+    border-radius: 6px;
+}
+
+body.authenticated .social-board .space-navigation a[aria-current] {
+    box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+body.authenticated .social-board :is(.relation-heading, .guild-recruitment-card, .guild-discovery-search) {
+    border: 1px solid var(--social-border);
+    border-radius: 8px;
+    background: var(--panel);
+}
+
+body.authenticated .social-board :is(.relation-heading, .guild-discovery-search) > :is(h2, div) {
+    min-width: 0;
+}
+
+body.authenticated .social-board .relation-heading {
+    display: grid;
+    grid-template-columns: minmax(200px, .8fr) minmax(270px, 1fr);
+    gap: var(--social-gap);
+    align-items: end;
+    margin-block: 18px;
+    padding: clamp(15px, 1.2vw, 23px);
+}
+
+body.authenticated .social-board .relation-heading :is(h2, p),
+body.authenticated .social-board .guild-discovery-search h2 {
+    margin-top: 0;
+}
+
+body.authenticated .social-board .relation-heading p {
+    margin-bottom: 0;
+}
+
+body.authenticated .social-board .relation-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 6px 10px;
+    min-width: 0;
+    margin: 0;
+}
+
+body.authenticated .social-board .relation-search label {
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+body.authenticated .social-board .relation-search input {
+    min-width: 0;
+    width: 100%;
+    margin: 0;
+}
+
+/* Illustration du jeu existante, derrière une couche opaque à gauche. */
+body.authenticated .guild-discovery--join .guild-discovery-banner {
+    display: grid;
+    align-content: center;
+    min-height: 148px;
+    padding: clamp(18px, 1.45vw, 28px);
+    margin-block: 18px;
+    border: 1px solid var(--social-border);
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--panel) 12%, color-mix(in srgb, var(--panel) 86%, transparent) 52%, transparent 100%), url('/art/genesis-reborn-planet.webp') center 48% / cover;
+}
+
+body.authenticated .guild-discovery-banner > h2 {
+    margin: 0 0 8px;
+    font-size: clamp(22px, 1.65vw, 32px);
+}
+
+body.authenticated .guild-discovery-banner > p {
+    max-width: 56ch;
+    margin: 0;
+    color: var(--text);
+}
+
+body.authenticated .social-board .guild-discovery-search {
+    display: grid;
+    grid-template-columns: minmax(210px, 1fr) minmax(235px, 2fr) auto;
+    align-items: end;
+    gap: var(--social-gap);
+    padding: clamp(15px, 1.2vw, 23px);
+}
+
+body.authenticated .social-board .guild-discovery-search > h2 {
+    align-self: center;
+    margin-bottom: 0;
+}
+
+body.authenticated .social-board .guild-create-shortcut {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+body.authenticated .social-board .guild-recruitment {
+    margin-block: 23px 18px;
+}
+
+body.authenticated .social-board .guild-recruitment-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--social-gap);
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+body.authenticated .social-board .guild-recruitment-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 20px;
+    margin: 0;
+    padding: clamp(14px, 1.15vw, 22px);
+}
+
+body.authenticated .social-board .guild-recruitment-card header,
+body.authenticated .social-board .guild-recruitment-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+body.authenticated .social-board .guild-recruitment-card h3 {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+body.authenticated .social-board .guild-recruitment-initial {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 44px;
+    height: 44px;
+    border: 1px solid var(--social-border);
+    border-radius: 8px;
+    background: var(--social-panel);
+    color: var(--accent);
+    font-weight: 750;
+}
+
+body.authenticated .social-board .guild-recruitment-actions {
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+body.authenticated .social-board .guild-recruitment-actions .badge {
+    white-space: normal;
+}
+
+body.authenticated .social-board .guild-overview-hero.guild-hub-hero {
+    grid-template-columns: auto minmax(0, 1fr);
+    min-height: 172px;
+    margin-bottom: 18px;
+}
+
+body.authenticated .social-board .guild-overview-hero .guild-overview-identity h2 {
+    font-size: clamp(23px, 1.65vw, 32px);
+}
+
+body.authenticated .social-board .guild-overview-hero .guild-channel-link {
+    grid-column: 2;
+    justify-self: start;
+}
+
+body.authenticated .social-board .guild-overview-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+    gap: var(--social-gap);
+    align-items: start;
+}
+
+body.authenticated .social-board .guild-overview-details {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--social-gap);
+    min-width: 0;
+}
+
+body.authenticated .social-board .guild-overview-conversation,
+body.authenticated .social-board .guild-overview-details > .panel {
+    height: auto;
+    margin: 0;
+    min-width: 0;
+}
+
+body.authenticated .social-board .guild-overview-conversation .guild-message-preview {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    align-items: start;
+    gap: 14px;
+}
+
+body.authenticated .social-board .guild-message-initial {
+    display: grid;
+    place-items: center;
+    min-height: 42px;
+    border: 1px solid var(--social-border);
+    border-radius: 7px;
+    background: var(--social-panel);
+    color: var(--accent);
+    font-weight: 750;
+}
+
+body.authenticated .social-board .guild-message-preview .guild-message-preview-body {
+    display: block;
+    min-width: 0;
+}
+
+body.authenticated .social-board .guild-message-preview-body header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+}
+
+body.authenticated .social-board .guild-overview-relations {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 12px 0;
+}
+
+body.authenticated .social-board .guild-overview-relations > div {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 4px;
+    min-width: 0;
+    padding: 12px;
+    background: var(--social-panel);
+    border: 1px solid var(--social-border);
+    border-radius: 6px;
+}
+
+body.authenticated .social-board .guild-overview-relations :is(dt, dd) {
+    margin: 0;
+}
+
+body.authenticated .social-board .guild-overview-relations dd {
+    font-size: 24px;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+}
+
+body.authenticated .social-board .personal-relations-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+}
+
+body.authenticated .social-board .guild-relations-list > .guild-card {
+    display: grid;
+    grid-template-columns: minmax(200px, .9fr) minmax(0, .67fr) minmax(0, 1.43fr);
+    align-items: start;
+    gap: 8px 20px;
+}
+
+body.authenticated .social-board .guild-relations-list > .guild-card > .guild-card-heading {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+body.authenticated .social-board .guild-relations-list > .guild-card > .guild-card-status {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+}
+
+body.authenticated .social-board .guild-card-status.badge {
+    white-space: normal;
+}
+
+body.authenticated .social-board .guild-relations-list > .guild-card > .guild-treaty-actions {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    justify-content: start;
+    min-width: 0;
+}
+
+body.authenticated .social-board .guild-relations-list > .guild-card > :not(.guild-card-heading, .guild-card-status, .guild-treaty-actions) {
+    grid-column: 1 / -1;
+}
+
+body.authenticated .social-board .guild-relations-list .guild-card-heading :is(h3, p) {
+    margin-block-start: 0;
+}
+
+body.authenticated .social-board .guild-relations-list .guild-treaty-actions > form {
+    min-width: 0;
+}
+
+body.authenticated .social-board .guild-relations-list .guild-treaty-actions select {
+    max-width: 100%;
+}
+
+body.authenticated .social-board .hall-progress-value {
+    font-size: clamp(20px, 1.6vw, 30px);
+    color: var(--text);
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+}
+
+body.authenticated .social-board .hall-resource-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 14px;
+}
+
+body.authenticated .social-board .hall-resource-fields legend {
+    padding-inline: 4px;
+}
+
+body.authenticated .social-board .hall-resource-fields input {
+    width: 100%;
+}
+
+body.authenticated .social-board .guild-project-detail.project-active-layout {
+    grid-template-columns: minmax(0, 1.34fr) minmax(0, 1fr);
+}
+
+/* Composer et aide restent dans le panneau ; seul l'historique défile. */
+body.authenticated .social-board--messages .inbox-layout.inbox-layout {
+    display: grid;
+    grid-template-columns: minmax(258px, 26.4%) minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+}
+
+body.authenticated .social-board--messages .inbox-sidebar,
+body.authenticated .social-board--messages .message-pane {
+    min-width: 0;
+    margin: 0;
+    max-height: none;
+}
+
+body.authenticated .social-board--messages .message-pane {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0;
+    border: 1px solid var(--social-border);
+    background: var(--panel);
+}
+
+body.authenticated .social-board--messages .inbox-layout--selected .message-pane {
+    min-height: clamp(520px, calc(100dvh - 420px), 650px);
+}
+
+body.authenticated .social-board--messages .message-thread {
+    flex: 1 1 250px;
+    height: auto;
+    min-height: min(36vh, 290px);
+    max-height: min(52dvh, 460px);
+    padding: clamp(12px, 1.2vw, 22px);
+}
+
+body.authenticated .social-board--messages .message-pane-heading {
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--line);
+}
+
+body.authenticated .social-board--messages .message-pane-heading > div {
+    min-width: 0;
+}
+
+body.authenticated .social-board--messages .message-composer {
+    position: static;
+    flex: 0 0 auto;
+    margin: auto 16px 0;
+    padding: 10px 0 0;
+    border: 1px solid var(--social-border);
+    border-radius: 8px;
+    background: var(--social-panel);
+}
+
+body.authenticated .social-board--messages .message-compose {
+    position: static;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+    align-items: end;
+    margin: 0;
+    padding: 0 14px 10px;
+    border: 0;
+    background: transparent;
+}
+
+body.authenticated .social-board--messages .message-compose textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 52px;
+    margin: 0;
+}
+
+body.authenticated .social-board--messages .message-compose button {
+    min-height: 52px;
+    min-width: 112px;
+    margin: 0;
+}
+
+body.authenticated .social-board--messages .message-markdown-help {
+    text-align: end;
+}
+
+body.authenticated .social-board--messages .message-markdown-help[open] {
+    text-align: start;
+}
+
+body.authenticated .social-board--messages .message-markdown-help summary {
+    min-height: 28px;
+    color: var(--accent);
+}
+
+body.authenticated .social-board--messages .message-bubble {
+    border: 1px solid var(--social-border);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--text);
+}
+
+body.authenticated .social-board--messages .message-bubble--own {
+    background: color-mix(in srgb, var(--panel) 88%, var(--accent));
+}
+
+body.authenticated .social-board--messages .message-meta :is(strong, a) {
+    color: var(--accent);
+}
+
+body.authenticated .social-board--messages .message-meta :is(.message-direction, time) {
+    color: var(--muted);
+}
+
+body.authenticated .social-board--messages .inbox-heading .badge {
+    color: var(--gold);
+    white-space: nowrap;
+}
+
+body.authenticated .social-board--messages .inbox-picker {
+    margin: 0;
+    border: 0;
+}
+
+body.authenticated .social-board--messages .inbox-picker > summary {
+    display: none;
+}
+
+body.authenticated .social-board--messages .inbox-group-label {
+    margin: 8px 0 0;
+    padding: 4px 8px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .075em;
+    text-transform: uppercase;
+}
+
+body.authenticated .social-board--messages .message-entry .message-report[open] form {
+    display: grid;
+    gap: 8px;
+    padding: 13px;
+    border: 1px solid var(--social-border);
+    border-radius: 7px;
+    background: var(--social-panel);
+}
+
+body.authenticated .social-board--messages .message-report[open] input {
+    width: 100%;
+    margin: 0;
+}
+
+body.authenticated .social-board--messages .message-report[open] button {
+    justify-self: start;
+    color: var(--danger);
+}
+
+body.authenticated .social-board--message-search .social-message-search-filters {
+    grid-template-columns: repeat(3, minmax(0, 1.3fr)) repeat(2, minmax(0, .8fr));
+    gap: 14px;
+}
+
+body.authenticated .social-board--message-search .social-message-filter-heading {
+    grid-column: 1 / -1;
+}
+
+body.authenticated .social-board--message-search .social-message-filter-heading p {
+    margin-block: 4px 0;
+}
+
+body.authenticated .social-board--message-search .search-filters > button {
+    justify-self: end;
+}
+
+body.authenticated .social-board--message-search article.message-search-result {
+    margin: 14px 0;
+    padding: clamp(14px, 1.35vw, 24px);
+    border: 1px solid var(--social-border);
+    border-radius: 8px;
+    background: var(--panel);
+}
+
+body.authenticated .social-board--message-search article.message-search-result > .secondary {
+    display: inline-flex;
+    align-items: center;
+}
+
+body.authenticated .social-board--report .player-report-form {
+    max-width: min(100%, 850px);
+    padding: clamp(14px, 1.2vw, 23px);
+}
+
+@media (max-width: 1100px) {
+    body.authenticated .social-board .guild-discovery-search {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    body.authenticated .social-board .guild-discovery-search > h2 {
+        grid-column: 1 / -1;
+    }
+
+    body.authenticated .social-board .guild-recruitment-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.authenticated .social-board--message-search .social-message-search-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.authenticated .social-board .guild-relations-list > .guild-card {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    body.authenticated .social-board .guild-relations-list > .guild-card > .guild-treaty-actions {
+        grid-column: 1 / -1;
+        grid-row: auto;
+    }
+}
+
+@media (max-width: 850px) {
+    body.authenticated .social-board :is(.relation-heading, .guild-overview-layout, .guild-project-detail.project-active-layout),
+    body.authenticated .social-board--messages .inbox-layout.inbox-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.authenticated .social-board--messages .inbox-layout.inbox-layout > :is(.inbox-sidebar, .message-pane) {
+        order: 0;
+    }
+
+    body.authenticated .social-board--messages .inbox-layout.inbox-layout .inbox-sidebar {
+        overflow: visible;
+    }
+}
+
+@media (max-width: 600px) {
+    body.authenticated .social-board :is(.guild-recruitment-grid, .guild-discovery-search),
+    body.authenticated .social-board--message-search .social-message-search-filters {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.authenticated .social-board--messages .inbox-picker > summary {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 10px 10px;
+        padding-inline: 10px;
+        min-height: 44px;
+        border: 1px solid var(--social-border);
+        border-radius: 6px;
+        background: var(--social-panel);
+        cursor: pointer;
+    }
+
+    body.authenticated .social-board--messages .inbox-picker > summary > .icon {
+        width: 16px;
+        color: var(--accent);
+    }
+
+    body.authenticated .social-board--messages .inbox-picker > summary > span {
+        margin-inline-start: auto;
+    }
+
+    body.authenticated .social-board--messages .message-thread {
+        min-height: 185px;
+        max-height: 46dvh;
+    }
+
+    body.authenticated .social-board--messages .message-composer {
+        margin: auto 10px 0;
+    }
+
+    body.authenticated .social-board--messages .message-compose {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.authenticated .social-board--messages .message-compose button {
+        justify-self: end;
+        min-height: 44px;
+    }
+
+    body.authenticated .social-board .guild-overview-hero .guild-channel-link {
+        grid-column: 1 / -1;
+    }
+
+    body.authenticated .social-board .guild-relations-list > .guild-card {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.authenticated .social-board .guild-relations-list > .guild-card > .guild-card-status {
+        grid-column: auto;
+        grid-row: auto;
+    }
+}
+
+body.authenticated .social-board--messages .inbox-sidebar {
+    max-height: clamp(520px, calc(100dvh - 420px), 650px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+body.authenticated .social-board .guild-relations-list > .guild-card > .badge {
+    justify-self: start;
+    padding: 5px 9px;
+    border: 1px solid var(--social-border);
+    border-radius: 5px;
+    background: var(--social-panel);
+}
+
+body.authenticated .social-board--guild-public .guild-public-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+    gap: var(--social-gap);
+    margin-block: 18px;
+}
+
+body.authenticated .social-board--guild-public .guild-public-content > .panel {
+    min-width: 0;
+    margin: 0;
+}
+
+body.authenticated .social-board--guild-customize .guild-profile-form {
+    max-width: 1080px;
+}
+
+body.authenticated .social-board .guild-rank-editor input[type=number] {
+    max-width: 240px;
+}
+
+body.authenticated .social-board .guild-action-review,
+body.authenticated .social-board .guild-rank-assignments {
+    border-radius: 7px;
+}
+
+body.authenticated .social-board .guild-members-table {
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 850px) {
+    body.authenticated .social-board--guild-public .guild-public-content {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.authenticated .social-board--messages .inbox-layout.inbox-layout .inbox-sidebar {
+        max-height: min(38dvh, 280px);
+        overflow-y: auto;
+    }
+}

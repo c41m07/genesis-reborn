@@ -1,14 +1,14 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}Confirmer la suppression · Patchnotes{% endblock %}
 {% block body %}
-<div class="page-heading"><h1>Confirmer la suppression</h1></div>
-<section class="panel" aria-labelledby="patchnote-delete-title">
+<div class="page-heading"><div><p class="eyebrow">Patchnotes · Suppression</p><h1>Confirmer la suppression</h1></div></div>
+<section class="panel admin-patchnote-deletion" aria-labelledby="patchnote-delete-title">
     <h2 id="patchnote-delete-title">{{ note.title }}</h2>
     <p>{{ note.version }} · {{ note.status == 'published' ? 'Publié' : 'Brouillon' }}. Cette patchnote sera supprimée définitivement et ne sera plus consultable par les joueurs.</p>
+    <form method="post" action="{{ path('app_admin_patchnote_delete', {id: note.id}) }}" class="admin-patchnote-actions">
+        <input type="hidden" name="_token" value="{{ csrf_token('patchnote_delete_' ~ note.id) }}">
+        <a class="secondary" href="{{ path('app_admin_patchnote_edit', {id: note.id}) }}">Annuler et revenir à la fiche</a>
+        <button class="danger">Supprimer définitivement</button>
+    </form>
 </section>
-<form method="post" action="{{ path('app_admin_patchnote_delete', {id: note.id}) }}" class="admin-patchnote-actions">
-    <input type="hidden" name="_token" value="{{ csrf_token('patchnote_delete_' ~ note.id) }}">
-    <button class="danger">Supprimer définitivement</button>
-    <a class="secondary" href="{{ path('app_admin_patchnote_edit', {id: note.id}) }}">Annuler et revenir à la fiche</a>
-</form>
 {% endblock %}

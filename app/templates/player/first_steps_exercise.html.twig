@@ -2,14 +2,16 @@
 {% block title %}Exercice pirate · Genesis Reborn{% endblock %}
 
 {% block body %}
+<div class="first-steps-exercise-board">
 <div class="page-heading">
     <div>
-        <h1>Exercice pirate</h1>
+        <p class="first-steps-eyebrow">Opérations · résultats non persistants</p><h1>Exercice pirate</h1>
         <p>Entraînement facultatif · {{ membership.universe.name }}</p>
     </div>
     <a class="quiet-button" href="{{ path('app_first_steps') }}">Retour aux Premiers pas</a>
 </div>
 
+<div class="first-steps-exercise-layout{{ report ? ' has-report' : '' }}">
 {% if report is not null %}
     <section class="panel account-panel" aria-labelledby="training-report-title">
         <h2 id="training-report-title">Rapport d’exercice</h2>
@@ -22,6 +24,10 @@
         {% endif %}
         <p>Le jalon d’apprentissage est validé quel que soit le résultat : l’objectif est de savoir lire le rapport.</p>
         <h3>Comparer les survivants et les pertes</h3>
+        <dl class="first-steps-exercise-metrics">
+            <div><dt>Escorte · survivants</dt><dd>{{ report.escortSurvivors }} / 2</dd></div>
+            <div><dt>Pirates · survivants</dt><dd>{{ report.pirateSurvivors }} / 2</dd></div>
+        </dl>
         <p>Le résultat résume le sort du convoi. Les pertes indiquent combien d’unités n’ont pas survécu, même dans le camp vainqueur.</p>
         <table class="data-table first-steps-exercise-summary" aria-label="Survivants et pertes par camp">
             <thead>
@@ -54,4 +60,6 @@
         <button type="submit" class="primary" aria-describedby="training-rules">{{ report is null ? 'Lancer la simulation' : 'Rejouer la simulation' }}</button>
     </form>
 </section>
+</div>
+</div>
 {% endblock %}

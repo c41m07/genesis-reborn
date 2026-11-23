@@ -444,36 +444,120 @@ body.authenticated .fleet-redesign .space-navigation-menu .space-navigation {
 .core-fleet-kicker { color:var(--accent); font-size:11px; letter-spacing:.12em; font-weight:800; text-transform:uppercase; }
 body.authenticated .fleet-redesign .core-fleet-workspace { grid-template-columns:minmax(0,1fr); }
 body.authenticated .fleet-redesign .core-fleet-workspace > .fleet-operations-rail { grid-template-columns:repeat(auto-fit,minmax(min(270px,100%),1fr)); }
-.core-fleet-composition-layout { min-width:0; }
-.core-fleet-steps { min-width:0; }
-.core-fleet-recap { padding:14px; min-width:0; align-self:start; }
-.core-fleet-recap h3 { margin:0 0 8px; font-size:16px; }
+.core-fleet-composition-layout, .core-fleet-steps, .core-fleet-side { min-width:0; }
+.core-fleet-side { display:grid; gap:14px; align-content:start; }
+.core-fleet-side .fleet-mission-summary-card { padding:14px; }
+.core-fleet-recap { padding:18px; min-width:0; align-self:start; }
+.core-fleet-recap h3 { display:flex; align-items:center; gap:7px; margin:0 0 12px; font-size:19px; }
+.core-fleet-recap h3 .icon { width:18px; height:18px; color:var(--accent); }
 .core-fleet-recap-total {
+    display:flex;
+    align-items:baseline;
+    flex-wrap:wrap;
+    gap:6px;
     margin:0;
-    padding:8px 10px;
+    padding:10px 12px;
     background:color-mix(in srgb,var(--accent) 10%,var(--panel));
     border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));
     border-radius:5px;
-    font-size:12px;
+    font-size:13px;
 }
-.core-fleet-recap-total strong { color:var(--accent); font-size:24px; font-variant-numeric:tabular-nums; }
-.core-fleet-recap-ranks { margin:6px 0; font-size:12px; color:var(--muted); overflow-wrap:anywhere; }
+.core-fleet-recap-total strong { color:var(--accent); font-size:clamp(1.6rem,2.2vw,2.25rem); font-variant-numeric:tabular-nums; }
+.core-fleet-recap-ranks { margin:6px 0; font-size:12px; color:var(--text); overflow-wrap:anywhere; }
 .core-fleet-recap-ships { margin:6px 0 0; padding:0; list-style:none; }
-.core-fleet-recap-ships li,.core-fleet-recap-facts>div { display:flex; justify-content:space-between; gap:8px; padding:5px 0; font-size:12px; overflow-wrap:anywhere; }
+.core-fleet-recap-ships li,.core-fleet-recap-facts>div { display:flex; justify-content:space-between; gap:8px; padding:6px 0; font-size:12px; overflow-wrap:anywhere; }
 .core-fleet-recap-ships strong,.core-fleet-recap-facts dt { flex-shrink:0; }
 .core-fleet-recap-facts { margin:8px 0 0; padding-top:5px; border-top:1px solid var(--line); }
-.core-fleet-recap-facts dd { margin:0; text-align:right; color:var(--muted); }
+.core-fleet-recap-facts dd { margin:0; text-align:right; color:var(--text); }
+.fleet-wizard-ready .core-fleet-recap-actions .fleet-wizard-actions {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    gap:8px;
+    margin-top:16px;
+}
+.fleet-wizard-ready .core-fleet-recap-actions .fleet-wizard-actions[hidden],
+.core-fleet-recap-quote .core-fleet-quote[hidden] {
+    display:none;
+}
+.core-fleet-recap-actions .fleet-wizard-actions > button { width:100%; min-height:44px; }
+.core-fleet-recap-actions .fleet-wizard-actions > .primary { grid-row:1; }
+.core-fleet-recap .core-fleet-recap-notice { margin:10px 0 0; font-size:12px; }
+.core-fleet-recap-quote .core-fleet-quote { padding-top:10px; margin-top:10px; border-top:1px solid var(--line); }
+.core-fleet-recap-quote .core-fleet-quote h4 { margin:0 0 8px; font-size:14px; }
+.fleet-wizard-ready .fleet-review-grid { grid-template-columns:minmax(0,1fr); }
+.fleet-redesign .fleet-composition-table {
+    border-collapse:separate;
+    border-spacing:0;
+    border:1px solid var(--line);
+    border-radius:5px;
+}
+.fleet-redesign .fleet-composition-table :is(th,td) { border-inline-end:1px solid var(--line); }
+.fleet-redesign .fleet-composition-table :is(th,td):last-child { border-inline-end:0; }
+.fleet-redesign .fleet-composition-table thead { background:color-mix(in srgb,var(--accent) 11%,var(--panel)); }
+.fleet-redesign .fleet-composition-table tbody tr:nth-child(even) { background:color-mix(in srgb,var(--accent) 4%,var(--panel)); }
+.fleet-composition-name { display:inline-flex; align-items:center; gap:6px; min-width:0; }
+.fleet-composition-name .icon { width:15px; height:15px; flex:none; color:var(--accent); }
+body.authenticated .fleet-redesign .fleet-composition-control > .fleet-composition-maximum {
+    flex-basis:clamp(27px,4vw,42px);
+    font-size:clamp(.6rem,1vw,.75rem);
+    padding-inline:2px;
+}
 @media(min-width:1200px) {
-    .core-fleet-composition-layout:has(.core-fleet-recap:not([hidden])) { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,26%); gap:16px; align-items:start; }
+    .core-fleet-composition-layout:has(.core-fleet-recap:not([hidden])) {
+        display:grid; grid-template-columns:minmax(0,1fr) minmax(260px,30%); gap:16px; align-items:start;
+    }
     .core-fleet-composition-layout .core-fleet-steps { grid-area:1/1; }
-    .core-fleet-composition-layout .core-fleet-recap { grid-area:1/2; }
+    .core-fleet-composition-layout .core-fleet-side { grid-area:1/2; }
 }
 @media(max-width:1199px) {
-    .core-fleet-recap { margin:0 0 12px; }
+    .core-fleet-composition-layout { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
+    .core-fleet-side { display:contents; }
+    .core-fleet-side .fleet-mission-summary-card { grid-row:3; }
+    .core-fleet-recap-notice { display:none; }
     .core-fleet-recap-ships { display:none; }
     .core-fleet-recap-facts>div { padding:2px 0; }
+}
+@media(max-width:600px) {
+    .fleet-composition-name .icon { display:none; }
+    .core-fleet-recap { padding:12px; }
 }
 /* Le texte de corps du récapitulatif garde le contraste sur son fond légèrement teinté. */
 body.authenticated .fleet-redesign .core-fleet-recap p.core-fleet-recap-total { color:var(--text); }
 body.authenticated .fleet-redesign .core-fleet-recap-ships > li,
 body.authenticated .fleet-redesign .core-fleet-recap-ships > li > strong { color:var(--text); }
+
+.core-fleet-tracking { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; }
+.core-fleet-tracking > * { min-width:0; }
+.core-fleet-tracking > .core-fleet-incoming .incoming-attacks { margin-block-start:0; }
+@media(min-width:1200px) {
+    .core-fleet-tracking { grid-template-columns:minmax(0,2fr) minmax(280px,1fr); align-items:start; }
+}
+
+body.authenticated .fleet-redesign:has(#prepare-mission) .page-heading h1 {
+    font-size:clamp(1.9rem,2.4vw,2.75rem);
+    line-height:1.1;
+}
+
+body.authenticated .fleet-redesign .fleet-form:has(.core-fleet-composition-layout) {
+    padding:0;
+    border:0;
+    background:transparent;
+}
+
+.core-fleet-steps {
+    overflow-wrap:anywhere;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:var(--panel);
+}
+
+@media(min-width:1200px) {
+    .core-fleet-steps { min-height:100%; }
+}
+
+@media(min-width:1200px) {
+    body.authenticated .fleet-redesign .core-fleet-steps .fleet-wizard-steps { padding-bottom:8px; }
+    body.authenticated .fleet-redesign .core-fleet-steps .fleet-wizard-panel[data-step="1"] { padding-top:8px; }
+    body.authenticated .fleet-redesign .core-fleet-steps .fleet-wizard-panel[data-step="1"] h3 { margin-bottom:5px; }
+    body.authenticated .fleet-redesign .core-fleet-steps .fleet-composition-table tbody > tr > * { padding-block:9px; }
+}
