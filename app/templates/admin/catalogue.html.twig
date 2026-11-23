@@ -8,9 +8,12 @@
 {% if editing %}<section class="panel admin-catalogue-entry"><h2>Valeurs de {{ item.label }}</h2><p>La production est matérialisée puis recalculée à l’enregistrement. Les références peuvent être restaurées pour cette entrée.</p>{% include 'admin/_catalogue_form.html.twig' %}</section>
 {% else %}
 <form method="get" action="{{ path('app_admin_catalogue',{id:universe.id}) }}" class="admin-page-search" role="search"><label for="catalogue-query">Rechercher dans toutes les familles</label><input id="catalogue-query" name="q" type="search" maxlength="150" value="{{ query }}" placeholder="Nom, identifiant ou rang"><button class="primary">Rechercher</button>{% if query %}<a href="{{ path('app_admin_catalogue_group',{id:universe.id,group:group}) }}">Effacer la recherche</a>{% endif %}</form>
+{% set rankLabels = {'basic':'Basique','intermediate':'Intermédiaire','superior':'Supérieur'} %}
 {% set resultCount = 0 %}
+{% for items in catalogues %}{% set resultCount = resultCount + items|length %}{% endfor %}
 <section class="panel admin-catalogue-list" aria-labelledby="admin-catalogue-list-title">
     <h2 id="admin-catalogue-list-title">Fiches du catalogue</h2>
+    {% if resultCount > 0 %}
     <table class="admin-design-table" role="table" aria-labelledby="admin-catalogue-list-title">
         <thead role="rowgroup">
             <tr role="row">
@@ -23,11 +26,12 @@
         <tbody role="rowgroup">
         {% for family, items in catalogues %}
             {% for entry in items %}
-                {% set resultCount = resultCount + 1 %}
                 <tr role="row">
                     <th scope="row" role="rowheader">{{ entry.label }} <small><code>{{ entry.slug }}</code></small></th>
                     <td role="cell" data-label="Famille">{{ groupLabels[family] }}</td>
-                    <td role="cell" data-label="Rangs disponibles">{{ entry.tier_labels|join(' · ') }}</td>
+                    <td role="cell" data-label="Rangs disponibles">
+                        <ul class="admin-design-ranks">{% for rank, label in entry.tier_labels %}<li><strong>{{ rankLabels[rank]|default(rank) }}</strong> : {{ label }}</li>{% endfor %}</ul>
+                    </td>
                     <td role="cell" class="admin-design-table-action">
                         <a class="admin-design-row-link" href="{{ path('app_admin_catalogue_edit', {id: universe.id, group: family, slug: entry.slug}) }}">Modifier {{ entry.label }}</a>
                     </td>
@@ -36,7 +40,9 @@
         {% endfor %}
         </tbody>
     </table>
+    {% else %}
+        <p role="status">Aucune entrée ne correspond à cette recherche.</p>
+    {% endif %}
 </section>
-{% if resultCount == 0 %}<p class="panel" role="status">Aucune entrée ne correspond à cette recherche.</p>{% endif %}
 {% endif %}
 {% endblock %}

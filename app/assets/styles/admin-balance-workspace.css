@@ -3,7 +3,7 @@ body.admin-console.admin-balance-workspace .admin-content {
     overflow-wrap: anywhere;
 }
 
-body.admin-console.admin-balance-workspace :is(.admin-observation-comparison, .admin-observation-resources, .admin-catalogue-grid, .catalog-balance-grid) {
+body.admin-console.admin-balance-workspace :is(.admin-observation-comparison, .admin-observation-resources, .catalog-balance-grid) {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
@@ -20,8 +20,7 @@ body.admin-console.admin-balance-workspace :is(.panel, .admin-resource-observati
     border-radius: 6px;
 }
 
-body.admin-console.admin-balance-workspace .admin-observation-comparison > .panel,
-body.admin-console.admin-balance-workspace .admin-catalogue-grid > .panel {
+body.admin-console.admin-balance-workspace .admin-observation-comparison > .panel {
     margin: 0;
 }
 
@@ -71,7 +70,7 @@ body.admin-console.admin-balance-workspace :is(.admin-page-navigation, .admin-ba
     margin: 24px 0;
 }
 
-body.admin-console.admin-balance-workspace :is(.admin-page-navigation a, .admin-balance-actions a, .admin-catalogue-grid .secondary) {
+body.admin-console.admin-balance-workspace :is(.admin-page-navigation a, .admin-balance-actions a) {
     display: flex;
     align-items: center;
     min-height: 46px;
@@ -160,7 +159,7 @@ body.admin-console.admin-balance-workspace .admin-catalogue-reset {
 }
 
 @media (max-width: 1200px) {
-    body.admin-console.admin-balance-workspace :is(.admin-observation-comparison, .admin-observation-resources, .admin-catalogue-grid, .catalog-balance-grid, .admin-catalogue-costs) {
+    body.admin-console.admin-balance-workspace :is(.admin-observation-comparison, .admin-observation-resources, .catalog-balance-grid, .admin-catalogue-costs) {
         grid-template-columns: minmax(0, 1fr);
     }
 }
@@ -282,3 +281,14 @@ body.admin-console.admin-balance-workspace .admin-catalogue-publication h3 { mar
         font-size: .86em;
     }
 }
+
+.admin-balance-workspace .admin-design-ranks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 12px;
+    color: var(--muted);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.admin-balance-workspace .admin-design-ranks strong { color: var(--text); }
