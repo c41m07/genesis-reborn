@@ -130,6 +130,9 @@
                     </li>
                 {% endfor %}
             </ol>
+            {% if dossier.chapter.missions|filter(mission => mission.state == 'locked') is not empty %}
+                <p class="pirate-campaign-lock-hint">Terminez les dossiers précédents pour débloquer les missions suivantes.</p>
+            {% endif %}
             {% set previousChapters = dossier.history|filter(entry => entry.number not in chapterMissions) %}
             {% if previousChapters is not empty %}
                 <details class="pirate-campaign-archives">

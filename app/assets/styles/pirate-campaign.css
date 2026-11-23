@@ -308,3 +308,45 @@ a.pirate-campaign-mission-title {
     font-weight: 750;
 }
 .player-campaign-board #pirate-intelligence-title { scroll-margin-top:180px; }
+
+
+/* P22 : chaque état se lit dans son vrai dossier ; aucun montant n'est un reçu. */
+.pirate-campaign-missions .pirate-campaign-lock-hint {
+    margin:.8rem 0 0;
+    color:color-mix(in srgb,var(--text) 78%,var(--muted));
+    font-size:.82rem;
+}
+.pirate-campaign .pirate-campaign-economy-card {
+    --pirate-economy-tone:#3e87a3;
+    padding:.9rem;
+    border:1px solid color-mix(in srgb,var(--pirate-economy-tone) 44%,var(--line));
+    border-radius:7px;
+    background:color-mix(in srgb,var(--pirate-economy-tone) 7%,var(--panel));
+}
+.pirate-campaign .pirate-campaign-economy-card--estimate { --pirate-economy-tone:#a97732; }
+.pirate-campaign .pirate-campaign-economy-card--capacity { --pirate-economy-tone:#b45356; }
+.pirate-campaign .pirate-economy-badge {
+    color:var(--text);
+    border-color:color-mix(in srgb,var(--pirate-economy-tone) 54%,var(--line));
+    background:color-mix(in srgb,var(--pirate-economy-tone) 18%,var(--panel));
+}
+.pirate-campaign .pirate-campaign-economy-card .pirate-campaign-reward {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(min(100%,7rem),1fr));
+    gap:.5rem;
+}
+.pirate-campaign .pirate-campaign-economy-card .pirate-campaign-reward > div {
+    display:block;
+    margin:0;
+    min-width:0;
+    padding:.45rem .55rem;
+    border:1px solid var(--line);
+    border-radius:5px;
+    background:var(--panel);
+}
+.pirate-campaign .pirate-campaign-economy-card .pirate-campaign-reward dd {
+    margin:.2rem 0 0;
+    color:var(--text);
+    font-weight:750;
+}
+.pirate-campaign .pirate-campaign-economy-card > .secondary { max-width:100%; width:auto; }

@@ -1,7 +1,8 @@
 {% import 'ui/macros.html.twig' as ui %}
 {% if briefing.quote is not null and not has_durable_reward %}
-    <section aria-labelledby="pirate-potential-title">
+    <section class="pirate-campaign-economy-card pirate-campaign-economy-card--estimate" aria-labelledby="pirate-potential-title">
         <h3 id="pirate-potential-title">{{ ui.icon('overview') }} Gain potentiel</h3>
+        <p class="badge pirate-economy-badge">Non versé</p>
         <p>Estimation du convoi après victoire : 50 % du coût catalogue de la flotte révélée, hors électricité. Ce montant n’a pas été versé.</p>
         <dl class="pirate-campaign-reward">
             {% for resource in briefing.quote %}

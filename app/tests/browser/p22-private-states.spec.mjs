@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { execFileSync } from 'node:child_process';
 import { test, expect } from './support/isolated-test.mjs';
 import { queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
@@ -47,6 +48,10 @@ test('P22 : états privés de campagne en lecture seule', async ({ page, browser
         await expect(tab.locator('body')).toHaveAttribute('data-theme',theme);
         const anchor = await verify(tab);
         await expect.poll(()=>tab.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+        if (viewport.width===390) {
+          const scope = suffix.startsWith('A') ? '.pirate-campaign-missions' : '.pirate-campaign-economy-card';
+          expect((await new AxeBuilder({page:tab}).include(scope).withTags(['wcag2a','wcag2aa']).analyze()).violations).toEqual([]);
+        }
         await anchor.evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));
         await tab.screenshot({path:info.outputPath(`P22-${suffix}-${theme}-${viewport.width}.png`),animations:'disabled',scale:'css'});
       }
@@ -59,6 +64,7 @@ test('P22 : états privés de campagne en lecture seule', async ({ page, browser
     const rows = tab.locator('.pirate-campaign-mission-row--locked');
     await expect(rows).toHaveCount(2);
     await expect(rows.locator('a')).toHaveCount(0);
+    await expect(tab.locator('.pirate-campaign-lock-hint')).toContainText('Terminez les dossiers précédents');
     await expect(rows.getByText('Verrouillée',{exact:true})).toHaveCount(2);
     await expect(tab.getByText('Gain potentiel',{exact:true})).toHaveCount(0);
     return rows.first();
@@ -69,13 +75,19 @@ test('P22 : états privés de campagne en lecture seule', async ({ page, browser
   await snapshot(page,owner,'B-potentiel',async tab=>{
     const quote = tab.getByRole('region',{name:'Gain potentiel',exact:true});
     await expect(quote).toContainText('Ce montant n’a pas été versé.');
+    await expect(quote.locator('.pirate-economy-badge')).toHaveText('Non versé');
+    await expect(quote.locator('dl > div')).toHaveCount(4);
+    const card = quote.locator('dl > div').first();
+    expect((await card.locator('dd').boundingBox()).y).toBeGreaterThanOrEqual((await card.locator('dt').boundingBox()).y);
     await expect(tab.getByRole('button',{name:'Vérifier le devis d’attaque',exact:true})).toBeVisible();
     return quote;
   });
   prepare(owner.origin,'travelling');
   await snapshot(page,owner,'C-convoi',async tab=>{
     const convoy = tab.getByRole('region',{name:'Convoi de remerciement',exact:true});
+    await expect(convoy).toHaveClass(/economy-card--transit/);
     await expect(convoy).toContainText('En convoi');
+    await expect(convoy.locator('dl > div')).toHaveCount(4);
     await expect(convoy).toContainText('Arrivée prévue');
     await expect(convoy.getByRole('link',{name:'Voir le trajet dans Flottes',exact:true})).toHaveAttribute('href','/flottes');
     await expect(convoy.getByRole('button')).toHaveCount(0);
@@ -94,6 +106,8 @@ test('P22 : états privés de campagne en lecture seule', async ({ page, browser
     prepare(full.origin,'full');
     await snapshot(other,full,'D-depot-empeche',async tab=>{
       const convoy = tab.getByRole('region',{name:'Convoi de remerciement',exact:true});
+      await expect(convoy).toHaveClass(/economy-card--capacity/);
+      await expect(convoy).toContainText('Stockage insuffisant.');
       await expect(convoy).toContainText('espace insuffisant lors du dernier contrôle');
       await expect(convoy.getByRole('button',{name:'Retenter le dépôt dans la même colonie'})).toBeVisible();
       await expect(convoy.getByText('Lot crédité',{exact:true})).toHaveCount(0);
