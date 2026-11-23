@@ -192,6 +192,17 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
     }
 }
 
+/* Sur téléphone, préserver les commandes du comparateur et le suivi de
+   la Vue générale sans refermer l’aide ni déplacer la vue Cartes. */
+@media (max-width: 740px) {
+    .app-frame:has(> .shell :is(.player-planets-board .colony-resource-picker, .overview-page .core-empire-watch)) > .first-steps-popup-enhanced {
+        position: relative;
+        inset: auto;
+        margin: 0 0 8px auto;
+        max-width: 100%;
+    }
+}
+
 /* Carte, composeur et choix de cadeau gardent leur espace : l’aide reste au-dessus dans le flux. */
 :is(.shell--galaxy-v2, .shell--messaging, .shell--advent, .shell--fleet-decision) > .first-steps-popup-enhanced {
     position: relative;
