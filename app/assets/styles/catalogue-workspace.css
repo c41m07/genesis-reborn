@@ -709,6 +709,17 @@ body[data-theme="light"] .core-catalogue-header--technologies .core-catalogue-ki
         .building-costs:not(:has(> span:nth-child(4))) > span[hidden] {
         display: none;
     }
+    /* Dans un coût de lot à trois tuiles, l’abréviation évite de couper
+       Électricité en plein mot. Le libellé intégral reste accessible. */
+    .catalog-workspace section:not(.catalog-condensed) .core-construction-cost
+        .building-costs:has(> span:nth-child(3):last-child) > [data-resource="electricity"] .cost-label-full {
+        display: none;
+    }
+    .catalog-workspace section:not(.catalog-condensed) .core-construction-cost
+        .building-costs:has(> span:nth-child(3):last-child) > [data-resource="electricity"] .cost-label-short {
+        display: inline;
+        white-space: nowrap;
+    }
 }
 @media (max-width: 600px) {
     .catalog-workspace .catalogue-next-rank > a { min-height: 44px; }
