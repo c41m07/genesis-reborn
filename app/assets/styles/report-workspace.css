@@ -269,5 +269,61 @@ html[data-theme="light"] .player-report-detail {
 .player-report-detail .intel-board-summary { margin:.75rem 0; }
 .player-report-detail .intel-board-summary > div { border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 8%,var(--panel)); }
 .player-report-detail #combat-rounds .combat-round > summary { min-height:42px; padding-block:.55rem; }
+
+/* Le rail d’un rapport joueur est plus étroit que la fenêtre entière, même en Full HD.
+   Dans ce rail, reprendre les lignes compactes mobiles plutôt que tasser huit colonnes. */
+.player-report-detail #combat-rounds { container:player-combat-rounds / inline-size; }
+
+@container player-combat-rounds (max-width:42rem) {
+    .player-report-detail #combat-rounds .combat-versus {
+        grid-template-columns:minmax(0,1fr);
+    }
+
+    .player-report-detail #combat-rounds .combat-vs { padding-top:0; }
+
+    .player-report-detail #combat-rounds .round-table,
+    .player-report-detail #combat-rounds .round-table tbody { display:block; }
+
+    .player-report-detail #combat-rounds .round-table thead {
+        position:absolute;
+        inline-size:1px;
+        block-size:1px;
+        overflow:hidden;
+        clip-path:inset(50%);
+    }
+
+    .player-report-detail #combat-rounds .round-table tbody tr {
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:8px 10px;
+        padding-block:10px;
+        border-bottom:1px solid var(--line);
+    }
+
+    .player-report-detail #combat-rounds .round-table tbody :is(th,td) {
+        width:auto;
+        padding:0;
+        border:0;
+        text-align:start;
+    }
+
+    .player-report-detail #combat-rounds .round-table tbody th,
+    .player-report-detail #combat-rounds .round-table .report-empty-row,
+    .player-report-detail #combat-rounds .round-table td:last-child { grid-column:1/-1; }
+
+    .player-report-detail #combat-rounds .round-table td[data-label]::before {
+        content:attr(data-label);
+        display:block;
+        margin-block-end:2px;
+        color:var(--muted);
+        font-size:11px;
+        font-weight:400;
+    }
+
+    .player-report-detail #combat-rounds .round-table td[data-label]:last-child::before {
+        display:inline;
+        margin-inline-end:8px;
+    }
+}
 .player-report-board .player-report-type { min-width:0; display:grid; justify-items:start; gap:.2rem; }
 .player-report-board .player-report-kind { font-size:.82rem; color:var(--text); }
