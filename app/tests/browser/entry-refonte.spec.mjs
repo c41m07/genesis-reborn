@@ -125,10 +125,6 @@ test('L8 A : règles complètes, calendriers et reprise d’empire', async ({ pa
   await expect(page).toHaveURL(/univers$/);
   await expect(page.getByRole('heading', { name: 'Choisissez votre univers' })).toBeVisible();
   await expect(page.locator('.resource-event-stack')).toHaveCount(0);
-  await page.setViewportSize({ width: 1920, height: 1080 });
-  const dimensions = await page.evaluate(() => [innerWidth, innerHeight, devicePixelRatio]);
-  expect(dimensions).toEqual([1920, 1080, 1]);
-  await page.screenshot({ path: testInfo.outputPath('08-univers-premier-acces-1920.png'), scale: 'css', animations: 'disabled' });
 
   const omegaId = queryIsolatedSql(project, "SELECT id FROM universe WHERE slug='omega-1'");
   const turboId = queryIsolatedSql(project, "SELECT id FROM universe WHERE slug='turbo-1'");

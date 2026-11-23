@@ -1084,6 +1084,12 @@ body[data-theme=light] .entry-denied .access-denied-panel .entry-eyebrow {
     font-size: 16px;
 }
 
+/* À largeur suffisante, les trois états sont comparables en une ligne.
+   auto-fit garde une carte lisible quand l’univers n’a que deux choix. */
+.entry-universes--audit .universe-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%,max(345px,calc((100% - 40px) / 3))),1fr));
+}
+
 .entry-universes--audit .universe-card {
     padding: clamp(18px, 1.4vw, 27px);
     border-radius: 10px;

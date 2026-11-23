@@ -1,5 +1,6 @@
 import { test, expect } from './support/isolated-test.mjs';
 import AxeBuilder from '@axe-core/playwright';
+import { queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
 
 // Captures alignées sur le viewport de la maquette, sans recadrage ni page entière.
 async function capture(page, testInfo, label, width, height) {
@@ -103,5 +104,52 @@ test('Documents publics : sommaires, textes conservés et ancres natives sans Ja
     expect(violations).toEqual([]);
   } finally {
     await contextAxe.close();
+  }
+});
+
+test('Premier accès : trois états universitaires dans le viewport de la maquette', async ({ page }, testInfo) => {
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const fixtureEmail = `public-maquette-${suffix}@example.test`;
+  const fixturePassword = 'Public-Maquette-2026!';
+  const project = process.env.BROWSER_ROUTER;
+  const closedSlug = `maquette-closed-${suffix}`;
+
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto('/inscription');
+  await page.getByLabel('Adresse email').fill(fixtureEmail);
+  await page.getByLabel('Nom de commandant').fill(`Public-${suffix}`);
+  await page.getByLabel('Mot de passe (12 caractères minimum)', { exact: true }).fill(fixturePassword);
+  await page.getByLabel('Confirmer le mot de passe').fill(fixturePassword);
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await expect(page).toHaveURL(/connexion$/);
+  await page.getByLabel('Adresse email').fill(fixtureEmail);
+  await page.getByLabel('Mot de passe', { exact: true }).fill(fixturePassword);
+  await page.getByRole('button', { name: 'Connexion' }).click();
+  await expect(page).toHaveURL(/univers$/);
+
+  // Le jeu importe deux univers. Le troisième état n’existe que dans cette copie.
+  const startsAt = queryIsolatedSql(project, "SELECT COALESCE(DATE_FORMAT(starts_at,'%Y-%m-%d %H:%i:%s'),'NULL') FROM universe WHERE slug='turbo-1'");
+  expect(startsAt).toMatch(/^(NULL|\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)$/);
+  const restore = startsAt === 'NULL' ? 'NULL' : "'"+startsAt+"'";
+  try {
+    runIsolatedSql(project, "UPDATE universe SET starts_at=DATE_ADD(UTC_TIMESTAMP(), INTERVAL 1 DAY) WHERE slug='turbo-1'");
+    runIsolatedSql(project, `INSERT INTO universe (slug,name,status,game_settings) VALUES ('${closedSlug}','Univers saisonnier','closed',JSON_OBJECT())`);
+    await page.goto('/univers');
+    await expect(page.getByRole('heading', { level: 1, name: 'Choisissez votre univers' })).toBeVisible();
+    const cards = page.locator('.universe-card');
+    await expect(cards).toHaveCount(3);
+    const initialStates = await cards.locator('.entry-universe-state').allTextContents();
+    expect(initialStates.map(s => s.trim())).toEqual(expect.arrayContaining(['OUVERT', 'OUVERTURE PROGRAMMÉE', 'INACCESSIBLE']));
+    await expect(cards.locator('button')).toHaveCount(1);
+    const rowYs = await cards.evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().y));
+    expect(Math.max(...rowYs) - Math.min(...rowYs)).toBeLessThan(2);
+    await capture(page, testInfo, '08-univers-premier-acces', 1920, 1080);
+    await page.setViewportSize({ width: 390, height: 844 });
+    const mobileYs = await cards.evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().y));
+    expect(new Set(mobileYs).size).toBe(3);
+    await capture(page, testInfo, '08-univers-premier-acces', 390, 844);
+  } finally {
+    runIsolatedSql(project, `DELETE FROM universe WHERE slug='${closedSlug}'`);
+    runIsolatedSql(project, `UPDATE universe SET starts_at=${restore} WHERE slug='turbo-1'`);
   }
 });
