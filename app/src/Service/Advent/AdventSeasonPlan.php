@@ -23,7 +23,6 @@ final readonly class AdventSeasonPlan
     private const PACKS = [
         6 => [
             'beginner' => [
-                [['transport', 'B', 1]],
                 [['probe', 'B', 12]],
             ],
             'intermediate' => [
@@ -95,15 +94,16 @@ final readonly class AdventSeasonPlan
         $budget = (self::MILESTONE_BUDGET_METAL[$door] ?? 0) * $multiplier;
         $packs = self::PACKS[$door][$bracket] ?? null;
         if ($packs !== null) {
-            return array_map(fn (array $pack): array => $this->pack($pack, $budget), $packs);
+            $result = array_map(fn (array $pack): array => $this->pack($pack, $budget), $packs);
+            return $door === 6 && $bracket === 'beginner'
+                ? [...$result, $this->voucher('transport', $budget), $this->voucher('colony_ship', $budget)]
+                : $result;
         }
         if ($door === 12) {
             return [['kind' => 'research_discount', 'percent' => 50, 'budget_metal' => $budget]];
         }
         if ($door === 24) {
-            return array_map(static fn (string $slug): array => [
-                'kind' => 'ship_voucher', 'slug' => $slug, 'tier' => 'basic', 'quantity' => 1, 'budget_metal' => $budget,
-            ], ['cruiser', 'battleship', 'capital']);
+            return array_map(fn (string $slug): array => $this->voucher($slug, $budget), ['cruiser', 'battleship', 'capital']);
         }
 
         $metal = match (true) {
@@ -134,6 +134,12 @@ final readonly class AdventSeasonPlan
         }
 
         return ['kind' => 'ship_pack', 'units' => $units, 'budget_metal' => $budget, 'value_twice_metal' => $rawValue];
+    }
+
+    /** @return array{kind:string,slug:string,tier:string,quantity:int,budget_metal:int} */
+    private function voucher(string $slug, int $budget): array
+    {
+        return ['kind' => 'ship_voucher', 'slug' => $slug, 'tier' => 'basic', 'quantity' => 1, 'budget_metal' => $budget];
     }
 
     /** @param array<string,int> $resources */

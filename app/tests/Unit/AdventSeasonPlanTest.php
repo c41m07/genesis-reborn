@@ -31,7 +31,7 @@ final class AdventSeasonPlanTest extends TestCase
         self::assertSame(['basic', 'basic', 'basic'], array_column($doors[24]['options']['beginner'], 'tier'));
     }
 
-    public function testCatalogueRevealsOnlyTheRequestedTransportConflict(): void
+    public function testAllPublishedChoicesRespectCeilingsWithoutCivilSlotItems(): void
     {
         $doors = (new AdventSeasonPlan(new GameCatalog(dirname(__DIR__, 2).'/config/game')))->doors();
         $over = [];
@@ -44,7 +44,9 @@ final class AdventSeasonPlanTest extends TestCase
                 }
             }
         }
-        self::assertSame([[6, 'beginner', 0, 24000]], $over);
+        self::assertSame([], $over);
+        self::assertSame([['slug' => 'probe', 'tier' => 'basic', 'quantity' => 12]], $doors[6]['options']['beginner'][0]['units']);
+        self::assertSame(['transport', 'colony_ship'], array_column(array_slice($doors[6]['options']['beginner'], 1), 'slug'));
         self::assertSame(71878, $doors[6]['options']['intermediate'][2]['value_twice_metal']);
         self::assertSame(287860, $doors[6]['options']['veteran'][2]['value_twice_metal']);
         foreach ($doors as $door) {
