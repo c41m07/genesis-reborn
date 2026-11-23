@@ -190,6 +190,17 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
     max-width: 100%;
 }
 
+/* Sur téléphone, l’aide ouverte suit le formulaire de signalement.
+   Les champs et le retour au classement restent accessibles sans fermer le guide. */
+@media (max-width: 740px) {
+    .app-frame:has(> .shell .player-report-workspace .player-report-form) > .first-steps-popup-enhanced[open] {
+        position: relative;
+        inset: auto;
+        margin: 0 0 8px auto;
+        max-width: 100%;
+    }
+}
+
 /* Le panneau de l’objectif n’est pas modal sur grand écran. L’aide reste
    dépliée sous la page de détail, sans recouvrir l’action ni les prérequis. */
 @media (min-width: 901px) {
