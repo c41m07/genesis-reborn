@@ -131,6 +131,11 @@
 }
 .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs { flex:0 1 auto; margin:0; gap:6px; }
 .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a { min-height:34px; border-radius:4px; }
+/* Le canevas et sa barre restent sombres en thème clair ; les liens suivent
+   leurs propres couleurs, pas les teintes des onglets sur fond clair. */
+body.authenticated .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a:not([aria-current="page"]) {
+    color:var(--text);
+}
 .gv2-workspace[data-view] .gv2-map-stage .gv2-scene .gv2-locator {
     position:absolute; z-index:3; inset:12px auto auto 12px;
     min-width:0; max-width:55%; padding:6px 10px; pointer-events:none;
