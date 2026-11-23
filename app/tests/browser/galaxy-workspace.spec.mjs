@@ -83,6 +83,17 @@ test('L7C : système et globe conservent clic, rotation, zoom, gestes tactiles e
     await expect.poll(async()=>{const panel=await inspector.boundingBox(), canvas=await scene.boundingBox();return panel.x>=canvas.x+canvas.width;}).toBe(true);
     await page.setViewportSize({width:390,height:844});
     await expect.poll(async()=>{const panel=await inspector.boundingBox(), canvas=await scene.boundingBox();return panel.y+panel.height<=canvas.y;}).toBe(true);
+    await expect.poll(() => page.evaluate(() => {
+        const hud = document.querySelector('.gv2-hud');
+        const search = hud.querySelector('.gv2-search').getBoundingClientRect();
+        const coord = hud.querySelector('.gv2-coordinate');
+        const rectangle = coord.getBoundingClientRect();
+        const zoom = [...document.querySelectorAll('.gv2-map-controls button')].map(button => button.getBoundingClientRect());
+        const canvas = document.querySelector('.gv2-scene').getBoundingClientRect();
+        return rectangle.x >= search.right && rectangle.height < search.height
+          && coord.scrollWidth <= coord.clientWidth + 1
+          && zoom.every(button => Math.abs(button.y - zoom[0].y) <= 1 && button.width >= 44 && button.bottom <= canvas.top);
+    })).toBe(true);
     await inspector.getByRole('button',{name:'Fermer la fiche du système'}).focus();
     await page.keyboard.press('Tab');
     await expect(inspector.getByRole('button',{name:'Entrer dans le système',exact:true})).toBeFocused();
@@ -131,7 +142,7 @@ test('L7C : système et globe conservent clic, rotation, zoom, gestes tactiles e
     await expect(page.locator('.galaxy-index-table .active-row')).toContainText(unknown.name);
     await expect(page.locator('.galaxy-system-panel')).toContainText('ses planètes ne sont pas encore révélées');
     await expect(page.locator('.galaxy-index-planets')).toHaveCount(0);
-    const filter = page.getByRole('searchbox', { name: 'Rechercher dans la liste' });
+    const filter = page.locator('.galaxy-list-toolbar').getByRole('searchbox', { name: 'Rechercher dans la liste' });
     await filter.fill('nom inexistant de recette');
     await expect(page.locator('.galaxy-index-results')).toHaveText('Aucun système trouvé.');
     await filter.fill(unknown.name);
