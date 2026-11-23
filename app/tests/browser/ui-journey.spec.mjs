@@ -18,6 +18,7 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
   await page.locator('article.universe-card').first().getByRole('button',{name:/Créer mon empire/}).click();
   await expect(page).toHaveURL(/planetes\/\d+$/);
   const home=page.url(), accessResults=[];
+  await page.locator('.overview-score-detail summary').press('Enter');
   await expect(page.locator('.empire-banner .empire-points')).toBeVisible();
   await page.goto(home+'?section=buildings');
   await expect(page.locator('.catalog-operations-rail')).toBeVisible();

@@ -18,13 +18,13 @@
             {% if hostile %}
                 <li class="core-empire-deadline is-hostile" data-empire-watch-kind="hostile">
                     <div><strong>Attaque entrante</strong><a href="#incoming-attacks-heading">{{ hostile.destinationName }}</a></div>
-                    <time datetime="{{ hostile.arrivalAt }}">{{ hostile.arrivalAt|date('d/m H:i:s', preferences.timezone) }}</time>
+                    {% include 'colony/_overview_timing.html.twig' with {at:hostile.arrivalAt, now:now, timezone:preferences.timezone} only %}
                 </li>
             {% endif %}
             {% for deadline in other %}
                 <li class="core-empire-deadline">
                     <div><span>{{ deadline.kind }}</span><a href="{{ deadline.href }}">{{ deadline.name }}</a><small>{{ deadline.colony }}</small></div>
-                    <time datetime="{{ deadline.deadline|date('c') }}">{{ deadline.deadline|date('d/m H:i:s', preferences.timezone) }}</time>
+                    {% include 'colony/_overview_timing.html.twig' with {at:deadline.deadline, now:now, timezone:preferences.timezone} only %}
                 </li>
             {% endfor %}
         </ol>

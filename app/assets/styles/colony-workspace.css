@@ -469,7 +469,7 @@ body.authenticated.ui-refined .colony-redesign .colony-comparison th[data-compar
 }
 
 /* Les priorités de l’empire accompagnent la colonie active, en flux normal sur mobile. */
-.core-overview-top { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; align-items:start; }
+.core-overview-top { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; align-items:stretch; margin-block-end:16px; }
 .core-overview-top .empire-banner { min-width:0; }
 .core-empire-watch { min-width:0; margin:0; padding:16px; }
 .core-empire-watch h2 { margin:0 0 5px; font-size:20px; }

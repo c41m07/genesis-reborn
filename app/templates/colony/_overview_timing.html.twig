@@ -1,0 +1,5 @@
+{% set seconds = max(0, at|date('U') - now) %}
+<div class="overview-timing" data-controller="countdown" data-countdown-end-value="{{ at|date('c') }}" data-countdown-refresh-value="false">
+    <strong><span class="visually-hidden">Temps restant : </span><span data-countdown-target="time">{{ seconds // 3600 }}h {{ (seconds % 3600) // 60 }}m {{ seconds % 60 }}s</span></strong>
+    <time datetime="{{ at|date('c') }}">{{ at|date('d/m H:i:s', timezone) }}</time>
+</div>
