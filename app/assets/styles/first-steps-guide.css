@@ -229,6 +229,15 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
 }
 :is(.shell--galaxy-v2, .shell--messaging, .shell--advent, .shell--fleet-decision) > .first-steps-popup-enhanced .first-steps-popup-panel { margin-top: 0; }
 
+/* Les explications dépliées du classement Joueurs et le guide restent visibles,
+   sans étendre la disposition à l’onglet Guildes ni à l’aide repliée. */
+.app-frame:has(> .shell .ranking-board-help details[open] ~ .ranking-board-help-facts) > .first-steps-popup-enhanced[open] {
+    position: relative;
+    inset: auto;
+    margin: 0 0 8px auto;
+    max-width: 100%;
+}
+
 /* Le tableau horizontal des guildes doit rester lisible sous l’aide ouverte sur téléphone. */
 @media (max-width: 740px) {
     body[data-ui-page="classements"] .shell > .first-steps-popup-enhanced {

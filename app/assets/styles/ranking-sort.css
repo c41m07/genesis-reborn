@@ -36,10 +36,11 @@
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
+    justify-content: flex-start;
     gap: .2rem .65rem;
     color: var(--accent);
 }
-.ranking-board-main .ranking-board-own dd { margin: 0; font-weight: 750; font-variant-numeric: tabular-nums; }
+.ranking-board-main .ranking-board-own dd { margin: 0; color: inherit; font-weight: 750; font-variant-numeric: tabular-nums; }
 .ranking-board-help-facts { display: grid; gap: .7rem; margin-top: .85rem; }
 .ranking-board-help-fact {
     padding: .8rem .9rem;
