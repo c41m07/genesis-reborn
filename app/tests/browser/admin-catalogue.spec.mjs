@@ -100,6 +100,9 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
       const layout = page.locator('.admin-restoration-layout');
       await expect.poll(() => layout.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(width >= 1440 ? 2 : 1);
       await expect(layout.getByRole('heading', { name: 'Valeurs à réappliquer' })).toBeVisible();
+      const confirmation = layout.getByRole('checkbox', { name: /Je confirme ces valeurs/ });
+      await expect(confirmation).toBeVisible();
+      await expect(confirmation).toHaveCSS('width', '18px');
       await expect(layout.getByRole('button', { name: 'Publier ces valeurs historiques' })).toBeVisible();
       if (width === 1920 || width === 390) {
         const accessibility = await new AxeBuilder({ page }).include('#admin-main').analyze();
@@ -141,7 +144,7 @@ test('Catalogue B : comparaison des rangs, thèmes et formulaires natifs des qua
         if (index === 0) {
           const table = page.getByRole('table', { name: 'Fiches du catalogue' });
           await expect(table.getByRole('columnheader')).toHaveText(['Fiche', 'Famille', 'Rangs disponibles', 'Ouvrir']);
-          const row = table.getByRole('row').filter({ has: table.getByRole('link', { name: 'Modifier Mine à ciel ouvert', exact: true }) });
+          const row = table.getByRole('row').filter({ has: page.getByRole('link', { name: 'Modifier Mine à ciel ouvert', exact: true }) });
           await expect(row.getByRole('rowheader')).toContainText('Mine à ciel ouvert');
           await expect(row.getByRole('listitem')).toHaveText([/^Basique : Mine à ciel ouvert$/, /^Intermédiaire : .+/, /^Supérieur : .+/]);
           await expect.poll(() => row.evaluate(element => getComputedStyle(element).display)).toBe(width <= 760 ? 'block' : 'table-row');

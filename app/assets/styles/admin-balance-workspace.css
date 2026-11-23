@@ -292,3 +292,42 @@ body.admin-console.admin-balance-workspace .admin-catalogue-publication h3 { mar
     margin: 0;
 }
 .admin-balance-workspace .admin-design-ranks strong { color: var(--text); }
+
+/* Le titre et les panneaux commencent sur la même verticale que le fil d’Ariane. */
+body.admin-console.admin-balance-workspace .admin-content > :is(.admin-task-heading,.admin-catalogue-list,.admin-catalogue-entry) {
+    max-width: none;
+    margin-inline: 0;
+}
+body.admin-console.admin-balance-workspace .admin-task-heading h1 { font-size: clamp(26px, 3vw, 42px); }
+.admin-balance-workspace .admin-restoration-layout .admin-ops-table :first-child:is(th,td) { text-align: start; }
+.admin-balance-workspace .admin-restoration-layout .admin-ops-table caption { text-align: start; padding-block: 6px; }
+
+.admin-balance-workspace .admin-design-restore-decision :is(form, .admin-design-restore-confirm) { display: grid; gap: 10px; }
+.admin-balance-workspace .admin-design-restore-decision textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 76px;
+    padding: 10px 12px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    resize: vertical;
+}
+.admin-balance-workspace .admin-design-restore-decision .admin-design-restore-confirm {
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: center;
+    min-height: 44px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--admin-raised);
+}
+.admin-balance-workspace .admin-design-restore-decision .admin-design-restore-confirm input {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    margin: 0;
+    accent-color: var(--accent);
+}
+.admin-balance-workspace .admin-design-restore-decision :is(button,a) { width: 100%; }

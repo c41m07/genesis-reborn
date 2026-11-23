@@ -32,7 +32,7 @@
 <input type="hidden" name="_token" value="{{ csrf_token(tokenKey) }}">
 <input type="hidden" name="revision" value="{{ preview.revision }}">
 <label for="restore-reason">Motif de restauration</label><textarea id="restore-reason" name="reason" required minlength="5" maxlength="1000"></textarea>
-<label><input type="checkbox" name="confirmed" value="1" required> Je confirme ces valeurs pour cette fiche et cet univers.</label>
+<label class="admin-design-restore-confirm"><input type="checkbox" name="confirmed" value="1" required><span>Je confirme ces valeurs pour cette fiche et cet univers.</span></label>
 <button class="primary">Publier ces valeurs historiques</button>
 </form>
 <a class="secondary" href="{{ path('app_admin_catalogue_history', {id: universe.id, group: group, slug: slug}) }}">Annuler et revenir à l’historique</a>
