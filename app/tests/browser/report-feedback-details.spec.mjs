@@ -69,10 +69,15 @@ test('Renseignements : rangs actuels, ancien format, ressources et détection', 
   await expect(unknownIntel.getByText('Recherches : inconnu', { exact: true })).toBeVisible();
   await expect(unknownIntel.getByText('Flottes : inconnu', { exact: true })).toBeVisible();
   await expect(page.locator('.intel-section')).toHaveCount(3);
+  await expect(page.locator('.intel-board-summary')).toContainText('Métal observé');
+  await expect(page.locator('.intel-board-summary abbr')).toHaveAttribute('title', '12 000');
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.screenshot({ path: testInfo.outputPath('P03-intel-partiel-1920x1080.png'), scale:'css', animations:'disabled' });
   runIsolatedSql(project, `UPDATE espionage_report SET result='detected', intel_categories=0, snapshot='{}' WHERE id=${Number(id)}`);
   await page.reload();
   await expect(page.getByRole('status')).toContainText('Sondes détectées');
   await expect(page.locator('.intel-section')).toHaveCount(0);
+  await expect(page.locator('.intel-board-summary')).toHaveCount(0);
 });
 
 test('Combats : filtre économique, pertes lisibles et défilement clavier', async ({ page }, testInfo) => {
@@ -145,6 +150,10 @@ test('Combats : filtre économique, pertes lisibles et défilement clavier', asy
   await expect(enemy.getByRole('row')).toHaveCount(2);
   const intermediate = own.getByRole('row').filter({ hasText: 'Chasseur intermédiaire' });
   await expect(intermediate.getByRole('cell')).toHaveText(['2', '−1', '1', '1', '1', '0', '100 %']);
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  const [balance, roundsRail] = await Promise.all([page.locator('.player-combat-core').boundingBox(), page.locator('#combat-rounds').boundingBox()]);
+  expect(roundsRail.x).toBeGreaterThanOrEqual(balance.x + balance.width);
+  await page.screenshot({ path: testInfo.outputPath('P02-combat-rounds-1920x1080.png'), scale:'css', animations:'disabled' });
   const rebuilt = page.getByRole('table', { name: 'Bilan des défenses planétaires par type et par rang', exact: true });
   await expect(rebuilt.getByRole('row').filter({ hasText: 'Tourelle ionique' }).getByRole('cell')).toHaveText(['Intermédiaire', '10', '3', '−7']);
   const versus = page.getByRole('region', { name: 'Round 1, comparaison des camps', exact: true });

@@ -91,6 +91,15 @@ test('L6 A : annonces en lignes, objectifs et participation, récompenses et mob
   runIsolatedSql(project, `INSERT INTO player_universe (universe_id, joined_at, catalog_unlocks) VALUES ${Array.from({ length: 26 }, () => `(${universe},UTC_TIMESTAMP(),'{}')`).join(',')}`);
   runIsolatedSql(project, `INSERT INTO boost_event_contribution(event_id,player_universe_id,source_key,value)
     SELECT ${ids.guided},id,CONCAT('anonymous-ranking-',id),1 FROM player_universe WHERE universe_id=${universe} AND id>${lastMember}`);
+  // Isoler un aperçu actif connu pour comparer exactement contribution et total.
+  runIsolatedSql(project, 'UPDATE boost_event SET scheduled_at=UTC_TIMESTAMP() WHERE id=' + ids.guided);
+  await page.setViewportSize({ width:1920, height:1080 });
+  await page.goto('/evenements');
+  const challenge = page.getByRole('article', { name:'Aux confins' });
+  await expect(challenge.getByRole('progressbar')).toHaveAttribute('value', '40');
+  const own = page.getByRole('region', { name:'Votre participation' }).locator('dl > div').filter({hasText:'Aux confins'});
+  await expect(own.locator('dd')).toHaveText('2,00');
+  await page.screenshot({ path:info.outputPath('P04-defi-en-cours-1920x1080.png'), scale:'css', animations:'disabled' });
   const pages = [['events', '/evenements'], ['challenges', '/evenements/defis'], ...['guided', 'weekly', 'closed', 'cancelled'].map(key => [key, '/evenements/defis/' + ids[key]])];
   for (const theme of ['dark', 'light']) {
     runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
