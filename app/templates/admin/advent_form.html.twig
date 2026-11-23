@@ -1,0 +1,24 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Calendrier de l’Avent · Administration{% endblock %}
+{% block body %}
+    <div class="page-heading"><div><h1>Préparer le calendrier de l’Avent</h1><p>24 portes, une édition ouverte dans tous les univers accessibles. Chaque joueur fixe un seul univers pour l’édition. Dates en heure de Paris.</p></div><a class="secondary" href="{{ path('app_admin_game_events') }}">Liste des événements</a></div>
+    {% if published %}
+        <section class="panel" aria-labelledby="advent-published"><h2 id="advent-published">Édition publiée</h2><p>{{ published.name }} · Première porte le {{ published.startsAt|date('d/m/Y', 'Europe/Paris') }}. Son calendrier et ses choix ne peuvent plus être modifiés.</p></section>
+    {% endif %}
+    <form class="admin-event-form admin-rotation-form" method="post" action="{{ path('app_admin_game_event_advent') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('admin_advent_preview') }}">
+        <section class="panel" aria-labelledby="advent-dates-title">
+            <h2 id="advent-dates-title">Édition et calendrier</h2>
+            <div class="admin-rotation-fields">
+                <div class="admin-rotation-field"><label for="advent-name">Nom de l’édition</label><input id="advent-name" name="name" maxlength="120" value="{{ draft.name }}" required></div>
+                <div class="admin-rotation-field"><label for="advent-first">Date de la première porte</label><input id="advent-first" name="first" type="date" value="{{ draft.first }}" required></div>
+                <div class="admin-rotation-field"><label for="advent-last">Dernier jour de rattrapage inclus</label><input id="advent-last" name="last" type="date" value="{{ draft.last }}" required></div>
+            </div>
+        </section>
+        <section class="panel" aria-labelledby="advent-lots-title">
+            <h2 id="advent-lots-title">Barème de l’édition</h2>
+            <p>Vérifiez les lots, les choix, les remises et leurs plafonds pour les trois tranches dans l’aperçu. La publication fige leur définition et ne lance aucun versement.</p>
+        </section>
+        <button class="primary">Vérifier l’aperçu des 24 portes</button>
+    </form>
+{% endblock %}

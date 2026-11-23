@@ -9,7 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 final class UniverseService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private ResourceService $resources,private ClockInterface $clock,private PlanetNameGenerator $planetNames,private \App\Service\Player\EmpireActivityService $activity,private EntityManagerInterface $em) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private ResourceService $resources,private ClockInterface $clock,private PlanetNameGenerator $planetNames,private \App\Service\Player\EmpireActivityService $activity,private EntityManagerInterface $em,private \App\Service\Advent\AdventParticipation $advent) {}
     public function select(Player $player,int $universeId): void
     {
         $this->manager->transaction(function()use($player,$universeId){
@@ -48,6 +48,7 @@ final class UniverseService
                 $this->resources->initialize($planet, firstAccountPlanet: $firstAccountPlanet);
                 $player->firstPlanetStarterPending = false;
                 $d=new PlayerDiscovery();$d->playerUniverse=$m;$d->solarSystem=$planet->solarSystem;$this->manager->save($d);
+                $this->advent->observeJoinLocked($m, $planet);
             }
             $player->currentPlayerUniverse=$m;
         });

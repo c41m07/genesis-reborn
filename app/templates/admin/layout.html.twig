@@ -10,7 +10,7 @@
 {% set universeWorkspace = currentRoute in ['app_admin_universes', 'app_admin_universe_new', 'app_admin_universe_manage'] %}
 {% set balanceWorkspace = currentRoute == 'app_admin_universe_metrics' or currentRoute starts with 'app_admin_catalogue' %}
 {% set boxesWorkspace = currentRoute == 'app_admin_resource_boxes' %}
-{% set eventsWorkspace = currentRoute in ['app_admin_game_events', 'app_admin_game_event_new', 'app_admin_game_event_edit', 'app_admin_event_wizard', 'app_admin_event_preview'] %}
+{% set eventsWorkspace = currentRoute in ['app_admin_game_events', 'app_admin_game_event_new', 'app_admin_game_event_edit', 'app_admin_game_event_advent', 'app_admin_game_event_advent_preview', 'app_admin_event_wizard', 'app_admin_event_preview'] %}
 {% set projectsWorkspace = currentRoute in ['app_admin_guild_projects', 'app_admin_guild_project_new', 'app_admin_guild_project_edit'] %}
 {% set rotationsWorkspace = currentRoute in ['app_admin_weekly_rotations', 'app_admin_weekly_rotation_new', 'app_admin_weekly_rotation_edit'] %}
 {% set challengesWorkspace = currentRoute in ['app_admin_challenges', 'app_admin_challenge'] %}

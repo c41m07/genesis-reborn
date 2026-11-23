@@ -3,8 +3,9 @@
 {% block body %}
 <div class="social-profile-page social-workspace public-player-profile" data-page-sections="disabled">
 <nav class="social-page-actions" aria-label="Retour au classement"><a class="secondary" href="{{ path('app_leaderboard') }}">← Classement</a></nav>
-<div class="page-heading"><div><h1>{{ profile.username }}</h1><p>Profil du commandant · Univers {{ membership.universe.name }}</p></div>
+<div class="page-heading"><div><h1>{{ profile.username }}</h1>{% if profile.cosmetics.title is defined %}<p class="badge">{{ profile.cosmetics.title }}</p>{% endif %}<p>Profil du commandant · Univers {{ membership.universe.name }}</p></div>
 </div>
+{% if profile.cosmetics.banner is defined %}<div class="profile-polar-night" role="img" aria-label="Bannière {{ profile.cosmetics.banner }}"></div>{% endif %}
 <section class="panel" aria-labelledby="player-public-guild"><h2 id="player-public-guild">Guilde</h2>
 {% if profile.guild %}<p>{% if profile.guild.can_view %}<a href="{{ path('app_guild_public_profile',{id:profile.guild.id}) }}">{% endif %}{% if profile.guild.tag %}[{{ profile.guild.tag }}] {% endif %}{{ profile.guild.name }}{% if profile.guild.can_view %}</a>{% endif %}</p>{% else %}<p>Aucune guilde.</p>{% endif %}
 </section>

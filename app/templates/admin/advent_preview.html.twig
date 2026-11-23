@@ -1,0 +1,33 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Aperçu de l’Avent · Administration{% endblock %}
+{% block body %}
+    <div class="page-heading"><div><h1>Aperçu : {{ draft.name }}</h1><p>Tous les univers accessibles, un seul cadeau par compte et par porte. Rattrapage jusqu’au {{ draft.last|date('d/m/Y', 'Europe/Paris') }} inclus, heure de Paris.</p></div><a class="secondary" href="{{ path('app_admin_game_event_advent', {edit: 1}) }}">Modifier avant publication</a></div>
+    <ol class="event-list">
+        {% for day, door in draft.doors %}
+            <li class="panel">
+                <h2>Porte {{ day }} · {{ door.opens_at|date('d/m/Y', 'Europe/Paris') }}</h2>
+                <div class="advent-admin-brackets">
+                    {% for bracket, offers in door.options %}
+                        <section aria-label="{{ brackets[bracket] }}">
+                            <h3>{{ brackets[bracket] }}</h3>
+                            <ol>
+                                {% for offer in offers %}
+                                    <li>{% include 'advent/_offer.html.twig' with {offer: offer, resources: resources, ships: ships} only %}</li>
+                                {% endfor %}
+                            </ol>
+                        </section>
+                    {% endfor %}
+                </div>
+                {% if door.cosmetics %}<p>Tous les joueurs qui ouvrent cette porte : <strong>Gardien des étoiles</strong> et <strong>Nuit polaire</strong>.</p>{% endif %}
+            </li>
+        {% endfor %}
+    </ol>
+    <section class="panel" aria-labelledby="advent-confirm">
+        <h2 id="advent-confirm">Publier cette version</h2>
+        <p>Après confirmation, les dates et les choix seront figés et visibles par les joueurs. La première porte reste fermée jusqu’à sa date d’ouverture.</p>
+        <form method="post" action="{{ path('app_admin_game_event_advent_preview', {key: key}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('admin_advent_preview_' ~ key) }}">
+            <button class="primary">Confirmer et publier</button>
+        </form>
+    </section>
+{% endblock %}

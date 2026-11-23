@@ -78,3 +78,5 @@ sont conservées.
 - [Recherche admin au clavier](ADMIN_ACCESSIBILITE_RECHERCHE.md) : focus après réponse différée et recette isolée.
 
 - [Recette intégrée locale des lots admin](ADMIN_RECETTE_INTEGREE.md) : références, validations et limites avant fusion.
+
+- [Calendrier de l’Avent](CALENDRIER_AVENT.md) : règles joueur, préparation administrative et pilote.
