@@ -71,6 +71,13 @@ test('Planches joueur : rails de décision sur grand écran et flux mobile sans 
                 expect.soft((await page.goto(path))?.status(), path).toBe(200);
                 await expect.soft(page.locator(landmark).first()).toBeVisible({ timeout: 3000 });
                 expect.soft(await page.evaluate(() => document.documentElement.scrollWidth), model).toBeLessThanOrEqual(width);
+                if (model === 'P13' && width === 1920) {
+                    const launch = page.getByRole('button', { name: 'Simuler 10 combats', exact: true });
+                    await expect(launch).toBeInViewport({ ratio: 1 });
+                    const grids = page.locator('.simulation-form .strategic-grid > section');
+                    await expect(grids).toHaveCount(2);
+                    for (const grid of await grids.all()) await expect(grid).toBeInViewport({ ratio: 0.9 });
+                }
                 await page.screenshot({ path: info.outputPath(model + '-' + width + 'x' + height + '.png'), scale: 'css', animations: 'disabled' });
                 if (model === 'P12') {
                     const details = page.locator('#technology-detail');

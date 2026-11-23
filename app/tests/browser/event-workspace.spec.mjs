@@ -99,6 +99,7 @@ test('L6 A : annonces en lignes, objectifs et participation, récompenses et mob
   await expect(challenge.getByRole('progressbar')).toHaveAttribute('value', '40');
   const own = page.getByRole('region', { name:'Votre participation' }).locator('dl > div').filter({hasText:'Aux confins'});
   await expect(own.locator('dd')).toHaveText('2,00');
+  await challenge.evaluate(element => element.scrollIntoView({block:'center',behavior:'instant'}));
   await page.screenshot({ path:info.outputPath('P04-defi-en-cours-1920x1080.png'), scale:'css', animations:'disabled' });
   const pages = [['events', '/evenements'], ['challenges', '/evenements/defis'], ...['guided', 'weekly', 'closed', 'cancelled'].map(key => [key, '/evenements/defis/' + ids[key]])];
   for (const theme of ['dark', 'light']) {
