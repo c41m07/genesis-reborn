@@ -258,8 +258,8 @@ final class GameRepository
     {
         // Uniquement les informations déjà visibles sur la fiche de ces guildes : l’effectif
         // est un agrégat, ni les membres ni leurs identités ne sont hydratés.
-        $memberCount = $this->em->createQueryBuilder()->select('COUNT(member.id)')
-            ->from(\App\Entity\GuildMember::class, 'member')->where('member.guild = guild');
+        $memberCount = $this->em->createQueryBuilder()->select('COUNT(guildMember.id)')
+            ->from(\App\Entity\GuildMember::class, 'guildMember')->where('guildMember.guild = guild');
         return $this->em->createQueryBuilder()->select('guild.id AS id', 'guild.name AS name', 'guild.tag AS tag', 'profile.description AS description')
             ->addSelect('('.$memberCount->getDQL().') AS members')
             ->from(Guild::class, 'guild')
