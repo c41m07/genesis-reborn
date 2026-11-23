@@ -185,3 +185,42 @@
     }
     .gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-map-stage:has(.gv2-planet-panel:not([hidden]),.gv2-system-panel:not([hidden])) .gv2-scene { grid-area:2/1; }
 }
+
+/* Liste cartographique : les planètes restent dans la fiche côté droit, pas dupliquées dans chaque ligne. */
+.galaxy-list-toolbar, .galaxy-list-select {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:end;
+    gap:10px 14px;
+    min-width:0;
+}
+
+.galaxy-list-toolbar { justify-content:space-between; padding:14px; }
+.galaxy-list-toolbar .galaxy-view-tabs { margin:0; }
+.galaxy-list-select > div { display:grid; gap:4px; min-width:0; }
+.galaxy-list-select select { max-width:100%; }
+.galaxy-list-layout { display:grid; grid-template-columns:minmax(0,2fr) minmax(285px,1fr); align-items:start; gap:14px; }
+.galaxy-list-layout > * { min-width:0; margin:0; padding:16px; }
+.galaxy-index .section-heading { display:flex; flex-wrap:wrap; align-items:end; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.galaxy-index .section-heading h2 { margin:0; }
+.galaxy-index-filter:not([hidden]) { display:grid; gap:4px; max-width:100%; }
+.galaxy-index-scroll { max-height:520px; overflow:auto; border:1px solid var(--line); border-radius:5px; }
+.galaxy-index-table { width:100%; margin:0; }
+.galaxy-index-table thead th { position:sticky; top:0; z-index:1; background:var(--panel); }
+.galaxy-index-table th small { display:block; margin-top:3px; font-weight:400; color:var(--text); }
+.galaxy-index-table .active-row { background:color-mix(in srgb,var(--accent) 12%,var(--panel)); }
+.galaxy-index-table [hidden] { display:none; }
+.galaxy-index-coordinates { color:var(--accent); }
+.galaxy-index-guide { margin:12px 0 0; padding:10px; border:1px solid var(--line); border-radius:5px; }
+.galaxy-index-planets { display:grid; gap:8px; padding:0; list-style:none; }
+.galaxy-index-planets li { padding:10px; border:1px solid var(--line); border-radius:5px; }
+.galaxy-index-planets p { margin:4px 0; }
+.galaxy-index-planets .galaxy-actions { display:flex; flex-wrap:wrap; gap:6px; }
+.galaxy-open-map { display:flex; align-items:center; justify-content:center; min-height:44px; }
+@media(max-width:1000px) { .galaxy-list-layout { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:740px) {
+    .galaxy-list-toolbar,.galaxy-list-select { align-items:stretch; }
+    .galaxy-list-select { display:grid; grid-template-columns:minmax(0,1fr); width:100%; }
+    .galaxy-list-layout > * { padding:10px; }
+    .galaxy-index-scroll { max-height:340px; }
+}
