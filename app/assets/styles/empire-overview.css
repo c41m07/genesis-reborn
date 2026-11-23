@@ -496,3 +496,26 @@ body.ui-refined[data-ui-page="vue-generale"] .overview-page .dashboard-journal .
     .overview-page .flight-operation .flight-progress-row { margin-top:4px; }
     body.ui-refined[data-ui-page="vue-generale"] .overview-page .dashboard-journal { margin-top:12px; padding:12px 14px; }
 }
+
+@media(min-width:1200px) {
+    body.ui-refined[data-ui-page="vue-generale"] .overview-page .flight-operations .flight-operation:is([data-status=traveling],[data-status=returning]) {
+        display:grid; align-items:center;
+        grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);
+        gap:2px 14px;
+    }
+    .overview-page .flight-operation:is([data-status=traveling],[data-status=returning]) > .operation-heading {
+        grid-column:1/-1; margin:0;
+    }
+    .overview-page .flight-operation:is([data-status=traveling],[data-status=returning]) > .flight-ownership {
+        grid-column:1; grid-row:2; margin:0;
+    }
+    .overview-page .flight-operation:is([data-status=traveling],[data-status=returning]) > .flight-route {
+        grid-column:1; grid-row:3; margin:0;
+    }
+    .overview-page .flight-operation:is([data-status=traveling],[data-status=returning]) > .flight-progress-row {
+        grid-column:2; grid-row:2/span 2; margin:0;
+    }
+    .overview-page .flight-operation:is([data-status=traveling],[data-status=returning]) > p:not(.flight-ownership) {
+        grid-column:1/-1;
+    }
+}

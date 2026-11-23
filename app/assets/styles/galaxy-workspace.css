@@ -237,14 +237,14 @@
     .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs { gap:4px; }
     .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a { min-height:44px; }
     .gv2-workspace .core-galaxy-toolbar .gv2-hud {
-        display:grid; grid-template-columns:minmax(0,26%) minmax(0,1fr) minmax(56px,auto);
+        display:grid; grid-template-columns:minmax(0,26%) minmax(0,1fr) minmax(60px,max-content);
         gap:4px; padding:0;
     }
-    .gv2-workspace .gv2-galaxy-form { min-width:0; margin:0; }
+    .gv2-workspace .gv2-galaxy-form { grid-area:1/1; min-width:0; margin:0; }
     .gv2-workspace .gv2-galaxy-form select { width:100%; min-height:44px; padding-inline:4px 14px; }
-    .gv2-workspace .gv2-search { width:100%; height:44px; min-width:0; }
+    .gv2-workspace .gv2-search { grid-area:1/2; width:100%; height:44px; min-width:0; }
     .gv2-workspace .gv2-search-results { width:max(100%,min(240px,70vw)); inset-inline-start:auto; }
-    .gv2-workspace .gv2-coordinate { min-width:0; font-size:11px; text-align:center; }
+    .gv2-workspace .gv2-coordinate { grid-area:1/3; min-width:0; font-size:11px; text-align:center; white-space:nowrap; }
     .gv2-workspace .core-galaxy-toolbar .gv2-layout-modes { flex:1 1 auto; gap:4px; padding:0; }
     .gv2-workspace .core-galaxy-toolbar .gv2-layout-modes button { min-width:0; padding:4px; font-size:12px; }
     .gv2-workspace .core-galaxy-toolbar .gv2-layout-note { flex:1 1 100%; padding:1px 4px; font-size:11px; }
