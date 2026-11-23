@@ -135,7 +135,7 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
     }
 
     for (const theme of ['dark', 'light']) {
-        runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(preferences, '$.theme', '" + theme + "') WHERE email='" + email + "'");
+        runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(COALESCE(preferences, JSON_OBJECT()), '$.theme', '" + theme + "') WHERE email='" + email + "'");
         for (const width of [360, 390, 1440, 1920]) {
             await page.setViewportSize({ width, height: 900 });
             await page.goto('/evenements/avent/' + edition);
