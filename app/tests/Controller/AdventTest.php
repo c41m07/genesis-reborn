@@ -396,6 +396,86 @@ final class AdventTest extends WebTestCase
         self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_claim'));
     }
 
+    public function testTwoUniverseTabsCannotElectTwoProfilesForOneAccount(): void
+    {
+        $member = $this->player('AdventRaceElection');
+        $omega = $member->currentPlayerUniverse;
+        $colony = $this->planet($member)->id;
+        $member = $this->select($member, 'turbo-1');
+        $turbo = $member->currentPlayerUniverse;
+        $member = $this->select($member, 'omega-1');
+        $db = $this->em->getConnection();
+        $db->executeStatement('UPDATE player_universe SET catalog_unlocks = ? WHERE id = ?', [
+            json_encode(['_requirements_version' => 2, 'v2:planet:'.$colony.':ships:fighter:intermediate' => true], JSON_THROW_ON_ERROR), $omega->id,
+        ]);
+        $edition = $this->publishConsolidated($this->player('AdventElectionAdmin', admin: true));
+        $this->clock->sleep(8 * 3600);
+        $report = static::getContainer()->get(AdventCohortCapture::class)->capture($edition);
+        self::assertSame('captured', $report['state']);
+        self::assertEqualsCanonicalizing(['beginner', 'intermediate'], $db->fetchFirstColumn(
+            'SELECT bracket FROM advent_progression WHERE player_id = ? AND advent_edition_id = ?', [$member->id, $edition],
+        ));
+
+        $directory = sys_get_temp_dir().'/genesis-advent-election-'.bin2hex(random_bytes(8));
+        mkdir($directory, 0700);
+        $workers = [];
+        try {
+            $db->beginTransaction();
+            $db->fetchOne('SELECT id FROM player WHERE id = ? FOR UPDATE', [$member->id]);
+            foreach ([$omega->id, $turbo->id] as $index => $membership) {
+                $input = ['action' => 'bind', 'player' => $member->id, 'membership' => $membership,
+                    'edition' => $edition, 'when' => '2026-12-06 12:00:00', 'ready' => $directory.'/'.$index, 'go' => $directory.'/go'];
+                $worker = new Process([PHP_BINARY, dirname(__DIR__).'/Support/concurrent_advent_open.php', json_encode($input, JSON_THROW_ON_ERROR)]);
+                $worker->setTimeout(20);
+                $worker->start();
+                $workers[] = $worker;
+            }
+            $deadline = microtime(true) + 8;
+            while (microtime(true) < $deadline && (!is_file($directory.'/0') || !is_file($directory.'/1'))) {
+                clearstatcache();
+                usleep(20000);
+            }
+            foreach ($workers as $index => $worker) {
+                self::assertFileExists($directory.'/'.$index, $worker->getErrorOutput());
+            }
+            $connections = [(int) file_get_contents($directory.'/0'), (int) file_get_contents($directory.'/1')];
+            self::assertNotSame($connections[0], $connections[1]);
+            touch($directory.'/go');
+            $deadline = microtime(true) + 5;
+            do {
+                $waiting = (int) $db->fetchOne("SELECT COUNT(*) FROM information_schema.PROCESSLIST
+                    WHERE ID IN (?, ?) AND INFO LIKE '%player%' AND INFO LIKE '%FOR UPDATE%'", $connections);
+                if ($waiting === 2) {
+                    break;
+                }
+                usleep(20000);
+            } while (microtime(true) < $deadline);
+            self::assertSame(2, $waiting, 'Les deux élections attendent le compte, pas deux verrous indépendants.');
+            $db->commit();
+            foreach (['bound', 'stale'] as $index => $state) {
+                self::assertSame(0, $workers[$index]->wait(), $workers[$index]->getErrorOutput());
+                self::assertSame($state, trim($workers[$index]->getOutput()));
+            }
+            $bindings = $db->fetchAllAssociative('SELECT universe_id, bracket FROM advent_binding WHERE player_id = ?', [$member->id]);
+            self::assertCount(1, $bindings);
+            self::assertSame($omega->universe->id, (int) $bindings[0]['universe_id']);
+            self::assertSame('intermediate', $bindings[0]['bracket']);
+        } finally {
+            if ($db->isTransactionActive()) {
+                $db->rollBack();
+            }
+            foreach ($workers as $worker) {
+                $worker->stop(0);
+            }
+            foreach (['0', '1', 'go'] as $part) {
+                if (is_file($file = $directory.'/'.$part)) {
+                    unlink($file);
+                }
+            }
+            rmdir($directory);
+        }
+    }
+
     public function testLockedHullPackCanBeDeliveredLaterAndCosmeticsDoNotDependOnAHeavyHull(): void
     {
         $admin = $this->player('AdventShipAdmin', admin: true);

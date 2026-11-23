@@ -6,7 +6,7 @@ require dirname(__DIR__).'/bootstrap.php';
 
 use App\Entity\{AdventEdition, Planet, Player, PlayerUniverse};
 use App\Kernel;
-use App\Service\Advent\AdventRewards;
+use App\Service\Advent\{AdventParticipation, AdventRewards};
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Clock\MockClock;
 
@@ -24,9 +24,8 @@ if (($params['host'] ?? '') !== 'database-test' || ($params['dbname'] ?? '') !==
 }
 $player = $em->find(Player::class, $input['player']);
 $membership = $em->find(PlayerUniverse::class, $input['membership']);
-$planet = $em->find(Planet::class, $input['planet']);
+$planet = isset($input['planet']) ? $em->find(Planet::class, $input['planet']) : null;
 $edition = $em->find(AdventEdition::class, $input['edition']);
-$service = $container->get(AdventRewards::class);
 file_put_contents($input['ready'], (string) $connection->fetchOne('SELECT CONNECTION_ID()'));
 $deadline = microtime(true) + 10;
 while (!is_file($input['go'])) {
@@ -36,4 +35,18 @@ while (!is_file($input['go'])) {
     usleep(10000);
 }
 
+if (($input['action'] ?? 'open') === 'bind') {
+    try {
+        $container->get(AdventParticipation::class)->bind($player, $membership, $edition);
+        echo "bound\n";
+    } catch (DomainException $error) {
+        if ($error->getMessage() !== 'Votre univers actif ne peut pas être retenu pour cette édition.') {
+            throw $error;
+        }
+        echo "stale\n";
+    }
+    return;
+}
+
+$service = $container->get(AdventRewards::class);
 echo $service->open($player, $membership, $planet, $edition, 1, $input['choice'])['state']."\n";
