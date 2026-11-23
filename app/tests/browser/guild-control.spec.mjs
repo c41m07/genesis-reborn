@@ -142,7 +142,9 @@ test('L1C A : rôles, formulaires, traités et confirmations natives de gestion'
             })).toEqual({ belowName: true, fitsCard: true, textLines: 1 });
             if (width === 1920 || width === 390) {
               const guide = page.locator('.first-steps-popup');
-              await expect(guide.locator('summary[aria-label="Ouvrir Premiers pas"]')).toBeVisible();
+              await expect(guide).toHaveAttribute('open', '');
+              await expect(guide.locator('.first-steps-popup-mount')).toBeVisible();
+              await expect(guide.locator('summary[aria-label="Fermer Premiers pas"]')).toBeVisible();
               await expect(page.getByRole('button', { name: 'Enregistrer le grade' })).toBeEnabled();
             }
             const directory = await page.getByRole('region', { name: 'Grades de la guilde' }).boundingBox();
