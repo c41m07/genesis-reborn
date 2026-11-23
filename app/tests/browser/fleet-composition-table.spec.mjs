@@ -106,7 +106,7 @@ test('Flottes : les trois rangs restent alignés et arrivent ensemble au devis, 
         ['Chasseur multirôle', 'Intermédiaire', '2'],
         ['Chasseur d’assaut orbital', 'Supérieur', '3'],
     ]) {
-        const row = reviewTable.getByRole('row').filter({ has: reviewTable.getByRole('rowheader', { name, exact: true }) });
+        const row = reviewTable.getByRole('row').filter({ has: page.getByRole('rowheader', { name, exact: true }) });
         await expect(row.getByRole('cell')).toHaveText([rank, quantity]);
     }
 
