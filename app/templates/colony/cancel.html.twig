@@ -1,9 +1,10 @@
 {% extends 'base.html.twig' %}
+{% import 'ui/macros.html.twig' as ui %}
 {% block title %}Vérifier l’annulation · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="page-heading"><h1>Vérifier l’annulation</h1></div>
-<section class="panel sensitive-actions">
-<h2>Commandes concernées</h2>
+<div class="page-heading"><div><h1>Vérifier l’annulation</h1><p>{{ planet.name }} · {{ planet.coordinates() }}</p></div></div>
+<section class="panel sensitive-actions project-confirmation" aria-labelledby="queue-cancel-title">
+<h2 id="queue-cancel-title">{{ ui.icon('building') }} Commandes concernées</h2>
 <p><strong>{{ rows|length }} {{ rows|length == 1 ? 'commande concernée' : 'commandes concernées' }}</strong> : la commande sélectionnée et ses niveaux dépendants.</p>
 <p>Estimation : 25 % des ressources payées, dans la place disponible sur chaque colonie. L’état sera revérifié à la confirmation.</p>
 {# Additionne les estimations déjà préparées pour l’affichage ; la confirmation reste recalculée côté serveur. #}
@@ -15,7 +16,7 @@
 {% endfor %}
 <h3>Remboursement estimé</h3>
 {% if estimatedRefunds %}
-    <dl>
+    <dl class="confirmation-refunds">
         {% for slug, amount in estimatedRefunds %}
             <div><dt>{{ resource_labels[slug] }}</dt><dd>{{ amount|quantity(2) }}</dd></div>
         {% endfor %}
@@ -27,7 +28,15 @@
 <summary>Détail des commandes</summary>
 <ul>{% for row in rows %}<li><strong>{{ row.label }}</strong> · {{ row.item.planet.name }} · {{ row.item.itemLevel ? 'Niveau '~row.item.itemLevel : 'Quantité '~row.item.quantity }}{% if row.item.id != item.id %} · Dépendance annulée{% endif %}<ul>{% for slug,amount in row.refund|filter(amount => amount > 0) %}<li>{{ resource_labels[slug] }} : {{ amount|quantity(2) }} remboursés</li>{% else %}<li>Aucun remboursement.</li>{% endfor %}</ul></li>{% endfor %}</ul>
 </details>
-<form method="post" action="{{ path('app_queue_cancel',{id:planet.id,itemId:item.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('cancel'~item.id) }}"><input type="hidden" name="request_key" value="{{ request_key() }}"><input type="hidden" name="section" value="{{ section }}"><button class="primary">Confirmer l’annulation de ces {{ rows|length }} commandes</button></form>
-<a class="secondary" href="{{ path('app_colony',{id:planet.id,section:section}) }}">Conserver les commandes</a>
+<p class="confirmation-risk"><strong>Les travaux concernés seront arrêtés.</strong> Vérifiez les commandes et leur colonie avant de confirmer.</p>
+<div class="confirmation-buttons">
+    <a class="secondary" href="{{ path('app_colony',{id:planet.id,section:section}) }}">Conserver les commandes</a>
+    <form method="post" action="{{ path('app_queue_cancel',{id:planet.id,itemId:item.id}) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('cancel'~item.id) }}">
+        <input type="hidden" name="request_key" value="{{ request_key() }}">
+        <input type="hidden" name="section" value="{{ section }}">
+        <button class="danger" type="submit">Confirmer l’annulation de ces {{ rows|length }} commandes</button>
+    </form>
+</div>
 </section>
 {% endblock %}
