@@ -72,6 +72,7 @@ test('Renseignements : rangs actuels, ancien format, ressources et détection', 
   await expect(page.locator('.intel-board-summary')).toContainText('Métal observé');
   await expect(page.locator('.intel-board-summary abbr')).toHaveAttribute('title', '12 000');
   await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   await page.screenshot({ path: testInfo.outputPath('P03-intel-partiel-1920x1080.png'), scale:'css', animations:'disabled' });
   runIsolatedSql(project, `UPDATE espionage_report SET result='detected', intel_categories=0, snapshot='{}' WHERE id=${Number(id)}`);
   await page.reload();
@@ -153,6 +154,7 @@ test('Combats : filtre économique, pertes lisibles et défilement clavier', asy
   await page.setViewportSize({ width: 1920, height: 1080 });
   const [balance, roundsRail] = await Promise.all([page.locator('.player-combat-core').boundingBox(), page.locator('#combat-rounds').boundingBox()]);
   expect(roundsRail.x).toBeGreaterThanOrEqual(balance.x + balance.width);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   await page.screenshot({ path: testInfo.outputPath('P02-combat-rounds-1920x1080.png'), scale:'css', animations:'disabled' });
   const rebuilt = page.getByRole('table', { name: 'Bilan des défenses planétaires par type et par rang', exact: true });
   await expect(rebuilt.getByRole('row').filter({ hasText: 'Tourelle ionique' }).getByRole('cell')).toHaveText(['Intermédiaire', '10', '3', '−7']);
