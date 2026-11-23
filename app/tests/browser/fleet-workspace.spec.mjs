@@ -140,6 +140,23 @@ test('L2A A : missions en lignes, trois étapes, devis et rappel sur ordinateur 
       }
       await checkLayout(page, width);
       await capture(page, testInfo, 'confirmation', theme, width);
+      if ([1920, 390].includes(width)) {
+        // Le guide d’un nouveau joueur reste ouvert et la confirmation reste atteignable.
+        const guide = page.locator('.first-steps-popup-enhanced[open]');
+        const send = form.getByRole('button', { name: /Envoyer la flotte/ });
+        await expect(guide.locator('.first-steps-popup-panel:visible')).toBeVisible();
+        await form.getByRole('button', { name: 'Estimer le trajet', exact: true }).focus();
+        await page.keyboard.press('Tab');
+        await expect(send).toBeFocused();
+        await send.scrollIntoViewIfNeeded();
+        const panel = await guide.locator('.first-steps-popup-panel:visible').boundingBox();
+        const action = await send.boundingBox();
+        expect(panel.y).toBeGreaterThanOrEqual(action.y + action.height);
+        expect(await send.evaluate(button => {
+          const box = button.getBoundingClientRect();
+          return button.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+        })).toBe(true);
+      }
       await form.getByRole('button', { name: /Modifier la destination/ }).click();
       await expect(form.locator('[name="cargo[metal]"]')).toHaveValue('1000');
       await form.getByRole('button', { name: /Retour à la composition/ }).click();

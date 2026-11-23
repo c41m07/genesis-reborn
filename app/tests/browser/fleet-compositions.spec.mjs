@@ -89,6 +89,18 @@ test('L2C A : quatre vues adaptatives, rangs réunis, saisie conservée et liens
           await expect(page.getByRole('region', { name: 'Tableau des compositions', exact: true })).toHaveCount(1);
           await expect(page.locator('.composition-card')).toHaveCount(3);
           const card = page.locator(`[data-composition="${composition}"]`);
+          if (width === 390) {
+            const column = page.getByRole('columnheader', { name: 'Unités prévues', exact: true });
+            const lines = await column.evaluate(cell => {
+              const range = document.createRange();
+              range.selectNodeContents(cell);
+              return range.getClientRects().length;
+            });
+            expect(lines).toBeLessThanOrEqual(2);
+            const region = page.getByRole('region', { name: 'Tableau des compositions', exact: true });
+            await expect(region).toHaveAttribute('tabindex', '0');
+            expect(await region.evaluate(node => node.scrollWidth > node.clientWidth)).toBe(true);
+          }
           await expect(card.locator('.composition-library-total')).toHaveText('92 unités');
           await card.locator('.composition-quantities summary').press('Enter');
           await expect(card.locator('.composition-quantities ul')).toBeVisible();

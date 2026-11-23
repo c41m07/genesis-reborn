@@ -154,6 +154,15 @@
 .first-steps-preview h2 { overflow-wrap: anywhere; }
 body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: hidden; }
 
+/* À la confirmation de départ uniquement, garder le guide à la suite du
+   formulaire sans couvrir le devis ni son bouton, même quand l’aide est ouverte. */
+.app-frame:has(> .shell .fleet-wizard-ready[data-fleet-step="3"]) > .first-steps-popup-enhanced {
+    position: relative;
+    inset: auto;
+    margin: 0 0 8px auto;
+    max-width: 100%;
+}
+
 /* Carte, composeur et choix de cadeau gardent leur espace : l’aide reste au-dessus dans le flux. */
 :is(.shell--galaxy-v2, .shell--messaging, .shell--advent, .shell--fleet-decision) > .first-steps-popup-enhanced {
     position: relative;
