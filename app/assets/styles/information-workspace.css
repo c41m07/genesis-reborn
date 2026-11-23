@@ -421,7 +421,9 @@ body[data-theme=light] .information-workspace a:not(.primary) {
 
 /* Le sommaire reste avant le document dans le DOM. La colonne latérale est
    uniquement une présentation des mêmes ancres de lecture. */
-.information-workspace.legal-page--audit {
+body.ui-refined[data-ui-page="documents-legaux"] main > .legal-page--audit {
+    box-sizing: border-box;
+    width: 100%;
     max-width: 1650px;
 }
 

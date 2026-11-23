@@ -74,6 +74,9 @@ test('Documents publics : sommaires, textes conservés et ancres natives sans Ja
       for (const target of targets) await expect(article.locator(target)).toHaveCount(1);
       const [left, right] = await Promise.all([toc.boundingBox(), article.boundingBox()]);
       expect(left.x + left.width).toBeLessThan(right.x);
+      expect(left.width).toBeGreaterThan(320);
+      expect(left.width).toBeLessThan(380);
+      expect(right.width).toBeGreaterThan(1150);
       await expect(article.getByRole('heading', { name: 'Information provisoire et incomplète' })).toBeVisible();
       await toc.getByRole('link', { name: first }).click();
       expect(new URL(page.url()).hash).toBe(targets[0]);
