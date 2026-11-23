@@ -4,7 +4,7 @@
 <div data-live-region="overview-attention">
     {% if not chrome.vacation and (fullResources or reducedResources) %}
         <section class="overview-attention panel" aria-labelledby="attention-title">
-            <h2 id="attention-title">À surveiller · {{ planet.name }}</h2>
+            <h3 id="attention-title">Stocks et production · {{ planet.name }}</h3>
             {% if fullResources %}
                 <p>Stockages pleins : {% for slug,resource in fullResources %}<a href="{{ path('app_colony',{id:planet.id,section:'buildings',_fragment:'item-storage_'~slug~'-basic'}) }}">{{ resource.label }}</a>{{ not loop.last ? ', ' : '.' }}{% endfor %} Les apports supplémentaires ne sont plus stockés.</p>
             {% endif %}

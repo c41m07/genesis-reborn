@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block title %}Récompense quotidienne · Genesis Reborn{% endblock %}
 {% block body %}
+{% import 'ui/macros.html.twig' as ui %}
 <div class="page-heading">
     <div>
         <h1>Récompense quotidienne</h1>
@@ -10,21 +11,25 @@
 </div>
 <section class="panel account-panel" aria-labelledby="daily-reward-heading">
     <h2 id="daily-reward-heading" tabindex="-1">Jour {{ status.slot }} sur 7</h2>
-    <p>Univers actif : <strong>{{ universe.name }}</strong>.{% if planet %} Planète destinataire : <strong>{{ planet.name }}</strong> ({{ planet.coordinates() }}).{% endif %}</p>
+    <p>Univers actif : <strong>{{ universe.name }}</strong>.</p>
     {% if status.claimed %}
         <p>Votre compte a déjà récupéré son lot du jour. Revenez après minuit (heure de Paris).</p>
         <a class="quiet-button" href="{{ path('app_daily_reward', planet ? {colony: planet.id} : {}) }}">Actualiser la récompense</a>
     {% elseif not planet %}
         <p>Vous devez contrôler une planète dans cet univers pour récupérer le lot.</p>
     {% else %}
-        <p><strong>{{ status.reward.metal|quantity(0) }} métal</strong> et <strong>{{ status.reward.nano|quantity(0) }} nano</strong>.</p>
+        <dl class="daily-reward-resource-lines" aria-label="Contenu du lot">
+            <div><dt>{{ ui.icon('metal') }} Métal</dt><dd>{{ status.reward.metal|quantity(0) }}</dd></div>
+            <div><dt>{{ ui.icon('nano') }} Nano</dt><dd>{{ status.reward.nano|quantity(0) }}</dd></div>
+        </dl>
         <p id="daily-reward-rules">Le lot doit tenir en entier dans vos stocks. Si vous manquez un jour, le cycle ne repart pas à zéro.</p>
+        <p id="daily-reward-destination">Planète destinataire : <strong>{{ planet.name }}</strong> ({{ planet.coordinates() }}).</p>
         {% include 'player/_daily_reward_claim_form.html.twig' with {
             planet: planet,
             status: status,
             tokenId: tokenId,
             submitLabel: 'Récupérer',
-            rulesId: 'daily-reward-rules'
+            rulesId: 'daily-reward-rules daily-reward-destination'
         } only %}
     {% endif %}
 </section>

@@ -13,6 +13,7 @@
         <input data-password-visibility-target="input" id="password" name="_password" type="password" autocomplete="current-password" required {% if error %}aria-invalid="true" aria-describedby="login-error"{% endif %}>
         {% include 'ui/password_toggle.html.twig' with {id: 'password'} only %}
     </div>
+    <a class="entry-recovery-link" href="{{ path('app_password_reset_request') }}">Mot de passe oublié ?</a>
     <div class="preference-toggle">
         <input id="remember-me" name="_remember_me" type="checkbox" value="1">
         <label for="remember-me">Se souvenir de moi pendant 30 jours</label>
@@ -21,7 +22,6 @@
     <button class="primary full" type="submit">Connexion <span aria-hidden="true">↗</span></button>
 </form>
 <nav class="entry-access-links" aria-label="Autres accès au compte">
-    <a href="{{ path('app_password_reset_request') }}">Mot de passe oublié ?</a>
     <a href="{{ path('app_email_verify_request') }}">Recevoir un lien de confirmation</a>
     <a href="{{ path('app_register') }}">Première mission ? Créer un compte</a>
 </nav>

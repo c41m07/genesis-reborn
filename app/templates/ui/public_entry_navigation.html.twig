@@ -2,5 +2,5 @@
     {% if route != 'app_access_denied' %}
         <a class="entry-public-login {{ route == 'app_register' ? 'entry-mobile-action' : '' }}" href="{{ path('app_login') }}"{% if route == 'app_login' %} aria-current="page"{% endif %}>Se connecter</a>
     {% endif %}
-    <a class="primary public-login {{ route != 'app_register' ? 'entry-mobile-action' : '' }}" href="{{ path('app_register') }}"{% if route == 'app_register' %} aria-current="page"{% endif %}>Créer un compte</a>
+    <a class="{{ route in ['app_login','app_register','app_password_reset_request','app_password_reset','app_email_verify_request','app_email_verify'] ? 'secondary' : 'primary' }} public-login {{ route != 'app_register' ? 'entry-mobile-action' : '' }}" href="{{ path('app_register') }}"{% if route == 'app_register' %} aria-current="page"{% endif %}>Créer un compte</a>
 </nav>

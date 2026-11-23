@@ -327,3 +327,21 @@ Confirmation à droite sur grand écran, sous le bilan sinon ; aucune informatio
 nécessaire n’est cachée. Le nom, les champs de protection et les destinations
 existantes sont conservés. Styles limités à `.colony-redesign`, sans modification
 de la Vue générale ; [recette et captures](../REFONTE_VISUELLE_INTERFACES.md).
+
+## Catalogues du cœur de jeu
+
+- Bâtiments et Recherche gardent le même ordre de lecture : intitulé et rang, coût et temps du niveau visé, effet principal, puis action. Le détail reste replié par défaut. Le mode condensé garde l’effet principal et la même action native.
+- L’effet, son avant/après et les valeurs acquises viennent de la projection du catalogue. Une production nominale de la colonie ne décrit pas le débit net après consommations. Un maximum déjà en file n’est pas présenté comme acquis ; les commandes et la durée déjà engagées restent dans les files.
+- Deux bandeaux courts identifient le pont d’ingénierie et le laboratoire colonial. Leur illustration est décorative, avec un fond thématique qui découple la lisibilité du texte de l’image. Le cyan indique la sélection ; l’or marque la commande principale disponible, en complément de son libellé.
+- Chantier et Défenses : une caractéristique de l’unité précède le coût de la commande. Un nombre nul de vaisseaux en réserve ou de défenses installées n’est pas un verrou. Max remplit la quantité du devis sans jamais passer la commande ; lorsqu’aucun lot n’est disponible, il est désactivé. Le prix d’une unité reste dans les détails et ne varie pas avec la quantité saisie.
+- Préparation de flotte : conserver les trois étapes et la grille de quantités/stock/Max par rang. Le récapitulatif est une lecture du formulaire, à droite sur grand écran, au-dessus près de la grille sur les formats étroits, et sans autre bouton d’envoi. Coût et durée ne sont confirmés que dans l’estimation existante.
+- Galaxie : outils regroupés sans bandeau illustré. L’inspecteur est dans le flux, à droite sur grand écran, au-dessus de la carte sur formats étroits ; ni la fiche ni ses actions ne couvrent le canvas. Le cyan relie le système sélectionné et sa fiche. Entrer dans le système reste une action séparée et ne doit pas se confondre avec la sélection, le zoom ou la liste classique.
+- Vue générale : bandeau de la colonie et « À surveiller » ouvrent le poste de commandement. Le panneau suit tout l’empire dans l’univers sélectionné : une attaque effectivement signalée d’abord, puis deux prochaines fins/arrivées connues et la colonie correspondante. Les stocks/restrictions de production restent des informations de la colonie active. Ne pas dater une file en attente ou une recherche dont la colonie n’est plus contrôlée. Journal, files locales, arrivées et propres flottes gardent leurs espaces distincts.
+
+## Parcours connexes
+
+- Rapports : distinguer la portée (actifs ou archives), le filtre et les actions de sélection ; préserver les onglets soulignés. Le statut du transport se lit à côté du trajet, avant le bilan des ressources ; une information non obtenue par espionnage n’est pas un zéro.
+- Guildes : conserver bannière compacte et accès au canal ; distinguer tag réellement configuré, nombre de membres, rôle et relations. L’emblème de repli est décoratif, sans droits ni état déduits du visuel.
+- Événements : un seul repère de navigation entre la programmation et les défis/rotations. Le nombre d’événements appartient à sa période et ne prétend pas compter les défis.
+- Accès : ordre formulaire puis scène ; la création de compte dans le menu reste secondaire pendant une tâche d’authentification. Les demandes courtes gardent le formulaire et l’aide sans répéter l’illustration.
+- Administration : mettre l’univers concerné dans le contexte du catalogue, puis comparer champ, durée et coûts dans le même ordre « Actuel / Proposé ». Les hypothèses du devis et la confirmation restent distinctes du calcul de jeu.

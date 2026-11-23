@@ -7,19 +7,19 @@
             {% if report.rows %}
                 <table class="data-table simulation-losses">
                     <caption class="visually-hidden">{{ title }} · effectifs par type et rang</caption>
-                    <thead><tr><th scope="col">Unité</th><th scope="col">Engagés</th><th scope="col">Pertes</th><th scope="col">Survivants</th></tr></thead>
+                    <thead><tr><th scope="col">Unité</th><th scope="col">Engagés</th><th scope="col">Survivants</th><th scope="col">Pertes</th></tr></thead>
                     <tbody>
                     {% for row in report.rows %}
                         <tr data-simulation-unit="{{ row.slug }}" data-simulation-tier="{{ row.tier }}">
                             <th scope="row">{{ row.label }}<small>{{ tier_labels[row.tier] }} · arrivée R{{ row.arrival }}</small></th>
                             <td data-label="Engagés">{{ row.initial|quantity(0) }}</td>
-                            <td data-label="Pertes" class="{{ row.lost ? 'report-loss' : '' }}">{{ row.lost ? '−' : '' }}{{ row.lost|quantity(0) }}</td>
                             <td data-label="Survivants" class="{{ row.remaining ? 'simulation-survivors' : '' }}">{{ row.remaining|quantity(0) }}</td>
+                            <td data-label="Pertes" class="{{ row.lost ? 'report-loss' : '' }}">{{ row.lost ? '−' : '' }}{{ row.lost|quantity(0) }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
                 </table>
-                <p class="muted simulation-total">{{ report.initial|quantity(0) }} engagés · {{ report.lost|quantity(0) }} {{ report.lost > 1 ? 'perdus' : 'perdu' }} · {{ report.remaining|quantity(0) }} survivants</p>
+                <p class="muted simulation-total">{{ report.initial|quantity(0) }} engagés · {{ report.remaining|quantity(0) }} survivants · {{ report.lost|quantity(0) }} {{ report.lost > 1 ? 'perdus' : 'perdu' }}</p>
             {% else %}
                 <p>Aucune unité dans ce camp.</p>
             {% endif %}

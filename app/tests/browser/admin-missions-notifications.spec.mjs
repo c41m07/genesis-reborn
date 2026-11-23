@@ -148,6 +148,12 @@ test('Admin : huit missions, univers, statuts, pagination, clavier et responsive
   // Le tableau devient des fiches complètes : les sept valeurs restent lisibles sans défilement latéral.
   await expect(region.locator('tbody tr').first().locator('td[data-label]')).toHaveCount(7);
   expect(await region.evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
+  const departureCell = region.locator('tbody tr').first().locator('[data-label="Dernier départ"]');
+  const departure = departureCell.locator('time');
+  await expect(departure).toBeVisible();
+  await expect(departure).toHaveAttribute('datetime', /^\d{4}-\d{2}-\d{2}T/);
+  expect(await departureCell.evaluate(cell => cell.scrollWidth <= cell.clientWidth)).toBe(true);
+  await expect(page.getByText('Compteurs des missions correspondant aux filtres ci-dessus.', { exact: true })).toBeVisible();
   await region.locator('tbody tr').first().getByRole('link').focus();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', {name:/^Flotte n°/,level:1})).toBeVisible();

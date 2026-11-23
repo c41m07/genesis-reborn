@@ -15,7 +15,7 @@
 {% set rotationsWorkspace = currentRoute in ['app_admin_weekly_rotations', 'app_admin_weekly_rotation_new', 'app_admin_weekly_rotation_edit'] %}
 {% set challengesWorkspace = currentRoute in ['app_admin_challenges', 'app_admin_challenge'] %}
 {% set patchnotesWorkspace = currentRoute starts with 'app_admin_patchnote' %}
-{% set opsWorkspace = currentRoute in ['app_admin_security', 'app_admin_permissions', 'app_admin_operations', 'app_admin_audit', 'app_admin_legal_preview'] %}
+{% set opsWorkspace = currentRoute in ['app_admin_security', 'app_admin_permissions', 'app_admin_operations', 'app_admin_audit', 'app_admin_legal_preview', 'app_admin_outbox_inspection'] %}
 {% set directWorkspace = opsWorkspace or patchnotesWorkspace or challengesWorkspace or rotationsWorkspace or projectsWorkspace or eventsWorkspace or boxesWorkspace or balanceWorkspace or universeWorkspace or surveillanceWorkspace or caseWorkspace or moderationWorkspace or currentRoute in ['app_admin_index', 'app_admin_group', 'app_admin_players', 'app_admin_player', 'app_admin_guild_directory', 'app_admin_guild_detail'] %}
 <!DOCTYPE html><html lang="fr"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#090f1b"><meta name="robots" content="noindex">
@@ -34,6 +34,10 @@
 
 <div class="admin-sidebar-footer"><a class="secondary" href="{{ path('app_home') }}">← Retour au jeu</a><form method="post" action="{{ path('app_logout') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}"><button class="secondary">Déconnexion</button></form><small>Accès administrateur · actions consignées</small></div>
 </div></aside>
-<div class="admin-main"><header class="admin-topbar"><span>Console d’administration <i class="connection-dot"></i></span><span>{{ app.user.username }} · ADMIN</span></header>
+<div class="admin-main"><header class="admin-topbar">
+    <span>Console d’administration <i class="connection-dot"></i></span>
+    {% if (universeWorkspace or balanceWorkspace or boxesWorkspace or rotationsWorkspace) and universe.name is defined %}<span class="core-admin-universe">Univers : <strong>{{ universe.name }}</strong></span>{% endif %}
+    <span>{{ app.user.username }} · ADMIN</span>
+</header>
 <main {% if directWorkspace or currentRoute starts with 'app_admin_universe' or currentRoute starts with 'app_admin_catalogue' or currentRoute starts with 'app_admin_game_event' or currentRoute starts with 'app_admin_guild_project' or currentRoute starts with 'app_admin_weekly_rotation' %}data-page-sections="disabled"{% endif %} id="admin-main" class="admin-content" tabindex="-1">{% for type,messages in app.flashes %}{% for message in messages %}<div class="flash {{ type }}" role="{{ type=='error'?'alert':'status' }}">{{ message }}</div>{% endfor %}{% endfor %}{% include 'admin/_navigation.html.twig' with {placement:'content'} %}{% block body %}{% endblock %}</main>
 </div></div></body></html>

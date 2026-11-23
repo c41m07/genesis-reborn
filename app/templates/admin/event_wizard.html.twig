@@ -1,11 +1,10 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}Créer un événement guidé · Console{% endblock %}
 {% block body %}
-<p><a class="secondary" href="{{ path('app_admin_game_events') }}">← Événements</a></p>
-<div class="page-heading"><h1>Créer un événement guidé</h1></div>
+<div class="page-heading"><div><p class="eyebrow">Étape {{ model == '' ? 1 : 2 }} sur 3</p><h1>Créer un événement guidé</h1></div><a class="secondary" href="{{ path('app_admin_game_events') }}">← Événements</a></div>
 {% if model == '' %}
     <section class="panel">
-        <h2>1. Choisir un modèle</h2>
+        <h2>Choisir un modèle</h2>
         <p>Chaque modèle propose ses réglages, puis un aperçu avant la planification.</p>
         {% set modelHelp = {'bonus': 'Production des ressources augmentée sur une période définie.', 'announcement': 'Un message visible pendant la période choisie, global ou par univers.', 'challenge': 'Un objectif commun, une contribution minimale et une récompense par participant éligible.'} %}
         <div class="admin-event-model-choices">
@@ -19,7 +18,7 @@
     </section>
 {% else %}
     <section class="panel">
-        <h2>1. {{ models[model] }}</h2>
+        <h2>Régler : {{ models[model] }}</h2>
         <p><a class="secondary" href="{{ path('app_admin_event_wizard') }}">Choisir un autre modèle</a></p>
         <form method="post" class="admin-event-wizard-form">
             <input type="hidden" name="_token" value="{{ csrf_token('admin_event_preview') }}">

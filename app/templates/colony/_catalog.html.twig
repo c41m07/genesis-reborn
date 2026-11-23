@@ -3,7 +3,7 @@
 {% for group,items in cards %}{% if group==section %}
 <section id="panel-{{ group }}" data-controller="building-catalog" data-building-catalog-show-locked-value="{{ show_locked_items ? 'true' : 'false' }}" data-action="hashchange@window->building-catalog#followHash click->building-catalog#rememberFilter" aria-label="{{ {buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[group] }}">
     <div class="catalog-section-title">
-        <h2 class="visually-hidden">Catalogue {{ {buildings:'des bâtiments',technologies:'des recherches',ships:'des vaisseaux',defenses:'des défenses'}[group] }}</h2>
+        <h2 class="core-catalogue-title">{{ {buildings:'Installations', technologies:'Catalogue des recherches', ships:'Catalogue des vaisseaux', defenses:'Catalogue des défenses'}[group] }}</h2>
         <div class="building-visibility"><button type="button" role="switch" aria-checked="false" data-building-catalog-target="compactSwitch" data-action="building-catalog#toggleCompact" hidden><span>Vue condensée</span><span class="building-switch-track" aria-hidden="true"></span></button></div>
         <form method="get" class="building-visibility">
             <input type="hidden" name="section" value="{{ group }}">

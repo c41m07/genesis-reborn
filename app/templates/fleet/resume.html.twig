@@ -22,6 +22,7 @@
     {% if quote %}
         <section class="panel fleet-resume-quote" aria-labelledby="station-quote-title">
             <h2 id="station-quote-title">Devis de reprise</h2>
+            <p id="station-quote-destination">Destination du stationnement : <strong>{{ quote.target.name }}</strong>.</p>
             <dl class="report-facts">
                 <div><dt>Nouvelle base</dt><dd>{{ quote.target.name }} · {{ quote.target.coordinates() }}</dd></div>
                 <div><dt>Durée</dt><dd>{{ duration_label(quote.seconds) }}</dd></div>
@@ -32,7 +33,7 @@
                 <input type="hidden" name="request_key" value="{{ request_key() }}">
                 <input type="hidden" name="version" value="{{ quote.version }}">
                 <input type="hidden" name="planet" value="{{ quote.target.id }}">
-                <button class="primary">Confirmer la reprise</button>
+                <button class="primary" aria-describedby="station-quote-destination">Confirmer la reprise</button>
             </form>
         </section>
     {% endif %}

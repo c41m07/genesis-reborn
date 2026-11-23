@@ -620,7 +620,7 @@ export default class extends Controller {
 
         this.drawFlights(ctx);
         if (this.hoveredSystem) this.drawSelection(ctx, this.hoveredSystem, '#00d4ff');
-        if (this.selectedSystem) this.drawSelection(ctx, this.selectedSystem, '#ffb040');
+        if (this.selectedSystem) this.drawSelection(ctx, this.selectedSystem, '#77d5e9');
     }
 
     toggleMapFilters() {

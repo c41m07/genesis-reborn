@@ -7,21 +7,25 @@
         <div><h1>Planètes</h1><p>Chaque monde, une nouvelle ambition. Gérez vos colonies et leurs opérations.</p></div>
         {% if chrome.planet %}<a class="quiet-button" href="{{ path('app_colony',{id:chrome.planet.id}) }}">{{ ui.icon('overview') }} Vue générale {{ ui.icon('arrow') }}</a>{% endif %}
     </div>
-    <nav class="ui-tabs" aria-label="Présentation des colonies">
-        <a href="{{ path('app_planets') }}" {% if not table_view %}class="active" aria-current="page"{% endif %}>Cartes</a>
-        <a href="{{ path('app_planets',{view:'table'}) }}" {% if table_view %}class="active" aria-current="page"{% endif %}>Comparer les colonies</a>
-    </nav>
+    <div class="colony-comparison-toolbar">
+        <nav class="ui-tabs" aria-label="Présentation des colonies">
+            <a href="{{ path('app_planets') }}" {% if not table_view %}class="active" aria-current="page"{% endif %}>Cartes</a>
+            <a href="{{ path('app_planets',{view:'table'}) }}" {% if table_view %}class="active" aria-current="page"{% endif %}>Comparer les colonies</a>
+        </nav>
+        {% if table_view %}
+            <form class="colony-resource-picker" method="get" action="{{ path('app_planets') }}" data-controller="colony-comparison">
+                <input type="hidden" name="view" value="table">
+                <label for="comparison-resource">Ressource à comparer</label>
+                <select id="comparison-resource" name="resource" data-action="change->colony-comparison#select">
+                    {% for slug,label in {metal:'Métal',nano:'Nano',hydrogen:'Hydrogène',antimatter:'Antimatière',electricity:'Électricité'} %}
+                        <option value="{{ slug }}" {{ comparison_resource==slug ? 'selected' : '' }}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button class="secondary">Comparer cette ressource</button>
+            </form>
+        {% endif %}
+    </div>
     {% if table_view %}
-        <form class="colony-resource-picker" method="get" action="{{ path('app_planets') }}" data-controller="colony-comparison">
-            <input type="hidden" name="view" value="table">
-            <label for="comparison-resource">Ressource à comparer</label>
-            <select id="comparison-resource" name="resource" data-action="change->colony-comparison#select">
-                {% for slug,label in {metal:'Métal',nano:'Nano',hydrogen:'Hydrogène',antimatter:'Antimatière',electricity:'Électricité'} %}
-                    <option value="{{ slug }}" {{ comparison_resource==slug ? 'selected' : '' }}>{{ label }}</option>
-                {% endfor %}
-            </select>
-            <button class="secondary">Comparer cette ressource</button>
-        </form>
         {% if comparison_activities.research and comparison_activities.researchOrigin is null %}
             <section class="colony-comparison-common-research" aria-label="File de recherche commune">
                 <p>Recherche commune à cet empire · Colonie d’origine indisponible</p>

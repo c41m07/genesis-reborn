@@ -113,6 +113,8 @@ final class ColonyController extends AbstractController
         JournalService $journal,
         \App\Service\Colony\EmpireDetails $details,
         FirstStepsView $firstSteps,
+        ColonyComparisonActivities $comparison,
+        ClockInterface $clock,
     ): Response
     {
         $p = $this->owned($id);
@@ -128,6 +130,8 @@ final class ColonyController extends AbstractController
                 $journal->open($m);
             }
             $data['journal_page'] = $journal->data($m, $id);
+            $data['overview_time'] = $clock->now();
+            $data['overview_deadlines'] = $comparison->upcomingForEmpire($m, $this->repo->planets($m->universe, $m));
             $points = [
                 'building_points' => 0,
                 'research_points' => 0,
@@ -174,6 +178,7 @@ final class ColonyController extends AbstractController
         if ($data['section'] === 'overview') {
             // Réutiliser les ressources déjà préparées ; le bandeau conserve son propre rendu.
             $templates['overview-attention'] = 'colony/_overview_attention.html.twig';
+            $templates['overview-deadlines'] = 'colony/_overview_deadlines.html.twig';
             $templates['overview-flight-metric'] = 'colony/_overview_flight_metric.html.twig';
         }
         $regions = [];

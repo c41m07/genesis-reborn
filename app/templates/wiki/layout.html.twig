@@ -6,12 +6,6 @@
     <h1 id="{{ currentChapter ? 'wiki-title-'~currentChapter : 'wiki-title' }}">{% block wiki_heading %}Wiki du jeu{% endblock %}</h1>
     {% block wiki_intro %}{% endblock %}
   </header>
-  <nav class="wiki-space-navigation" aria-label="Pages du wiki">
-    <a href="{{ path('app_wiki') }}"{% if app.request.attributes.get('_route')=='app_wiki' %} aria-current="page"{% elseif currentChapter %} aria-current="location"{% endif %}>Accueil</a>
-    <a href="{{ path('app_wiki_search',query ? {q:query} : {}) }}"{% if app.request.attributes.get('_route')=='app_wiki_search' %} aria-current="page"{% endif %}>Recherche globale</a>
-    <a href="{{ path('app_wiki_reference',{source:'regles'}) }}"{% if source=='regles' %} aria-current="page"{% endif %}>Règles de référence</a>
-    <a href="{{ path('app_wiki_reference',{source:'decisions'}) }}"{% if source=='decisions' %} aria-current="page"{% endif %}>Décisions du projet</a>
-  </nav>
   {% if app.request.attributes.get('_route') in ['app_wiki','app_wiki_search'] %}
   <form class="panel wiki-search" method="get" action="{{ path('app_wiki_search') }}" role="search" aria-label="Recherche du manuel">
     <label for="wiki-query">Rechercher dans le manuel</label>
@@ -19,6 +13,12 @@
     <button class="secondary">Rechercher</button>
   </form>
   {% endif %}
+  <nav class="wiki-space-navigation" aria-label="Pages du wiki">
+    <a href="{{ path('app_wiki') }}"{% if app.request.attributes.get('_route')=='app_wiki' %} aria-current="page"{% elseif currentChapter %} aria-current="location"{% endif %}>Accueil</a>
+    <a href="{{ path('app_wiki_search',query ? {q:query} : {}) }}"{% if app.request.attributes.get('_route')=='app_wiki_search' %} aria-current="page"{% endif %}>Recherche globale</a>
+    <a href="{{ path('app_wiki_reference',{source:'regles'}) }}"{% if source=='regles' %} aria-current="page"{% endif %}>Règles de référence</a>
+    <a href="{{ path('app_wiki_reference',{source:'decisions'}) }}"{% if source=='decisions' %} aria-current="page"{% endif %}>Décisions du projet</a>
+  </nav>
   <div class="wiki-layout">
     <aside id="wiki-summary" class="wiki-navigation" aria-label="Navigation des chapitres" tabindex="-1">
       {% include 'wiki/_summary.html.twig' %}

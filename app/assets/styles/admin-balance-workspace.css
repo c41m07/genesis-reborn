@@ -178,3 +178,18 @@ body.admin-console.admin-balance-workspace .admin-catalogue-reset {
         font-size: 16px;
     }
 }
+
+/* L’univers est visible au niveau du shell ; le fil et les accès secondaires occupent une seule bande si possible. */
+.admin-balance-workspace .core-admin-universe { min-width:0; overflow-wrap:anywhere; color:var(--text); }
+.admin-balance-workspace .core-admin-context { display:flex; flex-wrap:wrap; align-items:center; gap:4px 14px; margin:0 0 10px; }
+.admin-balance-workspace .core-admin-context :is(.admin-breadcrumbs,.admin-page-navigation) { margin:0; min-width:0; }
+.admin-balance-workspace .core-admin-context .admin-page-navigation a { min-height:40px; padding:6px 10px; }
+.admin-balance-workspace .admin-universe-navigation { margin-bottom:14px; padding-bottom:8px; }
+.admin-balance-workspace .core-admin-restoration .table-scroll { margin:0 0 18px; }
+.admin-balance-workspace .core-admin-restoration .admin-ops-table { width:100%; table-layout:fixed; font-variant-numeric:tabular-nums; }
+.admin-balance-workspace .core-admin-restoration .admin-ops-table :is(th,td) { overflow-wrap:anywhere; }
+.admin-balance-workspace .core-admin-restoration .admin-ops-table :is(th,td):nth-child(n+2) { width:27%; text-align:right; }
+.admin-balance-workspace .core-admin-restoration form { margin-top:16px; }
+
+.admin-balance-workspace .admin-history-table { font-variant-numeric: tabular-nums; }
+.admin-balance-workspace .admin-history-revision { display: block; margin-top: 4px; color: var(--text); line-height: 1.35; }

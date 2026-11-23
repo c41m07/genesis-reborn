@@ -2,7 +2,7 @@
 {% set proposal=row.relation.proposal|default(row.status=='pending' ? 'allies' : null) %}
 {% set treatyPermissions={allies:'diplomacy.alliance',non_aggression:'diplomacy.non_aggression',defense:'diplomacy.defense',neutral:'diplomacy.neutral'} %}
 <article class="panel guild-card{% if own %} guild-card--{{ row.status }}{% endif %}{{ proposal and own and row.relation.proposer.id!=own.id ? ' received-proposals' : '' }}">
-    <span class="badge">{{ own ? relation_labels[row.status]|default(row.status) : 'Recrutement ouvert' }}</span>
+    <span class="badge">{{ own ? ((row.status=='pending' ? 'État actuel : ' : 'Relation actuelle : ') ~ relation_labels[row.status]|default(row.status)) : 'Recrutement ouvert' }}</span>
     <h3><a class="public-profile-link" href="{{ path('app_guild_public_profile',{id:g.id}) }}">{{ g.name }}</a></h3>
     <p class="guild-result-meta"><span>Commandement : {{ g.leader.displayName }}</span><span>{{ row.members|length }} membre{{ row.members|length > 1 ? 's' : '' }}</span></p>
     {% if not own %}
@@ -21,7 +21,7 @@
         {% if row.status=='defense' %}<p>Non-agression et stationnement défensif avec accord du propriétaire. Aucun droit supplémentaire de transport ni regroupement offensif. Espionnage autorisé ; aucune protection entre camps dans une bataille.</p>{% endif %}
         <div class="guild-treaty-actions">
         {% if proposal %}
-            <p>{{ proposal=='neutral' ? 'Paix' : relation_labels[proposal] }} : proposition {{ row.relation.proposer.id==own.id ? 'envoyée' : 'reçue' }}. La relation actuelle reste applicable jusqu’à acceptation.</p>
+            <p><strong>Proposition {{ row.relation.proposer.id==own.id ? 'envoyée' : 'reçue' }} :</strong> {{ proposal=='neutral' ? 'Paix' : relation_labels[proposal] }}. La relation actuelle reste applicable jusqu’à acceptation.</p>
             {% if guildPermissions[treatyPermissions[proposal]] %}
                 {% if row.relation.proposer.id!=own.id %}
                     {% include 'player/_guild_treaty_form.html.twig' with {treatyStatus:proposal,treatyAction:'accept',treatyLabel:proposal=='neutral' ? 'Accepter la paix' : 'Accepter le traité'} %}

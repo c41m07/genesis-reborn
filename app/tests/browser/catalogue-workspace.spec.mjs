@@ -96,11 +96,20 @@ test('L7B : manques multiples, devis de lot et suivi dépliable conservés aprè
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto(`${user.path}?section=ships`);
     const ship = page.locator('#item-fighter-basic');
+    await expect(ship.locator('[data-catalogue-main-gain]')).toContainText('Attaque');
+    await expect(ship.locator('.core-unit-price')).toBeHidden();
+    const unitMetalPrice = Number((await ship.locator('.building-costs>[data-resource=metal]').getAttribute('title')).split(' : ')[1].replace(/\s/g, ''));
     await ship.getByLabel('Quantité', { exact: true }).fill('5');
     const previewResponse = page.waitForResponse(response => response.url().includes('/construction-maximum'));
     await ship.getByLabel('Quantité', { exact: true }).press('Tab');
     const preview = await (await previewResponse).json();
     await expect(ship.locator('[data-construction-quantity-target=costHeading]')).toHaveText('Coût du lot × 5');
+    await ship.locator('.core-unit-details summary').click();
+    const unitMetalDetail = ship.locator('.core-unit-price li').filter({ hasText: 'Métal' });
+    await expect(unitMetalDetail).toBeVisible();
+    const detailAmount = await unitMetalDetail.locator('strong').innerText();
+    expect(Number(detailAmount.replace(/\s/g, ''))).toBe(unitMetalPrice);
+    await ship.locator('.core-unit-details summary').click();
     for (const [resource, amount] of Object.entries(preview.costs).filter(([,amount]) => amount > 0)) {
         const title = await ship.locator(`.building-costs>[data-resource=${resource}]`).getAttribute('title');
         expect(Number(title.split(' : ')[1].replace(/\s/g, ''))).toBe(amount);
@@ -151,8 +160,11 @@ test('L7B : manques multiples, devis de lot et suivi dépliable conservés aprè
     await expect(page.locator('.incoming-empty-message')).toBeVisible();
     await page.goto(`${user.path}?section=ships`);
     const unavailable = page.locator('#item-fighter-basic');
+    await expect(unavailable.getByRole('button', { name: /Max :/ })).toBeDisabled();
     const unavailableResponse = page.waitForResponse(response => response.url().includes('/construction-maximum'));
-    await unavailable.getByRole('button', { name: /Max :/ }).click();
+    const unavailableQuantity = unavailable.getByLabel('Quantité', { exact: true });
+    await unavailableQuantity.fill('2');
+    await unavailableQuantity.press('Tab');
     const quote = await (await unavailableResponse).json();
     expect(quote.maximum).toBe(0);
     expect(Object.keys(quote.missingResources).length).toBeGreaterThan(1);

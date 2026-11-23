@@ -36,18 +36,20 @@
                         </div>
                         <div class="composition-actions">
                             <a class="primary" href="{{ path('app_fleet_composition_load',{id:composition.id}) }}">Vérifier et charger</a>
-                            <a class="secondary" href="{{ path('app_fleet_composition_edit',{id:composition.id}) }}" aria-label="Modifier {{ composition.name }}">Modifier</a>
-                            <details>
-                                <summary>Supprimer<span class="visually-hidden"> {{ composition.name }}</span></summary>
-                                <form method="post">
-                                    <p>Cette suppression retire le modèle enregistré.</p>
-                                    <input type="hidden" name="_token" value="{{ csrf_token('fleet_compositions') }}">
-                                    <input type="hidden" name="id" value="{{ composition.id }}">
-                                    <input type="hidden" name="version" value="{{ composition.version }}">
-                                    <input type="hidden" name="action" value="delete">
-                                    <button class="secondary">Supprimer cette composition</button>
-                                </form>
-                            </details>
+                            <div class="composition-management" role="group" aria-label="Gérer {{ composition.name }}">
+                                <a class="secondary" href="{{ path('app_fleet_composition_edit',{id:composition.id}) }}" aria-label="Modifier {{ composition.name }}">Modifier</a>
+                                <details>
+                                    <summary>Supprimer<span class="visually-hidden"> {{ composition.name }}</span></summary>
+                                    <form method="post">
+                                        <p>Cette suppression retire le modèle enregistré.</p>
+                                        <input type="hidden" name="_token" value="{{ csrf_token('fleet_compositions') }}">
+                                        <input type="hidden" name="id" value="{{ composition.id }}">
+                                        <input type="hidden" name="version" value="{{ composition.version }}">
+                                        <input type="hidden" name="action" value="delete">
+                                        <button class="secondary">Supprimer cette composition</button>
+                                    </form>
+                                </details>
+                            </div>
                         </div>
                     </article>
                 {% else %}

@@ -298,3 +298,13 @@ body.authenticated .fleet-compositions .composition-missing {
         line-height: 1.5;
     }
 }
+
+.fleet-compositions .composition-management {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px;
+    padding-inline-start: 12px;
+    border-inline-start: 1px solid var(--line);
+    min-width: 0;
+}

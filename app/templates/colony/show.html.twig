@@ -3,10 +3,22 @@
 {% block incoming_fleets %}{% endblock %}
 {% block body %}
 <div class="{{ section == 'overview' ? 'overview-page' : '' }}" data-controller="colony-live" data-colony-live-url-value="{{ path('app_colony',{id:planet.id}) }}">
-<div class="page-heading">
+{% set catalogueHeader = {
+    buildings: {title:'Pont d’ingénierie', intro:'Énergie, extraction et infrastructures de cette colonie.', art:'art/colony-overview.webp'},
+    technologies: {title:'Laboratoire colonial', intro:'Développez les technologies partagées par vos colonies dans cet univers.', art:'images/catalog/buildings/lab__basic-768.webp'},
+    ships: {title:'Hangar d’assemblage', intro:'Assemblez les vaisseaux de reconnaissance, de transport et de combat.', art:'images/catalog/buildings/shipyard__basic.webp'},
+    defenses: {title:'Poste de défense planétaire', intro:'Installez les défenses adaptées aux menaces de cette colonie.', art:'images/catalog/buildings/fortress__basic.webp'},
+}[section]|default(null) %}
+<div class="page-heading{{ catalogueHeader ? ' core-catalogue-header core-catalogue-header--' ~ section : '' }}">
+    {% if catalogueHeader %}
+        <img class="core-catalogue-header-art" src="{{ asset(catalogueHeader.art) }}" alt="" decoding="async">
+    {% endif %}
     <div>
+        {% if catalogueHeader %}<p class="core-catalogue-kicker">{{ catalogueHeader.title }} · {{ planet.name }}</p>{% endif %}
         <h1>{{ {overview:'Vue générale',buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[section] }}<span>.</span></h1>
-        {% if section == 'overview' %}
+        {% if catalogueHeader %}
+            <p>{{ catalogueHeader.intro }}</p>
+        {% elseif section == 'overview' %}
             <p>Agir sur la colonie active, suivre tout l’empire.</p>
         {% endif %}
     </div>
@@ -16,7 +28,7 @@
 </div>
 <div class="colony-layout colony-layout--integrated"><div class="colony-content">
 {% if section=='overview' %}
-{% include 'colony/_overview_attention.html.twig' %}
+<div class="core-overview-top">
 <section class="colony-banner panel empire-banner" aria-labelledby="overview-colony-title">
     <picture><source type="image/webp" srcset="{{ asset('art/colony-overview.webp') }}"><img class="colony-scene" src="{{ asset('art/colony-overview.png') }}" alt="" aria-hidden="true"></picture>
     <div class="hero-content">
@@ -43,6 +55,13 @@
 <a class="metric-card" href="{{ path('app_guilds') }}"><span class="metric-symbol">{{ ui.icon('diplomacy') }}</span><span><small>Guilde</small><strong>{{ empire_guild ? empire_guild.name : (guilds_enabled ? 'Sans guilde' : 'Désactivée') }}</strong><span class="metric-caption">{{ empire_guild ? 'Ouvrir ma guilde' : (guilds_enabled ? 'Trouver une guilde' : 'Dans cet univers') }}</span></span><span class="metric-arrow" aria-hidden="true">→</span></a>
 </nav>
 </section>
+<aside class="core-empire-watch panel" aria-labelledby="core-empire-watch-title">
+    <h2 id="core-empire-watch-title">À surveiller</h2>
+    <p>Prochaines échéances de votre empire · {{ membership.universe.name }}</p>
+    {% include 'colony/_overview_deadlines.html.twig' %}
+    {% include 'colony/_overview_attention.html.twig' %}
+</aside>
+</div>
 <div class="dashboard-layout">
 <div class="dashboard-primary">
 <section class="dashboard-activity" aria-label="Activité et files de la colonie active">{% include 'ui/colony_queues.html.twig' %}</section>

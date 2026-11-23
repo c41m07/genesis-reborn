@@ -137,6 +137,16 @@ final class CatalogueDetailsTest extends KernelTestCase
         $html=$twig->render('ui/catalogue_benefits.html.twig',['card'=>['maximum'=>false,'benefits'=>array_values($rows),'details'=>['unlocks'=>[]],'target'=>1],'group'=>'ships','d'=>$definition,'show_locked_items'=>false]);
         self::assertStringContainsString('876,25',$html);
         self::assertStringContainsString('Vos recherches sont incluses',$html);
+        self::assertStringNotContainsString('Prix unitaire', $html);
+        $quoted = $twig->render('ui/catalogue_benefits.html.twig', [
+            'card' => ['maximum' => false, 'benefits' => array_values($rows), 'costs' => ['metal' => 987, 'nano' => 0]],
+            'group' => 'ships', 'd' => $definition,
+            'resources' => ['metal' => ['label' => 'Métal'], 'nano' => ['label' => 'Nano']],
+        ]);
+        self::assertStringContainsString('Prix unitaire', $quoted);
+        self::assertStringContainsString('Métal : <strong>987</strong>', $quoted);
+        self::assertStringNotContainsString('Nano : <strong>', $quoted);
+        self::assertStringContainsString('876,25', $quoted);
     }
 
     public function testShipCharacteristicsWithoutResearchKeepBaseValuesAndUnarmedShipsDoNotGainShots():void

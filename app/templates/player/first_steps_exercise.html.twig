@@ -23,10 +23,15 @@
         <p>Le jalon d’apprentissage est validé quel que soit le résultat : l’objectif est de savoir lire le rapport.</p>
         <h3>Comparer les survivants et les pertes</h3>
         <p>Le résultat résume le sort du convoi. Les pertes indiquent combien d’unités n’ont pas survécu, même dans le camp vainqueur.</p>
-        <ul>
-            <li>Escorte : {{ report.escortSurvivors }} sur 2 en service, {{ report.escortLosses }} perdues dans la simulation.</li>
-            <li>Pirates : {{ report.pirateSurvivors }} sur 2 en service, {{ report.pirateLosses }} perdues dans la simulation.</li>
-        </ul>
+        <table class="data-table first-steps-exercise-summary" aria-label="Survivants et pertes par camp">
+            <thead>
+                <tr><th scope="col">Camp</th><th scope="col">Survivants</th><th scope="col">Pertes</th></tr>
+            </thead>
+            <tbody>
+                <tr><th scope="row">Escorte</th><td>{{ report.escortSurvivors }} sur 2</td><td>{{ report.escortLosses }}</td></tr>
+                <tr><th scope="row">Pirates</th><td>{{ report.pirateSurvivors }} sur 2</td><td>{{ report.pirateLosses }}</td></tr>
+            </tbody>
+        </table>
         <details>
             <summary>Comprendre les tirs manche par manche</summary>
             <p>Les tirs qui touchent entament d’abord le bouclier. Les dégâts qui passent atteignent la structure : c’est ce qui peut faire perdre une unité.</p>

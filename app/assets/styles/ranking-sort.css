@@ -3,3 +3,11 @@
 .ranking-sort:hover{text-decoration:underline;background:color-mix(in srgb,var(--accent) 8%,var(--panel))}
 .ranking-sort[aria-current=page]{background:color-mix(in srgb,var(--accent) 12%,var(--panel))}
 .ranking-sort:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
+
+.leaderboard-workspace .ranking-table thead :is(th:first-child,.ranking-sort-heading),
+.leaderboard-workspace .ranking-table--guilds thead th:nth-child(n+3),
+.leaderboard-workspace .ranking-table--players tbody :is(td:first-child,td[data-category]),
+.leaderboard-workspace .ranking-table--guilds tbody td {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+}

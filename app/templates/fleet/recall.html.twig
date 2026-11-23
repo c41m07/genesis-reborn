@@ -23,8 +23,8 @@
 <div><dt>Carburant inutilisé conservé</dt><dd>{{ quote.unused_fuel|quantity(2) }} hydrogène</dd></div>
 </dl>
 <h3>Fret conservé</h3><ul>{% for slug,amount in quote.freight|filter(amount => amount > 0) %}<li>{{ resources[slug] }} : {{ amount|quantity(2) }}</li>{% else %}<li>Aucun fret.</li>{% endfor %}</ul>
-<p>Les vaisseaux reviennent sans accomplir la mission prévue. Le calcul est actualisé lors de la confirmation. Le dépôt reste soumis aux capacités de stockage habituelles.</p>
-<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('fleet_recall_'~fleet.id) }}"><input type="hidden" name="request_key" value="{{ request_key }}"><input type="hidden" name="version" value="{{ quote.version }}"><input type="hidden" name="return_planet" value="{{ quote.return_planet.id }}"><button class="primary" type="submit">Confirmer le rappel</button></form>
+<p id="fleet-recall-consequence"><strong>Mission interrompue :</strong> les vaisseaux reviennent sans accomplir la mission prévue. Le calcul est actualisé lors de la confirmation. Le dépôt reste soumis aux capacités de stockage habituelles.</p>
+<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('fleet_recall_'~fleet.id) }}"><input type="hidden" name="request_key" value="{{ request_key }}"><input type="hidden" name="version" value="{{ quote.version }}"><input type="hidden" name="return_planet" value="{{ quote.return_planet.id }}"><button class="primary" type="submit" aria-describedby="fleet-recall-consequence">Confirmer le rappel</button></form>
 {% endif %}
 <p><a href="{{ path('app_fleets') }}">Revenir aux flottes</a></p>
 </section>

@@ -35,8 +35,8 @@ test('La Vue générale validée regroupe les accès et actualise les alertes sa
     resourceStocks(999999);
     for (const theme of ['dark', 'light']) {
       runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
-      for (const width of [1440, 768, 390, 320]) {
-        await page.setViewportSize({ width, height: 1000 });
+      for (const width of [1920, 1440, 768, 390, 320]) {
+        await page.setViewportSize({ width, height: width === 1920 ? 1080 : 1000 });
         await page.goto(colonyUrl);
         await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
         const attention = page.locator('.overview-attention');
@@ -44,7 +44,14 @@ test('La Vue générale validée regroupe les accès et actualise les alertes sa
         const attentionBounds = await attention.boundingBox();
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
         const heroBounds = await banner.boundingBox();
-        expect(attentionBounds.y + attentionBounds.height).toBeLessThanOrEqual(heroBounds.y);
+        const watchBounds = await page.locator('.core-empire-watch').boundingBox();
+        expect(attentionBounds.y).toBeGreaterThanOrEqual(watchBounds.y);
+        if (width >= 1250) {
+            expect(watchBounds.x).toBeGreaterThanOrEqual(heroBounds.x + heroBounds.width);
+            expect(Math.abs(watchBounds.y - heroBounds.y)).toBeLessThan(2);
+        } else {
+            expect(watchBounds.y).toBeGreaterThanOrEqual(heroBounds.y + heroBounds.height);
+        }
         const bounds = await metrics.boundingBox();
         expect(bounds.y).toBeGreaterThan(heroBounds.y);
         expect(bounds.y + bounds.height).toBeLessThanOrEqual(heroBounds.y + heroBounds.height);

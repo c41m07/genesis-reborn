@@ -1,0 +1,10 @@
+{# Une caractéristique par unité, avec les bonus déjà calculés par le catalogue. #}
+{% set positive = card.benefits|filter(item => item.value is defined and item.value > 0) %}
+{% set preferred = d.economic_unit is defined ? (positive|first) : (positive|filter(item => item.label == (card.filter_category == 'transport' ? 'Capacité de soute' : 'Attaque'))|first) %}
+{% set benefit = preferred ?: (positive|first) %}
+{% if benefit %}
+    <div class="core-catalogue-gain core-unit-gain" data-catalogue-main-gain>
+        <span>{{ benefit.label }}</span>
+        <strong>{% include 'ui/catalogue_benefit_value.html.twig' with {benefit:benefit} only %}</strong>
+    </div>
+{% endif %}

@@ -76,10 +76,26 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
   await firstEntry.getByRole('button', { name: 'Restaurer les valeurs de référence' }).click();
   await expect(page.locator('.flash[role="status"]')).toContainText('Équilibrage enregistré');
 
-  for (const width of [1440, 768, 390]) {
-    await page.setViewportSize({ width, height: 900 });
+  await page.getByRole('link', { name: /Consulter l’historique et comparer les versions/ }).click();
+  const history = page.url();
+  const universe = Number(new URL(history).pathname.match(/universes[/]([0-9]+)/)[1]);
+  const settings = queryIsolatedSql(project, `SELECT game_settings FROM universe WHERE id=${universe}`);
+  await page.getByRole('link', { name: 'Préparer la restauration de l’état après cette trace' }).last().click();
+  await expect(page.locator('.core-admin-universe')).toContainText('Univers :');
+  await expect(page.getByRole('navigation', { name: 'Fil d’Ariane' })).toContainText('Préparer une restauration');
+  const tables = page.locator('.core-admin-restoration table');
+  await expect(tables).toHaveCount(2);
+  await expect(tables.nth(0).getByRole('columnheader')).toHaveText(['Champ','Actuel','Proposé']);
+  await expect(tables.nth(1).getByRole('columnheader')).toHaveText(['Élément','Actuel','Proposé']);
+  await expect(tables.nth(1).getByRole('rowheader', { name: 'Durée' })).toBeVisible();
+  await expect(page.getByLabel('Motif de restauration')).toHaveValue('');
+  for (const width of [1920, 1440, 768, 390]) {
+    await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
+  await page.getByRole('link', { name: 'Annuler et revenir à l’historique' }).click();
+  await expect(page).toHaveURL(history);
+  expect(queryIsolatedSql(project, `SELECT game_settings FROM universe WHERE id=${universe}`)).toBe(settings);
 });
 
 test('Catalogue B : comparaison des rangs, thèmes et formulaires natifs des quatre familles', async ({ page, browser }, testInfo) => {

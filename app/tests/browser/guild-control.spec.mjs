@@ -91,7 +91,7 @@ test('L1C A : rôles, formulaires, traités et confirmations natives de gestion'
     await peer.locator('.relation-results .guild-card').getByLabel('Traité à proposer').selectOption('defense');
     await peer.locator('.relation-results .guild-card').getByRole('button', { name: 'Proposer le traité' }).click();
     await member.goto('/diplomatie');
-    await expect(member.locator('.guild-relations-list .guild-card > .badge')).toHaveText('Alliés');
+    await expect(member.locator('.guild-relations-list .guild-card > .badge')).toHaveText('Relation actuelle : Alliés');
     await expect(member.locator('.guild-relations-list').getByRole('button', { name: 'Accepter le traité' })).toHaveCount(0);
     await expect(member.getByText('Déclarer ennemis', { exact: true })).toHaveCount(0);
 
@@ -124,8 +124,8 @@ test('L1C A : rôles, formulaires, traités et confirmations natives de gestion'
           } else if (key === 'personnalisation') {
             await expect(page.getByLabel('Description', { exact: true })).toHaveValue(description);
           } else {
-            await expect(page.locator('.guild-relations-list .badge')).toHaveText('Alliés');
-            await expect(page.locator('.guild-relations-list')).toContainText('proposition reçue');
+            await expect(page.locator('.guild-relations-list .badge')).toHaveText('Relation actuelle : Alliés');
+            await expect(page.locator('.guild-relations-list').getByText(/^Proposition reçue : Pacte de défense/)).toBeVisible();
             await expect(page.locator('.guild-relations-list')).toContainText('La relation actuelle reste applicable');
           }
           if (width === 390) {

@@ -467,3 +467,58 @@ body.authenticated.ui-refined .colony-redesign .colony-comparison th[data-compar
         width: 125px;
     }
 }
+
+/* Les priorités de l’empire accompagnent la colonie active, en flux normal sur mobile. */
+.core-overview-top { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; align-items:start; }
+.core-overview-top .empire-banner { min-width:0; }
+.core-empire-watch { min-width:0; margin:0; padding:16px; }
+.core-empire-watch h2 { margin:0 0 5px; font-size:20px; }
+.core-empire-watch p { margin:0 0 8px; }
+.core-empire-deadlines { display:grid; gap:8px; list-style:none; padding:0; margin:12px 0; }
+.core-empire-deadline {
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:8px 12px;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:5px;
+    background:color-mix(in srgb,var(--accent) 6%,var(--panel));
+    overflow-wrap:anywhere;
+}
+.core-empire-deadline>div { display:grid; gap:2px; min-width:0; }
+.core-empire-deadline>div>span { font-size:10px; color:var(--muted); font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
+.core-empire-deadline time { white-space:nowrap; font-size:12px; font-variant-numeric:tabular-nums; color:var(--text); }
+.core-empire-deadline small { color:var(--muted); }
+.core-empire-deadline a { min-height:30px; display:inline-flex; align-items:center; font-size:13px; font-weight:700; color:var(--accent); }
+.core-empire-deadline.is-hostile { border-color:var(--danger,#ff9b9b); }
+.core-empire-watch .overview-attention { margin:8px 0 0; }
+.core-empire-watch .overview-attention h3 { margin:0 0 6px; font-size:14px; }
+@media(min-width:1250px) {
+    .core-overview-top { grid-template-columns:minmax(0,2fr) minmax(0,1fr); }
+}
+
+/* Les commandes restent dans l’ordre de lecture natif, le filtre GET sert aussi sans JS. */
+@media (min-width: 1201px) {
+    .colony-redesign .colony-comparison-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px 20px;
+        margin-block: 0 16px;
+    }
+
+    body.authenticated.ui-refined .colony-redesign .colony-comparison-toolbar .colony-resource-picker {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        width: auto;
+        margin: 0;
+    }
+
+    .colony-redesign .colony-comparison-toolbar .colony-resource-picker label { margin: 0; }
+    .colony-redesign .colony-comparison-toolbar .colony-resource-picker select { width: auto; }
+}
+.colony-redesign .colony-comparison [data-resource] { text-align: end; font-variant-numeric: tabular-nums; }

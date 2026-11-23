@@ -51,6 +51,44 @@ async function prepareThreat(page,browser) {
   return {project,defender,attacker,galaxy,fleet,target};
 }
 
+test('Le poste de commandement suit deux recherches et une attaque vers une autre colonie', async ({page, browser}) => {
+  test.setTimeout(120000);
+  const data = await prepareThreat(page, browser);
+  const {project, defender, galaxy} = data;
+  const outpost = Number(queryIsolatedSql(project, `SELECT p.id FROM planet p JOIN solar_system s ON s.id=p.solar_system_id
+    WHERE s.galaxy_id=${galaxy} AND p.owner_id IS NULL AND p.npc_planet=0 ORDER BY p.id LIMIT 1`));
+  expect(outpost).toBeGreaterThan(0);
+  runIsolatedSql(project, `
+    UPDATE planet SET owner_id=${defender.memberId},name='Balcon de Nérée' WHERE id=${outpost};
+    UPDATE fleet f JOIN planet p ON p.id=${outpost} SET f.destination_id=p.id,f.destination_system_id=p.solar_system_id WHERE f.id=${data.fleet};
+    INSERT INTO queue_item(planet_id,player_universe_id,queue_type,item_slug,tier,item_level,quantity,duration_seconds,paid_costs,queued_at,started_at,dispatch_token) VALUES
+      (${outpost},${defender.memberId},'research','engineering_foundations','basic',1,1,900,'{}',UTC_TIMESTAMP(),UTC_TIMESTAMP(),'watch-first-research'),
+      (${defender.planetId},${defender.memberId},'research','naval_engineering','basic',1,1,1200,'{}',UTC_TIMESTAMP(),UTC_TIMESTAMP(),'watch-second-research'),
+      (${outpost},${defender.memberId},'building','mine_metal','basic',1,1,1500,'{}',UTC_TIMESTAMP(),UTC_TIMESTAMP(),'watch-later-building'),
+      (${data.attacker.planetId},${data.attacker.memberId},'research','signature_masking','basic',1,1,300,'{}',UTC_TIMESTAMP(),UTC_TIMESTAMP(),'watch-foreign-research');
+  `);
+  await page.setViewportSize({width:1920,height:1080});
+  await page.goto('/planetes/'+defender.planetId);
+  const watch = page.locator('[data-live-region="overview-deadlines"]');
+  await expect(watch.locator('li')).toHaveCount(2);
+  await expect(watch.locator('li > div > span')).toHaveText(['Fin de recherche','Fin de recherche']);
+  await expect(watch.locator('li').first()).toContainText('Balcon de Nérée');
+  await expect(watch.locator('li').last()).toContainText(data.target);
+  await expect(watch).not.toContainText('Signature');
+  await expect(watch).not.toContainText('Attaque entrante');
+  await page.getByRole('heading',{name:'Vue générale.',exact:true}).focus();
+  runIsolatedSql(project,`UPDATE fleet SET arrival_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 29 MINUTE) WHERE id=${data.fleet}`);
+  await expect(watch.locator('li').first()).toContainText('Attaque entrante',{timeout:15000});
+  await expect(watch.locator('li').first()).toContainText('Balcon de Nérée');
+  await expect(watch.locator('li')).toHaveCount(3);
+  await expect(watch).not.toContainText('Source confidentielle');
+  await expect(watch).not.toContainText('vaisseaux');
+  const deadlines = await watch.locator('time').evaluateAll(times => times.map(time => time.dateTime));
+  await page.goto('/planetes/'+outpost);
+  await expect(watch.locator('li').first()).toContainText('Balcon de Nérée');
+  expect(await watch.locator('time').evaluateAll(times => times.map(time => time.dateTime))).toEqual(deadlines);
+});
+
 test('Une attaque apparaît au seuil sans recharger, avec focus préservé et données privées masquées',async({page,browser},testInfo)=>{
   test.setTimeout(120000);
   const data=await prepareThreat(page,browser);

@@ -273,3 +273,10 @@ body.authenticated .event-redesign > .inline-link {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
 }
+
+/* Un seul passage entre les deux espaces ; les comptes ne mélangent pas événements et défis. */
+.events-space .core-event-context { color:var(--text); }
+.core-event-group-heading { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:10px; }
+.core-event-group-heading h2 { margin:0; }
+.event-list .core-event-empty { padding:14px 16px; margin:0 0 14px; color:var(--text); }
+.event-period dd { font-variant-numeric:tabular-nums; }

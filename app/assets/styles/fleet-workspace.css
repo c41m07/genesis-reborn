@@ -439,3 +439,41 @@ body.authenticated .fleet-redesign .space-navigation-menu .space-navigation {
         width: 100%;
     }
 }
+
+/* Console de navigation : même formulaire et ordre clavier à toutes les largeurs. */
+.core-fleet-kicker { color:var(--accent); font-size:11px; letter-spacing:.12em; font-weight:800; text-transform:uppercase; }
+body.authenticated .fleet-redesign .core-fleet-workspace { grid-template-columns:minmax(0,1fr); }
+body.authenticated .fleet-redesign .core-fleet-workspace > .fleet-operations-rail { grid-template-columns:repeat(auto-fit,minmax(min(270px,100%),1fr)); }
+.core-fleet-composition-layout { min-width:0; }
+.core-fleet-steps { min-width:0; }
+.core-fleet-recap { padding:14px; min-width:0; align-self:start; }
+.core-fleet-recap h3 { margin:0 0 8px; font-size:16px; }
+.core-fleet-recap-total {
+    margin:0;
+    padding:8px 10px;
+    background:color-mix(in srgb,var(--accent) 10%,var(--panel));
+    border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));
+    border-radius:5px;
+    font-size:12px;
+}
+.core-fleet-recap-total strong { color:var(--accent); font-size:24px; font-variant-numeric:tabular-nums; }
+.core-fleet-recap-ranks { margin:6px 0; font-size:12px; color:var(--muted); overflow-wrap:anywhere; }
+.core-fleet-recap-ships { margin:6px 0 0; padding:0; list-style:none; }
+.core-fleet-recap-ships li,.core-fleet-recap-facts>div { display:flex; justify-content:space-between; gap:8px; padding:5px 0; font-size:12px; overflow-wrap:anywhere; }
+.core-fleet-recap-ships strong,.core-fleet-recap-facts dt { flex-shrink:0; }
+.core-fleet-recap-facts { margin:8px 0 0; padding-top:5px; border-top:1px solid var(--line); }
+.core-fleet-recap-facts dd { margin:0; text-align:right; color:var(--muted); }
+@media(min-width:1200px) {
+    .core-fleet-composition-layout:has(.core-fleet-recap:not([hidden])) { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,26%); gap:16px; align-items:start; }
+    .core-fleet-composition-layout .core-fleet-steps { grid-area:1/1; }
+    .core-fleet-composition-layout .core-fleet-recap { grid-area:1/2; }
+}
+@media(max-width:1199px) {
+    .core-fleet-recap { margin:0 0 12px; }
+    .core-fleet-recap-ships { display:none; }
+    .core-fleet-recap-facts>div { padding:2px 0; }
+}
+/* Le texte de corps du récapitulatif garde le contraste sur son fond légèrement teinté. */
+body.authenticated .fleet-redesign .core-fleet-recap p.core-fleet-recap-total { color:var(--text); }
+body.authenticated .fleet-redesign .core-fleet-recap-ships > li,
+body.authenticated .fleet-redesign .core-fleet-recap-ships > li > strong { color:var(--text); }

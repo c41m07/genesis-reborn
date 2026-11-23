@@ -98,3 +98,47 @@
     .gv2-workspace .gv2-system-panel,
     .gv2-workspace .gv2-planet-panel { margin-inline:12px; padding:12px; }
 }
+
+.core-galaxy-heading { align-items:baseline; justify-content:flex-start; gap:12px 20px; margin-bottom:10px; }
+.core-galaxy-kicker,.core-galaxy-selection-label { color:var(--accent); font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+.core-galaxy-kicker { margin:0; }
+.core-galaxy-toolbar { display:flex; flex-wrap:wrap; gap:0 6px; align-items:center; padding:6px 8px; }
+.gv2-workspace .core-galaxy-toolbar .gv2-hud { flex:1 1 420px; padding:4px 6px; }
+.gv2-workspace .core-galaxy-toolbar .gv2-layout-modes { padding:4px 6px; }
+.gv2-workspace .core-galaxy-toolbar .gv2-layout-note { padding:4px 6px; }
+.gv2-workspace .gv2-enter-system {
+    background:#e7b76b;
+    border-color:#e7b76b;
+    color:#131b24;
+    font-weight:800;
+}
+.gv2-workspace .gv2-enter-system:hover { background:#f0c683; color:#131b24; }
+.gv2-workspace[data-view=galaxy] .gv2-system-panel:not([hidden]) { border-color:color-mix(in srgb,var(--accent) 55%,var(--line)); }
+.gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-map-stage:has(.gv2-planet-panel:not([hidden]),.gv2-system-panel:not([hidden])) {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) clamp(220px,27%,320px);
+    gap:12px;
+}
+.gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-scene { grid-area:1/1; min-width:0; }
+.gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-map-stage > :is(.gv2-system-panel,.gv2-planet-panel) {
+    grid-area:1/2;
+    min-width:0;
+    max-height:560px;
+    margin:0 12px 0 0;
+    overflow:auto;
+    overscroll-behavior:contain;
+}
+@media(max-width:1000px) {
+    .gv2-workspace .core-galaxy-toolbar .gv2-hud { flex-basis:100%; }
+    .gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-map-stage:has(.gv2-planet-panel:not([hidden]),.gv2-system-panel:not([hidden])) {
+        grid-template-columns:minmax(0,1fr);
+        grid-template-rows:auto auto;
+        gap:8px;
+    }
+    .gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-map-stage > :is(.gv2-system-panel,.gv2-planet-panel) {
+        grid-area:1/1;
+        max-height:170px;
+        margin:0 12px;
+    }
+    .gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-map-stage:has(.gv2-planet-panel:not([hidden]),.gv2-system-panel:not([hidden])) .gv2-scene { grid-area:2/1; }
+}
