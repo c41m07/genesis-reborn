@@ -222,3 +222,5 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
 @media(max-width:850px) {
     .first-steps-exercise-layout.has-report { grid-template-columns:minmax(0,1fr); }
 }
+.first-steps-board-rail .first-steps-refund-destination { display:grid; gap:.5rem; margin-block:.7rem; }
+.first-steps-refund-destination :is(select,button) { min-height:44px; }

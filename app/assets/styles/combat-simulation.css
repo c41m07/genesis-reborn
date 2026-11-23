@@ -50,3 +50,7 @@ body[data-theme=light] .simulation-workspace .simulation-survivors { color:#1767
 .player-simulation-board .simulation-board-unit-scroll input { min-height:36px; }
 .player-simulation-board .simulation-board-unit-scroll thead { position:sticky; top:0; background:var(--panel); z-index:1; }
 .player-simulation-board .simulation-board-options > button { grid-column:1 / -1; justify-self:start; margin:0; }
+.player-simulation-board .simulation-trial-summary { margin:1rem 0; }
+.player-simulation-board .simulation-trial-summary :is(th,td) { padding:.55rem .75rem; font-variant-numeric:tabular-nums; }
+.player-simulation-board .simulation-trial-summary td:nth-child(n+3) { text-align:end; }
+.player-simulation-board .simulation-trial > summary { scroll-margin-top:180px; }

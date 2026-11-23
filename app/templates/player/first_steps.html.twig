@@ -85,16 +85,26 @@
 {% endif %}
 {% if training.next is null %}<p><strong>Ces premiers objectifs sont terminés.</strong> Vous pouvez poursuivre librement votre découverte du jeu.</p>{% endif %}
 </section>
+{% set rewardPlanet = rewardPlanet|default(colony) %}
 <aside class="panel account-panel first-steps-board-rail" aria-labelledby="first-steps-actions-title">
     <h2 id="first-steps-actions-title">Remboursements et aide</h2>
     {% if colony and trainingRewards is not empty %}
     <section class="first-steps-refunds" aria-labelledby="training-reward-title">
         <h3 id="training-reward-title">Remboursements disponibles</h3>
-        <p id="training-refund-destination">Destination : <strong>{{ colony.name }}</strong>. Si les stocks sont pleins, les remboursements restent en attente. Vous pouvez choisir une autre colonie de cet empire puis revenir ici.</p>
+        <p id="training-refund-destination">Destination : <strong>{{ rewardPlanet.name }}</strong>. Si les stocks sont pleins, les remboursements restent en attente.</p>
+        {% if rewardPlanets|length > 1 %}
+        <form method="get" action="{{ path('app_first_steps', {_fragment:'training-reward-title'}) }}" class="first-steps-refund-destination">
+            <label for="first-steps-reward-planet">Colonie bénéficiaire</label>
+            <select id="first-steps-reward-planet" name="reward_planet">
+                {% for destination in rewardPlanets %}<option value="{{ destination.id }}"{{ destination.id == rewardPlanet.id ? ' selected' }}>{{ destination.name }} · {{ destination.coordinates() }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="secondary">Choisir cette colonie</button>
+        </form>
+        {% endif %}
         {% for reward in trainingRewards %}
             <form id="first-step-refund-{{ reward.step_key }}" method="post" action="{{ path('app_first_steps_claim') }}" data-turbo="false">
-                <input type="hidden" name="_token" value="{{ csrf_token('first-steps-reward-'~trainingMembership.id~'-'~colony.id~'-'~reward.step_key) }}">
-                <input type="hidden" name="planet" value="{{ colony.id }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('first-steps-reward-'~trainingMembership.id~'-'~rewardPlanet.id~'-'~reward.step_key) }}">
+                <input type="hidden" name="planet" value="{{ rewardPlanet.id }}">
                 <input type="hidden" name="step" value="{{ reward.step_key }}">
                 <div><strong>{{ training.hints[reward.step_key].title }}</strong><p>{{ reward.metal|quantity(0) }} métal et {{ reward.nano|quantity(0) }} nanos.</p></div>
                 <button class="secondary" aria-describedby="training-refund-destination" type="submit">Récupérer : {{ training.hints[reward.step_key].title }}</button>

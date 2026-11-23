@@ -39,9 +39,26 @@
 </dl>
 <p>Cette estimation porte sur dix combats : 7 victoires donnent 70 %, sans garantir cette probabilité réelle. Le butin, la reconstruction, les voyages et l’évolution ultérieure des forces ne sont pas simulés.</p>
 <p>Dépliez chaque combat pour consulter ses pertes fictives, ses survivants et ses rounds. Les pertes moyennes ne sont pas calculées.</p>
+<div class="table-scroll simulation-trial-summary" role="region" tabindex="0" aria-label="Bilan par combat">
+    <table class="data-table">
+        <caption>Bilan de l’attaquant dans chaque combat</caption>
+        <thead><tr><th scope="col">Combat</th><th scope="col">Issue</th><th scope="col">Engagés</th><th scope="col">Survivants</th><th scope="col">Pertes</th></tr></thead>
+        <tbody>
+        {% for trial in result.trials %}
+        <tr>
+            <th scope="row"><a href="#simulation-trial-{{ loop.index }}">Combat {{ loop.index }}</a></th>
+            <td>{{ outcome_labels[trial.outcome]|default(trial.outcome) }}</td>
+            <td>{{ trial.report.attacker.initial|quantity(0) }}</td>
+            <td>{{ trial.report.attacker.remaining|quantity(0) }}</td>
+            <td>{{ trial.report.attacker.lost|quantity(0) }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% for trial in result.trials %}
 <details class="simulation-trial" data-simulation-seed="{{ trial.seed }}">
-<summary>Combat {{ loop.index }} · {{ outcome_labels[trial.outcome]|default(trial.outcome) }} · graine {{ trial.seed }}</summary>
+<summary id="simulation-trial-{{ loop.index }}">Combat {{ loop.index }} · {{ outcome_labels[trial.outcome]|default(trial.outcome) }} · graine {{ trial.seed }}</summary>
 {% include 'combat/_simulation_trial.html.twig' with {trial:trial,unit_labels:unit_labels,tier_labels:tier_labels} only %}
 </details>
 {% endfor %}

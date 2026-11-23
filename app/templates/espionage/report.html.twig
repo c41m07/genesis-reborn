@@ -24,6 +24,13 @@
 {% endif %}
 <div class="player-intel-layout">
 <section class="panel player-intel-core" aria-labelledby="intel-details"><h2 id="intel-details">Renseignements détaillés</h2>
+{% if playerBoard and report.snapshot.resources is defined %}
+    {# Cette synthèse ne lit que ce que la sonde a effectivement révélé ; le cas détecté ne passe pas ici. #}
+    {% set snapshotSummary = report.snapshot.resources|filter((item, slug) => slug in ['metal','nano','electricity'] and item.stock is defined) %}
+    {% if snapshotSummary %}
+        <dl class="report-metrics intel-board-summary">{% for slug,item in snapshotSummary %}<div><dt>{{ item.label ?? slug }} observé</dt><dd>{{ item.stock|quantity(0) }}</dd></div>{% endfor %}</dl>
+    {% endif %}
+{% endif %}
 {% for category, title in {resources:'Ressources et production', buildings:'Bâtiments', research:'Recherches', fleets:'Flottes', defenses:'Défenses fixes'} %}
 {% if report.snapshot[category] is defined %}
 <details class="intel-section" open><summary><h3>{{ title }}</h3></summary>{% set items = report.snapshot[category] %}

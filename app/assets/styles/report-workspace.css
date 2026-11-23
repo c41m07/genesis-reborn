@@ -263,3 +263,6 @@ html[data-theme="light"] .player-report-detail {
 @media(max-width:560px) {
     .player-transport-detail .transport-board-metrics { grid-template-columns:minmax(0,1fr); }
 }
+.player-report-detail .intel-board-summary { margin:.75rem 0; }
+.player-report-detail .intel-board-summary > div { border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 8%,var(--panel)); }
+.player-report-detail #combat-rounds .combat-round > summary { min-height:42px; padding-block:.55rem; }

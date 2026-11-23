@@ -1,3 +1,5 @@
+{% macro remaining(seconds) %}{{ seconds // 3600 > 0 ? (seconds // 3600) ~ ' h ' : '' }}{{ (seconds % 3600) // 60 > 0 ? ((seconds % 3600) // 60) ~ ' min ' : '' }}{{ seconds % 60 }} s{% endmacro %}
+{% import _self as display %}
 <section id="inventory-boosts" class="inventory-bonuses" aria-labelledby="available-bonuses-title">
     <h2 id="available-bonuses-title" class="visually-hidden">Bonus disponibles</h2>
     <div class="inventory-boost-layout">
@@ -43,6 +45,11 @@
             <article class="boost-operation" data-inventory-review-target="operation" data-operation="queue-{{ item.id }}">
                 <h3>{{ row.label }} · {{ item.planet.name }}</h3>
                 <p>{% if item.itemLevel %}Niveau {{ item.itemLevel }}{% else %}Quantité : {{ item.quantity|quantity }}{% endif %} · Fin prévue : <time datetime="{{ item.finishAt|date('c') }}">{{ item.finishAt|date('d/m/Y H:i:s', preferences.timezone) }}</time></p>
+                <dl class="inventory-preview-times">
+                    <div><dt>Avant</dt><dd>{{ display.remaining(row.seconds_before) }}</dd></div>
+                    <div><dt>Après</dt><dd>{{ display.remaining(row.seconds_after) }}</dd></div>
+                </dl>
+                <p class="muted">Estimation à l’ouverture de la page ; la durée est recalculée à la confirmation.</p>
                 <form method="post" action="{{ path('app_boost_use', {type:'queue', id:item.id}) }}" data-action="submit->inventory-review#review" data-review-title="Vérifier l’accélération" data-review-copy="{{ row.label }} · {{ item.planet.name }} : utiliser un boost pour retirer {{ duration_reduction_percent|number_format(2, ',', ' ') }} % du temps restant." data-review-confirm="Utiliser un boost">
                     <input type="hidden" name="_token" value="{{ csrf_token('boost-queue-' ~ item.id) }}">
                     <input type="hidden" name="request_key" value="{{ request_key() }}">

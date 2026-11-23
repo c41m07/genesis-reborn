@@ -6,6 +6,7 @@ use App\Entity\{Planet, PlayerUniverse};
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Player\VacationCalendar;
+use App\Service\Queue\QueueTiming;
 use Psr\Clock\ClockInterface;
 
 /** Prépare chaque destination de l’inventaire ; la consommation reste dans les services métier. */
@@ -54,14 +55,25 @@ final class InventoryPageView
                 'available_colonies' => $this->repo->all(Planet::class, ['owner' => $membership], ['id' => 'ASC']),
             ];
         }
-        $data += ['duration_reduction_percent' => $this->grants->durationReductionRatio() * 100, 'active_queues' => []];
+        $ratio = $this->grants->durationReductionRatio();
+        $data += ['duration_reduction_percent' => $ratio * 100, 'active_queues' => []];
         if ($counts['boosts'] > 0 && !$data['vacation']) {
             $definitions = array_merge($this->catalog->all('buildings'), $this->catalog->all('technologies'), $this->catalog->all('ships'), $this->catalog->all('defenses'));
             // Les opérations gardent leur périmètre de tout l’empire, quelle que soit la colonie active.
+            $now = $this->clock->now();
             foreach ($this->repo->activeQueueItemsFor($membership) as $item) {
-                if ($item->finishAt() > $this->clock->now()) {
+                if ($item->startedAt !== null && $item->finishAt() > $now) {
                     $definition = $definitions[$item->itemSlug] ?? null;
-                    $data['active_queues'][] = ['item' => $item, 'label' => $definition ? $this->catalog->withTier($definition, $item->tier)['label'] : $item->itemSlug];
+                    // L’aperçu emploie le même arrondi que le boost réellement consommé.
+                    // Il est daté de l’ouverture ; le service réévalue le temps au clic.
+                    $elapsed = max(0, $now->getTimestamp() - $item->startedAt->getTimestamp());
+                    $after = QueueTiming::boostedDuration($item->durationSeconds, $elapsed, 1 / (1 - $ratio));
+                    $data['active_queues'][] = [
+                        'item' => $item,
+                        'label' => $definition ? $this->catalog->withTier($definition, $item->tier)['label'] : $item->itemSlug,
+                        'seconds_before' => max(0, $item->durationSeconds - $elapsed),
+                        'seconds_after' => max(0, $after - $elapsed),
+                    ];
                 }
             }
         }
