@@ -1315,6 +1315,7 @@ body.authenticated .social-board--messages .inbox-item--unavailable {
 }
 
 body.authenticated .social-board--messages .message-day {
+    align-self: stretch;
     margin: 0 0 4px;
     color: var(--muted);
     text-align: center;

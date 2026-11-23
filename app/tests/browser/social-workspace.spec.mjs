@@ -44,6 +44,8 @@ test('L7E A : recherche, actualisation des non-lus et rédaction restent indépe
         await expect(contact).not.toContainText('Transport reçu. Merci pour les ressources.');
         await page.goto(conversationUrl);
         await expect(page.locator('.message-day time')).toHaveCount(1);
+        const contactTime = await contact.locator('.inbox-contact-meta time').textContent();
+        expect(await page.locator('.message-meta time').textContent()).toContain(contactTime.slice(-5));
         await page.setViewportSize({ width: 1920, height: 1080 });
         await page.screenshot({ path: info.outputPath('social-S12-messagerie-1920x1080.png'), animations: 'disabled' });
         await page.setViewportSize({ width: 390, height: 844 });
