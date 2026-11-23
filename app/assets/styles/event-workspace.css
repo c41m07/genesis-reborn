@@ -529,6 +529,38 @@ body.authenticated .advent-board :is(.advent-day-tile, .advent-state)[data-state
     }
 }
 
+/* Planche 08-01 : la porte 6 sélectionnée et réellement disponible reste
+   repérable sur la grille ; les autres états gardent leur présentation. */
+.advent-board:has(#advent-door-6:target .advent-choice, .advent-layout:not(:has(.advent-door:target)) #advent-door-6[data-default] .advent-choice)
+    .advent-day-tile[href="#advent-door-6"] {
+    border-color: var(--advent-open);
+    background: color-mix(in srgb, var(--advent-open) 11%, var(--panel));
+}
+
+@media (min-width: 1021px) {
+    /* Le récapitulatif et le contexte d'univers restent visibles sans ouvrir
+       une seconde boîte. Premiers pas garde sa place et ses commandes. */
+    body.authenticated .advent-board:has(#advent-door-6:target .advent-choice, .advent-layout:not(:has(.advent-door:target)) #advent-door-6[data-default] .advent-choice)
+        :is(.advent-board-heading, .advent-destination, .advent-universe) {
+        margin-block: .45rem;
+    }
+    body.authenticated .advent-board:has(#advent-door-6:target .advent-choice, .advent-layout:not(:has(.advent-door:target)) #advent-door-6[data-default] .advent-choice)
+        .advent-universe {
+        padding: .55rem .85rem;
+    }
+    body.authenticated .advent-board:has(#advent-door-6:target .advent-choice, .advent-layout:not(:has(.advent-door:target)) #advent-door-6[data-default] .advent-choice)
+        .advent-universe :is(p, h2) {
+        margin: .2rem 0;
+        line-height: 1.4;
+    }
+    body.authenticated .advent-board #advent-door-6:has(.advent-choice) :is(h2, p, summary) {
+        margin-block: .2rem;
+    }
+    body.authenticated .advent-board #advent-door-6:has(.advent-choice) .advent-door-form {
+        gap: .45rem;
+    }
+}
+
 .advent-board .advent-choice {
     margin: 0;
     padding: 0;
@@ -601,6 +633,22 @@ body.authenticated .advent-board :is(.advent-moment, .advent-finale) p { margin:
     background: linear-gradient(97deg, rgba(10, 22, 41, .98), rgba(10, 22, 41, .90) 52%, rgba(10, 22, 41, .24));
     content: "";
 }
+/* Planche 08-02 : cette bannière reste sombre, quel que soit le thème.
+   Le voile garantit aussi le fond du titre si l'image n'est pas chargée. */
+.advent-board .advent-finale-preview--banner:has(.advent-banner-name):has(.advent-title-name)::after {
+    background: linear-gradient(97deg, rgba(10, 22, 41, .98), rgba(10, 22, 41, .90) 52%, rgba(10, 22, 41, .78));
+}
+
+body.authenticated .advent-board .advent-finale-preview--banner:has(.advent-banner-name):has(.advent-title-name) p {
+    color: #c3d7eb;
+}
+body.authenticated .advent-board .advent-finale-preview--banner:has(.advent-title-name) .advent-banner-name {
+    color: #a7e8f5;
+}
+body.authenticated .advent-board .advent-finale-preview--banner:has(.advent-banner-name) .advent-title-name {
+    color: #f5f8ff;
+}
+
 .advent-board .advent-finale-preview img {
     position: absolute;
     z-index: -2;

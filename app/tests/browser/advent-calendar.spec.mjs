@@ -103,6 +103,12 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
     }, {
         kind: 'ship_pack', units: [{ slug: 'probe', tier: 'basic', quantity: 12 }], budget_metal: 6000,
     }];
+    doors[12].opens_at = new Date(now - 50_000).toISOString();
+    doors[12].options.beginner = [{ kind: 'research_discount', percent: 50, budget_metal: 7500 }];
+    doors[18].opens_at = new Date(now - 40_000).toISOString();
+    doors[18].options.beginner = [{
+        kind: 'ship_pack', units: [{ slug: 'fighter', tier: 'basic', quantity: 1 }], budget_metal: 8000,
+    }];
     doors[24].opens_at = new Date(now - 30_000).toISOString();
     doors[24].cosmetics = ['guardian_of_stars', 'polar_night'];
     doors[24].options.beginner = [{
@@ -168,6 +174,13 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
             const action = page.locator('#advent-door-6').getByRole('button', { name: 'Confirmer le cadeau et la destination' });
             await expect(help).toBeVisible();
             await action.click({ trial: true });
+            await expect(page.getByRole('link', { name: /^Porte 6,/ })).not.toHaveCSS('border-left-color', await page.getByRole('link', { name: /^Porte 7,/ }).evaluate((tile) => getComputedStyle(tile).borderLeftColor));
+            if (width === 1920) {
+                await page.evaluate(() => { window.scrollTo(0, 0); });
+                await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+                const calendarTop = await page.locator('.advent-calendar').evaluate((calendar) => calendar.getBoundingClientRect().top);
+                expect(calendarTop).toBeLessThan(635);
+            }
             const [helpBounds, actionBounds] = await Promise.all([help.boundingBox(), action.boundingBox()]);
             expect(helpBounds.y + helpBounds.height).toBeLessThanOrEqual(actionBounds.y);
         }
@@ -201,13 +214,32 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
         await expect(reserves.getByRole('link', { name: 'Voir le devis de la porte 6' })).toBeVisible();
         await expect(reserves.getByText('Gardien des étoiles', { exact: true })).toBeVisible();
         await expect(reserves.getByText('Nuit polaire', { exact: true })).toBeVisible();
+        const milestones = reserves.locator('.advent-moments');
+        await milestones.getByRole('link', { name: 'Voir la porte 12' }).press('Enter');
+        const researchDoor = mobile.locator('#advent-door-12');
+        await researchDoor.getByRole('radio').press('Space');
+        await researchDoor.getByLabel('Colonie destinataire').selectOption(String(colony));
+        await researchDoor.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).press('Enter');
+        await researchDoor.getByRole('link', { name: 'Voir le devis de cette remise' }).press('Enter');
+        await expect(mobile.getByRole('heading', { name: 'Remise de recherche' })).toBeVisible();
+        await expect(mobile.getByRole('button', { name: 'Calculer le devis' })).toBeVisible();
+        await mobile.getByRole('link', { name: 'Retour au calendrier' }).press('Enter');
+        await mobile.getByRole('link', { name: /^Porte 18,/ }).press('Enter');
+        const fightDoor = mobile.locator('#advent-door-18');
+        await fightDoor.getByRole('radio').press('Space');
+        await fightDoor.getByLabel('Colonie destinataire').selectOption(String(colony));
+        await fightDoor.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).press('Enter');
+        await expect(fightDoor.getByText('Réservé', { exact: true })).toBeVisible();
+        await mobile.getByRole('link', { name: 'Cadeaux et réserves', exact: true }).press('Enter');
+        await expect(milestones.getByRole('link', { name: 'Voir le devis de la porte 12' })).toBeVisible();
+        await expect(milestones.getByText('Lot réservé :', { exact: false })).toBeVisible();
         await reserves.getByRole('link', { name: 'Choisir mon cadeau lourd' }).press('Enter');
         const last = mobile.locator('#advent-door-24');
         await expect(last.getByRole('radio')).toHaveCount(1);
         await expect(last).toContainText('Croiseur de combat');
         await expect(last).toContainText('16,00 k');
         await expect(last).not.toContainText('96,00 k');
-        expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM advent_claim WHERE advent_edition_id=' + edition))).toBe(2);
+        expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM advent_claim WHERE advent_edition_id=' + edition))).toBe(4);
         expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM profile_cosmetic WHERE player_id=(SELECT id FROM player WHERE email=\x27' + email + '\x27)'))).toBe(0);
     } finally {
         await native.close();
@@ -230,15 +262,36 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
                 const rewards = page.locator('.advent-finale-preview img');
                 await rewards.scrollIntoViewIfNeeded();
                 await expect.poll(() => rewards.evaluate((image) => image.naturalWidth)).toBeGreaterThan(0);
+                const finale = page.locator('.advent-finale-preview');
+                // Le clair ne doit pas réappliquer le texte gris des panneaux sur le panorama.
+                await expect(finale.getByText('Gardien des étoiles', { exact: true })).toHaveCSS('color', 'rgb(245, 248, 255)');
+                await expect(finale.getByText('Titre et bannière de profil', { exact: true })).toHaveCSS('color', 'rgb(195, 215, 235)');
                 const proof = process.env.GR_AVENT_PROOF_DIRECTORY;
                 if (proof) {
-                    await page.locator('.advent-rewards').scrollIntoViewIfNeeded();
+                    await page.getByRole('link', { name: 'Cadeaux et réserves', exact: true }).press('Enter');
+                    await expect(page).toHaveURL(/#advent-rewards$/);
                     await page.screenshot({ path: proof + '/AVENT_RESERVES_J24_' + theme + '.png' });
                 }
+            }
+
+            if (width === 390 && process.env.GR_AVENT_PROOF_DIRECTORY) {
+                await page.getByRole('link', { name: 'Cadeaux et réserves', exact: true }).press('Enter');
+                await expect(page).toHaveURL(/#advent-rewards$/);
+                const rewards = page.locator('.advent-finale-preview img');
+                await rewards.scrollIntoViewIfNeeded();
+                await expect.poll(() => rewards.evaluate((image) => image.naturalWidth)).toBeGreaterThan(0);
+                await page.screenshot({ path: process.env.GR_AVENT_PROOF_DIRECTORY + '/AVENT_RESERVES_J24_MOBILE_' + theme + '.png' });
             }
 
             const contentWidth = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
             expect(contentWidth[0]).toBeLessThanOrEqual(contentWidth[1] + 2);
         }
     }
+    await page.goto('/evenements/avent/' + edition + '#advent-door-24');
+    const finaleDoor = page.locator('#advent-door-24');
+    await finaleDoor.getByRole('radio').check();
+    await finaleDoor.getByLabel('Colonie destinataire').selectOption(String(colony));
+    await finaleDoor.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).press('Enter');
+    await expect(finaleDoor.getByText('Bon à utiliser', { exact: true })).toBeVisible();
+    expect(Number(queryIsolatedSql(project, "SELECT COUNT(*) FROM profile_cosmetic WHERE player_id=(SELECT id FROM player WHERE email='" + email + "') AND equipped=0"))).toBe(2);
 });

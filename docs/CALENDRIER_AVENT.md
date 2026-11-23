@@ -14,6 +14,8 @@ Les bons J6 et J24 concernés financent une seule construction basique du type a
 
 Le calendrier présente les 24 portes et ouvre le détail du jour à côté sur grand écran, sous la grille en largeur étroite. Les liens ancrés et les formulaires natifs restent utilisables sans JavaScript. « Cadeaux et réserves » réunit les étapes particulières et les droits encore à retirer ; les bons conservent leur devis séparé. L’illustration du J24 reprend le panorama de la planche approuvée : c’est un aperçu de l’Avent, pas une modification du profil équipé.
 
+Sur grand écran, lorsque J6 permet réellement de choisir un cadeau, son récapitulatif et le contexte d’univers sont rapprochés sans cacher le plafond ni le relevé. La porte visée est identifiable dans la grille. L’aperçu J24 avec les deux cosmétiques garde des libellés clairs sur le panorama sombre, y compris lorsque le thème du jeu est clair.
+
 ## Administration
 
 - Aucune édition n’est créée ni activée à l’installation. La fonctionnalité est désactivée par défaut (`ADVENT_ENABLED=0`).
