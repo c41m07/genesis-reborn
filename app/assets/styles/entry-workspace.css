@@ -854,7 +854,9 @@ body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previe
 
 body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previews {
     display: block;
+    max-width: none;
     margin: 0;
+    padding: 0;
 }
 
 body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previews article {
