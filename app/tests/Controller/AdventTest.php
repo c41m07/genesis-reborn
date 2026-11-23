@@ -424,7 +424,7 @@ final class AdventTest extends WebTestCase
         $preview = $editions->prepare('Avent synthétique', '2026-12-01', '2026-12-31',
             array_fill(1, 24, [['metal' => '7'], ['nano' => '3']]));
 
-        return $editions->publish($admin, $preview)->id;
+        return $editions->publish($this->em->find(Player::class, $admin->id), $preview)->id;
     }
 
     private function publishConsolidated(Player $admin): int

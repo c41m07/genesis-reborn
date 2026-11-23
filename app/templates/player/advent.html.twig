@@ -37,7 +37,7 @@
                 <p>Le choix de l’univers se fait pendant l’édition.</p>
             {% endif %}
             {% if progression %}
-                <p>{{ progression.origin == 'late_cohort' ? 'Observation tardive' : (progression.origin == 'arrival' ? 'Progression à l’arrivée' : 'Relevé de départ') }} : <time datetime="{{ progression.observed_at|date('c', 'UTC') }}">{{ (progression.observed_at ~ ' UTC')|date('d/m/Y H:i', 'Europe/Paris') }}</time>, heure de Paris.</p>
+                <p>{{ progression.origin == 'late_cohort' ? 'Observation tardive' : (progression.origin == 'arrival' ? 'Progression à l’arrivée' : 'Relevé de départ') }} : <time datetime="{{ (progression.observed_at ~ ' UTC')|date('c', 'UTC') }}">{{ (progression.observed_at ~ ' UTC')|date('d/m/Y H:i:s', 'Europe/Paris') }}</time>, heure de Paris.</p>
             {% endif %}
         </section>
     {% endif %}
