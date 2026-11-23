@@ -158,3 +158,46 @@
 .admin-console--organized .admin-counter-scope { margin-bottom: 8px; }
 .admin-console--organized .admin-universe-opening { grid-column: 1 / -1; }
 .admin-console--organized .admin-universe-opening p { margin: 0 0 8px; }
+
+.admin-console--organized .admin-topbar { justify-content: flex-start; }
+.admin-console--organized .admin-topbar > span:last-child { margin-inline-start: auto; }
+
+/* La console partage les tokens du jeu sans réutiliser les cartes de colonie. */
+.admin-console--organized .admin-topbar .core-admin-universe {
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--admin-raised);
+    color: var(--accent);
+}
+
+.admin-console--organized .admin-content > :is(.page-heading, .feedback-admin-heading, .feedback-detail-heading) {
+    padding: clamp(14px, 2vw, 26px);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: linear-gradient(112deg, var(--admin-raised), var(--panel));
+}
+
+.admin-console--organized .admin-content > :is(.page-heading, .feedback-admin-heading, .feedback-detail-heading) > :is(div, h1) { min-width: 0; overflow-wrap: anywhere; }
+.admin-console--organized .admin-content > :is(.page-heading, .feedback-admin-heading, .feedback-detail-heading) .eyebrow { color: var(--accent); }
+.admin-console--organized .admin-content > :is(.page-heading, .feedback-admin-heading, .feedback-detail-heading) h1 { font-size: clamp(26px, 3vw, 42px); }
+.admin-console--organized[data-theme=light] .primary {
+    color: #1a202b;
+    background: #e7b76b;
+    border-color: #805719;
+}
+
+@media (max-width: 760px) {
+    .admin-console--organized .admin-content > :is(.page-heading, .feedback-admin-heading, .feedback-detail-heading) :is(a, button) { min-height: 44px; }
+}
+
+/* La composition pleine largeur laisse respirer la table et le rail de confirmation,
+   sans toucher aux panneaux ou aux menus responsifs existants. */
+@media (min-width: 1500px) {
+    .admin-console--organized .admin-shell { grid-template-columns: 258px minmax(0, 1fr); }
+    .admin-console--organized .admin-content { max-width: 1740px; padding-inline: 32px; }
+    .admin-console--organized .admin-topbar { min-height: 70px; padding-inline: 32px; }
+}
+
+.admin-console--organized .admin-ops-table thead th { background: var(--admin-raised); color: var(--muted); }
+.admin-console--organized .admin-ops-table tbody tr:nth-child(even) { background: color-mix(in srgb, var(--bg) 25%, var(--panel)); }
