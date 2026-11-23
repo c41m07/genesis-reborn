@@ -45,8 +45,9 @@ maquettes demeurent des références, pas des captures de la version précédent
   cadeau réservé reste récupérable après clôture sans JavaScript.
 - `report-workspace.spec.mjs` : scénario échoué initialement sur le
   contraste du rapport Transport clair ; relancé sans changer Axe et réussi
-  après correction. Transport, retour filtré, effacement du journal et
-  lecture des rapports sans JavaScript, espionnage détecté inclus.
+  après correction. Transport, retour filtré, réinitialisation du filtre
+  de planète et lecture des rapports sans JavaScript, espionnage détecté
+  inclus. La commande d’archivage sans JavaScript est vérifiée visible.
 - Vérification statique des formulaires et CSRF comparés à la base :
   seule nouvelle action de formulaire, la recherche GET Classement.
 
