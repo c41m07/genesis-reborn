@@ -86,6 +86,7 @@ test('L2C A : quatre vues adaptatives, rangs réunis, saisie conservée et liens
         await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
         await expect(page.locator('.space-navigation a[aria-current="page"]')).toHaveText('Mes compositions');
         if (key === 'list') {
+          await expect(page.getByRole('region', { name: 'Tableau des compositions', exact: true })).toHaveCount(1);
           await expect(page.locator('.composition-card')).toHaveCount(3);
           const card = page.locator(`[data-composition="${composition}"]`);
           await expect(card.locator('.composition-library-total')).toHaveText('92 unités');
@@ -172,7 +173,7 @@ test('L2C A : quatre vues adaptatives, rangs réunis, saisie conservée et liens
     await plain.locator('#composition-transport-basic').fill('1');
     await plain.getByRole('button', { name: 'Enregistrer la composition' }).click();
     const card = plain.locator('.composition-card').filter({ has: plain.getByRole('heading', { name: 'Modèle sans JavaScript', exact: true }) });
-    await card.locator('summary').click();
+    await card.locator('.composition-management summary').click();
     await expect(card.getByRole('button', { name: 'Supprimer cette composition' })).toBeVisible();
     await card.getByRole('button', { name: 'Supprimer cette composition' }).click();
     await expect(plain.getByRole('heading', { name: 'Modèle sans JavaScript', exact: true })).toHaveCount(0);

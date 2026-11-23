@@ -211,12 +211,13 @@ test('Flottes entrantes : transport neutre, propre retour séparé et demande d�
     if (label === 'vue-generale') {
       expect(await ownPanel.evaluate(element=>element.previousElementSibling.matches('.incoming-attacks'))).toBeTruthy();
       expect(ownBox.y).toBeGreaterThanOrEqual(incomingBox.y+incomingBox.height-1);
+      expect(Math.abs(incomingBox.x-ownBox.x)).toBeLessThan(2);
+      expect(Math.abs(incomingBox.width-ownBox.width)).toBeLessThan(2);
     } else {
-      expect(await ownPanel.evaluate(element=>element.nextElementSibling.matches('.incoming-attacks'))).toBeTruthy();
-      expect(incomingBox.y).toBeGreaterThanOrEqual(ownBox.y+ownBox.height-1);
+      await expect(incomingPanel.locator('xpath=ancestor::aside[1]')).toHaveAccessibleName('Arrivées et informations de composition autorisées');
+      expect(incomingBox.x).toBeGreaterThanOrEqual(ownBox.x+ownBox.width-1);
+      expect(Math.abs(incomingBox.y-ownBox.y)).toBeLessThan(2);
     }
-    expect(Math.abs(incomingBox.x-ownBox.x)).toBeLessThan(2);
-    expect(Math.abs(incomingBox.width-ownBox.width)).toBeLessThan(2);
     for(const property of ['backgroundImage','backgroundColor','borderRadius','padding','borderTopWidth']) {
       expect(await incomingPanel.evaluate((element,key)=>getComputedStyle(element)[key],property))
         .toEqual(await ownPanel.evaluate((element,key)=>getComputedStyle(element)[key],property));
@@ -229,6 +230,16 @@ test('Flottes entrantes : transport neutre, propre retour séparé et demande d�
     await expect(incomingPanel.locator('.flight-route')).toBeVisible();
     await expect(incomingPanel.getByRole('progressbar')).toBeVisible();
     await page.locator(container).screenshot({path:testInfo.outputPath('cadres-'+label+'.png'),animations:'disabled'});
+    if (label === 'flottes') {
+      await page.setViewportSize({width:390,height:844});
+      await expect.poll(async()=>{
+        const [mobileOwn,mobileIncoming]=await Promise.all([ownPanel.boundingBox(),incomingPanel.boundingBox()]);
+        return mobileIncoming.y>=mobileOwn.y+mobileOwn.height-1
+          && Math.abs(mobileIncoming.x-mobileOwn.x)<2
+          && Math.abs(mobileIncoming.width-mobileOwn.width)<2;
+      }).toBe(true);
+      await page.setViewportSize({width:1440,height:1000});
+    }
   }
   // Dans les catalogues validés, vols et arrivées occupent deux suivis dépliables.
   for (const section of ['buildings','technologies','ships','defenses']) {
