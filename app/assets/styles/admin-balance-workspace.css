@@ -251,6 +251,8 @@ body.admin-console.admin-balance-workspace .admin-catalogue-costs fieldset {
     border-radius: 7px;
     background: var(--admin-raised);
 }
+/* Le texte de prudence reste lisible sur le panneau rehaussé, y compris en clair. */
+body.admin-console.admin-balance-workspace .admin-catalogue-preview-inputs > p { color: var(--muted); }
 body.admin-console.admin-balance-workspace .admin-catalogue-costs legend { padding: 0 7px; }
 body.admin-console.admin-balance-workspace .admin-catalogue-publication h3 { margin: 0; }
 .admin-balance-workspace .admin-design-comparison { width: 100%; table-layout: fixed; font-variant-numeric: tabular-nums; }
