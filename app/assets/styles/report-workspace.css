@@ -266,3 +266,5 @@ html[data-theme="light"] .player-report-detail {
 .player-report-detail .intel-board-summary { margin:.75rem 0; }
 .player-report-detail .intel-board-summary > div { border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 8%,var(--panel)); }
 .player-report-detail #combat-rounds .combat-round > summary { min-height:42px; padding-block:.55rem; }
+.player-report-board .player-report-type { min-width:0; display:grid; justify-items:start; gap:.2rem; }
+.player-report-board .player-report-kind { font-size:.82rem; color:var(--text); }

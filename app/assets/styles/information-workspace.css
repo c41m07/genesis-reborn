@@ -622,3 +622,6 @@ body.ui-refined[data-ui-page="feedback"] .feedback-workspace.social-board {
 .player-patchnotes-board .patchnote-card .section-heading { gap:.45rem; }
 .player-patchnotes-board .patchnote-card .section-heading .badge { display:inline-flex; margin:0 0 .45rem; }
 .player-patchnotes-board .patchnote-card .section-heading h2 { margin:0; }
+.player-patchnotes-board .stack-list { max-width:72rem; display:grid; gap:.8rem; }
+.player-patchnotes-board .patchnote-card { padding:clamp(1rem,1.5vw,1.5rem); }
+.player-patchnotes-board .patchnote-card .section-heading { margin-block:0 .65rem; }

@@ -225,3 +225,6 @@ body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-summary a[aria-cur
 @media(max-width:560px) {
     body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-search { grid-template-columns:minmax(0,1fr); }
 }
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-space-navigation { display:flex; flex-wrap:wrap; gap:.55rem; margin-block:1rem; }
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-chapters :is(.primary,.secondary) { width:max-content; max-width:100%; min-height:44px; justify-self:start; }
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board :is(.wiki-summary,.wiki-chapter-card) { padding:1rem; }

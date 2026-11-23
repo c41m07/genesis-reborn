@@ -23,7 +23,7 @@
     {% elseif not planet %}
         <p>Vous devez contrôler une planète dans cet univers pour récupérer le lot.</p>
     {% else %}
-        <dl class="daily-reward-resource-lines" aria-label="Contenu du lot">
+        <dl class="daily-reward-resource-lines daily-board-kpis" aria-label="Contenu du lot">
             <div><dt>{{ ui.icon('metal') }} Métal</dt><dd>{{ status.reward.metal|quantity(0) }}</dd></div>
             <div><dt>{{ ui.icon('nano') }} Nano</dt><dd>{{ status.reward.nano|quantity(0) }}</dd></div>
         </dl>

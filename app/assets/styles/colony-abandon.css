@@ -96,3 +96,5 @@ body.authenticated.ui-refined .colony-redesign .project-confirmation .confirmati
         width:100%;
     }
 }
+.colony-abandon-board .colony-abandon-eyebrow { color:var(--accent); font-weight:750; letter-spacing:.1em; text-transform:uppercase; }
+.colony-abandon-board .colony-abandon-layout { max-width:85rem; margin-inline:auto; }
