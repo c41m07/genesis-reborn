@@ -23,9 +23,16 @@ async function resetGameDatabase() {
   };
   // Aucun consommateur ne doit lire ou écrire pendant la reconstruction du schéma.
   await stage('stop_consumers', () => docker([...compose, 'stop', '--timeout', '3', 'worker', 'relay', 'notifier']));
-  await stage('reset_database', () => run('database', ['sh', '-lc', 'mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" -e "DROP DATABASE IF EXISTS genesis_v2; CREATE DATABASE genesis_v2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL PRIVILEGES ON genesis_v2.* TO \'genesis\'@\'%\';"']));
-  await stage('migrate', () => run('app', ['php', 'bin/console', 'doctrine:migrations:migrate', '--no-interaction']));
-  await stage('import', () => run('app', ['php', 'bin/console', 'app:universe:import']));
+  // Supprimer aussi les files différées : une ancienne livraison pourrait viser
+  // un identifiant réattribué après la restauration. Le broker est propre à ce lot.
+  await stage('reset_broker', () => run('rabbitmq', ['sh', '-ec', [
+    'rabbitmqctl delete_vhost /',
+    'rabbitmqctl add_vhost /',
+    'rabbitmqctl set_permissions -p / "$RABBITMQ_DEFAULT_USER" ".*" ".*" ".*"',
+  ].join(' && ')]));
+  await stage('restore_reference', () => run('database', ['sh', '-ec',
+    'mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" < /tmp/genesis-browser-reference.sql',
+  ]));
   await stage('start_consumers', () => docker([...compose, 'up', '-d', '--wait', '--wait-timeout', '45', 'worker', 'relay', 'notifier']));
   return timings;
 }

@@ -29,14 +29,14 @@ vers `dev` ou `alpha`, ainsi qu’aux passages entre brouillon et « prête à r
   Compose, la syntaxe PHP, Twig, YAML et le conteneur Symfony ; il compile les
   assets et lance les tests Python. Aucun service de base de données, migration,
   parcours navigateur ou restauration SQL n’est lancé.
-- Prête à relire : les cinq jobs `quality` exécutent la CI complète sur la dernière
-  version de la PR. Une correction relance cette validation ; repasser en brouillon
-  si le développement reprend.
+- Prête à relire : les jobs de qualité, les cinq familles PHPUnit, la sauvegarde
+  et la préparation de la référence navigateur peuvent démarrer en parallèle.
+  Les quatre familles Playwright démarrent dès que la référence est disponible.
+  Les contrôles de fusion passent au vert quand tous les jobs ont réussi.
 
-La matrice légère ne crée aucun des cinq contrôles complets requis, même comme
-job ignoré : GitHub peut accepter un contrôle ignoré pour autoriser une fusion.
-La CI légère seule ne suffit donc pas à satisfaire la protection de `dev`.
-Les noms des cinq contrôles requis sont conservés.
+La CI publie les cinq noms historiques obligatoires uniquement pour le bilan
+d’une validation complète. Le bilan vérifie aussi les annulations et les jobs
+ignorés. Une exécution ciblée possède ses propres résultats.
 
 Pendant la CI, il est possible de relire et documenter le lot courant ou de
 développer un lot indépendant sur une autre branche issue de `dev` actualisée.
@@ -46,7 +46,11 @@ actualiser la branche si nécessaire et attendre la CI complète de cette versio
 Ne pas partager les bases de test entre vérifications simultanées.
 
 Les push seuls sur les branches de travail et sur `dev`, y compris après fusion,
-ne lancent pas de seconde validation. Le déclenchement manuel reste complet.
+ne lancent pas de seconde validation. Dans GitHub Actions, ouvrir « Genesis Reborn CI », puis « Run workflow ».
+Choisir la branche et une catégorie ou « Suite complète ». Une sélection ciblée
+exécute ses seuls prérequis et ses tests. Seule la suite complète peut publier
+une image sur une branche de livraison. Le formulaire GitHub utilise la
+définition du workflow disponible sur la branche par défaut.
 
 Les push sur `alpha`, actuellement aussi branche par défaut, conservent la
 validation complète. Après sa réussite, le job `publish` construit `docker/prod/Dockerfile` et publie
@@ -55,23 +59,34 @@ Le résumé du job indique aussi la référence immuable avec digest.
 Les pull requests ne publient aucune image. Si la branche par défaut change,
 adapter les filtres `push.branches` et `pull_request.branches` du workflow ; la
 condition du job `publish` ne suffit pas à déclencher une exécution.
-Le job PHP vérifie aussi les espaces du diff avec `git diff --check HEAD^ HEAD` :
-sur une PR, il compare le commit de fusion testé à son premier parent (la base) ;
-sur un push de livraison, il compare le commit livré à son parent.
+Le job de qualité vérifie le diff par rapport au premier parent du commit testé,
+Compose, les assets et les contrôles statiques. Les jobs PHP correspondent aux
+dossiers Unit, Service, Controller, Integration et Twig. Chaque runner dispose
+de sa base MariaDB de test isolée. Le job Integration vérifie également le
+schéma obtenu par migration. Le job sauvegarde exécute les tests Python et une
+restauration réelle dans deux instances jetables.
 
-La validation complète utilise cinq jobs en parallèle : un pour PHP et le lint, quatre
-pour les tests navigateur répartis avec `--shard=N/4`. Chaque lot navigateur
-conserve un seul worker, son runner et sa base jetable ; tous les lots doivent
-réussir avant la publication. Le nombre de scénarios évolue avec le dépôt ; le lot H a validé 93 scénarios localement, puis ses contrôles GitHub. Les nombres datés des anciens audits ne décrivent pas la suite courante. Les couches de
-l'image PHP de test, les dépendances PHP verrouillées et les téléchargements npm
-sont mis en cache. Le premier passage remplit les caches ; la durée dépend aussi
-de la disponibilité des runners GitHub.
+La préparation navigateur migre une base neuve et importe les cartes du commit
+avant tout consommateur. Elle publie uniquement le dump de cette base de jeu
+synthétique et sa somme SHA-256, comme artefact de l’exécution. Chaque catégorie
+le télécharge, le vérifie et travaille dans son projet Docker avec un seul worker.
+Avant chaque scénario utilisant la fixture de base, les consommateurs sont
+arrêtés, le vhost RabbitMQ jetable est recréé et la copie SQL est restaurée.
+Les scénarios de persistance peuvent redémarrer leurs propres conteneurs.
 
-Pour exécuter un lot localement :
+Les projets Playwright répartissent les fichiers par parcours. Les audits
+transversaux sont prioritaires, puis viennent Administration et Flottes et
+interactions. Empire et progression couvre les autres parcours. Les nouveaux
+fichiers restent ainsi inclus dans la suite complète. Exemples locaux :
 
 ```bash
-make test-browser BROWSER_ARGS='--shard=1/4'
+make test-php PHP_TEST_PATH=tests/Twig
+BROWSER_PERSISTENCE=1 make test-browser BROWSER_ARGS='--project=audits'
 ```
+
+La commande locale prépare la référence une fois pour son lot. En CI, les quatre
+lots partagent le même artefact du commit. Le gain de durée globale est non
+mesuré.
 
 Le workflow `Deploy Genesis Reborn` est manuel par défaut. Il transfère le Compose
 de production et le script par SSH, télécharge l'image, arrête les processus

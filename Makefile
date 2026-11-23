@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 DC = docker compose --env-file .env.local
 EXEC = $(DC) exec -T --user $(shell id -u):$(shell id -g) app
-.PHONY: help configure doctor validate build start stop down status logs shell console install migrate import seed-demo test lint lint-static assets watch verify-install test-browser backup restore ops-check backup-status test-backup empires-warn empires-preview empires-convert occupations-resume
+.PHONY: help configure doctor validate build start stop down status logs shell console install install-php migrate import seed-demo test test-php test-python lint lint-schema lint-static assets watch verify-install test-browser backup restore ops-check backup-status test-backup empires-warn empires-preview empires-convert occupations-resume
 help: ## Afficher les commandes
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "%-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 configure: ## Générer les secrets locaux sans écraser l'existant
@@ -28,9 +28,10 @@ shell: ## Shell PHP
 	$(DC) exec --user $(shell id -u):$(shell id -g) app bash
 console: ## Console Symfony, ex. make console CMD=about
 	$(EXEC) php bin/console $(CMD)
-install: ## Installer les dépendances PHP et frontend verrouillées
-	$(DC) run --rm --no-deps --user $(shell id -u):$(shell id -g) app composer install --no-interaction
+install: install-php ## Installer les dépendances PHP et frontend verrouillées
 	cd app && npm ci
+install-php: ## Installer les dépendances PHP verrouillées
+	$(DC) run --rm --no-deps --user $(shell id -u):$(shell id -g) app composer install --no-interaction
 assets: ## Compiler les assets Encore
 	cd app && npm run build
 watch: ## Recompiler les assets à chaque modification (actualiser le navigateur)
@@ -41,17 +42,20 @@ import: ## Importer les cartes et univers de référence
 	$(EXEC) php bin/console app:universe:import
 seed-demo: ## Créer le compte de démonstration local
 	$(EXEC) php bin/console app:seed-demo
-test: ## Tests unitaires, HTTP et MariaDB isolée en mémoire
+test: test-php test-python ## Tests unitaires, HTTP et MariaDB isolée en mémoire
+test-php: ## Exécuter PHPUnit (PHP_TEST_PATH facultatif)
 	$(DC) --profile test up -d --wait database-test
 	$(DC) exec -T --user root app chown -R $(shell id -u):$(shell id -g) var/cache
-	$(EXEC) php -d memory_limit=512M bin/phpunit
+	$(EXEC) php -d memory_limit=512M bin/phpunit $(PHP_TEST_PATH)
+test-python: ## Vérifier les scripts Python de sauvegarde
 	python3 -m unittest discover -s app/tests/scripts -p "test_backup*.py"
 lint-static: ## Vérifier PHP, Twig, YAML et conteneur sans contrôler le schéma SQL
 	$(EXEC) sh -c 'find src tests migrations -name "*.php" -print0 | xargs -0 -n1 php -l >/dev/null'
 	$(EXEC) php bin/console lint:yaml config
 	$(EXEC) php bin/console lint:twig templates
 	$(EXEC) php bin/console lint:container
-lint: lint-static ## Vérifier PHP, Twig, YAML, conteneur et schéma
+lint: lint-static lint-schema ## Vérifier PHP, Twig, YAML, conteneur et schéma
+lint-schema: ## Vérifier le schéma Doctrine
 	$(EXEC) php bin/console doctrine:schema:validate
 
 test-browser: ## Vérifier les parcours navigateur dans une base MariaDB éphémère isolée
