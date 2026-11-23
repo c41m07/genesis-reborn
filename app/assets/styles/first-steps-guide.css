@@ -210,9 +210,10 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
     max-width: 100%;
 }
 
-/* Sur téléphone, l’aide reste en flux après le suivi de la Vue générale. */
+/* Sur téléphone, ne masquer ni le suivi de la Vue générale ni le lien du panneau Recherche vide ouvert. */
 @media (max-width: 740px) {
-    .app-frame:has(> .shell .overview-page .core-empire-watch) > .first-steps-popup-enhanced {
+    .app-frame:has(> .shell .overview-page .core-empire-watch) > .first-steps-popup-enhanced,
+    .app-frame:has(> .shell #panel-technologies):has(> .shell .catalog-queue-ribbon [data-queue-type="research"][data-queue-occupied="false"][open]) > .first-steps-popup-enhanced {
         position: relative;
         inset: auto;
         margin: 0 0 8px auto;
