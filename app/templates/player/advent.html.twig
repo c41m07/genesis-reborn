@@ -1,16 +1,42 @@
 {% extends 'base.html.twig' %}
 {% block title %}Calendrier de l’Avent · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="events-space event-redesign" data-page-sections="disabled">
-    <div class="page-heading">
+{% set milestoneTitles = {6: 'Flotte utilitaire', 12: 'Recherche', 18: 'Combat léger', 24: 'Cadeau de combat lourd'} %}
+{% set statuses = {} %}
+{% set pending = [] %}
+{% set openDay = null %}
+{% set currentDay = null %}
+{% for day, door in doors %}
+    {% set claim = door.claim %}
+    {% set waitingCredit = claim and not claim.deliveredAt and claim.award.kind|default('') in ['research_discount', 'ship_voucher'] %}
+    {% set statuses = statuses|merge({('door-' ~ day): {
+        label: claim ? (claim.deliveredAt ? 'Versé' : (waitingCredit ? (claim.award.kind == 'research_discount' ? 'Remise à utiliser' : 'Bon à utiliser') : 'Réservé')) : (door.open ? (destinationsAllowed and colonies ? 'Disponible' : 'Ouverte') : (closed ? 'Expiré' : 'À venir')),
+        key: claim ? (claim.deliveredAt ? 'delivered' : 'reserved') : (door.open ? 'open' : (closed ? 'expired' : 'future'))
+    }}) %}
+    {% if claim and not claim.deliveredAt %}
+        {% set pending = pending|merge([day]) %}
+    {% endif %}
+    {% if not claim and door.open %}
+        {% set openDay = openDay is null ? day : max(openDay, day) %}
+    {% endif %}
+    {% if door.open %}
+        {% set currentDay = currentDay is null ? day : max(currentDay, day) %}
+    {% endif %}
+{% endfor %}
+{% set defaultDay = currentDay ? (openDay ?? currentDay) : (pending ? pending|first : doors|keys|first) %}
+{% set cosmetics = consolidated ? edition.doors[24].cosmetics|default([]) : [] %}
+<div class="events-space event-redesign advent-board" data-page-sections="disabled">
+    <div class="page-heading advent-board-heading">
         <div>
             <h1>{{ edition.name }}</h1>
             <p>{{ claimed }} / 24 portes ouvertes sur votre compte, tous univers confondus.</p>
-            <p>Rattrapage jusqu’au {{ edition.closesAt|date_modify('-1 second')|date('d/m/Y', 'Europe/Paris') }} inclus (heure de Paris).</p>
         </div>
-        <a class="secondary" href="{{ path('app_game_events') }}">Retour aux événements</a>
+        <div class="advent-links">
+            <a class="secondary" href="{{ path('app_game_events') }}">Retour aux événements</a>
+            {% if consolidated or pending %}<a class="secondary" href="#advent-rewards">Cadeaux et réserves</a>{% endif %}
+        </div>
     </div>
-    <p>Destination à choisir parmi vos colonies dans <strong>{{ membership.universe.name }}</strong>. Un cadeau réservé reste disponible après la clôture, même si vous choisissez une autre colonie.</p>
+    <p class="advent-destination">Destination à choisir parmi vos colonies dans <strong>{{ membership.universe.name }}</strong>. Un cadeau réservé reste disponible après la clôture, même si vous choisissez une autre colonie.</p>
     {% if otherEditions|length > 1 or (otherEditions|length == 1 and otherEditions[0].id != edition.id) %}
         <nav aria-label="Éditions de l’Avent"><ul>
             {% for other in otherEditions %}
@@ -41,65 +67,41 @@
             {% endif %}
         </section>
     {% endif %}
-    {% if closed %}<p>L’édition est close : les portes non ouvertes ont expiré. Vous pouvez encore retirer vos cadeaux réservés.</p>{% endif %}
-    {% if not colonies %}<p>Vous n’avez pas de colonie dans cet univers pour recevoir un cadeau.</p>{% endif %}
-    <ol class="advent-doors" aria-label="Les 24 portes de l’Avent">
-        {% for day, door in doors %}
-            {% set claim = door.claim %}
-            {% set credit = claim.award.kind|default('') in ['research_discount', 'ship_voucher'] %}
-            {% set actionable = destinationsAllowed and colonies and (claim ? not claim.deliveredAt : door.open) %}
-            {% set status = claim ? (claim.deliveredAt ? 'Versé' : 'Réservé') : (door.open ? 'Prêt à ouvrir' : (closed ? 'Expiré' : 'Fermé')) %}
-            <li class="panel advent-door" id="advent-door-{{ day }}" tabindex="-1">
-                <h2>Porte {{ day }}</h2>
-                <p><span class="badge">{{ status }}</span> <time datetime="{{ door.opensAt|date('c', 'UTC') }}">{{ door.opensAt|date('d/m', 'Europe/Paris') }}</time></p>
-                {% if actionable and credit %}
-                    {% include 'advent/_offer.html.twig' with {offer: claim.award, resources: resources, ships: ships} only %}
-                    <p><a class="secondary" href="{{ path('app_advent_credit', {id: edition.id, claimId: claim.id}) }}">Voir le devis de cette remise</a></p>
-                {% elseif actionable %}
-                    <details>
-                        <summary>{{ claim ? 'Reprendre le versement' : 'Choisir mon cadeau' }}<span class="visually-hidden">, porte {{ day }}</span></summary>
-                        <form method="post" action="{{ path('app_advent_open', {id: edition.id, door: day}) }}" class="advent-door-form">
-                            <input type="hidden" name="_token" value="{{ csrf_token('advent_' ~ edition.id ~ '_' ~ membership.id ~ '_' ~ day) }}">
-                            {% if claim %}
-                                {% if claim.award.kind|default('') == 'ship_pack' %}
-                                    <p>Lot réservé : {% include 'advent/_offer.html.twig' with {offer: claim.award, resources: resources, ships: ships} only %}.</p>
-                                {% else %}
-                                    <p>Reste à verser : {% for resource, amount in claim.resources %}{{ (amount - claim.creditedResources[resource]|default(0))|quantity(0) }} {{ resources[resource] }}{{ loop.last ? '' : ' · ' }}{% endfor %}.</p>
-                                {% endif %}
-                                {% if colonies[claim.originalDestinationId] is defined %}
-                                    {% set original = colonies[claim.originalDestinationId] %}
-                                    <p>Destination initiale : <strong>{{ original.name }}</strong> ({{ original.coordinates() }}).</p>
-                                {% endif %}
-                                <input type="hidden" name="choice" value="{{ claim.choice }}">
-                            {% else %}
-                                {% if consolidated %}
-                                    <fieldset class="advent-choice">
-                                        <legend>Cadeau de la porte {{ day }}</legend>
-                                        {% for choice, offer in door.options %}
-                                            <label><input type="radio" name="choice" value="{{ choice }}" required> <span>{% include 'advent/_offer.html.twig' with {offer: offer, resources: resources, ships: ships} only %}</span></label>
-                                        {% endfor %}
-                                    </fieldset>
-                                {% else %}
-                                    <label for="advent-choice-{{ day }}">Cadeau de la porte {{ day }}</label>
-                                    <select name="choice" id="advent-choice-{{ day }}" required>
-                                        <option value="">Choisir le lot</option>
-                                        {% for choice, amounts in door.options %}<option value="{{ choice }}">{% for resource, amount in amounts %}{{ amount|quantity(0) }} {{ resources[resource] }}{{ loop.last ? '' : ' · ' }}{% endfor %}</option>{% endfor %}
-                                    </select>
-                                {% endif %}
-                            {% endif %}
-                            <label for="advent-colony-{{ day }}">Colonie destinataire</label>
-                            <select name="colony" id="advent-colony-{{ day }}" required>
-                                <option value="">Choisir une de mes colonies</option>
-                                {% for colony in colonies %}<option value="{{ colony.id }}">{{ colony.name }} ({{ colony.coordinates() }})</option>{% endfor %}
-                            </select>
-                            <button class="primary">{{ claim ? 'Retenter le versement' : 'Confirmer le cadeau et la destination' }}</button>
-                        </form>
-                    </details>
-                {% elseif claim and not claim.deliveredAt %}
-                    <p>Le lot reste réservé. {{ consolidated ? 'Revenez dans l’univers fixé et choisissez une de vos colonies.' : 'Choisissez un univers où vous contrôlez une colonie.' }}</p>
-                {% endif %}
-            </li>
-        {% endfor %}
-    </ol>
+    {% if closed %}<p class="advent-notice">L’édition est close : les portes non ouvertes ont expiré. Vous pouvez encore retirer vos cadeaux réservés.</p>{% endif %}
+    {% if not colonies %}<p class="advent-notice">Vous n’avez pas de colonie dans cet univers pour recevoir un cadeau.</p>{% endif %}
+
+    <div class="advent-layout">
+        <section class="panel advent-calendar" aria-labelledby="advent-calendar-title">
+            <h2 id="advent-calendar-title">Choisir une porte</h2>
+            <p>Rattrapage jusqu’au {{ edition.closesAt|date_modify('-1 second')|date('d/m/Y', 'Europe/Paris') }} à {{ edition.closesAt|date_modify('-1 second')|date('H:i', 'Europe/Paris') }}, heure de Paris.</p>
+            <ul class="advent-meta" aria-label="Contexte de l’édition">
+                {% if consolidated and binding %}<li class="badge">{{ bracketLabels[binding.bracket] }}</li>{% endif %}
+                <li class="badge">Univers actif : {{ membership.universe.name }}</li>
+            </ul>
+            <ol class="advent-doors" aria-label="Les 24 portes de l’Avent">
+                {% for day, door in doors %}
+                    {% set milestone = consolidated and milestoneTitles[day] is defined %}
+                    {% set status = statuses['door-' ~ day] %}
+                    <li>
+                        <a class="advent-day-tile" data-state="{{ status.key }}"{% if milestone %} data-milestone{% endif %}{% if day == defaultDay %} data-default{% endif %}
+                           href="#advent-door-{{ day }}" aria-label="Porte {{ day }}, {% if milestone %}cadeau, {% endif %}{{ status.label }}">
+                            <span class="advent-day-number">{{ '%02d'|format(day) }}</span>
+                            {% if milestone %}<span class="advent-milestone" aria-hidden="true">Cadeau</span>{% endif %}
+                            <span class="advent-day-status">{{ status.label }}</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ol>
+        </section>
+
+        <section class="advent-selection" aria-label="Cadeau de la porte">
+            {% for day, door in doors %}
+                {% include 'advent/_door.html.twig' with {status: statuses['door-' ~ day], milestone: consolidated ? milestoneTitles[day]|default(null) : null, selected: day == defaultDay} %}
+            {% endfor %}
+        </section>
+    </div>
+    {% if consolidated or pending %}
+        {% include 'advent/_rewards.html.twig' %}
+    {% endif %}
 </div>
 {% endblock %}
