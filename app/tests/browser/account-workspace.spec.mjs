@@ -242,3 +242,69 @@ test('P07 : réglages enregistrés et vacances inactives', async ({ page, browse
   } finally { await native.close(); }
   expect(vacations()).toBe('0');
 });
+
+
+test('P06 : mes identifiants et refus sans modification du compte', async ({ page, browser, baseURL }, info) => {
+  test.setTimeout(120000);
+  const id = crypto.randomUUID().slice(0,8);
+  const email = 'p06-' + id + '@example.test';
+  const name = 'Horizon-' + id;
+  const password = crypto.randomUUID() + 'aA1!';
+  await page.goto('/inscription');
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Nom de commandant').fill(name);
+  await page.getByLabel('Mot de passe (12 caractères minimum)',{exact:true}).fill(password);
+  await page.getByLabel('Confirmer le mot de passe').fill(password);
+  await page.getByRole('button',{name:'Créer mon compte'}).click();
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Mot de passe',{exact:true}).fill(password);
+  await page.getByRole('button',{name:/Connexion/}).click();
+  await page.locator('.universe-card').filter({has:page.getByRole('heading',{name:/Omega/})}).getByRole('button').click();
+  await expect(page).toHaveURL(/planetes\/\d+$/);
+  const project = process.env.BROWSER_ROUTER;
+  const accountName = () => queryIsolatedSql(project,`SELECT username FROM player WHERE email='${email}'`);
+  expect(accountName()).toBe(name);
+  for (const theme of ['dark','light']) {
+    runIsolatedSql(project,`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
+    for (const viewport of [{width:1920,height:1080},{width:390,height:844}]) {
+      await page.setViewportSize(viewport);
+      await page.goto('/profil');
+      const form = page.locator('.account-profile-form');
+      const rail = page.getByRole('complementary',{name:'Portée et actions sensibles'});
+      await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
+      await expect(form.locator('.profile-password')).not.toHaveAttribute('open');
+      await expect(rail.getByRole('link',{name:'Voir la confirmation'})).toHaveAttribute('href','/profil/supprimer');
+      await expect(form.getByRole('link',{name:'Voir la confirmation'})).toHaveCount(0);
+      await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+      await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+      await page.screenshot({path:info.outputPath(`P06-identifiants-${theme}-${viewport.width}.png`),scale:'css',animations:'disabled'});
+      if (viewport.width===390) {
+        await form.getByRole('button',{name:'Enregistrer mes identifiants'}).scrollIntoViewIfNeeded();
+        await page.screenshot({path:info.outputPath(`P06-action-${theme}-390.png`),scale:'css',animations:'disabled'});
+      }
+      await form.getByLabel('Nom de commandant').fill('Texte conservé');
+      const input = form.getByLabel('Mot de passe actuel',{exact:true});
+      await input.fill('Incorrect-synthetique-2026!');
+      const rejected = page.waitForResponse(r=>r.request().method()==='POST' && new URL(r.url()).pathname==='/profil');
+      await form.getByRole('button',{name:'Enregistrer mes identifiants'}).press('Enter');
+      expect((await rejected).status()).toBe(422);
+      await expect(form.getByLabel('Nom de commandant')).toHaveValue('Texte conservé');
+      await expect(form.getByLabel('Adresse email')).toHaveValue(email);
+      await expect(input).toHaveValue('');
+      await expect(form.getByRole('alert')).toContainText('Profil non enregistré.');
+      await expect(form.locator('.profile-password')).toHaveAttribute('open','');
+      expect(accountName()).toBe(name);
+      await page.screenshot({path:info.outputPath(`P06-refus-${theme}-${viewport.width}.png`),scale:'css',animations:'disabled'});
+    }
+  }
+  const context = await browser.newContext({baseURL,storageState:await page.context().storageState(),javaScriptEnabled:false});
+  try {
+    const tab = await context.newPage();
+    await tab.goto('/profil');
+    const summary = tab.locator('.profile-password > summary');
+    await summary.press('Enter');
+    await expect(tab.locator('.profile-password')).toHaveAttribute('open','');
+    await summary.press('Enter');
+    await expect(tab.locator('.profile-password')).not.toHaveAttribute('open');
+  } finally { await context.close(); }
+});
