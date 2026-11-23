@@ -164,7 +164,7 @@ test('Simulateur : dix combats reproductibles, détails accessibles et aucune mu
 
  await expect(result.locator('strong').first()).toContainText(counts[0]*10+' %');
  await expect(result).toContainText('7 victoires donnent 70 %, sans garantir cette probabilité réelle');
- const first=await result.innerText(),trial=trials.first(),summary=trial.locator(':scope > summary');
+ const first=await result.textContent(),trial=trials.first(),summary=trial.locator(':scope > summary');
  await summary.focus();await page.keyboard.press('Enter');await expect(trial).toHaveAttribute('open','');
  await expect(trial.getByRole('heading',{name:'Camp attaquant',exact:true})).toBeVisible();
  await expect(trial.getByRole('heading',{name:'Camp défenseur',exact:true})).toBeVisible();
@@ -184,7 +184,8 @@ test('Simulateur : dix combats reproductibles, détails accessibles et aucune mu
  await summary.click();await expect(trial).not.toHaveAttribute('open','');
  await page.getByRole('checkbox',{name:/Je confirme les hypothèses/}).check();
  await page.getByRole('button',{name:'Simuler 10 combats'}).click();
- expect(await result.innerText()).toBe(first);
+ await expect(result.getByRole('heading',{name:'Estimation sur 10 combats'})).toBeInViewport();
+ expect(await result.textContent()).toBe(first);
  expect(queryIsolatedSql(p,stockQuery)).toBe(before);
  expect(Number(queryIsolatedSql(p,'SELECT COUNT(*) FROM combat_event'))).toBe(0);
  for(const theme of ['dark','light']){
