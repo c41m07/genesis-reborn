@@ -1,10 +1,16 @@
+{% import 'ui/macros.html.twig' as ui %}
 <aside class="core-fleet-recap panel" aria-labelledby="core-fleet-recap-title-{{ fleetId }}" data-fleet-wizard-target="recap" hidden>
-    <h3 id="core-fleet-recap-title-{{ fleetId }}">Récapitulatif de mission</h3>
+    <h2 id="core-fleet-recap-title-{{ fleetId }}">{{ ui.icon('overview') }} Récapitulatif de mission</h2>
     <p class="core-fleet-recap-total"><strong data-fleet-wizard-target="recapCount">0</strong> vaisseaux sélectionnés</p>
     <p class="core-fleet-recap-ranks" data-fleet-wizard-target="recapRanks" hidden></p>
     <ul class="core-fleet-recap-ships" data-fleet-wizard-target="recapShips" hidden></ul>
     <dl class="core-fleet-recap-facts">
+        <div><dt>Départ</dt><dd>{{ origin }}</dd></div>
         <div><dt>Destination</dt><dd data-fleet-wizard-target="recapDestination">À choisir</dd></div>
-        <div><dt>Estimation</dt><dd data-fleet-wizard-target="recapQuote">Après le devis du trajet</dd></div>
+        <div><dt>Fret chargé</dt><dd data-fleet-wizard-target="recapCargo">Selon la mission</dd></div>
+        <div><dt>Durée et arrivée</dt><dd data-fleet-wizard-target="recapQuote">Après le devis du trajet</dd></div>
     </dl>
+    <div class="core-fleet-recap-quote" data-fleet-wizard-target="recapQuoteSlot"></div>
+    <div class="core-fleet-recap-actions" data-fleet-wizard-target="recapActions"></div>
+    <p class="core-fleet-recap-notice" data-fleet-wizard-target="recapNotice">Aucun départ n’est lancé à cette étape.</p>
 </aside>

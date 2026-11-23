@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block title %}Rapport de transport · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="mission-report report-workspace">
+<div class="mission-report report-workspace player-report-detail player-transport-detail">
 {% include 'ui/report_back_link.html.twig' %}
 <header class="report-heading core-transport-heading">
     <p class="report-eyebrow">ÉCONOMIE · N° {{ report.id }}</p>
@@ -11,7 +11,9 @@
     </div>
 </header>
 {% if app.request.attributes.get('_route') == 'app_transport_report' %}{% include 'ui/report_notice_form.html.twig' with {report_notice_kind:'transport'} %}{% endif %}
+<div class="player-transport-core">
 <section class="panel report-summary"><h2>Participants</h2><p>{{ report.snapshot.sender }} → {{ report.snapshot.recipient }}</p>{% if report.snapshot.returned_at is defined %}<p class="muted">Flotte rentrée le {{ report.snapshot.returned_at|date('d/m/Y H:i') }}.</p>{% endif %}</section>
 {% include 'transport/_details.html.twig' %}
+</div>
 </div>
 {% endblock %}

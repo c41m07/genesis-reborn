@@ -2,15 +2,18 @@
 {% import 'ui/macros.html.twig' as ui %}
 {% block title %}Messages · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="social-workspace messaging-workspace" data-page-sections="disabled">
+<div class="social-workspace messaging-workspace social-board social-board--messages" data-page-sections="disabled">
 <div class="page-heading"><div><h1>Messages</h1><p>Votre centre de communication dans cet univers.</p></div></div>
 <nav class="social-page-actions" aria-label="Recherche de messages">
     <a class="secondary" href="{{ path('app_message_search') }}">Rechercher dans les messages</a>
     {% if peer %}<a class="secondary" href="{{ path('app_message_search',{channel:'private',with:peer.id}) }}">Chercher dans cette conversation</a>{% endif %}
 </nav>
-<div class="inbox-layout">
+<div class="inbox-layout{% if peer or activeChannel in ['guild','global'] %} inbox-layout--selected{% endif %}">
     <aside class="panel inbox-sidebar" aria-label="Boîte de réception">
         <header class="inbox-heading"><h2>Messagerie</h2>{% if unreadPrivate %}<span class="badge">{{ unreadPrivate }} non lu{{ unreadPrivate>1?'s':'' }}</span>{% endif %}</header>
+        {# Le menu est ouvert en HTML : les contacts restent accessibles sans JavaScript. #}
+        <details class="inbox-picker" open data-controller="space-navigation" data-space-navigation-mobile-open-value="{{ (not peer and activeChannel not in ['guild', 'global']) ? 'true' : 'false' }}" data-action="keydown.esc->space-navigation#close focusout->space-navigation#captureFocus">
+            <summary data-space-navigation-target="summary">{{ ui.icon('notifications') }} Conversations <span aria-hidden="true">⌄</span></summary>
         <form class="message-search" method="get" action="{{ path('app_messages') }}" role="search">
             <label for="message-recipient-search">Rechercher un joueur</label>
             <div><input id="message-recipient-search" type="search" name="q" value="{{ search }}" minlength="2" maxlength="40" placeholder="Pseudo du commandant"><button class="secondary">Rechercher</button></div>
@@ -22,8 +25,9 @@
         </section>{% endif %}
         <div data-message-notifications-target="conversations">{% include 'player/_message_contacts.html.twig' %}</div>
         {% if not guild %}<a class="inbox-guild-hint" href="{{ path('app_guilds') }}">Le canal de guilde est accessible après avoir rejoint une guilde.</a>{% endif %}
+        </details>
     </aside>
-    <section class="panel message-pane" aria-label="Conversation sélectionnée">
+    <section class="panel message-pane" aria-label="Conversation sélectionnée" id="message-conversation">
         {% if peer and activeChannel=='private' %}
             <header class="message-pane-heading"><div class="message-avatar" aria-hidden="true">{{ peer.displayName|first|upper }}</div><div><h2>Conversation avec {% if peer.playerControlled %}<a class="public-profile-link" href="{{ path('app_player_public_profile',{id:peer.id}) }}">{{ peer.displayName }}</a>{% else %}{{ peer.displayName }}{% endif %}</h2><p>{{ membership.universe.name }}</p></div></header>
             <div class="message-thread" data-controller="message-thread" tabindex="0" aria-label="Historique de la conversation" aria-live="polite">

@@ -2,16 +2,23 @@ import { Controller } from '@hotwired/stimulus';
 import { compactNumber, exactNumber } from '../quantity.js';
 
 export default class extends Controller {
-    static targets = ['step', 'indicator', 'counter', 'quantity', 'error', 'summary', 'recap', 'recapCount', 'recapRanks', 'recapShips', 'recapDestination', 'recapQuote'];
+    static targets = ['step', 'indicator', 'counter', 'quantity', 'error', 'summary', 'recap', 'recapCount', 'recapRanks', 'recapShips', 'recapDestination', 'recapCargo', 'recapQuote', 'recapActions', 'recapNotice', 'stageActions', 'quotePanel', 'recapQuoteSlot'];
 
     static values = { origin: String };
 
     connect() {
         this.currentStep = 1;
         this.element.classList.add('fleet-wizard-ready');
+        if (this.hasRecapActionsTarget) {
+            // Déplacer les vrais contrôles, jamais les dupliquer. Sans JS ils
+            // restent dans les étapes et le bouton d’envoi natif est disponible.
+            this.recapActionsTarget.append(...this.stageActionsTargets);
+        }
+        if (this.hasQuotePanelTarget && this.hasRecapQuoteSlotTarget) {
+            this.recapQuoteSlotTarget.append(this.quotePanelTarget);
+        }
         this.render();
         if (this.hasRecapTarget) this.recapTarget.hidden = false;
-        this.updateRecap();
     }
 
     next(event) {
@@ -93,13 +100,19 @@ export default class extends Controller {
             .map(([rank, label]) => exactNumber(ranks[rank]) + ' ' + label).join(' · ');
         this.recapRanksTarget.hidden = ships === 0;
         this.recapShipsTarget.hidden = ships === 0;
-        this.recapShipsTarget.replaceChildren(...selected.map(input => {
+        const byType = new Map();
+        for (const input of selected) {
+            const type = input.dataset.shipType;
+            const old = byType.get(type) ?? { label: input.dataset.shipFamily, amount: 0 };
+            byType.set(type, { ...old, amount: old.amount + Number(input.value) });
+        }
+        this.recapShipsTarget.replaceChildren(...[...byType.values()].map(({ label, amount }) => {
             const item = document.createElement('li');
-            const label = document.createElement('span');
-            const amount = document.createElement('strong');
-            label.textContent = input.dataset.shipLabel;
-            amount.textContent = exactNumber(Number(input.value));
-            item.append(label, amount);
+            const name = document.createElement('span');
+            const total = document.createElement('strong');
+            name.textContent = label;
+            total.textContent = exactNumber(amount);
+            item.append(name, total);
             return item;
         }));
 
@@ -109,6 +122,11 @@ export default class extends Controller {
         this.recapDestinationTarget.textContent = this.hasDestination()
             ? ((option ? (missionField?.value === 'explore' ? option.dataset.systemCoordinates : option.textContent.trim()) : field.value.trim()) || 'À choisir')
             : 'À choisir';
+        if (this.hasRecapCargoTarget) {
+            const cargo = [...this.element.querySelectorAll('[name^="cargo["]')].filter(input => !input.disabled);
+            const total = cargo.reduce((sum, input) => sum + Math.max(0, Number(input.value) || 0), 0);
+            this.recapCargoTarget.textContent = this.currentStep === 1 ? 'Selon la mission' : (total ? exactNumber(total) + ' ressources' : 'Aucun');
+        }
         if (event) this.recapQuoteTarget.textContent = 'Après le devis du trajet';
     }
 
@@ -137,7 +155,15 @@ export default class extends Controller {
             if (active) indicator.setAttribute('aria-current', 'step');
             else indicator.removeAttribute('aria-current');
         });
+        if (this.hasRecapActionsTarget) {
+            this.stageActionsTargets.forEach(actions => {
+                actions.hidden = Number(actions.dataset.step) !== this.currentStep;
+            });
+        }
+        if (this.hasQuotePanelTarget && this.hasRecapQuoteSlotTarget) this.quotePanelTarget.hidden = this.currentStep !== 3;
+        if (this.hasRecapNoticeTarget) this.recapNoticeTarget.hidden = this.currentStep === 3;
         this.counterTarget.textContent = 'Étape ' + this.currentStep + ' / 3';
+        this.updateRecap();
         if (moveFocus) {
             // Le bouton précédent est masqué : le titre situe le clavier dans la nouvelle étape.
             const activeStep = this.stepTargets.find(step => Number(step.dataset.step) === this.currentStep);

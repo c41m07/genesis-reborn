@@ -1,10 +1,14 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}Préparer une restauration · {{ universe.name }}{% endblock %}
 {% block body %}
-<div class="core-admin-restoration">
-<h1>Restaurer les valeurs de la trace #{{ source }}</h1>
-<p>{{ universe.name }} · {{ slug }}. Seuls les champs modifiables ci-dessous seront réappliqués comme surcharges. Les règles, prérequis, stocks, files déjà payées et niveaux des joueurs ne sont pas restaurés.</p>
-<p>La production sera matérialisée puis recalculée à la publication. Une évolution du catalogue depuis cet aperçu bloque la confirmation. Les limites sont revérifiées côté serveur.</p>
+<div class="page-heading admin-task-heading">
+    <div><p class="eyebrow">Catalogue · {{ item.label|default(slug) }} · {{ universe.name }}</p>
+    <h1>Restaurer les valeurs de la trace #{{ source }}</h1>
+    <p>Seuls les champs modifiables seront réappliqués. Règles, prérequis, stocks, files déjà payées et niveaux des joueurs ne sont pas restaurés.</p></div>
+</div>
+<div class="core-admin-restoration admin-restoration-layout">
+<section class="panel admin-design-comparison-panel" aria-labelledby="restore-comparison-title">
+<h2 id="restore-comparison-title">Valeurs à réappliquer</h2>
 <div class="table-scroll" role="region" tabindex="0" aria-label="Comparaison des valeurs du catalogue">
     <table class="admin-ops-table"><caption>Valeurs actuelles et historiques proposées</caption><thead><tr><th scope="col">Champ</th><th scope="col">Actuel</th><th scope="col">Proposé</th></tr></thead><tbody>
     {% for field in preview.comparison %}<tr><th scope="row">{{ field.label }}</th><td>{{ field.before }}</td><td>{{ field.after }}</td></tr>{% endfor %}
@@ -19,13 +23,19 @@
     {% for resource in preview.quote.before.costs|merge(preview.quote.after.costs)|keys %}<tr><th scope="row">{{ resourceLabels[resource]|default(resource) }}</th><td>{{ preview.quote.before.costs[resource]|default(0) }}</td><td>{{ preview.quote.after.costs[resource]|default(0) }}</td></tr>{% endfor %}
     </tbody></table>
 </div>
+</section>
+<section class="panel admin-design-restore-decision" aria-labelledby="restore-decision-title">
+<p class="eyebrow">Confirmation · {{ universe.name }}</p>
+<h2 id="restore-decision-title">Vérifier et publier</h2>
+<p>La production sera matérialisée puis recalculée à la publication. Une évolution du catalogue depuis cet aperçu bloque la confirmation. Les limites sont revérifiées côté serveur.</p>
 <form method="post" class="admin-catalogue-restore">
 <input type="hidden" name="_token" value="{{ csrf_token(tokenKey) }}">
 <input type="hidden" name="revision" value="{{ preview.revision }}">
 <label for="restore-reason">Motif de restauration</label><textarea id="restore-reason" name="reason" required minlength="5" maxlength="1000"></textarea>
-<label><input type="checkbox" name="confirmed" value="1" required> Je confirme ces valeurs pour cette fiche et cet univers.</label>
+<label class="admin-design-restore-confirm"><input type="checkbox" name="confirmed" value="1" required><span>Je confirme ces valeurs pour cette fiche et cet univers.</span></label>
 <button class="primary">Publier ces valeurs historiques</button>
 </form>
 <a class="secondary" href="{{ path('app_admin_catalogue_history', {id: universe.id, group: group, slug: slug}) }}">Annuler et revenir à l’historique</a>
+</section>
 </div>
 {% endblock %}

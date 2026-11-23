@@ -308,3 +308,14 @@ body.authenticated .fleet-compositions .composition-missing {
     border-inline-start: 1px solid var(--line);
     min-width: 0;
 }
+
+.composition-library-scroll { max-width:100%; overflow:auto; border:1px solid var(--line); border-radius:5px; }
+.fleet-compositions .composition-library .composition-library-table { width:100%; min-width:480px; margin:0; }
+.fleet-compositions .composition-library .composition-card { display:table-row; }
+.fleet-compositions .composition-library :is(td, th) { vertical-align:top; }
+body.authenticated .fleet-compositions .composition-library .composition-card h3 { margin:0 0 6px; font-size:15px; }
+.fleet-compositions .composition-quantities { margin-top:4px; font-weight:400; }
+.fleet-compositions .composition-quantities summary { color:var(--accent); cursor:pointer; }
+.fleet-compositions .composition-library-total { font-variant-numeric:tabular-nums; }
+.fleet-compositions .composition-library .composition-list-actions { margin:14px 0 0; }
+body.authenticated .fleet-compositions .composition-delete-confirmation { border-color:#c65664; background:#a73543; color:#fff; }

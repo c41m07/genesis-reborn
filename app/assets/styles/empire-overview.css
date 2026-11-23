@@ -27,16 +27,17 @@ body.ui-refined[data-ui-page="vue-generale"] .overview-page .empire-banner {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
-    min-height: 0;
+    grid-template-rows: minmax(0, 1fr) auto;
+    min-height: 308px;
     height: auto;
     padding: 0;
-    margin-bottom: 20px;
+    margin: 0;
     color: #e7eef6;
     background: #101b2b;
 }
 
 body.ui-refined[data-ui-page="vue-generale"] .overview-page .colony-scene {
-    opacity: .42;
+    opacity: .86;
     object-position: center;
 }
 
@@ -44,14 +45,16 @@ body.ui-refined[data-ui-page="vue-generale"] .overview-page .hero-content {
     position: relative;
     min-width: 0;
     max-width: none;
-    padding: 20px 18px 14px;
+    padding: 24px 24px 18px;
+    background: linear-gradient(90deg, #091726d9 0%, #0b1929ad 40%, #0d1b2a1a 100%);
 }
 
 .overview-colony-heading {
     display: flex;
+    flex-direction: column;
     justify-content: space-between;
-    align-items: center;
-    gap: 20px;
+    align-items: flex-start;
+    gap: 22px;
 }
 
 .overview-colony-heading > div {
@@ -59,26 +62,37 @@ body.ui-refined[data-ui-page="vue-generale"] .overview-page .hero-content {
 }
 
 body.ui-refined[data-ui-page="vue-generale"] .overview-page .hero-content h2 {
-    margin: 16px 0 4px;
-    font-size: 30px;
+    margin: 16px 0 8px;
+    font-size: clamp(2rem, 3.1vw, 3.65rem);
+    line-height: 1.04;
 }
 
 body.ui-refined[data-ui-page="vue-generale"] .overview-page .overview-colony-heading p {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     margin: 4px 0 0;
-    font-size: 12px;
+    color: #e7eef6;
+    font-size: 13px;
 }
 
 body.ui-refined[data-ui-page="vue-generale"] .overview-page .hero-content .badge {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: #87d8b4;
+    padding: 5px 8px;
+    border: 1px solid #4a807899;
+    background: #153b36;
+    color: #c5eddd;
     font-size: 10px;
+    letter-spacing: .07em;
+    text-transform: uppercase;
 }
 
 body.ui-refined[data-ui-page="vue-generale"] .overview-page .overview-colony-heading .quiet-button {
-    flex-shrink: 0;
-    padding: 12px;
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+    max-width: 100%;
+    padding: 10px 12px;
     border: 1px solid #405269;
     border-radius: 5px;
     background: #172537;
@@ -127,7 +141,7 @@ body.ui-refined[data-ui-page="vue-generale"] .overview-page .empire-points dd sm
     font-weight: inherit;
 }
 
-body.ui-refined[data-ui-page="vue-generale"] .overview-page .hero-content .overview-points-change {
+body.ui-refined[data-ui-page="vue-generale"] .overview-page .overview-score-body .overview-points-change {
     display: block;
     margin: 14px 0 0;
     color: #e7eef6;
@@ -135,55 +149,145 @@ body.ui-refined[data-ui-page="vue-generale"] .overview-page .hero-content .overv
     line-height: 1.6;
 }
 
-/* Le pied de bannière est une navigation de l’empire, distincte des files locales. */
-body.ui-refined[data-ui-page="vue-generale"] .overview-page .dashboard-metrics {
+/* Le bandeau regroupe les quatre repères de la maquette ; les scores détaillés restent disponibles. */
+.overview-page .overview-heading > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 24px;
+}
+
+body.ui-refined[data-ui-page="vue-generale"] .overview-page .overview-heading h1 {
+    margin: 0;
+    font-size: clamp(1.8rem, 2vw, 2.22rem);
+}
+
+body.ui-refined[data-ui-page="vue-generale"] .overview-page .overview-heading .overview-kicker {
+    margin: 0;
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.overview-page .overview-summary {
     position: relative;
     z-index: 2;
     display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    margin: 0 24px 16px;
+    border: 1px solid #4b6278;
+    border-radius: 5px;
+    background: #0e1a2c;
+}
+
+body.ui-refined[data-ui-page="vue-generale"] .overview-page .dashboard-metrics {
+    display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-self: stretch;
     gap: 0;
     width: 100%;
+    min-width: 0;
     margin: 0;
     padding: 0;
-    border-top: 1px solid #405269;
-    background: #09132199;
+    border: 0;
+    background: transparent;
 }
 
 body.ui-refined[data-ui-page="vue-generale"] .overview-page .metric-card {
-    min-height: 56px;
-    padding: 12px 18px;
-    gap: 8px;
+    min-width: 0;
+    min-height: 42px;
+    padding: 5px 12px;
+    gap: 7px;
     border: 0;
-    border-right: 1px solid #405269;
-    border-radius: 0;
+    border-radius: 4px;
     background: transparent;
-    color: #77d5e9;
+    color: #a9dbea;
 }
 
-.overview-page .metric-card:last-child {
-    border-right: 0;
+.overview-page .metric-card:hover {
+    background: #183047;
 }
 
-.overview-page .metric-symbol,
-.overview-page .metric-card:not(:nth-child(2)) .metric-caption {
-    display: none;
+.overview-page .metric-symbol {
+    display: inline-grid;
+    align-items: center;
 }
 
 body.ui-refined[data-ui-page="vue-generale"] .overview-page .metric-card strong {
-    margin: 3px 0 0;
-    color: #77d5e9;
-    font-size: 16px;
+    margin: 2px 0 0;
+    color: #e7eef6;
+    font-size: 13px;
 }
 
 body.ui-refined[data-ui-page="vue-generale"] .overview-page .metric-card :is(small, .metric-caption) {
-    color: #e7eef6;
-    font-size: 11px;
+    color: #bbcedf;
+    font-size: 10px;
+}
+
+.overview-page .metric-card :is(.metric-caption, .metric-arrow) {
+    display: none;
+}
+
+.overview-page .metric-card:nth-child(3) .metric-caption {
+    display: block;
+}
+
+.overview-score-detail {
+    min-width: 0;
+}
+
+.overview-score-detail[open] {
+    grid-column: 1 / -1;
+}
+
+.overview-score-detail > summary {
+    min-height: 42px;
+    align-content: center;
+    padding: 4px 12px;
+    color: #b9dcea;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.overview-score-body {
+    grid-column: 1 / -1;
+    padding: 4px 12px 14px;
+    border-top: 1px solid #405269;
+}
+
+.overview-page .core-empire-watch > h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.overview-page .core-empire-watch > h2 .icon {
+    width: 18px;
+    height: 18px;
+    color: var(--gold);
+}
+
+.overview-timing {
+    text-align: end;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+}
+
+.overview-timing time {
+    display: block;
+}
+
+.core-empire-deadline.is-hostile .overview-timing {
+    color: var(--danger, #bd3636);
 }
 
 body.ui-refined[data-ui-page="vue-generale"] .overview-page .dashboard-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
-    gap: 20px;
+    grid-template-columns: minmax(0, .97fr) minmax(0, 1.03fr);
+    gap: 14px;
 }
 
 body.ui-refined[data-ui-page="vue-generale"] .overview-page .dashboard-secondary {
@@ -216,8 +320,10 @@ body.ui-refined[data-ui-page="vue-generale"] .overview-page .scene-operation {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 10px 20px;
-    padding: 18px 0;
-    border-color: var(--line);
+    padding: 12px 10px;
+    margin-top: 8px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
 }
 
 .overview-page .scene-operation > :not(.overview-queue-links) {
@@ -316,7 +422,20 @@ body.ui-refined[data-ui-page="vue-generale"] .overview-page .dashboard-journal {
     }
 
     .overview-page .empire-points dd {
-        font-size: 22px;
+        font-size: 20px;
+    }
+
+    .overview-page .overview-summary {
+        grid-template-columns: minmax(0, 1fr);
+        margin: 0 12px 12px;
+    }
+
+    body.ui-refined[data-ui-page="vue-generale"] .overview-page .hero-content {
+        padding: 16px 12px;
+    }
+
+    body.ui-refined[data-ui-page="vue-generale"] .overview-page .dashboard-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     body.ui-refined[data-ui-page="vue-generale"] .overview-page .metric-card {

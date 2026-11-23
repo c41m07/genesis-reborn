@@ -31,8 +31,21 @@ test('Rapports A : transport complet, retour filtré, effacement, thèmes et lec
     runIsolatedSql(project, 'INSERT INTO report_notice (player_universe_id,espionage_report_id) VALUES ('+Number(member)+','+spy+')');
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
+    await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto('/rapports?type=economy');
     await expect(page.locator('.report-unread-count')).toHaveText('2');
+    const reportList = page.locator('.player-report-layout .report-center');
+    const reportHelp = page.locator('.player-report-layout .player-report-help');
+    const [listDesktop, helpDesktop] = await Promise.all([reportList.boundingBox(), reportHelp.boundingBox()]);
+    expect(listDesktop.width).toBeGreaterThan(helpDesktop.width);
+    expect(listDesktop.x + listDesktop.width).toBeLessThan(helpDesktop.x);
+    expect(Math.abs(listDesktop.y - helpDesktop.y)).toBeLessThanOrEqual(1);
+    await page.screenshot({ path: info.outputPath('P01-rapports-1920x1080.png'), scale: 'css', animations: 'disabled' });
+    await page.setViewportSize({ width: 390, height: 844 });
+    const [listMobile, helpMobile] = await Promise.all([reportList.boundingBox(), reportHelp.boundingBox()]);
+    expect(listMobile.y + listMobile.height).toBeLessThan(helpMobile.y);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    await page.screenshot({ path: info.outputPath('P01-rapports-390x844.png'), scale: 'css', animations: 'disabled' });
     await expect(page.locator('body')).toHaveAttribute('data-menu-notifications-unread-journal-value', 'false');
     await expect(page.locator('.report-row .report-new-label')).toHaveText('Nouveau');
     expect(await page.evaluate(async url => (await fetch(url, { headers: { 'Sec-Purpose': 'prefetch' } })).status, '/rapports/transport/'+id)).toBe(200);
@@ -63,6 +76,8 @@ test('Rapports A : transport complet, retour filtré, effacement, thèmes et lec
     await expect(row.locator('[data-label="Livré"]')).toHaveText('1 500,00');
     await expect(row.locator('[data-label="Déposé au retour"]')).toHaveText('450,00');
     await expect(row.locator('[data-label="Perdu au retour"]')).toHaveText('−50,00');
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.screenshot({ path: info.outputPath('P16-transport-1920x1080.png'), scale: 'css', animations: 'disabled' });
     for (const width of [1440, 768, 390, 320]) {
         await page.setViewportSize({ width, height: 1000 });
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);

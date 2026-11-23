@@ -10,16 +10,22 @@
         <div><dt>Votre rôle</dt><dd>{{ own.leader.id == membership.id ? 'Commandant' : ownMember.rank.name|default('Membre') }}</dd></div>
     </dl>
 </div>
+<a class="primary guild-channel-link" href="{{ path('app_messages',{channel:'guild'}) }}">Ouvrir le canal de guilde {{ ui.icon('arrow') }}</a>
+</section>
+<div class="guild-overview-layout">
+<section class="panel guild-overview-conversation"><div class="section-heading"><h2>Derniers échanges</h2><a href="{{ path('app_messages',{channel:'guild'}) }}">Tout lire</a></div>
+{% for message in guildPreview %}<article class="guild-message-preview"><span class="guild-message-initial" aria-hidden="true">{{ message.sender.displayName|slice(0, 1)|upper }}</span><div class="guild-message-preview-body"><header><strong>{{ message.sender.displayName }}</strong><time datetime="{{ message.createdAt|date('c') }}">{{ message.createdAt|date('d/m H:i',preferences.timezone) }}</time></header><p>{{ message.content|length > 160 ? message.content|slice(0,160) ~ '…' : message.content }}</p></div></article>{% else %}<p>Le canal est prêt. Lancez la première discussion avec votre guilde.</p>{% endfor %}
+<small>Consulter cet aperçu ne marque pas le canal comme lu.</small></section>
+<div class="guild-overview-details">
+<section class="panel guild-overview-diplomacy" aria-labelledby="guild-overview-diplomacy-title">
+    <h2 id="guild-overview-diplomacy-title">Relations diplomatiques</h2>
 <dl class="guild-overview-relations core-guild-stats" aria-label="Relations diplomatiques de cette guilde">
     <div><dt>Guildes alliées</dt><dd>{{ guildRelationCounts.allies|default(0)|quantity(0) }}</dd></div>
     <div><dt>Guildes ennemies</dt><dd>{{ guildRelationCounts.enemies|default(0)|quantity(0) }}</dd></div>
 </dl>
-<a class="primary guild-channel-link" href="{{ path('app_messages',{channel:'guild'}) }}">Ouvrir le canal de guilde {{ ui.icon('arrow') }}</a>
+    <a class="secondary" href="{{ path('app_diplomacy') }}">Consulter la diplomatie</a>
 </section>
-<section class="panel guild-overview-conversation"><div class="section-heading"><h2>Derniers échanges</h2><a href="{{ path('app_messages',{channel:'guild'}) }}">Tout lire</a></div>
-{% for message in guildPreview %}<article class="guild-message-preview"><div><strong>{{ message.sender.displayName }}</strong><time datetime="{{ message.createdAt|date('c') }}">{{ message.createdAt|date('d/m H:i',preferences.timezone) }}</time></div><p>{{ message.content|length > 160 ? message.content|slice(0,160) ~ '…' : message.content }}</p></article>{% else %}<p>Le canal est prêt. Lancez la première discussion avec votre guilde.</p>{% endfor %}
-<small>Consulter cet aperçu ne marque pas le canal comme lu.</small></section>
-<div class="diplomacy-home-columns guild-overview-details">
-<section class="panel"><h2>Présentation</h2>{% if profile.description %}<p class="guild-public-description">{{ profile.description|nl2br }}</p>{% else %}<p>Votre guilde n’a pas encore ajouté de présentation.</p>{% endif %}</section>
 <section class="panel"><h2>Projets collectifs</h2><p>Retrouvez les paliers, contributions et récompenses de votre guilde.</p><div class="guild-hub-actions"><a class="secondary" href="{{ path('app_guild_projects') }}">Consulter les projets</a><a class="secondary" href="{{ path('app_map_v2') }}">Ouvrir la galaxie</a><a class="secondary" href="{{ path('app_leaderboard',{tab:'guilds'}) }}">Classement</a></div></section>
+<section class="panel"><h2>Présentation</h2>{% if profile.description %}<p class="guild-public-description">{{ profile.description|nl2br }}</p>{% else %}<p>Votre guilde n’a pas encore ajouté de présentation.</p>{% endif %}</section>
+</div>
 </div>

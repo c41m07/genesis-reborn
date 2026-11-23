@@ -303,7 +303,14 @@ test('Classement quotidien : points figés, gains, pertes et signe égal accessi
   await page.reload();
   await expect(row.locator('[data-category="points"] .ranking-change')).toHaveText(/\(\+\d/);
   await expect(row.locator('td').first().locator('.ranking-change')).toHaveText('(= 0)');
-  await page.locator('.page-heading details > summary').focus();
+  const help = page.getByRole('complementary', { name: 'Lire le classement' });
+  const headingHelp = page.getByRole('link', { name: 'Comment lire le classement' });
+  await headingHelp.focus();
+  await page.keyboard.press('Enter');
+  await expect(help).toBeFocused();
+  const disclosure = help.getByText('Comprendre le classement', { exact: true });
+  await disclosure.focus();
+  await expect(disclosure).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByText('Actualisation chaque jour à 00 h', { exact: false })).toBeVisible();
   const gained = await page.evaluate(() => fetch('/api/classement').then(response => response.json()));

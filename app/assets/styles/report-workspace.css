@@ -158,3 +158,92 @@ body[data-theme=light] .core-report-state.is-success { color:#215f43; }
 body[data-theme=light] .core-report-state.is-risk { color:#92283a; }
 .core-transport-route { display:flex; align-items:baseline; flex-wrap:wrap; gap:8px 14px; }
 .core-transport-route p { margin:0; overflow-wrap:anywhere; }
+
+/* P01/P16 : le filtre et son aide se partagent la largeur, sans fausse ligne de tableau interactive. */
+.player-report-board .player-board-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+.player-report-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+.player-report-board .player-report-nav { display:flex; flex-wrap:wrap; gap:.5rem 1rem; margin-block:0 1.15rem; }
+.player-report-board .player-report-nav .report-tabs { margin:0; gap:.4rem; padding:0; border:0; }
+.player-report-board .player-report-nav a { padding:.42rem .95rem; border:1px solid var(--line); border-radius:5px; background:var(--panel); text-decoration:none; }
+.player-report-board .player-report-nav a[aria-current] { color:var(--text); border-color:var(--accent); background:color-mix(in srgb,var(--accent) 14%,var(--panel)); box-shadow:inset 0 -2px var(--accent); }
+.player-report-layout { display:grid; grid-template-columns:minmax(0,2.42fr) minmax(17rem,1fr); gap:1.1rem; align-items:start; }
+.player-report-layout .report-center { margin:0; min-width:0; }
+.player-report-layout .report-center-heading { padding-block-end:.2rem; }
+.player-report-subtitle { margin:0; padding-inline:1.25rem; color:var(--muted); }
+.player-report-help { min-width:0; padding:1.2rem; }
+.player-report-help h2 { display:flex; align-items:center; gap:.55rem; margin:0 0 .5rem; font-size:1.2rem; }
+.player-report-help h2 svg { color:var(--accent); flex:none; width:1rem; height:1rem; }
+.player-report-help p,.player-report-help dd { color:var(--muted); }
+.player-report-help dl { margin:.8rem 0; }
+.player-report-help dl > div { padding:.8rem 0; border-bottom:1px solid var(--line); }
+.player-report-help dt { color:var(--text); font-weight:750; }
+.player-report-help dd { margin:.3rem 0 0; }
+.player-report-board .core-report-selection > strong { flex-basis:auto; }
+.player-report-board .core-report-selection button { margin-left:0; }
+.player-report-board .report-list { padding:0 1.1rem 1rem; }
+.player-report-list-heading,.player-report-board .report-row { --report-columns:minmax(0,1.52fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.88fr); }
+.player-report-list-heading { display:grid; grid-template-columns:var(--report-columns) minmax(5rem, max-content); margin:0 1.1rem; padding:.65rem .6rem .65rem 2.4rem; border:1px solid var(--line); border-radius:5px; background:color-mix(in srgb,var(--accent) 6%,var(--panel)); color:var(--text); font-size:.68rem; font-weight:750; letter-spacing:.06em; text-transform:uppercase; }
+.player-report-board .report-archive-entry { display:grid; grid-template-columns:2rem minmax(0,1fr) minmax(5rem,max-content); gap:0; padding:0 .4rem; min-width:0; border-bottom:1px solid var(--line); }
+.player-report-board .report-archive-entry:nth-child(even) { background:color-mix(in srgb,var(--accent) 3%,var(--panel)); }
+.player-report-board .report-row { display:grid; grid-template-columns:var(--report-columns); gap:.45rem; align-items:center; min-width:0; min-height:3rem; padding:.4rem .5rem; border:0; border-radius:0; background:transparent; color:var(--text); }
+.player-report-board .report-row:hover { background:color-mix(in srgb,var(--accent) 12%,var(--panel)); }
+.player-report-board .report-row.is-unread .report-copy strong { text-decoration:underline; text-underline-offset:.21em; }
+.player-report-board .report-row > .badge { justify-self:start; }
+.player-report-board .report-row :is(.report-copy,.badge,.player-report-location,time) { min-width:0; white-space:normal; overflow-wrap:anywhere; }
+.player-report-board .report-row :is(.player-report-location,time) { color:var(--muted); font-size:.8rem; }
+.player-report-board .report-select { min-width:0; width:100%; }
+.player-report-board .report-archive-action { align-self:center; justify-self:end; }
+@media (max-width:1200px) {
+    .player-report-layout { grid-template-columns:minmax(0,1.9fr) minmax(14rem,1fr); }
+    .player-report-layout .report-search { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .player-report-layout .report-search-actions { grid-column:1 / -1; }
+}
+@media (max-width:950px) {
+    .player-report-layout { grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:700px) {
+    .player-report-board .player-report-list-heading { display:none; }
+    .player-report-board .report-archive-entry { grid-template-columns:2.25rem minmax(0,1fr); column-gap:.2rem; }
+    .player-report-board .report-row { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+    .player-report-board .report-copy { grid-column:1 / -1; }
+    .player-report-board .report-archive-action { grid-column:2; justify-self:start; margin:.25rem .45rem .55rem; min-height:44px; }
+}
+
+/* P02/P03/P16 : le détail reste une vraie page ; les ancres ne créent ni faux onglet ni lecture implicite. */
+.player-report-detail .report-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+.player-report-detail .report-section-nav { gap:.45rem; padding:0; border:0; }
+.player-report-detail .report-section-nav a { padding:.45rem 1rem; border:1px solid var(--line); border-radius:5px; background:var(--panel); }
+.player-report-detail .report-section-nav a:first-child { background:color-mix(in srgb,var(--accent) 12%,var(--panel)); border-color:var(--accent); }
+.player-report-detail .player-combat-layout,
+.player-report-detail .player-intel-layout { display:grid; grid-template-columns:minmax(0,2.04fr) minmax(16rem,1fr); align-items:start; gap:1.1rem; min-width:0; }
+.player-report-detail :is(.player-combat-core,.player-transport-core,.player-intel-core,.player-intel-aside,#combat-rounds) { min-width:0; padding:1.3rem; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+.player-report-detail .player-combat-core > .panel,
+.player-report-detail .player-transport-core > .panel { padding-inline:0; border:0; box-shadow:none; background:none; }
+.player-report-detail .player-combat-core > .report-summary { padding:.75rem 1rem; border:1px solid var(--line); border-inline-start:3px solid var(--green); background:color-mix(in srgb,var(--green) 8%,var(--panel)); }
+.player-report-detail .player-combat-core > .report-summary--defeat { border-inline-start-color:var(--danger); background:color-mix(in srgb,var(--danger) 8%,var(--panel)); }
+.player-report-detail .report-totals > div { padding:1rem; border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 6%,var(--panel)); }
+.player-report-detail .report-totals > div:first-child dd { color:var(--accent); }
+.player-report-detail .player-report-note { padding:1rem; border:1px solid var(--line); border-inline-start:3px solid var(--accent); border-radius:6px; background:color-mix(in srgb,var(--accent) 10%,var(--panel)); color:var(--text); }
+.player-report-detail .combat-round { background:color-mix(in srgb,var(--accent) 6%,var(--panel)); }
+.player-report-detail .player-intel-aside h2 { margin-top:0; }
+.player-report-detail .intel-unknown ul { display:grid; gap:.65rem; margin:1rem 0; padding:0; list-style:none; }
+.player-report-detail .intel-unknown li { padding:.8rem; border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 6%,var(--panel)); color:var(--text); }
+.player-report-detail :is(#intel-details,#intel-missing) { scroll-margin-top:180px; }
+@media (max-width:960px) {
+    .player-report-detail .player-combat-layout,
+    .player-report-detail .player-intel-layout { grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:560px) {
+    .player-report-detail :is(.player-combat-core,.player-transport-core,.player-intel-core,.player-intel-aside,#combat-rounds) { padding:.85rem; }
+    .player-report-detail .report-totals > div { padding:.55rem; }
+}
+
+/* Le changement de thème sur la racine synchronise aussi les nouvelles surfaces sans classe .panel. */
+html[data-theme="light"] .player-report-detail {
+    --panel: #fff;
+    --line: #d3dce5;
+    --text: #253748;
+    --muted: #526170;
+    --accent: #24627a;
+    --gold: #805419;
+}

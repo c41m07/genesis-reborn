@@ -69,15 +69,29 @@ test('L4 A : compte structuré, confirmations et états sensibles sur ordinateur
         await expect(page.locator('.account-redesign nav [aria-current="page"]')).toHaveAttribute('href', url);
         await verifyColumns(page, width);
         if (key === 'profile') {
-          await expect(page.locator('.account-profile-form')).toHaveCount(1);
+          const profile = page.locator('.account-profile-form');
+          const sensitiveRail = page.getByRole('complementary', { name: 'Portée et actions sensibles' });
+          await expect(profile).toHaveCount(1);
+          await expect(sensitiveRail).toBeVisible();
+          const [form, rail] = await Promise.all([profile.boundingBox(), sensitiveRail.boundingBox()]);
+          if (width === 1440) {
+            expect(rail.x).toBeGreaterThanOrEqual(form.x + form.width);
+            expect(Math.abs(rail.y - form.y)).toBeLessThanOrEqual(1);
+          } else {
+            expect(rail.y).toBeGreaterThanOrEqual(form.y + form.height);
+          }
           await expect(page.locator('.profile-password')).not.toHaveAttribute('open');
         }
         if (key === 'preferences') {
           await expect(page.locator('.account-preferences-form')).toHaveCount(1);
           await expect(page.locator('.account-preferences-form button[type="submit"], .account-preferences-save')).toHaveCount(1);
           if (width === 1440) {
-            const cards = page.locator('.account-preference-columns > .panel');
-            expect((await cards.nth(1).boundingBox()).x).toBeGreaterThanOrEqual((await cards.first().boundingBox()).x + (await cards.first().boundingBox()).width);
+            const shortcuts = page.getByRole('group', { name: 'Raccourcis de la galaxie' });
+            const transports = page.getByRole('group', { name: 'Réception des transports' });
+            await expect(shortcuts).toBeVisible();
+            await expect(transports).toBeVisible();
+            const [left, right] = await Promise.all([shortcuts.boundingBox(), transports.boundingBox()]);
+            expect(right.x).toBeGreaterThanOrEqual(left.x + left.width);
           }
         }
         if (key === 'vacation') {

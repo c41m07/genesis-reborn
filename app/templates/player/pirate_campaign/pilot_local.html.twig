@@ -9,9 +9,10 @@
 {% set canDeposit = deposit_token and dossier.convoy.selected_reward.state|default('') == 'full_pending' %}
 {% set hasIntel = briefing and (briefing.formation is not null or (briefing.quote is not null and not dossier.convoy.selected_reward)) %}
 
-<div class="page-refinement pirate-campaign" data-page-sections="disabled">
+<div class="page-refinement pirate-campaign player-campaign-board" data-page-sections="disabled">
     <header class="page-heading">
         <div>
+            <p class="campaign-eyebrow">Opérations · dossier {{ dossier.selected }}</p>
             <h1>Campagne pirate</h1>
             <p>Répondez aux signaux civils et rouvrez les routes de votre secteur.</p>
         </div>
@@ -20,8 +21,15 @@
         {% endif %}
     </header>
 
+    <nav class="campaign-board-navigation" aria-label="Sections du dossier">
+        <a href="#pirate-missions-title">Missions</a>
+        <a href="#pirate-dossier-title">Dossier actif</a>
+    </nav>
     <section class="pirate-campaign-banner" aria-label="Progression de la campagne">
         <img class="pirate-campaign-art" src="{{ asset('art/genesis-reborn-planet.webp') }}" width="1448" height="1086" alt="" decoding="async">
+        <div class="campaign-board-banner-text">
+            {% include 'player/pirate_campaign/_mission_heading.html.twig' with {narrative: narrative, status: dossier.signal_pending ? 'Signal de détresse' : briefing.status, compact: true} only %}
+        </div>
         <div class="pirate-campaign-progress">
             <div>
                 <strong aria-current="step">Chapitre {{ dossier.chapter.number }}</strong>
@@ -40,15 +48,15 @@
         </div>
     </section>
 
-    <section class="panel pirate-campaign-dossier{{ hasIntel ? ' pirate-campaign-dossier--has-intel' : '' }}" aria-labelledby="pirate-mission-title">
+    <div class="campaign-board-layout">
+    <section class="panel pirate-campaign-dossier" aria-labelledby="pirate-mission-title">
         <div class="pirate-campaign-briefing">
-            {% include 'player/pirate_campaign/_mission_heading.html.twig' with {narrative: narrative, status: dossier.signal_pending ? 'Signal de détresse' : briefing.status} only %}
+            <h2 id="pirate-dossier-title">Dossier actif</h2>
+            <p>{{ narrative.message }}</p>
+            {% if narrative.guidance %}<p>{{ narrative.guidance }}</p>{% endif %}
 
             {% if dossier.signal_pending and not encounter_form and not needs_colony %}
                 <p role="status">Un départ de reconnaissance n’est pas disponible depuis la colonie active.</p>
-            {% endif %}
-            {% if briefing %}
-                {% include 'player/pirate_campaign/_briefing.html.twig' with {briefing: briefing} only %}
             {% endif %}
 
             {# Les commandes restent dans leur ordre natif ; un seul bouton porte l'accent principal. #}
@@ -73,9 +81,6 @@
             <p class="pirate-campaign-refresh"><a class="inline-link" href="{{ path('app_pirate_campaign', {missionNumber: dossier.selected}) }}">Actualiser le dossier</a></p>
         </div>
 
-        {% if hasIntel %}
-            {% include 'player/pirate_campaign/_intelligence.html.twig' with {briefing: briefing, has_durable_reward: dossier.convoy.selected_reward is not null} only %}
-        {% endif %}
     </section>
 
     <section class="panel pirate-campaign-missions" aria-labelledby="pirate-missions-title">
@@ -111,5 +116,21 @@
             {% endif %}
         </nav>
     </section>
+
+    <div class="campaign-board-side">
+        {% if hasIntel %}
+            {% include 'player/pirate_campaign/_intelligence.html.twig' with {briefing: briefing, has_durable_reward: dossier.convoy.selected_reward is not null} only %}
+        {% endif %}
+    <aside class="panel campaign-board-log" aria-labelledby="pirate-journal-title">
+        <h2 id="pirate-journal-title">Journal du dossier</h2>
+        {% if briefing %}
+            {% include 'player/pirate_campaign/_briefing.html.twig' with {briefing: briefing} only %}
+        {% endif %}
+        {% if not briefing or not briefing.dates %}
+            <p>Aucune étape chronométrée à afficher pour ce dossier.</p>
+        {% endif %}
+    </aside>
+    </div>
+    </div>
 </div>
 {% endblock %}

@@ -18,14 +18,22 @@
         {% include 'fleet/_composition_editor.html.twig' %}
         {% if editing %}<p><a href="{{ path('app_fleet_composition_new') }}">Créer une autre composition</a></p>{% endif %}
     {% else %}
-        <p class="composition-list-actions"><a class="primary" href="{{ path('app_fleet_composition_new') }}">Créer une composition</a></p>
-        <section aria-labelledby="saved-compositions-title">
-            <h2 id="saved-compositions-title" class="visually-hidden">Compositions enregistrées</h2>
-            <div class="composition-list">
+        <section class="panel composition-library" aria-labelledby="saved-compositions-title">
+            <h2 id="saved-compositions-title">Compositions enregistrées</h2>
+            <p>Une composition mémorise des quantités ; elle n’envoie aucune flotte.</p>
+            {% if compositions %}
+            <div class="table-scroll composition-library-scroll" role="region" tabindex="0" aria-label="Tableau des compositions">
+                <table class="data-table composition-library-table">
+                <thead><tr><th scope="col">Nom</th><th scope="col">Unités prévues</th><th scope="col">Actions</th></tr></thead>
+                <tbody>
                 {% for composition in compositions %}
-                    <article class="panel composition-card" data-composition="{{ composition.id }}">
-                        <div class="composition-description">
+                    {% set total = 0 %}
+                    {% for ranks in composition.ships %}{% for count in ranks %}{% set total = total + count %}{% endfor %}{% endfor %}
+                    <tr class="composition-card" data-composition="{{ composition.id }}">
+                        <th scope="row" class="composition-description">
                             <h3>{{ composition.name }}</h3>
+                            <details class="composition-quantities">
+                            <summary>Voir les quantités par rang<span class="visually-hidden"> · {{ composition.name }}</span></summary>
                             <ul>
                                 {% for slug,tiers in composition.ships %}
                                     {% for tier,count in tiers %}
@@ -33,29 +41,35 @@
                                     {% endfor %}
                                 {% endfor %}
                             </ul>
-                        </div>
-                        <div class="composition-actions">
+                            </details>
+                        </th>
+                        <td class="composition-library-total">{{ total|quantity(0) }} {{ total == 1 ? 'unité' : 'unités' }}</td>
+                        <td><div class="composition-actions">
                             <a class="primary" href="{{ path('app_fleet_composition_load',{id:composition.id}) }}">Vérifier et charger</a>
                             <div class="composition-management" role="group" aria-label="Gérer {{ composition.name }}">
                                 <a class="secondary" href="{{ path('app_fleet_composition_edit',{id:composition.id}) }}" aria-label="Modifier {{ composition.name }}">Modifier</a>
                                 <details>
                                     <summary>Supprimer<span class="visually-hidden"> {{ composition.name }}</span></summary>
                                     <form method="post">
-                                        <p>Cette suppression retire le modèle enregistré.</p>
+                                        <p>Cette suppression retire le modèle enregistré, sans modifier les vaisseaux à quai.</p>
                                         <input type="hidden" name="_token" value="{{ csrf_token('fleet_compositions') }}">
                                         <input type="hidden" name="id" value="{{ composition.id }}">
                                         <input type="hidden" name="version" value="{{ composition.version }}">
                                         <input type="hidden" name="action" value="delete">
-                                        <button class="secondary">Supprimer cette composition</button>
+                                        <button class="secondary composition-delete-confirmation">Supprimer cette composition</button>
                                     </form>
                                 </details>
                             </div>
                         </div>
-                    </article>
-                {% else %}
-                    <p class="panel">Aucune composition enregistrée. Créez une composition pour retrouver rapidement vos quantités habituelles.</p>
+                        </td>
+                    </tr>
                 {% endfor %}
+                </tbody></table>
             </div>
+            {% else %}
+                <p>Aucune composition enregistrée. Créez une composition pour retrouver rapidement vos quantités habituelles.</p>
+            {% endif %}
+            <p class="composition-list-actions"><a class="primary" href="{{ path('app_fleet_composition_new') }}">Créer une composition</a></p>
         </section>
     {% endif %}
 </div>

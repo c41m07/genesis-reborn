@@ -93,8 +93,9 @@ for (const channel of ['private', 'guild', 'global']) {
             for (const theme of ['dark', 'light']) {
                 await page.goto('/profil/preferences');await page.getByLabel('Thème de l’interface').selectOption(theme);
                 await page.getByRole('button', { name: 'Enregistrer les paramètres' }).click();await page.goto(url);
-                for (const width of [320, 390, 1440]) {
-                    await page.setViewportSize({ width, height: 900 });
+                for (const width of [320, 390, 768, 1440, 1920]) {
+                    await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
+                    await page.locator('.message-pane').scrollIntoViewIfNeeded();
                     await page.evaluate(() => document.fonts.ready.then(() => undefined));
                     // Au redimensionnement mobile, le fil peut encore faire défiler la page.
                     // Mesurer les trois éléments dans le même repère, au cours d'une seule lecture.
@@ -117,9 +118,29 @@ for (const channel of ['private', 'guild', 'global']) {
                     });
                     if (channel === 'private') {
                         await expect(page.locator('.inbox-item')).toHaveCount(14);
+                        const picker = page.locator('.inbox-picker');
+                        const summary = picker.locator('summary');
+                        if (width <= 600) {
+                            await expect(picker).not.toHaveAttribute('open', '');
+                            await summary.focus();
+                            await page.keyboard.press('Enter');
+                            await expect(picker).toHaveAttribute('open', '');
+                        }
                         expect(await page.locator('.inbox-sidebar').evaluate(sidebar => sidebar.scrollHeight > sidebar.clientHeight)).toBe(true);
+                        if (width <= 600) {
+                            await page.locator('.inbox-item').first().focus();
+                            await page.keyboard.press('Escape');
+                            await expect(picker).not.toHaveAttribute('open', '');
+                            await expect(summary).toBeFocused();
+                        }
                     }
-                    if (width !== 390) {
+                    if (width === 1920) {
+                        // Même taille CSS que S12/S13/S14, sans agrandissement de la capture.
+                        expect(await page.evaluate(() => innerHeight)).toBe(1080);
+                        await page.evaluate(() => window.scrollTo(0, 0));
+                        await page.screenshot({ path: testInfo.outputPath(`social-${channel}-${theme}-1920x1080.png`), animations: 'disabled' });
+                    }
+                    if (width === 320 || width === 1440) {
                         expect((await new AxeBuilder({ page }).include('main').analyze()).violations).toEqual([]);
                         if (channel === 'private') {
                             const help = page.locator('.message-markdown-help');

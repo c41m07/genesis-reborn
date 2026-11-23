@@ -469,7 +469,7 @@ body.authenticated.ui-refined .colony-redesign .colony-comparison th[data-compar
 }
 
 /* Les priorités de l’empire accompagnent la colonie active, en flux normal sur mobile. */
-.core-overview-top { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; align-items:start; }
+.core-overview-top { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; align-items:stretch; margin-block-end:16px; }
 .core-overview-top .empire-banner { min-width:0; }
 .core-empire-watch { min-width:0; margin:0; padding:16px; }
 .core-empire-watch h2 { margin:0 0 5px; font-size:20px; }
@@ -522,3 +522,23 @@ body.authenticated.ui-refined .colony-redesign .colony-comparison th[data-compar
     .colony-redesign .colony-comparison-toolbar .colony-resource-picker select { width: auto; }
 }
 .colony-redesign .colony-comparison [data-resource] { text-align: end; font-variant-numeric: tabular-nums; }
+
+/* P10/P19 : comparaison et cartes gardent leurs URL et leurs données propres. */
+body.authenticated.ui-refined .colony-redesign.player-planets-board .planet-board-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+body.authenticated.ui-refined .colony-redesign.player-planets-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+body.authenticated.ui-refined .colony-redesign.player-planets-board .colony-comparison-panel { padding:1.25rem; }
+body.authenticated.ui-refined .colony-redesign.player-planets-board .colony-comparison-panel h2 { margin-top:0; }
+body.authenticated.ui-refined .colony-redesign.player-planets-board .planet-index-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+body.authenticated.ui-refined .colony-redesign.player-planets-board .planet-index-card { grid-template-columns:minmax(0,1fr); gap:.8rem; }
+body.authenticated.ui-refined .colony-redesign.player-planets-board .planet-board-hero { position:relative; isolation:isolate; min-height:8rem; display:grid; align-items:end; padding:1rem; border-radius:7px; }
+body.authenticated.ui-refined .colony-redesign.player-planets-board .planet-board-hero .planet-index-art { position:absolute; z-index:-2; inset:0; width:100%; height:100%; overflow:hidden; border-radius:7px; }
+body.authenticated.ui-refined .colony-redesign.player-planets-board .planet-board-hero .planet-index-art img { width:100%; height:100%; object-fit:cover; object-position:55% 48%; }
+body.authenticated.ui-refined .colony-redesign.player-planets-board .planet-board-hero::after { position:absolute; z-index:-1; inset:0; content:""; border-radius:7px; background:linear-gradient(90deg,var(--panel) 5%,color-mix(in srgb,var(--panel) 85%,transparent) 40%,color-mix(in srgb,var(--panel) 36%,transparent)); }
+body.authenticated.ui-refined .colony-redesign.player-planets-board .planet-board-hero h2 { font-size:clamp(1.35rem,2.2vw,1.85rem); }
+body.authenticated.ui-refined .colony-redesign.player-planets-board .planet-index-actions { align-self:end; display:flex; flex-wrap:wrap; justify-content:flex-start; align-items:center; min-width:0; }
+body.authenticated.ui-refined .colony-redesign.player-planets-board .planet-index-actions > .full { width:auto; max-width:100%; }
+body.authenticated.ui-refined .colony-redesign.player-planets-board .planet-index-shortcuts { display:flex; flex-wrap:wrap; min-width:0; }
+body.authenticated.ui-refined .colony-redesign.player-planets-board .empty-state { grid-column:1 / -1; }
+@media(max-width:1000px) {
+    body.authenticated.ui-refined .colony-redesign.player-planets-board .planet-index-grid { grid-template-columns:minmax(0,1fr); }
+}

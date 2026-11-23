@@ -2,7 +2,7 @@
 {% block title %}{{ project.snapshot.name }} · Projets collectifs · Genesis Reborn
 {% endblock %}
 {% block body %}
-<div class="page-refinement guild-project-space project-redesign" data-page-sections="disabled">
+<div class="page-refinement guild-project-space project-redesign social-board social-board--guild-project" data-page-sections="disabled">
 <div class="page-heading"><div><h1>{{ project.snapshot.name }}</h1><p>Projet collectif de {{ guild.name }}</p></div><a class="secondary" href="{{ path(project.status=='active' ? 'app_guild_projects' : 'app_guild_projects_history') }}">Retour aux projets</a></div>
 {% include 'ui/guild_navigation.html.twig' with {compactNavigation:true} %}
 {% include 'ui/guild_project_navigation.html.twig' %}

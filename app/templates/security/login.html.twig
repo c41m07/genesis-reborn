@@ -2,8 +2,8 @@
 {% set access_heading_id = 'login-title' %}
 {% block title %}Connexion · Genesis Reborn{% endblock %}
 {% block access_content %}
-<h1 id="login-title">Reprendre le commandement</h1>
-<p>Connectez-vous pour retrouver vos univers.</p>
+<h1 id="login-title">Reprendre le <span>commandement</span></h1>
+<p>Connectez-vous pour retrouver votre empire.</p>
 {% if error %}<p id="login-error" class="flash error" role="alert">Connexion impossible. Vérifiez vos identifiants ou réessayez dans une minute.</p>{% endif %}
 <form class="auth-form" method="post" action="{{ path('app_login') }}">
     <label for="email">Adresse email</label>

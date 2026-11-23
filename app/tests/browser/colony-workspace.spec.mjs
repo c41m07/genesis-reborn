@@ -65,10 +65,23 @@ test('L7A A : colonies, renommage, comparaison et bilan complets sur quatre form
       await expect(card.getByRole('link', { name: 'Chantier', exact: true })).toHaveAttribute('href', `/planetes/${user.planet}?section=ships`);
       await expect(card.getByRole('link', { name: 'Flotte', exact: true })).toHaveAttribute('href', `/flottes?origin=${user.planet}`);
       await expect(page.locator('#planet-' + other.id)).toContainText('Ancienneté approximative');
-      const art = await card.locator('.planet-index-art').boundingBox();
-      const actions = await card.locator('.planet-index-actions').boundingBox();
-      if (width === 1440) expect(actions.x).toBeGreaterThan(art.x + art.width);
-      else expect(actions.y).toBeGreaterThan(art.y + art.height);
+      const [hero, art, body, actions] = await Promise.all([
+        card.locator('.planet-board-hero').boundingBox(),
+        card.locator('.planet-index-art').boundingBox(),
+        card.locator('.planet-index-body').boundingBox(),
+        card.locator('.planet-index-actions').boundingBox(),
+      ]);
+      expect(art).toEqual(hero);
+      expect(body.y).toBeGreaterThan(hero.y + hero.height);
+      expect(actions.y).toBeGreaterThanOrEqual(body.y + body.height);
+      const [first, second] = await Promise.all((await page.locator('.planet-index-card').all()).map(row => row.boundingBox()));
+      if (width === 1440) {
+        expect(second.x).toBeGreaterThan(first.x + first.width);
+        expect(Math.abs(second.y - first.y)).toBeLessThan(2);
+      } else {
+        expect(second.y).toBeGreaterThan(first.y + first.height);
+        expect(Math.abs(second.x - first.x)).toBeLessThan(2);
+      }
       await capture(page, info, 'planetes', theme, width);
       await card.locator('.planet-rename summary').click();
       await expect(card.getByLabel('Nouveau nom')).toHaveValue('Horizon');
@@ -186,7 +199,10 @@ test('L7A A : clavier, toucher, historique et formulaires sans JavaScript', asyn
     await plain.getByRole('button', { name: 'Comparer cette ressource', exact: true }).tap();
     await expect(plain).toHaveURL(/view=table&resource=electricity/);
     await expect(plain.locator('.colony-comparison td[data-resource="electricity"]')).toBeVisible();
-    await plain.getByRole('link', { name: 'Cartes', exact: true }).tap();
+    const cards = plain.getByRole('navigation', { name: 'Présentation des colonies' }).getByRole('link', { name: 'Mes colonies', exact: true });
+    await expect(cards).toHaveAttribute('href', '/planetes');
+    await cards.tap();
+    await expect(cards).toHaveAttribute('aria-current', 'page');
     await plain.locator('.planet-rename summary').tap();
     await plain.getByLabel('Nouveau nom').fill('Horizon sans script');
     await plain.getByRole('button', { name: /Enregistrer le nom de/ }).tap();

@@ -1,15 +1,104 @@
 {% extends 'base.html.twig' %}
 {% import 'ui/macros.html.twig' as ui %}
-{% block title %}Galaxie · Genesis Reborn{% endblock %}
+{% block title %}Liste des systèmes · Genesis Reborn{% endblock %}
 {% block body %}
-{% include 'ui/galaxy_tabs.html.twig' %}
-<div class="page-heading"><div><h1>Galaxie</h1><p>Un univers de possibilités. Explorez les systèmes connus et préparez vos prochaines missions.</p></div><span class="badge">{{ systems|length }} systèmes</span></div>
-<form class="galaxy-controls panel" method="get" action="{{ path('app_map') }}" data-controller="galaxy-select" data-action="change->galaxy-select#change"><div><label for="galaxy-display">Galaxie</label><select id="galaxy-display" name="galaxy">{% for galaxy in galaxies %}<option value="{{ galaxy.id }}" {{ selected_galaxy and selected_galaxy.id==galaxy.id?'selected':'' }}>{{ galaxy.name }}</option>{% endfor %}</select></div><div><label for="system-select">Système</label><select id="system-select" name="system" data-galaxy-select-target="system">{% for row in systems %}<option value="{{ row.system.id }}" {{ selected_system and selected_system.system.id==row.system.id?'selected':'' }}>{{ row.system.galaxy.coordinateCode() }}:{{ row.system.number() }} · {{ row.system.name }}</option>{% endfor %}</select></div><button class="secondary">Afficher le système</button><div class="map-legend-inline" aria-label="Légende"><span><i class="map-key owned"></i>Votre colonie</span><span><i class="map-key known"></i>Système exploré</span><span><i class="map-key"></i>Signal inconnu</span></div></form>
-<p class="map-origin-note">{% if map_origin %}Les missions rapides partent de <strong>{{ map_origin.name }}</strong> · {{ map_origin.coordinates() }}.{% else %}Sélectionnez une planète dans votre empire pour envoyer une mission rapide.{% endif %}</p>
-{% if selected_system %}
-<section class="panel galaxy-system-panel" aria-labelledby="selected-system-title"><header class="galaxy-system-heading"><div><h2 id="selected-system-title">{{ selected_system.system.galaxy.coordinateCode() }}:{{ selected_system.system.number() }} · {{ selected_system.system.name }}</h2><p>{% if selected_system.known %}{{ selected_system.planets|length }} positions planétaires cartographiées{% else %}Signal non cartographié · envoyez une flotte d’exploration pour révéler les planètes{% endif %}</p></div><span class="badge">{{ selected_system.known?'Exploré':'Inconnu' }}</span></header>
-{% if selected_system.known %}{% if selected_system.hall %}{% include 'universe/_guild_hall_marker.html.twig' with {hall:selected_system.hall} only %}{% endif %}<p class="galaxy-table-hint">Sur petit écran, faites défiler le tableau pour voir toutes les actions.</p><div class="table-scroll" role="region" tabindex="0" aria-label="Positions du système, défilement horizontal"><table class="data-table galaxy-table"><thead><tr><th scope="col">Position</th><th scope="col">Planète</th><th scope="col">Occupant / informations</th><th scope="col">Type de cible</th><th scope="col">Actions disponibles</th></tr></thead><tbody>{% for p in selected_system.planets|sort((a,b)=>a.position<=>b.position) %}<tr><td>[{{ p.coordinates() }}]</td><th scope="row"><span class="galaxy-planet-name"><i class="planet-dot" aria-hidden="true"></i>{{ p.name }}</span></th><td>{% if p.owner and p.owner.id==membership.id %}Vous{% elseif p.owner %}{{ p.owner.displayName }}{% elseif p.npcPlanet %}Faction PNJ · niveau {{ p.conquestLevel }}{% else %}Planète inhabitée{% endif %}</td><td><span class="badge">{% if p.owner and p.owner.id==membership.id %}Votre planète{% elseif p.owner and p.owner.forgotten %}Empire oublié · PNJ{% elseif p.owner %}Joueur{% elseif p.npcPlanet %}PNJ · conquérable{% else %}Colonisable{% endif %}</span></td><td class="galaxy-actions">{% include 'ui/map_conquest_actions.html.twig' with {map_action_class:'secondary'} %}{% if p.owner and p.owner.id==membership.id %}<a class="secondary" href="{{ path('app_colony',{id:p.id}) }}">Gérer {{ ui.icon('arrow') }}</a>{% elseif p.owner %}{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'spy',quick_target:p.id} %}{% elseif p.npcPlanet %}{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'spy',quick_target:p.id} %}{% else %}{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'colonize',quick_target:p.id} %}{% endif %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="galaxy-unknown-panel"><p>Les coordonnées de ce système sont connues, mais ses planètes ne sont pas encore révélées.</p>{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'explore',quick_target:selected_system.system.id} %}</div>{% endif %}
-</section>
-{% endif %}
-<details class="system-catalog"><summary>Parcourir les autres systèmes ({{ systems|length }})</summary><div class="system-grid">{% for row in systems %}<article class="panel system-card {{ row.known?'known-system':'unknown-system' }}"><p class="muted">{{ row.system.galaxy.coordinateCode() }}:{{ row.system.number() }}</p><h2><span class="star" aria-hidden="true">✦</span> {{ row.system.name }}</h2>{% if row.known %}<span class="badge">EXPLORÉ</span><ul class="planet-list">{% for p in row.planets %}<li class="{{ p.owner and p.owner.id==membership.id?'owned-planet':'' }}"><span><i class="planet-dot" aria-hidden="true"></i>{{ p.coordinates() }}</span>{% include 'ui/map_conquest_actions.html.twig' %}{% if p.owner and p.owner.id==membership.id %}<a href="{{ path('app_colony',{id:p.id}) }}">{{ p.name }}</a><a class="map-mission" href="{{ path('app_fleet_prepare',{mission:'transport',planet:p.id}) }}">Ravitailler →</a>{% elseif p.owner %}<span>{{ p.owner.forgotten ? 'Empire oublié · PNJ' : 'Colonisée par un joueur' }}</span>{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'spy',quick_target:p.id} %}{% elseif p.npcPlanet %}<span>Planète PNJ · niveau {{ p.conquestLevel }}</span>{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'spy',quick_target:p.id} %}{% else %}<span>Planète vierge</span>{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'colonize',quick_target:p.id} %}{% endif %}</li>{% endfor %}</ul>{% else %}<p class="unknown">Signal non cartographié</p><p class="muted">Planètes inconnues. Une sonde exploratrice doit découvrir ce système.</p>{% include 'ui/map_quick_mission.html.twig' with {quick_mission:'explore',quick_target:row.system.id} %}{% endif %}</article>{% endfor %}</div></details>
+<div class="galaxy-list-workspace" data-page-sections="disabled">
+    <div class="page-heading">
+        <div><p class="core-galaxy-kicker">Galaxie</p><h1>Liste des systèmes</h1><p>Retrouvez le système sélectionné entre la carte et la liste.</p></div>
+        <span class="badge">{{ systems|length }} systèmes</span>
+    </div>
+    <div class="panel galaxy-list-toolbar">
+        {% include 'ui/galaxy_tabs.html.twig' %}
+        <form class="galaxy-list-select" method="get" action="{{ path('app_map') }}" data-controller="galaxy-select" data-action="change->galaxy-select#change">
+            <div>
+                <label for="galaxy-display">Galaxie</label>
+                <select id="galaxy-display" name="galaxy">
+                    {% for galaxy in galaxies %}<option value="{{ galaxy.id }}" {{ selected_galaxy and selected_galaxy.id==galaxy.id?'selected':'' }}>{{ galaxy.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="system-select">Système</label>
+                <select id="system-select" name="system" data-galaxy-select-target="system">
+                    {% for row in systems %}<option value="{{ row.system.id }}" {{ selected_system and selected_system.system.id==row.system.id?'selected':'' }}>{{ row.system.galaxy.coordinateCode() }}:{{ row.system.number() }} · {{ row.system.name }}</option>{% endfor %}
+                </select>
+            </div>
+            <button class="secondary">Afficher le système</button>
+        </form>
+    </div>
+    <p class="map-origin-note">{% if map_origin %}Les missions rapides partent de <strong>{{ map_origin.name }}</strong> · {{ map_origin.coordinates() }}.{% else %}Sélectionnez une planète dans votre empire pour envoyer une mission rapide.{% endif %}</p>
+    <div class="galaxy-list-layout">
+        <section class="panel galaxy-index" aria-labelledby="galaxy-index-title" data-controller="galaxy-list-filter">
+            <div class="section-heading">
+                <h2 id="galaxy-index-title">Systèmes de {{ selected_galaxy.name|default('la galaxie') }}</h2>
+                <div class="galaxy-index-filter" data-galaxy-list-filter-target="field" hidden>
+                    <label for="galaxy-list-query">Rechercher dans la liste</label>
+                    <input id="galaxy-list-query" type="search" placeholder="Système ou coordonnées" data-action="input->galaxy-list-filter#update">
+                </div>
+            </div>
+            <div class="table-scroll galaxy-index-scroll" role="region" tabindex="0" aria-label="Liste des systèmes, zone défilante">
+                <table class="data-table galaxy-index-table">
+                    <thead><tr><th scope="col">Système</th><th scope="col">Découverte</th><th scope="col">Planètes</th><th scope="col">Action</th></tr></thead>
+                    <tbody>
+                    {% for row in systems %}
+                        {% set active = selected_system and selected_system.system.id == row.system.id %}
+                        {% set coordinate = row.system.galaxy.coordinateCode() ~ ':' ~ row.system.number() %}
+                        {% set url = path('app_map', {galaxy:row.system.galaxy.id,system:row.system.id,_fragment:'selected-system-title'}) %}
+                        <tr data-galaxy-list-filter-target="row" data-system-search="{{ coordinate ~ ' ' ~ row.system.name }}" class="{{ active?'active-row':'' }} {{ row.known?'known-system':'unknown-system' }}">
+                            <th scope="row"><span class="galaxy-index-coordinates">{{ coordinate }}</span><small>{{ row.system.name }}</small></th>
+                            <td>{{ row.known ? 'Exploré' : 'Signal non cartographié' }}</td>
+                            <td>{{ row.known ? row.planets|length : '—' }}</td>
+                            <td><a href="{{ url }}"{{ active?' aria-current=true':'' }} aria-label="{{ active ? 'Sélectionné' : (row.known ? 'Consulter' : 'Voir les coordonnées de') }} {{ coordinate }}">{{ active?'Sélectionné':(row.known?'Consulter':'Coordonnées') }}</a></td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4">Aucun système disponible.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p class="galaxy-index-results" role="status" data-galaxy-list-filter-target="status" hidden></p>
+            <p class="galaxy-index-guide">La sélection ouvre une fiche ; elle ne déclenche ni zoom ni mission.</p>
+        </section>
+        {% if selected_system %}
+            {% set system = selected_system.system %}
+            <section class="panel galaxy-system-panel" aria-labelledby="selected-system-title">
+                <header class="galaxy-system-heading">
+                    <div>
+                        <h2 id="selected-system-title">Informations du système</h2>
+                        <p><strong>{{ system.galaxy.coordinateCode() }}:{{ system.number() }} · {{ system.name }}</strong><br>
+                        {{ selected_system.known ? selected_system.planets|length ~ ' positions planétaires cartographiées' : 'Signal non cartographié' }}</p>
+                    </div>
+                    <span class="badge">{{ selected_system.known?'Exploré':'Inconnu' }}</span>
+                </header>
+                {% if selected_system.known %}
+                    {% if selected_system.hall %}{% include 'universe/_guild_hall_marker.html.twig' with {hall:selected_system.hall} only %}{% endif %}
+                    <ul class="galaxy-index-planets">
+                        {% for p in selected_system.planets|sort((a,b)=>a.position<=>b.position) %}
+                            <li>
+                                <div><strong>{{ p.name }}</strong> <small>[{{ p.coordinates() }}]</small></div>
+                                <p>{% if p.owner and p.owner.id==membership.id %}Votre colonie{% elseif p.owner %}{{ p.owner.forgotten ? 'Empire oublié · PNJ' : p.owner.displayName }}{% elseif p.npcPlanet %}Faction PNJ · niveau {{ p.conquestLevel }}{% else %}Planète inhabitée{% endif %}</p>
+                                <div class="galaxy-actions">
+                                    {% include 'ui/map_conquest_actions.html.twig' with {map_action_class:'secondary'} %}
+                                    {% if p.owner and p.owner.id==membership.id %}
+                                        <a class="secondary" href="{{ path('app_colony',{id:p.id}) }}">Gérer {{ ui.icon('arrow') }}</a>
+                                        <a class="secondary" href="{{ path('app_fleet_prepare',{mission:'transport',planet:p.id}) }}">Ravitailler {{ ui.icon('arrow') }}</a>
+                                    {% elseif p.owner or p.npcPlanet %}
+                                        {% include 'ui/map_quick_mission.html.twig' with {quick_mission:'spy',quick_target:p.id} %}
+                                    {% else %}
+                                        {% include 'ui/map_quick_mission.html.twig' with {quick_mission:'colonize',quick_target:p.id} %}
+                                    {% endif %}
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="galaxy-unknown-panel">
+                        <p>Les coordonnées de ce système sont connues, mais ses planètes ne sont pas encore révélées.</p>
+                        {% include 'ui/map_quick_mission.html.twig' with {quick_mission:'explore',quick_target:system.id} %}
+                    </div>
+                {% endif %}
+                <a class="primary galaxy-open-map" href="{{ path('app_map_v2',{galaxy:system.galaxy.id,system:system.id}) }}">Ouvrir la fiche sur la carte {{ ui.icon('arrow') }}</a>
+            </section>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

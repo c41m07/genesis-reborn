@@ -276,3 +276,31 @@ body.authenticated .account-redesign .form-error p {
         width: 100%;
     }
 }
+
+/* P06/P07/P17 : un formulaire à gauche, une portée et des accès séparés à droite. */
+.player-account-board .account-board-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+.player-account-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+.account-board-grid { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(16rem,1fr); gap:1.1rem; align-items:start; }
+.account-board-grid > *,
+.account-board-grid .account-board-rail > * { min-width:0; width:100%; max-width:none; margin:0; }
+.player-account-board .account-board-grid .account-identifiers { width:100%; max-width:none; }
+.account-board-rail { display:grid; gap:1rem; }
+.account-board-card { padding:clamp(1rem,2vw,1.5rem); }
+.account-board-card h2 { margin:0 0 .75rem; }
+.account-board-card dt { font-weight:750; color:var(--text); }
+.account-board-card dd { margin:.4rem 0 0; color:var(--muted); }
+.account-board-card dl > div { padding:.8rem 0; border-bottom:1px solid var(--line); }
+.account-board-card :is(a,button) { max-width:100%; white-space:normal; }
+.account-board-danger { margin:1rem 0; padding:.9rem; border:1px solid color-mix(in srgb,var(--danger) 45%,var(--line)); border-radius:6px; background:color-mix(in srgb,var(--danger) 10%,var(--panel)); color:var(--text); }
+.account-board-danger strong { color:var(--danger); }
+.account-board-danger p { margin:.45rem 0 0; }
+.account-board-grid .account-board-settings { display:grid; gap:.9rem; }
+.account-board-grid .account-preference-columns { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1rem; }
+.account-board-settings .account-preferences-save { justify-self:start; }
+.player-account-board .profile-cosmetics { max-width:none; margin-top:1rem; }
+@media (max-width:1040px) {
+    .account-board-grid .account-preference-columns { grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:850px) {
+    .account-board-grid { grid-template-columns:minmax(0,1fr); }
+}

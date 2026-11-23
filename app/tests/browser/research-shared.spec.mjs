@@ -30,10 +30,15 @@ test('Une recherche ajoutée depuis une autre colonie rejoint la même file et l
     test.setTimeout(120000);
     const { one, two, membership, project } = await colonies(page);
     const queue = page.locator('[data-queue-type="research"]');
+    const summary = queue.locator(':scope > summary');
+    const openQueue = async () => {
+        if (!await queue.evaluate(element => element.open)) await summary.press('Enter');
+    };
     await page.goto(`/planetes/${one}?section=technologies`);
     await page.locator('#item-engineering_foundations-basic').getByRole('button', { name: /Rechercher le niveau 1/ }).click();
-    await expect(queue).toContainText('Recherche commune');
-    await expect(queue).toContainText('depuis Aster');
+    await expect(summary).toContainText('Recherche commune');
+    await openQueue();
+    await expect(queue.getByText(/Recherche en cours depuis Aster/)).toBeVisible();
     runIsolatedSql(project, `DELETE FROM planet_building WHERE planet_id=${two} AND slug='lab'`);
     await page.setViewportSize({ width: 390, height: 900 });
     await page.goto(`/planetes/${two}?section=technologies`);
@@ -54,7 +59,7 @@ test('Une recherche ajoutée depuis une autre colonie rejoint la même file et l
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE player_universe_id=${membership} AND queue_type='research'`)).toBe('2');
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE player_universe_id=${membership} AND queue_type='research' AND started_at IS NOT NULL`)).toBe('1');
     expect(queryIsolatedSql(project, `SELECT item_level FROM queue_item WHERE planet_id=${two} AND queue_type='research'`)).toBe('2');
-    await queue.locator(':scope > summary').click();
+    await openQueue();
     await expect(queue.locator('.queue-detail-item')).toHaveCount(2);
     await expect(queue.locator('.queue-detail-item').nth(0)).toContainText('En cours · Aster');
     await expect(queue.locator('.queue-detail-item').nth(1)).toContainText('En attente · Beryl');
@@ -65,15 +70,25 @@ test('Une recherche ajoutée depuis une autre colonie rejoint la même file et l
     }
     await page.setViewportSize({ width: 390, height: 900 });
     await queue.screenshot({ path: info.outputPath('common-research-390.png'), animations: 'disabled' });
-    const cancel = queue.locator('.queue-detail-item').first().getByRole('link', { name: /Préparer l’annulation/ });
-    await cancel.focus(); await page.keyboard.press('Enter');
+    // Après les redimensionnements et la capture, repartir du panneau courant, pas d’un ancien nœud.
+    await openQueue();
+    const firstCommand = queue.locator('.queue-detail-item').filter({ hasText: 'En cours · Aster' });
+    const cancel = firstCommand.getByRole('link', { name: /Préparer l’annulation/ });
+    await expect(cancel).toBeVisible();
+    await cancel.press('Enter');
+    await expect(page).toHaveURL(/\/file\/\d+\/annulation/);
     await expect(page.getByRole('heading',{name:'Commandes concernées'})).toBeVisible();
-    await expect(page.locator('main')).toContainText('Dépendance annulée');
+    await page.getByText('Détail des commandes', { exact: true }).press('Enter');
+    await expect(page.getByText('Dépendance annulée', { exact: false })).toBeVisible();
     await page.getByRole('button',{name:/Confirmer l’annulation/}).click();
-    await expect(queue.locator('.operation-idle')).toContainText('Aucune commande en cours');
+    await expect(summary).toContainText('File disponible');
+    await openQueue();
+    await expect(queue.getByText('Aucune recherche en cours', { exact: true })).toBeVisible();
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE player_universe_id=${membership} AND queue_type='research'`)).toBe('0');
     await page.goto(`/planetes/${one}?section=technologies`);
-    await expect(queue.locator('.operation-idle')).toContainText('Aucune commande en cours');
+    await expect(summary).toContainText('File disponible');
+    await openQueue();
+    await expect(queue.getByText('Aucune recherche en cours', { exact: true })).toBeVisible();
     await expect(page.locator('#item-engineering_foundations-basic').getByRole('button', { name: /Rechercher le niveau 1/ })).toBeVisible();
 });
 

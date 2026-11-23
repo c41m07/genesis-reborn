@@ -6,7 +6,7 @@
 {% set guildWorkspace = tab == 'relations' or (enabled and own and tab in ['guilds', 'members']) %}
 {% set guildDiscovery = enabled and not own and tab in ['join', 'create'] %}
 {% set guildControl = enabled and own and tab in ['ranks', 'management', 'diplomacy'] %}
-<div class="page-refinement diplomacy-page{% if guildWorkspace %} guild-workspace guild-workspace--{{ tab }}{% endif %}{% if guildDiscovery %} guild-discovery guild-discovery--{{ tab }}{% endif %}{% if guildControl %} guild-control guild-control--{{ tab }}{% endif %}" data-page-sections="disabled">
+<div class="page-refinement diplomacy-page social-board{% if guildWorkspace %} guild-workspace guild-workspace--{{ tab }}{% endif %}{% if guildDiscovery %} guild-discovery guild-discovery--{{ tab }}{% endif %}{% if guildControl %} guild-control guild-control--{{ tab }}{% endif %}" data-page-sections="disabled">
 <div class="page-heading"><div><h1>{{ pageTitle }}</h1><p>{{ tab in ['relations','diplomacy'] ? 'Vos relations dans l’univers ' ~ membership.universe.name ~ '.' : 'Votre espace de guilde dans l’univers ' ~ membership.universe.name ~ '.' }}</p></div></div>
 {% if tab in ['relations','diplomacy'] %}
 {% set destinations = [] %}
@@ -25,7 +25,7 @@
 {% if incomingGuildCount %}<p class="panel received-proposals">{{ incomingGuildCount }} proposition{{ incomingGuildCount > 1 ? 's' : '' }} de guilde reçue{{ incomingGuildCount > 1 ? 's' : '' }} à traiter</p>{% endif %}
 {% if tab=='relations' %}
 <section aria-label="Relations entre commandants">
-    <div class="relation-heading"><div><h2>Alliances et rivalités</h2><p>Vos alliances et propositions en cours. Une alliance personnelle nécessite l’accord des deux commandants.</p></div>
+    <div class="panel relation-heading"><div><h2>Alliances et rivalités</h2><p>Vos alliances et propositions en cours. Une alliance personnelle nécessite l’accord des deux commandants.</p></div>
         <form method="get" action="{{ path('app_personal_relations') }}" class="relation-search" role="search">
             <label for="relation-player-search">Rechercher un joueur</label>
             <input id="relation-player-search" type="search" name="q" value="{{ search }}" minlength="2" maxlength="40" placeholder="Rechercher un joueur…" required>
@@ -60,7 +60,13 @@
     {% include 'player/_guild_ranks.html.twig' %}
 {% elseif tab=='diplomacy' and own %}
 <section aria-label="Diplomatie des guildes">
-<section class="panel"><h2>Traités et propositions</h2><p>Vos alliances, propositions et hostilités de guilde.</p>{% include 'player/_guild_search.html.twig' %}</section>
+<div class="guild-treaty-search">
+    <section class="panel relation-heading">
+        <div><h2>Traités et propositions</h2><p>Vos alliances, propositions et hostilités de guilde.</p></div>
+        {% include 'player/_guild_search.html.twig' with {showGuildSearchResults: false} %}
+    </section>
+    {% include 'player/_guild_search_results.html.twig' %}
+</div>
 <div class="section-heading"><h3>Relations de votre guilde</h3><span class="badge">{{ guildRelations|length }}</span></div>
 <div class="guild-relations-list">{% for row in guildRelations %}{% include 'player/_guild_diplomacy_card.html.twig' with {cardContext:'existing'} %}{% else %}<section class="panel"><h3>Aucune relation de guilde établie</h3><p>Recherchez une guilde pour consulter son équipage et établir une relation diplomatique.</p></section>{% endfor %}</div>
 </section>

@@ -1,18 +1,25 @@
 {% extends 'base.html.twig' %}
+{% import 'ui/macros.html.twig' as ui %}
 {% block title %}Genesis Reborn · Jeu de stratégie spatiale{% endblock %}
 {% block body %}
-<div class="entry-workspace entry-home" data-page-sections="disabled">
+<div class="entry-workspace entry-home entry-home--audit" data-page-sections="disabled">
     <section class="entry-hero" aria-labelledby="home-title">
+        {# Le fond reste décoratif ; les deux aperçus en dessous gardent leur lien d’agrandissement. #}
+        <picture class="entry-home-art">
+            <source type="image/webp" srcset="{{ asset('art/genesis-reborn-planet.webp') }}">
+            <img src="{{ asset('art/genesis-reborn-planet.png') }}" alt="" width="1448" height="1086">
+        </picture>
         <div class="entry-home-copy">
             <p class="entry-eyebrow">Stratégie spatiale par navigateur</p>
             <h1 id="home-title">Une colonie.<br>Un empire.<br><em>Votre histoire.</em></h1>
             <p class="lead">Bâtissez votre colonie, explorez des systèmes inconnus et développez votre flotte.</p>
             <div class="entry-home-actions">
-                <a class="primary" href="{{ path('app_register') }}">Créer mon compte</a>
+                <a class="primary" href="{{ path('app_register') }}">Créer mon compte {{ ui.icon("arrow") }}</a>
                 <a class="entry-text-link" href="{{ path('app_login') }}">Déjà commandant ? Connexion</a>
             </div>
         </div>
         <figure class="public-hero-preview">
+            <span class="entry-preview-tag">Aperçu du jeu</span>
             <a href="{{ asset('art/ui-preview-colony.png') }}">
                 <picture>
                     <source type="image/webp"
@@ -24,21 +31,38 @@
                     <img src="{{ asset('art/ui-preview-colony.png') }}" alt="Vue générale d’une colonie de démonstration : ressources, développement et suivi des activités" width="1440" height="1000">
                 </picture>
             </a>
-            <figcaption>Ressources, colonies et opérations réunies.</figcaption>
+            <figcaption>
+                <strong>Vue générale d’une colonie</strong>
+                <span>Ressources, colonies et opérations réunies.</span>
+            </figcaption>
         </figure>
     </section>
+    <div class="entry-home-panels">
     <section class="entry-game-introduction" aria-labelledby="game-introduction-title">
-        <h2 id="game-introduction-title">Construire, explorer, progresser.</h2>
+        <p class="entry-eyebrow">Construire · explorer · progresser</p>
+        <h2 id="game-introduction-title">Prenez le commandement.</h2>
         <p>Développez vos ressources, lancez vos recherches et préparez vos expéditions. Chaque univers possède sa propre progression.</p>
+        <ul class="entry-home-pillars">
+            <li>{{ ui.icon('buildings') }} Développement</li>
+            <li>{{ ui.icon('galaxy') }} Exploration</li>
+            <li>{{ ui.icon('fleet') }} Flottes</li>
+        </ul>
     </section>
     <section class="public-previews" aria-label="Aperçus réels du jeu">
         <article>
-            <a href="{{ asset('art/ui-preview-galaxy.png') }}"><picture><source type="image/webp" srcset="{{ asset('art/ui-preview-galaxy.webp') }}"><img src="{{ asset('art/ui-preview-galaxy.png') }}" alt="Carte interactive de la galaxie sur un compte de démonstration, avec ses systèmes et ses commandes d’exploration" width="1440" height="1000" loading="lazy"></picture></a>
-            <div class="entry-exploration-copy">
-                <h2>Explorez la galaxie</h2>
-                <p>Découvrez des systèmes inconnus, préparez vos missions et étendez votre empire.</p>
-            </div>
+            <a class="entry-galaxy-preview" href="{{ asset('art/ui-preview-galaxy.png') }}">
+                <picture>
+                    <source type="image/webp" srcset="{{ asset('art/ui-preview-galaxy.webp') }}">
+                    <img src="{{ asset('art/ui-preview-galaxy.png') }}" alt="Carte interactive de la galaxie sur un compte de démonstration, avec ses systèmes et ses commandes d’exploration" width="1440" height="1000" loading="lazy">
+                </picture>
+                <div class="entry-exploration-copy">
+                    <h2>Explorez la galaxie</h2>
+                    <p>Découvrez des systèmes inconnus, préparez vos missions et étendez votre empire.</p>
+                    <span class="entry-exploration-link">{{ ui.icon('arrow') }} Ouvrir l’aperçu de la galaxie</span>
+                </div>
+            </a>
         </article>
     </section>
+    </div>
 </div>
 {% endblock %}

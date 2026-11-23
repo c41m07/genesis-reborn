@@ -11,3 +11,21 @@
     text-align: end;
     font-variant-numeric: tabular-nums;
 }
+
+/* P14 : des filtres GET complètent, sans remplacer, les liens natifs de tri de chaque colonne. */
+.player-ranking-board .ranking-board-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+.player-ranking-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+.ranking-board-layout { display:grid; grid-template-columns:minmax(0,2.45fr) minmax(15rem,1fr); align-items:start; gap:1rem; }
+.ranking-board-main,.ranking-board-help { padding:1.2rem; min-width:0; }
+.ranking-board-help h2 { margin-top:0; }
+.ranking-board-help summary { min-height:44px; cursor:pointer; color:var(--accent); }
+.ranking-board-filters { display:flex; flex-wrap:wrap; gap:.7rem; align-items:end; margin-bottom:1rem; }
+.ranking-board-filters > div { flex:0 1 14rem; min-width:0; }
+.ranking-board-filters select { display:block; width:100%; min-height:44px; }
+.ranking-board-filters button { min-height:44px; }
+@media(max-width:1030px) {
+    .ranking-board-layout { grid-template-columns:minmax(0,1fr); }
+}
+
+/* Le raccourci d'aide reste utilisable lorsque le tableau passe avant l'aide en mobile. */
+#ranking-board-help { scroll-margin-block-start: var(--shell-sticky-top, 9rem); }

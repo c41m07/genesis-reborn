@@ -2,6 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
     static targets = ['summary'];
+    static values = { mobileOpen: Boolean };
 
     connect() {
         this.mobile = matchMedia('(max-width: 600px)');
@@ -16,12 +17,13 @@ export default class extends Controller {
     }
 
     sync() {
-        // Le HTML reste déplié sans JavaScript ; sur ordinateur, le résumé est masqué.
+        // Sur mobile, seule la boîte sans conversation active s'ouvre directement.
         const focusedElement = document.activeElement;
-        const focusSummary = this.mobile.matches && this.element.contains(focusedElement);
+        const shouldOpen = !this.mobile.matches || this.mobileOpenValue;
+        const focusSummary = !shouldOpen && this.element.contains(focusedElement);
         const focusCurrentPage = !this.mobile.matches
             && (focusedElement === this.summaryTarget || this.summaryLostFocus);
-        this.element.open = !this.mobile.matches;
+        this.element.open = shouldOpen;
         // Un changement de format ne doit pas laisser le focus dans un élément masqué.
         if (focusSummary) {
             this.summaryTarget.focus();

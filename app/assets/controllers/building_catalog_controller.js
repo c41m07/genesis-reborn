@@ -106,8 +106,13 @@ export default class extends Controller {
             });
         }
         if (new URLSearchParams(location.search).get('focusItem') === '1') {
+            const scheduledHash = location.hash;
+            const previousFocus = document.activeElement;
             requestAnimationFrame(() => {
-                if (tab.isConnected) tab.focus({ preventScroll: true });
+                // Une ancre ne reprend pas la main après un nouveau focus ou une nouvelle ancre.
+                if (tab.isConnected && location.hash === scheduledHash && document.activeElement === previousFocus) {
+                    tab.focus({ preventScroll: true });
+                }
             });
         }
     }

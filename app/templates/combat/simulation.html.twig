@@ -1,13 +1,17 @@
 {% extends 'base.html.twig' %}
 {% block title %}Simulateur de combat · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="strategic-page simulation-workspace">
-<div class="page-heading"><div><h1>Simulateur de combat</h1><p>Dix combats avec la même configuration et des graines distinctes, pour une estimation sans garantie.</p></div><a class="secondary" href="{{ path('app_fleet_prepare') }}">Préparer une mission</a></div>
+<div class="strategic-page simulation-workspace player-simulation-board">
+<div class="page-heading"><div><p class="simulation-board-eyebrow">Opérations · outil stratégique</p><h1>Simulateur de combat</h1><p>Dix combats avec la même configuration et des graines distinctes, pour une estimation sans garantie.</p></div><a class="secondary" href="{{ path('app_fleet_prepare') }}">Préparer une mission</a></div>
 <p class="panel">Deux camps paramétrés, sans occupation ni intervention future non saisie. Limite : {{ max_units }} unités au total et budget de calcul borné. Aucun vaisseau envoyé, aucune ressource dépensée. Les pertes calculées restent fictives.</p>
 <form method="get" class="panel"><label for="simulation-own">Reprendre mes vaisseaux disponibles</label><select id="simulation-own" name="own_planet">{% for planet in planets %}<option value="{{ planet.id }}">{{ planet.name }}</option>{% endfor %}</select>{% if intel %}<input type="hidden" name="report" value="{{ intel.id }}">{% endif %}<button class="secondary">Charger mes forces</button></form>
 {% if intel %}<section class="panel" aria-label="Source des renseignements"><h2>Rapport d’espionnage du {{ intel.date|date('d/m/Y à H:i',preferences.timezone) }}</h2><p>Ces renseignements datés peuvent être obsolètes. Catégories révélées : {{ intel.known ? intel.known|map(category=>{ships:'vaisseaux',research:'recherches',defenses:'défenses',fortress:'forteresse'}[category])|join(', ') : 'aucune' }}. Toute catégorie absente reste inconnue ; ses valeurs ci-dessous sont des hypothèses à confirmer. Toute modification manuelle est également une hypothèse.</p><a href="{{ path('app_espionage_report',{id:intel.id}) }}">Relire le rapport source</a></section>{% endif %}
 {% if error %}<p class="flash error" role="alert">{{ error }}</p>{% endif %}
-<form method="post" class="panel simulation-form">
+<nav class="simulation-board-nav" aria-label="Parcours du simulateur">
+    <a href="#simulation-scenario">Scénario</a>
+    {% if result %}<a href="#simulation-result">Résultats</a>{% endif %}
+</nav>
+<form method="post" class="panel simulation-form" id="simulation-scenario">
 <input type="hidden" name="_token" value="{{ csrf_token('combat_simulation') }}"><input type="hidden" name="report" value="{{ intel.id|default(0) }}">
 <div class="strategic-grid">{% for camp,title in {attacker:'Attaquant',defender:'Défenseur'} %}<section><h2>{{ title }}</h2>
 <label for="arrival-{{ camp }}">Arrivée des vaisseaux au round</label><input id="arrival-{{ camp }}" name="forces[{{ camp }}][arrival]" type="number" min="1" max="10" value="{{ forces[camp].arrival|default(1) }}" required>
@@ -16,9 +20,11 @@
 </tbody></table></div></details>{% endif %}{% endfor %}
 {% if camp=='defender' %}<details><summary>Forteresse · niveaux supposés{% if intel and 'fortress' not in intel.known %} · inconnus dans le rapport{% endif %}</summary>{% for tier,label in {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}<label for="fortress-{{ tier }}">Forteresse · {{ label }}</label><input id="fortress-{{ tier }}" name="forces[defender][fortress][{{ tier }}]" type="number" min="0" max="25" value="{{ forces.defender.fortress[tier]|default(0) }}" required>{% endfor %}</details>{% endif %}
 </section>{% endfor %}</div>
+<div class="simulation-board-options"><div>
 <label for="simulation-seed">Graine de départ reproductible</label><input id="simulation-seed" name="seed" type="number" min="0" max="4294967295" value="{{ seed }}" required aria-describedby="simulation-seed-help">
 <p id="simulation-seed-help">La même graine de départ reproduit la série de dix combats. Chaque combat utilise une graine distincte.</p>
-<label><input type="checkbox" name="assumptions" value="1" required> Je confirme les hypothèses saisies, notamment les valeurs zéro pour les renseignements inconnus. Ce scénario ne prédit pas un combat réel.</label>
+</div><label class="simulation-board-assumptions"><input type="checkbox" name="assumptions" value="1" required> Je confirme les hypothèses saisies, notamment les valeurs zéro pour les renseignements inconnus. Ce scénario ne prédit pas un combat réel.</label>
+</div>
 <button class="primary">Simuler 10 combats</button>
 </form>
 {% set unit_labels=choices.ships|merge(choices.defenses) %}{% set tier_labels={basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}

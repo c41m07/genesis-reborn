@@ -92,8 +92,11 @@ test('À la limite, le tableau des docks et des recherches conserve tous les eff
     await page.goto(colony+'?section='+section+'&showLockedItems=1&focusItem=1#'+hash);
     const opener = page.locator('#'+hash).getByRole('button', { name: 'Informations sur '+label, exact: true });
     const dialog = page.getByRole('dialog', { name: label, exact: true });
-    await opener.focus();
-    await page.keyboard.press('Enter');
+    const rank = page.locator('#building-tab-'+slug+'-'+tier);
+    // L’ancre s’applique avant que le visiteur poursuive au clavier.
+    await expect(rank).toBeFocused();
+    await expect(opener).toBeEnabled();
+    await opener.press('Enter');
     await expect(dialog).toBeVisible();
     const table = dialog.getByRole('table', { name: 'Effet cumulé des rangs' });
     await expect(table.getByRole('columnheader')).toHaveText(['Effet', 'Actuellement']);

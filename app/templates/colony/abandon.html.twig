@@ -32,9 +32,10 @@
     <h3>Commandes annulées sans remboursement</h3>
     <ul>{% for order in preview.orders %}<li>{{ order.label }} · {{ tiers[order.tier].label|default(order.tier) }}{% if order.level %} · niveau {{ order.level }}{% else %} · {{ order.quantity }} unité(s){% endif %}</li>{% else %}<li>Aucune commande.</li>{% endfor %}</ul>
 </section>
-<section class="panel colony-abandon-confirmation" aria-labelledby="abandon-confirm-title">
+<section class="panel colony-abandon-confirmation project-confirmation" aria-labelledby="abandon-confirm-title">
     {% if not preview.blockers %}
     <h2 id="abandon-confirm-title">Confirmer l’abandon</h2>
+    <p class="confirmation-risk"><strong>Action irréversible.</strong> La liste des pertes reste consultable avant de confirmer.</p>
     <form method="post" action="{{ path('app_planet_abandon',{id:planet.id}) }}" class="abandon-confirmation">
         <input type="hidden" name="_token" value="{{ csrf_token('abandon-'~membership.id~'-'~planet.id) }}">
         <input type="hidden" name="membership" value="{{ membership.id }}">
@@ -43,7 +44,7 @@
         <label for="abandon-name">Retapez le nom de la colonie pour confirmer</label>
         <p id="abandon-name-help">Nom attendu : <strong>{{ planet.name }}</strong>. Cette action est irréversible.</p>
         <input id="abandon-name" name="name" type="text" maxlength="160" required autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="abandon-name-help">
-        <div class="abandon-actions"><a class="secondary" href="{{ path('app_colony',{id:planet.id}) }}">Conserver cette colonie</a><button class="danger" type="submit">Abandonner définitivement {{ planet.name }}</button></div>
+        <div class="abandon-actions confirmation-buttons"><a class="secondary" href="{{ path('app_colony',{id:planet.id}) }}">Conserver cette colonie</a><button class="danger" type="submit">Abandonner définitivement {{ planet.name }}</button></div>
     </form>
     {% else %}
     <h2 id="abandon-confirm-title">Conserver cette colonie</h2>

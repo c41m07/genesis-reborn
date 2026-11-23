@@ -2,13 +2,19 @@ import { test, expect } from './support/isolated-test.mjs';
 import { prepareOwnedColony, runIsolatedSql, queryIsolatedSql } from './support/game-fixtures.mjs';
 
 async function checkLockedArtwork(page, panel, tab) {
-    const image=panel.locator('.catalog-card-art img');
-    await page.mouse.move(0,0);await tab.focus();
-    await expect(image).toHaveCSS('filter','grayscale(1)');
-    await image.hover();await expect(image).toHaveCSS('filter','none');
-    await page.mouse.move(0,0);await expect(image).toHaveCSS('filter','grayscale(1)');
-    await panel.locator('.requirement a').first().focus();await expect(image).toHaveCSS('filter','none');
-    await tab.focus();await expect(image).toHaveCSS('filter','grayscale(1)');
+    const image = panel.locator('.catalog-card-art img');
+    const state = panel.locator('.catalogue-family-mark');
+    // Le verrou reste lisible même quand l’image ne change plus de couleur au focus.
+    await page.mouse.move(0, 0);
+    await tab.focus();
+    await expect(state).toContainText('Verrouillé');
+    await expect(tab).toHaveAccessibleDescription(/Rang verrouillé, consulter les prérequis/);
+    await expect(image).toHaveCSS('filter', 'none');
+    await image.hover({ timeout: 3500 });
+    await expect(state).toContainText('Verrouillé');
+    await panel.locator('.requirement a').first().focus();
+    await expect(state).toContainText('Verrouillé');
+    await expect(panel.locator('.catalog-blocked-action')).toBeDisabled();
 }
 
 test('Les rangs bâtiments partagent une carte accessible et conservent les filtres au rafraîchissement', async ({ page, browser }) => {
@@ -67,7 +73,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(tab('superior').locator('.building-rank-cross')).toBeVisible();
     await expect(panel('superior').locator('img')).toHaveAttribute('src', /power_plant__superior.webp$/);
     await expect(panel('superior').locator('.requirement')).toContainText('Nécessite');
-    await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
+    await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','none');
     await checkLockedArtwork(page,panel('superior'),tab('superior'));
     await expect(panel('superior').locator('.card-body>form')).toHaveCount(0);
     await toggle.click();
@@ -122,7 +128,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
         await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('object-fit', 'cover');
         const positions = await family.getByRole('tab').evaluateAll(tabs => tabs.map(tab => Math.round(tab.getBoundingClientRect().top)));
         expect(new Set(positions).size).toBe(1);
-        await expect(tab('intermediate')).toHaveAccessibleName(/Interm\./);
+        await expect(tab('intermediate')).toHaveAccessibleName(width === 1920 ? /^Intermédiaire\b/ : /^Interm(?:\.|édiaire\b)/);
         await expect(tab('intermediate')).toHaveAccessibleDescription(/Intermédiaire/);
         const overflow = await family.getByRole('tab').evaluateAll(tabs => tabs.filter(tab => tab.scrollWidth > tab.clientWidth).map(tab => ({ label: tab.innerText, available: tab.clientWidth, content: tab.scrollWidth })));
         expect(overflow, `Onglets à ${width} px`).toEqual([]);
@@ -194,7 +200,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(fallback.locator('#item-power_plant-superior')).toBeHidden();
     await fallback.getByRole('switch', { name: 'Afficher les éléments verrouillés' }).click();
     await expect(fallback.locator('#item-power_plant-superior')).toBeVisible();
-    await expect(fallback.locator('#item-power_plant-superior .catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
+    await expect(fallback.locator('#item-power_plant-superior .catalog-card-art img')).toHaveCSS('filter','none');
     await expect(fallback.locator('#item-power_plant-basic').getByRole('button',{name:/^Il manque :/})).toBeDisabled();
     await noScript.close();
     for (const theme of ['dark','light']) {
@@ -208,7 +214,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
             await family.screenshot({path:`output/playwright/catalogue-bloque-${theme}-${width}.png`});
             await tab('superior').click();
-            await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
+            await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','none');
         }
     }
     sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'power_plant','intermediate',25)`);
@@ -288,7 +294,10 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
         await tab('superior').click();
         for (const width of [1920, 1440, 390, 320]) {
             await page.setViewportSize({ width, height: 1000 });
-            expect(await family.getByRole('tab').evaluateAll(tabs => tabs.every(tab => tab.scrollWidth <= tab.clientWidth))).toBe(true);
+            const overflowingTabs = await family.getByRole('tab').evaluateAll(tabs => tabs
+                .filter(tab => tab.scrollWidth > tab.clientWidth)
+                .map(tab => ({ text: tab.innerText, width: tab.clientWidth, actual: tab.scrollWidth })));
+            expect(overflowingTabs, 'Onglets ' + group + ' à ' + width + ' px').toEqual([]);
             const costRows = await panel('superior').locator('.building-costs > span').evaluateAll(costs => costs.map(cost => Math.round(cost.getBoundingClientRect().top)));
             if (group === 'ships') expect(costRows).toHaveLength(5);
             expect(new Set(costRows).size, `${group} : ressources sur une ligne à ${width} px`).toBe(1);

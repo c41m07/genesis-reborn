@@ -1,5 +1,6 @@
 {% import 'ui/macros.html.twig' as ui %}
-<aside class="pirate-campaign-intel" aria-label="Renseignements de la mission">
+<aside class="panel pirate-campaign-intel" aria-labelledby="pirate-intelligence-title">
+    <h2 id="pirate-intelligence-title" class="visually-hidden">Renseignements de la mission</h2>
     {% if briefing.formation is not null %}
         <section aria-labelledby="pirate-intel-title">
             <h3 id="pirate-intel-title">{{ ui.icon('fleet') }} Flotte pirate révélée</h3>
