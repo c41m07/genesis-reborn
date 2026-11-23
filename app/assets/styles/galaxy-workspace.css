@@ -54,7 +54,8 @@
 }
 .gv2-workspace[data-view=galaxy] .gv2-system-panel .gv2-planet-list { grid-template-columns:1fr; }
 .gv2-workspace .gv2-system-panel .gv2-planet-choice,
-.gv2-workspace .gv2-system-panel .gv2-planet-choice-name { min-width:0; overflow-wrap:anywhere; }
+.gv2-workspace .gv2-system-panel .gv2-planet-choice-name,
+.gv2-workspace .gv2-system-panel .gv2-planet-owner { min-width:0; white-space:normal; overflow-wrap:anywhere; }
 .galaxy-v2.gv2-workspace[data-view=galaxy] .gv2-map-settings { display:block; }
 .gv2-workspace .gv2-enter-system { display:none; }
 .gv2-workspace[data-view=galaxy] .gv2-enter-system { display:flex; min-height:44px; margin-bottom:12px; }

@@ -81,7 +81,7 @@
     background:#8f2834;
 }
 
-.project-confirmation .confirmation-buttons :is(a,button):focus-visible,
+body.authenticated.ui-refined .colony-redesign .project-confirmation .confirmation-buttons :is(a,button):focus-visible,
 .project-confirmation summary:focus-visible {
     outline:2px solid var(--accent);
     outline-offset:3px;

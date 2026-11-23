@@ -447,6 +447,8 @@ body.authenticated .fleet-redesign .core-fleet-workspace > .fleet-operations-rai
 .core-fleet-composition-layout, .core-fleet-steps, .core-fleet-side { min-width:0; }
 .core-fleet-side { display:grid; gap:14px; align-content:start; }
 .core-fleet-side .fleet-mission-summary-card { padding:14px; }
+/* Le récap se trouve dans le formulaire, mais sa liste n’est pas un message d’erreur. */
+body.authenticated .fleet-redesign .core-fleet-side .fleet-mission-summary-card > ul { color:var(--text); }
 .core-fleet-recap { padding:18px; min-width:0; align-self:start; }
 .core-fleet-recap h2 { display:flex; align-items:center; gap:7px; margin:0 0 12px; font-size:19px; }
 .core-fleet-recap h2 .icon { width:18px; height:18px; color:var(--accent); }
