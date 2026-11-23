@@ -893,13 +893,13 @@ body.authenticated .social-board--messages .message-pane {
 }
 
 body.authenticated .social-board--messages .inbox-layout--selected .message-pane {
-    min-height: clamp(520px, calc(100dvh - 420px), 650px);
+    min-height: min(clamp(520px, calc(100dvh - 420px), 650px), var(--message-pane-available, 650px));
 }
 
 body.authenticated .social-board--messages .message-thread {
     flex: 1 1 250px;
     height: auto;
-    min-height: min(36vh, 290px);
+    min-height: min(36vh, 290px, var(--message-thread-available, 290px));
     max-height: min(52dvh, 460px);
     padding: clamp(12px, 1.2vw, 22px);
 }

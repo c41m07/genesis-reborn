@@ -12,7 +12,7 @@
     <aside class="panel inbox-sidebar" aria-label="Boîte de réception">
         <header class="inbox-heading"><h2>Messagerie</h2>{% if unreadPrivate %}<span class="badge">{{ unreadPrivate }} non lu{{ unreadPrivate>1?'s':'' }}</span>{% endif %}</header>
         {# Le menu est ouvert en HTML : les contacts restent accessibles sans JavaScript. #}
-        <details class="inbox-picker" open data-controller="space-navigation" data-action="keydown.esc->space-navigation#close focusout->space-navigation#captureFocus">
+        <details class="inbox-picker" open data-controller="space-navigation" data-space-navigation-mobile-open-value="{{ (not peer and activeChannel not in ['guild', 'global']) ? 'true' : 'false' }}" data-action="keydown.esc->space-navigation#close focusout->space-navigation#captureFocus">
             <summary data-space-navigation-target="summary">{{ ui.icon('notifications') }} Conversations <span aria-hidden="true">⌄</span></summary>
         <form class="message-search" method="get" action="{{ path('app_messages') }}" role="search">
             <label for="message-recipient-search">Rechercher un joueur</label>
