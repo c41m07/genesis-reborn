@@ -1265,8 +1265,9 @@ body[data-theme=light] .entry-universes--audit .entry-universe-state--scheduled 
     min-height: 34px;
 }
 
+/* La scène retrouve l’emphase de la maquette par la graisse, sans dépasser le titre du formulaire. */
 .entry-access--login .entry-access-context .entry-context-title {
-    font-size: clamp(29px, 2.72vw, 52px);
+    font-weight: 800;
 }
 
 body .entry-public-header .entry-public-navigation [aria-current=page] {
