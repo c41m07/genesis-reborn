@@ -76,6 +76,8 @@ test('L7C : système et globe conservent clic, rotation, zoom, gestes tactiles e
     await page.getByRole('searchbox').fill(home.name);
     await page.locator('.gv2-search-results button').filter({hasText:home.name}).first().click();
     await expect(map).toHaveAttribute('data-view','galaxy');
+    await expect(page.locator('.core-galaxy-toolbar').getByRole('link', { name: 'Liste des systèmes' })).toBeVisible();
+    await expect(page.locator('.gv2-inspection').getByText('Journal de flotte', { exact: false })).toBeVisible();
     const inspector=page.locator('.gv2-system-panel'), scene=page.locator('.gv2-scene');
     await expect(inspector).toContainText('Système sélectionné');
     await expect.poll(async()=>{const panel=await inspector.boundingBox(), canvas=await scene.boundingBox();return panel.x>=canvas.x+canvas.width;}).toBe(true);

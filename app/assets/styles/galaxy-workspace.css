@@ -23,14 +23,29 @@
 /* Les deux emplacements existent dès l'ouverture : pas de repère couvert ni de recadrage à la sélection. */
 .gv2-preview-placeholder { display:none; }
 .gv2-workspace[data-view=galaxy] .gv2-map-stage {
-    display:grid; grid-template-columns:minmax(0,1fr) clamp(220px,27%,320px); grid-template-rows:minmax(0,1fr) auto; gap:12px;
+    display:grid; grid-template-columns:minmax(0,1fr) clamp(270px,26%,430px); gap:14px;
+    align-items:stretch; min-width:0;
 }
-.gv2-workspace[data-view=galaxy] .gv2-scene { grid-area:1/1/3/2; min-width:0; }
-/* La mini-carte reste utilisable, sans intercepter les repères du canvas principal. */
-.gv2-workspace[data-view=galaxy] .gv2-minimap { grid-area:2/2; position:static; width:auto; margin:0 12px 0 0; }
+.gv2-workspace[data-view=galaxy] .gv2-scene {
+    grid-area:1/1; min-width:0;
+    height:clamp(530px,calc(100svh - 370px),720px);
+    border:1px solid var(--line); border-radius:6px;
+}
+/* Réserver la largeur du rail avant toute sélection ; elle ne change pas le zoom ni la surface de clic. */
+.gv2-workspace[data-view=galaxy] .gv2-inspection {
+    display:flex; flex-direction:column; gap:12px;
+    grid-area:1/2; min-width:0; padding:14px;
+    border:1px solid var(--line); border-radius:6px; background:var(--panel);
+}
+.gv2-workspace[data-view=galaxy] .gv2-minimap {
+    position:static; width:auto; margin:0; box-shadow:none;
+}
+.gv2-workspace[data-view=galaxy] .gv2-inspection .gv2-flight-log {
+    margin:0; box-shadow:none;
+}
 .gv2-workspace[data-view=galaxy] .gv2-system-panel,
 .gv2-workspace[data-view=galaxy] .gv2-preview-placeholder {
-    grid-area:1/2; min-width:0; max-height:460px; margin:0 12px 0 0; overflow:auto; overscroll-behavior:contain;
+    min-width:0; max-height:470px; margin:0; overflow:auto; overscroll-behavior:contain;
 }
 .gv2-workspace[data-view=galaxy] .gv2-map-stage:has(.gv2-system-panel[hidden]) .gv2-preview-placeholder {
     display:flex; align-items:center; justify-content:center; padding:12px; margin-block:0;
@@ -60,13 +75,15 @@
 .gv2-workspace .gv2-breadcrumbs:has(>[hidden]):not(:has(>button:not([hidden]))) { display:none; }
 @media(max-width:1000px) {
     .gv2-workspace[data-view=galaxy] .gv2-map-stage {
-        grid-template-columns:minmax(0,1fr); grid-template-rows:104px auto auto; gap:8px;
+        grid-template-columns:minmax(0,1fr) minmax(105px,30%); grid-template-rows:104px auto auto; gap:8px;
     }
-    .gv2-workspace[data-view=galaxy] .gv2-scene { grid-area:2/1; height:350px; }
-    .gv2-workspace[data-view=galaxy] .gv2-minimap { grid-area:3/1; width:114px; justify-self:end; }
+    .gv2-workspace[data-view=galaxy] .gv2-inspection { display:contents; }
+    .gv2-workspace[data-view=galaxy] .gv2-scene { grid-area:2/1/3/3; height:350px; }
+    .gv2-workspace[data-view=galaxy] .gv2-minimap { grid-area:3/2; width:auto; }
+    .gv2-workspace[data-view=galaxy] .gv2-inspection .gv2-flight-log { grid-area:3/1; }
     .gv2-workspace[data-view=galaxy] .gv2-system-panel,
     .gv2-workspace[data-view=galaxy] .gv2-preview-placeholder {
-        grid-area:1/1; max-height:104px; margin:0 12px; padding:8px;
+        grid-area:1/1/2/3; max-height:104px; margin:0; padding:8px;
     }
     .gv2-workspace[data-view=galaxy] .gv2-system-panel>[data-galaxy-v2-target=systemContent] {
         display:grid; grid-template-columns:minmax(0,1fr) minmax(0,auto); gap:4px 8px;
@@ -102,8 +119,30 @@
 .core-galaxy-heading { align-items:baseline; justify-content:flex-start; gap:12px 20px; margin-bottom:10px; }
 .core-galaxy-kicker,.core-galaxy-selection-label { color:var(--accent); font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
 .core-galaxy-kicker { margin:0; }
-.core-galaxy-toolbar { display:flex; flex-wrap:wrap; gap:0 6px; align-items:center; padding:6px 8px; }
-.gv2-workspace .core-galaxy-toolbar .gv2-hud { flex:1 1 420px; padding:4px 6px; }
+.core-galaxy-toolbar {
+    display:flex; flex-wrap:wrap; gap:4px 8px; align-items:center;
+    padding:6px; margin-bottom:12px; min-width:0;
+    border:1px solid var(--line); border-radius:6px; background:var(--panel);
+}
+.gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs { flex:0 1 auto; margin:0; gap:6px; }
+.gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a { min-height:34px; border-radius:4px; }
+.gv2-workspace[data-view] .gv2-map-stage .gv2-scene .gv2-locator {
+    position:absolute; z-index:3; inset:12px auto auto 12px;
+    min-width:0; max-width:55%; padding:6px 10px; pointer-events:none;
+    border:1px solid var(--line); border-radius:5px; background:#0c1929e8;
+    color:#c7e0ed; font-size:11px; overflow-wrap:anywhere;
+}
+.gv2-workspace[data-view] .gv2-map-stage .gv2-scene .gv2-map-controls {
+    position:absolute; inset:12px 12px auto auto; max-width:48%;
+    gap:5px; justify-content:flex-end; padding:0; z-index:6;
+}
+.gv2-workspace[data-view] .gv2-map-stage .gv2-scene .gv2-map-controls button { min-width:40px; min-height:40px; }
+.gv2-workspace[data-view] .gv2-map-stage .gv2-scene .gv2-map-help {
+    display:block; position:absolute; inset:auto auto 12px 12px; z-index:3;
+    max-width:min(calc(100% - 24px),65%); padding:8px 10px; pointer-events:none;
+    border:1px solid var(--line); border-radius:5px; background:#0c1929eb; color:#cfdeea;
+}
+.gv2-workspace .core-galaxy-toolbar .gv2-hud { flex:1 1 360px; min-width:0; padding:4px 6px; }
 .gv2-workspace .core-galaxy-toolbar .gv2-layout-modes { padding:4px 6px; }
 .gv2-workspace .core-galaxy-toolbar .gv2-layout-note { padding:4px 6px; }
 .gv2-workspace .gv2-enter-system {
@@ -120,7 +159,7 @@
     gap:12px;
 }
 .gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-scene { grid-area:1/1; min-width:0; }
-.gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-map-stage > :is(.gv2-system-panel,.gv2-planet-panel) {
+.gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-inspection {
     grid-area:1/2;
     min-width:0;
     max-height:560px;
@@ -130,12 +169,16 @@
 }
 @media(max-width:1000px) {
     .gv2-workspace .core-galaxy-toolbar .gv2-hud { flex-basis:100%; }
+    .gv2-workspace[data-view] .gv2-map-stage .gv2-scene .gv2-map-controls { max-width:62%; }
+    .gv2-workspace[data-view] .gv2-map-stage .gv2-scene .gv2-map-controls button { min-width:44px; min-height:44px; }
+    .gv2-workspace[data-view] .gv2-map-stage .gv2-scene .gv2-locator { max-width:34%; }
+    .gv2-workspace[data-view] .gv2-map-stage .gv2-scene .gv2-map-help { max-width:calc(100% - 24px); }
     .gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-map-stage:has(.gv2-planet-panel:not([hidden]),.gv2-system-panel:not([hidden])) {
         grid-template-columns:minmax(0,1fr);
         grid-template-rows:auto auto;
         gap:8px;
     }
-    .gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-map-stage > :is(.gv2-system-panel,.gv2-planet-panel) {
+    .gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-inspection {
         grid-area:1/1;
         max-height:170px;
         margin:0 12px;
