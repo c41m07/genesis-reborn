@@ -152,7 +152,7 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
     await expect(page.getByRole('status')).toHaveText('Saisissez au moins deux caractères.');
     await page.goto('/guildes');
     const directory = page.getByRole('region', { name: 'Guildes qui recrutent', exact: true });
-    await expect(directory.getByRole('link', { name: guildName, exact: true })).toHaveAttribute('href', '/guildes/' + guildId);
+    await expect(directory.getByRole('link', { name: 'Voir la guilde ' + guildName, exact: true })).toHaveAttribute('href', '/guildes/' + guildId);
     await expect(directory.getByRole('link')).toHaveCount(2);
     await expect(directory.locator('form')).toHaveCount(0);
     await expect(page.getByRole('searchbox', { name: 'Rechercher une guilde', exact: true })).toBeVisible();
@@ -162,7 +162,7 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
     try {
       const native = await nativeContext.newPage();
       await native.goto('/guildes');
-      await expect(native.getByRole('region', { name: 'Guildes qui recrutent', exact: true }).getByRole('link', { name: guildName, exact: true })).toBeVisible();
+      await expect(native.getByRole('region', { name: 'Guildes qui recrutent', exact: true }).getByRole('link', { name: 'Voir la guilde ' + guildName, exact: true })).toBeVisible();
       await native.goto('/guildes?q=Vig');
       await expect(native.getByRole('region', { name: 'Guildes qui recrutent', exact: true })).toHaveCount(0);
       const first = native.locator('.guild-card').first();
@@ -215,7 +215,7 @@ test('Annuaire initial : seuls les profils actifs du même univers sont proposé
     await enterUniverse(page, 'Visiteur-' + suffix, 'annuaire-visitor-' + suffix + '@example.test');
     await page.goto('/guildes');
     const directory = page.getByRole('region', { name: 'Guildes qui recrutent', exact: true });
-    await expect(directory.getByRole('link', { name: guildName, exact: true })).toHaveAttribute('href', '/guildes/' + guildId);
+    await expect(directory.getByRole('link', { name: 'Voir la guilde ' + guildName, exact: true })).toHaveAttribute('href', '/guildes/' + guildId);
     await expect(directory).not.toContainText(archivedName);
     await expect(directory).not.toContainText(foreignName);
     await expect(directory).not.toContainText('Annuaire-' + suffix);
@@ -227,7 +227,7 @@ test('Annuaire initial : seuls les profils actifs du même univers sont proposé
       const native = await nativeContext.newPage();
       await native.goto('/guildes');
       const suggestions = native.getByRole('region', { name: 'Guildes qui recrutent', exact: true });
-      await expect(suggestions.getByRole('link', { name: guildName, exact: true })).toBeVisible();
+      await expect(suggestions.getByRole('link', { name: 'Voir la guilde ' + guildName, exact: true })).toBeVisible();
       const search = native.getByRole('searchbox', { name: 'Rechercher une guilde', exact: true });
       await search.fill(guildName);
       await native.getByRole('button', { name: 'Rechercher', exact: true }).click();

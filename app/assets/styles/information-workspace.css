@@ -418,3 +418,51 @@ body[data-theme=light] .information-workspace a:not(.primary) {
 .information-workspace.legal-page .legal-contents + h2 {
     margin-top: 0;
 }
+
+/* S17/S20 : la saisie et la pièce jointe suivent l'ordre du formulaire ; l'aperçu reste à droite. */
+body.ui-refined[data-ui-page="feedback"] .feedback-workspace.social-board .feedback-layout {
+    grid-template-columns: minmax(0, 1.65fr) minmax(270px, 1fr);
+    max-width: none;
+    margin-inline: 0;
+    align-items: start;
+}
+
+body.ui-refined[data-ui-page="feedback"] .feedback-workspace.social-board {
+    max-width: none;
+}
+
+.feedback-workspace.social-board .feedback-primary {
+    min-width: 0;
+}
+
+.feedback-workspace.social-board .feedback-source fieldset {
+    min-width: 0;
+    margin: 10px 0 0;
+    padding: 0;
+    border: 0;
+}
+
+.feedback-workspace.social-board .feedback-source legend,
+.feedback-workspace.social-board .feedback-upload h2 {
+    margin: 10px 0 3px;
+    padding: 0;
+    font-size: 14px;
+}
+
+.feedback-workspace.social-board .feedback-attachment-panel > h2 {
+    margin: 0 0 8px;
+}
+
+.feedback-workspace.social-board .feedback-actions {
+    margin-top: 14px;
+    padding: 14px 0 0;
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+}
+
+@media (max-width: 900px) {
+    body.ui-refined[data-ui-page="feedback"] .feedback-workspace.social-board .feedback-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

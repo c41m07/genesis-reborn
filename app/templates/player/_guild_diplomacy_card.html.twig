@@ -2,9 +2,9 @@
 {% set proposal=row.relation.proposal|default(row.status=='pending' ? 'allies' : null) %}
 {% set treatyPermissions={allies:'diplomacy.alliance',non_aggression:'diplomacy.non_aggression',defense:'diplomacy.defense',neutral:'diplomacy.neutral'} %}
 <article class="panel guild-card{% if own %} guild-card--{{ row.status }}{% endif %}{{ proposal and own and row.relation.proposer.id!=own.id ? ' received-proposals' : '' }}">
-    <span class="badge">{{ own ? ((row.status=='pending' ? 'État actuel : ' : 'Relation actuelle : ') ~ relation_labels[row.status]|default(row.status)) : 'Recrutement ouvert' }}</span>
-    <h3><a class="public-profile-link" href="{{ path('app_guild_public_profile',{id:g.id}) }}">{{ g.name }}</a></h3>
-    <p class="guild-result-meta"><span>Commandement : {{ g.leader.displayName }}</span><span>{{ row.members|length }} membre{{ row.members|length > 1 ? 's' : '' }}</span></p>
+    <span class="badge guild-card-status">{{ own ? ((row.status=='pending' ? 'État actuel : ' : 'Relation actuelle : ') ~ relation_labels[row.status]|default(row.status)) : 'Recrutement ouvert' }}</span>
+    <header class="guild-card-heading"><h3><a class="public-profile-link" href="{{ path('app_guild_public_profile',{id:g.id}) }}">{{ g.name }}</a></h3>
+    <p class="guild-result-meta"><span>Commandement : {{ g.leader.displayName }}</span><span>{{ row.members|length }} membre{{ row.members|length > 1 ? 's' : '' }}</span></p></header>
     {% if not own %}
         <details><summary>Voir les membres</summary><ul>{% for member in row.members %}<li>{{ member.playerUniverse.displayName }}</li>{% endfor %}</ul></details>
         <div class="guild-result-actions">
