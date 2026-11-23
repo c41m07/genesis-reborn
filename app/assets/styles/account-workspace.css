@@ -351,4 +351,11 @@ body.authenticated .account-redesign:is(.account-deletion-page,.vacation-page) .
         gap:.65rem;
     }
     body.authenticated .preferences-page .account-board-settings .account-section legend { margin-bottom:.35rem; }
+    .preferences-page .account-board-settings .account-section > p { margin-block:.35rem .5rem; }
+    .preferences-page .account-board-settings > section:last-of-type .account-section {
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        column-gap:.85rem;
+    }
+    .preferences-page .account-board-settings > section:last-of-type .account-section > p { grid-column:1 / -1; }
 }
