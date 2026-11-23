@@ -86,8 +86,12 @@ test('L4 A : compte structuré, confirmations et états sensibles sur ordinateur
           await expect(page.locator('.account-preferences-form')).toHaveCount(1);
           await expect(page.locator('.account-preferences-form button[type="submit"], .account-preferences-save')).toHaveCount(1);
           if (width === 1440) {
-            const cards = page.locator('.account-preference-columns > .panel');
-            expect((await cards.nth(1).boundingBox()).x).toBeGreaterThanOrEqual((await cards.first().boundingBox()).x + (await cards.first().boundingBox()).width);
+            const shortcuts = page.getByRole('group', { name: 'Raccourcis de la galaxie' });
+            const transports = page.getByRole('group', { name: 'Réception des transports' });
+            await expect(shortcuts).toBeVisible();
+            await expect(transports).toBeVisible();
+            const [left, right] = await Promise.all([shortcuts.boundingBox(), transports.boundingBox()]);
+            expect(right.x).toBeGreaterThanOrEqual(left.x + left.width);
           }
         }
         if (key === 'vacation') {
