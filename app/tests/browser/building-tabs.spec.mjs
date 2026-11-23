@@ -128,7 +128,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
         await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('object-fit', 'cover');
         const positions = await family.getByRole('tab').evaluateAll(tabs => tabs.map(tab => Math.round(tab.getBoundingClientRect().top)));
         expect(new Set(positions).size).toBe(1);
-        await expect(tab('intermediate')).toHaveAccessibleName(/Interm\./);
+        await expect(tab('intermediate')).toHaveAccessibleName(width === 1920 ? /^Intermédiaire\b/ : /^Interm(?:\.|édiaire\b)/);
         await expect(tab('intermediate')).toHaveAccessibleDescription(/Intermédiaire/);
         const overflow = await family.getByRole('tab').evaluateAll(tabs => tabs.filter(tab => tab.scrollWidth > tab.clientWidth).map(tab => ({ label: tab.innerText, available: tab.clientWidth, content: tab.scrollWidth })));
         expect(overflow, `Onglets à ${width} px`).toEqual([]);
