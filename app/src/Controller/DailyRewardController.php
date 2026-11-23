@@ -24,13 +24,15 @@ final class DailyRewardController extends AbstractController
     public function show(Request $request): Response
     {
         $membership = $this->context->membership();
+        $destinations = $this->repo->planets($membership->universe, $membership);
         $planet = $request->query->has('colony')
             ? $this->ownedPlanet($membership, $request->query->getInt('colony'))
-            : ($this->repo->planets($membership->universe, $membership)[0] ?? null);
+            : ($destinations[0] ?? null);
         $status = $this->rewards->status($this->player());
 
         return $this->render('player/daily_reward.html.twig', [
             'planet' => $planet,
+            'destinations' => $destinations,
             'universe' => $membership->universe,
             'status' => $status,
             'tokenId' => $planet === null ? null : $this->tokenId($membership, $planet, $status['date']),

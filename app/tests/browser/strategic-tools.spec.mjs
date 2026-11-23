@@ -50,6 +50,11 @@ test('Simulateur : dix combats reproductibles, détails accessibles et aucune mu
  const result=page.locator('#simulation-result'),trials=result.locator('.simulation-trial');
  await expect(result.getByRole('heading',{name:'Estimation sur 10 combats'})).toBeVisible();
  await expect(trials).toHaveCount(10);
+ const trialOverview=result.getByRole('table',{name:'Bilan de l’attaquant dans chaque combat'});
+ await expect(trialOverview.locator('tbody tr')).toHaveCount(10);
+ await page.setViewportSize({width:1920,height:1080});
+ await result.evaluate(element=>element.scrollIntoView({block:'start',behavior:'instant'}));
+ await page.screenshot({path:testInfo.outputPath('P21-resultat-reel-1920x1080.png'),animations:'disabled',scale:'css'});
  expect(await trials.evaluateAll(nodes=>nodes.map(node=>Number(node.dataset.simulationSeed)))).toEqual(Array.from({length:10},(_,index)=>42+index));
  const counts=(await result.locator('.simulation-outcomes dd').allTextContents()).map(Number);
  expect(counts.reduce((total,count)=>total+count,0)).toBe(10);

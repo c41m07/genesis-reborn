@@ -99,6 +99,12 @@ test('L3 A : inventaire guidé, confirmations, états vides et vacances dans les
           await expect(page.locator('.boost-operation:visible')).toHaveCount(1);
           await expect(page.locator('.boost-operation:visible')).toContainText('Avant-poste des Constellations Oubliées');
           await picker.selectOption('queue-' + queue);
+          const timings = page.locator('.boost-operation:visible .inventory-preview-times');
+          await expect(timings).toContainText('Avant');
+          await expect(timings).toContainText('Après');
+          const values = await timings.locator('dd').allTextContents();
+          expect(values).toHaveLength(2);
+          expect(values[0]).not.toEqual(values[1]);
           await expect(page.locator('.boost-operation:visible')).toHaveCount(1);
           if (width === 1440) {
             const stock = await page.locator('.inventory-boost-stock').boundingBox();

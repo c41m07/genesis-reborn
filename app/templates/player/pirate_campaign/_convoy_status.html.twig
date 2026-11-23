@@ -26,6 +26,7 @@
                 <time datetime="{{ reward.expected_arrival_at }}">{{ reward.expected_arrival_at|date('d/m/Y à H:i:s', 'UTC') }} UTC</time>.
                 {% if reward.awaiting_arrival_confirmation %}L’arrivée reste à confirmer.{% endif %}
             </p>
+            <a class="secondary" href="{{ path('app_fleets') }}">Voir le trajet dans Flottes</a>
         {% elseif reward.state == 'arrival_confirmed' %}
             <p>Arrivée confirmée, versement non confirmé.</p>
         {% elseif reward.state == 'full_pending' %}

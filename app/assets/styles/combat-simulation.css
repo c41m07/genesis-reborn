@@ -38,3 +38,19 @@ body[data-theme=light] .simulation-workspace .simulation-survivors { color:#1767
 @media(max-width:800px) {
     .simulation-board-options { grid-template-columns:minmax(0,1fr); }
 }
+
+/* La liste de vaisseaux reste complète et défilable au clavier, sans éloigner l'action principale. */
+.player-simulation-board .simulation-board-note { max-width:92ch; margin:0 0 .65rem; }
+.player-simulation-board .simulation-board-load { display:flex; flex-wrap:wrap; align-items:center; gap:.55rem; scroll-margin-top:180px; }
+.player-simulation-board .simulation-board-load label { margin:0; }
+.player-simulation-board .simulation-board-load select { width:auto; min-width:min(15rem,100%); max-width:100%; min-height:44px; }
+.player-simulation-board .simulation-board-source-link { display:block; min-height:1.5rem; margin:.3rem 0 .75rem; }
+.player-simulation-board .simulation-board-unit-scroll { max-height:clamp(11rem,24vh,21rem); overflow:auto; scrollbar-gutter:stable; }
+.player-simulation-board .simulation-board-unit-scroll :is(td,th) { padding:.42rem .55rem; }
+.player-simulation-board .simulation-board-unit-scroll input { min-height:36px; }
+.player-simulation-board .simulation-board-unit-scroll thead { position:sticky; top:0; background:var(--panel); z-index:1; }
+.player-simulation-board .simulation-board-options > button { grid-column:1 / -1; justify-self:start; margin:0; }
+.player-simulation-board .simulation-trial-summary { margin:1rem 0; }
+.player-simulation-board .simulation-trial-summary :is(th,td) { padding:.55rem .75rem; font-variant-numeric:tabular-nums; }
+.player-simulation-board .simulation-trial-summary td:nth-child(n+3) { text-align:end; }
+.player-simulation-board .simulation-trial > summary { scroll-margin-top:180px; }

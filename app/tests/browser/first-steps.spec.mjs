@@ -307,7 +307,7 @@ test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', a
 });
 
 
-test('Premiers pas : panneau non modal, images à la demande et reprise par Préférences', async ({ page, browser, baseURL }) => {
+test('Premiers pas : panneau non modal, images à la demande et reprise par Préférences', async ({ page, browser, baseURL }, info) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await register(page);
     const overview = page.url();
@@ -353,6 +353,9 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
     await popup.getByRole('button', { name: 'Suivant', exact: true }).click();
     await expect(second).toHaveAttribute('src', /mine-resultat[.]webp$/);
     await expect(popup.locator('output')).toHaveText('2 sur 2');
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.screenshot({ path: info.outputPath('P09-illustration-1920x1080.png'), scale: 'css', animations: 'disabled' });
+    await page.setViewportSize({ width: 1440, height: 900 });
     await page.keyboard.press('Escape');
     await expect(popup).not.toHaveAttribute('open', '');
     await expect(summary).toBeFocused();

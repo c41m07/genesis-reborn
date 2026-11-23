@@ -51,9 +51,18 @@
     <div class="campaign-board-layout">
     <section class="panel pirate-campaign-dossier" aria-labelledby="pirate-mission-title">
         <div class="pirate-campaign-briefing">
-            <h2 id="pirate-dossier-title">Dossier actif</h2>
+            <h2 id="pirate-dossier-title">{{ dossier.current == dossier.selected ? 'Dossier actif' : 'Dossier consulté' }}</h2>
             <p>{{ narrative.message }}</p>
             {% if narrative.guidance %}<p>{{ narrative.guidance }}</p>{% endif %}
+            {% if hasIntel %}
+            <dl class="campaign-board-briefing-summary">
+                <div><dt>Reconnaissance</dt><dd>{{ briefing.status }}</dd></div>
+                {% if briefing.formation is not null %}
+                    <div><dt>Flotte pirate</dt><dd>{{ briefing.formation|reduce((total, ship) => total + ship.quantity, 0)|quantity(0) }} unité(s) observée(s)</dd></div>
+                {% endif %}
+            </dl>
+            <a class="quiet-button" href="#pirate-intelligence-title">Voir les renseignements</a>
+            {% endif %}
 
             {% if dossier.signal_pending and not encounter_form and not needs_colony %}
                 <p role="status">Un départ de reconnaissance n’est pas disponible depuis la colonie active.</p>
