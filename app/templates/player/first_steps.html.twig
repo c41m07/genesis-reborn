@@ -50,8 +50,6 @@
             {% set done = training.completed[step]|default(false) %}
             <li class="first-step{{ step == training.next ? ' first-step--next' : '' }}">
                 {% set example = training.examples[step] %}
-                <details {{ step == training.next ? 'open' }}>
-                <summary>{{ guide.title }} <span>{{ training.existing[step]|default(false) ? 'Déjà en place' : (done ? 'Terminé' : 'À faire') }}</span></summary>
                 <img class="first-steps-card-art" src="{{ asset(example[0]) }}" alt="" loading="lazy" decoding="async">
                 <span class="first-steps-card-index">Étape {{ loop.index }}</span>
                 <h3>{{ guide.title }}</h3>
@@ -77,7 +75,6 @@
                     <a class="secondary" href="{{ path('app_colony', {id: colony.id, section: 'ships', showLockedItems: 1, focusItem: 1, _fragment: 'item-colony_ship-basic'}) }}">Ouvrir la fiche du Vaisseau colonisateur</a>
                     <a class="secondary" href="{{ path('app_colony', {id: colony.id, section: 'technologies', showLockedItems: 1, focusItem: 1, _fragment: 'item-colonial_expansion-basic'}) }}">Voir les Protocoles de colonisation</a>
                 {% endif %}
-                </details>
             </li>
         {% endfor %}
     </ol>

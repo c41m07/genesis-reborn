@@ -26,3 +26,6 @@
 @media(max-width:1030px) {
     .ranking-board-layout { grid-template-columns:minmax(0,1fr); }
 }
+
+/* Le raccourci d'aide reste utilisable lorsque le tableau passe avant l'aide en mobile. */
+#ranking-board-help { scroll-margin-block-start: var(--shell-sticky-top, 9rem); }

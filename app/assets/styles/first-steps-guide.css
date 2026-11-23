@@ -202,12 +202,8 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
 .first-steps-player-board .first-steps-next { position:relative; isolation:isolate; overflow:hidden; min-height:12rem; display:grid; grid-template-columns:minmax(0,1fr); align-content:end; justify-items:start; color:var(--text); }
 .first-steps-next-art { position:absolute; inset:0; z-index:-2; width:100%; height:100%; object-fit:cover; object-position:center; border-radius:inherit; }
 .first-steps-player-board .first-steps-next::after { position:absolute; inset:0; z-index:-1; content:""; background:linear-gradient(90deg,var(--panel),color-mix(in srgb,var(--panel) 88%,transparent) 60%,color-mix(in srgb,var(--panel) 45%,transparent)); }
-.first-steps-player-board .first-steps-list { display:grid; grid-template-columns:minmax(0,1fr); }
-.first-steps-player-board .first-step details { min-width:0; }
-.first-steps-player-board .first-step summary { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.5rem; min-height:44px; cursor:pointer; color:var(--text); font-weight:700; }
-.first-steps-player-board .first-step summary span { color:var(--accent); font-size:.82rem; }
-.first-steps-player-board .first-step summary::after { content:"⌄"; color:var(--accent); }
-.first-steps-player-board .first-step details[open] summary::after { content:"⌃"; }
+/* Les jalons ne bloquent pas les suivants : titres, instructions et actions restent visibles. */
+.first-steps-player-board .first-step :is(a,button) { max-width:100%; min-width:0; overflow-wrap:anywhere; white-space:normal; }
 .first-steps-board-rail .first-steps-refunds { margin:0 0 1rem; }
 .first-steps-board-rail > h2 { margin-top:0; }
 .first-steps-player-board :is(#first-steps-heading,#training-reward-title) { scroll-margin-top:180px; }
