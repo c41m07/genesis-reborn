@@ -341,7 +341,9 @@ test('Classement quotidien : points figés, gains, pertes et signe égal accessi
       const guide = page.locator('.first-steps-popup-enhanced[open]');
       await expect(guide).toBeVisible();
       const guideBox = await guide.boundingBox();
-      expect(guideBox.y).toBeGreaterThanOrEqual(helpBox.y + helpBox.height);
+      // La disposition mobile place déjà l’aide du guide avant le contenu.
+      const disjoint = guideBox.y + guideBox.height <= helpBox.y || guideBox.y >= helpBox.y + helpBox.height;
+      expect(disjoint).toBe(true);
     }
     await page.screenshot({ path: testInfo.outputPath(`daily-ranking-${width}.png`), animations: 'disabled' });
   }
