@@ -26,7 +26,7 @@
     <a href="#simulation-scenario">Scénario</a>
     {% if result %}<a href="#simulation-result">Résultats</a>{% endif %}
 </nav>
-<form method="post" class="panel simulation-form" id="simulation-scenario">
+<form method="post" action="#simulation-result" class="panel simulation-form" id="simulation-scenario">
 <input type="hidden" name="_token" value="{{ csrf_token('combat_simulation') }}"><input type="hidden" name="report" value="{{ intel.id|default(0) }}">
 <div class="strategic-grid">{% for camp,title in {attacker:'Attaquant',defender:'Défenseur'} %}<section><h2>{{ title }}</h2>
 {% if camp == 'attacker' and scenarioBoard %}<div class="simulation-board-load">{{ controls.own_forces_controls(planets, true) }}</div>
@@ -48,14 +48,25 @@
 {% set unit_labels=choices.ships|merge(choices.defenses) %}{% set tier_labels={basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}
  {% set outcome_labels={attacker_wins:'Victoire de l’attaquant',defender_wins:'Défaite de l’attaquant',draw:'Égalité',ongoing:'Combat non terminé'} %}
 {% if result %}
-<section class="panel" id="simulation-result" aria-labelledby="simulation-result-title">
-<h2 id="simulation-result-title">Estimation sur {{ result.count }} combats</h2>
+<section class="panel" id="simulation-result" tabindex="-1" aria-labelledby="simulation-result-title">
+<header class="simulation-result-heading">
+    <p class="simulation-board-eyebrow">Opérations · résultats non persistants</p>
+    <h2 id="simulation-result-title">Estimation sur {{ result.count }} combats</h2>
+    <p>Configuration conservée à l’écran après le calcul.</p>
+</header>
 <p><strong>Victoires de l’attaquant : {{ result.win_percent }} %</strong> ({{ result.outcomes.attacker_wins }} sur {{ result.count }}).</p>
 <dl class="simulation-outcomes">
-{% for outcome,count in result.outcomes %}<div><dt>{{ {attacker_wins:'Victoires de l’attaquant',defender_wins:'Défaites de l’attaquant',draw:'Égalités',ongoing:'Combats non terminés'}[outcome]|default(outcome) }}</dt><dd>{{ count }}</dd></div>{% endfor %}
+{% for outcome,label in {attacker_wins:'Victoires de l’attaquant',draw:'Égalités',defender_wins:'Défaites de l’attaquant',ongoing:'Combats non terminés'} %}
+    <div class="simulation-outcome simulation-outcome--{{ outcome }}">
+        <dt>{{ label }}</dt>
+        <dd>{{ result.outcomes[outcome] }}</dd>
+        <dd class="simulation-outcome-sample">Sur {{ result.count }} essais</dd>
+    </div>
+{% endfor %}
 </dl>
 <p>Cette estimation porte sur dix combats : 7 victoires donnent 70 %, sans garantir cette probabilité réelle. Le butin, la reconstruction, les voyages et l’évolution ultérieure des forces ne sont pas simulés.</p>
 <p>Dépliez chaque combat pour consulter ses pertes fictives, ses survivants et ses rounds. Les pertes moyennes ne sont pas calculées.</p>
+<h3>Issue et effectifs de l’attaquant</h3>
 <div class="table-scroll simulation-trial-summary" role="region" tabindex="0" aria-label="Bilan par combat">
     <table class="data-table">
         <caption>Bilan de l’attaquant dans chaque combat</caption>
@@ -64,7 +75,7 @@
         {% for trial in result.trials %}
         <tr>
             <th scope="row"><a href="#simulation-trial-{{ loop.index }}">Combat {{ loop.index }}</a></th>
-            <td>{{ outcome_labels[trial.outcome]|default(trial.outcome) }}</td>
+            <td><span class="simulation-outcome-label simulation-outcome--{{ trial.outcome }}">{{ outcome_labels[trial.outcome]|default(trial.outcome) }}</span></td>
             <td>{{ trial.report.attacker.initial|quantity(0) }}</td>
             <td>{{ trial.report.attacker.remaining|quantity(0) }}</td>
             <td>{{ trial.report.attacker.lost|quantity(0) }}</td>
@@ -73,6 +84,11 @@
         </tbody>
     </table>
 </div>
+<div class="simulation-result-actions">
+    <a class="secondary" href="#simulation-trial-1">Voir le détail des combats</a>
+    <a href="#simulation-scenario">Revenir au scénario</a>
+</div>
+<h3>Détails par combat</h3>
 {% for trial in result.trials %}
 <details class="simulation-trial" data-simulation-seed="{{ trial.seed }}">
 <summary id="simulation-trial-{{ loop.index }}">Combat {{ loop.index }} · {{ outcome_labels[trial.outcome]|default(trial.outcome) }} · graine {{ trial.seed }}</summary>

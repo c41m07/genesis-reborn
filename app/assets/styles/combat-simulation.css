@@ -126,3 +126,44 @@ body[data-theme=light] .simulation-workspace .simulation-survivors { color:#1767
     }
     .player-simulation-board--scenario .simulation-board-options > .simulation-board-note { grid-column:2; }
 }
+
+
+/* P21 : des libellés restent associés aux couleurs et les quatre issues réelles restent visibles. */
+.player-simulation-board #simulation-result { margin-top:1rem; padding:clamp(.85rem,1.6vw,1.65rem); }
+.simulation-result-heading > p { margin:0 0 .5rem; }
+.simulation-result-heading > h2 { margin:.1rem 0 .4rem; font-size:clamp(1.45rem,2vw,2rem); }
+.player-simulation-board .simulation-outcomes { grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr)); }
+.player-simulation-board .simulation-outcome > dt { font-weight:700; }
+.player-simulation-board .simulation-outcome > dd {
+    display:block;
+    margin:.5rem 0 0;
+    font-size:clamp(1.35rem,2vw,1.9rem);
+    line-height:1.15;
+    color:var(--simulation-outcome-color,var(--text));
+}
+.player-simulation-board .simulation-outcome > dd.simulation-outcome-sample {
+    display:block;
+    margin-top:.35rem;
+    color:var(--muted);
+    font-size:.75rem;
+}
+.player-simulation-board .simulation-outcome--attacker_wins { --simulation-outcome-color:#87d8b4; }
+.player-simulation-board .simulation-outcome--draw { --simulation-outcome-color:#e9bc73; }
+.player-simulation-board .simulation-outcome--defender_wins { --simulation-outcome-color:#ffadab; }
+body[data-theme=light] .player-simulation-board .simulation-outcome--attacker_wins { --simulation-outcome-color:#176742; }
+body[data-theme=light] .player-simulation-board .simulation-outcome--draw { --simulation-outcome-color:#784a00; }
+body[data-theme=light] .player-simulation-board .simulation-outcome--defender_wins { --simulation-outcome-color:#a02830; }
+.player-simulation-board .simulation-outcome-label { color:var(--simulation-outcome-color,var(--text)); font-weight:650; }
+.player-simulation-board .simulation-trial-summary tbody tr > * { border-bottom:1px solid var(--line); }
+.player-simulation-board .simulation-trial-summary tbody tr:nth-child(even) { background:color-mix(in srgb,var(--accent) 3%,var(--panel)); }
+.player-simulation-board .simulation-trial-summary :is(th,td):nth-child(n+3) { text-align:end; }
+.player-simulation-board .simulation-result-actions { display:flex; align-items:center; flex-wrap:wrap; gap:.8rem; }
+.player-simulation-board .simulation-result-actions + h3 { margin-top:1.5rem; }
+
+/* Garder le résultat inspectable même si le guide se déplie automatiquement. */
+.app-frame:has(> .shell .player-simulation-board #simulation-result) > .first-steps-popup-enhanced[open] {
+    position:relative;
+    inset:auto;
+    margin:0 0 8px auto;
+    max-width:100%;
+}
