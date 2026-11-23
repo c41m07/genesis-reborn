@@ -91,8 +91,11 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   const card=slug=>page.locator('#item-'+slug+'-basic');
   await card('shipyard').getByRole('button',{name:/Améliorer .* niveau 1/}).click();accelerateQueuedItem(process.env.BROWSER_ROUTER,email,'building','shipyard');await page.reload();await expect(page.locator('#building-tab-shipyard-basic .building-rank-level')).toHaveText('1',{timeout:30000});
   await card('shipyard').getByRole('button',{name:/Améliorer .* niveau 2/}).click();accelerateQueuedItem(process.env.BROWSER_ROUTER,email,'building','shipyard');await page.reload();await expect(page.locator('#building-tab-shipyard-basic .building-rank-level')).toHaveText('2',{timeout:30000});
-  for(const name of ['probe','colony_ship','transport']) {
-    await page.getByRole('navigation',{name:'Navigation principale',exact:true}).getByRole('link',{name:'Chantier spatial',exact:true}).click();await card(name).getByRole('button',{name:/Construire/}).click();
+  for(const [slug,label] of [['probe','Sonde de reconnaissance'],['colony_ship','Vaisseau colonisateur'],['transport','Cargo de ligne']]) {
+    await page.getByRole('navigation',{name:'Navigation principale',exact:true}).getByRole('link',{name:'Chantier spatial',exact:true}).click();
+    const action=card(slug).getByRole('button',{name:new RegExp('^(Construire|Ajouter à la file) : '+label+' × 1$')});
+    await expect(action).toBeEnabled();
+    await action.click();
   }
   await page.getByRole('navigation',{name:'Navigation principale',exact:true}).getByRole('link',{name:'Chantier spatial',exact:true}).click();
   accelerateShipyard(process.env.BROWSER_ROUTER,email);
