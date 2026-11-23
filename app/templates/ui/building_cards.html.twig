@@ -17,6 +17,12 @@
     {% set definition = (ranks|first).definition %}
     {% set category = (ranks|first).filter_category %}
     {% set accessible = ranks|filter(card => not card.failures or card.maximum) %}
+    {% set familyLabels = {
+        buildings:{power_plant:'Énergie', mine_metal:'Extraction', mine_nano:'Fabrication', mine_hydrogen:'Raffinage'},
+        ships:{probe:'Reconnaissance', transport:'Transport'},
+    } %}
+    {% set familyLabel = familyLabels[group][slug]|default(catalog_filter_options[group][category]|default(group == 'buildings' ? 'Installation' : '')) %}
+    {% set familyIcon = {buildings:'buildings', technologies:'research', ships:'fleet', defenses:'diplomacy'}[group] %}
     <article class="panel catalog-card card--{{ group }} building-card" data-building-catalog-target="family" data-slug="{{ slug }}" data-catalog-filter-target="card" data-category="{{ category }}" data-catalog-visible="{{ show_locked_items or accessible ? 'true' : 'false' }}" {% if not show_locked_items and not accessible %}hidden{% endif %}>
         <nav class="building-rank-tabs" aria-label="Rangs de {{ definition.label }}">
             {% for card in ranks %}
@@ -56,20 +62,41 @@
         {% for card in ranks %}
             {% set d = card.definition %}
             {% set maximumPending = leveled and card.maximum and card.level < card.max_level %}
+            {% set cardState = card.maximum ? (maximumPending ? 'queued' : 'maximum') : ((card.failures or card.missing_research_laboratory|default(null)) ? 'locked' : (vacation ? 'paused' : ((leveled and (card.payment.missing|default([]))) ? 'shortage' : 'ready'))) %}
             <div id="item-{{ slug }}-{{ card.tier }}" class="building-rank {{ card.failures and not card.maximum ? 'is-locked' : '' }}" data-building-catalog-target="panel" data-tier="{{ card.tier }}"{% if not leveled and not card.failures and not vacation %} data-controller="construction-quantity" data-construction-quantity-url-value="{{ path('app_construction_maximum', {id: planet.id}) }}"{% endif %} {% if card.failures and not card.maximum and not show_locked_items %}hidden{% endif %}>
                 {% set imagePath = 'images/catalog/'~group~'/'~slug~'__'~card.tier %}
                 {% set imageVariant = d.artwork|default('') is empty and card.tier == 'basic' and slug in (cardVariants[group]|default([])) %}
-                <div class="catalog-card-art">
+                <div class="catalog-card-art catalogue-card-visual" data-catalogue-state="{{ cardState }}">
                     <img src="{{ asset(d.artwork|default(imagePath~'.webp')) }}"
                          {% if imageVariant %}srcset="{{ asset(imagePath~'-768.webp') }} 768w, {{ asset(imagePath~'.webp') }} 1448w"
                          sizes="auto, (max-width: 640px) calc(100vw - 34px), 360px" width="1448" height="1086"{% endif %}
                          alt="{{ d.label }}" loading="lazy" decoding="async">
+                    {% if familyLabel or cardState in ['queued', 'maximum', 'locked', 'paused', 'shortage'] %}
+                        <span class="catalogue-family-mark">
+                            {{ ui.icon(familyIcon) }}
+                            {% if familyLabel %}<span>{{ familyLabel }}</span>{% endif %}
+                            {% if cardState in ['queued', 'maximum', 'locked', 'paused', 'shortage'] %}<strong>{{ {
+                                queued:'Maximum en file', maximum:'Au maximum', locked:'Verrouillé',
+                                paused:'En vacances', shortage:'Ressources insuffisantes',
+                            }[cardState] }}</strong>{% endif %}
+                        </span>
+                    {% endif %}
                 </div>
                 <div class="card-body">
-                    <div class="catalog-card-heading"><h3>{{ d.label }}</h3>{% include 'ui/catalogue_info.html.twig' %}</div>
+                    <div class="catalog-card-heading catalogue-card-identity">
+                        <h3>{{ d.label }}</h3>
+                        <span class="catalogue-level-badge" data-catalogue-state="{{ cardState }}">
+                            {% if leveled %}
+                                {{ cardState == 'maximum' ? 'Max. ' ~ card.level : 'Niv. ' ~ card.level }}
+                            {% else %}
+                                {{ card.quantity|quantity }} {{ group == 'defenses' ? (card.quantity > 1 ? 'installés' : 'installé') : 'en réserve' }}
+                            {% endif %}
+                        </span>
+                        {% include 'ui/catalogue_info.html.twig' %}
+                    </div>
                     {% set guidedCard = training_hint is defined and training_hint is not null and training_hint.item == slug and card.tier == 'basic' %}
                     {% if guidedCard %}{% include 'player/_first_steps_catalog_hint.html.twig' %}{% endif %}
-                    <p class="catalog-level">{% if leveled %}Niveau actuel {{ card.level }}{{ maximumPending ? ' · Maximum en file' : (card.maximum ? ' · Maximum' : ' → '~card.target) }}{% else %}{{ card.quantity|quantity }} {{ group == 'defenses' ? 'installé' : 'en réserve' }}{% if group == 'defenses' and card.quantity > 1 %}s{% endif %}{% if card.failures %} · Verrouillé{% endif %}{% endif %}</p>
+                    <p class="catalog-level">{% if leveled %}{{ maximumPending ? 'Dernier niveau en file' : (card.maximum ? 'Aucune amélioration pour ce rang' : 'Objectif : niveau ' ~ card.target) }}{% else %}{{ group == 'defenses' ? 'Défense de cette colonie' : 'Hangar de cette colonie' }}{% if group == 'defenses' and card.quantity > 1 %}s{% endif %}{% if card.failures %} · Verrouillé{% endif %}{% endif %}</p>
                     {% if card.queued %}<p class="catalog-queued">{{ card.target-card.level-1 }} niveau{{ card.target-card.level-1 > 1 ? 'x' : '' }} en file</p>{% endif %}
                     {% if not leveled or not card.maximum %}
                     <div class="build-duration">{{ ui.icon('clock') }} <span{% if not leveled %} data-construction-quantity-target="duration"{% endif %}>{{ duration_label(card.duration) }}</span></div>
@@ -82,6 +109,11 @@
                     </div>
                     {% endset %}
                     {% if leveled %}{{ costsOverview }}{% endif %}
+                    {% elseif card.maximum %}
+                        <dl class="catalogue-no-quote" aria-label="Aucune nouvelle commande à payer">
+                            <div><dt>Durée</dt><dd>—</dd></div>
+                            <div><dt>Coût du niveau</dt><dd>—</dd></div>
+                        </dl>
                     {% endif %}
                     {% if leveled %}
                         {% include 'ui/core_catalogue_gain.html.twig' %}
@@ -146,7 +178,9 @@
                         </form>
                     {% endif %}
                     {% if card.maximum or card.failures or vacation %}<button type="button" class="secondary full catalog-blocked-action" disabled>{{ card.maximum ? (maximumPending ? 'Niveau maximum en file' : 'Niveau maximum atteint') : (card.failures ? 'Prérequis manquants' : 'Mode vacances') }}</button></div>{% endif %}
-                    {% if not leveled %}<div class="core-unit-details">{% include 'ui/catalogue_benefits.html.twig' %}</div>{% endif %}
+                    {% if not leveled or (not card.maximum and card.benefits) %}
+                        <div class="core-unit-details">{% include 'ui/catalogue_benefits.html.twig' %}</div>
+                    {% endif %}
                 </div>
             </div>
         {% endfor %}

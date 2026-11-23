@@ -22,9 +22,7 @@
             <p>Agir sur la colonie active, suivre tout l’empire.</p>
         {% endif %}
     </div>
-    {% if section != 'overview' %}
-        {% include 'ui/development_navigation.html.twig' %}
-    {% endif %}
+    {# Les catalogues restent accessibles dans le menu Développement, y compris dans le tiroir mobile. #}
 </div>
 <div class="colony-layout colony-layout--integrated"><div class="colony-content">
 {% if section=='overview' %}
@@ -76,8 +74,10 @@
 <div class="colony-catalog-workspace catalog-workspace" data-controller="catalog-sticky">
     <div class="catalog-operations-rail" data-catalog-sticky-target="rail" aria-label="Suivi des files et des flottes">
         {% include 'ui/colony_queues.html.twig' %}
-        {% include 'ui/flights.html.twig' %}
-        {% include 'ui/incoming_attacks.html.twig' with {incoming_catalog:true} %}
+        <div class="catalog-flight-followups" role="group" aria-label="Suivi des flottes">
+            {% include 'ui/flights.html.twig' %}
+            {% include 'ui/incoming_attacks.html.twig' with {incoming_catalog:true} %}
+        </div>
     </div>
     {% include 'colony/_catalog.html.twig' %}
 </div>
