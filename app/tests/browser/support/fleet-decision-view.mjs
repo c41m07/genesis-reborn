@@ -15,6 +15,19 @@ export async function captureDecision(page, data, info, kind, url) {
       const confirm = cards.locator('form[method="post"] button');
       await expect(compute).toBeEnabled();
       await expect(confirm).toBeEnabled();
+      if (kind === 'rappel') {
+        for (const warning of [confirm, cards.locator('#fleet-recall-consequence')]) {
+          const redBorder = await warning.evaluate(element => {
+            const border = getComputedStyle(element).borderTopColor;
+            const ctx = document.createElement('canvas').getContext('2d');
+            ctx.fillStyle = border;
+            ctx.fillRect(0, 0, 1, 1);
+            const [red, green, blue] = ctx.getImageData(0, 0, 1, 1).data;
+            return red > green + 10 && red > blue + 10;
+          });
+          expect(redBorder).toBe(true);
+        }
+      }
       const help = page.locator('.first-steps-popup-enhanced');
       await expect(help).toHaveAttribute('open', '');
       const bounds = await help.boundingBox();
