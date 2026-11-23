@@ -75,7 +75,10 @@ test('Rapports A : transport complet, retour filtré, effacement, thèmes et lec
     await expect(row.locator('[data-label="Envoyé"]')).toHaveText('2 000,00');
     await expect(row.locator('[data-label="Livré"]')).toHaveText('1 500,00');
     const delivered = page.locator('.transport-board-metrics > div').filter({hasText:'Quantité livrée'});
-    await expect(delivered.locator('dd').first()).toHaveText('1 500,00');
+    const nano = page.locator('.report-resource-table tbody tr').filter({ hasText: 'Nano' });
+    await expect(nano.locator('[data-label="Livré"]')).toHaveText('800,00');
+    // Le KPI additionne les deux ressources livrées, pas seulement la ligne Métal.
+    await expect(delivered.locator('dd').first()).toHaveText('2 300,00');
     await expect(row.locator('[data-label="Déposé au retour"]')).toHaveText('450,00');
     await expect(row.locator('[data-label="Perdu au retour"]')).toHaveText('−50,00');
     await page.setViewportSize({ width: 1920, height: 1080 });
