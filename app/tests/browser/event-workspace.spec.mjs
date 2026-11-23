@@ -24,7 +24,7 @@ async function expectEventBoardClear(page, challenge) {
   await expect(preview).toBeVisible();
   await expect(upcoming.getByRole('heading', { name: 'Semaine des bâtisseurs' })).toBeVisible();
 
-  const guideTop = (await guide.locator(".first-steps-popup-panel").boundingBox()).y;
+  const guideTop = (await guide.locator('.first-steps-preview').boundingBox()).y;
   for (const element of [upcoming.locator('time').first(), action]) {
     const rect = await element.boundingBox();
     expect(rect).not.toBeNull();
