@@ -71,6 +71,17 @@ test('Avent : retrouver sans JavaScript un cadeau réservé après la clôture',
         await first.getByLabel('Colonie destinataire').selectOption(String(colony));
         await first.getByRole('button', { name: 'Retenter le versement' }).click();
         await expect(first.getByText('Versé', { exact: true })).toBeVisible();
+        const history = mobile.locator('.advent-board--history');
+        await expect(history.getByText('Édition close', { exact: true })).toBeVisible();
+        await expect(history.locator('form[method="post"]')).toHaveCount(0);
+        await expect(first).toContainText('Le cadeau de cette porte a déjà été versé.');
+        await mobile.getByRole('link', { name: /^Porte 24,/ }).press('Enter');
+        const expired = mobile.locator('#advent-door-24');
+        await expect(expired).toBeVisible();
+        await expect(expired).toContainText('Cette porte n’a pas été ouverte avant la clôture.');
+        await expired.getByRole('link', { name: 'Revenir aux 24 portes' }).press('Enter');
+        await expect(mobile.locator('#advent-calendar-title')).toBeFocused();
+        await expect(mobile.getByRole('dialog')).toHaveCount(0);
         expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM advent_claim WHERE delivered_at IS NOT NULL'))).toBe(1);
 
         for (const width of [360, 390, 1440]) {
@@ -185,6 +196,58 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
             expect(helpBounds.y + helpBounds.height).toBeLessThanOrEqual(actionBounds.y);
         }
 
+        // Reçu natif déjà versé, sans droit en attente. On avance d'abord
+        // la clôture de la fixture, puis rétablit sa date pour tester J6–J24.
+        const originalClose = queryIsolatedSql(project, "SELECT DATE_FORMAT(closes_at, '%Y-%m-%d %H:%i:%s') FROM advent_edition WHERE id=" + edition).trim();
+        expect(originalClose).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+        runIsolatedSql(project, 'UPDATE advent_edition SET closes_at = UTC_TIMESTAMP() - INTERVAL 1 SECOND WHERE id=' + edition);
+        try {
+            for (const theme of ['dark', 'light']) {
+                runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(IF(JSON_TYPE(preferences)='OBJECT', preferences, JSON_OBJECT()), '$.theme', '" + theme + "') WHERE email='" + email + "'");
+                for (const [width, height] of [[1920, 1080], [390, 844]]) {
+                    await page.setViewportSize({ width, height });
+                    await openAdventDocument(page, '/evenements/avent/' + edition);
+                    const history = page.locator('.advent-board--history');
+                    await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+                    await expect(history.getByText('Édition close', { exact: true })).toBeVisible();
+                    await expect(history.locator('.advent-day-tile')).toHaveCount(24);
+                    await expect(history.locator('form[method="post"]')).toHaveCount(0);
+                    await expect(history.getByRole('link', { name: 'Retour aux événements' })).toHaveAttribute('href', '/evenements');
+                    const calendar = await history.locator('.advent-calendar').boundingBox();
+                    const panel = await history.locator('.advent-selection').boundingBox();
+                    const context = await history.getByRole('region', { name: 'Univers de cette édition' }).boundingBox();
+                    if (width === 1920) {
+                        expect(panel.x).toBeGreaterThanOrEqual(calendar.x + calendar.width);
+                        expect(context.y).toBeGreaterThanOrEqual(panel.y + panel.height);
+                    } else {
+                        expect(panel.y).toBeGreaterThanOrEqual(context.y + context.height);
+                        const tile = await history.getByRole('link', { name: /^Porte 1,/ }).boundingBox();
+                        expect(tile.width).toBeGreaterThanOrEqual(44);
+                        expect(tile.height).toBeGreaterThanOrEqual(44);
+                    }
+                    const dimensions = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+                    expect(dimensions[0]).toBeLessThanOrEqual(dimensions[1] + 2);
+                    const proof = process.env.GR_AVENT_PROOF_DIRECTORY;
+                    if (proof) {
+                        await page.evaluate(() => window.scrollTo(0, 0));
+                        await page.screenshot({ path: proof + '/AVENT_EDITION_CLOSE_' + width + '_' + theme + '.png' });
+                    }
+
+                    const tile = history.getByRole('link', { name: /^Porte 7,/ });
+                    if (width === 1920) {
+                        const idleBorder = await tile.evaluate((element) => getComputedStyle(element).borderInlineStartColor);
+                        await tile.hover();
+                        await expect(tile).not.toHaveCSS('border-inline-start-color', idleBorder);
+                    }
+                    await tile.click();
+                    await expect(page).toHaveURL(/#advent-door-7$/);
+                    await expect(history.locator('#advent-door-7')).toContainText('Expiré');
+                    await expect(history.getByRole('dialog')).toHaveCount(0);
+                }
+            }
+        } finally {
+            runIsolatedSql(project, "UPDATE advent_edition SET closes_at='" + originalClose + "' WHERE id=" + edition);
+        }
         const proof = process.env.GR_AVENT_PROOF_DIRECTORY;
         if (proof) {
             // Les planches de comparaison montrent un compte dont l’aide est fermée.
@@ -301,6 +364,12 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
     await finaleDoor.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).press('Enter');
     await expect(finaleDoor.getByText('Bon à utiliser', { exact: true })).toBeVisible();
     expect(Number(queryIsolatedSql(project, "SELECT COUNT(*) FROM profile_cosmetic WHERE player_id=(SELECT id FROM player WHERE email='" + email + "') AND equipped=0"))).toBe(2);
+
+    runIsolatedSql(project, 'UPDATE advent_edition SET closes_at = UTC_TIMESTAMP() - INTERVAL 1 SECOND WHERE id=' + edition);
+    await openAdventDocument(page, '/evenements/avent/' + edition + '#advent-door-24');
+    await expect(page.locator('.advent-board--history')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Cadeaux et réserves', exact: true })).toBeVisible();
+    await expect(finaleDoor.getByRole('link', { name: 'Voir le devis de cette remise' })).toBeVisible();
 });
 
 test('Avent : devis J6 et J12 maquetés, calcul et confirmation séparés', async ({ page, browser, baseURL }) => {

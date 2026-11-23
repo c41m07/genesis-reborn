@@ -888,3 +888,102 @@ body.authenticated .advent-credit-board :is(a, select, button):focus-visible {
         padding-inline: .32rem;
     }
 }
+
+/* Saison close sans droit en attente : grille et récépissé restent consultables
+   par les ancres existantes. Aucun de ces styles ne touche le choix ou le retrait. */
+body.authenticated .advent-board--history .advent-history-kicker {
+    display: inline-flex;
+    margin: 0 0 .4rem;
+    padding: .28rem .65rem;
+    border: 1px solid var(--advent-line);
+    border-radius: .3rem;
+    background: var(--advent-panel);
+    color: var(--accent);
+    font-size: .72rem;
+    font-weight: 750;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.advent-board--history .advent-history-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: .65rem;
+    padding: .8rem 1rem;
+    border: 1px solid var(--advent-line);
+    border-radius: .45rem;
+    background: color-mix(in srgb, var(--panel) 92%, var(--accent));
+}
+
+body.authenticated .advent-board--history .advent-history-notice p { margin: 0; }
+.advent-board--history .advent-history-notice :is(strong, span) { display: block; }
+.advent-board--history .advent-history-notice strong { margin-bottom: .15rem; }
+
+.advent-board--history :is(.advent-history-notice, .advent-calendar h2, .advent-door h2) > .icon {
+    flex: 0 0 auto;
+    width: 1.2rem;
+    height: 1.2rem;
+    color: var(--accent);
+    vertical-align: -.1em;
+}
+
+body.authenticated .advent-board--history .advent-history-context {
+    min-width: 0;
+    padding: clamp(.8rem, 1.3vw, 1.5rem);
+    border: 1px solid var(--advent-line);
+    border-radius: .55rem;
+    background: linear-gradient(154deg, var(--advent-panel), var(--panel));
+    overflow-wrap: anywhere;
+}
+body.authenticated .advent-board--history .advent-history-context h2 { margin: 0 0 .5rem; font-size: 1.15rem; }
+.advent-board--history .advent-calendar h3 { margin: 1rem 0 .65rem; font-size: 1rem; }
+.advent-board--history .advent-history-gift { display: none; }
+
+body.authenticated .advent-board--history .advent-day-tile[data-state="delivered"] {
+    background: color-mix(in srgb, var(--panel) 93%, var(--advent-delivered));
+    color: var(--text);
+}
+
+.advent-board--history .advent-day-tile[data-state="delivered"] .advent-day-status { color: var(--advent-delivered); }
+.advent-board--history .advent-day-tile[data-state="expired"] .advent-day-status { color: var(--text); }
+.advent-board--history .advent-layout:not(:has(.advent-door:target)) .advent-day-tile[data-default],
+.advent-board--history .advent-day-tile:is(:hover, :focus-visible) {
+    border-color: var(--accent);
+}
+.advent-board--history :is(.advent-back-to-calendar, #advent-calendar-title):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+.advent-board--history .advent-back-to-calendar {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+}
+
+@media (min-width: 1021px) {
+    .advent-board--history .advent-layout:has(.advent-history-context) {
+        grid-template-areas: "calendar selection" "calendar history-context";
+        grid-template-rows: auto 1fr;
+    }
+    .advent-board--history .advent-layout:has(.advent-history-context) .advent-calendar { grid-area: calendar; }
+    .advent-board--history .advent-layout:has(.advent-history-context) .advent-selection { grid-area: selection; }
+    .advent-board--history .advent-history-context { grid-area: history-context; }
+}
+
+@media (max-width: 480px) {
+    body.authenticated .advent-board--history .advent-calendar { padding: .65rem; }
+    .advent-board--history .advent-doors { gap: .3rem; }
+    .advent-board--history .advent-day-tile {
+        min-height: 50px;
+        padding: .25rem .28rem;
+    }
+    .advent-board--history .advent-day-number { font-size: 1rem; }
+    .advent-board--history .advent-day-status { font-size: .67rem; }
+    .advent-board--history .advent-milestone-word { display: none; }
+    .advent-board--history .advent-history-gift { display: inline; }
+}
+
+@media (min-width: 380px) and (max-width: 480px) {
+    /* Six cases dans la largeur de la maquette ; à 360 px on garde des cibles lisibles. */
+    .advent-board--history .advent-doors { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}

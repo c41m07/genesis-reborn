@@ -83,6 +83,7 @@ final class AdventTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
         self::assertCount(24, $crawler->filter('.advent-door'));
+        self::assertSelectorNotExists('.advent-board--history');
         self::assertSelectorNotExists('#advent-door-1 form');
 
         // À minuit à Paris, seule la première porte est récupérable.
@@ -136,6 +137,8 @@ final class AdventTest extends WebTestCase
         self::assertSelectorExists('a[href="/evenements/avent"]');
         $crawler = $this->client->request('GET', $editionUrl);
         self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('.advent-board--history');
+        self::assertSelectorTextContains('.advent-notice', 'retirer vos cadeaux réservés');
         self::assertSelectorTextContains('#advent-door-2', 'Expiré');
         self::assertSelectorNotExists('#advent-door-2 form');
         $token = $crawler->filter('#advent-door-1 input[name="_token"]')->attr('value');
@@ -162,6 +165,12 @@ final class AdventTest extends WebTestCase
         self::assertEqualsWithDelta(507, (float) $db->fetchOne("SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = 'metal'", [$altPlanet->id]), .01);
         self::assertEqualsWithDelta(10000, (float) $db->fetchOne("SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = 'metal'", [$planet->id]), .01);
         $this->client->request('GET', $editionUrl);
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
+        self::assertSelectorTextContains('.advent-board--history .advent-history-notice', 'Aucun cadeau ne reste à retirer');
+        self::assertSelectorNotExists('.advent-board--history form[method="post"]');
+        self::assertSelectorExists('.advent-board--history a[href="/evenements"]');
+        self::assertSelectorTextContains('#advent-door-1', 'Le cadeau de cette porte a déjà été versé.');
         self::assertSelectorTextContains('#advent-door-1', 'Versé');
         self::assertSelectorTextContains('#advent-door-24', 'Expiré');
         $this->client->request('GET', '/evenements');
