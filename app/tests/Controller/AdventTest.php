@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\{AdventClaim, AdventEdition, Planet, Player, Universe};
+use App\Service\Advent\{AdventCohortCapture, AdventEditions};
 use App\Service\Universe\{UniverseImporter, UniverseService};
 use App\Service\Colony\ResourceService;
 use App\Service\Player\RegistrationService;
@@ -323,12 +324,115 @@ final class AdventTest extends WebTestCase
         }
     }
 
+    public function testCohortIsFrozenBeforeLaterUnlockAndOpeningAndInitialCapKeepsRest(): void
+    {
+        $senior = $this->player('AdventEstablished');
+        $secondary = $this->player('AdventLateUnlock');
+        $admin = $this->player('AdventCohortAdmin', admin: true);
+        $colony = $this->planet($senior)->id;
+        $secondaryColony = $this->planet($secondary)->id;
+        $omegaMembership = $senior->currentPlayerUniverse->id;
+        $senior = $this->select($senior, 'turbo-1');
+        $alternate = $senior->currentPlayerUniverse->id;
+        $senior = $this->select($senior, 'omega-1');
+        $db = $this->em->getConnection();
+        $setUnlock = static function (int $member, int $planet, string $slug, string $tier) use ($db): void {
+            $db->executeStatement('UPDATE player_universe SET catalog_unlocks = ? WHERE id = ?', [
+                json_encode(['_requirements_version' => 2, 'v2:planet:'.$planet.':ships:'.$slug.':'.$tier => true], JSON_THROW_ON_ERROR), $member,
+            ]);
+        };
+        $setUnlock($omegaMembership, $colony, 'fighter', 'intermediate');
+        $id = $this->publishConsolidated($admin);
+        $this->clock->sleep(8 * 3600);
+        $capture = static::getContainer()->get(AdventCohortCapture::class);
+        $report = $capture->capture($id);
+        self::assertSame('captured', $report['state']);
+        self::assertSame('2026-11-30 23:00:00', $report['observed_at']);
+        self::assertSame(4, $report['profiles']);
+        self::assertSame('already', $capture->capture($id)['state']);
+        $byUniverse = $db->fetchFirstColumn('SELECT bracket FROM advent_progression WHERE player_id = ? ORDER BY universe_id', [$senior->id]);
+        self::assertEqualsCanonicalizing(['intermediate', 'beginner'], $byUniverse);
+        $setUnlock($secondary->currentPlayerUniverse->id, $secondaryColony, 'capital', 'superior');
+        self::assertSame('beginner', $db->fetchOne('SELECT bracket FROM advent_progression WHERE player_id = ?', [$secondary->id]));
+        $new = $this->player('AdventNewcomer');
+        self::assertSame('arrival', $db->fetchOne('SELECT origin FROM advent_progression WHERE player_id = ?', [$new->id]));
+        self::assertSame('beginner', $db->fetchOne('SELECT bracket FROM advent_progression WHERE player_id = ?', [$new->id]));
+
+        $this->client->loginUser($this->em->find(Player::class, $senior->id));
+        $uri = '/evenements/avent/'.$id;
+        $crawler = $this->client->request('GET', $uri);
+        self::assertSelectorNotExists('#advent-door-1 form');
+        $this->client->submit($crawler->filter('form[action$="/univers"]')->form());
+        self::assertResponseRedirects($uri, 303);
+        self::assertSame($omegaMembership, $senior->currentPlayerUniverse->id);
+        $crawler = $this->client->followRedirect();
+        self::assertSelectorTextContains('.advent-universe', 'Intermédiaire ×6');
+        $token = $crawler->filter('#advent-door-1 input[name="_token"]')->attr('value');
+        $this->fixtureStocks($colony, '2026-11-30 23:00:00', ['metal' => 0, 'nano' => 0]);
+        $this->client->request('POST', $uri.'/portes/1', ['_token' => $token, 'choice' => '0', 'colony' => $colony]);
+        self::assertResponseRedirects($uri.'#advent-door-1', 303);
+        self::assertSame(['metal' => 2000, 'nano' => 1000], json_decode($db->fetchOne('SELECT credited_resources FROM advent_claim'), true));
+        self::assertNull($db->fetchOne('SELECT delivered_at FROM advent_claim'));
+
+        $senior = $this->select($senior, 'turbo-1');
+        self::assertSame($alternate, $senior->currentPlayerUniverse->id);
+        $this->client->loginUser($senior);
+        $this->client->request('GET', $uri);
+        self::assertSelectorNotExists('#advent-door-1 form');
+        self::assertSelectorTextContains('main', 'Le choix ne peut pas être transféré.');
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_binding WHERE player_id = ?', [$senior->id]));
+        $senior = $this->select($senior, 'omega-1');
+        $this->clock->sleep(49 * 3600);
+        $this->client->getCookieJar()->clear();
+        $this->client->loginUser($senior);
+        $crawler = $this->client->request('GET', $uri);
+        $token = $crawler->filter('#advent-door-1 input[name="_token"]')->attr('value');
+        $this->fixtureStocks($colony, '2026-12-03 00:00:00', ['metal' => 0, 'nano' => 0]);
+        $this->client->request('POST', $uri.'/portes/1', ['_token' => $token, 'choice' => '0', 'colony' => $colony]);
+        self::assertResponseRedirects($uri.'#advent-door-1', 303);
+        self::assertSame(['metal' => 3600, 'nano' => 1800], json_decode($db->fetchOne('SELECT credited_resources FROM advent_claim'), true));
+        self::assertNotNull($db->fetchOne('SELECT delivered_at FROM advent_claim'));
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_claim'));
+    }
+
+    public function testLateCaptureNeverPretendsToBeMidnight(): void
+    {
+        $this->player('AdventLateCohort');
+        $admin = $this->player('AdventLateCohortAdmin', admin: true);
+        $id = $this->publishConsolidated($admin);
+        $this->clock->sleep(8 * 3600 + 121);
+        $capture = static::getContainer()->get(AdventCohortCapture::class);
+        try {
+            $capture->capture($id);
+            self::fail('Un relevé passé ne doit pas être reconstitué.');
+        } catch (\DomainException $error) {
+            self::assertStringContainsString('Relevé de départ manqué', $error->getMessage());
+        }
+        $db = $this->em->getConnection();
+        self::assertNull($db->fetchOne('SELECT cohort_captured_at FROM advent_edition WHERE id = ?', [$id]));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_progression'));
+        $result = $capture->capture($id, acceptLate: true);
+        self::assertSame('late', $result['state']);
+        self::assertSame('2026-11-30 23:02:01', $result['observed_at']);
+        self::assertSame(['late_cohort'], array_unique($db->fetchFirstColumn('SELECT origin FROM advent_progression')));
+    }
+
+    /** Anciennes fixtures de retenue : les montants synthétiques ne transitent plus par l’admin. */
     private function publish(Player $admin): int
+    {
+        $editions = static::getContainer()->get(AdventEditions::class);
+        $preview = $editions->prepare('Avent synthétique', '2026-12-01', '2026-12-31',
+            array_fill(1, 24, [['metal' => '7'], ['nano' => '3']]));
+
+        return $editions->publish($admin, $preview)->id;
+    }
+
+    private function publishConsolidated(Player $admin): int
     {
         $this->client->loginUser($admin);
         $crawler = $this->client->request('GET', '/admin/events/avent');
         self::assertResponseIsSuccessful();
-        self::assertCount(24, $crawler->filter('.admin-event-form details'));
+        self::assertSelectorTextContains('main', 'Barème de l’édition');
         $token = $crawler->filter('.admin-event-form input[name="_token"]')->attr('value');
         $this->client->request('POST', '/admin/events/avent', [
             '_token' => $token, 'name' => 'Avent synthétique', 'first' => '2026-12-01', 'last' => '2026-12-31',
@@ -339,6 +443,11 @@ final class AdventTest extends WebTestCase
         $crawler = $this->client->followRedirect();
         self::assertResponseIsSuccessful();
         self::assertCount(24, $crawler->filter('ol.event-list > li'));
+        self::assertSelectorTextContains('main', 'Débutant ×1');
+        self::assertSelectorTextContains('main', 'Vétéran ×24');
+        self::assertSelectorTextContains('main', 'Gardien des étoiles');
+        self::assertSelectorTextNotContains('main', 'Collecteur');
+
         $url = $this->client->getRequest()->getUri();
         $this->client->submit($crawler->selectButton('Confirmer et publier')->form());
         self::assertResponseRedirects('/admin/events/avent', 303);
