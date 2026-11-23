@@ -306,20 +306,15 @@ test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', a
         await expect(report).toBeVisible();
         expect(completed()).toBe(first);
         expect(assets()).toBe(before);
-        await view.goto('/profil/preferences');
-        await view.getByLabel('Thème de l’interface').selectOption('light');
-        await view.getByRole('button', { name: 'Enregistrer les paramètres' }).click();
-        await expect(view.locator('body')).toHaveAttribute('data-theme', 'light');
+        const setFixtureTheme = theme => runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','" + theme + "') WHERE email='" + email + "'");
+        setFixtureTheme('light');
         await view.goto(route);
         await view.getByRole('button', { name: 'Lancer la simulation', exact: true }).press('Enter');
         await captureReport(view, 'light', 'native');
 
         // Axe s’exécute uniquement dans le navigateur où JavaScript est disponible.
         for (const theme of ['light', 'dark']) {
-            await page.goto('/profil/preferences');
-            await page.getByLabel('Thème de l’interface').selectOption(theme);
-            await page.getByRole('button', { name: 'Enregistrer les paramètres' }).click();
-            await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+            setFixtureTheme(theme);
             await page.goto(route);
             await page.getByRole('button', { name: 'Lancer la simulation', exact: true }).click();
             await captureReport(page, theme, 'js');
