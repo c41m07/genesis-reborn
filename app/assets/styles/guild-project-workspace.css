@@ -244,3 +244,39 @@ body.authenticated .project-redesign .project-donation-panel .project-donation-l
         width: 100%;
     }
 }
+
+
+/* S09 : l’avancement du palier et les conditions personnelles sont deux
+   lectures distinctes. Le don, s’il est disponible, reste dans son panneau. */
+body.authenticated .social-board--guild-project .project-personal-recap {
+    margin-block: 1rem;
+    padding: .85rem 1rem;
+    border: 1px solid var(--project-control-border);
+    border-inline-start: 3px solid var(--accent);
+    border-radius: .35rem;
+    background: color-mix(in srgb, var(--panel) 93%, var(--accent));
+}
+body.authenticated .social-board--guild-project .project-personal-recap--qualified {
+    border-inline-start-color: var(--project-positive);
+}
+body.authenticated .social-board--guild-project .project-personal-recap :is(h3, ul, p) {
+    margin: 0;
+}
+body.authenticated .social-board--guild-project .project-personal-recap ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem 1.2rem;
+    margin-block: .45rem;
+    padding: 0;
+    list-style: none;
+}
+body.authenticated .social-board--guild-project .project-personal-recap li { margin: 0; }
+body.authenticated .social-board--guild-project .project-donation-panel h2 { margin-bottom: .35rem; }
+body.authenticated .social-board--guild-project .project-donation-context { color: var(--text); }
+
+@media (min-width: 1021px) {
+    .social-board--guild-project .project-donation-panel .form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+}
