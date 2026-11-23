@@ -1434,3 +1434,15 @@ body.authenticated .social-board--messages .message-mobile-back {
         margin: 10px 12px 0;
     }
 }
+
+body.authenticated .social-board :is(.guild-hall-closed, .social-feedback-guidance) {
+    margin-block: 18px 0;
+    padding: 12px 16px;
+    border: 1px solid var(--social-border);
+    border-radius: 7px;
+    background: var(--social-panel);
+}
+
+body.authenticated .social-board :is(.guild-hall-closed, .social-feedback-guidance) :is(h2, h3) {
+    margin-block: 0 8px;
+}
