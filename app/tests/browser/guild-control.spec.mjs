@@ -125,7 +125,7 @@ test('L1C A : rôles, formulaires, traités et confirmations natives de gestion'
             await expect(page.getByLabel('Description', { exact: true })).toHaveValue(description);
           } else {
             await expect(page.locator('.guild-relations-list .badge')).toHaveText('Relation actuelle : Alliés');
-            await expect(page.locator('.guild-relations-list')).toContainText('proposition reçue');
+            await expect(page.locator('.guild-relations-list').getByText(/^Proposition reçue : Pacte de défense/)).toBeVisible();
             await expect(page.locator('.guild-relations-list')).toContainText('La relation actuelle reste applicable');
           }
           if (width === 390) {
