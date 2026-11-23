@@ -1229,3 +1229,83 @@ body[data-theme=light] .entry-universes--audit .entry-universe-state--scheduled 
         margin-bottom: 20px;
     }
 }
+
+/* Le gabarit nominal tient dans la maquette ; erreurs et notices restent libres de s’étendre. */
+.entry-access--login .entry-access-panel > .entry-eyebrow {
+    margin: 5px 0 20px;
+}
+
+.entry-access--login .core-entry-access--task-first .entry-access-panel h1 {
+    margin-block: 0 15px;
+}
+
+.entry-access--login .entry-access-panel > p:not(.entry-eyebrow,.auth-back,.flash) {
+    margin-block: 0 18px;
+}
+
+.entry-access--login .entry-access-panel .auth-form {
+    margin-block: 18px 14px;
+    gap: 7px;
+}
+
+.entry-access--login .entry-access-panel .auth-form label {
+    margin-block: 0;
+}
+
+.entry-access--login .entry-access-panel .entry-recovery-link {
+    min-height: 35px;
+}
+
+.entry-access--login .entry-access-panel .preference-toggle {
+    min-height: 38px;
+    margin-block: 0 5px;
+}
+
+.entry-access--login .entry-access-links a {
+    min-height: 34px;
+}
+
+.entry-access--login .entry-access-context .entry-context-title {
+    font-size: clamp(29px, 2.72vw, 52px);
+}
+
+body .entry-public-header .entry-public-navigation [aria-current=page] {
+    text-decoration: underline;
+    text-underline-offset: 5px;
+}
+
+.entry-access--audit .entry-access-notice {
+    display: grid;
+    gap: 6px;
+    margin-block: 12px;
+    padding: 12px 14px;
+    border-inline-start: 3px solid currentColor;
+}
+
+.entry-access--audit .entry-access-notice--receipt {
+    color: var(--accent);
+    border-color: var(--line);
+    border-inline-start-color: var(--accent);
+    background: color-mix(in srgb, var(--panel) 90%, var(--accent));
+}
+
+.entry-universes--audit .universe-card .universe-closing:not([hidden]) {
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-inline-start: 3px solid var(--accent);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--panel) 90%, var(--accent));
+}
+
+.entry-universes--audit .empty-state {
+    grid-column: 1 / -1;
+    padding: clamp(20px, 2.5vw, 44px);
+    border-inline-start: 3px solid var(--accent);
+}
+
+@media (max-width: 760px) {
+    .entry-access--login .entry-access-panel .entry-recovery-link,
+    .entry-access--login .entry-access-links a {
+        min-height: 44px;
+    }
+}

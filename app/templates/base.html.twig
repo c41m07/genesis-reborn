@@ -107,7 +107,7 @@
     {% include 'ui/resource_strip.html.twig' with {passive: campaignPage} %}
 </div>
 {% endif %}
-<main id="main" class="shell {{ route=='app_map_v2'?'shell--galaxy-v2':(route=='app_messages'?'shell--messaging':'') }}">{% if chrome.membership and route != 'app_universes' %}{% include 'universe/_closing.html.twig' with {universe: chrome.membership.universe, passive: campaignPage} %}{% endif %}{% for type,messages in app.flashes %}{% for message in messages %}<div class="flash {{ type }}" role="{{ type=='error'?'alert':'status' }}">{{ message }}</div>{% endfor %}{% endfor %}{% block incoming_fleets %}{% if chrome.membership %}{% include 'ui/incoming_attacks.html.twig' with {incoming_panel:false} %}{% endif %}{% endblock %}
+<main id="main" class="shell {{ route=='app_map_v2'?'shell--galaxy-v2':(route=='app_messages'?'shell--messaging':'') }}">{% if chrome.membership and route != 'app_universes' %}{% include 'universe/_closing.html.twig' with {universe: chrome.membership.universe, passive: campaignPage} %}{% endif %}{% block flash_messages %}{% for type,messages in app.flashes %}{% for message in messages %}<div class="flash {{ type }}" role="{{ type=='error'?'alert':'status' }}">{{ message }}</div>{% endfor %}{% endfor %}{% endblock %}{% block incoming_fleets %}{% if chrome.membership %}{% include 'ui/incoming_attacks.html.twig' with {incoming_panel:false} %}{% endif %}{% endblock %}
     {# L’aide reste à portée sans recouvrir la carte ni le composeur collé en bas. #}
     {% if firstStepsPreview and firstStepsInFlow %}
         {% include 'player/_first_steps_popup.html.twig' with {planet: chrome.planet, preview: firstStepsPreview} only %}

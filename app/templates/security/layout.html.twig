@@ -1,7 +1,9 @@
 {% extends 'base.html.twig' %}
 
+{# Les notices natives suivent la tâche au lieu de repousser le formulaire sous le bandeau. #}
+{% block flash_messages %}{% endblock %}
 {% block body %}
-<div class="entry-workspace entry-access entry-access--audit" data-page-sections="disabled">
+<div class="entry-workspace entry-access entry-access--audit{{ access_heading_id == 'login-title' ? ' entry-access--login' : '' }}" data-page-sections="disabled">
     {# L'action est la première information de la page, y compris dans l'ordre de lecture. #}
     {% set compactAccess = app.request.attributes.get('_route') not in ['app_login', 'app_register'] %}
     <div class="entry-access-layout{{ compactAccess ? ' core-entry-access--compact' : ' core-entry-access--task-first' }}">
