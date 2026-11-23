@@ -300,3 +300,18 @@ body.authenticated .event-redesign > .inline-link {
     gap: .55rem;
     margin-top: .75rem;
 }
+
+.profile-cosmetics {
+    margin-block-start: 1rem;
+}
+
+.profile-polar-night {
+    min-block-size: 4.5rem;
+    margin-block: .75rem;
+    border: 1px solid var(--line);
+    border-radius: .4rem;
+    background:
+        radial-gradient(ellipse at 32% 94%, #a2d6ed 0%, #516ca5 14%, transparent 43%),
+        radial-gradient(ellipse at 70% 82%, #4daeba 0%, #263051 25%, transparent 51%),
+        linear-gradient(160deg, #0e1529, #182337 70%, #101725);
+}
