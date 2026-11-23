@@ -151,7 +151,7 @@ test('L7C : système et globe conservent clic, rotation, zoom, gestes tactiles e
     await expect(page).toHaveURL(url => url.pathname === '/carte-v2' && Number(url.searchParams.get('system')) === selected);
     await expect(page.locator('.gv2-system-panel')).toContainText('aucune planète révélée');
     await page.setViewportSize({width:360,height:800});
-    runIsolatedSql(user.project, `UPDATE player SET preferences=JSON_SET(COALESCE(preferences,JSON_OBJECT()),'$.theme','light') WHERE email='${user.email}'`);
+    runIsolatedSql(user.project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','light') WHERE email='${user.email}'`);
     await page.reload();
     await expect(page.locator('body')).toHaveAttribute('data-theme', 'light');
     await expect(page.getByRole('link', {name:'Liste des systèmes',exact:true})).toBeVisible();
