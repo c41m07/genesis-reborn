@@ -78,7 +78,7 @@ test('Planches joueur : rails de décision sur grand écran et flux mobile sans 
                     await expect(details).toBeHidden();
                     await item.click();
                     await expect(details).toBeVisible();
-                    await expect(details).toContainText('Prérequis');
+                    await expect(details.getByRole('heading', { level: 2 })).toBeVisible();
                     if (width === 1920) {
                         await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
                     } else {

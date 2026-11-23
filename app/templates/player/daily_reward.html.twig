@@ -29,6 +29,17 @@
         </dl>
         <p id="daily-reward-rules">Le lot doit tenir en entier dans vos stocks. Si vous manquez un jour, le cycle ne repart pas à zéro.</p>
         <p id="daily-reward-destination">Planète destinataire : <strong>{{ planet.name }}</strong> ({{ planet.coordinates() }}).</p>
+        {% if destinations|length > 1 %}
+        <form class="daily-board-destination" method="get" action="{{ path('app_daily_reward') }}">
+            <div>
+                <label for="daily-destination">Changer de destination</label>
+                <select id="daily-destination" name="colony">
+                    {% for destination in destinations %}<option value="{{ destination.id }}"{% if destination.id == planet.id %} selected{% endif %}>{{ destination.name }} ({{ destination.coordinates() }})</option>{% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="quiet-button">Choisir cette planète</button>
+        </form>
+        {% endif %}
         {% include 'player/_daily_reward_claim_form.html.twig' with {
             planet: planet,
             status: status,
