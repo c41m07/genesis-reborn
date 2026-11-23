@@ -422,6 +422,7 @@ body[data-theme=light] .information-workspace a:not(.primary) {
 /* S17/S20 : la saisie et la pièce jointe suivent l'ordre du formulaire ; l'aperçu reste à droite. */
 body.ui-refined[data-ui-page="feedback"] .feedback-workspace.social-board .feedback-layout {
     grid-template-columns: minmax(0, 1.65fr) minmax(270px, 1fr);
+    grid-template-areas: "primary context";
     max-width: none;
     margin-inline: 0;
     align-items: start;
@@ -464,5 +465,6 @@ body.ui-refined[data-ui-page="feedback"] .feedback-workspace.social-board {
 @media (max-width: 900px) {
     body.ui-refined[data-ui-page="feedback"] .feedback-workspace.social-board .feedback-layout {
         grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "primary" "context";
     }
 }
