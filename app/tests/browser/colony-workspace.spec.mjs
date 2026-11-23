@@ -114,6 +114,16 @@ test('L7A A : colonies, renommage, comparaison et bilan complets sur quatre form
       await expect(orion).toContainText('Aucune opération en cours');
       await expect(orion.locator('.planet-index-art img')).toHaveAttribute('src', /planet-desert\.webp/);
       await expect(orion.getByRole('link', { name: /Ouvrir cette colonie/ })).toHaveAttribute('href', '/planetes/' + other.id);
+      if (width >= 1440) {
+        const controls = horizon.locator('.colony-comparison-card-actions');
+        const open = controls.getByRole('link', { name: /Ouvrir cette colonie/ });
+        const manage = controls.getByRole('link', { name: /Renommer ou consulter ses bonus/ });
+        await open.focus();
+        await page.keyboard.press('Tab');
+        await expect(manage).toBeFocused();
+        await assertGuideBelowAction(page, manage);
+        await assertGuideBelowAction(page, page.locator('.colony-comparison tbody td[data-comparison-queue="shipyard"]').last());
+      }
       if (width === 1440) await expect(page.locator('.colony-comparison td[data-resource="nano"]').first()).toBeVisible();
       else await expect(page.locator('.colony-comparison td[data-resource="nano"]').first()).toBeHidden();
       const horizonWork = page.locator('.colony-comparison tbody tr')

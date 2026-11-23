@@ -201,10 +201,18 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
     }
 }
 
-/* Sur téléphone, préserver les commandes du comparateur et le suivi de
-   la Vue générale sans refermer l’aide ni déplacer la vue Cartes. */
+/* Le comparateur peut afficher des contrôles et des cartes sur toute sa largeur.
+   Garder l’aide ouverte après le contenu, sans changer la vue Cartes. */
+.app-frame:has(> .shell .player-planets-board .colony-resource-picker) > .first-steps-popup-enhanced {
+    position: relative;
+    inset: auto;
+    margin: 0 0 8px auto;
+    max-width: 100%;
+}
+
+/* Sur téléphone, l’aide reste en flux après le suivi de la Vue générale. */
 @media (max-width: 740px) {
-    .app-frame:has(> .shell :is(.player-planets-board .colony-resource-picker, .overview-page .core-empire-watch)) > .first-steps-popup-enhanced {
+    .app-frame:has(> .shell .overview-page .core-empire-watch) > .first-steps-popup-enhanced {
         position: relative;
         inset: auto;
         margin: 0 0 8px auto;
