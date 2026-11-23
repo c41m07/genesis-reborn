@@ -47,7 +47,7 @@
                             <th scope="row"><span class="galaxy-index-coordinates">{{ coordinate }}</span><small>{{ row.system.name }}</small></th>
                             <td>{{ row.known ? 'Exploré' : 'Signal non cartographié' }}</td>
                             <td>{{ row.known ? row.planets|length : '—' }}</td>
-                            <td><a href="{{ url }}"{{ active?' aria-current=true':'' }} aria-label="{{ row.known ? 'Consulter' : 'Voir les coordonnées de' }} {{ coordinate }}">{{ active?'Sélectionné':(row.known?'Consulter':'Coordonnées') }}</a></td>
+                            <td><a href="{{ url }}"{{ active?' aria-current=true':'' }} aria-label="{{ active ? 'Sélectionné' : (row.known ? 'Consulter' : 'Voir les coordonnées de') }} {{ coordinate }}">{{ active?'Sélectionné':(row.known?'Consulter':'Coordonnées') }}</a></td>
                         </tr>
                     {% else %}
                         <tr><td colspan="4">Aucun système disponible.</td></tr>

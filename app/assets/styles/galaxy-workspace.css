@@ -52,7 +52,8 @@
     display:flex; align-items:center; justify-content:center; padding:12px; margin-block:0;
     background:var(--panel); color:var(--muted); border:1px solid var(--line); border-radius:5px; text-align:center;
 }
-.gv2-workspace[data-view=galaxy] .gv2-system-panel .gv2-planet-list { grid-template-columns:1fr; }
+/* Dans le rail, une planète par ligne laisse la place à son nom et au marqueur. */
+.gv2-workspace .gv2-system-panel .gv2-planet-list { grid-template-columns:minmax(0,1fr); }
 .gv2-workspace .gv2-system-panel .gv2-planet-choice,
 .gv2-workspace .gv2-system-panel .gv2-planet-choice-name,
 .gv2-workspace .gv2-system-panel .gv2-planet-owner { min-width:0; white-space:normal; overflow-wrap:anywhere; }
