@@ -172,6 +172,15 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
     max-width: 100%;
 }
 
+/* Ne pas masquer le nom à ressaisir ni une des deux décisions d’abandon.
+   L’aide reste ouverte dans le flux et les pages sans formulaire gardent leur disposition. */
+.app-frame:has(> .shell .colony-abandon-confirmation .abandon-confirmation) > .first-steps-popup-enhanced {
+    position: relative;
+    inset: auto;
+    margin: 0 0 8px auto;
+    max-width: 100%;
+}
+
 /* Carte, composeur et choix de cadeau gardent leur espace : l’aide reste au-dessus dans le flux. */
 :is(.shell--galaxy-v2, .shell--messaging, .shell--advent, .shell--fleet-decision) > .first-steps-popup-enhanced {
     position: relative;
