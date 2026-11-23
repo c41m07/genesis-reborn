@@ -1,5 +1,6 @@
 {% import 'ui/macros.html.twig' as ui %}
-<aside class="panel pirate-campaign-intel" aria-labelledby="pirate-intelligence-title">
+{% set tag = embedded|default(false) ? 'section' : 'aside' %}
+<{{ tag }} class="{{ embedded|default(false) ? 'pirate-campaign-intel pirate-campaign-intel--embedded' : 'panel pirate-campaign-intel' }}" aria-labelledby="pirate-intelligence-title">
     <h2 id="pirate-intelligence-title" tabindex="-1">Renseignements de la mission</h2>
     {% if briefing.formation is not null %}
         <section aria-labelledby="pirate-intel-title">
@@ -13,16 +14,7 @@
             <p class="muted">Gardez si possible des vaisseaux en réserve. Remplacer des pertes peut demander de l’électricité en plus des matériaux.</p>
         </section>
     {% endif %}
-    {% if briefing.quote is not null and not has_durable_reward %}
-        <section aria-labelledby="pirate-potential-title">
-            <h3 id="pirate-potential-title">{{ ui.icon('overview') }} Gain potentiel</h3>
-            <p>Estimation du convoi après victoire : 50 % du coût catalogue de la flotte révélée, hors électricité. Ce montant n’a pas été versé.</p>
-            <dl class="pirate-campaign-reward">
-                {% for resource in briefing.quote %}
-                    <div><dt>{{ resource.label }}</dt><dd>+{{ resource.amount }}</dd></div>
-                {% endfor %}
-            </dl>
-            <p class="muted">Vérifiez le stockage avant une livraison. Ce n’est pas une condition pour combattre.</p>
-        </section>
+    {% if not embedded|default(false) %}
+        {% include 'player/pirate_campaign/_potential_reward.html.twig' with {briefing: briefing, has_durable_reward: has_durable_reward} only %}
     {% endif %}
-</aside>
+</{{ tag }}>
