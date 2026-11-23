@@ -217,7 +217,7 @@ body.admin-console.admin-balance-workspace .admin-catalogue-reset {
 .admin-balance-workspace .admin-design-table tbody th small { display: block; margin-top: 4px; font-weight: 400; }
 body.admin-console.admin-balance-workspace .admin-design-table tbody th code { color: var(--muted); }
 .admin-balance-workspace .admin-design-row-link { display: inline-flex; min-height: 44px; align-items: center; font-weight: 700; }
-.admin-balance-workspace .admin-catalogue-history-link { margin-block: 0 16px; }
+.admin-balance-workspace .admin-catalogue-history-link { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
 .admin-balance-workspace .admin-catalogue-history-link .secondary { width: fit-content; min-height: 44px; }
 .admin-balance-workspace .admin-catalogue-list { margin-bottom: 12px; }
 
@@ -332,3 +332,20 @@ body.admin-console.admin-balance-workspace .admin-task-heading h1 { font-size: c
     accent-color: var(--accent);
 }
 .admin-balance-workspace .admin-design-restore-decision :is(button,a) { width: 100%; }
+
+/* Les accès existants restent tous visibles sans repousser inutilement les vraies données. */
+body.admin-console.admin-balance-workspace .core-admin-context .admin-page-navigation { margin: 0; }
+body.admin-console.admin-balance-workspace .admin-content > .admin-task-heading {
+    margin-block: 0 16px;
+    padding-block: clamp(12px, 1.2vw, 18px);
+}
+body.admin-console.admin-balance-workspace .admin-task-heading :is(h1,p:not(.eyebrow)) { margin-block: 4px 0; }
+body.admin-console.admin-balance-workspace .admin-content > .admin-task-heading + .admin-page-navigation { margin-block: 12px; }
+@media (min-width: 761px) {
+    body.admin-console.admin-balance-workspace .admin-task-heading + .admin-page-navigation {
+        grid-template-columns: repeat(4, minmax(0, max-content));
+    }
+}
+@media (max-width: 760px) {
+    .admin-balance-workspace .admin-catalogue-history-link { justify-content: flex-start; }
+}
