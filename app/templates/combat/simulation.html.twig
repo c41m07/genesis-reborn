@@ -67,6 +67,10 @@
 <p>Cette estimation porte sur dix combats : 7 victoires donnent 70 %, sans garantir cette probabilité réelle. Le butin, la reconstruction, les voyages et l’évolution ultérieure des forces ne sont pas simulés.</p>
 <p>Dépliez chaque combat pour consulter ses pertes fictives, ses survivants et ses rounds. Les pertes moyennes ne sont pas calculées.</p>
 <h3>Issue et effectifs de l’attaquant</h3>
+<div class="simulation-result-actions">
+    <a class="secondary" href="#simulation-trial-1">Voir le détail des combats</a>
+    <a href="#simulation-scenario">Revenir au scénario</a>
+</div>
 <div class="table-scroll simulation-trial-summary" role="region" tabindex="0" aria-label="Bilan par combat">
     <table class="data-table">
         <caption>Bilan de l’attaquant dans chaque combat</caption>
@@ -83,10 +87,6 @@
         {% endfor %}
         </tbody>
     </table>
-</div>
-<div class="simulation-result-actions">
-    <a class="secondary" href="#simulation-trial-1">Voir le détail des combats</a>
-    <a href="#simulation-scenario">Revenir au scénario</a>
 </div>
 <h3>Détails par combat</h3>
 {% for trial in result.trials %}
