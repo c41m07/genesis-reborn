@@ -3,6 +3,12 @@
 {% block body %}
 {% import 'ui/macros.html.twig' as ui %}
 <div class="social-profile-page page-refinement guild-discovery guild-discovery--profile social-board social-board--guild-public" data-page-sections="disabled">
+<div class="page-heading">
+    <div>
+        <h1>Présentation de guilde</h1>
+        <p>Fiche publique dans l’univers {{ membership.universe.name }}.</p>
+    </div>
+</div>
 {% include 'ui/guild_navigation.html.twig' %}
 <section class="panel guild-public-hero">
 {% if profile.has_banner %}<img class="guild-public-banner" src="{{ path('app_guild_media',{id:profile.id,kind:'banner'}) }}" alt="Bannière de la guilde {{ profile.name }}">{% endif %}
@@ -12,16 +18,24 @@
 {% else %}
     <span class="guild-profile-emblem" aria-hidden="true">{{ ui.icon('diplomacy') }}</span>
 {% endif %}
-<div><h1>{% if profile.tag %}[{{ profile.tag }}] {% endif %}{{ profile.name }}</h1><p>Guilde de l’univers {{ membership.universe.name }} · {{ profile.member_count }} membre{{ profile.member_count>1?'s':'' }}</p></div></div>
+<div><h2>{% if profile.tag %}[{{ profile.tag }}] {% endif %}{{ profile.name }}</h2><p>Guilde de l’univers {{ membership.universe.name }} · {{ profile.member_count }} membre{{ profile.member_count>1?'s':'' }}</p></div></div>
 {% if can_edit %}<a class="secondary" href="{{ path('app_guild_profile_edit',{id:profile.id}) }}">Personnaliser la guilde</a>{% endif %}
 </section>
 <div class="guild-public-content">
 <section class="panel" aria-labelledby="guild-public-description"><h2 id="guild-public-description">Présentation</h2><div class="guild-public-description">{% if profile.description %}<p>{{ profile.description|nl2br }}</p>{% else %}<p>Cette guilde n’a pas encore ajouté de description.</p>{% endif %}</div></section>
-<section class="panel" aria-labelledby="guild-public-leader"><h2 id="guild-public-leader">Commandant</h2>{% if profile.leader %}<a class="secondary" href="{{ path('app_player_public_profile',{id:profile.leader.id}) }}">{{ profile.leader.username }}</a>{% else %}<p>Commandement indisponible.</p>{% endif %}</section>
+<section class="panel" aria-labelledby="guild-public-leader"><h2 id="guild-public-leader">Commandant</h2>{% if profile.leader %}
+    <div class="guild-public-commander">
+        <span aria-hidden="true">{{ profile.leader.username|first|upper }}</span>
+        <strong>{{ profile.leader.username }}</strong>
+    </div>
+    <a class="secondary" href="{{ path('app_player_public_profile',{id:profile.leader.id}) }}" aria-label="Voir le profil du commandant {{ profile.leader.username }}">Voir le profil du commandant</a>
+{% else %}
+    <p>Commandement indisponible.</p>
+{% endif %}</section>
 </div>
 <nav class="guild-profile-links" aria-label="Liens de la présentation de guilde">
-    <a class="secondary" href="{{ path('app_leaderboard',{tab:'guilds'}) }}">Classement des guildes</a>
     <a class="secondary" href="{{ path('app_guilds') }}">{{ chrome.guild|default(null) ? 'Ma guilde' : 'Trouver une guilde' }}</a>
+    <a class="secondary" href="{{ path('app_leaderboard',{tab:'guilds'}) }}">Classement des guildes</a>
 </nav>
 </div>
 {% endblock %}

@@ -3,9 +3,9 @@
 {% if profile.has_banner %}<img class="guild-public-banner" src="{{ path('app_guild_media',{id:own.id,kind:'banner'}) }}" alt="Bannière de la guilde {{ own.name }}">{% endif %}
 {% if profile.has_logo %}<img class="guild-public-logo" src="{{ path('app_guild_media',{id:own.id,kind:'logo'}) }}" alt="">{% else %}<span class="guild-hub-emblem" aria-hidden="true">{{ ui.icon('diplomacy') }}</span>{% endif %}
 <div class="guild-overview-identity">
-    <h2><a class="public-profile-link" href="{{ path('app_guild_public_profile',{id:own.id}) }}">{{ own.name }}</a></h2>
+    <h2><a class="public-profile-link" href="{{ path('app_guild_public_profile',{id:own.id}) }}">{% if own.tag %}[{{ own.tag }}] {% endif %}{{ own.name }}</a></h2>
     <dl class="guild-hub-stats core-guild-stats">
-        {% if own.tag %}<div><dt>Tag</dt><dd class="guild-overview-tag">[{{ own.tag }}]</dd></div>{% endif %}
+        {% if profile.leader %}<div><dt>Commandant</dt><dd>{{ profile.leader.username }}</dd></div>{% endif %}
         <div><dt>Membres</dt><dd>{{ profile.member_count|quantity(0) }}</dd></div>
         <div><dt>Votre rôle</dt><dd>{{ own.leader.id == membership.id ? 'Commandant' : ownMember.rank.name|default('Membre') }}</dd></div>
     </dl>
@@ -13,19 +13,27 @@
 <a class="primary guild-channel-link" href="{{ path('app_messages',{channel:'guild'}) }}">Ouvrir le canal de guilde {{ ui.icon('arrow') }}</a>
 </section>
 <div class="guild-overview-layout">
-<section class="panel guild-overview-conversation"><div class="section-heading"><h2>Derniers échanges</h2><a href="{{ path('app_messages',{channel:'guild'}) }}">Tout lire</a></div>
+<section class="panel guild-overview-conversation"><div class="section-heading"><h2>Derniers échanges</h2></div><p class="muted">Aperçu du canal · ouvrez le canal pour répondre.</p>
 {% for message in guildPreview %}<article class="guild-message-preview"><span class="guild-message-initial" aria-hidden="true">{{ message.sender.displayName|slice(0, 1)|upper }}</span><div class="guild-message-preview-body"><header><strong>{{ message.sender.displayName }}</strong><time datetime="{{ message.createdAt|date('c') }}">{{ message.createdAt|date('d/m H:i',preferences.timezone) }}</time></header><p>{{ message.content|length > 160 ? message.content|slice(0,160) ~ '…' : message.content }}</p></div></article>{% else %}<p>Le canal est prêt. Lancez la première discussion avec votre guilde.</p>{% endfor %}
-<small>Consulter cet aperçu ne marque pas le canal comme lu.</small></section>
+<small>Consulter cet aperçu ne marque pas le canal comme lu.</small><a class="secondary guild-overview-read-all" href="{{ path('app_messages',{channel:'guild'}) }}">Tout lire</a></section>
 <div class="guild-overview-details">
 <section class="panel guild-overview-diplomacy" aria-labelledby="guild-overview-diplomacy-title">
     <h2 id="guild-overview-diplomacy-title">Relations diplomatiques</h2>
 <dl class="guild-overview-relations core-guild-stats" aria-label="Relations diplomatiques de cette guilde">
     <div><dt>Guildes alliées</dt><dd>{{ guildRelationCounts.allies|default(0)|quantity(0) }}</dd></div>
+    <div><dt>Neutres enregistrées</dt><dd>{{ guildRelationCounts.neutral|default(0)|quantity(0) }}</dd></div>
     <div><dt>Guildes ennemies</dt><dd>{{ guildRelationCounts.enemies|default(0)|quantity(0) }}</dd></div>
 </dl>
     <a class="secondary" href="{{ path('app_diplomacy') }}">Consulter la diplomatie</a>
 </section>
-<section class="panel"><h2>Projets collectifs</h2><p>Retrouvez les paliers, contributions et récompenses de votre guilde.</p><div class="guild-hub-actions"><a class="secondary" href="{{ path('app_guild_projects') }}">Consulter les projets</a><a class="secondary" href="{{ path('app_map_v2') }}">Ouvrir la galaxie</a><a class="secondary" href="{{ path('app_leaderboard',{tab:'guilds'}) }}">Classement</a></div></section>
+<section class="panel"><h2>Projets collectifs</h2><p>Financez les paliers avec votre guilde.</p>
+{% if guildProjectPreview is defined %}
+    <div class="guild-overview-project">
+        <label for="guild-overview-project-progress">{{ guildProjectPreview.name }} · palier en cours</label>
+        <progress id="guild-overview-project-progress" value="{{ guildProjectPreview.value }}" max="{{ guildProjectPreview.maximum }}">{{ guildProjectPreview.value }} sur {{ guildProjectPreview.maximum }}</progress>
+    </div>
+{% endif %}
+<div class="guild-hub-actions"><a class="secondary" href="{{ path('app_guild_projects') }}">Consulter les projets</a><a class="secondary" href="{{ path('app_map_v2') }}">Ouvrir la galaxie</a><a class="secondary" href="{{ path('app_leaderboard',{tab:'guilds'}) }}">Classement</a></div></section>
 <section class="panel"><h2>Présentation</h2>{% if profile.description %}<p class="guild-public-description">{{ profile.description|nl2br }}</p>{% else %}<p>Votre guilde n’a pas encore ajouté de présentation.</p>{% endif %}</section>
 </div>
 </div>

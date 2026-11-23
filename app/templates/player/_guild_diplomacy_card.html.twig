@@ -17,6 +17,7 @@
             </form>
         </div>
     {% else %}
+        {% if not proposal %}<p class="guild-treaty-no-proposal">Aucune proposition en cours</p>{% endif %}
         {% if row.status=='non_aggression' %}<p>Attaques et conquêtes directes bloquées. Aucun droit supplémentaire de stationnement défensif ou de transport. Espionnage autorisé ; aucune protection contre les tirs dans un combat à plusieurs camps.</p>{% endif %}
         {% if row.status=='defense' %}<p>Non-agression et stationnement défensif avec accord du propriétaire. Aucun droit supplémentaire de transport ni regroupement offensif. Espionnage autorisé ; aucune protection entre camps dans une bataille.</p>{% endif %}
         <div class="guild-treaty-actions">
@@ -50,6 +51,7 @@
             <details><summary>Voir les membres</summary><ul>{% for member in row.members %}<li>{{ member.playerUniverse.displayName }}</li>{% endfor %}</ul></details>
             <a href="{{ path('app_messages',{with:g.leader.id}) }}">Contacter le commandant</a>
         </div>
+        <div class="guild-treaty-review">
         {% if row.status in ['allies','non_aggression','defense'] and guildPermissions['diplomacy.neutral'] %}
             <details><summary>Rompre le traité</summary><p>La rupture est immédiate et annule aussi toute proposition en attente.</p>
                 {% include 'player/_guild_treaty_form.html.twig' with {treatyStatus:'neutral',treatyAction:'break',treatyLabel:'Confirmer la rupture'} %}
@@ -66,5 +68,6 @@
                 <ol>{% for event in row.history %}<li><time datetime="{{ event.occurredAt|date('c') }}">{{ event.occurredAt|date('d/m/Y H:i', 'UTC') }} UTC</time> · {{ event.actorGuildId==own.id ? 'Votre guilde' : g.name }} · {{ actionLabels[event.action] }} · {{ event.proposal ? (event.proposal=='neutral' ? 'Paix proposée' : relation_labels[event.proposal]) : relation_labels[event.status]|default(event.status) }} · commandant #{{ event.actorId }}</li>{% endfor %}</ol>
             </details>
         {% endif %}
+        </div>
     {% endif %}
 </article>

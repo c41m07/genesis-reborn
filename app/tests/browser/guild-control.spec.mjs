@@ -59,7 +59,7 @@ test('L1C A : rôles, formulaires, traités et confirmations natives de gestion'
     await page.getByLabel('Proposer et accepter les alliances de guilde').check();
     await page.getByRole('button', { name: 'Créer le grade', exact: true }).click();
     await page.goto('/guildes/membres');
-    await page.getByText('Attribuer un grade', { exact: true }).click();
+    await expect(page.getByRole('row').filter({ hasText: memberName }).getByLabel('Grade de '+memberName, { exact: true })).toBeVisible();
     await page.getByLabel('Grade de ' + memberName, { exact: true }).selectOption({ label: rankName });
     await page.getByRole('button', { name: 'Attribuer le grade à ' + memberName, exact: true }).click();
     await member.goto('/guildes/grades');
