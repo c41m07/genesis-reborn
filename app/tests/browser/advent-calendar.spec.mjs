@@ -362,7 +362,11 @@ test('Avent : devis J6 et J12 maquetés, calcul et confirmation séparés', asyn
             await door.getByRole('radio').press('Space');
             await door.getByLabel('Colonie destinataire').selectOption(String(colony));
             await door.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).press('Enter');
-            await door.getByRole('link', { name: 'Voir le devis de cette remise' }).press('Enter');
+            const link = door.getByRole('link', { name: 'Voir le devis de cette remise' });
+            const destination = await link.getAttribute('href');
+            expect(destination).toContain('/avoirs/');
+            await link.click();
+            await expect(mobile).toHaveURL(new URL(destination, baseURL).href);
             quoteUrl[day] = mobile.url();
             expect(countQueue()).toBe(0);
             await expect(mobile.getByRole('table')).toHaveCount(0);
@@ -376,7 +380,8 @@ test('Avent : devis J6 et J12 maquetés, calcul et confirmation séparés', asyn
                     await mobile.screenshot({ path: proof + '/AVENT_J6_AVANT_CHOIX_390.png', fullPage: true });
                 }
             }
-            await mobile.getByRole('link', { name: 'Retour au calendrier', exact: true }).press('Enter');
+            await mobile.getByRole('link', { name: 'Retour au calendrier', exact: true }).click();
+            await expect(mobile).toHaveURL(new URL('/evenements/avent/' + edition, baseURL).href);
         }
 
         // On donne au compte synthétique les déblocages et le laboratoire de la recette PHP.
