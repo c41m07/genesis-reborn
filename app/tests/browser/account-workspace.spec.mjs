@@ -381,6 +381,21 @@ test('P17 : consulter la suppression et revenir sans aucune soumission', async (
       await expect(confirmation).toBeFocused();
       await page.keyboard.press('Tab');
       await expect(submit).toBeFocused();
+      const safeBack=form.getByRole('link',{name:'Retour aux identifiants',exact:true});
+      await expect(safeBack).toHaveAttribute('href','/profil');
+      await page.keyboard.press('Tab');
+      await expect(safeBack).toBeFocused();
+      if(viewport.width===1920){
+        const [wideWarning,wideForm,primary,alternative]=await Promise.all([warning.boundingBox(),form.boundingBox(),submit.boundingBox(),safeBack.boundingBox()]);
+        expect(wideForm.x).toBeGreaterThanOrEqual(wideWarning.x+wideWarning.width);
+        expect(wideForm.width).toBeGreaterThanOrEqual(wideWarning.width);
+        expect(Math.abs(primary.y-alternative.y)).toBeLessThanOrEqual(1);
+        expect(alternative.x).toBeGreaterThanOrEqual(primary.x+primary.width);
+      }else{
+        const [above,below]=await Promise.all([warning.boundingBox(),form.boundingBox()]);
+        expect(below.y).toBeGreaterThanOrEqual(above.y+above.height);
+        expect((await new AxeBuilder({page}).include('.account-deletion-page .account-workspace').analyze()).violations).toEqual([]);
+      }
       await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'});});
       await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
       await page.screenshot({path:info.outputPath(`P17-B-confirmation-${theme}-${viewport.width}.png`),animations:'disabled',scale:'css'});
@@ -397,9 +412,7 @@ test('P17 : consulter la suppression et revenir sans aucune soumission', async (
     await tab.route('**/profil/supprimer',preventDeletion);
     await tab.goto('/profil/supprimer');
     await expect(tab.getByRole('heading',{name:'Suppression du compte',exact:true})).toBeVisible();
-    const menu=tab.locator('.space-navigation-menu > summary');
-    if(await menu.isVisible()) await menu.press('Enter');
-    await tab.getByRole('navigation',{name:'Compte et préférences'}).getByRole('link',{name:'Mes identifiants',exact:true}).press('Enter');
+    await tab.locator('.account-delete-form').getByRole('link',{name:'Retour aux identifiants',exact:true}).press('Enter');
     await expect(tab).toHaveURL(/profil$/);
   } finally { await native.close(); }
   expect(attempted).toEqual([]);

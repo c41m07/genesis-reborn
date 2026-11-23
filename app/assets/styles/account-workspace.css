@@ -392,3 +392,43 @@ body.authenticated .profile-page .profile-danger-card .account-board-danger p { 
 @media (min-width: 1280px) {
     .profile-page .account-profile-confirmation { max-width:64%; }
 }
+
+
+/* P17-B : l’avertissement reste avant la confirmation dans l’ordre de lecture. */
+.account-deletion-page .sensitive-actions {
+    border-color:color-mix(in srgb,var(--account-danger) 40%,var(--line));
+    background:color-mix(in srgb,var(--account-danger) 9%,var(--panel));
+}
+body.authenticated .account-deletion-page .sensitive-actions p { color:var(--text); }
+body.authenticated .account-deletion-page .account-delete-confirmation {
+    align-items:flex-start;
+    padding:.65rem .75rem;
+    border:1px solid color-mix(in srgb,var(--account-danger) 38%,var(--line));
+    border-radius:6px;
+    background:color-mix(in srgb,var(--account-danger) 7%,var(--panel));
+    color:var(--text);
+}
+.account-deletion-page .account-delete-actions {
+    display:flex;
+    flex-wrap:wrap;
+    gap:.65rem;
+    margin-top:.5rem;
+}
+body.authenticated .account-deletion-page .account-delete-actions :is(.danger,.secondary) {
+    width:auto;
+    max-width:100%;
+    min-height:44px;
+    margin:0;
+    white-space:normal;
+}
+body.authenticated .account-deletion-page .account-delete-actions .danger {
+    background:color-mix(in srgb,var(--account-danger) 6%,var(--panel));
+}
+@media (min-width: 1100px) {
+    body.authenticated .account-redesign.account-deletion-page .account-workspace {
+        grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);
+    }
+}
+@media (max-width: 520px) {
+    body.authenticated .account-deletion-page .account-delete-actions > * { width:100%; }
+}

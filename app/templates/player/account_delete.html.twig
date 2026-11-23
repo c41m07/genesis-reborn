@@ -2,7 +2,7 @@
 {% block title %}Suppression du compte · Genesis Reborn{% endblock %}
 {% block body %}
 <div class="page-refinement account-space account-deletion-page account-redesign" data-page-sections="disabled">
-<div class="page-heading"><div><h1 id="account-delete-title">Suppression du compte</h1><p>Cette action concerne votre compte et tous vos univers.</p></div></div>
+<div class="page-heading"><div><p class="account-board-eyebrow">Compte · sous-page dédiée</p><h1 id="account-delete-title">Suppression du compte</h1><p>Cette action concerne votre compte et tous vos univers.</p></div></div>
 {% include 'ui/account_navigation.html.twig' %}
 <div class="account-workspace">
     <section class="panel account-panel sensitive-actions" aria-labelledby="account-delete-warning">
@@ -17,7 +17,10 @@
         <label for="account-delete-password">Mot de passe pour supprimer le compte</label>
         <input id="account-delete-password" type="password" name="password" autocomplete="current-password" required>
         <label class="account-delete-confirmation" for="account-delete-confirmed"><input id="account-delete-confirmed" type="checkbox" name="confirmed" value="1" required><span>Je confirme la suppression définitive de mon compte dans tous les univers.</span></label>
-        <button class="danger" type="submit" aria-describedby="account-delete-scope">Supprimer définitivement mon compte</button>
+        <div class="account-delete-actions">
+            <button class="danger" type="submit" aria-describedby="account-delete-scope">Supprimer définitivement mon compte</button>
+            <a class="secondary" href="{{ path('app_profile') }}">Retour aux identifiants</a>
+        </div>
     </form>
 </div>
 </div>
