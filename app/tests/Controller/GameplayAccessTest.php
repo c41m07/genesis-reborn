@@ -311,6 +311,8 @@ final class GameplayAccessTest extends WebTestCase
         $targets[3]->conquestLevel = 4;
         $targets[4]->owner = null;
         $targets[4]->npcPlanet = false;
+        $targets[4]->name = $home->solarSystem->name.' · '.$targets[4]->position;
+        $targets[3]->name = 'Oreaiel';
         $guilds = [];
         foreach ([$membership, $enemy->currentPlayerUniverse] as $index => $member) {
             $guild = new \App\Entity\Guild();
@@ -352,6 +354,11 @@ final class GameplayAccessTest extends WebTestCase
         self::assertSame('neutral', $relations[$targets[2]->id]);
         self::assertSame('npc', $relations[$targets[3]->id]);
         self::assertSame('uninhabited', $relations[$targets[4]->id]);
+        // La colonne de position suffit lorsque le nom est la désignation générée du système.
+        $unnamed = $crawler->filter('.gv2-planet-choice[data-planet-id="'.$targets[4]->id.'"]');
+        self::assertSame('', $unnamed->filter('.gv2-planet-choice-name')->text());
+        self::assertSame(sprintf('%02d', $targets[4]->position), $unnamed->filter('.gv2-planet-number')->text());
+        self::assertSame('Oreaiel', $crawler->filter('.gv2-planet-choice[data-planet-id="'.$targets[3]->id.'"] .gv2-planet-choice-name')->text());
         $unknown = array_filter($map['systems'], static fn (array $row): bool => !$row['known']);
         self::assertNotEmpty($unknown);
         foreach ($unknown as $row) {
