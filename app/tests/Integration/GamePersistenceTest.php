@@ -207,7 +207,7 @@ final class GamePersistenceTest extends KernelTestCase
             'playerUniverse' => $membership, 'solarSystem' => $system,
         ])))[0];
         $fleets = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
-        foreach (['p', 'q'] as $receipt) {
+        foreach (['a', 'b'] as $receipt) {
             $fleets->send($membership, $origin, 'explore', $system->id, ['probe' => 1], .5, [], str_repeat($receipt, 32));
         }
         $traveling = $this->em->getRepository(\App\Entity\Fleet::class)->findBy(['status' => 'traveling'], ['id' => 'ASC']);
