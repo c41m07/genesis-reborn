@@ -6,7 +6,7 @@ use App\Entity\Notification;
 use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use App\Integration\Mercure\PublisherInterface;
-use App\Message\{QueueItemFinished, FleetArrived, CombatEventDue, UniverseClosureDue, OccupationDue, EmpireReconstructionDue, GuildProjectRewardsDue};
+use App\Message\{AdventCaptureDue, QueueItemFinished, FleetArrived, CombatEventDue, UniverseClosureDue, OccupationDue, EmpireReconstructionDue, GuildProjectRewardsDue};
 use Symfony\Component\Messenger\{MessageBusInterface, Stamp\DelayStamp};
 use App\Message\{PirateAttackDue, PirateConvoyDue, PirateReconnaissanceDue, PirateSurvivorsDue};
 use Psr\Clock\ClockInterface;
@@ -30,7 +30,7 @@ final class OutboxRelay
     public function run(bool $notifications = false): int
     {
         $count = 0;
-        foreach ($this->repo->outbox($notifications) as $outboxMessage) {
+        foreach ($this->repo->outbox($notifications, $this->clock->now()) as $outboxMessage) {
             $this->manager->transaction(function () use ($outboxMessage, $notifications) {
                 $this->manager->lock($outboxMessage);
                 if ($notifications) {
@@ -40,6 +40,7 @@ final class OutboxRelay
                     }
                 } else {
                     $message = match ($outboxMessage->kind) {
+                        AdventCaptureDue::KIND => new AdventCaptureDue($outboxMessage->targetId, $outboxMessage->token === 'late'),
                         'queue' => new QueueItemFinished($outboxMessage->targetId, $outboxMessage->token),
                         PirateReconnaissanceDue::KIND => new PirateReconnaissanceDue($outboxMessage->targetId, $outboxMessage->token),
                         PirateAttackDue::KIND => new PirateAttackDue($outboxMessage->targetId, $outboxMessage->token),

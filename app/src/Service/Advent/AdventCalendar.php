@@ -30,13 +30,15 @@ final class AdventCalendar
         return ['startsAt' => $doors[1], 'closesAt' => $last->modify('+1 day')->setTimezone($utc), 'doors' => $doors];
     }
 
-    /** @return array{first: string, last: string} */
-    public function defaults(\DateTimeImmutable $now): array
+    public function instant(string $value): \DateTimeImmutable
     {
-        $paris = $now->setTimezone(new \DateTimeZone(self::PARIS));
-        $year = (int) $paris->format('Y');
-
-        return ['first' => $year.'-12-01', 'last' => $year.'-12-31'];
+        if (preg_match('/\A20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}\z/', $value)) {
+            $date = \DateTimeImmutable::createFromFormat('!Y-m-d\TH:i', $value, new \DateTimeZone(self::PARIS));
+            if ($date !== false && $date->format('Y-m-d\TH:i') === $value) {
+                return $date->setTimezone(new \DateTimeZone('UTC'));
+            }
+        }
+        throw new \DomainException('Saisissez une date et une heure valides, en heure de Paris.');
     }
 
     public function canOpen(\DateTimeImmutable $now, \DateTimeImmutable $opensAt, \DateTimeImmutable $closesAt): bool

@@ -12,7 +12,7 @@
             {% if approvedDesign %}<p class="advent-credit-day">J{{ creditDoor }} · {{ research ? 'Recherche' : 'Bon naval' }}</p>{% endif %}
             <p>{% include 'advent/_offer.html.twig' with {offer: offer, resources: resources, ships: ships} only %}</p>
         </div>
-        <a class="secondary" href="{{ path('app_advent_edition', {id: editionId}) }}">Retour au calendrier</a>
+        {% if calendarVisible %}<a class="secondary" href="{{ path('app_advent_edition', {id: editionId}) }}">Retour au calendrier</a>{% else %}<a class="secondary" href="{{ path('app_inventory_pending') }}">Retour aux récompenses en attente</a>{% endif %}
     </div>
     {% if approvedDesign %}<div class="advent-credit-grid">{% endif %}
     <section class="panel" aria-labelledby="advent-credit-choice-title">

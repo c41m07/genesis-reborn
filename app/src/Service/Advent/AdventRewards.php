@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Advent;
 
-use App\Entity\{AdventClaim, AdventEdition, Planet, Player, PlayerUniverse};
+use App\Entity\{AdventBinding, AdventClaim, AdventEdition, Planet, Player, PlayerUniverse};
 use App\Manager\GameManager;
 use App\Service\Colony\{ActionGuard, ResourceService};
 use App\Service\Player\ProfileCosmetics;
@@ -16,7 +16,7 @@ final readonly class AdventRewards
 {
     public function __construct(
         private AdventCalendar $calendar,
-        private AdventEditions $editions,
+        private \App\Repository\AdventWindowRepository $windows,
         private ActionGuard $guard,
         private ResourceService $resources,
         private GameManager $manager,
@@ -38,14 +38,22 @@ final readonly class AdventRewards
         return $claims;
     }
 
-    /** @return array{state: string, missing?: array<string, int>} */
-    public function open(Player $player, PlayerUniverse $membership, Planet $planet, AdventEdition $edition, int $door, int $choice): array
+    /** Droits privés déjà acquis, y compris ceux des éditions historiques sans liaison. */
+    public function pending(PlayerUniverse $membership): array
     {
-        if (!$this->editions->enabled) {
-            return ['state' => 'unavailable'];
-        }
+        return $this->em->createQuery('SELECT c, e FROM '.AdventClaim::class.' c JOIN c.adventEdition e
+            WHERE c.player = :player AND c.deliveredAt IS NULL AND (e.plan = :custom OR EXISTS (
+                SELECT b.id FROM '.AdventBinding::class.' b WHERE b.player = c.player
+                AND b.adventEdition = e AND b.universeId = :universe))
+            ORDER BY e.season DESC, c.door')
+            ->setParameter('player', $membership->player)->setParameter('custom', 'custom')
+            ->setParameter('universe', $membership->universe->id)->getResult();
+    }
 
-        return $this->manager->transaction(function () use ($player, $membership, $planet, $edition, $door, $choice): array {
+    /** @return array{state: string, missing?: array<string, int>} */
+    public function open(Player $player, PlayerUniverse $membership, Planet $planet, AdventEdition $edition, int $door, int $choice, bool $reservationOnly = false): array
+    {
+        return $this->manager->transaction(function () use ($player, $membership, $planet, $edition, $door, $choice, $reservationOnly): array {
             $this->guard->lock($membership, $planet, currentReads: true);
             if ($membership->player?->id !== $player->id) {
                 return ['state' => 'stale'];
@@ -68,6 +76,11 @@ final readonly class AdventRewards
             }
 
             $now = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
+            // Une requête du calendrier peut avoir attendu le verrou jusqu’à la fermeture.
+            // Seul le retrait d’un reçu existant dans l’inventaire reste alors permis.
+            if (!$reservationOnly && !$this->windows->isVisible($membership->universe, $edition->id)) {
+                return ['state' => 'unavailable'];
+            }
             $binding = null;
             if ($edition->plan === 'consolidated') {
                 $binding = $this->em->getConnection()->fetchAssociative(
@@ -97,7 +110,7 @@ final readonly class AdventRewards
                 // Après la clôture, les portes non ouvertes expirent ; aucun
                 // nouveau droit n’est recréé sur la base d’une ancienne page.
                 $options = $binding === null ? ($definition['options'] ?? []) : ($definition['options'][$binding['bracket']] ?? []);
-                if ($definition === null || !isset($options[$choice])
+                if ($reservationOnly || $definition === null || !isset($options[$choice])
                     || !$this->calendar->canOpen($now, new \DateTimeImmutable($definition['opens_at']), $edition->closesAt)) {
                     return ['state' => 'unavailable'];
                 }

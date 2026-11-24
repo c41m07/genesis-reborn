@@ -931,4 +931,4 @@ possédée et découverte. Sans solution, l’attente persiste.
 
 ## Calendrier de l’Avent
 
-Une édition commune à tous les univers accessibles propose 24 portes civiles à l’heure de Paris, un lot par compte et par porte. Les portes non ouvertes expirent à la date de clôture annoncée. Un lot choisi et déjà réservé reste retirable ensuite vers une colonie éligible appartenant au même compte, sans versement partiel ni attribution en double. [Détail du calendrier et des réservations](CALENDRIER_AVENT.md).
+L’administration choisit la période de visibilité dans chaque univers. Les portes du 1er au 24 décembre s’ouvrent à minuit à Paris. Chaque compte peut rattraper les jours passés pendant la période et obtenir un lot par porte pour toute la saison. À l’heure de fermeture, la page et les portes ferment. Les lots déjà réservés restent retirables dans l’inventaire. [Détail du calendrier et des réservations](CALENDRIER_AVENT.md).

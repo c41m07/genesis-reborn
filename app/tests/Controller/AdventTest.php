@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
-use App\Entity\{AdventClaim, AdventEdition, Planet, Player, Universe};
+use App\Entity\{AdventClaim, AdventEdition, AdventWindow, Planet, Player, Universe};
 use App\Service\Advent\{AdventCohortCapture, AdventEditions, AdventParticipation, AdventQueueCredits, AdventRewards};
 use App\Service\Universe\{UniverseImporter, UniverseService};
 use App\Service\Colony\ResourceService;
@@ -21,17 +21,12 @@ use Symfony\Component\Process\Process;
 
 final class AdventTest extends WebTestCase
 {
-    private ?string $savedServer;
-    private ?string $savedEnv;
     private KernelBrowser $client;
     private EntityManagerInterface $em;
     private MockClock $clock;
 
     protected function setUp(): void
     {
-        $this->savedServer = $_SERVER['ADVENT_ENABLED'] ?? null;
-        $this->savedEnv = $_ENV['ADVENT_ENABLED'] ?? null;
-        $_SERVER['ADVENT_ENABLED'] = $_ENV['ADVENT_ENABLED'] = '1';
         $this->client = static::createClient(['environment' => 'test'], ['HTTP_HOST' => 'genesis-reborn.localhost']);
         $this->client->disableReboot();
         $this->em = static::getContainer()->get(EntityManagerInterface::class);
@@ -46,18 +41,6 @@ final class AdventTest extends WebTestCase
         $this->clock = new MockClock('2026-11-30T15:00:00Z');
         static::getContainer()->set('clock', $this->clock);
         static::getContainer()->get(UniverseImporter::class)->import();
-    }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-        unset($_SERVER['ADVENT_ENABLED'], $_ENV['ADVENT_ENABLED']);
-        if ($this->savedServer !== null) {
-            $_SERVER['ADVENT_ENABLED'] = $this->savedServer;
-        }
-        if ($this->savedEnv !== null) {
-            $_ENV['ADVENT_ENABLED'] = $this->savedEnv;
-        }
     }
 
     public function testAdministrationPreviewAndCalendarClaimAreSeparatedAndScoped(): void
@@ -78,7 +61,8 @@ final class AdventTest extends WebTestCase
         $edition = $this->publish($admin);
         $this->client->loginUser($member);
         $this->client->request('GET', '/evenements');
-        self::assertSelectorExists('a[href="/evenements/avent"]');
+        self::assertSelectorExists('header.topbar a[href="/evenements/avent"]');
+        self::assertSelectorNotExists('main a[href="/evenements/avent"]');
         $crawler = $this->client->request('GET', '/evenements/avent');
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
@@ -112,71 +96,83 @@ final class AdventTest extends WebTestCase
         self::assertSame($planet->id, (int) $initial['original_destination_id']);
         self::assertNull($initial['delivered_at']);
 
-        // L’ancien formulaire se ferme après changement d’univers même si
-        // une nouvelle destination contrôlée peut ensuite être choisie.
+        // Le calendrier et un formulaire mémorisé sont inaccessibles dans un autre univers.
         $member = $this->select($member, 'turbo-1');
-        $altPlanet = $this->planet($member);
         $this->client->loginUser($member);
         $this->client->request('GET', $editionUrl);
-        self::assertSelectorTextContains('#advent-door-1', 'Réservé');
-        self::assertSelectorExists('#advent-door-1 form');
-        $this->client->request('POST', $url, ['choice' => '1', 'colony' => $altPlanet->id, '_token' => $token]);
-        self::assertResponseStatusCodeSame(403);
-
-        // Le joueur revient avec une nouvelle session jusqu’à la dernière
-        // seconde civile, puis reste connecté au passage de la clôture.
-        $this->clock->sleep(31 * 24 * 3600 - 1);
+        self::assertResponseStatusCodeSame(404);
+        $this->client->request('POST', $url, ['choice' => '0', 'colony' => $foreign->id, '_token' => $token]);
+        self::assertResponseStatusCodeSame(404);
+        $member = $this->select($member, 'omega-1');
+        $this->client->loginUser($member);
+        $this->clock->sleep(31 * 86400 - 1);
         $this->client->getCookieJar()->clear();
         $this->client->loginUser($this->em->find(Player::class, $member->id));
         $crawler = $this->client->request('GET', $editionUrl);
-        self::assertResponseIsSuccessful();
         self::assertSelectorExists('#advent-door-24 form');
-        $unopenedToken = $crawler->filter('#advent-door-2 input[name="_token"]')->attr('value');
+        self::assertSelectorExists('#advent-door-2 form');
         $this->clock->sleep(1);
         $this->client->request('GET', '/evenements');
-        self::assertSelectorExists('a[href="/evenements/avent"]');
-        $crawler = $this->client->request('GET', $editionUrl);
-        self::assertResponseIsSuccessful();
-        self::assertSelectorNotExists('.advent-board--history');
-        self::assertSelectorTextContains('.advent-notice', 'retirer vos cadeaux réservés');
-        self::assertSelectorTextContains('#advent-door-2', 'Expiré');
-        self::assertSelectorNotExists('#advent-door-2 form');
-        $token = $crawler->filter('#advent-door-1 input[name="_token"]')->attr('value');
-        $this->client->request('POST', $editionUrl.'/portes/2', ['choice' => '0', 'colony' => $altPlanet->id, '_token' => $unopenedToken]);
-        self::assertResponseRedirects($editionUrl.'#advent-door-2', 303);
-        $this->client->followRedirect();
-        self::assertSelectorTextContains('main', 'Cette porte ou ce choix de cadeau n’est pas disponible.');
-        $this->client->request('POST', $url, ['choice' => '0', 'colony' => $foreign->id, '_token' => $token]);
-        self::assertResponseStatusCodeSame(404);
-        $this->client->request('POST', $url, ['choice' => '1', 'colony' => $altPlanet->id, '_token' => $token]);
-        self::assertResponseRedirects($editionUrl.'#advent-door-1', 303);
-        $this->client->followRedirect();
-        self::assertSelectorTextContains('main', 'Le choix du cadeau ne peut plus être modifié.');
-        self::assertSame($initial, $db->fetchAssociative('SELECT choice, resources, delivered_at, original_destination_id, delivered_destination_id FROM advent_claim'));
-        $this->fixtureStocks($altPlanet->id, '2026-12-31 23:00:00', ['metal' => 500]);
-        for ($i = 0; $i < 2; ++$i) {
-            $this->client->request('POST', $url, ['choice' => '0', 'colony' => $altPlanet->id, '_token' => $token]);
-            self::assertResponseRedirects($editionUrl.'#advent-door-1', 303);
+        self::assertSelectorNotExists('header a[href="/evenements/avent"]');
+        foreach (['/evenements/avent', $editionUrl] as $address) {
+            $this->client->request('GET', $address);
+            self::assertResponseStatusCodeSame(404);
         }
-        self::assertSame(1, $this->em->getRepository(AdventClaim::class)->count());
-        self::assertSame($planet->id, (int) $db->fetchOne('SELECT original_destination_id FROM advent_claim'));
-        self::assertSame($altPlanet->id, (int) $db->fetchOne('SELECT delivered_destination_id FROM advent_claim'));
+        $this->client->request('POST', $url, ['choice' => '0', 'colony' => $planet->id, '_token' => $token]);
+        self::assertResponseStatusCodeSame(404);
+        $this->fixtureStocks($planet->id, '2026-12-31 23:00:00', ['metal' => 500]);
+        $crawler = $this->client->request('GET', '/inventaire/recompenses');
+        $form = $crawler->selectButton('Retenter le versement')->form();
+        $inventoryUrl = $form->getUri();
+        $this->client->submit($form);
+        self::assertResponseRedirects('/inventaire/recompenses', 303);
+        $this->client->followRedirect();
+        self::assertSelectorNotExists('form[action*="/recompenses/avent/"]');
         self::assertSame('2026-12-31 23:00:00', $db->fetchOne('SELECT delivered_at FROM advent_claim'));
-        self::assertEqualsWithDelta(507, (float) $db->fetchOne("SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = 'metal'", [$altPlanet->id]), .01);
-        self::assertEqualsWithDelta(10000, (float) $db->fetchOne("SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = 'metal'", [$planet->id]), .01);
-        $this->client->request('GET', $editionUrl);
-        self::assertResponseIsSuccessful();
-        self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
-        self::assertSelectorTextContains('.advent-board--history .advent-history-notice', 'Aucun cadeau ne reste à retirer');
-        self::assertSelectorNotExists('.advent-board--history form[method="post"]');
-        self::assertSelectorExists('.advent-board--history a[href="/evenements"]');
-        self::assertSelectorTextContains('#advent-door-1', 'Le cadeau de cette porte a déjà été versé.');
-        self::assertSelectorTextContains('#advent-door-1', 'Versé');
-        self::assertSelectorTextContains('#advent-door-24', 'Expiré');
-        $this->client->request('GET', '/evenements');
-        self::assertSelectorNotExists('a[href="/evenements/avent"]');
-        $this->client->loginUser($this->em->find(Player::class, $other->id));
-        $this->client->request('GET', $editionUrl);
+        self::assertEqualsWithDelta(507, (float) $db->fetchOne("SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = 'metal'", [$planet->id]), .01);
+        $this->client->loginUser($other);
+        $this->client->request('POST', $inventoryUrl);
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testActivationMidMonthAndIndependentWindowsForTheSameSeason(): void
+    {
+        $admin = $this->player('AdventWindowAdmin', admin: true);
+        $player = $this->player('AdventWindowMember');
+        $editions = static::getContainer()->get(AdventEditions::class);
+        $omega = $admin->currentPlayerUniverse->universe;
+        $turbo = $this->em->getRepository(Universe::class)->findOneBy(['slug' => 'turbo-1']);
+        $this->clock->modify('2026-12-10T12:00:00Z');
+        $window = $editions->publish($admin, $editions->prepare('Avent Omega', 2026, $omega->id, '2026-12-10T13:01', '2026-12-31T00:00'));
+        $otherWindow = $editions->publish($admin, $editions->prepare('Avent Turbo', 2026, $turbo->id, '2026-12-20T18:00', '2027-01-01T00:00'));
+        self::assertSame($window->edition->id, $otherWindow->edition->id);
+        $this->client->loginUser($player);
+        $uri = '/evenements/avent/'.$window->edition->id;
+        $this->client->request('GET', $uri);
+        self::assertResponseStatusCodeSame(404);
+        $this->clock->sleep(60);
+        $handler = static::getContainer()->get(\App\MessageHandler\AdventCaptureDueHandler::class);
+        $handler(new \App\Message\AdventCaptureDue($window->edition->id, true));
+        $crawler = $this->client->request('GET', $uri);
+        self::assertSelectorTextContains('h1', 'Avent Omega');
+        $this->client->submit($crawler->filter('form[action$="/univers"]')->form());
+        $this->client->followRedirect();
+        self::assertSelectorExists('#advent-door-1 form');
+        self::assertSelectorExists('#advent-door-10 form');
+        self::assertSelectorNotExists('#advent-door-11 form');
+        $this->clock->modify('2026-12-30T23:00:00Z');
+        $this->client->getCookieJar()->clear();
+        $this->client->loginUser($this->em->find(Player::class, $player->id));
+        $this->client->request('GET', $uri);
+        self::assertResponseStatusCodeSame(404);
+        $player = $this->select($player, 'turbo-1');
+        $this->client->loginUser($player);
+        $this->client->request('GET', $uri);
+        self::assertSelectorTextContains('h1', 'Avent Turbo');
+        $this->clock->modify('2027-12-10T12:00:00Z');
+        $this->client->getCookieJar()->clear();
+        $this->client->loginUser($this->em->find(Player::class, $player->id));
+        $this->client->request('GET', '/evenements/avent');
         self::assertResponseStatusCodeSame(404);
     }
 
@@ -188,11 +184,12 @@ final class AdventTest extends WebTestCase
         $token = $crawler->filter('.admin-event-form input[name="_token"]')->attr('value');
         foreach (['2026-11-31', "2026-12-01\0"] as $invalidDate) {
             $this->client->request('POST', '/admin/events/avent', [
-                '_token' => $token, 'name' => 'Avent invalide', 'first' => $invalidDate, 'last' => '2026-12-31',
+                '_token' => $token, 'name' => 'Avent invalide', 'season' => 2026, 'universe' => $admin->currentPlayerUniverse->universe->id,
+                'from' => $invalidDate, 'until' => '2026-12-31T00:00',
                 'options' => array_fill(1, 24, [['metal' => '7']]),
             ]);
             self::assertResponseStatusCodeSame(422);
-            self::assertSelectorTextContains('main', 'Saisissez une date civile valide');
+            self::assertSelectorTextContains('main', 'Saisissez une date et une heure valides');
         }
         self::assertSame(0, $this->em->getRepository(AdventEdition::class)->count());
     }
@@ -246,7 +243,7 @@ final class AdventTest extends WebTestCase
             $db->fetchOne('SELECT id FROM player_universe WHERE id = ? FOR UPDATE', [$membership]);
             foreach ($choices as $index => $choice) {
                 $input = ['player' => $member->id, 'membership' => $membership, 'planet' => $planets[$index],
-                    'edition' => $edition, 'choice' => $choice, 'when' => $when, 'ready' => $directory.'/'.$index, 'go' => $directory.'/go'];
+                    'edition' => $edition, 'choice' => $choice, 'reservation' => $retry, 'when' => $when, 'ready' => $directory.'/'.$index, 'go' => $directory.'/go'];
                 $worker = new Process([PHP_BINARY, dirname(__DIR__).'/Support/concurrent_advent_open.php', json_encode($input, JSON_THROW_ON_ERROR)]);
                 $worker->setTimeout(20);
                 $worker->start();
@@ -389,7 +386,7 @@ final class AdventTest extends WebTestCase
         $this->client->loginUser($senior);
         $this->client->request('GET', $uri);
         self::assertSelectorNotExists('#advent-door-1 form');
-        self::assertSelectorTextContains('main', 'Le choix ne peut pas être transféré.');
+        self::assertResponseStatusCodeSame(404);
         self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_binding WHERE player_id = ?', [$senior->id]));
         $senior = $this->select($senior, 'omega-1');
         $this->clock->sleep(49 * 3600);
@@ -669,11 +666,26 @@ final class AdventTest extends WebTestCase
     /** Anciennes fixtures de retenue : les montants synthétiques ne transitent plus par l’admin. */
     private function publish(Player $admin): int
     {
-        $editions = static::getContainer()->get(AdventEditions::class);
-        $preview = $editions->prepare('Avent synthétique', '2026-12-01', '2026-12-31',
-            array_fill(1, 24, [['metal' => '7'], ['nano' => '3']]));
-
-        return $editions->publish($this->em->find(Player::class, $admin->id), $preview)->id;
+        $edition = new AdventEdition();
+        $edition->season = 2026;
+        $edition->name = 'Avent synthétique';
+        $edition->publishedAt = $this->clock->now();
+        $dates = (new \App\Service\Advent\AdventCalendar())->schedule('2026-12-01', '2026-12-31');
+        $edition->startsAt = $dates['startsAt'];
+        $edition->closesAt = $dates['closesAt'];
+        foreach ($dates['doors'] as $day => $date) {
+            $edition->doors[$day] = ['opens_at' => $date->format(DATE_ATOM), 'options' => [['metal' => 7], ['nano' => 3]]];
+        }
+        $window = new AdventWindow();
+        $window->universe = $this->em->find(Universe::class, $admin->currentPlayerUniverse->universe->id);
+        $window->name = $edition->name;
+        $window->edition = $edition;
+        $window->visibleFrom = $edition->publishedAt;
+        $window->visibleUntil = $edition->closesAt;
+        $this->em->persist($edition);
+        $this->em->persist($window);
+        $this->em->flush();
+        return $edition->id;
     }
 
     private function publishConsolidated(Player $admin): int
@@ -684,7 +696,8 @@ final class AdventTest extends WebTestCase
         self::assertSelectorTextContains('main', 'Barème de l’édition');
         $token = $crawler->filter('.admin-event-form input[name="_token"]')->attr('value');
         $this->client->request('POST', '/admin/events/avent', [
-            '_token' => $token, 'name' => 'Avent synthétique', 'first' => '2026-12-01', 'last' => '2026-12-31',
+            '_token' => $token, 'name' => 'Avent synthétique', 'season' => 2026, 'universe' => $admin->currentPlayerUniverse->universe->id,
+            'from' => '2026-12-01T00:00', 'until' => '2027-01-01T00:00',
             'options' => array_fill(1, 24, [['metal' => '7'], ['nano' => '3']]),
         ]);
         self::assertResponseStatusCodeSame(303);
@@ -703,6 +716,7 @@ final class AdventTest extends WebTestCase
         $this->client->request('GET', $url);
         self::assertResponseStatusCodeSame(404);
         self::assertSame(1, $this->em->getRepository(AdventEdition::class)->count());
+        self::assertSame(1, (int) $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'advent_capture'"));
         self::assertSame(1, (int) $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM admin_audit_log WHERE action = 'advent_edition_published'"));
 
         return (int) $this->em->getConnection()->fetchOne('SELECT id FROM advent_edition');
