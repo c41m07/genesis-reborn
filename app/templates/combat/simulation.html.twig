@@ -29,6 +29,9 @@
         <input type="hidden" name="report" value="{{ intel.id|default(0) }}">
         <input type="hidden" name="own_source" value="{{ own_source }}">
         <input type="hidden" name="wizard_step" value="{{ step }}" data-simulation-wizard-target="current">
+        {# Entrée dans un champ numérique ne doit ni remplacer des données ni lancer un calcul.
+           Ce premier bouton neutralise uniquement la soumission implicite du navigateur. #}
+        <button type="submit" hidden disabled></button>
         {% include 'combat/_wizard_sources.html.twig' %}
         {% for key, item in steps %}
             <section class="simulation-wizard-stage" id="simulation-{{ key }}" data-step="{{ key }}"

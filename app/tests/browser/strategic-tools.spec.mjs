@@ -99,7 +99,13 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
  try {
   const tab=await context.newPage();
   await tab.goto('/simulateur');
-  await tab.locator('#sim-defender-ships-fighter-basic').fill('18');
+  const draft=tab.locator('#sim-defender-ships-fighter-basic');
+  await draft.fill('18');
+  const posts=[];
+  tab.on('request', request=>{if(request.method()==='POST') posts.push(request);});
+  await draft.press('Enter');
+  await expect(draft).toHaveValue('18');
+  expect(posts).toHaveLength(0);
   const nativeImport=tab.getByRole('button',{name:'Charger mes forces'});
   const request=tab.waitForRequest(request=>request.method()==='POST' && new URL(request.url()).pathname==='/simulateur');
   await nativeImport.click();
@@ -151,16 +157,11 @@ test('Simulateur : sources datées, champs inconnus éditables et brouillon cons
  await unknown.fill('3');
  await expect(page.locator('#simulation-defender-research-source')).toContainText('hypothèse saisie');
  await expect(stillUnknown).toHaveValue('');
- for (const theme of ['dark','light']) {
-  // Le changement de thème ne recharge pas ce brouillon : le test reprend la même fixture source.
-  for (const width of [1920,390]) {
-   await page.setViewportSize({width,height:width===1920?1080:844});
-   await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-   if (theme==='dark') {
-    await unknown.scrollIntoViewIfNeeded();
-    await page.screenshot({path:testInfo.outputPath('P13-wizard-intel-'+theme+'-'+width+'.png'),scale:'css',animations:'disabled'});
-   }
-  }
+ for (const width of [1920,390]) {
+  await page.setViewportSize({width,height:width===1920?1080:844});
+  await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  await unknown.scrollIntoViewIfNeeded();
+  await page.screenshot({path:testInfo.outputPath('P13-wizard-intel-dark-'+width+'.png'),scale:'css',animations:'disabled'});
  }
  await nav.getByRole('link',{name:'Simulation',exact:true}).click();
  await page.getByRole('checkbox',{name:/Je confirme les hypothèses/}).check();

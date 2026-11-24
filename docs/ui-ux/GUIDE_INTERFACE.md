@@ -346,3 +346,10 @@ de la Vue générale ; [recette et captures](../REFONTE_VISUELLE_INTERFACES.md).
 - Accès : ordre formulaire puis scène ; la création de compte dans le menu reste secondaire pendant une tâche d’authentification. Les demandes courtes gardent le formulaire et l’aide sans répéter l’illustration.
 - Visuels décoratifs validés : le portrait « Accès au commandement » est partagé par Connexion et Inscription seulement ; la scène reste masquée en présentation étroite. Le panorama de l’Avent reste derrière le titre HTML et les liens, avec un voile et un cadrage mobile dédiés. Les variantes WebP sont choisies par le navigateur ; aucune illustration n’est indispensable pour utiliser le formulaire ou le calendrier.
 - Administration : mettre l’univers concerné dans le contexte du catalogue, puis comparer champ, durée et coûts dans le même ordre « Actuel / Proposé ». Les hypothèses du devis et la confirmation restent distinctes du calcul de jeu.
+
+
+## Assistant du simulateur de combat
+
+- Une étape montre la même catégorie pour les deux camps, côte à côte sur ordinateur, puis empilés sur téléphone. Les ancres et tous les champs sont rendus côté serveur ; JavaScript ne fait que guider l’affichage et placer le focus. Un champ invalide ramène à son étape. Le résultat reste sur la même page.
+- Les sources sont deux actions explicites : la copie de la colonie reprend seulement les vaisseaux disponibles et les recherches du membre ; le rapport reste limité à l’instantané de l’émetteur. Appliquer une source conserve l’autre camp et ne produit ni mission ni calcul.
+- La date et le lien restent associés au rapport ; un renseignement non révélé n’est pas affiché comme zéro. Un champ laissé inconnu compte pour zéro pour le calcul seulement après confirmation. Les défenses fixes et la forteresse appartiennent uniquement au défenseur.
