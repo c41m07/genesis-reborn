@@ -240,17 +240,18 @@ final class FirstStepsView
     {
     }
 
-    public function hasPending(PlayerUniverse $membership, Planet $planet, bool $exerciseInResponse = false): bool
+    public function hasPending(PlayerUniverse $membership, bool $exerciseInResponse = false): bool
     {
-        return $this->preview($membership, $planet, $exerciseInResponse) !== null;
+        return $this->preview($membership, $exerciseInResponse) !== null;
     }
 
     /**
      * @return array{next:string,guide:array,count:int,total:int,validation:string}|null
      */
-    public function preview(PlayerUniverse $membership, Planet $planet, bool $exerciseInResponse = false): ?array
+    public function preview(PlayerUniverse $membership, bool $exerciseInResponse = false): ?array
     {
-        $done = $this->firstSteps->guideEvidence($membership, $planet, $exerciseInResponse);
+        $evidence = $this->firstSteps->guideEvidence($membership, $exerciseInResponse);
+        $done = $evidence['proved'] + $evidence['existing'];
         foreach (FirstStep::cases() as $step) {
             if (!isset($done[$step->value])) {
                 return [
@@ -267,39 +268,19 @@ final class FirstStepsView
     }
 
     /** @return array{next:string,guide:array,count:int,total:int,slides:list<array{caption:string,image?:array{file:string,width:int,height:int,alt:string,x?:float,y?:float}}>,validation:string}|null */
-    public function panel(PlayerUniverse $membership, Planet $planet): ?array
+    public function panel(PlayerUniverse $membership): ?array
     {
-        $preview = $this->preview($membership, $planet);
+        $preview = $this->preview($membership);
 
         return $preview === null ? null : $preview + ['slides' => self::GESTURES[$preview['next']]];
     }
 
-    /** @param array<string, array<string, int>> $buildings @param array<string, array<string, int>> $technologies */
-    public function progress(PlayerUniverse $membership, array $buildings, array $technologies): array
+    /** @param array<string, array<string, int>> $activeBuildings */
+    public function progress(PlayerUniverse $membership, array $activeBuildings): array
     {
-        $completed = $this->firstSteps->completed($membership);
-        $existing = [];
-        foreach (FirstStep::cases() as $step) {
-            if (isset($completed[$step->value])) {
-                continue;
-            }
-            $building = $step->buildingSlug();
-            $alreadyPresent = $building !== null && ($buildings[$building]['basic'] ?? 0) > 0;
-            if ($step === FirstStep::Research) {
-                foreach ($technologies as $levels) {
-                    if (($levels['basic'] ?? 0) > 0) {
-                        $alreadyPresent = true;
-                        break;
-                    }
-                }
-            }
-            if ($alreadyPresent) {
-                // Un niveau déjà installé suffit pour le guide ; aucune écriture ni prime rétroactive.
-                $existing[$step->value] = true;
-            }
-        }
-        $existing += $this->firstSteps->heritageAtCompletion($membership, $completed, $completed + $existing);
-        $done = $completed + $existing;
+        $evidence = $this->firstSteps->guideEvidence($membership);
+        $existing = $evidence['existing'];
+        $done = $evidence['proved'] + $existing;
         $next = null;
         foreach (FirstStep::cases() as $step) {
             if (!isset($done[$step->value])) {
@@ -309,7 +290,7 @@ final class FirstStepsView
         }
 
         $parallel = null;
-        if ($next === FirstStep::MetalStorage->value && ($buildings['mine_metal']['basic'] ?? 0) < 5) {
+        if ($next === FirstStep::MetalStorage->value && ($activeBuildings['mine_metal']['basic'] ?? 0) < 5) {
             // Ne pas laisser la carte pointer uniquement vers le dépôt bloqué pendant plusieurs niveaux.
             $afterStorage = false;
             foreach (FirstStep::cases() as $step) {

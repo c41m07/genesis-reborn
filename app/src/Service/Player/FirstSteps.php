@@ -40,12 +40,14 @@ final class FirstSteps
     }
 
     /**
-     * Lit les preuves utiles au shell, sans charger stocks, récompenses ou détails du guide.
-     * La colonie et son propriétaire ont déjà été vérifiés par l'appelant.
+     * Lit la progression affichée de cet empire sans charger de stocks ou de récompenses.
+     * Une seule colonie détenue dans l’univers fournit les bâtiments historiques manquants :
+     * celle qui apporte le plus de jalons supplémentaires, puis l’identifiant le plus bas.
+     * Le choix de la colonie affichée ne change ni ces indices, ni les preuves persistées.
      *
-     * @return array<string, true>
+     * @return array{proved:array<string, true>, existing:array<string, true>}
      */
-    public function guideEvidence(PlayerUniverse $membership, Planet $planet, bool $exerciseInResponse = false): array
+    public function guideEvidence(PlayerUniverse $membership, bool $exerciseInResponse = false): array
     {
         $buildings = [];
         foreach (FirstStep::cases() as $step) {
@@ -57,20 +59,26 @@ final class FirstSteps
         // Les migrations historiques n’utilisent pas toutes la même collation pour ces clés ASCII.
         $rows = $this->entityManager->getConnection()->fetchAllAssociative(
             <<<'SQL'
-                SELECT CAST(step_key AS BINARY) AS evidence, 0 AS is_building
+                SELECT CAST(step_key AS BINARY) AS evidence, 0 AS source, NULL AS colony
                 FROM first_step_completion WHERE player_universe_id = :member
                 UNION ALL
-                SELECT CAST(slug AS BINARY), 1 FROM planet_building
-                WHERE planet_id = :planet AND tier = 'basic' AND level > 0 AND slug IN (:buildings)
+                SELECT CAST(b.slug AS BINARY), 1, p.id
+                FROM planet p
+                JOIN solar_system s ON s.id = p.solar_system_id
+                JOIN galaxy g ON g.id = s.galaxy_id
+                JOIN planet_building b ON b.planet_id = p.id
+                WHERE p.owner_id = :owner AND g.universe_id = :universe
+                  AND b.tier = 'basic' AND b.level > 0 AND b.slug IN (:buildings)
                 UNION ALL
-                SELECT CAST(:research AS BINARY), 0 WHERE EXISTS (
+                SELECT CAST(:research AS BINARY), 2, NULL WHERE EXISTS (
                     SELECT 1 FROM player_technology
                     WHERE player_universe_id = :researchMember AND tier = 'basic' AND level > 0
                 )
                 SQL,
             [
                 'member' => $membership->id,
-                'planet' => $planet->id,
+                'owner' => $membership->id,
+                'universe' => $membership->universe->id,
                 'buildings' => array_keys($buildings),
                 'research' => FirstStep::Research->value,
                 'researchMember' => $membership->id,
@@ -80,11 +88,15 @@ final class FirstSteps
 
         $proved = [];
         $existing = [];
+        $byColony = [];
         foreach ($rows as $row) {
-            if ((int) $row['is_building'] === 1) {
-                $existing[$buildings[$row['evidence']]] = true;
-            } elseif (FirstStep::tryFrom($row['evidence']) !== null) {
-                $proved[$row['evidence']] = true;
+            $evidence = $row['evidence'];
+            if ((int) $row['source'] === 1) {
+                $byColony[(int) $row['colony']][$buildings[$evidence]] = true;
+            } elseif ((int) $row['source'] === 2) {
+                $existing[FirstStep::Research->value] = true;
+            } elseif (FirstStep::tryFrom($evidence) !== null) {
+                $proved[$evidence] = true;
             }
         }
 
@@ -94,62 +106,16 @@ final class FirstSteps
             $proved[FirstStep::PirateExercise->value] = true;
         }
 
-        return $proved + $existing + $this->heritageAtCompletion($membership, $proved, $proved + $existing);
-    }
-
-    /**
-     * Ne redémarre pas un guide déjà complet parce que le joueur change de colonie.
-     * Les bâtiments non attestés doivent tous exister sur une même colonie de cet empire ;
-     * on ne cumule pas des bâtiments répartis entre plusieurs colonies, et on n'écrit aucun jalon.
-     *
-     * @param array<string, true> $proved
-     * @param array<string, true> $local
-     * @return array<string, true>
-     */
-    public function heritageAtCompletion(PlayerUniverse $membership, array $proved, array $local): array
-    {
-        if (count($local) >= count(FirstStep::cases())) {
-            return [];
-        }
-
-        $buildings = [];
-        foreach (FirstStep::cases() as $step) {
-            $slug = $step->buildingSlug();
-            if ($slug === null && !isset($local[$step->value])) {
-                // C’est encore un guide en cours : aucune lecture supplémentaire dans le shell.
-                return [];
-            }
-            if ($slug !== null && !isset($proved[$step->value])) {
-                $buildings[$slug] = $step->value;
+        ksort($byColony, SORT_NUMERIC);
+        $inheritedBuildings = [];
+        foreach ($byColony as $candidate) {
+            $candidate = array_diff_key($candidate, $proved);
+            if (count($candidate) > count($inheritedBuildings)) {
+                $inheritedBuildings = $candidate;
             }
         }
-        if ($buildings === []) {
-            return [];
-        }
 
-        $colony = $this->entityManager->getConnection()->fetchOne(
-            <<<'SQL'
-                SELECT p.id
-                FROM planet p
-                JOIN solar_system s ON s.id = p.solar_system_id
-                JOIN galaxy g ON g.id = s.galaxy_id
-                JOIN planet_building b ON b.planet_id = p.id
-                WHERE p.owner_id = :membership AND g.universe_id = :universe
-                  AND b.tier = 'basic' AND b.level > 0 AND b.slug IN (:buildings)
-                GROUP BY p.id
-                HAVING COUNT(*) = :needed
-                LIMIT 1
-                SQL,
-            [
-                'membership' => $membership->id,
-                'universe' => $membership->universe->id,
-                'buildings' => array_keys($buildings),
-                'needed' => count($buildings),
-            ],
-            ['buildings' => ArrayParameterType::STRING],
-        );
-
-        return $colony === false ? [] : array_fill_keys($buildings, true);
+        return ['proved' => $proved, 'existing' => array_diff_key($existing + $inheritedBuildings, $proved)];
     }
 
     public function recordQueueCompletion(QueueItem $item, \DateTimeImmutable $finishedAt, bool $shipConstructed = false): void

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\{Planet, PlanetBuilding, Player, PlayerTechnology};
+use App\Entity\{Planet, PlanetBuilding, Player};
 use App\Repository\GameRepository;
 use App\Service\Player\FirstStep;
 use App\Service\Player\FirstSteps;
@@ -34,7 +34,6 @@ final class FirstStepsController extends AbstractController
             }
         }
         $levels = $planet === null ? [] : $repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]);
-        $technologies = $repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]);
 
         // La destination du remboursement n’est pas la colonie consultée pour les jalons.
         // Elle reste limitée aux mêmes planètes possédées déjà chargées plus haut.
@@ -48,7 +47,7 @@ final class FirstStepsController extends AbstractController
         }
 
         return $this->render('player/first_steps.html.twig', [
-            'training' => $view->progress($membership, $levels, $technologies),
+            'training' => $view->progress($membership, $levels),
             'trainingMembership' => $membership,
             'trainingPlanet' => $planet,
             'rewardPlanet' => $rewardPlanet,
@@ -71,7 +70,7 @@ final class FirstStepsController extends AbstractController
 
         $response = new Response(headers: ['Cache-Control' => 'private, no-store']);
         // Une page restée ouverte peut viser un guide désactivé ou maintenant terminé.
-        $panel = ($player->preferences['firstStepsGuide'] ?? true) ? $view->panel($membership, $planet) : null;
+        $panel = ($player->preferences['firstStepsGuide'] ?? true) ? $view->panel($membership) : null;
         if ($panel === null) {
             return $response->setStatusCode(Response::HTTP_NO_CONTENT);
         }
