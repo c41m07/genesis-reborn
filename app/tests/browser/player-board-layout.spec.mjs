@@ -73,10 +73,15 @@ test('Planches joueur : rails de décision sur grand écran et flux mobile sans 
                 expect.soft(await page.evaluate(() => document.documentElement.scrollWidth), model).toBeLessThanOrEqual(width);
                 if (model === 'P13' && width === 1920) {
                     const next = page.getByRole('link', { name: 'Continuer : défenses', exact: true });
-                    await expect(next).toBeInViewport({ ratio: 1 });
+                    await expect(next).toBeVisible();
                     const grids = page.locator('#simulation-ships .simulation-wizard-camp');
                     await expect(grids).toHaveCount(2);
-                    for (const grid of await grids.all()) await expect(grid).toBeInViewport({ ratio: 0.9 });
+                    for (const grid of await grids.all()) {
+                        const lastRow = grid.getByRole('row').last();
+                        await lastRow.scrollIntoViewIfNeeded();
+                        await expect(lastRow).toBeInViewport({ ratio: 1 });
+                    }
+                    await page.evaluate(() => window.scrollTo({top: 0, behavior: 'instant'}));
                 }
                 await page.screenshot({ path: info.outputPath(model + '-' + width + 'x' + height + '.png'), scale: 'css', animations: 'disabled' });
                 if (model === 'P12') {

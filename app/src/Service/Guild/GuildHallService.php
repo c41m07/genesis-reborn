@@ -120,7 +120,7 @@ final readonly class GuildHallService
                 'SELECT id FROM planet WHERE solar_system_id = ? AND position = 0 FOR UPDATE',
                 [$system->id],
             )) {
-                throw new \DomainException('La position 0 de ce système est déjà occupée.');
+                throw new \DomainException('L’emplacement du Hall dans ce système est déjà occupé.');
             }
 
             // La position 0 reste une projection du Hall. Aucune planète ni flotte

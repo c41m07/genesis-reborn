@@ -147,8 +147,8 @@ body[data-ui-page="catalogues"] :is(#panel-buildings,#panel-technologies,#panel-
 body[data-theme=light] .catalog-disclosure.has-hostile>.catalog-follow-summary,
 body[data-theme=light] .catalog-workspace .building-card .catalog-build-action.has-missing-resources { color:#a32939; }
 body[data-theme=light] .catalog-workspace { --muted:#566374; }
-body[data-theme=light] .catalog-workspace .card-benefits>summary,
-body[data-theme=light] .catalog-workspace .card-benefits>summary::after { color:#315a45; }
+body[data-theme=light] .catalog-workspace :is(.card-benefits,.catalog-prerequisites)>summary,
+body[data-theme=light] .catalog-workspace :is(.card-benefits,.catalog-prerequisites)>summary::after { color:#315a45; }
 @media(max-width:1199px) {
     body[data-ui-page="catalogues"] :is(#panel-buildings,#panel-technologies,#panel-ships,#panel-defenses) .building-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
     .catalog-workspace .catalog-condensed .building-rank-tabs { width:250px; }
@@ -495,18 +495,10 @@ body[data-ui-page="catalogues"] .catalog-workspace .catalog-operations-rail {
     flex: 1 1 0;
     padding-block: 4px;
 }
-.catalog-workspace .building-card .building-rank.is-locked .catalogue-card-visual img { filter: none; }
 
 @container (min-width: 368px) {
     .catalog-workspace .building-rank-tabs .building-rank-full { display: inline; }
     .catalog-workspace .building-rank-tabs .building-rank-short { display: none; }
-}
-/* Une réservation de 1,25 M et le nom de rang gardent chacun leur ligne.
-   Les trois onglets restent de même largeur, sans masquer ni tronquer les effectifs. */
-.catalog-workspace :is(.card--ships, .card--defenses) .building-rank-tabs > .building-rank-tab {
-    flex-direction: column;
-    gap: 2px;
-    min-height: 52px;
 }
 .catalog-workspace .catalog-condensed :is(.card--ships, .card--defenses) .building-rank-full { display: none; }
 .catalog-workspace .catalog-condensed :is(.card--ships, .card--defenses) .building-rank-short { display: inline; }
@@ -656,6 +648,36 @@ body[data-theme="light"] .catalogue-cancel { --catalogue-decision-danger: #a92f4
     .catalog-workspace section:not(.catalog-condensed) .building-card .card-body > form { padding-top: 3px; }
     .catalog-workspace section:not(.catalog-condensed) .core-catalogue-gain { gap: 2px 7px; padding-block: 4px; }
 }
+
+/* Les prérequis restent consultables au-dessus des cartes voisines, même en vue condensée. */
+.catalog-workspace .building-card:has(.catalog-prerequisites[open]) {
+    position: relative;
+    z-index: 3;
+    overflow: visible;
+}
+.catalog-workspace .building-card .catalog-prerequisites {
+    position: relative;
+    padding: 0;
+    margin: 8px 0 0;
+}
+.catalog-prerequisites > summary {
+    align-content: center;
+    min-height: 44px;
+    padding: 5px 9px;
+}
+.catalog-workspace .catalog-prerequisites > ul {
+    position: absolute;
+    z-index: 2;
+    inset: 100% -1px auto;
+    margin: 0;
+    padding: 8px 12px 8px 26px;
+    border: 1px solid var(--line);
+    border-radius: 0 0 5px 5px;
+    background: var(--panel);
+    box-shadow: 0 6px 16px #0005;
+}
+.catalog-prerequisites li + li { margin-top: 5px; }
+.catalog-prerequisites a { text-decoration: underline; }
 
 /* Les détails se déplient sous leur commande sur les rangées multi-cartes.
    L’article ouvert ne recalcule pas la position des actions de sa rangée.

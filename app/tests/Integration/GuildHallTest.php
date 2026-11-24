@@ -83,7 +83,7 @@ final class GuildHallTest extends KernelTestCase
         self::assertSame($planetCount, $this->em->getRepository(Planet::class)->count());
         self::assertSame([], $halls->claimsForKnownSystems($neighbor, [$system->id]));
         $this->discover($neighbor, $system);
-        self::assertSame([$system->id => ['tag' => 'HLA', 'position' => 0]], $halls->claimsForKnownSystems($neighbor, [$system->id]));
+        self::assertSame([$system->id => ['tag' => 'HLA', 'position' => 0, 'guildId' => $guild->id]], $halls->claimsForKnownSystems($neighbor, [$system->id]));
         self::assertSame([], $halls->claimsForKnownSystems($otherUniverse, [$system->id]));
     }
 
@@ -102,7 +102,7 @@ final class GuildHallTest extends KernelTestCase
             ['action' => 'place', 'member' => $second->id, 'guild' => $secondGuild->id, 'system' => $system],
         ]);
         self::assertContains('accepted', $results);
-        self::assertContains('La position 0 de ce système est déjà occupée.', $results);
+        self::assertContains('L’emplacement du Hall dans ce système est déjà occupé.', $results);
         $db = $this->em->getConnection();
         self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM guild_hall WHERE solar_system_id = ?', [$system]));
         self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM guild_hall WHERE solar_system_id IS NULL AND strength = 32'));
@@ -361,7 +361,7 @@ final class GuildHallTest extends KernelTestCase
         yield 'financement incomplet' => ['early', 'entièrement financé'];
         yield 'système autre univers' => ['other-world', 'Système inaccessible'];
         yield 'jamais découvert' => ['unknown', 'Système inaccessible'];
-        yield 'revendication concurrente déjà validée' => ['taken', 'déjà occupée'];
+        yield 'revendication concurrente déjà validée' => ['taken', 'déjà occupé'];
         yield 'stock tierce colonie' => ['foreign-planet', 'ne vous appartient pas'];
         yield 'ancienne révision' => ['stale', 'Le Hall a changé'];
         yield 'don supérieur au reste' => ['overfund', 'dépasse la force'];

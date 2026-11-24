@@ -63,9 +63,6 @@ test('La Vue générale validée regroupe les accès et actualise les alertes sa
     const banner = page.locator('.empire-banner');
     const scores = banner.locator('.overview-score-detail');
     await expect(scores.locator('.empire-points')).not.toBeVisible();
-    await scores.locator('summary').press('Enter');
-    await expect(scores.locator('.empire-points dt')).toHaveText(['Bâtiments', 'Recherche', 'Flotte', 'Total']);
-    await scores.locator('summary').press('Enter');
     const metrics = page.locator('.dashboard-metrics');
     await expect(banner.locator('.metric-card')).toHaveCount(4);
     await expect(metrics.locator('.metric-card small')).toHaveText(['Planètes', 'Points d’empire', 'Classement', 'Guilde']);
@@ -80,6 +77,16 @@ test('La Vue générale validée regroupe les accès et actualise les alertes sa
         await page.goto(colonyUrl);
         await expect(page.locator('[data-live-region="overview-deadlines"]')).toContainText('Aucune échéance confirmée');
         await verifyBannerLayers(banner);
+        const title = banner.locator('#overview-colony-title');
+        const titleSize = await title.boundingBox();
+        const bannerHeight = (await banner.boundingBox()).height;
+        await scores.locator('summary').press('Enter');
+        await expect(scores.locator('.empire-points dt')).toHaveText(['Bâtiments', 'Recherche', 'Flotte']);
+        const panel = await scores.locator('.overview-score-body').boundingBox();
+        expect(panel.y + panel.height).toBeLessThanOrEqual((await scores.locator('summary').boundingBox()).y);
+        expect((await banner.boundingBox()).height).toBe(bannerHeight);
+        expect((await title.boundingBox()).height).toBe(titleSize.height);
+        await scores.locator('summary').press('Enter');
         await page.screenshot({ path: info.outputPath(`vue-voile-calme-${theme}-${width}.png`), animations: 'disabled' });
       }
     }

@@ -136,7 +136,7 @@ final readonly class GuildHallRepository
         ) !== false;
     }
 
-    /** @param list<int> $systemIds @return array<int, array{tag: ?string, position: int}> */
+    /** @param list<int> $systemIds @return array<int, array{tag: ?string, position: int, guildId: int}> */
     public function claimsForKnownSystems(PlayerUniverse $viewer, array $systemIds): array
     {
         if (!$viewer->isPlayerControlled() || $systemIds === []) {
@@ -146,7 +146,7 @@ final readonly class GuildHallRepository
         // Un Hall n'ajoute pas de découverte. Filtrer aussi côté SQL pour que les
         // identifiants reçus par erreur d'un autre univers ne dévoilent aucun tag.
         $rows = $this->em->getConnection()->fetchAllAssociative(
-            'SELECT s.id, g.tag FROM guild_hall h
+            'SELECT s.id, g.tag, g.id AS guild_id FROM guild_hall h
                 JOIN guild g ON g.id = h.guild_id AND g.archived_at IS NULL
                 JOIN solar_system s ON s.id = h.solar_system_id
                 JOIN galaxy a ON a.id = s.galaxy_id AND a.universe_id = g.universe_id
@@ -158,7 +158,7 @@ final readonly class GuildHallRepository
 
         $claims = [];
         foreach ($rows as $row) {
-            $claims[(int) $row['id']] = ['tag' => $row['tag'], 'position' => 0];
+            $claims[(int) $row['id']] = ['tag' => $row['tag'], 'position' => 0, 'guildId' => (int) $row['guild_id']];
         }
 
         return $claims;

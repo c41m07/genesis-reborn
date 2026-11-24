@@ -16,7 +16,7 @@ test('Laboratoire débloque une recherche, la file progresse et le résultat est
   prepareOwnedColony(process.env.BROWSER_ROUTER, email, { showLockedItems: true });
   const lab = () => page.locator('#item-lab-basic');
   await page.getByRole('navigation', { name: 'Navigation principale', exact: true }).getByRole('link', { name: 'Bâtiments', exact: true }).click(); await lab().getByRole('button', { name: /Améliorer .* niveau 1/ }).click();
-  await expect(page.locator('#building-tab-lab-basic .building-rank-level')).toHaveText('1', { timeout: 30000 });
+  await expect(page.locator('#item-lab-basic .catalogue-level-badge')).toHaveText('Niv. 1', { timeout: 30000 });
   await page.getByRole('navigation', { name: 'Navigation principale', exact: true }).getByRole('link', { name: 'Recherche', exact: true }).click(); await expect(page.locator('.technology-tree')).toHaveCount(0);
   const research = page.locator('#item-engineering_foundations-basic');
   await expect(research.getByRole('button', { name: /Rechercher le niveau 1/ })).toBeVisible(); await research.getByRole('button', { name: /Rechercher le niveau 1/ }).click();
@@ -25,7 +25,7 @@ test('Laboratoire débloque une recherche, la file progresse et le résultat est
   await expect(summary).toContainText('Génie civil colonial');
   const bar = summary.getByRole('progressbar'), first = Number(await bar.getAttribute('aria-valuenow'));
   await expect.poll(async () => Number(await bar.getAttribute('aria-valuenow')), { timeout: 10000 }).toBeGreaterThan(first);
-  await expect.poll(async () => { await page.reload(); return page.locator('#building-tab-engineering_foundations-basic .building-rank-level').textContent(); }, { timeout: 30000, intervals: [500, 1000, 2000] }).toBe('1');
+  await expect.poll(async () => { await page.reload(); return (await page.locator('#item-engineering_foundations-basic .catalogue-level-badge').textContent()).trim(); }, { timeout: 30000, intervals: [500, 1000, 2000] }).toBe('Niv. 1');
   await expect(summary).toContainText('File disponible');
   await expect(summary.getByText('Génie civil colonial')).toHaveCount(0);
   if (!await queue.evaluate(element => element.open)) await summary.press('Enter');

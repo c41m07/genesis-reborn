@@ -218,7 +218,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
       const point = window.galaxyDrawnLabels[String(planet.position).padStart(2, '0')];
       if (!point?.canvas.includes('gv2-canvas--system')) continue;
       const x = rect.left + point.x, y = rect.top + point.y;
-      if (document.elementFromPoint(x, y) === canvas) return { name: planet.name, x, y };
+      if (document.elementFromPoint(x, y) === canvas) return { id: planet.id, name: planet.name, x, y };
     }
     return null;
   }, planets);
@@ -329,7 +329,7 @@ test('GalaxieV2 relie la galaxie, le système et la planète sans casser la cart
   await page.locator('.gv2-planet-panel').getByRole('button', { name: /Revenir au système/ }).tap();
   await expect(page.locator('.gv2-canvas--system')).toHaveClass(/is-active/);
   await expect(page.locator('.gv2-system-panel .gv2-panel-heading')).toContainText(homeSystem.name);
-  await expect(page.locator('.gv2-planet-choice').filter({ hasText: mobilePlanet.name })).toBeFocused();
+  await expect(page.locator(`.gv2-planet-choice[data-planet-id="${mobilePlanet.id}"]`)).toBeFocused();
 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/carte-v2');

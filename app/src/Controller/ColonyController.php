@@ -575,7 +575,11 @@ final class ColonyController extends AbstractController
                         'npc' => $planet->npcPlanet || $planet->owner?->isForgotten(),
                         'conquestLevel' => $planet->conquestLevel,
                     ], $row['planets']),
-                ] + ($row['hall'] ? ['hall' => $row['hall']] : []);
+                ] + ($row['hall'] ? ['hall' => [
+                    'position' => $row['hall']['position'],
+                    'tag' => $row['hall']['tag'],
+                    'profileUrl' => $this->generateUrl('app_guild_public_profile', ['id' => $row['hall']['guildId']]),
+                ]] : []);
             }
             $flights = $this->visibility->forMap($m, $selectedGalaxy);
             $campaignTraffic = $this->campaignTraffic->forGalaxy($m, $selectedGalaxy);
