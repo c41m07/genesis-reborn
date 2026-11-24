@@ -22,9 +22,10 @@ final class VerificationRecoveryOrigin
             return null;
         }
 
-        // Le compte est déjà verrouillé par l’appelant. Un reçu issu d’une
-        // reprise n’est jamais une nouvelle origine, même si son issue est inconnue.
-        if ($db->fetchOne('SELECT original_request_id FROM verification_recovery_event WHERE recovery_request_id = ? FOR UPDATE', [$requestId]) !== false) {
+        // Première lecture cohérente après le verrou du compte : toutes les
+        // écritures de filiation du même compte sont déjà sérialisées. Ne pas
+        // verrouiller un intervalle d’identifiants absent, partagé entre comptes.
+        if ($db->fetchOne('SELECT original_request_id FROM verification_recovery_event WHERE recovery_request_id = ?', [$requestId]) !== false) {
             return null;
         }
 
