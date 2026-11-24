@@ -24,7 +24,7 @@
 
 ## Commentaires et documentation du code
 
-- Les commentaires utiles font partie du code attendu. Lors de chaque ajout ou modification, examiner les traitements concernés et ajouter ou actualiser les explications nécessaires à leur compréhension.
+- À chaque ajout ou modification de code, rédiger ou actualiser les commentaires utiles au fil du développement. Expliquer l’intention des traitements concernés pendant leur mise en œuvre.
 - Écrire les commentaires explicatifs en français simple, direct et naturel, comme des notes permettant de retrouver l’intention du code.
 - Commenter obligatoirement les choix non évidents et les traitements complexes ou sensibles lorsque le code seul ne permet pas de comprendre leur raison.
 - Expliquer notamment les étapes importantes d’un algorithme, les raisons et le périmètre d’un verrou, l’ordre nécessaire des opérations, les contrôles de confidentialité, les risques de données périmées, l’idempotence, les cas particuliers et les compatibilités historiques.
