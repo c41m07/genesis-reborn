@@ -23,7 +23,7 @@
     {% if tutorial_spy %}
         <label for="tutorial-probe-{{ f.id }}">Sonde de reconnaissance basique</label>
         <input id="tutorial-probe-{{ f.id }}" type="number" name="ships[probe][basic]" value="1" min="1" max="1" readonly
-               data-fleet-wizard-target="quantity" data-ship-label="Sonde de reconnaissance basique" data-ship-family="Sonde de reconnaissance" data-ship-type="probe">
+               data-fleet-wizard-target="quantity" data-ship-label="Sonde de reconnaissance basique" data-ship-family="Sonde de reconnaissance" data-ship-type="probe" data-ship-tier="basic">
     {% else %}
         {% include 'fleet/_ship_selection_table.html.twig' with {
             ships: row.ships, catalog: catalog, fleetId: f.id, fleetLimit: fleet_limit,

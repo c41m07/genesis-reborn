@@ -1112,6 +1112,9 @@ test('Premiers pas : le devis et le départ n’acceptent que la sonde basique e
     await form.locator('select[name="npc_destination"]').selectOption(String(nativeNpc.id));
     await form.locator('[name="ratio"]').selectOption('0.1');
     await form.getByRole('button', { name: /Vérifier la mission/ }).click();
+    const composition = form.getByRole('table', { name: 'Composition', exact: true });
+    await expect(composition.getByRole('row').filter({ hasText: 'Sonde de reconnaissance basique' }).getByRole('cell', { name: 'Basique', exact: true })).toBeVisible();
+
     await form.getByRole('button', { name: 'Estimer le trajet' }).click();
     await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
     await form.getByRole('button', { name: /Envoyer la flotte/ }).click();
