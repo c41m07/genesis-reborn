@@ -166,6 +166,36 @@ final class GameplayAccessTest extends WebTestCase
         $this->client->request('GET','/');self::assertResponseRedirects('/planetes/'.$secondId);
         $this->client->request('GET','/?colony='.$foreignId);self::assertResponseStatusCodeSame(404);
     }
+    public function testCatalogueShowsLegacyOrdersAboveTheNewCapWithoutEnablingAdd(): void
+    {
+        [$player, $planet] = $this->player('LegacyQueueUi');
+        $now = new \DateTimeImmutable();
+        $planet->buildingQueueStartedAt = $now;
+        for ($index = 0; $index < 11; ++$index) {
+            $item = new QueueItem();
+            $item->planet = $planet;
+            $item->playerUniverse = $player->currentPlayerUniverse;
+            $item->queueType = 'building';
+            $item->itemSlug = 'mine_metal';
+            $item->itemLevel = $index + 1;
+            $item->durationSeconds = 86400;
+            $item->queuedAt = $now;
+            $item->startedAt = $index === 0 ? $now : null;
+            $item->dispatchToken = 'catalogue-'.$index;
+            $this->em->persist($item);
+        }
+        $this->em->flush();
+
+        $this->client->loginUser($player);
+        $crawler = $this->client->request('GET', '/planetes/'.$planet->id.'?section=buildings');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextSame('[data-queue-type="building"] .queue-capacity', '11/10 commandes');
+        self::assertCount(11, $crawler->filter('[data-queue-type="building"] .queue-detail-item'));
+        self::assertCount(11, $crawler->filter('[data-queue-type="building"] .queue-detail-item a'));
+        self::assertSelectorTextContains('[data-queue-type="building"] .catalog-follow-panel', 'Les commandes déjà lancées sont conservées');
+        self::assertSelectorTextSame('#item-mine_metal-basic .catalog-build-action:disabled .catalog-action-label', 'File pleine');
+    }
+
     public function testSceneShowsQueueTotalAndOnlyOwnActiveFlightsAcrossColonies():void
     {
         [$a,$first]=$this->player('Alpha');[$b,$foreign]=$this->player('Beta');$m=$a->currentPlayerUniverse;

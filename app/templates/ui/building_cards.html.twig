@@ -9,7 +9,7 @@
 {% set leveled = group in ['buildings', 'technologies'] %}
 {% set queueType = group == 'buildings' ? 'building' : (group == 'technologies' ? 'research' : 'shipyard') %}
 {% set currentQueue = queues[queueType]|default([]) %}
-{% set queueFull = currentQueue|length >= 30 %}
+{% set queueFull = currentQueue|length >= constant('App\\Service\\Queue\\QueueService::MAX_ORDERS') %}
 {% for card in items %}
     {% set slug = card.definition.slug %}
     {% set families = families|merge({(slug): (families[slug]|default([]))|merge([card])}) %}

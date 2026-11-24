@@ -71,6 +71,21 @@
                 <canvas class="gv2-canvas gv2-canvas--galaxy is-active" data-galaxy-v2-target="galaxyCanvas" aria-label="Carte animée de la galaxie. Glissez pour déplacer, molette pour zoomer, cliquez sur un système pour afficher sa fiche."></canvas>
                 <canvas class="gv2-canvas gv2-canvas--system" data-galaxy-v2-target="systemCanvas" aria-label="Vue du système solaire. Cliquez sur une planète pour ouvrir sa vue rapprochée ; sa fiche est accessible dans la liste."></canvas>
                 <canvas class="gv2-canvas gv2-canvas--planet" data-galaxy-v2-target="planetCanvas" aria-label="Vue rapprochée de la planète"></canvas>
+                <div class="gv2-stations" data-galaxy-v2-target="stations" hidden
+                     data-action="pointerover->galaxy-v2#stationHover pointerout->galaxy-v2#stationLeave focusin->galaxy-v2#stationFocus focusout->galaxy-v2#stationBlur click->galaxy-v2#stationToggle">
+                    <button type="button" class="gv2-station gv2-station--hall" data-galaxy-v2-target="hallStation" aria-label="Hall de guilde, Position 0" aria-expanded="false" aria-controls="gv2-station-detail" hidden>
+                        <img data-src="{{ asset('images/map/hall-guilde.png') }}" alt="" width="19" height="19">
+                        <span class="gv2-station-label" aria-hidden="true">Hall de guilde · Position 0</span>
+                    </button>
+                    <button type="button" class="gv2-station gv2-station--pirate" data-galaxy-v2-target="pirateStation" aria-label="Station pirate repérée, aucune case planétaire" aria-expanded="false" aria-controls="gv2-station-detail" hidden>
+                        <img data-src="{{ asset('images/map/station-pirate.png') }}" alt="" width="19" height="19">
+                        <span class="gv2-station-label" aria-hidden="true">Station pirate</span>
+                    </button>
+                    <div id="gv2-station-detail" class="gv2-station-detail" role="status" data-galaxy-v2-target="stationDetail" hidden>
+                        <strong data-galaxy-v2-target="stationTitle"></strong>
+                        <small data-galaxy-v2-target="stationText"></small>
+                    </div>
+                </div>
                 <div class="gv2-scanlines" aria-hidden="true"></div><div class="gv2-vignette" aria-hidden="true"></div>
                 <div class="gv2-tooltip" role="status" data-galaxy-v2-target="tooltip" hidden></div>
 

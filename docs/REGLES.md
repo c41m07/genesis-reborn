@@ -230,6 +230,8 @@ Les dégâts d’un tour sont multipliés par ((HP + bouclier restants)/(HP + bo
 
 Les neuf classes R14 ont une croissance de combat 1/1,5/2,25 ; les coûts par rang et les autres facteurs de mobilité/construction restent séparés. Une escorte est une composition financée par remplacement, sans interception ou interposition automatique. Un round reste une minute, dix rounds au maximum ; si les camps subsistent à la limite, le défenseur gagne officiellement. Les HP individuels ne sont pas persistés entre batailles.
 
+Le Bombardier inflige ×1,30 contre les défenses au sol aux trois rangs. Le même coefficient s’applique à la chance de toucher avant l’écart de rang, dans les bornes existantes. Les coefficients antérieurs du Cuirassé (×1,15) et du Capital (×1,30) ne changent pas ; les coûts et contres navals du Bombardier restent inchangés.
+
 Les statistiques, prix, coefficients, preuves de transposition et précautions de déploiement R14 sont détaillés dans [BALANCING_R14.md](EQUILIBRAGE.md#combat-r14).
 
 
@@ -413,14 +415,14 @@ s’appliquent toujours. Les joueurs retrouvent les rotations dans Événements 
 
 ## Saisie des quantités et boutons Max
 
-- Construction de vaisseaux et défenses : Max utilise les ressources disponibles et le coût réel du lot, sans limite fixe de 100. La limite de 30 commandes par file reste applicable.
+- Construction de vaisseaux et défenses : Max utilise les ressources disponibles et le coût réel du lot, sans limite fixe de 100. Le chantier partage un plafond de 10 commandes à l’ajout entre vaisseaux et défenses, par colonie. La file de bâtiments a son propre plafond de 10 par colonie. Au-delà de ce plafond, les commandes déjà payées restent en place et aucun ajout n’est possible tant que la file ne compte pas moins de 10 commandes.
 - Composition d’une flotte : Max sélectionne les unités disponibles d’un type et d’un rang, dans la place restante sous le plafond de flotte de l’univers.
 - Fret : un Max par ressource conserve les autres chargements et tient compte du stock, du carburant réservé et de la soute libre. La limite de saisie de 100 000 000 par ressource est conservée.
 - Les quantités excessives sont réduites automatiquement, avec un message d’ajustement et une vérification serveur au moment de l’action. Les entrées négatives, non entières ou inconnues restent refusées ; un maximum nul ne permet pas d’achat ni de départ sans vaisseau.
 
 ## File de recherche commune
 
-Dans un même univers, toutes les colonies d’un joueur partagent une file de recherche de 30 commandes maximum. Chaque ajout exige un laboratoire du même rang au niveau 1 ou plus sur la colonie choisie. Il paie ses coûts sur cette colonie et utilise ses bonus de laboratoire pour le devis. Les niveaux déjà en file sont pris en compte depuis toutes les colonies. Les recherches sont exécutées successivement ; la durée des nouvelles commandes suit les bonus du laboratoire d’origine, jamais celui de la colonie affichée.
+Dans un même univers, toutes les colonies d’un joueur partagent une file de recherche plafonnée à 10 commandes au moment d’un ajout. Chaque ajout exige un laboratoire du même rang au niveau 1 ou plus sur la colonie choisie. Il paie ses coûts sur cette colonie et utilise ses bonus de laboratoire pour le devis. Les niveaux déjà en file sont pris en compte depuis toutes les colonies. Les recherches sont exécutées successivement ; la durée des nouvelles commandes suit les bonus du laboratoire d’origine, jamais celui de la colonie affichée.
 
 Les recherches historiquement actives en parallèle terminent leur travail sans être annulées. La suite de la file attend la fin de toutes ces recherches, puis fonctionne avec une seule recherche active. Les univers restent indépendants. Annulations, remboursements, vacances et captures conservent leurs règles ; la colonie d’origine de chaque commande reste enregistrée.
 

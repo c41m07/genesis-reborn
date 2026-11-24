@@ -46,7 +46,11 @@ final class R14RegressionTest extends TestCase
             }
         }
         $actual = $catalog->get('combat_modifiers', 'modifiers');
-        foreach ($fixture['modifiers'] as $attacker => $targets) foreach ($targets as $target => $factor) self::assertEquals($factor, $actual[$attacker][$target], "$attacker/$target");
+        foreach ($fixture['modifiers'] as $attacker => $targets) foreach ($targets as $target => $factor) {
+            // L’étude R14 reste figée ; le rôle anti-sol a évolué pour le seul bombardier.
+            $expected = $attacker === 'bomber' && $target === 'ground_defense' ? 1.30 : $factor;
+            self::assertEquals($expected, $actual[$attacker][$target], "$attacker/$target");
+        }
     }
 
     public function testFullCombatLogsMatchIndependentReference(): void

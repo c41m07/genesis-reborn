@@ -1,4 +1,4 @@
-<details class="first-steps-popup" data-controller="first-steps-guide"
+<details class="first-steps-popup" data-controller="first-steps-guide"{% if localMap|default(false) %} data-gv2-local-first-steps hidden{% endif %}
          data-first-steps-guide-scope-value="{{ planet.owner.id }}"
          data-first-steps-guide-url-value="{{ path('app_first_steps_panel', {colony: planet.id}) }}"
          data-action="toggle->first-steps-guide#rememberOpened keydown.esc->first-steps-guide#closeFromKeyboard">

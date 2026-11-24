@@ -26,7 +26,6 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
         const fillText = CanvasRenderingContext2D.prototype.fillText;
         const locations = new WeakMap();
         window.hallPoints = {};
-        window.hallOrbitalMarker = false;
         CanvasRenderingContext2D.prototype.arc = function (x, y, ...rest) {
             locations.set(this, { x, y });
             return arc.call(this, x, y, ...rest);
@@ -35,7 +34,6 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
             if (this.canvas.classList.contains('gv2-canvas--galaxy') && /^[^:]+:\d+$/.test(text)) {
                 window.hallPoints[text] = locations.get(this);
             }
-            if (this.canvas.classList.contains('gv2-canvas--system') && text === '◆') window.hallOrbitalMarker = true;
             return fillText.call(this, text, ...rest);
         };
     });
@@ -199,5 +197,8 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
     await expect(page.getByRole('complementary', { name: 'Informations sur le système sélectionné' }).locator('[data-system-guild-hall]')).toContainText('[HAL]');
     await page.getByRole('button', { name: 'Entrer dans le système' }).click();
     await expect(shell).toHaveAttribute('data-view', 'system');
-    await expect.poll(() => page.evaluate(() => window.hallOrbitalMarker)).toBe(true);
+    const station = page.getByRole('button', { name: 'Hall de guilde [HAL] · Position 0', exact: true });
+    await expect(station).toBeVisible();
+    await expect.poll(() => station.locator('img').evaluate(image => image.naturalWidth)).toBe(192);
+    await expect(page.getByRole('button', { name: /Station pirate/ })).toHaveCount(0);
 });

@@ -24,7 +24,7 @@
 {% set rewardGamePage = not campaignPage and presentationPage not in ['', 'accueil-public', 'profil', 'preferences', 'vacances', 'suppression-compte', 'wiki', 'feedback', 'documents-legaux', 'erreurs', 'annuler-file', 'rappeler-flotte', 'abandon-colonie', 'signaler-commandant'] %}
 {% set rewardHeader = daily_reward_header(app.user, chrome.planet, rewardGamePage) %}
 {# Les confirmations et certaines pages autonomes du jeu gardent aussi la languette. #}
-{% set firstStepsGamePage = rewardGamePage or route in ['app_first_steps', 'app_first_steps_exercise', 'app_daily_reward', 'app_queue_cancel_preview', 'app_fleet_recall', 'app_fleet_station_resume', 'app_planet_abandon', 'app_player_report'] %}
+{% set firstStepsGamePage = (rewardGamePage and route != 'app_map') or route in ['app_first_steps', 'app_first_steps_exercise', 'app_daily_reward', 'app_queue_cancel_preview', 'app_fleet_recall', 'app_fleet_station_resume', 'app_planet_abandon', 'app_player_report'] %}
 {% set firstStepsPreview = firstStepsGamePage ? first_steps_preview(app.user, chrome.membership, chrome.planet, route == 'app_first_steps_exercise' and firstStepsExerciseInResponse|default(false)) : null %}
 {% set adventPage = route in ['app_advent', 'app_advent_edition', 'app_advent_credit'] %}
 {% set fleetDecisionPage = route in ['app_fleet_recall', 'app_fleet_station_resume'] %}
@@ -110,9 +110,13 @@
 </div>
 {% endif %}
 <main id="main" class="shell {{ route=='app_map_v2'?'shell--galaxy-v2':(route=='app_messages'?'shell--messaging':(adventPage?'shell--advent':(fleetDecisionPage?'shell--fleet-decision':''))) }}">{% if chrome.membership and route != 'app_universes' %}{% include 'universe/_closing.html.twig' with {universe: chrome.membership.universe, passive: campaignPage} %}{% endif %}{% block flash_messages %}{% for type,messages in app.flashes %}{% for message in messages %}<div class="flash {{ type }}" role="{{ type=='error'?'alert':'status' }}">{{ message }}</div>{% endfor %}{% endfor %}{% endblock %}{% block incoming_fleets %}{% if chrome.membership %}{% include 'ui/incoming_attacks.html.twig' with {incoming_panel:false} %}{% endif %}{% endblock %}
-    {# L’aide reste à portée sans recouvrir la carte, le composeur ni les boutons de l’Avent. #}
+    {# Galaxie v2 partage sa page avec les vues locales : seule la carte d’ensemble masque l’aide. #}
     {% if firstStepsPreview and firstStepsInFlow and not fleetDecisionPage %}
-        {% include 'player/_first_steps_popup.html.twig' with {planet: chrome.planet, preview: firstStepsPreview} only %}
+        {% if route == 'app_map_v2' %}
+            {% include 'player/_first_steps_popup.html.twig' with {planet: chrome.planet, preview: firstStepsPreview, localMap: true} only %}
+        {% else %}
+            {% include 'player/_first_steps_popup.html.twig' with {planet: chrome.planet, preview: firstStepsPreview} only %}
+        {% endif %}
     {% endif %}
     {% block body %}{% endblock %}
     {# Ne pas masquer les champs de calcul ni la confirmation d'une décision de flotte. #}

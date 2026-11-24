@@ -21,6 +21,9 @@ use App\Service\Player\VacationCalendar;
  */
 final class QueueService
 {
+    // Un plafond à l’ajout uniquement : les commandes déjà payées restent dans leur file.
+    public const MAX_ORDERS = 10;
+    private const FULL_MESSAGE = 'File pleine (' . self::MAX_ORDERS . ' commandes maximum).';
     public function __construct(
         private GameManager $manager,
         private GameRepository $repo,
@@ -89,8 +92,8 @@ final class QueueService
                 default => 'shipyard',
             };
             $queue = $queueType === 'research' ? $this->repo->researchQueue($membership) : $this->repo->queue($planet, $queueType);
-            if (count($queue) >= 30) {
-                throw new \DomainException('File pleine (30 commandes maximum).');
+            if (count($queue) >= self::MAX_ORDERS) {
+                throw new \DomainException(self::FULL_MESSAGE);
             }
             $buildings = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]);
             $technologies = $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]);
@@ -237,7 +240,7 @@ final class QueueService
             $definition = $this->catalog->getTierForUniverse($membership->universe, $group, $slug, $tier);
             $buildings = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]);
             $technologies = $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]);
-            if (count($this->repo->queue($planet, 'shipyard')) >= 30 || $this->access->failures($membership, $planet, $group, $definition, $tier, $buildings, $technologies)) {
+            if (count($this->repo->queue($planet, 'shipyard')) >= self::MAX_ORDERS || $this->access->failures($membership, $planet, $group, $definition, $tier, $buildings, $technologies)) {
                 return 0;
             }
             return $this->unitMaximum(
@@ -277,8 +280,8 @@ final class QueueService
         $paymentEstimate = null;
         if ($maximum === 0) {
             $failures = $this->access->failures($membership, $planet, $group, $definition, $tier, $buildings, $technologies);
-            if (count($this->repo->queue($planet, 'shipyard')) >= 30) {
-                $reason = 'File pleine (30 commandes maximum).';
+            if (count($this->repo->queue($planet, 'shipyard')) >= self::MAX_ORDERS) {
+                $reason = self::FULL_MESSAGE;
             } elseif ($failures) {
                 $reason = 'Prérequis manquants : ' . implode(', ', $failures) . '.';
             } elseif ($this->economicUnits->constructionLimit($planet, $definition, $buildings) === 0) {
@@ -328,8 +331,11 @@ final class QueueService
         $technologies = $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]);
         $research = $group === 'technologies';
         $queue = $research ? $this->repo->researchQueue($membership) : $this->repo->queue($planet, 'shipyard');
-        if (count($queue) >= 30 || ($research && !$this->access->hasLocalResearchLaboratory($buildings, $tier))) {
-            throw new \DomainException('La file ou le laboratoire de cette colonie ne permet pas encore cette commande.');
+        if (count($queue) >= self::MAX_ORDERS) {
+            throw new \DomainException(self::FULL_MESSAGE);
+        }
+        if ($research && !$this->access->hasLocalResearchLaboratory($buildings, $tier)) {
+            throw new \DomainException('Le laboratoire de cette colonie ne permet pas encore cette commande.');
         }
         $level = $research ? 1 + ($technologies[$slug][$tier] ?? 0) : 1;
         $levelCap = (int) ($definition['effect']['tier_max_levels'][$tier] ?? $definition['max_level'] ?? PHP_INT_MAX);

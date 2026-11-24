@@ -2247,3 +2247,7 @@ checkpoint gardent leur chronomètre : le calcul ne reconstitue pas leur histori
 La défense garde l’absence de bonus passif et les flottes ne sont pas concernées.
 Le catalogue de base, le multiplicateur d’univers et les paramètres du bonus sont
 figés à l’achat ; aucun changement administratif ne requalifie les files en masse.
+
+### Plafond de commandes des files de production (24/11/2026)
+
+Le plafond passe de 30 à **10 commandes à l’ajout** sur les files existantes : Bâtiments par colonie, Vaisseaux/Défenses dans la même file par colonie, et Recherche commune à toutes les colonies de la participation dans cet univers. Les commandes déjà payées restent en place, même au-delà de 10. Leur achèvement et leur annulation ne changent pas. Un ajout redevient possible à 9 commandes, sous réserve des autres conditions natives.
