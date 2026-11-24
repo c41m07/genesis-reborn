@@ -50,13 +50,15 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
    await attacker.fill('24');
    await defender.fill('18');
    const shipsStep=page.getByRole('region',{name:'Vaisseaux',exact:true});
-   const left=await shipsStep.getByRole('region',{name:'Vaisseaux · Attaquant',exact:true}).boundingBox();
-   const right=await shipsStep.getByRole('region',{name:'Vaisseaux · Défenseur',exact:true}).boundingBox();
+   const cards=shipsStep.locator('.simulation-wizard-camp');
+   await expect(cards).toHaveCount(2);
+   // Lire les deux rectangles au même instant même si le navigateur vient de défiler.
+   const [left,right]=await cards.evaluateAll(elements=>elements.map(el=>el.getBoundingClientRect().toJSON()));
    if (viewport.width===1920) {
-    expect(right.x).toBeGreaterThanOrEqual(left.x+left.width);
-    expect(Math.abs(left.y-right.y)).toBeLessThanOrEqual(2);
+    expect(right.left).toBeGreaterThanOrEqual(left.right);
+    expect(Math.abs(left.top-right.top)).toBeLessThanOrEqual(2);
    } else {
-    expect(right.y).toBeGreaterThanOrEqual(left.y+left.height);
+    expect(right.top).toBeGreaterThanOrEqual(left.bottom);
    }
    const next=page.getByRole('link',{name:'Continuer : défenses'});
    const tables=shipsStep.locator('.simulation-board-unit-scroll');
@@ -148,7 +150,7 @@ test('Simulateur : sources datées, champs inconnus éditables et brouillon cons
  await expect(page.locator('#sim-defender-ships-fighter-basic')).toHaveValue('8');
  const reportLink=page.getByRole('link',{name:'Relire le rapport source'});
  await expect(reportLink).toBeVisible();
- expect(await reportLink.evaluate(link=>new URL(link.href).pathname)).toBe('/rapports/espionage/'+reportId);
+ expect(await reportLink.evaluate(link=>new URL(link.href).pathname)).toBe('/rapports/espionnage/'+reportId);
  await expect(page.locator('time').filter({hasText:'20/11/2026'})).toHaveAttribute('datetime',/^2026-11-20T/);
  page.once('dialog',dialog=>dialog.accept());
  await page.getByRole('button',{name:'Charger mes forces'}).click();
