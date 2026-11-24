@@ -7,8 +7,8 @@
 <section class="advent-rewards" id="advent-rewards" aria-labelledby="advent-rewards-title" tabindex="-1">
     <div class="page-heading">
         <div>
-            <h2 id="advent-rewards-title">{{ closedReadOnly ? 'Cadeaux de cette édition' : 'Cadeaux et réserves' }}</h2>
-            {% if not closedReadOnly %}<p>Un lot déjà réservé reste accessible après la clôture.</p>{% endif %}
+            <h2 id="advent-rewards-title">Cadeaux et réserves</h2>
+            <p>Les cadeaux réservés restent disponibles dans votre inventaire après la clôture.</p>
         </div>
         <a class="secondary" href="#advent-calendar-title">Revenir aux 24 portes</a>
     </div>
@@ -55,7 +55,7 @@
                         </div>
                     </div>
                 {% endif %}
-                <p class="advent-finale-status"><strong>{{ closedReadOnly ? 'État du cadeau' : 'Un seul cadeau à choisir' }}</strong><span class="badge advent-state" data-state="{{ finalState.key }}">{{ finalState.label }}</span></p>
+                <p class="advent-finale-status"><strong>Un seul cadeau à choisir</strong><span class="badge advent-state" data-state="{{ finalState.key }}">{{ finalState.label }}</span></p>
                 {% if hasTitle or hasBanner %}
                     <p class="advent-notice">Illustration de l’Avent : l’apparence équipée se retrouve dans le profil. Les cosmétiques sont acquis à l’ouverture de la porte, quel que soit le cadeau choisi. Vous pouvez les équiper ou les retirer dans votre profil.</p>
                 {% endif %}

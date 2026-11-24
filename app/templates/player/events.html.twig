@@ -4,12 +4,6 @@
 <div class="page-refinement events-space event-redesign player-event-board" data-page-sections="disabled">
 <div class="page-heading"><div><p class="event-board-eyebrow">Opérations · {{ membership.universe.name }}</p><h1>Événements et bonus</h1><p>Les rendez-vous en cours et à venir dans votre univers. Horaires : {{ preferences.timezone }}.</p></div></div>
 {% include 'ui/event_navigation.html.twig' %}
-{% if adventEditions %}
-    <section class="panel event-card" aria-labelledby="advent-link-title">
-        <div><h2 id="advent-link-title">Calendrier de l’Avent</h2><p>Une édition commune à tous vos univers. Retrouvez aussi vos cadeaux réservés après la clôture.</p></div>
-        <a class="secondary" href="{{ path('app_advent') }}">Ouvrir le calendrier de l’Avent</a>
-    </section>
-{% endif %}
 {% set typeLabels = {'production_bonus':'Bonus de production','construction_speed':'Vitesse de construction','research_speed':'Vitesse de recherche','fleet_speed':'Vitesse des flottes','special':'Événement spécial','reward':'Récompense','announcement':'Annonce'} %}
 <p class="core-event-context">Annonces et bonus applicables à votre empire dans <strong>{{ membership.universe.name }}</strong>.</p>
 <nav class="event-board-periods" aria-label="Périodes de programmation">

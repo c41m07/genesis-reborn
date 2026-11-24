@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Entity\{GameEvent, Player, Universe};
 use App\Repository\GameRepository;
 use App\Service\Event\GameEventService;
-use App\Service\Advent\AdventEditions;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
 use Symfony\Component\Routing\Attribute\Route;
@@ -20,12 +19,11 @@ final class AdminGameEventController extends AbstractController
         GameRepository $repo,
         GameEventService $events,
         \App\Repository\AdminReadRepository $reads,
-        AdventEditions $advent,
     ): Response
     {
         if ($request->attributes->get('_route') === 'app_admin_game_events' && !$request->isMethod('POST')) {
             $archived = $request->query->getBoolean('archived');
-            return $this->render('admin/events.html.twig', $reads->gameEvents($archived, $request->query->getInt('page', 1)) + ['archived' => $archived, 'adventEnabled' => $advent->enabled]);
+            return $this->render('admin/events.html.twig', $reads->gameEvents($archived, $request->query->getInt('page', 1)) + ['archived' => $archived]);
         }
         $draft = [
             'name' => '',

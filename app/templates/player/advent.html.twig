@@ -11,8 +11,8 @@
     {% set claim = door.claim %}
     {% set waitingCredit = claim and not claim.deliveredAt and claim.award.kind|default('') in ['research_discount', 'ship_voucher'] %}
     {% set statuses = statuses|merge({('door-' ~ day): {
-        label: claim ? (claim.deliveredAt ? 'Versé' : (waitingCredit ? (claim.award.kind == 'research_discount' ? 'Remise à utiliser' : 'Bon à utiliser') : 'Réservé')) : (door.open ? (destinationsAllowed and colonies ? 'Disponible' : 'Ouverte') : (closed ? 'Expiré' : 'À venir')),
-        key: claim ? (claim.deliveredAt ? 'delivered' : 'reserved') : (door.open ? 'open' : (closed ? 'expired' : 'future'))
+        label: claim ? (claim.deliveredAt ? 'Versé' : (waitingCredit ? (claim.award.kind == 'research_discount' ? 'Remise à utiliser' : 'Bon à utiliser') : 'Réservé')) : (door.open ? (destinationsAllowed and colonies ? 'Disponible' : 'Ouverte') : 'À venir'),
+        key: claim ? (claim.deliveredAt ? 'delivered' : 'reserved') : (door.open ? 'open' : 'future')
     }}) %}
     {% if claim and not claim.deliveredAt %}
         {% set pending = pending|merge([day]) %}
@@ -25,10 +25,8 @@
     {% endif %}
 {% endfor %}
 {% set defaultDay = currentDay ? (openDay ?? currentDay) : (pending ? pending|first : doors|keys|first) %}
-{# Une saison close avec un droit encore utilisable garde le parcours de retrait. #}
-{% set closedReadOnly = closed and pending is empty %}
 {% set cosmetics = consolidated ? edition.doors[24].cosmetics|default([]) : [] %}
-<div class="events-space event-redesign advent-board{{ closedReadOnly ? ' advent-board--history' : '' }}" data-page-sections="disabled">
+<div class="events-space event-redesign advent-board" data-page-sections="disabled">
     <div class="page-heading advent-board-heading">
         <picture class="advent-heading-picture" aria-hidden="true">
             <img src="{{ asset('art/genesis-avent-panorama-720.webp') }}"
@@ -36,24 +34,16 @@
                  sizes="(max-width: 1020px) 100vw, calc(100vw - 260px)" alt="" width="1536" height="512" decoding="async">
         </picture>
         <div>
-            {% if closedReadOnly %}<p class="advent-history-kicker">Événements</p>{% endif %}
-            <h1>{{ edition.name }}</h1>
+            <h1>{{ window.name }}</h1>
             <p>{{ claimed }} / 24 portes ouvertes sur votre compte, tous univers confondus.</p>
         </div>
         <div class="advent-links">
             <a class="secondary" href="{{ path('app_game_events') }}">Retour aux événements</a>
-            {% if not closedReadOnly and (consolidated or pending) %}<a class="secondary" href="#advent-rewards">Cadeaux et réserves</a>{% endif %}
+            {% if consolidated or pending %}<a class="secondary" href="#advent-rewards">Cadeaux et réserves</a>{% endif %}
         </div>
     </div>
-    {% if not closedReadOnly %}<p class="advent-destination">Destination à choisir parmi vos colonies dans <strong>{{ membership.universe.name }}</strong>. Un cadeau réservé reste disponible après la clôture, même si vous choisissez une autre colonie.</p>{% endif %}
-    {% if otherEditions|length > 1 or (otherEditions|length == 1 and otherEditions[0].id != edition.id) %}
-        <nav aria-label="Éditions de l’Avent"><ul>
-            {% for other in otherEditions %}
-                <li><a href="{{ path('app_advent_edition', {id: other.id}) }}"{{ other.id == edition.id ? ' aria-current=page' }}>{{ other.name }} · {{ other.season }}</a></li>
-            {% endfor %}
-        </ul></nav>
-    {% endif %}
-    {% if consolidated and not closedReadOnly %}
+    <p class="advent-destination">Destination à choisir parmi vos colonies dans <strong>{{ membership.universe.name }}</strong>. Après la clôture, retrouvez vos cadeaux réservés dans <a href="{{ path('app_inventory_pending') }}">Inventaire · Récompenses en attente</a>.</p>
+    {% if consolidated %}
         <section class="panel advent-universe" aria-labelledby="advent-universe-status">
             <h2 id="advent-universe-status">Univers de cette édition</h2>
             {% if binding %}
@@ -76,27 +66,16 @@
             {% endif %}
         </section>
     {% endif %}
-    {% if closedReadOnly %}
-        <div class="advent-history-notice">
-            {{ ui.icon('clock') }}
-            <p><strong>Édition close</strong><span>Les portes non ouvertes ont expiré. Aucun cadeau ne reste à retirer sur cette édition.</span></p>
-        </div>
-    {% elseif closed %}<p class="advent-notice">L’édition est close : les portes non ouvertes ont expiré. Vous pouvez encore retirer vos cadeaux réservés.</p>{% endif %}
-    {% if not closedReadOnly and not colonies %}<p class="advent-notice">Vous n’avez pas de colonie dans cet univers pour recevoir un cadeau.</p>{% endif %}
+    {% if not colonies %}<p class="advent-notice">Vous n’avez pas de colonie dans cet univers pour recevoir un cadeau.</p>{% endif %}
 
     <div class="advent-layout">
         <section class="panel advent-calendar" aria-labelledby="advent-calendar-title">
-            <h2 id="advent-calendar-title"{% if closedReadOnly %} tabindex="-1"{% endif %}>{% if closedReadOnly %}{{ ui.icon('clock') }} Calendrier de l’Avent{% else %}Choisir une porte{% endif %}</h2>
-            <p>{{ closedReadOnly ? 'Clôture le' : 'Rattrapage jusqu’au' }} {{ edition.closesAt|date_modify('-1 second')|date('d/m/Y', 'Europe/Paris') }} à {{ edition.closesAt|date_modify('-1 second')|date('H:i', 'Europe/Paris') }}, heure de Paris.</p>
-            {% if not closedReadOnly or binding %}<ul class="advent-meta" aria-label="Contexte de l’édition">
+            <h2 id="advent-calendar-title">Choisir une porte</h2>
+            <p>Récupérez les portes ouvertes avant le {{ window.visibleUntil|date('d/m/Y', 'Europe/Paris') }} à {{ window.visibleUntil|date('H:i', 'Europe/Paris') }}, heure de Paris.</p>
+            <ul class="advent-meta" aria-label="Contexte de l’édition">
                 {% if consolidated and binding %}<li class="badge">{{ bracketLabels[binding.bracket] }}</li>{% endif %}
-                {% if closedReadOnly %}
-                    <li class="badge">{{ bindingUniverse.name|default('Univers d’origine indisponible') }}</li>
-                {% else %}
-                    <li class="badge">Univers actif : {{ membership.universe.name }}</li>
-                {% endif %}
-            </ul>{% endif %}
-            {% if closedReadOnly %}<h3>Choisir une porte à consulter</h3>{% endif %}
+                <li class="badge">Univers actif : {{ membership.universe.name }}</li>
+            </ul>
             <ol class="advent-doors" aria-label="Les 24 portes de l’Avent">
                 {% for day, door in doors %}
                     {% set milestone = consolidated and milestoneTitles[day] is defined %}
@@ -105,28 +84,13 @@
                         <a class="advent-day-tile" data-state="{{ status.key }}"{% if milestone %} data-milestone{% endif %}{% if day == defaultDay %} data-default{% endif %}
                            href="#advent-door-{{ day }}" aria-label="Porte {{ day }}, {% if milestone %}cadeau, {% endif %}{{ status.label }}">
                             <span class="advent-day-number">{{ '%02d'|format(day) }}</span>
-                            {% if milestone %}<span class="advent-milestone" aria-hidden="true">{% if closedReadOnly %}<span class="advent-history-gift">◇</span>{% endif %}<span class="advent-milestone-word">Cadeau</span></span>{% endif %}
+                            {% if milestone %}<span class="advent-milestone" aria-hidden="true"><span class="advent-milestone-word">Cadeau</span></span>{% endif %}
                             <span class="advent-day-status">{{ status.label }}</span>
                         </a>
                     </li>
                 {% endfor %}
             </ol>
         </section>
-
-        {% if closedReadOnly and consolidated %}
-            <section class="panel advent-history-context" aria-labelledby="advent-universe-status">
-                <h2 id="advent-universe-status">Univers de cette édition</h2>
-                {% if binding %}
-                    <p><strong>{{ bindingUniverse.name|default('Univers d’origine indisponible') }}</strong> · {{ bracketLabels[binding.bracket] }}</p>
-                    <p>L’univers de cette édition ne peut pas être transféré.</p>
-                {% else %}
-                    <p>Le choix de l’univers se fait pendant l’édition.</p>
-                {% endif %}
-                {% if progression %}
-                    <p>{{ progression.origin == 'late_cohort' ? 'Observation tardive' : (progression.origin == 'arrival' ? 'Progression à l’arrivée' : 'Relevé de départ') }} : <time datetime="{{ (progression.observed_at ~ ' UTC')|date('c', 'UTC') }}">{{ (progression.observed_at ~ ' UTC')|date('d/m/Y H:i:s', 'Europe/Paris') }}</time>, heure de Paris.</p>
-                {% endif %}
-            </section>
-        {% endif %}
 
         <section class="advent-selection" aria-label="Cadeau de la porte">
             {% for day, door in doors %}
@@ -135,7 +99,6 @@
         </section>
     </div>
     {% if consolidated or pending %}
-        {% if closedReadOnly %}<p><a href="#advent-rewards">Voir les cadeaux de cette édition</a></p>{% endif %}
         {% include 'advent/_rewards.html.twig' %}
     {% endif %}
 </div>

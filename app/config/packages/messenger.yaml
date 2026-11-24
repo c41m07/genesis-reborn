@@ -14,6 +14,7 @@ framework:
                     exchange: {name: genesis_v2_failed}
                     queues: {genesis_v2_failed: ~}
         routing:
+            'App\Message\AdventCaptureDue': async
             'App\Message\QueueItemFinished': async
             'App\Message\FleetArrived': async
             'App\Message\PirateReconnaissanceDue': async

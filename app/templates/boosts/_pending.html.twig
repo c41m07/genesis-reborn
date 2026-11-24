@@ -1,7 +1,7 @@
 <section id="inventory-pending" class="inventory-pending" aria-labelledby="inventory-pending-title">
 <div class="panel inventory-pending-summary">
 <div class="section-heading"><h2 id="inventory-pending-title">Ordre d’arrivée dans l’inventaire</h2><span class="badge">{{ pending_boost_count }}</span></div>
-{% if pending_boost_count>0 %}<p class="boost-pending" role="status">{{ pending_boost_count }} bonus en attente. Dès qu’une place se libère, la récompense la plus ancienne rejoint votre inventaire.</p>{% else %}<p>Aucune récompense en attente. Les récompenses gagnées restent conservées même si l’inventaire est plein.</p>{% endif %}
+{% if pending_boost_count>0 %}<p class="boost-pending" role="status">{{ pending_boost_count }} bonus en attente. Dès qu’une place se libère, la récompense la plus ancienne rejoint votre inventaire.</p>{% else %}<p>Aucune récompense en attente de place dans l’inventaire.</p>{% endif %}
 </div>
 {% if pending_boost_count>0 %}
 <ol class="inventory-pending-list" start="{{ (pending_page-1)*25+1 }}">{% for item in pending_items %}<li data-pending-item="{{ item.id }}"><div class="inventory-pending-entry"><div><strong>{{ item.kind=='resource_box' ? item.payload.label|default('Boîte de ressources') : 'Boost de réduction de durée' }}</strong>
@@ -9,3 +9,33 @@
 {% if pending_pages>1 %}<nav class="ui-tabs space-navigation" aria-label="Pages des récompenses en attente">{% if pending_page>1 %}<a href="{{ path('app_inventory_pending',{page:pending_page-1}) }}">Récompenses précédentes</a>{% endif %}<span>Page {{ pending_page }} / {{ pending_pages }}</span>{% if pending_page<pending_pages %}<a href="{{ path('app_inventory_pending',{page:pending_page+1}) }}">Récompenses suivantes</a>{% endif %}</nav>{% endif %}
 {% endif %}
 </section>
+{% if advent_reservations %}
+<section aria-labelledby="advent-reservations-title">
+    <h2 id="advent-reservations-title">Cadeaux de l’Avent réservés</h2>
+    {% for claim in advent_reservations %}
+        <article class="panel">
+            <h3>Avent {{ claim.adventEdition.season }} · Porte {{ claim.door }}</h3>
+            {% if claim.award.kind|default('') in ['ship_voucher', 'research_discount'] %}
+                <a class="secondary" href="{{ path('app_advent_credit', {id:claim.adventEdition.id, claimId:claim.id}) }}">Voir le devis de la porte {{ claim.door }}</a>
+            {% else %}
+                {% if claim.award.kind|default('') == 'ship_pack' %}
+                    <p>{% include 'advent/_offer.html.twig' with {offer:claim.award, ships:advent_ships} only %}</p>
+                {% else %}
+                    <p>Reste à verser : {% for resource, quantity in claim.resources %}{{ (quantity - claim.creditedResources[resource]|default(0))|quantity(0) }} {{ advent_resources[resource] }}{{ loop.last ? '' : ' · ' }}{% endfor %}</p>
+                {% endif %}
+                {% if advent_colonies %}
+                    <form method="post" action="{{ path('app_advent_reserved', {id:claim.adventEdition.id, door:claim.door}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('advent_' ~ claim.adventEdition.id ~ '_' ~ membership.id ~ '_' ~ claim.door) }}">
+                        <input type="hidden" name="choice" value="{{ claim.choice }}">
+                        <label for="advent-destination-{{ claim.id }}">Colonie destinataire</label>
+                        <select id="advent-destination-{{ claim.id }}" name="colony" required>
+                            {% for colony in advent_colonies %}<option value="{{ colony.id }}">{{ colony.name }} ({{ colony.coordinates() }})</option>{% endfor %}
+                        </select>
+                        <button class="primary">Retenter le versement</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+        </article>
+    {% endfor %}
+</section>
+{% endif %}

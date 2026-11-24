@@ -2251,3 +2251,7 @@ figés à l’achat ; aucun changement administratif ne requalifie les files en 
 ### Plafond de commandes des files de production (24/11/2026)
 
 Le plafond passe de 30 à **10 commandes à l’ajout** sur les files existantes : Bâtiments par colonie, Vaisseaux/Défenses dans la même file par colonie, et Recherche commune à toutes les colonies de la participation dans cet univers. Les commandes déjà payées restent en place, même au-delà de 10. Leur achèvement et leur annulation ne changent pas. Un ajout redevient possible à 9 commandes, sous réserve des autres conditions natives.
+
+## Programmation du calendrier de l’Avent par univers — 24 novembre 2026
+
+L’administration programme chaque période de visibilité avec un début inclus et une fin exclue en heure de Paris. Le bouton cadeau de la barre supérieure et l’accès direct suivent la même période. Les portes conservent les dates du 1er au 24 décembre et peuvent être rattrapées pendant la visibilité. Une nouvelle saison demande une publication explicite. L’inventaire assure le retrait des cadeaux déjà réservés après la fermeture.

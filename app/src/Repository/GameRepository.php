@@ -1125,9 +1125,9 @@ final class GameRepository
             ->getOneOrNullResult();
     }
 
-    public function outbox(bool $notifications): array
+    public function outbox(bool $notifications, \DateTimeImmutable $now): array
     {
-        return $this->em->createQueryBuilder()->select('o')->from(OutboxMessage::class, 'o')->where($notifications ? 'o.kind = :kind' : 'o.kind IN (:kind)')->setParameter('kind', $notifications ? 'notification' : [
+        $query = $this->em->createQueryBuilder()->select('o')->from(OutboxMessage::class, 'o')->where($notifications ? 'o.kind = :kind' : 'o.kind IN (:kind)')->setParameter('kind', $notifications ? 'notification' : [
             'queue',
             'fleet',
             'combat',
@@ -1135,11 +1135,21 @@ final class GameRepository
             'occupation',
             'guild_project',
             'reconstruction',
+            \App\Message\AdventCaptureDue::KIND,
             \App\Message\PirateReconnaissanceDue::KIND,
             \App\Message\PirateAttackDue::KIND,
             \App\Message\PirateConvoyDue::KIND,
             \App\Message\PirateSurvivorsDue::KIND,
-        ])->orderBy('o.id', 'ASC')->setMaxResults(100)->getQuery()->getResult();
+        ]);
+        if (!$notifications) {
+            // La programmation annuelle peut précéder Noël de plusieurs mois.
+            // L’outbox conserve le relevé jusqu’à son échéance, sans délai AMQP de longue durée.
+            $query->andWhere('o.kind != :capture OR o.dueAt <= :now')
+                ->setParameter('capture', \App\Message\AdventCaptureDue::KIND)
+                ->setParameter('now', $now->setTimezone(new \DateTimeZone('UTC')));
+        }
+
+        return $query->orderBy('o.id', 'ASC')->setMaxResults(100)->getQuery()->getResult();
     }
 
     public function activeQueueItems(): array

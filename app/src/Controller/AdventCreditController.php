@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class AdventCreditController extends AbstractController
 {
     #[Route('/evenements/avent/{id}/avoirs/{claimId}', name: 'app_advent_credit', requirements: ['id' => '\d+', 'claimId' => '\d+'], methods: ['GET', 'POST'])]
-    public function view(Request $request, int $id, int $claimId, UniverseContext $context, AdventQueueCredits $credits, QueueService $queue, GameRepository $game, GameCatalog $catalog): Response
+    public function view(Request $request, int $id, int $claimId, UniverseContext $context, AdventQueueCredits $credits, QueueService $queue, GameRepository $game, GameCatalog $catalog, \App\Repository\AdventWindowRepository $windows): Response
     {
         $membership = $context->membership();
         $credit = $credits->findRedeemableOffer($membership, $id, $claimId);
@@ -54,7 +54,9 @@ final class AdventCreditController extends AbstractController
                         adventCreditId: $claimId, adventQuote: $key);
                     $this->addFlash('success', 'Commande enregistrée dans la file au prix du devis Avent.');
 
-                    return $this->redirectToRoute('app_advent_edition', ['id' => $id], Response::HTTP_SEE_OTHER);
+                    return $windows->isVisible($membership->universe, $id)
+                        ? $this->redirectToRoute('app_advent_edition', ['id' => $id], Response::HTTP_SEE_OTHER)
+                        : $this->redirectToRoute('app_inventory_pending', status: Response::HTTP_SEE_OTHER);
                 }
                 $quote = $queue->adventPreview($membership, $planet, $group, $slug, $tier, $offer);
                 $quote['proof'] = AdventQueueCredits::quoteKey($claimId, $membership->id, $planetId, $group, $slug, $tier, $quote['level'], $quote['duration'], $quote['paid']);
@@ -66,7 +68,7 @@ final class AdventCreditController extends AbstractController
             $error = 'Choisissez une colonie qui recevra cette commande.';
         }
         $response = $this->render('player/advent_credit.html.twig', [
-            'editionId' => $id, 'claimId' => $claimId, 'membership' => $membership, 'offer' => $offer, 'research' => $research,
+            'calendarVisible' => $windows->isVisible($membership->universe, $id), 'editionId' => $id, 'claimId' => $claimId, 'membership' => $membership, 'offer' => $offer, 'research' => $research,
             'planets' => $game->planets($membership->universe, $membership), 'selectedPlanet' => $planetId, 'selection' => $selection,
             'technologies' => $research ? $catalog->forUniverse($membership->universe)['catalog']['technologies'] : [],
             'ranks' => $catalog->tiers(), 'ships' => $catalog->all('ships'), 'resources' => AdventGifts::RESOURCES,

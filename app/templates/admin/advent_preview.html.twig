@@ -1,7 +1,7 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}Aperçu de l’Avent · Administration{% endblock %}
 {% block body %}
-    <div class="page-heading"><div><h1>Aperçu : {{ draft.name }}</h1><p>Tous les univers accessibles, un seul cadeau par compte et par porte. Rattrapage jusqu’au {{ draft.last|date('d/m/Y', 'Europe/Paris') }} inclus, heure de Paris.</p></div><a class="secondary" href="{{ path('app_admin_game_event_advent', {edit: 1}) }}">Modifier avant publication</a></div>
+    <div class="page-heading"><div><h1>Aperçu : {{ draft.name }}</h1><p>{{ draft.universeName }} · Visible du {{ draft.from|replace({'T':' à '}) }} au {{ draft.until|replace({'T':' à '}) }}, heure de Paris. La page ferme à l’heure indiquée.</p></div><a class="secondary" href="{{ path('app_admin_game_event_advent', {edit: 1}) }}">Modifier avant publication</a></div>
     <ol class="event-list">
         {% for day, door in draft.doors %}
             <li class="panel">
@@ -24,7 +24,7 @@
     </ol>
     <section class="panel" aria-labelledby="advent-confirm">
         <h2 id="advent-confirm">Publier cette version</h2>
-        <p>Après confirmation, les dates et les choix seront figés et visibles par les joueurs. La première porte reste fermée jusqu’à sa date d’ouverture.</p>
+        <p>La confirmation programme cette période uniquement. Si la première porte est déjà ouverte, le relevé de progression manquant sera effectué à la date réelle de programmation.</p>
         <form method="post" action="{{ path('app_admin_game_event_advent_preview', {key: key}) }}">
             <input type="hidden" name="_token" value="{{ csrf_token('admin_advent_preview_' ~ key) }}">
             <button class="primary">Confirmer et publier</button>

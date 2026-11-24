@@ -9,7 +9,7 @@ use App\Manager\GameManager;
 use App\Service\Catalog\GameCatalog;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use App\Repository\AdventWindowRepository;
 
 final readonly class AdventParticipation
 {
@@ -19,7 +19,7 @@ final readonly class AdventParticipation
         private AdventBracket $brackets,
         private GameCatalog $catalog,
         private ClockInterface $clock,
-        #[Autowire('%env(bool:ADVENT_ENABLED)%')] private bool $enabled,
+        private AdventWindowRepository $windows,
     ) {}
 
     public function binding(Player $player, AdventEdition $edition): ?AdventBinding
@@ -43,7 +43,7 @@ final readonly class AdventParticipation
         $this->manager->transaction(function () use ($player, $membership, $edition): void {
             $this->manager->lockCurrent($player);
             $now = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
-            if (!$this->enabled || $edition->plan !== 'consolidated' || $now < $edition->startsAt || $now >= $edition->closesAt
+            if (!$this->windows->isVisible($membership->universe, $edition->id) || $edition->plan !== 'consolidated' || $now < $edition->startsAt || $now >= $edition->closesAt
                 || $player->lockedAt !== null || $player->emailVerifiedAt === null || $player->currentPlayerUniverse?->id !== $membership->id) {
                 throw new \DomainException('Votre univers actif ne peut pas être retenu pour cette édition.');
             }
@@ -89,7 +89,11 @@ final readonly class AdventParticipation
     /** Seulement depuis la création effective d’une première participation. */
     public function observeJoinLocked(PlayerUniverse $membership, Planet $firstPlanet): void
     {
-        if (!$this->enabled) {
+        $joined = $membership->joinedAt->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+        if (!$this->em->getConnection()->fetchOne(
+            'SELECT 1 FROM advent_edition WHERE plan = ? AND starts_at <= ? AND closes_at > ? LIMIT 1',
+            ['consolidated', $joined, $joined],
+        )) {
             return;
         }
         // Création native : aucun bâtiment, technologie ou accès acquis en
@@ -99,7 +103,6 @@ final readonly class AdventParticipation
         if ($bracket === null) {
             return;
         }
-        $joined = $membership->joinedAt->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s');
         $this->em->getConnection()->executeStatement(
             'INSERT INTO advent_progression (advent_edition_id, player_id, universe_id, bracket, observed_at, origin)
              SELECT e.id, ?, ?, ?, ?, ? FROM advent_edition e WHERE e.plan = ? AND e.starts_at <= ? AND e.closes_at > ?

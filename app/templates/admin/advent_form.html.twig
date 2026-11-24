@@ -1,9 +1,11 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}Calendrier de l’Avent · Administration{% endblock %}
 {% block body %}
-    <div class="page-heading"><div><h1>Préparer le calendrier de l’Avent</h1><p>24 portes, une édition ouverte dans tous les univers accessibles. Chaque joueur fixe un seul univers pour l’édition. Dates en heure de Paris.</p></div><a class="secondary" href="{{ path('app_admin_game_events') }}">Liste des événements</a></div>
+    <div class="page-heading"><div><h1>Préparer le calendrier de l’Avent</h1><p>Choisissez où et quand afficher le calendrier. Les portes s’ouvrent du 1er au 24 décembre à minuit, heure de Paris.</p></div><a class="secondary" href="{{ path('app_admin_game_events') }}">Liste des événements</a></div>
     {% if published %}
-        <section class="panel" aria-labelledby="advent-published"><h2 id="advent-published">Édition publiée</h2><p>{{ published.name }} · Première porte le {{ published.startsAt|date('d/m/Y', 'Europe/Paris') }}. Son calendrier et ses choix ne peuvent plus être modifiés.</p></section>
+        <section class="panel" aria-labelledby="advent-published"><h2 id="advent-published">Calendriers programmés</h2><ul>
+            {% for window in published %}<li>{{ window.universe.name }} · {{ window.name }} · du {{ window.visibleFrom|date('d/m/Y H:i', 'Europe/Paris') }} au {{ window.visibleUntil|date('d/m/Y H:i', 'Europe/Paris') }} (heure de Paris)</li>{% endfor %}
+        </ul></section>
     {% endif %}
     <form class="admin-event-form admin-rotation-form" method="post" action="{{ path('app_admin_game_event_advent') }}">
         <input type="hidden" name="_token" value="{{ csrf_token('admin_advent_preview') }}">
@@ -11,8 +13,10 @@
             <h2 id="advent-dates-title">Édition et calendrier</h2>
             <div class="admin-rotation-fields">
                 <div class="admin-rotation-field"><label for="advent-name">Nom de l’édition</label><input id="advent-name" name="name" maxlength="120" value="{{ draft.name }}" required></div>
-                <div class="admin-rotation-field"><label for="advent-first">Date de la première porte</label><input id="advent-first" name="first" type="date" value="{{ draft.first }}" required></div>
-                <div class="admin-rotation-field"><label for="advent-last">Dernier jour de rattrapage inclus</label><input id="advent-last" name="last" type="date" value="{{ draft.last }}" required></div>
+                <div class="admin-rotation-field"><label for="advent-universe">Univers</label><select id="advent-universe" name="universe" required><option value="">Choisir un univers</option>{% for universe in universes %}<option value="{{ universe.id }}"{% if draft.universe == universe.id %} selected{% endif %}>{{ universe.name }}</option>{% endfor %}</select></div>
+                <div class="admin-rotation-field"><label for="advent-season">Année des 24 portes</label><input id="advent-season" name="season" type="number" min="2000" max="2099" value="{{ draft.season }}" required></div>
+                <div class="admin-rotation-field"><label for="advent-from">Visible à partir du (Paris)</label><input id="advent-from" name="from" type="datetime-local" value="{{ draft.from }}" required></div>
+                <div class="admin-rotation-field"><label for="advent-until">Fermer le (Paris)</label><input id="advent-until" name="until" type="datetime-local" value="{{ draft.until }}" required></div>
             </div>
         </section>
         <section class="panel" aria-labelledby="advent-lots-title">

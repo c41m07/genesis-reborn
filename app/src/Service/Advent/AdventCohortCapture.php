@@ -19,7 +19,6 @@ final readonly class AdventCohortCapture
 
     public function __construct(
         private EntityManagerInterface $em,
-        private AdventEditions $editions,
         private AdventBracket $brackets,
         private GameCatalog $catalog,
         private ClockInterface $clock,
@@ -28,9 +27,6 @@ final readonly class AdventCohortCapture
     /** @return array{state:string, observed_at:string, profiles:int, unknown:int, milliseconds:int} */
     public function capture(int $edition, bool $acceptLate = false): array
     {
-        if (!$this->editions->enabled) {
-            throw new \DomainException('Le calendrier de l’Avent est désactivé.');
-        }
         $timer = hrtime(true);
         $db = $this->em->getConnection();
         if ($db->isTransactionActive()) {
@@ -42,7 +38,7 @@ final readonly class AdventCohortCapture
         $db->beginTransaction();
         try {
             $observed = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
-            $header = $db->fetchAssociative('SELECT starts_at, closes_at, cohort_captured_at, plan FROM advent_edition WHERE id = ?', [$edition]);
+            $header = $db->fetchAssociative('SELECT starts_at, closes_at, published_at, cohort_captured_at, plan FROM advent_edition WHERE id = ?', [$edition]);
             if ($header === false || $header['plan'] !== 'consolidated') {
                 throw new \DomainException('Édition consolidée introuvable.');
             }
@@ -59,7 +55,7 @@ final readonly class AdventCohortCapture
             if ($late && !$acceptLate) {
                 throw new \DomainException('Relevé de départ manqué. N’acceptez une observation tardive qu’en sachant qu’elle ne reconstruit pas l’ouverture.');
             }
-            [$profiles, $unknown] = $this->evaluate($db, $header['starts_at'], $observedAt);
+            [$profiles, $unknown] = $this->evaluate($db, max($header['starts_at'], $header['published_at']), $observedAt);
             $db->commit();
         } catch (\Throwable $error) {
             $db->rollBack();
