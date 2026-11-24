@@ -45,9 +45,9 @@ test('Flottes : les trois rangs restent alignés et arrivent ensemble au devis, 
     await expect(table.getByRole('columnheader')).toHaveText(['Élément', 'Basique', 'Intermédiaire', 'Supérieur']);
     await expect(table.getByRole('rowheader')).toHaveCount(2);
     const background = locator => locator.evaluate(el => getComputedStyle(el).backgroundColor);
-    for (const theme of ['dark', 'light', 'dark']) {
-        runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(COALESCE(preferences,JSON_OBJECT()),'$.theme','${theme}') WHERE email='${email}'`);
-        await page.reload();
+    for (const theme of ['light', 'dark']) {
+        runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
+        await page.goto(prepare);
         await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
         const unavailable = table.locator('input[data-ship-type="probe"][data-ship-tier="intermediate"]');
         const unavailableMax = unavailable.locator('+ button');

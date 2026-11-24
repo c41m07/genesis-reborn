@@ -260,7 +260,12 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
     sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'shipyard','intermediate',1)`);
     for (const [group, slug, families] of [['technologies', 'engineering_foundations', 19], ['ships', 'fighter', 16], ['defenses', 'ground_turret_anti_light', 4]]) {
         await page.setViewportSize({ width: 1920, height: 1000 });
+        if (group === 'defenses') {
+            sql(`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','light') WHERE email='${email}'`);
+        }
         await page.goto(`${path}?section=${group}`);
+        if (group !== 'technologies') await expect(page.locator('body')).toHaveAttribute('data-theme', group === 'defenses' ? 'light' : 'dark');
+
         const costFrames = tier => panel(tier).locator('.building-costs > span:not([hidden])').evaluateAll(chips => chips.map(chip => {
             const style = getComputedStyle(chip);
             return style.borderTopStyle === 'solid' && style.borderTopWidth === '1px' && style.backgroundColor !== 'rgba(0, 0, 0, 0)';
