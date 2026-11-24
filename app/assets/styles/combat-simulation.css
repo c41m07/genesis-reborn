@@ -292,6 +292,7 @@ body[data-theme=light] .player-simulation-board .simulation-outcome--defender_wi
 }
 .simulation-wizard-camp th:first-child {
     width: 42%;
+    white-space: normal;
     overflow-wrap: anywhere;
 }
 .simulation-wizard-camp th:not(:first-child) {
