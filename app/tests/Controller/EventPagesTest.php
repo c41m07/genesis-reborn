@@ -351,6 +351,10 @@ final class EventPagesTest extends WebTestCase
             $status = $payload['status'];
             unset($payload['status']);
             $this->client->request('POST', $canonical, $payload);
+            if ($status === 403) {
+                self::assertResponseRedirects('/acces-refuse');
+                $this->client->followRedirect();
+            }
             self::assertResponseStatusCodeSame($status);
             self::assertSame('draft', $expectedStatus());
             self::assertSame([], $auditRows());
@@ -363,6 +367,8 @@ final class EventPagesTest extends WebTestCase
         $session->set('_csrf/game_event_delete_' . $draft->id, $legacyCsrf);
         $session->save();
         $this->client->request('POST', $base . '/delete', ['_token' => 'invalid']);
+        self::assertResponseRedirects('/acces-refuse');
+        $this->client->followRedirect();
         self::assertResponseStatusCodeSame(403);
         $this->client->request('POST', $base . '/delete', ['_token' => $legacyCsrf]);
         self::assertResponseRedirects('/admin/events#event-removal-' . $draft->id, 303);
