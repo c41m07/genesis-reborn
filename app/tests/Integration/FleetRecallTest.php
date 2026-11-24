@@ -58,12 +58,24 @@ final class FleetRecallTest extends WebTestCase
     }
     private function send(string $mission='transport'): Fleet
     {
-        $target=match($mission) { 'attack','conquer'=>$this->npc->id,'colonize'=>$this->virgin->id,'explore'=>$this->home->solarSystem->id,default=>$this->target->id };
+        $target=match($mission) { 'attack','conquer'=>$this->npc->id,'colonize'=>$this->virgin->id,'explore'=>$this->unexploredSystem()->id,default=>$this->target->id };
         $composition=match($mission) { 'explore','spy'=>['probe'=>1],'colonize'=>['colony_ship'=>1],'conquer'=>['colony_ship'=>1,'fighter'=>1],default=>['transport'=>1,'fighter'=>1] };
         self::getContainer()->get(FleetService::class)->send($this->player->currentPlayerUniverse,$this->home,$mission,$target,$composition,1,
             $mission==='transport'?['metal'=>100,'hydrogen'=>50]:[],str_repeat('a',32),$mission==='orbit'?1:0);
         return $this->em->getRepository(Fleet::class)->findOneBy(['playerUniverse'=>$this->player->currentPlayerUniverse,'status'=>'traveling']);
     }
+    private function unexploredSystem(): SolarSystem
+    {
+        $discoveries = $this->em->getRepository(PlayerDiscovery::class);
+        $systems = $this->em->getRepository(SolarSystem::class)->findBy(['galaxy' => $this->home->solarSystem->galaxy], ['id' => 'ASC']);
+        foreach ($systems as $system) {
+            if (!$discoveries->count(['playerUniverse' => $this->player->currentPlayerUniverse, 'solarSystem' => $system])) {
+                return $system;
+            }
+        }
+        self::fail('La fixture doit contenir un système non exploré dans la galaxie du départ.');
+    }
+
     private function totalShips(): int { return (int)$this->em->getConnection()->fetchOne('SELECT SUM(quantity) FROM fleet_ship'); }
     private function state(int $id): array { return $this->em->getConnection()->fetchAssociative('SELECT status,arrival_at,departure_at,cargo,reserved_fuel,orbit_fuel,dispatch_token,return_planet_id,navigation FROM fleet WHERE id=?',[$id]); }
 
@@ -87,6 +99,11 @@ final class FleetRecallTest extends WebTestCase
         self::getContainer()->get(FleetService::class)->arrive($f->id,$newToken);self::assertSame($total,$this->totalShips());
         self::assertSame($this->peer->currentPlayerUniverse->id,$this->target->owner->id);self::assertNull($this->virgin->owner);self::assertNull($this->npc->owner);
         self::assertSame(0,(int)$this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM espionage_report'));
+        if ($mission === 'explore') {
+            self::assertSame(0, $this->em->getRepository(PlayerDiscovery::class)->count([
+                'playerUniverse' => $m, 'solarSystem' => $f->destinationSystem,
+            ]));
+        }
         if($mission==='transport') {
             $report=$this->em->getRepository(TransportReport::class)->findOneBy(['fleet'=>$f]);
             self::assertSame('refused',$report->status);self::assertSame('player_recall',$report->snapshot['refusal_reason']);

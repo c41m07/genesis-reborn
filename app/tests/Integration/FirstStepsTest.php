@@ -206,16 +206,26 @@ final class FirstStepsTest extends KernelTestCase
         self::assertSame(['ship' => true], $this->guide->completed($membership));
 
         $fleetService = self::getContainer()->get(FleetService::class);
-        $known = $this->launchProbe($fleetService, $membership, $planet, $planet->solarSystem, '7');
+        $systems = $this->entityManager->getRepository(SolarSystem::class)->findBy(['galaxy' => $planet->solarSystem->galaxy], ['id' => 'ASC']);
+        $unexplored = array_values(array_filter($systems, static fn (SolarSystem $system): bool => !$discovery->count([
+            'playerUniverse' => $membership, 'solarSystem' => $system,
+        ])));
+        self::assertGreaterThanOrEqual(3, count($unexplored));
+        $discoveredDuringTravel = array_shift($unexplored);
+        $unknown = $unexplored;
+        $known = $this->launchProbe($fleetService, $membership, $planet, $discoveredDuringTravel, '7');
+        // Une découverte préexistante à l’arrivée ne fournit pas la preuve de cette mission.
+        $priorDiscovery = new PlayerDiscovery();
+        $priorDiscovery->playerUniverse = $membership;
+        $priorDiscovery->solarSystem = $discoveredDuringTravel;
+        $this->entityManager->persist($priorDiscovery);
+        $this->entityManager->flush();
         $this->clock->sleep($known->travelSeconds + 1);
         $fleetService->arrive($known->id, $known->dispatchToken);
         self::assertSame('completed', $known->status);
         self::assertSame(['ship' => true], $this->guide->completed($membership));
         self::assertSame(1, $discovery->count(['playerUniverse' => $membership, 'solarSystem' => $planet->solarSystem]));
-
-        $systems = $this->entityManager->getRepository(SolarSystem::class)->findBy(['galaxy' => $planet->solarSystem->galaxy], ['id' => 'ASC']);
-        $unknown = array_values(array_filter($systems, static fn (SolarSystem $system): bool => $system !== $planet->solarSystem));
-        self::assertGreaterThanOrEqual(2, count($unknown));
+        self::assertSame(1, $discovery->count(['playerUniverse' => $membership, 'solarSystem' => $discoveredDuringTravel]));
         $first = $this->launchProbe($fleetService, $membership, $planet, $unknown[0], '8');
         $firstToken = $first->dispatchToken;
         $arrival = $first->arrivalAt->format('Y-m-d H:i:s');
