@@ -68,6 +68,15 @@
 - Préserver les contrats des messages asynchrones et événements, l'outbox, les jetons, les tentatives et la gestion des échecs. Une notification temps réel déclenche une récupération autorisée de l'état ; elle ne constitue pas une preuve qu'une action reste permise.
 - Pour HTML/CSS et les assets, réutiliser les composants et styles cohérents du projet, préserver la structure sémantique et les parcours sans JavaScript lorsqu'ils existent. Vérifier les chargements et contrôleurs requis avant de déplacer ou différer un fichier ; ne pas changer d'outillage frontend sans besoin démontré.
 
+## Dates et fuseaux horaires
+
+- Stocker chaque instant en UTC. Pour une colonne `DATETIME` sans fuseau, convertir l’instant en UTC à l’écriture et interpréter la valeur lue en UTC. Une colonne `DATE` représente un jour civil et se conserve sans conversion.
+- Afficher les heures dans le fuseau choisi dans les préférences du joueur. Pour un courriel ou une notification différée, utiliser le fuseau du destinataire et le repli prévu par l’application si sa préférence manque. Valider tout identifiant de fuseau reçu du client.
+- Avant de formater une date déjà chargée, appliquer explicitement le fuseau d’affichage. Préférer un objet immuable ou convertir une copie pour préserver la valeur de l’entité. Si un traitement change temporairement le fuseau de PHP ou de Twig, le rétablir dans un bloc `finally`, y compris dans les workers.
+- Pour filtrer les événements d’un jour, calculer le début de ce jour et le début du jour suivant dans le fuseau concerné, puis convertir les deux bornes en UTC pour la requête SQL ou DQL. Exclure la borne de fin. Lors d’un changement d’heure, deux minuits locaux peuvent être séparés de 23 ou 25 heures.
+- Pour une échéance de jeu, appliquer le fuseau fixé par la règle métier. Par exemple, le classement quotidien suit minuit en `Europe/Paris`, quel que soit le fuseau d’affichage du joueur. Préserver le format des API existantes et, pour tout nouvel horodatage textuel échangé, utiliser ISO 8601 avec `Z` ou un décalage explicite.
+- Dans les tests concernés, fixer l’instant et le fuseau. Vérifier que deux joueurs dans des fuseaux différents voient le même événement à leur heure locale et que l’instant stocké reste identique. Couvrir les changements d’heure pour les règles fondées sur le jour civil.
+
 ## Performances et protections contre les régressions
 
 - Mesurer avant et après une optimisation avec le même scénario, les mêmes données, le même mode de débogage et des états de cache comparables. Distinguer nombre de requêtes, temps SQL, temps serveur, mémoire, volume transféré et rendu navigateur ; séparer premier chargement et passages à chaud. Ne pas présenter une estimation comme un gain vérifié.
