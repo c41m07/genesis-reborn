@@ -75,9 +75,13 @@ exécutées pour cette recette.
    dispose d'un broker neuf ; son volume ne vient pas du dump. Vérifier la
    sélection du transport AMQP : l'environnement Symfony `test` utilise en
    revanche un transport en mémoire.
-2. Créer nativement deux commandes de chantier fictives A et B, sur deux
-   participations distinctes pour éviter que le règlement d'une file traite
-   aussi l'autre. Sur la source, commencer par B : après son échéance, lancer
+2. Préparer le relevé quotidien du classement sur la source avant toute
+   commande de la recette, avec une participation fictive. Rester dans le
+   même jour civil Europe/Paris jusqu'à la fin : un nouveau relevé peut
+   synchroniser les files avant même le worker et fausser la comparaison.
+   Créer deux constructions fictives A et B sur deux participations
+   distinctes, pour que le règlement d'une file ne termine pas aussi
+   l'autre. Sur la source, commencer par B : après son échéance, lancer
    une passe `app:outbox:relay --kind=events`, sans worker. Observer une
    publication dans la file AMQP source, puis vérifier en SQL la disparition
    de l'outbox B sans clôture ni crédit. Créer ensuite A et vérifier que la
@@ -102,7 +106,7 @@ exécutées pour cette recette.
    configuration privée. Supprimer uniquement les ressources et fichiers
    créés par la recette et vérifier leur absence.
 
-La preuve est limitée aux commandes de chantier. Elle ne définit aucune
+Le scénario est limité aux commandes de construction. Elle ne définit aucune
 réémission pour B, ne remplace pas les réconciliations déjà présentes et
 n'autorise aucune reconstruction globale.
 
