@@ -83,7 +83,7 @@ final class GuildHallTest extends KernelTestCase
         self::assertSame($planetCount, $this->em->getRepository(Planet::class)->count());
         self::assertSame([], $halls->claimsForKnownSystems($neighbor, [$system->id]));
         $this->discover($neighbor, $system);
-        self::assertSame([$system->id => ['tag' => 'HLA', 'position' => 0]], $halls->claimsForKnownSystems($neighbor, [$system->id]));
+        self::assertSame([$system->id => ['tag' => 'HLA', 'position' => 0, 'guildId' => $guild->id]], $halls->claimsForKnownSystems($neighbor, [$system->id]));
         self::assertSame([], $halls->claimsForKnownSystems($otherUniverse, [$system->id]));
     }
 

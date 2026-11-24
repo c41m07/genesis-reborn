@@ -39,16 +39,11 @@ body[data-theme=light] .simulation-workspace .simulation-survivors { color:#1767
     .simulation-board-options { grid-template-columns:minmax(0,1fr); }
 }
 
-/* La liste de vaisseaux reste complète et défilable au clavier, sans éloigner l'action principale. */
 .player-simulation-board .simulation-board-note { max-width:92ch; margin:0 0 .65rem; }
 .player-simulation-board .simulation-board-load { display:flex; flex-wrap:wrap; align-items:center; gap:.55rem; scroll-margin-top:180px; }
 .player-simulation-board .simulation-board-load label { margin:0; }
 .player-simulation-board .simulation-board-load select { width:auto; min-width:min(15rem,100%); max-width:100%; min-height:44px; }
 .player-simulation-board .simulation-board-source-link { display:block; min-height:1.5rem; margin:.3rem 0 .75rem; }
-.player-simulation-board .simulation-board-unit-scroll { max-height:clamp(11rem,24vh,21rem); overflow:auto; scrollbar-gutter:stable; }
-.player-simulation-board .simulation-board-unit-scroll :is(td,th) { padding:.42rem .55rem; }
-.player-simulation-board .simulation-board-unit-scroll input { min-height:36px; }
-.player-simulation-board .simulation-board-unit-scroll thead { position:sticky; top:0; background:var(--panel); z-index:1; }
 .player-simulation-board .simulation-board-options > button { grid-column:1 / -1; justify-self:start; margin:0; }
 /* À grand écran, les réglages avancés fermés partagent une ligne. Une
    section ouverte retrouve toute la largeur, sans superposer de commandes. */
@@ -65,8 +60,6 @@ body[data-theme=light] .simulation-workspace .simulation-survivors { color:#1767
     .player-simulation-board .simulation-form > .strategic-grid > section > details > summary { padding:.35rem 0; overflow-wrap:anywhere; }
     .player-simulation-board .simulation-form > .strategic-grid > section > label { margin:.2rem 0 0; }
     .player-simulation-board .simulation-board-source-link { margin:0 0 .1rem; }
-    .player-simulation-board .simulation-board-unit-scroll { max-height:clamp(9.5rem,15.5vh,10.5rem); }
-    .player-simulation-board .simulation-board-unit-scroll :is(td,th) { padding-block:.33rem; }
     .player-simulation-board .simulation-board-options { gap:.4rem .85rem; margin:.55rem 0 0; }
     .player-simulation-board .simulation-board-options > div > label { margin:0 0 .3rem; }
     .player-simulation-board .simulation-board-options > div > p { margin:.3rem 0 0; }
@@ -99,15 +92,6 @@ body[data-theme=light] .simulation-workspace .simulation-survivors { color:#1767
 }
 
 
-/* Le résumé « Vaisseaux » nomme déjà la zone ; la légende reste lue dans le tableau. */
-.player-simulation-board--scenario details:first-of-type .simulation-board-unit-scroll caption {
-    position:absolute;
-    width:1px;
-    height:1px;
-    overflow:hidden;
-    clip-path:inset(50%);
-}
-
 @media (min-width: 1280px) and (min-height: 900px) {
     .player-simulation-board--scenario .page-heading > div > p:not(.simulation-board-eyebrow) { max-width:72ch; }
     .player-simulation-board--scenario .simulation-board-load { min-height:44px; }
@@ -118,7 +102,6 @@ body[data-theme=light] .simulation-workspace .simulation-survivors { color:#1767
         min-height:44px;
         margin-block:0 .25rem;
     }
-    .player-simulation-board--scenario details:first-of-type .simulation-board-unit-scroll { max-height:11.25rem; }
     .player-simulation-board--scenario .simulation-board-options > button {
         grid-column:1;
         grid-row:2;
@@ -273,9 +256,6 @@ body[data-theme=light] .player-simulation-board .simulation-outcome--defender_wi
 }
 .simulation-wizard-camp h3 {
     margin: 0 0 .6rem;
-}
-.simulation-wizard-camp .simulation-board-unit-scroll {
-    max-height: min(24vh, 15.5rem);
 }
 /* Le tableau générique impose 440 px et un dernier champ large.
    Ici, les trois rangs tiennent sur le téléphone sans défilement horizontal. */

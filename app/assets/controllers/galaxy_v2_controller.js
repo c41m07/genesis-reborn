@@ -52,7 +52,7 @@ export default class extends Controller {
         this.gameMap = this.mapValue;
         this.solarLayoutCache = null;
         this.localFirstSteps = this.element.closest('main')?.querySelector('[data-gv2-local-first-steps]');
-        this.pinnedStation = this.hoveredStation = this.focusedStation = this.displayedStation = null;
+        this.hoveredStation = this.focusedStation = this.displayedStation = null;
         this.systems = this.gameMap.systems.map((system) => ({ ...system, planets: system.planets || [] }));
         this.systemById = new Map(this.systems.map((system) => [Number(system.id), system]));
         this.flights = (this.gameMap.flights || []).map((flight) => ({
@@ -739,10 +739,10 @@ export default class extends Controller {
         ctx.lineWidth = isHovered ? 1.8 : 1.2;
         ctx.stroke();
         ctx.beginPath();
-        ctx.arc(point.x, point.y, radius + 3, 0, Math.PI * 2);
         const hasOwnedPlanet = system.planets.some((planet) => planet.ownedByCurrentPlayer);
+        ctx.arc(point.x, point.y, radius + (hasOwnedPlanet ? 6 : 3), 0, Math.PI * 2);
         ctx.strokeStyle = hasOwnedPlanet ? '#00e676' : (isHovered ? 'rgba(202,232,255,.9)' : 'rgba(157,202,239,.5)');
-        ctx.lineWidth = 1;
+        ctx.lineWidth = hasOwnedPlanet ? 3 : 1;
         ctx.stroke();
         ctx.restore();
     }
@@ -1607,7 +1607,7 @@ export default class extends Controller {
     navigateBack(event) {
         if (event.key !== 'Escape' || event.defaultPrevented || event.target.closest('input, select, textarea')) return;
         if (this.displayedStation) {
-            this.pinnedStation = this.hoveredStation = this.focusedStation = null;
+            this.hoveredStation = this.focusedStation = null;
             this.updateStationDetail();
             event.preventDefault();
             return;
@@ -1818,7 +1818,7 @@ export default class extends Controller {
     hideStations() {
         this.stationsTarget.hidden = true;
         this.hallStationTarget.hidden = this.pirateStationTarget.hidden = true;
-        this.pinnedStation = this.hoveredStation = this.focusedStation = null;
+        this.hoveredStation = this.focusedStation = null;
         this.updateStationDetail();
     }
 
@@ -1842,81 +1842,68 @@ export default class extends Controller {
         if (!this.stationsTarget.contains(this.displayedStation) || this.displayedStation?.hidden) this.updateStationDetail();
     }
 
-    setStation(button, available, x, y, diameter) {
+    setStation(link, available, x, y, diameter) {
         const visible = Boolean(available) && x >= 22 && y >= 22 && x <= this.width - 22 && y <= this.height - 22;
-        if (!visible && button === document.activeElement) this.systemBackTarget.focus({ preventScroll: true });
-        if (button.hidden === visible) button.hidden = !visible;
+        if (!visible && link === document.activeElement) this.systemBackTarget.focus({ preventScroll: true });
+        if (link.hidden === visible) link.hidden = !visible;
         if (!visible) {
-            if (this.pinnedStation === button) this.pinnedStation = null;
-            if (this.hoveredStation === button) this.hoveredStation = null;
-            if (this.focusedStation === button) this.focusedStation = null;
+            if (this.hoveredStation === link) this.hoveredStation = null;
+            if (this.focusedStation === link) this.focusedStation = null;
             return;
         }
-        const image = button.querySelector('img');
+        const image = link.querySelector('img');
         if (!image.hasAttribute('src')) image.src = image.dataset.src;
         const style = '--station-x:' + x.toFixed(1) + 'px;--station-y:' + y.toFixed(1) + 'px;--planet-diameter:' + diameter + 'px';
-        if (button.getAttribute('style') !== style) button.setAttribute('style', style);
-        if (available.tag !== undefined) {
+        if (link.getAttribute('style') !== style) link.setAttribute('style', style);
+        if (available.profileUrl) {
+            if (link.getAttribute('href') !== available.profileUrl) link.setAttribute('href', available.profileUrl);
             const title = available.tag ? 'Hall de guilde [' + available.tag + ']' : 'Hall de guilde';
             const label = title + ' · Position 0';
-            if (button.getAttribute('aria-label') !== label) {
-                button.setAttribute('aria-label', label);
-                button.querySelector('.gv2-station-label').textContent = label;
+            if (link.getAttribute('aria-label') !== label) {
+                link.setAttribute('aria-label', label);
+                link.querySelector('.gv2-station-label').textContent = label;
             }
         }
     }
 
-    stationButton(target) {
+    stationLink(target) {
         return target.closest('.gv2-station');
     }
 
     stationHover(event) {
         if (event.pointerType !== 'mouse') return;
-        const button = this.stationButton(event.target);
-        if (!button || button.contains(event.relatedTarget)) return;
-        this.hoveredStation = button;
+        const link = this.stationLink(event.target);
+        if (!link || link.contains(event.relatedTarget)) return;
+        this.hoveredStation = link;
         this.updateStationDetail();
     }
 
     stationLeave(event) {
-        const button = this.stationButton(event.target);
-        if (event.pointerType !== 'mouse' || !button || button.contains(event.relatedTarget)) return;
+        const link = this.stationLink(event.target);
+        if (event.pointerType !== 'mouse' || !link || link.contains(event.relatedTarget)) return;
         this.hoveredStation = null;
         this.updateStationDetail();
     }
 
     stationFocus(event) {
-        const button = this.stationButton(event.target);
-        this.focusedStation = button?.matches(':focus-visible') ? button : null;
+        const link = this.stationLink(event.target);
+        this.focusedStation = link?.matches(':focus-visible') ? link : null;
         this.updateStationDetail();
     }
 
     stationBlur(event) {
-        if (!this.stationButton(event.target)) return;
+        if (!this.stationLink(event.target)) return;
         this.focusedStation = null;
         this.updateStationDetail();
     }
 
-    stationToggle(event) {
-        const button = this.stationButton(event.target);
-        if (!button) return;
-        if (this.pinnedStation === button) {
-            this.pinnedStation = this.hoveredStation = this.focusedStation = null;
-        } else {
-            this.pinnedStation = button;
-        }
-        this.updateStationDetail();
-    }
-
     updateStationDetail() {
-        const next = [this.pinnedStation, this.focusedStation, this.hoveredStation]
-            .find((button) => button && !button.hidden) || null;
+        const next = [this.focusedStation, this.hoveredStation]
+            .find((link) => link && !link.hidden) || null;
         if (next === this.displayedStation) return;
-        this.displayedStation?.setAttribute('aria-expanded', 'false');
         this.displayedStation = next;
         this.stationDetailTarget.hidden = !next;
         if (!next) return;
-        next.setAttribute('aria-expanded', 'true');
         const hall = next === this.hallStationTarget;
         this.stationDetailTarget.dataset.kind = hall ? 'hall' : 'pirate';
         this.stationTitleTarget.textContent = next.getAttribute('aria-label');

@@ -121,7 +121,7 @@ body.ui-refined[data-ui-page="vue-generale"] .overview-page .overview-points-tit
 
 body.ui-refined[data-ui-page="vue-generale"] .overview-page .empire-points {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 18px;
     margin: 0;
 }
@@ -251,10 +251,6 @@ body.ui-refined[data-ui-page="vue-generale"] .overview-page .metric-card :is(sma
     min-width: 0;
 }
 
-.overview-score-detail[open] {
-    grid-column: 1 / -1;
-}
-
 .overview-score-detail > summary {
     min-height: 42px;
     align-content: center;
@@ -264,10 +260,17 @@ body.ui-refined[data-ui-page="vue-generale"] .overview-page .metric-card :is(sma
     cursor: pointer;
 }
 
+/* Le détail se superpose au décor. Son ouverture conserve la grille du résumé. */
 .overview-score-body {
-    grid-column: 1 / -1;
+    position: absolute;
+    inset-inline-end: 0;
+    bottom: calc(100% + 4px);
+    width: min(100%, 28rem);
+    box-sizing: border-box;
+    background: #0e1a2c;
+    border: 1px solid #4b6278;
+    border-radius: 5px;
     padding: 4px 12px 14px;
-    border-top: 1px solid #405269;
 }
 
 .overview-page .core-empire-watch > h2 {
@@ -428,9 +431,12 @@ body.ui-refined[data-ui-page="vue-generale"] .overview-page .dashboard-journal {
 }
 
 @media (max-width: 600px) {
+    .overview-score-detail {
+        position: relative;
+    }
+
     body.ui-refined[data-ui-page="vue-generale"] .overview-page .empire-points {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 18px;
+        gap: 8px;
     }
 
     .overview-page .empire-points dd {

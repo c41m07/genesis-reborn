@@ -181,7 +181,7 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
     const shell = page.locator('.galaxy-v2');
     const map = JSON.parse(await shell.getAttribute('data-galaxy-v2-map-value'));
     const site = map.systems.find(row => row.id === system);
-    expect(site.hall).toEqual({ position: 0, tag: 'HAL' });
+    expect(site.hall).toEqual({ position: 0, tag: 'HAL', profileUrl: '/guildes/' + guild });
     const search = page.getByRole('searchbox', { name: 'Rechercher un système ou une planète connue' });
     await search.fill(site.name);
     await page.locator('.gv2-search-results button').filter({ hasText: site.name }).first().focus();
@@ -197,8 +197,10 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
     await expect(page.getByRole('complementary', { name: 'Informations sur le système sélectionné' }).locator('[data-system-guild-hall]')).toContainText('[HAL]');
     await page.getByRole('button', { name: 'Entrer dans le système' }).click();
     await expect(shell).toHaveAttribute('data-view', 'system');
-    const station = page.getByRole('button', { name: 'Hall de guilde [HAL] · Position 0', exact: true });
+    const station = page.getByRole('link', { name: 'Hall de guilde [HAL] · Position 0', exact: true });
     await expect(station).toBeVisible();
     await expect.poll(() => station.locator('img').evaluate(image => image.naturalWidth)).toBe(192);
-    await expect(page.getByRole('button', { name: /Station pirate/ })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /Station pirate/ })).toHaveCount(0);
+    await station.press('Enter');
+    await expect(page).toHaveURL(new RegExp('/guildes/' + guild + '$'));
 });
