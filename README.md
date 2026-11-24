@@ -877,6 +877,9 @@ Le cycle interne de reçu prévoit maintenant une revendication propriétaire et
 Le diagnostic d'exploitation indique pour chaque relais affiché l'attention
 requise et propose la fiche des cibles de nature flotte. Il ne déduit jamais
 l'exécution métier du seul état de l'outbox et n'expose aucune action de reprise.
+Le relais du jeu tente la publication même si le cycle des boosts ou du classement échoue.
+Une publication non confirmée reste dans l’outbox sans arrêter les autres lignes du lot.
+Voir [le diagnostic et ses limites](docs/ADMIN_EXPLOITATION_DIAGNOSTIC.md#résilience-du-relais-de-jeu).
 
 Les identifiants de relais du diagnostic ouvrent une inspection ciblée en lecture seule ; elle distingue les événements périmés sans autoriser leur reprise. Voir [le périmètre exploitation](docs/ADMIN_EXPLOITATION_DIAGNOSTIC.md).
 

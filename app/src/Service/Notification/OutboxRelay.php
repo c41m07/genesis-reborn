@@ -7,7 +7,7 @@ use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use App\Integration\Mercure\PublisherInterface;
 use App\Message\{AdventCaptureDue, QueueItemFinished, FleetArrived, CombatEventDue, UniverseClosureDue, OccupationDue, EmpireReconstructionDue, GuildProjectRewardsDue};
-use Symfony\Component\Messenger\{MessageBusInterface, Stamp\DelayStamp};
+use Symfony\Component\Messenger\{Exception\TransportException, MessageBusInterface, Stamp\DelayStamp};
 use App\Message\{PirateAttackDue, PirateConvoyDue, PirateReconnaissanceDue, PirateSurvivorsDue};
 use Psr\Clock\ClockInterface;
 
@@ -30,8 +30,9 @@ final class OutboxRelay
     public function run(bool $notifications = false): int
     {
         $count = 0;
+        $failed = [];
         foreach ($this->repo->outbox($notifications, $this->clock->now()) as $outboxMessage) {
-            $this->manager->transaction(function () use ($outboxMessage, $notifications) {
+            $failure = $this->manager->transaction(function () use ($outboxMessage, $notifications): ?string {
                 $this->manager->lock($outboxMessage);
                 if ($notifications) {
                     $notification = $this->repo->find(Notification::class, $outboxMessage->targetId);
@@ -56,15 +57,29 @@ final class OutboxRelay
                     };
                     // Messenger porte l’attente ; une échéance déjà dépassée est envoyée sans délai.
                     $delay = max(0, ($outboxMessage->dueAt->getTimestamp() - $this->clock->now()->getTimestamp()) * 1000);
-                    $this->bus->dispatch($message, [new DelayStamp($delay)]);
+                    try {
+                        $this->bus->dispatch($message, [new DelayStamp($delay)]);
+                    } catch (TransportException) {
+                        // Ce dispatch n’a pas de mutation SQL locale. Sortir sans retirer la ligne
+                        // permet de poursuivre le lot sans fermer Doctrine ni affirmer que le broker n’a rien reçu.
+                        return sprintf('%s#%d', $outboxMessage->kind, $outboxMessage->id);
+                    }
                 }
                 // Un arrêt après l’envoi peut republier le même événement : conserver son jeton et l’identifiant de notification.
                 $this->manager->remove($outboxMessage);
+                return null;
             });
-            ++$count;
+            if ($failure === null) {
+                ++$count;
+            } else {
+                $failed[] = $failure;
+            }
         }
         // Ne pas garder les entités de cette passe pour le prochain appel du relais.
         $this->manager->clear();
+        if ($failed !== []) {
+            throw new OutboxPublicationFailed($count, $failed);
+        }
         return $count;
     }
 }

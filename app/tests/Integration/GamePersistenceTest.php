@@ -3,7 +3,7 @@ namespace App\Tests\Integration;
 use App\Entity\{Player,PlayerUniverse,Universe,Planet,QueueItem,PlanetBuilding,PlanetResource,OutboxMessage,PlayerTechnology,Fleet,FleetShip,PlanetDefense,Notification};
 use App\Service\Universe\{UniverseImporter,UniverseService,UniverseLifecycleService};
 use App\Service\Notification\OutboxRelay;
-use App\Message\UniverseClosureDue;
+use App\Message\{QueueItemFinished, UniverseClosureDue};
 use App\MessageHandler\UniverseClosureDueHandler;
 use App\Service\Player\RegistrationService;
 use App\Service\Player\LeaderboardService;
@@ -11,9 +11,18 @@ use App\Service\Catalog\GameCatalog;
 use App\Service\Queue\QueueService;
 use App\Service\Colony\ResourceService;
 use App\Validator\DTO\RegistrationData;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\LeaderboardSnapshot;
+use Doctrine\ORM\{EntityManagerInterface, Events, Event\OnFlushEventArgs};
+use PHPUnit\Framework\Attributes\DataProvider;
 use Doctrine\ORM\Tools\SchemaTool;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\Messenger\{Envelope, MessageBusInterface, Worker};
+use Symfony\Component\Messenger\Event\WorkerRunningEvent;
+use Symfony\Component\Messenger\Exception\TransportException;
+use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 final class GamePersistenceTest extends KernelTestCase
 {
     private EntityManagerInterface $em;
@@ -449,6 +458,170 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertSame(array_slice($ids,0,20),array_column($snapshot['outbox_pending'],'id'));
         self::assertSame('UTC',$snapshot['outbox_pending'][0]['due_at']->getTimezone()->getName());
         self::assertSame($clock->now()->getTimestamp()-(new \DateTimeImmutable('2020-01-01T00:00:00Z'))->getTimestamp(),$snapshot['outbox_pending'][0]['overdue_seconds']);
+    }
+
+    public function testRelayContinuesAfterOneNonConfirmedPublicationAndWorkerCreditsOnce(): void
+    {
+        $clock = $this->clock();
+        $slow = $this->prepareRelayQueue('RetryRelay');
+        $fast = $this->prepareRelayQueue('HealthyRelay');
+        $clock->sleep(max($slow['duration'], $fast['duration']) + 1);
+
+        $container = self::getContainer();
+        $bus = $container->get(MessageBusInterface::class);
+        $transport = $container->get('messenger.transport.async');
+        self::assertInstanceOf(InMemoryTransport::class, $transport);
+        $flakyBus = new class ($bus, $slow['item']) implements MessageBusInterface {
+            private bool $failed = false;
+            public function __construct(private MessageBusInterface $inner, private int $target) {}
+            public function dispatch(object $message, array $stamps = []): Envelope
+            {
+                if (!$this->failed && $message instanceof QueueItemFinished && $message->queueItemId === $this->target) {
+                    $this->failed = true;
+                    throw new TransportException('Détail de transport synthétique à ne pas exposer.');
+                }
+                return $this->inner->dispatch($message, $stamps);
+            }
+        };
+        $container->set(OutboxRelay::class, new OutboxRelay(
+            $container->get(\App\Manager\GameManager::class),
+            $container->get(\App\Repository\GameRepository::class),
+            $flakyBus,
+            $container->get(\App\Integration\Mercure\PublisherInterface::class),
+            $clock,
+        ));
+
+        $command = $this->relayCommand();
+        self::assertSame(1, $command->execute([]));
+        self::assertStringContainsString('1 non confirmée(s) conservée(s) : queue#'.$slow['outbox'], $command->getDisplay());
+        self::assertStringNotContainsString('Détail de transport synthétique', $command->getDisplay());
+        self::assertTrue($this->em->isOpen());
+        self::assertNotNull($this->em->find(OutboxMessage::class, $slow['outbox']));
+        self::assertNull($this->em->find(OutboxMessage::class, $fast['outbox']));
+        $firstPass = $this->sentQueueMessages($transport);
+        self::assertSame([$fast['item']], array_map(static fn (QueueItemFinished $message): int => $message->queueItemId, $firstPass));
+
+        $this->consumeRelayQueue($transport, $bus);
+        self::assertNotNull($this->em->find(QueueItem::class, $slow['item']));
+        self::assertNull($this->em->find(QueueItem::class, $fast['item']));
+
+        self::assertSame(0, $command->execute([]));
+        self::assertNull($this->em->find(OutboxMessage::class, $slow['outbox']));
+        $secondPass = $this->sentQueueMessages($transport);
+        self::assertCount(2, $secondPass);
+        self::assertSame($slow['item'], $secondPass[1]->queueItemId);
+        self::assertSame($slow['token'], $secondPass[1]->dispatchToken);
+        // La remise peut être répétée si le broker avait accepté un premier envoi avant de répondre.
+        $transport->send(new Envelope($secondPass[1]));
+        $this->consumeRelayQueue($transport, $bus);
+        self::assertNull($this->em->find(QueueItem::class, $slow['item']));
+        foreach ([$slow, $fast] as $finished) {
+            self::assertSame(1, $this->em->getRepository(PlanetBuilding::class)->findOneBy([
+                'planet' => $finished['planet'],
+                'slug' => 'mine_metal',
+            ])->level);
+        }
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function failingRelayCycles(): iterable
+    {
+        yield 'boost' => ['boost'];
+        yield 'classement' => ['classement'];
+    }
+
+    #[DataProvider('failingRelayCycles')]
+    public function testRelayContinuesAfterCycleRollsBackAndClosesDoctrine(string $phase): void
+    {
+        $clock = $this->clock();
+        $job = $this->prepareRelayQueue('CycleRelay');
+        $clock->sleep($job['duration'] + 1);
+        $listener = new class ($phase) {
+            public bool $failed = false;
+            public function __construct(private string $phase) {}
+            public function onFlush(OnFlushEventArgs $event): void
+            {
+                if ($this->failed) {
+                    return;
+                }
+                $em = $event->getObjectManager();
+                $writesLeaderboard = array_any(
+                    $em->getUnitOfWork()->getScheduledEntityInsertions(),
+                    static fn (object $entity): bool => $entity instanceof LeaderboardSnapshot,
+                );
+                if ($this->phase === 'classement' && !$writesLeaderboard) {
+                    return;
+                }
+                $this->failed = true;
+                throw new \RuntimeException('Échec de cycle synthétique.');
+            }
+        };
+        $this->em->getEventManager()->addEventListener([Events::onFlush], $listener);
+        try {
+            $command = $this->relayCommand();
+            self::assertSame(1, $command->execute([]));
+        } finally {
+            $this->em->getEventManager()->removeEventListener([Events::onFlush], $listener);
+        }
+        self::assertTrue($listener->failed);
+        self::assertStringContainsString('Cycle '.$phase.' en échec', $command->getDisplay());
+        self::assertStringNotContainsString('Échec de cycle synthétique', $command->getDisplay());
+        self::assertTrue($this->em->isOpen());
+        self::assertNull($this->em->find(OutboxMessage::class, $job['outbox']));
+        $transport = self::getContainer()->get('messenger.transport.async');
+        self::assertInstanceOf(InMemoryTransport::class, $transport);
+        self::assertSame([$job['item']], array_map(
+            static fn (QueueItemFinished $message): int => $message->queueItemId,
+            $this->sentQueueMessages($transport),
+        ));
+        $this->consumeRelayQueue($transport, self::getContainer()->get(MessageBusInterface::class));
+        self::assertNull($this->em->find(QueueItem::class, $job['item']));
+        self::assertSame(1, $this->em->getRepository(PlanetBuilding::class)->findOneBy([
+            'planet' => $job['planet'],
+            'slug' => 'mine_metal',
+        ])->level);
+    }
+
+    /** @return array{item: int, planet: int, outbox: int, duration: int, token: string} */
+    private function prepareRelayQueue(string $name): array
+    {
+        $player = $this->player($name);
+        $planet = $this->join($player);
+        self::getContainer()->get(QueueService::class)->add(
+            $player->currentPlayerUniverse, $planet, 'buildings', 'mine_metal', 1, md5($name),
+        );
+        $item = $this->em->getRepository(QueueItem::class)->findOneBy(['planet' => $planet]);
+        self::assertInstanceOf(QueueItem::class, $item);
+        $outbox = $this->em->getRepository(OutboxMessage::class)->findOneBy(['kind' => 'queue', 'targetId' => $item->id]);
+        self::assertInstanceOf(OutboxMessage::class, $outbox);
+        return ['item' => $item->id, 'planet' => $planet->id, 'outbox' => $outbox->id,
+            'duration' => $item->durationSeconds, 'token' => $outbox->token];
+    }
+
+    /** @return list<QueueItemFinished> */
+    private function sentQueueMessages(InMemoryTransport $transport): array
+    {
+        return array_values(array_filter(
+            array_map(static fn (Envelope $envelope): object => $envelope->getMessage(), $transport->getSent()),
+            static fn (object $message): bool => $message instanceof QueueItemFinished,
+        ));
+    }
+
+    private function relayCommand(): CommandTester
+    {
+        $application = new Application(self::$kernel);
+        return new CommandTester($application->find('app:outbox:relay'));
+    }
+
+    private function consumeRelayQueue(InMemoryTransport $transport, MessageBusInterface $bus): void
+    {
+        $dispatcher = new EventDispatcher();
+        $dispatcher->addListener(WorkerRunningEvent::class, static function (WorkerRunningEvent $event): void {
+            if ($event->isWorkerIdle()) {
+                $event->getWorker()->stop();
+            }
+        });
+        (new Worker(['async' => $transport], $bus, $dispatcher))->run(['sleep' => 0]);
     }
 
     public function testOutboxRestartsAfterPublishFailureAndDuplicateDeliveryIsHarmless(): void
