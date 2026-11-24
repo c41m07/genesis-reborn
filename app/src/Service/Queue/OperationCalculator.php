@@ -35,8 +35,15 @@ final class OperationCalculator
         // d'une seconde (et d'une minute électrique) à la réduction exacte de 70 %.
         $nominalDuration = $base * $levelFactor * $quantity * $mult * $tierFactor;
         $rawDuration = $nominalDuration * ((100-$timeReduction)/100);
+        // La file persiste la durée dans un INT signé. Refuser avant tout débit.
+        if ($captureTiming && (!is_finite($rawDuration) || ceil($rawDuration) > 2147483647)) {
+            throw new \DomainException('La durée de cette commande dépasse la capacité de la file.');
+        }
+        if (!is_finite($rawDuration) || $rawDuration >= PHP_INT_MAX) {
+            throw new \DomainException('La durée dépasse la capacité numérique du devis.');
+        }
         $duration=max(1,(int)ceil($rawDuration));
-        $costs=$this->catalog->costs($d,$level,$quantity,$group);
+        $costs=$this->catalog->costs($d,$level,$quantity,$group,$universe['catalog'] ?? null);
         $discountSlug=match($group){'buildings'=>'nanomaterial_synthesis','ships'=>'naval_engineering',default=>null};
         if($discountSlug!==null){$costCap=(float)($this->catalog->rules()['cost_reduction_max_percent']??40);$discount=$this->discountProduct($universe,$discountSlug,$technologies[$discountSlug]??[],'cost_discount',$costCap);foreach($costs as $resource=>$amount)$costs[$resource]=$amount>0?max(1,(int)ceil($amount*(1-$discount/100))):0;}
         if(in_array($group,['technologies','ships','defenses'],true)) $costs['electricity']=($costs['electricity']??0)+100*(int)ceil($duration/60);
@@ -51,7 +58,7 @@ final class OperationCalculator
         };
         $timing = $source !== null && ($group !== 'buildings' || ($source['effect']['type'] ?? null) === 'time_discount')
             ? ['base' => $nominalDuration, 'cap' => $timeCap, 'max' => max(1, (int) ($source['max_level'] ?? 25)),
-                'checkpoint' => null, 'work' => 1.0, 'full' => $duration]
+                'building_growth' => in_array($group, ['technologies', 'ships'], true) ? ($this->catalog->rules()['building_level_growth'] ?? []) : null, 'checkpoint' => null, 'work' => 1.0, 'full' => $duration]
             : null;
 
         return ['duration'=>$duration,'costs'=>$costs,'raw_duration'=>$rawDuration,'live_timing' => $timing];
@@ -80,7 +87,7 @@ final class OperationCalculator
     {
         if(is_int($levels)||is_numeric($levels))$levels=['basic'=>(int)$levels];
         $maxLevel=max(1,(int)($definition['max_level']??25));
-        return GameCatalog::diminishingBonus($levels,$cap,$maxLevel);
+        return GameCatalog::infrastructureBonus($levels,$cap,$maxLevel, $this->catalog->rules()['building_level_growth'] ?? []);
     }
     private function discountProduct(array $universe,string $slug,array|int $levels,string $type,float $globalCap):float
     {

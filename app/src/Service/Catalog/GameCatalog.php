@@ -63,6 +63,35 @@ final class GameCatalog
         if(!is_finite($factor)||$factor<=0)throw new \DomainException('Facteur de production invalide.');
         return $factor;
     }
+    /** Le bonus composé porte uniquement sur les niveaux du rang considéré. */
+    public static function compoundedLevels(int $level, string $tier, array $growth): float
+    {
+        return $level * ($growth[$tier] ?? 1.0) ** $level;
+    }
+
+    public static function infrastructureBonus(array|int $levels, float $cap, int $maxLevel, array $growth): float
+    {
+        if (is_int($levels)) {
+            $levels = ['basic' => $levels];
+        }
+        $maximum = 0.0;
+        $contribution = 0.0;
+        foreach (self::TIERS as $tier) {
+            $weight = self::tierFactor($tier);
+            $level = min($maxLevel, max(0, (int) ($levels[$tier] ?? 0)));
+            $contribution += $weight * self::compoundedLevels($level, $tier, $growth);
+            $maximum += $weight * self::compoundedLevels($maxLevel, $tier, $growth);
+        }
+
+        return $cap * (log1p(2 * $contribution / $maximum) / log1p(2));
+    }
+
+    public static function isEconomicBuilding(array $definition): bool
+    {
+        return isset($definition['production_resource']) || isset($definition['storage_resource'])
+            || in_array($definition['slug'] ?? '', ['lab', 'shipyard', 'fortress'], true);
+    }
+
     public static function colonyLimit(array|int $levels,array $effect,int $universeLimit):int
     {
         if(is_int($levels)||is_numeric($levels))$levels=['basic'=>(int)$levels];
@@ -153,7 +182,55 @@ final class GameCatalog
     }
     public function get(string $group,string $slug): array { return $this->data[$group][$slug] ?? throw new \DomainException('Élément de catalogue inconnu.'); }
     public function rules(): array { return $this->data['rules']; }
-    public function costs(array $definition,int $level=1,int $quantity=1,?string $operationGroup=null): array
+    public const MATERIAL_WEIGHTS = ['metal' => 2, 'nano' => 4, 'antimatter' => 8, 'hydrogen' => 1];
+
+    private static function materialValue(array $materials): float
+    {
+        $value = 0.0;
+        foreach (self::MATERIAL_WEIGHTS as $resource => $weight) {
+            $value += ($materials[$resource] ?? 0) * $weight;
+        }
+        return $value;
+    }
+
+    private function entryFactor(array $definition, string $tier, string $operationGroup, ?array $definitions, array $ancestors, array $base, float $factor): float
+    {
+        // Une référence utilise son devis entier, sans taxe électrique ni remise personnelle.
+        $key = $operationGroup.'/'.$definition['slug'].'/'.$tier;
+        if (isset($ancestors[$key])) {
+            throw new \DomainException('Cycle de calcul du prix de rang : '.$key);
+        }
+        $ancestors[$key] = true;
+        $reference = null;
+        $requirements = \App\Service\Requirement\RequirementChecker::unlockRequirements($definition, $tier);
+        foreach (['buildings', 'technologies'] as $group) {
+            foreach ($requirements[$group] ?? [] as $required) {
+                $slug = $required['slug'];
+                if ($operationGroup === 'technologies' && ($group !== 'technologies' || $slug !== $definition['slug'])) {
+                    continue;
+                }
+                $source = $definitions[$group][$slug] ?? $this->get($group, $slug);
+                $rank = $this->withTier($source, $required['tier'] ?? 'basic');
+                $quote = $this->materialQuote($rank, $required['level'], 1, $group, $definitions, $ancestors);
+                $reference = max($reference ?? 0, self::materialValue($quote));
+            }
+        }
+        if ($reference !== null) {
+            $profileValue = self::materialValue($base);
+            if ($profileValue <= 0) {
+                throw new \DomainException('Profil de matériaux vide pour '.$key);
+            }
+            return ($reference * 11) / ($profileValue * 10);
+        }
+        return $factor;
+    }
+
+    public function costs(array $definition, int $level = 1, int $quantity = 1, ?string $operationGroup = null, ?array $definitions = null): array
+    {
+        return $this->materialQuote($definition, $level, $quantity, $operationGroup, $definitions, []);
+    }
+
+    private function materialQuote(array $definition, int $level, int $quantity, ?string $operationGroup, ?array $definitions, array $ancestors): array
     {
         if($level<1||$quantity<1)throw new \InvalidArgumentException('Niveau ou quantité de coût invalide.');
         $tier=(string)($definition['_tier']??'basic');
@@ -161,9 +238,17 @@ final class GameCatalog
         $base=is_array($profiles)?($profiles[$tier]??[]):($definition['costs_base']??$definition['costs']??[]);
         $factor=is_array($profiles)?1.0:self::tierFactor($tier);
         $curveKey=match($operationGroup){'buildings'=>'building_cost','technologies'=>'research_cost',default=>null};
-        if($operationGroup==='buildings'&&isset($definition['production_resource']))$curveKey='production_building_cost';
-        $segments=$curveKey?($this->data['rules']['progression_curves'][$curveKey]??[]):[];
-        if($curveKey==='production_building_cost'&&$segments===[])$segments=$this->data['rules']['progression_curves']['building_cost']??[];
+        $curves = $this->rules()['progression_curves'];
+        $economic = $operationGroup === 'buildings' && self::isEconomicBuilding($definition);
+        if ($economic && isset($curves['economic_building_cost'])) {
+            $curveKey = 'economic_building_cost';
+        } elseif ($economic && isset($definition['production_resource'], $curves['production_building_cost'])) {
+            $curveKey = 'production_building_cost';
+        }
+        $segments = $curves[$curveKey] ?? [];
+        if ($tier !== 'basic' && ($economic || $operationGroup === 'technologies') && isset($curves['economic_building_cost'])) {
+            $factor = $this->entryFactor($definition, $tier, $operationGroup, $definitions, $ancestors, $base, $factor);
+        }
         $levelFactor=$segments!==[]?self::growthMultiplier($level,$segments):max(0.01,(float)($definition['costs_scaling']??1))**($level-1);
         $result=['metal'=>0,'nano'=>0,'antimatter'=>0,'hydrogen'=>0];
         foreach($base as $resource=>$amount){
@@ -171,7 +256,15 @@ final class GameCatalog
             if($resource==='electricity')continue;
             if(!array_key_exists($resource,$result)||!is_numeric($amount)||$amount<=0)continue;
             $scaled=(float)$amount*$factor*$levelFactor*$quantity;
-            $result[$resource]=max(1,(int)ceil($scaled));
+            if (!is_finite($scaled) || $scaled >= PHP_INT_MAX) {
+                throw new \DomainException('Le prix dépasse la capacité numérique du devis.');
+            }
+            // Neutraliser le bruit binaire à proximité immédiate d’un entier du nouveau tarif.
+            if (($economic || $operationGroup === 'technologies') && isset($curves['economic_building_cost'])
+                && abs(round($scaled) - $scaled) <= min(1e-9, 4 * PHP_FLOAT_EPSILON * $scaled)) {
+                $scaled = round($scaled);
+            }
+            $result[$resource]=(int)ceil($scaled);
         }
         return $result;
     }

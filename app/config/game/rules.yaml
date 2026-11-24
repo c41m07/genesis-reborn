@@ -119,19 +119,7 @@
     ],
     "research_cost": [
       {
-        "max_level": 5,
         "multiplier": 1.35
-      },
-      {
-        "max_level": 10,
-        "multiplier": 1.25
-      },
-      {
-        "max_level": 15,
-        "multiplier": 1.18
-      },
-      {
-        "multiplier": 1.12
       }
     ],
     "building_duration": [
@@ -176,28 +164,49 @@
         "multiplier": 1.12
       }
     ],
-    "production_building_cost": [
+    "economic_building_cost": [
       {
-        "max_level": 20,
-        "multiplier": 1.12
+        "max_level": 10,
+        "multiplier": 1.1
       },
       {
-        "max_level": 40,
+        "max_level": 20,
         "multiplier": 1.09
       },
       {
-        "max_level": 80,
-        "multiplier": 1.035
+        "max_level": 30,
+        "multiplier": 1.08
       },
       {
-        "max_level": 120,
-        "multiplier": 1.015
+        "max_level": 40,
+        "multiplier": 1.07
+      },
+      {
+        "max_level": 50,
+        "multiplier": 1.06
+      },
+      {
+        "max_level": 60,
+        "multiplier": 1.05
+      },
+      {
+        "max_level": 70,
+        "multiplier": 1.04
+      },
+      {
+        "max_level": 80,
+        "multiplier": 1.03
+      },
+      {
+        "max_level": 90,
+        "multiplier": 1.02
       },
       {
         "multiplier": 1.01
       }
     ]
   },
+  "building_level_growth": {"basic": 1.0025, "intermediate": 1.005, "superior": 1.01},
   "building_production_tier_factors": {
     "basic": 1.0,
     "intermediate": 1.5,

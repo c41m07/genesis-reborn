@@ -147,9 +147,10 @@ final class LeaderboardService
     private function cumulativeCost(\App\Entity\Universe $universe,string $group,string $slug,int $level,string $tier='basic'):int
     {
         $definition=$this->catalog->getTierForUniverse($universe,$group,$slug,$tier);
+        $definitions = $this->catalog->forUniverse($universe)['catalog'];
         $total = 0;
         for ($currentLevel = 1; $currentLevel <= $level; ++$currentLevel) {
-            $total += array_sum($this->catalog->costs($definition, $currentLevel, 1, $group));
+            $total += array_sum($this->catalog->costs($definition, $currentLevel, 1, $group, $definitions));
         }
 
         return $total;

@@ -50,6 +50,11 @@
           "slug": "naval_engineering",
           "tier": "intermediate",
           "level": 2
+        },
+        {
+          "slug": "modular_cargo_bays",
+          "tier": "basic",
+          "level": 5
         }
       ]
     },
@@ -66,6 +71,11 @@
           "slug": "naval_engineering",
           "tier": "superior",
           "level": 2
+        },
+        {
+          "slug": "modular_cargo_bays",
+          "tier": "intermediate",
+          "level": 5
         }
       ]
     }
