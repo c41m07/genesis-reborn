@@ -1,7 +1,7 @@
 <?php
 namespace App\Tests\Integration;
 
-use App\Entity\{ActionReceipt,CombatEvent,CombatParticipant,Fleet,FleetShip,Guild,GuildMember,Planet,PlanetResource,Player,PlayerBoost,PlayerDiscovery,PlayerTechnology,SolarSystem,TransportReport,Universe};
+use App\Entity\{ActionReceipt,CombatEvent,CombatParticipant,Fleet,FleetShip,Guild,GuildMember,Planet,PlanetResource,Player,PlayerBoost,PlayerDiscovery,PlayerTechnology,PlayerUniverse,SolarSystem,TransportReport,Universe};
 use App\Service\Fleet\{FleetNavigation,FleetRecallService,FleetService};
 use App\Service\Colony\ResourceService;
 use App\Service\Player\RegistrationService;
@@ -103,9 +103,19 @@ final class OrbitDepartureRequestTest extends WebTestCase
         self::assertStringNotContainsString($key, $this->client->getResponse()->getContent());
         $this->client->submit($crawler->selectButton('Marquer ce rapport comme lu')->form());
         self::assertResponseRedirects('/rapports/diplomatie/'.$id, 303);
-        self::assertNotNull($connection->fetchOne('SELECT consulted_at FROM report_notice WHERE diplomatic_report_id = ?', [$id]));
+        self::assertIsString($connection->fetchOne('SELECT consulted_at FROM report_notice WHERE diplomatic_report_id = ?', [$id]));
 
-        self::getContainer()->get(FleetService::class)->decideOrbit($member, $fleet->id, true, $key);
+        // Après les requêtes HTTP, réutiliser uniquement l’adhésion hydratée par le gestionnaire courant.
+        $managedMember = self::getContainer()->get(EntityManagerInterface::class)->find(PlayerUniverse::class, $member->id);
+        $archives = self::getContainer()->get(\App\Service\Combat\ReportArchiveService::class);
+        $archiveKey = 'diplomatic:'.$id;
+        $archives->change($managedMember, [$archiveKey], true);
+        self::assertSame([], $archives->page($managedMember, 'diplomatic', false, 1)['entries']);
+        self::assertSame([$archiveKey], array_column($archives->page($managedMember, 'diplomatic', true, 1)['entries'], 'key'));
+        $archives->change($managedMember, [$archiveKey], false);
+        self::assertSame([$archiveKey], array_column($archives->page($managedMember, 'diplomatic', false, 1)['entries'], 'key'));
+
+        self::getContainer()->get(FleetService::class)->decideOrbit($managedMember, $fleet->id, true, $key);
         self::assertSame('accepted', $connection->fetchOne('SELECT outcome FROM diplomatic_report WHERE recipient_id = ?', [$origin->id]));
         self::assertSame(1, (int) $connection->fetchOne('SELECT COUNT(*) FROM diplomatic_report WHERE recipient_id = ?', [$member->id]));
     }
