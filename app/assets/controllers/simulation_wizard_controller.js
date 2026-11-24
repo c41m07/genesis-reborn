@@ -54,8 +54,7 @@ export default class extends Controller {
 
     edited(event) {
         if (event.target.type !== 'number') return;
-        const group = event.target.closest('.simulation-board-unit-scroll');
-        const status = group?.previousElementSibling;
+        const status = document.getElementById(event.target.getAttribute('aria-describedby'));
         if (!status?.hasAttribute('data-simulation-wizard-source-status')) return;
         const variants = {
             own: 'Valeurs modifiées pour cette simulation uniquement.',

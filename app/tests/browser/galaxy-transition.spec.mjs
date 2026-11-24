@@ -449,3 +449,31 @@ test('Revenir depuis une planète consultée en aperçu restaure la fiche, sans 
   expect(state.zoom).toBe(.6);
   expect(focused).toBe(true);
 });
+
+test('La flotte entre par la frontière et rejoint la planète uniquement pendant son segment local', () => {
+  const arrows = [];
+  const flight = {
+    status: 'traveling', mission: 'transport', departureAt: '2026-11-24T10:00:00Z',
+    originSystemId: 1, destinationSystemId: 2, destinationPlanetId: 12,
+    localLegs: [{systemId: 2, from: 10, to: 4, start: .75, end: 1}],
+  };
+  const controller = Object.assign(Object.create(GalaxyController.prototype), {
+    flights: [flight], serverClockOffset: 0,
+    drawFlightArrow(ctx, x, y, dx, dy) { arrows.push({x, y, dx, dy}); },
+  });
+  const ctx = {save() {}, restore() {}, setLineDash() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}};
+  const system = {id: 2, planets: [{id: 12, position: 4, visual: {sx: 100, sy: 100}}]};
+  const draw = progress => {
+    controller.flightProgress = () => progress;
+    controller.drawLocalFlights(ctx, system, {x: 300, y: 200});
+  };
+  draw(.5);
+  expect(arrows).toEqual([]);
+  draw(.875);
+  expect(arrows.pop()).toEqual({x: 200, y: 150, dx: -200, dy: -100});
+  flight.status = 'returning';
+  draw(.125);
+  expect(arrows.pop()).toEqual({x: 200, y: 150, dx: 200, dy: 100});
+  draw(.5);
+  expect(arrows).toEqual([]);
+});

@@ -86,7 +86,7 @@ final class GuildHallController extends AbstractController
                     throw new \DomainException('Confirmez l’emplacement avant de placer le Hall.');
                 }
                 $service->place($actor, $guild->id, $request->request->getInt('system_id'), $revision);
-                $this->addFlash('success', 'Votre Hall est installé à la position 0 du système.');
+                $this->addFlash('success', 'Votre Hall est installé dans le système choisi.');
             } else {
                 $service->contribute($actor, $guild->id, $request->request->getInt('planet_id'), $revision, $request->request->all('resources'));
                 $this->addFlash('success', 'Votre don a été ajouté à la construction du Hall.');

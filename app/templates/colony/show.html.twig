@@ -51,7 +51,7 @@
             <div class="overview-score-body">
                 <h3 class="overview-points-title">Points de votre empire · {{ chrome.membership.universe.name }}</h3>
                 <dl class="empire-points">
-                    {% for key,label in {building_points:'Bâtiments',research_points:'Recherche',fleet_points:'Flotte',total_points:'Total'} %}
+                    {% for key,label in {building_points:'Bâtiments',research_points:'Recherche',fleet_points:'Flotte'} %}
                         <div><dt>{{ label }}</dt><dd>{{ empire_points[key]|quantity(0) }} <small>pts</small></dd></div>
                     {% endfor %}
                 </dl>

@@ -4,17 +4,26 @@ import { prepareOwnedColony, runIsolatedSql, queryIsolatedSql } from './support/
 async function checkLockedArtwork(page, panel, tab) {
     const image = panel.locator('.catalog-card-art img');
     const state = panel.locator('.catalogue-family-mark');
-    // Le verrou reste lisible même quand l’image ne change plus de couleur au focus.
+    await page.mouse.move(0, 0);
+    await page.getByRole('switch', { name: 'Afficher les éléments verrouillés' }).focus();
+    await expect(image).toHaveCSS('filter', 'grayscale(1)');
+    await image.hover();
+    await expect(image).toHaveCSS('filter', 'none');
     await page.mouse.move(0, 0);
     await tab.focus();
+    await expect(image).toHaveCSS('filter', 'none');
     await expect(state).toContainText('Verrouillé');
     await expect(tab).toHaveAccessibleDescription(/Rang verrouillé, consulter les prérequis/);
-    await expect(image).toHaveCSS('filter', 'none');
-    await image.hover({ timeout: 3500 });
-    await expect(state).toContainText('Verrouillé');
-    await panel.locator('.requirement a').first().focus();
-    await expect(state).toContainText('Verrouillé');
-    await expect(panel.locator('.catalog-blocked-action')).toBeDisabled();
+    const requirements = panel.locator('.catalog-prerequisites');
+    const link = requirements.getByRole('link').first();
+    await expect(link).toBeHidden();
+    const height = (await panel.boundingBox()).height;
+    await requirements.locator('summary').press('Enter');
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute('href', /#item-/);
+    expect((await panel.boundingBox()).height).toBe(height);
+    await requirements.locator('summary').press('Enter');
+    await expect(link).toBeHidden();
 }
 
 test('Les rangs bâtiments partagent une carte accessible et conservent les filtres au rafraîchissement', async ({ page, browser }) => {
@@ -50,8 +59,9 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     const toggle = page.getByRole('switch', { name: 'Afficher les éléments verrouillés' });
     await expect(page.locator('.building-card')).toHaveCount(13);
     await expect(family.getByRole('tab')).toHaveCount(3);
+    await expect(family.locator('.building-rank-tabs .building-rank-level')).toHaveCount(0);
     await expect(tab('basic')).toHaveAttribute('aria-selected', 'true');
-    await expect(tab('basic').locator('.building-rank-level')).toHaveText('250');
+    await expect(panel('basic').locator('.catalogue-level-badge')).toHaveText('Niv. 250');
     await expect(tab('basic').locator('.building-rank-up')).toHaveCount(0);
     await expect(tab('basic')).toHaveAccessibleDescription(/Ressources insuffisantes/);
     await expect(family.locator('.card-stock-badge, .tier-label')).toHaveCount(0);
@@ -70,9 +80,8 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await page.keyboard.press('ArrowRight');
     await expect(tab('superior')).toBeFocused();
     await expect(panel('superior')).toBeVisible();
-    await expect(tab('superior').locator('.building-rank-cross')).toBeVisible();
+    await expect(tab('superior').locator('.building-rank-cross, .building-rank-up')).toHaveCount(0);
     await expect(panel('superior').locator('img')).toHaveAttribute('src', /power_plant__superior.webp$/);
-    await expect(panel('superior').locator('.requirement')).toContainText('Nécessite');
     await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','none');
     await checkLockedArtwork(page,panel('superior'),tab('superior'));
     await expect(panel('superior').locator('.card-body>form')).toHaveCount(0);
@@ -200,7 +209,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(fallback.locator('#item-power_plant-superior')).toBeHidden();
     await fallback.getByRole('switch', { name: 'Afficher les éléments verrouillés' }).click();
     await expect(fallback.locator('#item-power_plant-superior')).toBeVisible();
-    await expect(fallback.locator('#item-power_plant-superior .catalog-card-art img')).toHaveCSS('filter','none');
+    await expect(fallback.locator('#item-power_plant-superior .catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
     await expect(fallback.locator('#item-power_plant-basic').getByRole('button',{name:/^Il manque :/})).toBeDisabled();
     await noScript.close();
     for (const theme of ['dark','light']) {
@@ -254,7 +263,7 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
     sql(`INSERT INTO planet_defense (planet_id,slug,tier,quantity) VALUES (${planet},'ground_turret_anti_light','basic',1250000)`);
     // Les unités conservées restent lisibles quand leur nouvelle construction n'est pas débloquée.
     await page.goto(`${path}?section=ships#item-fighter-intermediate`);
-    await expect(page.locator('#building-tab-fighter-intermediate .building-rank-level')).toHaveText('1,25 M');
+    await expect(page.locator('#item-fighter-intermediate .catalogue-level-badge')).toHaveText('1,25 M en réserve');
     await expect(page.locator('#building-tab-fighter-intermediate')).toHaveAccessibleDescription(/1 250 000 unités possédées.*Rang verrouillé/);
     await expect(page.locator('#item-fighter-intermediate .card-body>form')).toHaveCount(0);
     sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'shipyard','intermediate',1)`);
@@ -279,13 +288,13 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
         await expect(panel('basic').locator('form [name="group"]')).toHaveValue(group);
         await expect(panel('basic').locator('form [name="tier"]')).toHaveValue('basic');
         await expect(family.locator('.card-stock-badge, .tier-label')).toHaveCount(0);
-        await expect(tab('basic').locator('.building-rank-level')).toHaveText(group === 'technologies' ? '5' : group === 'ships' ? '125,00 k' : '1,25 M');
+        await expect(panel('basic').locator('.catalogue-level-badge')).toHaveText(group === 'technologies' ? 'Niv. 5' : group === 'ships' ? '125,00 k en réserve' : '1,25 M installés');
         if (group !== 'technologies') {
             await expect(tab('basic')).toHaveAccessibleDescription(/unités possédées/);
             await panel('basic').getByLabel('Quantité', { exact: true }).fill('3');
             await tab('intermediate').click();
             if (group === 'ships') {
-                await expect(tab('intermediate').locator('.building-rank-level')).toHaveText('1,25 M');
+                await expect(panel('intermediate').locator('.catalogue-level-badge')).toHaveText('1,25 M en réserve');
                 await expect(panel('intermediate').getByLabel('Quantité', { exact: true })).toHaveValue('1');
             }
             await tab('basic').click();
@@ -298,7 +307,7 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
         }
         await tab('superior').click();
         await expect(panel('superior')).toBeVisible();
-        await expect(tab('superior').locator('.building-rank-cross')).toBeVisible();
+        await expect(tab('superior').locator('.building-rank-cross, .building-rank-up')).toHaveCount(0);
         await expect(panel('superior').locator('img')).toHaveAttribute('alt', /\S/);
         await checkLockedArtwork(page,panel('superior'),tab('superior'));
         await toggle.click();

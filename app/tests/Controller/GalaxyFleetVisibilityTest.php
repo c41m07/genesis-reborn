@@ -72,6 +72,30 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
         return $rows[$fleet->id];
     }
 
+    public function testLocalMapLegsUseFrozenDurationsAndExcludeHyperspace(): void
+    {
+        [$owner, $home] = $this->player('LocalMapOwner');
+        [$viewer, $destination] = $this->player('LocalMapViewer');
+        $home = $this->hiddenOrigin($viewer, $owner, $destination);
+        $fleet = $this->fleet($owner, $home, $destination, 'transport');
+        $origin = [$home->solarSystem->id, 1, 0, 0, $home->position];
+        $target = [$destination->solarSystem->id, 1, 0, 0, $destination->position];
+        $exit = $origin;
+        $entry = $target;
+        $exit[4] = $entry[4] = 10;
+        $fleet->navigation = ['seconds' => 100, 'legs' => [
+            ['from' => $origin, 'to' => $exit, 'seconds' => 20, 'hyper' => false],
+            ['from' => $exit, 'to' => $entry, 'seconds' => 50, 'hyper' => true],
+            ['from' => $entry, 'to' => $target, 'seconds' => 30, 'hyper' => false],
+        ]];
+        $this->em->flush();
+        $legs = $this->row($this->map($owner, $home), $fleet)['localLegs'];
+        self::assertCount(2, $legs);
+        self::assertEquals(0.2, $legs[0]['end']);
+        self::assertSame([['systemId' => $destination->solarSystem->id, 'from' => 10,
+            'to' => $destination->position, 'start' => 0.7, 'end' => 1]], $this->row($this->map($viewer, $destination), $fleet)['localLegs']);
+    }
+
     public function testSpyTrajectoriesArePrivateToOwnerEvenForTargetAndAllies(): void
     {
         [$owner,$home]=$this->player('ProbeOwner');[$target,$destination]=$this->player('ProbeTarget');[$ally]=$this->player('ProbeAlly');
@@ -222,6 +246,7 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
         $row=$this->row($this->surveillance($defender,$target->solarSystem->galaxy->id),$fleet);
         self::assertSame($home->name,$row['originName']);self::assertSame($home->coordinates(),$row['originCoordinates']);
         self::assertNull($row['departureAt']);
+        self::assertSame([], $row['localLegs']);
     }
 
     public function testSimpleRankSumAndUniverseCapsDoNotChangeSpyBonuses(): void
