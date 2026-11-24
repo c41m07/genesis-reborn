@@ -17,7 +17,7 @@
             <h2 id="hall-progress-title">{% if installed %}{{ ui.icon('buildings') }} Hall installé{% else %}Progression de la construction{% endif %}</h2>
             {% if installed %}
                 {% set system = hall.solarSystem %}
-                <p>Installé à la position 0 de {{ system.galaxy.coordinateCode() }}:{{ system.number() }} · {{ system.name }}.</p>
+                <p>Installé dans le système {{ system.galaxy.coordinateCode() }}:{{ system.number() }} · {{ system.name }}.</p>
             {% endif %}
             <p class="hall-progress-value">{{ (required - remaining)|number_format(0, ',', ' ') }} / {{ required|number_format(0, ',', ' ') }} unités de force</p>
             <progress aria-labelledby="hall-progress-title" max="{{ required }}" value="{{ required - remaining }}">{{ (required - remaining)|number_format(0, ',', ' ') }} sur {{ required|number_format(0, ',', ' ') }}</progress>
@@ -41,7 +41,7 @@
                 </aside>
                 <p>8 hydrogène, 4 métal, 2 nano ou 1 antimatière valent chacun 8 unités.</p>
             {% endif %}
-            <p class="muted">Le Hall revendique le système à la position 0. Il ne remplace aucune planète et ne donne ni bonus ni nouveau pouvoir.</p>
+            <p class="muted">Le Hall revendique le système. Il ne remplace aucune planète et ne donne ni bonus ni nouveau pouvoir.</p>
         </section>
         {% if not may_act %}
             <p class="panel">Vous pouvez consulter le Hall, mais pas contribuer ni le placer pendant les vacances.</p>

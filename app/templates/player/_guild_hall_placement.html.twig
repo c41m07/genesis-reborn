@@ -1,7 +1,7 @@
 {% import 'ui/macros.html.twig' as ui %}
 <section class="panel project-donation-panel guild-hall-placement" aria-labelledby="hall-placement-title">
     <h2 id="hall-placement-title">{{ ui.icon('galaxy') }} Placer le Hall</h2>
-    <p>Choisissez un système déjà exploré dont la position 0 est libre. Le Hall ne pourra pas être déplacé.</p>
+    <p>Choisissez un système déjà exploré disposant d’un emplacement libre pour le Hall. Le Hall ne pourra pas être déplacé.</p>
     <form class="guild-hall-site-search" method="get" action="{{ path('app_guild_hall') }}" role="search" aria-label="Rechercher un système exploré">
         <label for="hall-search">Nom du système</label>
         <input id="hall-search" name="q" type="search" value="{{ search }}" maxlength="80">

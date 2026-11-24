@@ -73,9 +73,9 @@
                 <canvas class="gv2-canvas gv2-canvas--planet" data-galaxy-v2-target="planetCanvas" aria-label="Vue rapprochée de la planète"></canvas>
                 <div class="gv2-stations" data-galaxy-v2-target="stations" hidden
                      data-action="pointerover->galaxy-v2#stationHover pointerout->galaxy-v2#stationLeave focusin->galaxy-v2#stationFocus focusout->galaxy-v2#stationBlur">
-                    <a class="gv2-station gv2-station--hall" data-galaxy-v2-target="hallStation" aria-label="Hall de guilde, Position 0" hidden>
+                    <a class="gv2-station gv2-station--hall" data-galaxy-v2-target="hallStation" aria-label="Hall de guilde" hidden>
                         <img data-src="{{ asset('images/map/hall-guilde.png') }}" alt="" width="19" height="19">
-                        <span class="gv2-station-label" aria-hidden="true">Hall de guilde · Position 0</span>
+                        <span class="gv2-station-label" aria-hidden="true">Hall de guilde</span>
                     </a>
                     <a class="gv2-station gv2-station--pirate" data-galaxy-v2-target="pirateStation"{% if campaignAccessible %} href="{{ path('app_pirate_campaign') }}"{% endif %} aria-label="Station pirate repérée, aucune case planétaire" hidden>
                         <img data-src="{{ asset('images/map/station-pirate.png') }}" alt="" width="19" height="19">

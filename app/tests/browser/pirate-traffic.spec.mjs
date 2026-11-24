@@ -109,7 +109,8 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
   expect(reported).toHaveLength(1);
   expect(reported[0]).toMatchObject({ kind: 'pirates', mission: 1, systems: [system], eta: null });
   expect(Object.keys(reported[0]).sort()).toEqual(['eta', 'kind', 'label', 'mission', 'overdue', 'systems']);
-  await expect.poll(() => page.evaluate(() => window.testGalaxyGlyphs.has('P'))).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.testOwnedRing)).toBe(true);
+  expect(await page.evaluate(() => ['P', '◆', '◇'].some(symbol => window.testGalaxyGlyphs.has(symbol)))).toBe(false);
   await expect(station).toHaveCount(0);
   const viewData = JSON.parse(await shell.getAttribute('data-galaxy-v2-map-value'));
   const own = viewData.systems.find(row => row.id === system);
