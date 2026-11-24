@@ -1,8 +1,17 @@
 <?php
 namespace App\Tests\Service;
 
+use App\Entity\{Galaxy, Planet, SolarSystem, Universe};
+use App\Manager\GameManager;
+use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
-use App\Service\Combat\CombatSimulator;
+use App\Service\Colony\{CatalogueDetails, EconomicUnitCapacity, ResourceService};
+use App\Service\Event\GameEventService;
+use App\Service\Player\VacationCalendar;
+use App\Service\Requirement\{CatalogAccess, RequirementChecker};
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Clock\MockClock;
+use App\Service\Combat\{CombatSimulator, TechnologyEffectCalculator};
 use PHPUnit\Framework\TestCase;
 
 final class CombatCountersTest extends TestCase
@@ -113,6 +122,72 @@ final class CombatCountersTest extends TestCase
         }
         self::assertEquals(1,$counters['modifiers']['corvette']['heavy_fighter']);
         self::assertSame(1,$counters['modifiers']['capital']['heavy_fighter']);
+    }
+
+    public function testBomberGroundBonusAppliesAtEveryRankToRealDefenseFamilies(): void
+    {
+        $catalog = new GameCatalog(dirname(__DIR__, 2).'/config/game');
+        $counters = $catalog->all('combat_modifiers');
+        self::assertSame('Défenses au sol', $catalog->combatLabel('ground_defense'));
+        self::assertSame(1.30, $counters['relations']['bomber']['ground_defense']);
+        self::assertSame(1.15, $counters['relations']['battleship']['ground_defense']);
+        self::assertSame(1.30, $counters['relations']['capital']['ground_defense']);
+        $simulator = new CombatSimulator();
+
+        foreach (GameCatalog::TIERS as $tier) {
+            $bomber = $catalog->withTier($catalog->get('ships', 'bomber'), $tier) + ['quantity' => 8];
+            $participants = [['id' => 'a', 'role' => 'attacker', 'camp' => 'attackers', 'arrival_round' => 1, 'units' => [$bomber]]];
+            foreach ($catalog->all('defenses') as $base) {
+                $defense = $catalog->withTier($base, $tier) + ['quantity' => 1, 'id' => 'synthetic', 'camp' => 'defenders'];
+                // Isoler le coefficient : la tourelle survit au round et ne réduit pas la puissance du bombardier.
+                $defense['hp'] = 1000000;
+                $defense['shield'] = 0;
+                $defense['base_attack'] = 0;
+                $result = $simulator->simulate($participants, [$defense], $counters['modifiers'], 1, 12345);
+                $shots = $result['rounds'][0]['shots'];
+                self::assertNotEmpty($shots, $tier.'/'.$base['slug']);
+                $hits = 0;
+                foreach ($shots as $shot) {
+                    self::assertEqualsWithDelta($simulator->hitChance($bomber, $defense, 0, 1.30), $shot['chance'], 1e-8);
+                    if ($shot['hit']) {
+                        ++$hits;
+                        self::assertEqualsWithDelta($bomber['base_attack'] * 1.30, $shot['damage'], 1e-8);
+                    }
+                }
+                self::assertGreaterThan(0, $hits);
+            }
+        }
+    }
+
+    public function testCatalogueDetailsShowTheSameGroundCounterAtEveryRank(): void
+    {
+        $catalog = new GameCatalog(dirname(__DIR__, 2).'/config/game');
+        $entityManager = $this->createStub(EntityManagerInterface::class);
+        $entityManager->method('getRepository')->willThrowException(new \LogicException('La fiche synthétique ne doit pas lire de base.'));
+        $repo = new GameRepository($entityManager);
+        $manager = new GameManager($entityManager);
+        $clock = new MockClock('2026-11-24T12:00:00Z');
+        $capacity = new EconomicUnitCapacity($repo, $catalog);
+        $resources = new ResourceService($repo, $manager, $catalog, $clock, new GameEventService($repo, $manager, $clock), new VacationCalendar($repo, $clock), $capacity);
+        $requirements = new RequirementChecker($catalog);
+        $view = new CatalogueDetails($catalog, $resources, new TechnologyEffectCalculator($catalog), $requirements, new CatalogAccess($repo, $catalog, $requirements), $capacity);
+        $universe = new Universe();
+        $universe->slug = 'omega-1';
+        $galaxy = new Galaxy();
+        $galaxy->universe = $universe;
+        $system = new SolarSystem();
+        $system->galaxy = $galaxy;
+        $planet = new Planet();
+        $planet->solarSystem = $system;
+        $planet->position = 5;
+
+        foreach (GameCatalog::TIERS as $tier) {
+            $bomber = $catalog->getTierForUniverse($universe, 'ships', 'bomber', $tier);
+            $sheet = $view->describe($bomber, 'ships', 1, $planet, [], []);
+            $counterRows = array_column($sheet['sections'], 'rows', 'title')['Contres et faiblesses'];
+            $ground = array_column($counterRows, 'text', 'label')['Défenses au sol'] ?? null;
+            self::assertSame('×1,3 dégâts et chance de toucher', $ground, $tier);
+        }
     }
 
     private function unit(string $slug,int $attack):array

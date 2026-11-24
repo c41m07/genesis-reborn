@@ -230,6 +230,8 @@ Les dégâts d’un tour sont multipliés par ((HP + bouclier restants)/(HP + bo
 
 Les neuf classes R14 ont une croissance de combat 1/1,5/2,25 ; les coûts par rang et les autres facteurs de mobilité/construction restent séparés. Une escorte est une composition financée par remplacement, sans interception ou interposition automatique. Un round reste une minute, dix rounds au maximum ; si les camps subsistent à la limite, le défenseur gagne officiellement. Les HP individuels ne sont pas persistés entre batailles.
 
+Le Bombardier inflige ×1,30 contre les défenses au sol aux trois rangs. Le même coefficient s’applique à la chance de toucher avant l’écart de rang, dans les bornes existantes. Les coefficients antérieurs du Cuirassé (×1,15) et du Capital (×1,30) ne changent pas ; les coûts et contres navals du Bombardier restent inchangés.
+
 Les statistiques, prix, coefficients, preuves de transposition et précautions de déploiement R14 sont détaillés dans [BALANCING_R14.md](EQUILIBRAGE.md#combat-r14).
 
 

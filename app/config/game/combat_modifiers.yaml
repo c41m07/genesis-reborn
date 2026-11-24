@@ -86,7 +86,7 @@
       "transport": 1,
       "colony_ship": 1,
       "probe": 1,
-      "ground_defense": 1,
+      "ground_defense": 1.3,
       "fighter": 1,
       "stealth_fighter": 1,
       "interceptor": 1,
