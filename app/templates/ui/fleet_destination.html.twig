@@ -17,12 +17,12 @@
 </div>
 {% endfor %}
 <div data-fleet-destination-target="panel" data-mode="custom">
-<label data-fleet-destination-target="searchLabel" for="destination-search-{{ f.id }}">{{ prefill.mission=='explore' ? 'Rechercher un système par coordonnées' : 'Pseudonyme du commandant' }}</label>
+<label data-fleet-destination-target="searchLabel" for="destination-search-{{ f.id }}">{{ tutorial_spy|default(false) ? 'Nom ou coordonnées du monde PNJ' : (prefill.mission=='explore' ? 'Rechercher un système par coordonnées' : 'Pseudonyme du commandant') }}</label>
 <div class="fleet-destination-search">
 <input id="destination-search-{{ f.id }}" type="search" maxlength="40" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="destination-results-{{ f.id }}" aria-describedby="destination-search-help-{{ f.id }}" data-fleet-destination-target="search" data-action="input->fleet-destination#search keydown->fleet-destination#navigate blur->fleet-destination#blur">
 <ul id="destination-results-{{ f.id }}" class="fleet-destination-suggestions" role="listbox" aria-label="Planètes découvertes proposées" data-fleet-destination-target="results" hidden></ul>
 </div>
-<small data-fleet-destination-target="searchHelp" id="destination-search-help-{{ f.id }}">{{ prefill.mission=='explore' ? 'Deux caractères minimum. Coordonnées des systèmes non explorés uniquement.' : 'Deux caractères minimum. Planètes découvertes dans cet univers et compatibles avec la mission uniquement.' }}</small>
+<small data-fleet-destination-target="searchHelp" id="destination-search-help-{{ f.id }}">{{ tutorial_spy|default(false) ? 'Deux caractères minimum. Seuls les mondes PNJ découverts sont proposés.' : (prefill.mission=='explore' ? 'Deux caractères minimum. Coordonnées des systèmes non explorés uniquement.' : 'Deux caractères minimum. Planètes découvertes dans cet univers et compatibles avec la mission uniquement.') }}</small>
 <p class="muted" role="status" data-fleet-destination-target="searchStatus"></p>
 <div data-fleet-fields-target="coordinate">
 <label for="coordinates-{{ f.id }}">Coordonnées de destination</label>
@@ -31,4 +31,4 @@
 </div>
 <noscript><p>Utilisez les coordonnées pour une destination personnalisée.</p></noscript>
 </div>
-<p class="muted fleet-pnj-help">PNJ : Attaque pour combattre sans capture ni butin ; Conquête JcE pour capturer selon les conditions de l’univers. Exploration propose uniquement les coordonnées des systèmes non explorés.</p>
+{% if not tutorial_spy|default(false) %}<p class="muted fleet-pnj-help">PNJ : Attaque pour combattre sans capture ni butin ; Conquête JcE pour capturer selon les conditions de l’univers. Exploration propose uniquement les coordonnées des systèmes non explorés.</p>{% endif %}
