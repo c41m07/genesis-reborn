@@ -5,6 +5,7 @@ namespace App\Repository;
 
 use App\Entity\PatchNote;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
 
 final class PatchNoteRepository
 {
@@ -15,12 +16,30 @@ final class PatchNoteRepository
     /** @return PatchNote[] */
     public function published(): array
     {
-        return $this->em->createQueryBuilder()->select('p')->from(PatchNote::class, 'p')->where('p.status = :status')->andWhere('p.publishedAt <= :now')->setParameter('status', 'published')->setParameter('now', new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->orderBy('p.publishedAt', 'DESC')->addOrderBy('p.id', 'DESC')->getQuery()->getResult();
+        return $this->publishedInReadingOrder()->getQuery()->getResult();
     }
 
-    public function latestPublishedId(): int
+    public function latestPublished(): ?PatchNote
     {
-        return (int) ($this->em->createQueryBuilder()->select('MAX(p.id)')->from(PatchNote::class, 'p')->where('p.status = :status')->andWhere('p.publishedAt <= :now')->setParameter('status', 'published')->setParameter('now', new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->getQuery()->getSingleScalarResult() ?? 0);
+        return $this->publishedInReadingOrder()->setMaxResults(1)->getQuery()->getOneOrNullResult();
+    }
+
+    public function find(int $id): ?PatchNote
+    {
+        return $this->em->find(PatchNote::class, $id);
+    }
+
+    private function publishedInReadingOrder(): QueryBuilder
+    {
+        return $this->em->createQueryBuilder()
+            ->select('p')
+            ->from(PatchNote::class, 'p')
+            ->where('p.status = :status')
+            ->andWhere('p.publishedAt <= :now')
+            ->setParameter('status', 'published')
+            ->setParameter('now', new \DateTimeImmutable('now', new \DateTimeZone('UTC')))
+            ->orderBy('p.publishedAt', 'DESC')
+            ->addOrderBy('p.id', 'DESC');
     }
 
     public function page(string $status, string $search, int $page): array
