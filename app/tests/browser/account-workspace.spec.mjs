@@ -200,9 +200,12 @@ test('P07 : réglages enregistrés et vacances inactives', async ({ page, browse
       const confirmation = page.getByText('Préférences enregistrées.', {exact:true});
       await expect(confirmation).toBeVisible();
       await expect(settings.getByRole('status').filter({ hasText:'Préférences enregistrées.' })).toHaveCount(1);
-      const settingsBox = await settings.getByRole('button',{name:'Enregistrer les paramètres',exact:true}).boundingBox();
-      const confirmationBox = await confirmation.boundingBox();
-      expect(confirmationBox.y).toBeGreaterThanOrEqual(settingsBox.y+settingsBox.height);
+      const confirmationGap = await settings.evaluate(form => {
+        const save = form.querySelector('.account-preferences-save').getBoundingClientRect();
+        const feedback = form.querySelector('.account-preferences-confirmation').getBoundingClientRect();
+        return feedback.top - save.bottom;
+      });
+      expect(confirmationGap).toBeGreaterThanOrEqual(0);
       await expect(page.locator('.account-vacation-summary--inactive')).toContainText('Pas de vacances actives');
       if (viewport.width === 390) {
         expect((await new AxeBuilder({page}).include('.account-preferences-confirmation').include('.account-vacation-summary').analyze()).violations).toEqual([]);
