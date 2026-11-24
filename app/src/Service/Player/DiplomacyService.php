@@ -5,9 +5,10 @@ use App\Repository\{GameRepository,GuildHallRepository};
 use App\Manager\GameManager;
 use App\Service\Catalog\GameCatalog;
 use Psr\Clock\ClockInterface;
+use App\Service\Report\DiplomaticReportWriter;
 final class DiplomacyService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private RelationResolver $relations,private GameCatalog $catalog,private ClockInterface $clock,private EmpireActivityService $activity,private DiplomacyAccessPolicy $access,private GuildProjectService $projects,private GuildHallRepository $guildHalls) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private RelationResolver $relations,private GameCatalog $catalog,private ClockInterface $clock,private EmpireActivityService $activity,private DiplomacyAccessPolicy $access,private GuildProjectService $projects,private GuildHallRepository $guildHalls, private DiplomaticReportWriter $diplomaticReports) {}
     private function lock(PlayerUniverse $m,bool $guildFeature=false): void
     {
         $this->manager->lock($m);$this->manager->lock($m->universe);
@@ -117,12 +118,16 @@ final class DiplomacyService
                     if ($contract->status === 'peace_pending') throw new \DomainException('Une proposition de paix est déjà en attente.');
                     $contract->status = 'peace_pending';
                     $contract->proposer = $actor;
+                    $this->diplomaticReports->record($target, $actor, 'personal_peace', 'requested');
                 } else {
                     if ($contract->status !== 'peace_pending') throw new \DomainException('Aucune proposition de paix en attente.');
                     if ($action === 'peace_accept' && $contract->proposer->id === $actor->id) {
                         throw new \DomainException('L’autre joueur doit accepter votre proposition de paix.');
                     }
                     $contract->status = $action === 'peace_accept' ? 'ended' : 'enemies';
+                    if ($contract->proposer->id !== $actor->id) {
+                        $this->diplomaticReports->record($contract->proposer, $actor, 'personal_peace', $action === 'peace_accept' ? 'accepted' : 'refused');
+                    }
                 }
                 return;
             }
@@ -130,7 +135,13 @@ final class DiplomacyService
                 if ($contract !== null && in_array($contract->status, AllianceContract::HOSTILE_STATUSES, true)) {
                     throw new \DomainException('La rivalité ne peut se terminer que par une paix acceptée par les deux joueurs.');
                 }
-                if ($contract !== null && in_array($contract->status, ['pending','accepted'], true)) $this->manager->remove($contract);
+                if ($contract !== null && in_array($contract->status, ['pending','accepted'], true)) {
+                    // Le proposant annule sa demande ; seul le destinataire peut la refuser.
+                    if ($contract->status === 'pending' && $contract->proposer->id !== $actor->id) {
+                        $this->diplomaticReports->record($contract->proposer, $actor, 'personal_alliance', 'refused');
+                    }
+                    $this->manager->remove($contract);
+                }
                 return;
             }
             if ($this->relations->guildStatus($this->relations->guild($actor), $this->relations->guild($target)) === 'enemies') {
@@ -141,12 +152,14 @@ final class DiplomacyService
                     throw new \DomainException('Aucune proposition reçue.');
                 }
                 $contract->status = 'accepted';
+                $this->diplomaticReports->record($contract->proposer, $actor, 'personal_alliance', 'accepted');
                 return;
             }
             if ($contract !== null && $contract->status !== 'ended') throw new \DomainException('Terminez la relation actuelle avant de proposer une alliance.');
             $contract ??= $this->newPersonalContract($actor, $target);
             $contract->status = 'pending';
             $contract->proposer = $actor;
+            $this->diplomaticReports->record($target, $actor, 'personal_alliance', 'requested');
         });
     }
 
@@ -231,6 +244,19 @@ final class DiplomacyService
                 if($relation->status==='enemies' && $proposal===null) throw new \DomainException('Cette hostilité existe déjà.');
                 $relation->status='enemies';$relation->proposal=null;$relation->proposer=$guild;
             }
+            if ($action === 'propose') {
+                $this->diplomaticReports->record($target->leader, $actor, $this->guildReportSubject($status), 'requested', guildName: $guild->name);
+            } elseif ($proposal !== null && in_array($action, ['accept', 'decline'], true) && $relation->proposer->id !== $guild->id) {
+                // Un traité identifie la guilde, pas le délégué qui l’a proposé. Seul le
+                // dernier événement concordant atteste l’expéditeur ; aucun repli vers tous les membres.
+                $opened = $this->repo->latestGuildTreatyEvent($actor->universe->id, $a->id, $b->id);
+                if ($opened !== null && $opened['action'] === 'propose' && $opened['proposal'] === $proposal && $opened['actorGuildId'] === $relation->proposer->id) {
+                    $proposer = $this->repo->find(PlayerUniverse::class, $opened['actorId']);
+                    if ($proposer !== null && $this->repo->one(GuildMember::class, ['playerUniverse' => $proposer, 'guild' => $relation->proposer])) {
+                        $this->diplomaticReports->record($proposer, $actor, $this->guildReportSubject($proposal), $action === 'accept' ? 'accepted' : 'refused', guildName: $guild->name);
+                    }
+                }
+            }
             $event=new \App\Entity\GuildTreatyEvent();
             $event->universeId=$actor->universe->id;$event->guildAId=$a->id;$event->guildBId=$b->id;
             $event->actorId=$actor->id;$event->actorGuildId=$guild->id;$event->action=$action;
@@ -241,6 +267,16 @@ final class DiplomacyService
             if($relation->status==='enemies') $this->breakHostileContracts($actor->universe);
         });
     }
+    private function guildReportSubject(string $proposal): string
+    {
+        return match ($proposal) {
+            'allies' => 'guild_alliance',
+            'non_aggression' => 'guild_non_aggression',
+            'defense' => 'guild_defense',
+            'neutral' => 'guild_peace',
+        };
+    }
+
     private function breakHostileContracts(\App\Entity\Universe $u): void
     {
         $this->manager->flush();

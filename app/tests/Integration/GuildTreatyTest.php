@@ -78,6 +78,11 @@ final class GuildTreatyTest extends KernelTestCase
         self::assertFalse($combat->canConquer($a,$this->em->getRepository(\App\Entity\Planet::class)->findOneBy(['owner'=>$b])));
         self::assertFalse($combat->orbitAutoAccepted($a,$this->em->getRepository(\App\Entity\Planet::class)->findOneBy(['owner'=>$b])));
         self::assertCount(2,$this->em->getRepository(GuildTreatyEvent::class)->findAll());
+        $reports = $this->em->getConnection()->fetchAllAssociative('SELECT recipient_id, subject, outcome FROM diplomatic_report ORDER BY id');
+        self::assertSame([$b->id, $a->id], array_map('intval', array_column($reports, 'recipient_id')));
+        $subject = 'guild_'.($type === 'allies' ? 'alliance' : $type);
+        self::assertSame([$subject, $subject], array_column($reports, 'subject'));
+        self::assertSame(['requested', 'accepted'], array_column($reports, 'outcome'));
     }
 
     public function testAcceptanceCannotChangeTheDisplayedTerms(): void

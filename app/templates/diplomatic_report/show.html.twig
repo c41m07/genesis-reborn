@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ report.subjectLabel }} · Rapports · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="mission-report report-workspace player-report-detail">
+    {% include 'ui/report_back_link.html.twig' %}
+    <header class="report-heading">
+        <p class="report-eyebrow">DIPLOMATIE · N° {{ report.id }}</p>
+        <h1>{{ report.subjectLabel }}</h1>
+        <p><time datetime="{{ report.createdAt|date('c') }}">{{ report.createdAt|date('d/m/Y à H:i', preferences.timezone) }}</time></p>
+    </header>
+    {% include 'ui/report_notice_form.html.twig' with {report_notice_kind:'diplomatic'} %}
+    <section class="panel report-summary">
+        <h2>{{ report.outcomeLabel }}</h2>
+        {% if report.guildName %}
+            <p>Guilde : {{ report.guildName }}</p>
+        {% elseif report.counterpart and not report.counterpart.forgotten %}
+            <p>Commandant : {{ report.counterpart.displayName }}</p>
+        {% endif %}
+        {% if report.location %}<p>Destination : {{ report.location }}</p>{% endif %}
+        {% if report.outcome == 'requested' %}
+            {% if report.subject == 'orbit' %}
+                <a class="secondary" href="{{ path('app_fleet_orbits') }}">Voir les demandes d’orbite dans Flottes</a>
+            {% elseif report.guildName %}
+                <a class="secondary" href="{{ path('app_diplomacy') }}">Voir la diplomatie de guilde</a>
+            {% else %}
+                <a class="secondary" href="{{ path('app_personal_relations') }}">Voir les relations entre commandants</a>
+            {% endif %}
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

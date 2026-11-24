@@ -80,6 +80,36 @@ final class OrbitDepartureRequestTest extends WebTestCase
         $this->clock->sleep($f->travelSeconds+1);self::getContainer()->get(FleetService::class)->arrive($f->id,$token);
         self::assertSame('orbiting',$f->status);self::assertSame('arrived',$f->navigation['orbit_request']['status']);
     }
+    public function testOrbitReportIsPrivateAndMergesWithTheReportsInbox(): void
+    {
+        $this->client->disableReboot();
+        $fleet = $this->send('orbit');
+        $key = $this->request()['key'];
+        $member = $this->peer->currentPlayerUniverse;
+        $origin = $this->player->currentPlayerUniverse;
+        $connection = $this->em->getConnection();
+        $id = (int) $connection->fetchOne('SELECT id FROM diplomatic_report WHERE recipient_id = ? AND outcome = ?', [$member->id, 'requested']);
+        self::assertGreaterThan(0, $id);
+        self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM diplomatic_report WHERE recipient_id = ?', [$origin->id]));
+
+        $this->client->request('GET', '/rapports/diplomatie/'.$id);
+        self::assertResponseStatusCodeSame(404);
+        $this->client->loginUser($this->peer);
+        $this->client->request('GET', '/rapports?type=diplomatic');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('a.report-row', 'Autorisation d’orbite');
+        $crawler = $this->client->request('GET', '/rapports/diplomatie/'.$id);
+        self::assertResponseIsSuccessful();
+        self::assertStringNotContainsString($key, $this->client->getResponse()->getContent());
+        $this->client->submit($crawler->selectButton('Marquer ce rapport comme lu')->form());
+        self::assertResponseRedirects('/rapports/diplomatie/'.$id, 303);
+        self::assertNotNull($connection->fetchOne('SELECT consulted_at FROM report_notice WHERE diplomatic_report_id = ?', [$id]));
+
+        self::getContainer()->get(FleetService::class)->decideOrbit($member, $fleet->id, true, $key);
+        self::assertSame('accepted', $connection->fetchOne('SELECT outcome FROM diplomatic_report WHERE recipient_id = ?', [$origin->id]));
+        self::assertSame(1, (int) $connection->fetchOne('SELECT COUNT(*) FROM diplomatic_report WHERE recipient_id = ?', [$member->id]));
+    }
+
     public function testSilenceAtArrivalReturnsWithoutOrbitFuelConsumptionOrDuplicateShips(): void
     {
         $f=$this->send('orbit');$ships=$this->totalShips();$hydrogen=$f->cargo['hydrogen'];$oneWay=($f->reservedFuel-$f->orbitFuel)/2;$token=$f->dispatchToken;

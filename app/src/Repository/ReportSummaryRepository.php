@@ -2,7 +2,7 @@
 
 namespace App\Repository;
 
-use App\Entity\{Planet, PlayerUniverse};
+use App\Entity\{DiplomaticReport, Planet, PlayerUniverse};
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 /**
@@ -96,6 +96,21 @@ final class ReportSummaryRepository
             ];
         }
         return $summaries;
+    }
+
+    /** @param list<int> $ids @return array<int, DiplomaticReport> */
+    public function diplomatic(PlayerUniverse $viewer, array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+        return $this->em->createQueryBuilder()
+            ->select('r', 'counterpart', 'account')->from(DiplomaticReport::class, 'r', 'r.id')
+            ->leftJoin('r.counterpart', 'counterpart')->leftJoin('counterpart.player', 'account')
+            ->join('r.recipient', 'recipient')->where('r.id IN (:ids)')
+            ->andWhere('recipient = :viewer AND recipient.universe = :universe')
+            ->setParameter('ids', $ids)->setParameter('viewer', $viewer)
+            ->setParameter('universe', $viewer->universe)->getQuery()->getResult();
     }
 
     private function planets(PlayerUniverse $viewer, array $ids): array
