@@ -388,15 +388,28 @@ test('P17 : consulter la suppression et revenir sans aucune soumission', async (
       await expect(safeBack).toHaveAttribute('href','/profil');
       await page.keyboard.press('Tab');
       await expect(safeBack).toBeFocused();
+      // La navigation au clavier peut rendre le DOM avant les feuilles de style.
+      // Mesurer les deux panneaux et leurs actions dans une seule image du rendu.
+      await page.waitForLoadState('load');
+      await page.evaluate(() => document.fonts.ready);
+      const geometry=await warning.evaluate(element => {
+        const workspace=element.closest('.account-workspace');
+        const confirmation=workspace.querySelector('.account-delete-form');
+        const rect=node=>node.getBoundingClientRect().toJSON();
+        return {
+          warning:rect(element),
+          form:rect(confirmation),
+          primary:rect(confirmation.querySelector('.account-delete-actions button[type="submit"]')),
+          alternative:rect(confirmation.querySelector('.account-delete-actions a[href="/profil"]')),
+        };
+      });
       if(viewport.width===1920){
-        const [wideWarning,wideForm,primary,alternative]=await Promise.all([warning.boundingBox(),form.boundingBox(),submit.boundingBox(),safeBack.boundingBox()]);
-        expect(wideForm.x).toBeGreaterThanOrEqual(wideWarning.x+wideWarning.width);
-        expect(wideForm.width).toBeGreaterThanOrEqual(wideWarning.width);
-        expect(Math.abs(primary.y-alternative.y)).toBeLessThanOrEqual(1);
-        expect(alternative.x).toBeGreaterThanOrEqual(primary.x+primary.width);
+        expect(geometry.form.left).toBeGreaterThanOrEqual(geometry.warning.right);
+        expect(geometry.form.width).toBeGreaterThanOrEqual(geometry.warning.width);
+        expect(Math.abs(geometry.primary.top-geometry.alternative.top)).toBeLessThanOrEqual(1);
+        expect(geometry.alternative.left).toBeGreaterThanOrEqual(geometry.primary.right);
       }else{
-        const [above,below]=await Promise.all([warning.boundingBox(),form.boundingBox()]);
-        expect(below.y).toBeGreaterThanOrEqual(above.y+above.height);
+        expect(geometry.form.top).toBeGreaterThanOrEqual(geometry.warning.bottom);
         expect((await new AxeBuilder({page}).include('.account-deletion-page .account-workspace').analyze()).violations).toEqual([]);
       }
       await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'});});
