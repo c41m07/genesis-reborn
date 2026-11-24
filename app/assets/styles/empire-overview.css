@@ -32,8 +32,21 @@ body.ui-refined[data-ui-page="vue-generale"] .overview-page .empire-banner {
     height: auto;
     padding: 0;
     margin: 0;
+    isolation: isolate;
     color: #e7eef6;
     background: #101b2b;
+}
+
+/* Le décor couvre le bandeau mais n’occupe aucune ligne de la grille. */
+body.ui-refined[data-ui-page="vue-generale"] .overview-page .empire-banner > picture {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+/* Un seul voile continu ; pas de second dégradé sur le bloc de texte. */
+body.ui-refined[data-ui-page="vue-generale"] .overview-page .empire-banner::before {
+    background: linear-gradient(90deg, #091522f6 0%, #091623d9 38%, #0c203a35 100%);
 }
 
 body.ui-refined[data-ui-page="vue-generale"] .overview-page .colony-scene {
@@ -46,7 +59,6 @@ body.ui-refined[data-ui-page="vue-generale"] .overview-page .hero-content {
     min-width: 0;
     max-width: none;
     padding: 24px 24px 18px;
-    background: linear-gradient(90deg, #091726d9 0%, #0b1929ad 40%, #0d1b2a1a 100%);
 }
 
 .overview-colony-heading {
