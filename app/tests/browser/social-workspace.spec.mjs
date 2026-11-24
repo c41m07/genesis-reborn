@@ -52,11 +52,12 @@ test('L7E A : recherche, actualisation des non-lus et rédaction restent indépe
         await expect(contactTime).toHaveText('10/11 11:15');
         await expect(messageTime).toHaveText('10/11/2026 11:15');
         expect(Date.parse(await contactTime.getAttribute('datetime'))).toBe(Date.parse(await messageTime.getAttribute('datetime')));
-        const refresh = await page.request.get('/messages/non-lus?with=' + peer.member);
-        expect(refresh.ok()).toBe(true);
-        const fragmentTime = await page.evaluate((markup) => {
-            return new DOMParser().parseFromString(markup, 'text/html').querySelector('.inbox-item[aria-current="page"] time')?.textContent;
-        }, (await refresh.json()).conversations);
+        const fragmentTime = await page.evaluate(async (member) => {
+            const response = await fetch('/messages/non-lus?with=' + member, {cache:'no-store'});
+            if (!response.ok) throw new Error('Actualisation des conversations : HTTP ' + response.status);
+            const {conversations} = await response.json();
+            return new DOMParser().parseFromString(conversations, 'text/html').querySelector('.inbox-item[aria-current="page"] time')?.textContent;
+        }, peer.member);
         expect(fragmentTime).toBe('10/11 11:15');
         await page.setViewportSize({ width: 1920, height: 1080 });
         await page.screenshot({ path: info.outputPath('social-S12-messagerie-1920x1080.png'), animations: 'disabled' });
