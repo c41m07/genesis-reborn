@@ -117,6 +117,9 @@ final class ReportArchiveTest extends WebTestCase
         self::assertCount(3,$service->page($member,'all',false,1,$criteria)['entries']);
         self::assertSame([],$service->page($member,'all',false,1,new \App\Service\Search\SearchCriteria(['participant'=>'ArchiveForeign']))['entries']);
         $planet=$this->home($this->recipient);
+        // Le filtre accepte les noms partiels. Un nom distinct évite de retrouver aussi le port du transport.
+        $planet->name = 'Cible du test des archives';
+        $this->em->flush();
         $target=new \App\Service\Search\SearchCriteria(['planet'=>$planet->name]);
         self::assertCount(2,$service->page($member,'all',false,1,$target)['entries']);
         $crawler=$this->client->request('GET','/rapports',['type'=>'combat','participant'=>'ArchiveOwner','from'=>'2026-11-12','until'=>'2026-11-12']);self::assertResponseIsSuccessful();
