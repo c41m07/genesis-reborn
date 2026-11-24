@@ -221,9 +221,10 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
     max-width: 100%;
 }
 
-/* Sur téléphone, ne masquer ni le suivi de la Vue générale ni le lien du panneau Recherche vide ouvert. */
+/* Sur téléphone, dégager les liens réellement présents dans le suivi de la Vue
+   générale et la file Recherche ouverte ; un suivi vide garde l’aide à portée. */
 @media (max-width: 740px) {
-    .app-frame:has(> .shell .overview-page .core-empire-watch) > .first-steps-popup-enhanced,
+    .app-frame:has(> .shell .overview-page .core-empire-watch a[href]) > .first-steps-popup-enhanced,
     .app-frame:has(> .shell #panel-technologies):has(> .shell .catalog-queue-ribbon [data-queue-type="research"][data-queue-occupied="false"][open]) > .first-steps-popup-enhanced {
         position: relative;
         inset: auto;
