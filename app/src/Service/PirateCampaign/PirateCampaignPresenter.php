@@ -126,7 +126,11 @@ final readonly class PirateCampaignPresenter
             $return,
             $progress['tactical_guidance'],
             $quote === null ? null : $this->rewardRows($quote),
-        ) + ['may_offer_recovery' => $progress['may_offer_recovery']];
+        ) + [
+            'may_offer_recovery' => $progress['may_offer_recovery'],
+            // Ce marqueur indique uniquement la composition de la vue, pas la disponibilité d’une attaque.
+            'intelligence_received' => $progress['phase'] === PirateCampaignMoment::RenseignementRecu->name,
+        ];
     }
 
     /**

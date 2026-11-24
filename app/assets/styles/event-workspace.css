@@ -529,6 +529,56 @@ body.authenticated .advent-board :is(.advent-day-tile, .advent-state)[data-state
     }
 }
 
+/* Planche 08-01 : la porte 6 sélectionnée et réellement disponible reste
+   repérable sur la grille ; les autres états gardent leur présentation. */
+.advent-board:is(:has(#advent-door-6:target .advent-choice), :not(:has(.advent-door:target)):has(#advent-door-6[data-default] .advent-choice))
+    .advent-day-tile[href="#advent-door-6"] {
+    border-color: var(--advent-open);
+    background: color-mix(in srgb, var(--advent-open) 11%, var(--panel));
+}
+
+@media (min-width: 1021px) {
+    /* Le récapitulatif et le contexte d'univers restent visibles sans ouvrir
+       une seconde boîte. Premiers pas garde sa place et ses commandes. */
+    body.authenticated .advent-board:is(:has(#advent-door-6:target .advent-choice), :not(:has(.advent-door:target)):has(#advent-door-6[data-default] .advent-choice))
+        :is(.advent-board-heading, .advent-destination, .advent-universe) {
+        margin-block: .45rem;
+    }
+    body.authenticated .advent-board:is(:has(#advent-door-6:target .advent-choice), :not(:has(.advent-door:target)):has(#advent-door-6[data-default] .advent-choice))
+        .advent-universe {
+        display: grid;
+        grid-template-columns: minmax(13rem, .65fr) minmax(0, 1.35fr);
+        align-items: baseline;
+        column-gap: 1rem;
+        padding: .55rem .85rem;
+    }
+    /* Le mode J6 sélectionnable est déjà lié : identité à gauche,
+       plafond et origine du relevé à droite sans cacher de texte. */
+    body.authenticated .advent-board:has(#advent-door-6 .advent-choice):is(:has(#advent-door-6:target), :not(:has(.advent-door:target)):has(#advent-door-6[data-default]))
+        .advent-universe > p:nth-of-type(2) {
+        grid-column: 2;
+        grid-row: 1;
+    }
+    body.authenticated .advent-board:is(:has(#advent-door-6:target .advent-choice), :not(:has(.advent-door:target)):has(#advent-door-6[data-default] .advent-choice))
+        .advent-universe :is(p, h2) {
+        margin: .2rem 0;
+        line-height: 1.4;
+    }
+    body.authenticated .advent-board #advent-door-6:has(.advent-choice) :is(h2, p, summary) {
+        margin-block: .2rem;
+    }
+    body.authenticated .advent-board #advent-door-6:has(.advent-choice) > :is(h2, p) {
+        display: inline-block;
+        margin-inline-end: .45rem;
+    }
+    body.authenticated .advent-board #advent-door-6:has(.advent-choice) .advent-door-form {
+        gap: .45rem;
+    }
+    body.authenticated .advent-board #advent-door-6:has(.advent-choice) .advent-notice {
+        padding: .4rem .65rem;
+    }
+}
+
 .advent-board .advent-choice {
     margin: 0;
     padding: 0;
@@ -601,6 +651,22 @@ body.authenticated .advent-board :is(.advent-moment, .advent-finale) p { margin:
     background: linear-gradient(97deg, rgba(10, 22, 41, .98), rgba(10, 22, 41, .90) 52%, rgba(10, 22, 41, .24));
     content: "";
 }
+/* Planche 08-02 : cette bannière reste sombre, quel que soit le thème.
+   Le voile garantit aussi le fond du titre si l'image n'est pas chargée. */
+.advent-board .advent-finale-preview--banner:has(.advent-banner-name):has(.advent-title-name)::after {
+    background: linear-gradient(97deg, rgba(10, 22, 41, .98), rgba(10, 22, 41, .90) 52%, rgba(10, 22, 41, .78));
+}
+
+body.authenticated .advent-board .advent-finale-preview--banner:has(.advent-banner-name):has(.advent-title-name) p {
+    color: #c3d7eb;
+}
+body.authenticated .advent-board .advent-finale-preview--banner:has(.advent-banner-name):has(.advent-title-name) .advent-banner-name {
+    color: #a7e8f5;
+}
+body.authenticated .advent-board .advent-finale-preview--banner:has(.advent-banner-name):has(.advent-title-name) .advent-title-name {
+    color: #f5f8ff;
+}
+
 .advent-board .advent-finale-preview img {
     position: absolute;
     z-index: -2;
@@ -657,4 +723,267 @@ body.authenticated .advent-board .advent-door-subtitle {
     color: var(--accent);
     font-size: 1rem;
     font-weight: 750;
+}
+
+/* Devis autonomes J6 et J12 validés : les autres bons gardent le gabarit natif.
+   Les états sans résultat et sans stock n'ajoutent aucun formulaire. */
+body.authenticated .advent-credit-board {
+    --advent-credit-border: color-mix(in srgb, var(--line) 78%, var(--accent));
+    --advent-credit-surface: color-mix(in srgb, var(--panel) 94%, var(--accent));
+    --advent-credit-ink: var(--text);
+    --advent-credit-remise: var(--accent);
+    --advent-credit-payment: var(--gold);
+    --advent-credit-danger: var(--danger, #ff9b9b);
+}
+body.authenticated[data-theme="light"] .advent-credit-board {
+    --advent-credit-remise: #0b5971;
+    --advent-credit-payment: #6c4410;
+    --advent-credit-danger: #9f2936;
+}
+body.authenticated .advent-credit-board .page-heading {
+    gap: 1rem 1.5rem;
+    margin-block-end: 1.15rem;
+}
+body.authenticated .advent-credit-board .page-heading h1 {
+    margin: .12rem 0 .45rem;
+    font-size: clamp(1.65rem, 3.1vw, 2.85rem);
+    overflow-wrap: anywhere;
+}
+body.authenticated .advent-credit-board .page-heading p {
+    margin: .45rem 0 0;
+}
+body.authenticated .advent-credit-board .advent-credit-context {
+    color: var(--accent);
+    font-size: .75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .11em;
+}
+body.authenticated .advent-credit-board .advent-credit-day {
+    display: inline-block;
+    margin-block: 0 .35rem;
+    padding: .27rem .62rem;
+    border: 1px solid color-mix(in srgb, var(--line) 65%, var(--gold));
+    border-radius: .3rem;
+    background: color-mix(in srgb, var(--panel) 89%, var(--gold));
+    color: var(--advent-credit-ink);
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+body.authenticated .advent-credit-board .advent-credit-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 38fr) minmax(0, 62fr);
+    align-items: start;
+    gap: 1rem;
+}
+body.authenticated .advent-credit-board .advent-credit-grid > .panel {
+    min-width: 0;
+    display: grid;
+    gap: .65rem;
+    padding: clamp(.9rem, 1.5vw, 1.4rem);
+    border: 1px solid var(--advent-credit-border);
+    border-radius: .6rem;
+    background: linear-gradient(155deg, var(--advent-credit-surface), var(--panel));
+    overflow-wrap: anywhere;
+}
+body.authenticated .advent-credit-board .advent-credit-grid > .panel h2 {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    margin: 0;
+    font-size: clamp(1.05rem, 1.7vw, 1.65rem);
+}
+body.authenticated .advent-credit-board h2 .icon {
+    flex: 0 0 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    color: var(--accent);
+}
+body.authenticated .advent-credit-board .advent-credit-grid p {
+    margin: 0;
+}
+body.authenticated .advent-credit-board .advent-door-form {
+    gap: .65rem;
+}
+body.authenticated .advent-credit-board .advent-door-form label {
+    color: var(--advent-credit-ink);
+    font-weight: 750;
+}
+body.authenticated .advent-credit-board .advent-door-form select,
+body.authenticated .advent-credit-board button,
+body.authenticated .advent-credit-board .page-heading a {
+    min-height: 44px;
+}
+body.authenticated .advent-credit-board button {
+    justify-self: start;
+    min-inline-size: min(14rem, 100%);
+    text-align: center;
+    white-space: normal;
+}
+body.authenticated .advent-credit-board table {
+    width: 100%;
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    font-variant-numeric: tabular-nums;
+}
+body.authenticated .advent-credit-board table :is(th, td) {
+    padding: .55rem .65rem;
+    border-block-end: 1px solid var(--advent-credit-border);
+    background: var(--advent-credit-surface);
+    text-align: end;
+}
+body.authenticated .advent-credit-board table :is(th, td):first-child {
+    width: 44%;
+    text-align: start;
+}
+body.authenticated .advent-credit-board thead th {
+    background: color-mix(in srgb, var(--panel) 87%, var(--accent));
+    color: var(--advent-credit-ink);
+}
+body.authenticated .advent-credit-board thead th:nth-child(2) {
+    color: var(--advent-credit-remise);
+}
+body.authenticated .advent-credit-board thead th:last-child {
+    color: var(--advent-credit-payment);
+}
+body.authenticated .advent-credit-board button[aria-describedby="advent-credit-usage"] {
+    min-inline-size: min(23rem, 100%);
+}
+body.authenticated .advent-credit-board tbody td:last-child {
+    color: var(--advent-credit-ink);
+    font-weight: 800;
+}
+body.authenticated .advent-credit-board :is(.advent-credit-note, .advent-credit-stock-warning) {
+    padding: .65rem .75rem;
+    border: 1px solid var(--advent-credit-border);
+    border-radius: .35rem;
+    background: var(--advent-credit-surface);
+    color: var(--advent-credit-ink);
+}
+body.authenticated .advent-credit-board .advent-credit-stock-warning {
+    border-color: color-mix(in srgb, var(--line) 52%, var(--advent-credit-danger));
+    background: color-mix(in srgb, var(--panel) 91%, var(--advent-credit-danger));
+}
+body.authenticated .advent-credit-board :is(a, select, button):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+@media (max-width: 850px) {
+    body.authenticated .advent-credit-board .advent-credit-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    body.authenticated .advent-credit-board .page-heading a {
+        justify-self: start;
+    }
+    body.authenticated .advent-credit-board button {
+        width: 100%;
+    }
+}
+@media (max-width: 480px) {
+    body.authenticated .advent-credit-board table :is(th, td) {
+        padding-inline: .32rem;
+    }
+}
+
+/* Saison close sans droit en attente : grille et récépissé restent consultables
+   par les ancres existantes. Aucun de ces styles ne touche le choix ou le retrait. */
+body.authenticated .advent-board--history .advent-history-kicker {
+    display: inline-flex;
+    margin: 0 0 .4rem;
+    padding: .28rem .65rem;
+    border: 1px solid var(--advent-line);
+    border-radius: .3rem;
+    background: var(--advent-panel);
+    color: var(--accent);
+    font-size: .72rem;
+    font-weight: 750;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.advent-board--history .advent-history-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: .65rem;
+    padding: .8rem 1rem;
+    border: 1px solid var(--advent-line);
+    border-radius: .45rem;
+    background: color-mix(in srgb, var(--panel) 92%, var(--accent));
+}
+
+body.authenticated .advent-board--history .advent-history-notice p { margin: 0; }
+.advent-board--history .advent-history-notice :is(strong, span) { display: block; }
+.advent-board--history .advent-history-notice strong { margin-bottom: .15rem; }
+
+.advent-board--history :is(.advent-history-notice, .advent-calendar h2, .advent-door h2) > .icon {
+    flex: 0 0 auto;
+    width: 1.2rem;
+    height: 1.2rem;
+    color: var(--accent);
+    vertical-align: -.1em;
+}
+
+body.authenticated .advent-board--history .advent-history-context {
+    min-width: 0;
+    padding: clamp(.8rem, 1.3vw, 1.5rem);
+    border: 1px solid var(--advent-line);
+    border-radius: .55rem;
+    background: linear-gradient(154deg, var(--advent-panel), var(--panel));
+    overflow-wrap: anywhere;
+}
+body.authenticated .advent-board--history .advent-history-context h2 { margin: 0 0 .5rem; font-size: 1.15rem; }
+.advent-board--history .advent-calendar h3 { margin: 1rem 0 .65rem; font-size: 1rem; }
+.advent-board--history .advent-history-gift { display: none; }
+
+body.authenticated .advent-board--history .advent-day-tile[data-state="delivered"] {
+    background: color-mix(in srgb, var(--panel) 93%, var(--advent-delivered));
+    color: var(--text);
+}
+
+.advent-board--history .advent-day-tile[data-state="delivered"] .advent-day-status { color: var(--advent-delivered); }
+.advent-board--history .advent-day-tile[data-state="expired"] .advent-day-status { color: var(--text); }
+.advent-board--history .advent-layout:not(:has(.advent-door:target)) .advent-day-tile[data-default],
+.advent-board--history .advent-day-tile:is(:hover, :focus-visible) {
+    border-color: var(--accent);
+}
+.advent-board--history :is(.advent-back-to-calendar, #advent-calendar-title):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+.advent-board--history .advent-back-to-calendar {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+}
+
+@media (min-width: 1021px) {
+    .advent-board--history .advent-layout:has(.advent-history-context) {
+        grid-template-areas: "calendar selection" "calendar history-context";
+        grid-template-rows: auto 1fr;
+    }
+    .advent-board--history .advent-layout:has(.advent-history-context) .advent-calendar { grid-area: calendar; }
+    .advent-board--history .advent-layout:has(.advent-history-context) .advent-selection { grid-area: selection; }
+    .advent-board--history .advent-history-context { grid-area: history-context; }
+}
+
+@media (max-width: 480px) {
+    body.authenticated .advent-board--history .advent-calendar { padding: .65rem; }
+    .advent-board--history .advent-doors { gap: .3rem; }
+    .advent-board--history .advent-day-tile {
+        min-height: 50px;
+        padding: .25rem .28rem;
+    }
+    .advent-board--history .advent-day-number { font-size: 1rem; }
+    .advent-board--history .advent-day-status { font-size: .67rem; }
+    .advent-board--history .advent-milestone-word { display: none; }
+    .advent-board--history .advent-history-gift { display: inline; }
+}
+
+@media (min-width: 380px) and (max-width: 480px) {
+    /* Six cases dans la largeur de la maquette ; à 360 px on garde des cibles lisibles. */
+    .advent-board--history .advent-doors { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }

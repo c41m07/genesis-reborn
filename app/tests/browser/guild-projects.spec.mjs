@@ -183,7 +183,8 @@ test('Les membres financent deux paliers et le traitement attribue les boosts un
 });
 
 
-test('Projets sans JavaScript : lancement, don et historique restent accessibles', async ({ browser, baseURL }) => {
+test('Projets sans JavaScript : lancement, don et historique restent accessibles', async ({ browser, baseURL }, testInfo) => {
+  test.setTimeout(120000);
   const context = await browser.newContext({ baseURL, javaScriptEnabled: false, viewport: { width: 390, height: 900 } });
   try {
     const page = await context.newPage();
@@ -199,7 +200,48 @@ test('Projets sans JavaScript : lancement, don et historique restent accessibles
     await page.getByRole('navigation', { name: 'Navigation des projets collectifs', exact: true }).getByRole('link', { name: 'Projets disponibles', exact: true }).click();
     await page.getByRole('button', { name: 'Lancer ' + name, exact: true }).click();
     await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
-    await page.getByLabel('Don Métal', { exact: true }).fill('10');
+    const recap = page.getByRole('region', { name: 'Votre contribution et les minimums' });
+    await expect(page.locator('.guild-stage-progress + .project-personal-recap')).toContainText('Métal : 0 / 2');
+    await expect(recap).toContainText('Atteignez tous les minimums');
+    await expect(page.locator('#project-donation')).toContainText('Débit uniquement sur la colonie sélectionnée.');
+    await page.getByLabel('Don Métal', { exact: true }).fill('2');
+    await page.getByRole('button', { name: 'Donner ces ressources', exact: true }).press('Enter');
+    await expect(page.locator('.flash.success')).toContainText('Don enregistré');
+    await expect(recap).toContainText('Métal : 2 / 2');
+    await expect(recap).toContainText('Minimums atteints');
+    await expect(page.locator('.guild-stage-progress progress')).toHaveAttribute('value', '2');
+    await expect(page.getByLabel('Don Métal', { exact: true })).toHaveAttribute('max', '8');
+    const auditContext = await browser.newContext({ baseURL, storageState: await context.storageState() });
+    try {
+      const auditPage = await auditContext.newPage();
+      for (const theme of ['dark', 'light']) {
+        runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(IF(JSON_TYPE(preferences)='OBJECT',preferences,JSON_OBJECT()),'$.theme','${theme}','$.firstStepsGuide',false) WHERE email='native-project-${id}@example.test'`);
+        for (const [width,height] of [[1920, 1080], [390, 844]]) {
+          await page.setViewportSize({ width, height });
+          await page.reload();
+          await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+          await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+          const progress = await page.locator('.project-overview').boundingBox();
+          const donation = await page.locator('#project-donation').boundingBox();
+          if (width === 1920) expect(donation.x).toBeGreaterThanOrEqual(progress.x + progress.width);
+          else expect(donation.y).toBeGreaterThanOrEqual(progress.y + progress.height);
+          await page.screenshot({ path: testInfo.outputPath(`S09-en-cours-${theme}-${width}.png`), animations:'disabled' });
+          if (width===390) {
+            await page.getByRole('heading', {name:'Contribuer au palier'}).scrollIntoViewIfNeeded();
+            await page.screenshot({ path: testInfo.outputPath(`S09-don-${theme}-${width}.png`), animations:'disabled' });
+          }
+          // Axe a besoin de JavaScript ; les dons et captures restent natifs dans
+          // le premier contexte, sur la même session et le même projet.
+          await auditPage.setViewportSize({ width, height });
+          await auditPage.goto(page.url());
+          await expect(auditPage.locator('.project-personal-recap')).toContainText('Métal : 2 / 2');
+          await expect(auditPage.locator('body')).toHaveAttribute('data-theme', theme);
+          const result = await new AxeBuilder({ page: auditPage }).include('.guild-project-detail').withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
+          expect(result.violations).toEqual([]);
+        }
+      }
+    } finally { await auditContext.close(); }
+    await page.getByLabel('Don Métal', { exact: true }).fill('8');
     await page.getByRole('button', { name: 'Donner ces ressources', exact: true }).click();
     await expect(page.locator('.flash.success')).toContainText('Le projet est terminé');
     await page.getByRole('navigation', { name: 'Navigation des projets collectifs', exact: true }).getByRole('link', { name: 'Historique', exact: true }).click();

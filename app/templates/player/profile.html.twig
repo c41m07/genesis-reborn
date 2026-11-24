@@ -11,16 +11,22 @@
         <section class="panel account-panel account-identifiers" aria-label="Modifier mon profil">
             <fieldset class="account-section"><legend>Identifiants</legend><div class="account-grid">{{ form_row(form.email) }}{{ form_row(form.username) }}</div></fieldset>
             <details class="profile-password" {% if form.vars.submitted and not form.vars.valid %}open{% endif %}>
-                <summary>Changer de mot de passe — facultatif</summary>
-                <fieldset class="account-section"><legend class="visually-hidden">Changer de mot de passe</legend><p>Laissez les deux champs vides pour conserver votre mot de passe. En cas de remplacement : 12 à 128 caractères.</p>{{ form_errors(form.newPassword) }}<div class="account-grid">{{ form_row(form.newPassword.first) }}{{ form_row(form.newPassword.second) }}</div></fieldset>
+                <summary>
+                    <span>Changer de mot de passe — facultatif</span>
+                    <small class="profile-password-hint">Laissez les deux champs vides pour conserver votre mot de passe.</small>
+                </summary>
+                <fieldset class="account-section"><legend class="visually-hidden">Changer de mot de passe</legend><p>En cas de remplacement : 12 à 128 caractères.</p>{{ form_errors(form.newPassword) }}<div class="account-grid">{{ form_row(form.newPassword.first) }}{{ form_row(form.newPassword.second) }}</div></fieldset>
             </details>
-            <fieldset class="account-section"><legend>Confirmer la modification</legend>{{ form_row(form.currentPassword, {help: 'Votre mot de passe actuel est nécessaire pour enregistrer le profil.'}) }}</fieldset>
+            <fieldset class="account-section account-profile-confirmation"><legend>Confirmer la modification</legend>{{ form_row(form.currentPassword, {help: 'Votre mot de passe actuel est nécessaire pour enregistrer le profil.'}) }}</fieldset>
             <button class="primary">Enregistrer mes identifiants</button>
-            <p class="profile-notice">Toute modification enregistrée ferme cette session : reconnectez-vous ensuite avec vos identifiants.</p>
+            <div class="profile-notice profile-validation-notice">
+                <strong>Validation des modifications</strong>
+                <p>Toute modification enregistrée ferme cette session : reconnectez-vous ensuite avec vos identifiants.</p>
+            </div>
         </section>
 {{ form_end(form) }}
 <aside class="account-board-rail" aria-label="Portée et actions sensibles">
-    <section class="panel account-board-card">
+    <section class="panel account-board-card profile-scope-card">
         <h2>Portée du compte</h2>
         <p>Vos identifiants sont utilisés dans tous vos univers.</p>
         <dl>
@@ -29,7 +35,7 @@
         </dl>
         <a class="secondary" href="{{ path('app_preferences') }}">Ouvrir les préférences</a>
     </section>
-    <section class="panel account-board-card">
+    <section class="panel account-board-card profile-danger-card">
         <h2>Zone sensible</h2>
         <div class="account-board-danger"><strong>Supprimer mon compte</strong><p>La confirmation détaille les conséquences pour tous vos univers.</p></div>
         <a class="danger" href="{{ path('app_account_delete_page') }}">Voir la confirmation</a>

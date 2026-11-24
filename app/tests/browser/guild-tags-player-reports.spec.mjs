@@ -112,3 +112,90 @@ test('Signalement joueur : contexte serveur, saisie préservée, modération pri
   expect(Number(queryIsolatedSql(project,'SELECT COUNT(*) FROM player_report WHERE id='+reportId))).toBe(1);
   await adminPage.close();
 });
+
+// Le signalement n’est jamais soumis : on mesure le vrai formulaire depuis le classement.
+test('S20 : signalement accessible avec le guide ouvert et retour sans soumission', async ({page,browser},info) => {
+  test.setTimeout(120000);
+  const reporter = await enter(page);
+  const targetPage = await browser.newPage();
+  const target = await enter(targetPage);
+  await targetPage.close();
+  const project = process.env.BROWSER_ROUTER;
+  runIsolatedSql(project, "UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(),INTERVAL 2 DAY) WHERE universe_id="+reporter.universeId);
+  let reportPosts = 0;
+  await page.route('**/classement/signaler/**', async route => {
+    if (route.request().method() === 'POST') {
+      reportPosts += 1;
+      return route.abort();
+    }
+    return route.continue();
+  });
+  const reportCount = () => Number(queryIsolatedSql(project,'SELECT COUNT(*) FROM player_report WHERE reporter_id='+reporter.memberId));
+  const bounds = (control) => control.evaluate(el => {
+    const rect = el.getBoundingClientRect();
+    const popup = document.querySelector('.first-steps-popup[open] .first-steps-popup-mount');
+    const p = popup.getBoundingClientRect();
+    const visible = rect.top >= 0 && rect.bottom <= innerHeight && rect.left >= 0 && rect.right <= innerWidth;
+    const intersection = Math.max(0,Math.min(rect.right,p.right)-Math.max(rect.left,p.left))*
+      Math.max(0,Math.min(rect.bottom,p.bottom)-Math.max(rect.top,p.top));
+    const top = document.elementFromPoint(rect.left+rect.width/2, rect.top+rect.height/2);
+    return {visible, intersection, hits: Boolean(top && el.contains(top))};
+  });
+  const initialCount = reportCount();
+  for (const [width,height] of [[1920,1080],[390,844]]) {
+    await page.setViewportSize({width,height});
+    await page.goto('/classement?category=planets&direction=asc&page=1');
+    const filter = new URL(page.url());
+    expect(filter.searchParams.get('category')).toBe('planets');
+    expect(filter.searchParams.get('direction')).toBe('asc');
+    const launch = page.getByRole('link',{name:'Signaler '+target.username,exact:true});
+    await launch.focus();
+    await page.keyboard.press('Enter');
+    const form = page.getByRole('region',{name:'Commandant signalé : '+target.username});
+    await expect(form).toContainText('Nombre de planètes');
+    await expect(page.getByRole('heading',{name:'Signaler un commandant',exact:true})).toBeVisible();
+    const guide = page.locator('details.first-steps-popup-enhanced');
+    const summary = guide.locator('summary');
+    await expect(summary).toHaveAttribute('aria-expanded', /^(true|false)$/);
+    if (await summary.getAttribute('aria-expanded') === 'false') {
+      await summary.press('Enter');
+    }
+    await expect(summary).toHaveAttribute('aria-expanded','true');
+    await expect(guide).toHaveAttribute('open','');
+    await expect(guide.locator('.first-steps-popup-mount')).toBeVisible();
+    await page.evaluate(()=>window.scrollTo(0,0));
+    await page.screenshot({path:info.outputPath('S20-'+width+'-depuis-entete.png'),animations:'disabled'});
+    const reason = form.getByLabel('Motif du signalement',{exact:true});
+    const comment = form.getByLabel('Commentaire (facultatif)',{exact:true});
+    const submit = form.getByRole('button',{name:'Transmettre le signalement',exact:true});
+    const cancel = form.getByRole('link',{name:'Revenir au classement',exact:true});
+    for (const [label,item] of Object.entries({reason,comment,submit,cancel})) {
+      // Contrôle en bas de la zone utile, au-dessus de la barre mobile.
+      await item.evaluate(el => {
+        const rect = el.getBoundingClientRect();
+        const center = rect.top + rect.height / 2;
+        const target = innerWidth <= 740 ? innerHeight - 165 : innerHeight / 2;
+        window.scrollBy({top: center - target, behavior: 'instant'});
+      });
+      const result = await bounds(item);
+      expect.soft(result.visible, width+' '+label+' is visible').toBe(true);
+      expect.soft(result.hits, width+' '+label+' centre clickable').toBe(true);
+      expect.soft(result.intersection, width+' '+label+' not overlapped by open guide').toBe(0);
+    }
+    await reason.selectOption('other');
+    await comment.focus();
+    await page.keyboard.type('Informations synthétiques à examiner');
+    await expect(comment).toHaveValue('Informations synthétiques à examiner');
+    await page.keyboard.press('Tab');
+    await expect(submit).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(cancel).toBeFocused();
+    await expect(guide).toHaveAttribute('open','');
+    await page.screenshot({path:info.outputPath('S20-'+width+'-actions-guide-ouvert.png'),animations:'disabled'});
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(url => url.pathname === '/classement' && ['category','direction','page'].every(k => (url.searchParams.get(k) ?? (k === 'page' ? '1' : null)) === (filter.searchParams.get(k) ?? (k === 'page' ? '1' : null))));
+    await expect(page.getByRole('link',{name:'Signaler '+target.username,exact:true})).toBeAttached();
+    expect(reportPosts).toBe(0);
+    expect(reportCount()).toBe(initialCount);
+  }
+});

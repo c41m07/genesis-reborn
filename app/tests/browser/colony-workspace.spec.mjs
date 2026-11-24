@@ -23,6 +23,18 @@ async function enter(page) {
   return { project, planet, member, email };
 }
 
+async function assertGuideBelowAction(page, control) {
+  const guide = page.locator('.app-frame > .first-steps-popup-enhanced');
+  await expect(guide.locator('.first-steps-popup-mount')).toBeVisible();
+  await control.scrollIntoViewIfNeeded();
+  const [action, help] = await Promise.all([control.boundingBox(), guide.boundingBox()]);
+  expect(help.y).toBeGreaterThanOrEqual(action.y + action.height);
+  expect(await control.evaluate(el => {
+    const { x, y, width, height } = el.getBoundingClientRect();
+    return el.contains(document.elementFromPoint(x + width / 2, y + height / 2));
+  })).toBe(true);
+}
+
 async function capture(page, info, key, theme, width, audit = true) {
   await expect(page.locator('.page-contents')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
@@ -37,7 +49,7 @@ async function capture(page, info, key, theme, width, audit = true) {
   }
 }
 
-test('L7A A : colonies, renommage, comparaison et bilan complets sur quatre formats', async ({ page }, info) => {
+test('L7A A : colonies, renommage, comparaison et bilan complets sur quatre formats', async ({ page, browser, baseURL }, info) => {
   test.setTimeout(240000);
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -92,6 +104,26 @@ test('L7A A : colonies, renommage, comparaison et bilan complets sur quatre form
       await expect(card.locator('.planet-production dl')).not.toBeEmpty();
       await page.goto('/planetes?view=table&resource=metal');
       await expect(page.locator('.colony-comparison tbody tr')).toHaveCount(2);
+      const shortcuts = page.locator('.colony-comparison-cards');
+      const horizon = shortcuts.getByRole('article', { name: 'Horizon' });
+      const orion = shortcuts.getByRole('article', { name: 'Orion' });
+      await expect(horizon).toContainText('Colonie active');
+      await expect(horizon).toContainText('Mine à ciel ouvert');
+      await expect(horizon).toContainText('Niveau 5');
+      await expect(horizon.locator('.planet-index-art img')).toHaveAttribute('src', /colony-overview\.webp/);
+      await expect(orion).toContainText('Aucune opération en cours');
+      await expect(orion.locator('.planet-index-art img')).toHaveAttribute('src', /planet-desert\.webp/);
+      await expect(orion.getByRole('link', { name: /Ouvrir cette colonie/ })).toHaveAttribute('href', '/planetes/' + other.id);
+      if (width >= 1440) {
+        const controls = horizon.locator('.colony-comparison-card-actions');
+        const open = controls.getByRole('link', { name: /Ouvrir cette colonie/ });
+        const manage = controls.getByRole('link', { name: /Renommer ou consulter ses bonus/ });
+        await open.focus();
+        await page.keyboard.press('Tab');
+        await expect(manage).toBeFocused();
+        await assertGuideBelowAction(page, manage);
+        await assertGuideBelowAction(page, page.locator('.colony-comparison tbody td[data-comparison-queue="shipyard"]').last());
+      }
       if (width === 1440) await expect(page.locator('.colony-comparison td[data-resource="nano"]').first()).toBeVisible();
       else await expect(page.locator('.colony-comparison td[data-resource="nano"]').first()).toBeHidden();
       const horizonWork = page.locator('.colony-comparison tbody tr')
@@ -101,6 +133,15 @@ test('L7A A : colonies, renommage, comparaison et bilan complets sur quatre form
       await expect(horizonWork).toContainText('Niveau 5');
       await expect(horizonWork).toContainText('En cours');
       await expect(horizonWork.locator('time')).toHaveAttribute('datetime', /T/);
+      if (width === 390) {
+        const resource = page.getByLabel('Ressource à comparer');
+        await resource.focus();
+        await assertGuideBelowAction(page, resource);
+        await page.keyboard.press('Tab');
+        const compare = page.getByRole('button', { name: 'Comparer cette ressource' });
+        await expect(compare).toBeFocused();
+        await assertGuideBelowAction(page, compare);
+      }
       await capture(page, info, 'comparaison', theme, width);
       await page.goto(abandon);
       for (const title of ['Un abandon définitif', 'Bilan des pertes', 'Ressources', 'Bâtiments', 'Défenses', 'Vaisseaux présents', 'Ressources embarquées présentes', 'Commandes annulées sans remboursement', 'Confirmer l’abandon']) {
@@ -130,6 +171,34 @@ test('L7A A : colonies, renommage, comparaison et bilan complets sur quatre form
   await capture(page, info, 'capacite-depassee', 'light', 390);
   await page.goto(abandon);
   await capture(page, info, 'abandon-nom-long', 'light', 390);
+  await page.goto('/planetes/' + user.planet);
+  await expect(page.locator('.dashboard-metrics')).toContainText('2/2');
+  const deadline = page.locator('.core-empire-watch').getByRole('link', { name: /Mine à ciel ouvert/ });
+  await deadline.focus();
+  await expect(deadline).toBeFocused();
+  await assertGuideBelowAction(page, deadline);
+
+  const native = await browser.newContext({
+    baseURL, javaScriptEnabled: false, storageState: await page.context().storageState(),
+    viewport: { width: 390, height: 844 },
+  });
+  try {
+    const fallback = await native.newPage();
+    await fallback.goto('/planetes?view=table&resource=metal');
+    const select = fallback.getByLabel('Ressource à comparer');
+    await select.selectOption('nano');
+    await select.focus();
+    await fallback.keyboard.press('Tab');
+    await expect(fallback.getByRole('button', { name: 'Comparer cette ressource' })).toBeFocused();
+    await fallback.keyboard.press('Enter');
+    await expect(fallback).toHaveURL(/resource=nano/);
+    await expect(fallback.locator('th[data-resource="nano"]')).toBeVisible();
+    await expect(fallback.locator('th[data-resource="metal"]')).toBeHidden();
+    await expect(fallback.locator('.colony-comparison tbody tr')).toHaveCount(2);
+    await expect(fallback.locator('[data-comparison-queue="building"]').filter({ hasText: 'Mine à ciel ouvert' })).toHaveCount(1);
+  } finally {
+    await native.close();
+  }
   expect(errors).toEqual([]);
 });
 

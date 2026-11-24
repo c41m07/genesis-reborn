@@ -20,10 +20,11 @@ final class AdventCreditController extends AbstractController
     public function view(Request $request, int $id, int $claimId, UniverseContext $context, AdventQueueCredits $credits, QueueService $queue, GameRepository $game, GameCatalog $catalog): Response
     {
         $membership = $context->membership();
-        $offer = $credits->offer($membership, $id, $claimId);
-        if ($offer === null) {
+        $credit = $credits->findRedeemableOffer($membership, $id, $claimId);
+        if ($credit === null) {
             throw $this->createNotFoundException('Ce bon n’est pas disponible dans l’univers de cette édition.');
         }
+        $offer = $credit['award'];
         $research = $offer['kind'] === 'research_discount';
         $group = $research ? 'technologies' : 'ships';
         if ($request->isMethod('POST') && !$this->isCsrfTokenValid('advent_credit_'.$membership->id.'_'.$claimId, $request->request->getString('_token'))) {
@@ -69,7 +70,7 @@ final class AdventCreditController extends AbstractController
             'planets' => $game->planets($membership->universe, $membership), 'selectedPlanet' => $planetId, 'selection' => $selection,
             'technologies' => $research ? $catalog->forUniverse($membership->universe)['catalog']['technologies'] : [],
             'ranks' => $catalog->tiers(), 'ships' => $catalog->all('ships'), 'resources' => AdventGifts::RESOURCES,
-            'quote' => $quote, 'error' => $error, 'requestKey' => $quote === null ? null : bin2hex(random_bytes(16)),
+            'creditDoor' => $credit['door'], 'quote' => $quote, 'error' => $error, 'requestKey' => $quote === null ? null : bin2hex(random_bytes(16)),
         ], new Response(status: $error === null ? 200 : 422));
         $response->setPrivate();
         $response->headers->addCacheControlDirective('no-store');

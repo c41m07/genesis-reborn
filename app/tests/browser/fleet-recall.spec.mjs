@@ -1,6 +1,7 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { execFileSync } from 'node:child_process';
 import AxeBuilder from '@axe-core/playwright';
+import { captureDecision } from './support/fleet-decision-view.mjs';
 import { prepareOwnedColony, revealVirginPlanet, runIsolatedSql, queryIsolatedSql } from './support/game-fixtures.mjs';
 
 async function enter(page, admin = false, universe = '') {
@@ -83,12 +84,29 @@ test('Origine perdue : choix de repli au toucher, origine historique conservée'
   const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});const page=await context.newPage();
   const data=await prepare(page);
   runIsolatedSql(data.project,'UPDATE planet SET owner_id=NULL,acquired_at=NULL WHERE id='+data.planetId);
-  await page.goto('/flottes/'+data.fleetId+'/rappel');
+  const recallUrl='/flottes/'+data.fleetId+'/rappel';
+  await page.goto(recallUrl);
   await expect(page.getByText('L’origine ne vous appartient plus.',{exact:false})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Confirmer le rappel',exact:true})).toHaveCount(0);
+  runIsolatedSql(data.project,'UPDATE planet SET owner_id=NULL WHERE id='+data.target.id);
+  await page.reload();
+  await expect(page.getByLabel('Colonie de repli',{exact:true})).toBeDisabled();
+  await expect(page.getByRole('button',{name:'Calculer le retour',exact:true})).toBeDisabled();
+  await expect(page.getByText('Aucune colonie de repli disponible : le rappel est indisponible, la mission continue.',{exact:true})).toBeVisible();
+  await expect(page.locator('.fleet-decision-quote')).toHaveCount(0);
+  await page.screenshot({path:testInfo.outputPath('rappel-sans-destination-390.png'),fullPage:true,animations:'disabled'});
+  expect(queryIsolatedSql(data.project,'SELECT status FROM fleet WHERE id='+data.fleetId)).toBe('traveling');
+  runIsolatedSql(data.project,'UPDATE planet SET owner_id='+data.memberId+' WHERE id='+data.target.id);
+  await page.reload();
   await page.getByLabel('Colonie de repli',{exact:true}).selectOption(String(data.target.id));
   await page.getByRole('button',{name:'Calculer le retour',exact:true}).tap();
   await expect(page.getByRole('button',{name:'Confirmer le rappel',exact:true})).toBeVisible();
   await page.screenshot({path:testInfo.outputPath('repli-mobile.png'),fullPage:true,animations:'disabled'});
+  const visual=await browser.newContext({baseURL:new URL(page.url()).origin, storageState:await context.storageState()});
+  try {
+    await captureDecision(await visual.newPage(),data,testInfo,'rappel',recallUrl+'?return_planet='+data.target.id);
+  } finally { await visual.close(); }
+  await page.reload();
   await page.getByRole('button',{name:'Confirmer le rappel',exact:true}).tap();
   await expect(page.getByText('Flotte rappelée. Le retour est programmé.',{exact:true})).toBeVisible();
   const route=queryIsolatedSql(data.project,"SELECT CONCAT(home_planet_id,':',return_planet_id) FROM fleet WHERE id="+data.fleetId).trim();

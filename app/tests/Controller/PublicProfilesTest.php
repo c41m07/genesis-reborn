@@ -86,6 +86,11 @@ final class PublicProfilesTest extends WebTestCase
         $html=$this->client->getResponse()->getContent();
         foreach([$this->member->email,'PRIVATE-PREFERENCES-MARKER','ROLE_ADMIN',$planet->coordinates()] as $private) self::assertStringNotContainsString($private,$html);
         self::assertSelectorTextContains('h1','PublicMember');self::assertSelectorCount(5,'.social-profile-scores > div');
+        self::assertSelectorTextContains('.commander-profile-score-total dt', 'Points totaux');
+        self::assertSelectorExists('.commander-profile-score-total dd strong');
+        self::assertSelectorTextContains('.commander-profile-score-total dd span', 'rang #');
+        self::assertSelectorTextContains('.commander-profile-guild-link', '[PUB] Public Guild');
+        self::assertSelectorTextContains('.commander-profile-write', 'Écrire à PublicMember');
         self::assertStringContainsString('no-store',$this->client->getResponse()->headers->get('Cache-Control'));
     }
 
@@ -138,6 +143,15 @@ final class PublicProfilesTest extends WebTestCase
         self::getContainer()->get(DailyLeaderboard::class)->forUniverse($this->leader->currentPlayerUniverse);
         $new=$this->player('PublicNew');$id=$new->currentPlayerUniverse->id;
         $this->client->request('GET','/joueurs/'.$id);self::assertResponseIsSuccessful();self::assertSelectorTextContains('.social-profile-scores','Pas encore classé');
+        $this->client->loginUser($new);
+        $this->client->request('GET', '/joueurs/'.$id);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.commander-profile-score-total dd', 'Pas encore classé');
+        self::assertSelectorNotExists('.commander-profile-score-total dd strong');
+        self::assertSelectorTextContains('[aria-labelledby="player-public-guild"]', 'Aucune guilde.');
+        self::assertSelectorNotExists('.commander-profile-write, .commander-profile-guild-link');
+        // La vue propre n’accorde aucun accès après l’oubli de la participation.
+        $this->client->loginUser($this->leader);
         self::getContainer()->get(EntityManagerInterface::class)->getConnection()->executeStatement('UPDATE player_universe SET forgotten_at=UTC_TIMESTAMP() WHERE id=?',[$id]);
         $this->client->request('GET','/joueurs/'.$id);self::assertResponseStatusCodeSame(404);
     }

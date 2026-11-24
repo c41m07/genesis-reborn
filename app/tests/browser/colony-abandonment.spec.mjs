@@ -81,6 +81,16 @@ for(const touch of [false,true]) test('Abandon confirmé : pertes, trace et cont
       await page.keyboard.press('Tab');await expect(confirm).toBeFocused();
       expect(await confirm.evaluate(e=>e.matches(':focus-visible') && getComputedStyle(e).outlineStyle==='solid' && parseFloat(getComputedStyle(e).outlineWidth)>0)).toBeTruthy();
     }
+    const guide = page.locator('.first-steps-popup-enhanced[open] .first-steps-popup-panel:visible');
+    await expect(guide).toBeVisible();
+    await confirm.scrollIntoViewIfNeeded();
+    const action = await confirm.boundingBox(), help = await guide.boundingBox();
+    // Un bouton peut intersecter le viewport tout en restant caché sous l’aide.
+    expect(help.y).toBeGreaterThanOrEqual(action.y + action.height);
+    expect(await confirm.evaluate(button => {
+      const box = button.getBoundingClientRect();
+      return button.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+    })).toBe(true);
     const body=await page.locator('.abandon-confirmation').evaluate(form=>Object.fromEntries(new FormData(form)));
     // La capture en haut de page précède une action en bas du formulaire.
     // Un défilement animé laisserait la cible bouger au moment du toucher.

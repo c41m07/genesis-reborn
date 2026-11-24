@@ -15,6 +15,32 @@ async function capture(page, info, key, theme, width) {
   }
 }
 
+// Contrôler l’empilement visuel même si l’aperçu laisse passer certains clics.
+async function expectEventBoardClear(page, challenge) {
+  const guide = page.locator('.first-steps-popup-enhanced[open]');
+  const preview = guide.getByRole('button', { name: /Voir l[’']étape illustrée/ });
+  const upcoming = page.getByRole('region', { name: 'À venir', exact: true });
+  const action = challenge.getByRole('link', { name: /^Voir le défi/ });
+  await expect(preview).toBeVisible();
+  await expect(upcoming.getByRole('heading', { name: 'Semaine des bâtisseurs' })).toBeVisible();
+
+  const guideTop = (await guide.locator('.first-steps-preview').boundingBox()).y;
+  for (const element of [upcoming.locator('time').first(), action]) {
+    const rect = await element.boundingBox();
+    expect(rect).not.toBeNull();
+    expect(guideTop).toBeGreaterThan(rect.y + rect.height);
+  }
+
+  await action.evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
+  await action.focus();
+  await expect(action).toBeFocused();
+  await expect(action).toBeInViewport({ ratio: 1 });
+  expect(await action.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    return element.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+  })).toBe(true);
+}
+
 test('L6 A : annonces en lignes, objectifs et participation, récompenses et mobile', async ({ page }, info) => {
   test.setTimeout(300000);
   const suffix = crypto.randomUUID().slice(0, 8);
@@ -99,6 +125,7 @@ test('L6 A : annonces en lignes, objectifs et participation, récompenses et mob
   await expect(challenge.getByRole('progressbar')).toHaveAttribute('value', '40');
   const own = page.getByRole('region', { name:'Votre participation' }).locator('dl > div').filter({hasText:'Aux confins'});
   await expect(own.locator('dd')).toHaveText('2,00');
+  await expectEventBoardClear(page, challenge);
   await challenge.evaluate(element => element.scrollIntoView({block:'center',behavior:'instant'}));
   await page.screenshot({ path:info.outputPath('P04-defi-en-cours-1920x1080.png'), scale:'css', animations:'disabled' });
   const pages = [['events', '/evenements'], ['challenges', '/evenements/defis'], ...['guided', 'weekly', 'closed', 'cancelled'].map(key => [key, '/evenements/defis/' + ids[key]])];
@@ -114,6 +141,9 @@ test('L6 A : annonces en lignes, objectifs et participation, récompenses et mob
           await expect(page.locator('section[aria-labelledby="events-current"] .event-card')).toHaveCount(2);
           await expect(page.locator('section[aria-labelledby="events-upcoming"] .event-card')).toHaveCount(1);
           await expect(page.locator('.event-description-column').filter({ hasText: 'Rendez-vous des commandants' })).toContainText('Tous les univers');
+          if (width === 1440 || width === 390) {
+            await expectEventBoardClear(page, page.getByRole('article', { name: 'Aux confins' }));
+          }
         }
         if (key === 'guided') {
           const zero = page.locator('.collective-challenge h3 + .report-facts > div').filter({ has: page.getByText('Antimatière', { exact: true }) });

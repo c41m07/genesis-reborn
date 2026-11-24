@@ -4,7 +4,7 @@ namespace App\Controller;
 use App\Service\Notification\JournalService;
 use App\Entity\{Guild,PlayerUniverse};
 use App\Repository\GameRepository;
-use App\Service\Player\{RelationResolver,SocialMessageService};
+use App\Service\Player\{PreferencesService,RelationResolver,SocialMessageService};
 use App\Service\Admin\AdminService;
 use App\Service\Universe\UniverseContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,7 +15,7 @@ use Symfony\Component\Uid\Uuid;
 final class SocialMessageController extends AbstractController
 {
     #[Route('/messages/non-lus', name: 'app_messages_unread', methods: ['GET'])]
-    public function unread(Request $request, UniverseContext $context, SocialMessageService $messages, RelationResolver $relations, GameRepository $repo, JournalService $journal): Response
+    public function unread(Request $request, UniverseContext $context, SocialMessageService $messages, RelationResolver $relations, GameRepository $repo, JournalService $journal, PreferencesService $preferences): Response
     {
         $membership = $context->membership();
         $unreadGuild = $messages->unreadGuildCount($membership);
@@ -27,6 +27,7 @@ final class SocialMessageController extends AbstractController
             'membership' => $membership->id,
             'conversations' => $this->renderView('player/_message_contacts.html.twig', [
                 'contacts' => $repo->messageContacts($membership),
+                'preferences' => $preferences->for($membership->player),
                 'guild' => $relations->guild($membership),
                 'unreadGuild' => $unreadGuild,
                 'peer' => $repo->find(PlayerUniverse::class, $request->query->getInt('with')),

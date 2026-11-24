@@ -550,7 +550,24 @@ body[data-theme="light"] .core-catalogue-header--technologies .core-catalogue-ki
 .catalogue-ships-empty p { margin: 0 0 9px; }
 .catalogue-empty-actions, .catalogue-cancel-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .catalogue-empty-actions > a, .catalogue-cancel-actions :is(a, button), .catalogue-empty-queue-link { min-height: 44px; }
-.catalogue-cancel { max-width: 55rem; }
+/* Le bouton actif d’annulation utilise le même code d’alerte que son bilan. */
+.catalogue-cancel { max-width: 55rem; --catalogue-decision-danger: #f68b83; }
+body[data-theme="light"] .catalogue-cancel { --catalogue-decision-danger: #a92f42; }
+.catalogue-cancel .catalogue-cancel-actions > button.danger:enabled {
+    padding: 8px 14px;
+    border: 1px solid color-mix(in srgb, var(--catalogue-decision-danger) 60%, var(--line));
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--catalogue-decision-danger) 24%, var(--panel));
+    color: var(--text);
+    font-weight: 700;
+}
+.catalogue-cancel .catalogue-cancel-actions > button.danger:enabled:hover {
+    background: color-mix(in srgb, var(--catalogue-decision-danger) 36%, var(--panel));
+}
+.catalogue-cancel .catalogue-cancel-actions > :is(a, button):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
 .catalogue-cancel-item {
     display: grid;
     gap: 4px;
@@ -708,6 +725,17 @@ body[data-theme="light"] .core-catalogue-header--technologies .core-catalogue-ki
     .catalog-workspace section:not(.catalog-condensed) .building-card
         .building-costs:not(:has(> span:nth-child(4))) > span[hidden] {
         display: none;
+    }
+    /* Dans un coût de lot à trois tuiles, l’abréviation évite de couper
+       Électricité en plein mot. Le libellé intégral reste accessible. */
+    .catalog-workspace section:not(.catalog-condensed) .core-construction-cost
+        .building-costs:has(> span:nth-child(3):last-child) > [data-resource="electricity"] .cost-label-full {
+        display: none;
+    }
+    .catalog-workspace section:not(.catalog-condensed) .core-construction-cost
+        .building-costs:has(> span:nth-child(3):last-child) > [data-resource="electricity"] .cost-label-short {
+        display: inline;
+        white-space: nowrap;
     }
 }
 @media (max-width: 600px) {

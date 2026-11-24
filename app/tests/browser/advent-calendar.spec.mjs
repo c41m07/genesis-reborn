@@ -71,6 +71,17 @@ test('Avent : retrouver sans JavaScript un cadeau réservé après la clôture',
         await first.getByLabel('Colonie destinataire').selectOption(String(colony));
         await first.getByRole('button', { name: 'Retenter le versement' }).click();
         await expect(first.getByText('Versé', { exact: true })).toBeVisible();
+        const history = mobile.locator('.advent-board--history');
+        await expect(history.getByText('Édition close', { exact: true })).toBeVisible();
+        await expect(history.locator('form[method="post"]')).toHaveCount(0);
+        await expect(first).toContainText('Le cadeau de cette porte a déjà été versé.');
+        await mobile.getByRole('link', { name: /^Porte 24,/ }).press('Enter');
+        const expired = mobile.locator('#advent-door-24');
+        await expect(expired).toBeVisible();
+        await expect(expired).toContainText('Cette porte n’a pas été ouverte avant la clôture.');
+        await expired.getByRole('link', { name: 'Revenir aux 24 portes' }).press('Enter');
+        await expect(mobile.locator('#advent-calendar-title')).toBeFocused();
+        await expect(mobile.getByRole('dialog')).toHaveCount(0);
         expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM advent_claim WHERE delivered_at IS NOT NULL'))).toBe(1);
 
         for (const width of [360, 390, 1440]) {
@@ -102,6 +113,12 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
         kind: 'ship_voucher', slug: 'transport', tier: 'basic', quantity: 1, budget_metal: 6000,
     }, {
         kind: 'ship_pack', units: [{ slug: 'probe', tier: 'basic', quantity: 12 }], budget_metal: 6000,
+    }];
+    doors[12].opens_at = new Date(now - 50_000).toISOString();
+    doors[12].options.beginner = [{ kind: 'research_discount', percent: 50, budget_metal: 7500 }];
+    doors[18].opens_at = new Date(now - 40_000).toISOString();
+    doors[18].options.beginner = [{
+        kind: 'ship_pack', units: [{ slug: 'fighter', tier: 'basic', quantity: 1 }], budget_metal: 8000,
     }];
     doors[24].opens_at = new Date(now - 30_000).toISOString();
     doors[24].cosmetics = ['guardian_of_stars', 'polar_night'];
@@ -168,10 +185,69 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
             const action = page.locator('#advent-door-6').getByRole('button', { name: 'Confirmer le cadeau et la destination' });
             await expect(help).toBeVisible();
             await action.click({ trial: true });
+            await expect(page.getByRole('link', { name: /^Porte 6,/ })).not.toHaveCSS('border-left-color', await page.getByRole('link', { name: /^Porte 7,/ }).evaluate((tile) => getComputedStyle(tile).borderLeftColor));
+            if (width === 1920) {
+                await page.evaluate(() => { window.scrollTo(0, 0); });
+                await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+                const calendarTop = await page.locator('.advent-calendar').evaluate((calendar) => calendar.getBoundingClientRect().top);
+                expect(calendarTop).toBeLessThan(635);
+            }
             const [helpBounds, actionBounds] = await Promise.all([help.boundingBox(), action.boundingBox()]);
             expect(helpBounds.y + helpBounds.height).toBeLessThanOrEqual(actionBounds.y);
         }
 
+        // Reçu natif déjà versé, sans droit en attente. On avance d'abord
+        // la clôture de la fixture, puis rétablit sa date pour tester J6–J24.
+        const originalClose = queryIsolatedSql(project, "SELECT DATE_FORMAT(closes_at, '%Y-%m-%d %H:%i:%s') FROM advent_edition WHERE id=" + edition).trim();
+        expect(originalClose).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+        runIsolatedSql(project, 'UPDATE advent_edition SET closes_at = UTC_TIMESTAMP() - INTERVAL 1 SECOND WHERE id=' + edition);
+        try {
+            for (const theme of ['dark', 'light']) {
+                runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(IF(JSON_TYPE(preferences)='OBJECT', preferences, JSON_OBJECT()), '$.theme', '" + theme + "') WHERE email='" + email + "'");
+                for (const [width, height] of [[1920, 1080], [390, 844]]) {
+                    await page.setViewportSize({ width, height });
+                    await openAdventDocument(page, '/evenements/avent/' + edition);
+                    const history = page.locator('.advent-board--history');
+                    await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+                    await expect(history.getByText('Édition close', { exact: true })).toBeVisible();
+                    await expect(history.locator('.advent-day-tile')).toHaveCount(24);
+                    await expect(history.locator('form[method="post"]')).toHaveCount(0);
+                    await expect(history.getByRole('link', { name: 'Retour aux événements' })).toHaveAttribute('href', '/evenements');
+                    const calendar = await history.locator('.advent-calendar').boundingBox();
+                    const panel = await history.locator('.advent-selection').boundingBox();
+                    const context = await history.getByRole('region', { name: 'Univers de cette édition' }).boundingBox();
+                    if (width === 1920) {
+                        expect(panel.x).toBeGreaterThanOrEqual(calendar.x + calendar.width);
+                        expect(context.y).toBeGreaterThanOrEqual(panel.y + panel.height);
+                    } else {
+                        expect(panel.y).toBeGreaterThanOrEqual(context.y + context.height);
+                        const tile = await history.getByRole('link', { name: /^Porte 1,/ }).boundingBox();
+                        expect(tile.width).toBeGreaterThanOrEqual(44);
+                        expect(tile.height).toBeGreaterThanOrEqual(44);
+                    }
+                    const dimensions = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+                    expect(dimensions[0]).toBeLessThanOrEqual(dimensions[1] + 2);
+                    const proof = process.env.GR_AVENT_PROOF_DIRECTORY;
+                    if (proof) {
+                        await page.evaluate(() => window.scrollTo(0, 0));
+                        await page.screenshot({ path: proof + '/AVENT_EDITION_CLOSE_' + width + '_' + theme + '.png' });
+                    }
+
+                    const tile = history.getByRole('link', { name: /^Porte 7,/ });
+                    if (width === 1920) {
+                        const idleBorder = await tile.evaluate((element) => getComputedStyle(element).borderInlineStartColor);
+                        await tile.hover();
+                        await expect(tile).not.toHaveCSS('border-inline-start-color', idleBorder);
+                    }
+                    await tile.click();
+                    await expect(page).toHaveURL(/#advent-door-7$/);
+                    await expect(history.locator('#advent-door-7')).toContainText('Expiré');
+                    await expect(history.getByRole('dialog')).toHaveCount(0);
+                }
+            }
+        } finally {
+            runIsolatedSql(project, "UPDATE advent_edition SET closes_at='" + originalClose + "' WHERE id=" + edition);
+        }
         const proof = process.env.GR_AVENT_PROOF_DIRECTORY;
         if (proof) {
             // Les planches de comparaison montrent un compte dont l’aide est fermée.
@@ -201,13 +277,39 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
         await expect(reserves.getByRole('link', { name: 'Voir le devis de la porte 6' })).toBeVisible();
         await expect(reserves.getByText('Gardien des étoiles', { exact: true })).toBeVisible();
         await expect(reserves.getByText('Nuit polaire', { exact: true })).toBeVisible();
+        const milestones = reserves.locator('.advent-moments');
+        await milestones.getByRole('link', { name: 'Voir la porte 12' }).press('Enter');
+        const researchDoor = mobile.locator('#advent-door-12');
+        await researchDoor.getByRole('radio').press('Space');
+        await researchDoor.getByLabel('Colonie destinataire').selectOption(String(colony));
+        await researchDoor.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).press('Enter');
+        const researchCredit = researchDoor.getByRole('link', { name: 'Voir le devis de cette remise' });
+        await expect(researchCredit).toBeVisible();
+        await researchCredit.focus();
+        await expect(researchCredit).toBeFocused();
+        const researchCreditUrl = new URL(await researchCredit.getAttribute('href'), baseURL).href;
+        await researchCredit.press('Enter');
+        await expect(mobile).toHaveURL(researchCreditUrl);
+        await expect(mobile.getByRole('heading', { name: 'Remise de recherche' })).toBeVisible();
+        await expect(mobile.getByRole('button', { name: 'Calculer le devis' })).toBeVisible();
+        await mobile.getByRole('link', { name: 'Retour au calendrier' }).click();
+        await expect(mobile).toHaveURL(new URL('/evenements/avent/' + edition, baseURL).href);
+        await mobile.getByRole('link', { name: /^Porte 18,/ }).press('Enter');
+        const fightDoor = mobile.locator('#advent-door-18');
+        await fightDoor.getByRole('radio').press('Space');
+        await fightDoor.getByLabel('Colonie destinataire').selectOption(String(colony));
+        await fightDoor.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).press('Enter');
+        await expect(fightDoor.getByText('Réservé', { exact: true })).toBeVisible();
+        await mobile.getByRole('link', { name: 'Cadeaux et réserves', exact: true }).press('Enter');
+        await expect(milestones.getByRole('link', { name: 'Voir le devis de la porte 12' })).toBeVisible();
+        await expect(milestones.getByText('Lot réservé :', { exact: false })).toBeVisible();
         await reserves.getByRole('link', { name: 'Choisir mon cadeau lourd' }).press('Enter');
         const last = mobile.locator('#advent-door-24');
         await expect(last.getByRole('radio')).toHaveCount(1);
         await expect(last).toContainText('Croiseur de combat');
         await expect(last).toContainText('16,00 k');
         await expect(last).not.toContainText('96,00 k');
-        expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM advent_claim WHERE advent_edition_id=' + edition))).toBe(2);
+        expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM advent_claim WHERE advent_edition_id=' + edition))).toBe(4);
         expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM profile_cosmetic WHERE player_id=(SELECT id FROM player WHERE email=\x27' + email + '\x27)'))).toBe(0);
     } finally {
         await native.close();
@@ -216,7 +318,7 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
     for (const theme of ['dark', 'light']) {
         runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(IF(JSON_TYPE(preferences)='OBJECT', preferences, JSON_OBJECT()), '$.theme', '" + theme + "') WHERE email='" + email + "'");
         for (const width of [360, 390, 768, 1440, 1920]) {
-            await page.setViewportSize({ width, height: 1080 });
+            await page.setViewportSize({ width, height: width <= 390 ? 844 : 1080 });
             await openAdventDocument(page, '/evenements/avent/' + edition);
             await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
             await expect(page.getByRole('heading', { name: 'Avent des étoiles' })).toBeVisible();
@@ -230,15 +332,183 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
                 const rewards = page.locator('.advent-finale-preview img');
                 await rewards.scrollIntoViewIfNeeded();
                 await expect.poll(() => rewards.evaluate((image) => image.naturalWidth)).toBeGreaterThan(0);
+                const finale = page.locator('.advent-finale-preview');
+                // Le clair ne doit pas réappliquer le texte gris des panneaux sur le panorama.
+                await expect(finale.getByText('Gardien des étoiles', { exact: true })).toHaveCSS('color', 'rgb(245, 248, 255)');
+                await expect(finale.getByText('Titre et bannière de profil', { exact: true })).toHaveCSS('color', 'rgb(195, 215, 235)');
                 const proof = process.env.GR_AVENT_PROOF_DIRECTORY;
                 if (proof) {
-                    await page.locator('.advent-rewards').scrollIntoViewIfNeeded();
+                    await page.getByRole('link', { name: 'Cadeaux et réserves', exact: true }).press('Enter');
+                    await expect(page).toHaveURL(/#advent-rewards$/);
                     await page.screenshot({ path: proof + '/AVENT_RESERVES_J24_' + theme + '.png' });
                 }
+            }
+
+            if (width === 390 && process.env.GR_AVENT_PROOF_DIRECTORY) {
+                await page.getByRole('link', { name: 'Cadeaux et réserves', exact: true }).press('Enter');
+                await expect(page).toHaveURL(/#advent-rewards$/);
+                const rewards = page.locator('.advent-finale-preview img');
+                await rewards.scrollIntoViewIfNeeded();
+                await expect.poll(() => rewards.evaluate((image) => image.naturalWidth)).toBeGreaterThan(0);
+                await page.screenshot({ path: process.env.GR_AVENT_PROOF_DIRECTORY + '/AVENT_RESERVES_J24_MOBILE_' + theme + '.png' });
             }
 
             const contentWidth = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
             expect(contentWidth[0]).toBeLessThanOrEqual(contentWidth[1] + 2);
         }
+    }
+    await page.goto('/evenements/avent/' + edition + '#advent-door-24');
+    const finaleDoor = page.locator('#advent-door-24');
+    await finaleDoor.getByRole('radio').check();
+    await finaleDoor.getByLabel('Colonie destinataire').selectOption(String(colony));
+    await finaleDoor.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).press('Enter');
+    await expect(finaleDoor.getByText('Bon à utiliser', { exact: true })).toBeVisible();
+    expect(Number(queryIsolatedSql(project, "SELECT COUNT(*) FROM profile_cosmetic WHERE player_id=(SELECT id FROM player WHERE email='" + email + "') AND equipped=0"))).toBe(2);
+
+    runIsolatedSql(project, 'UPDATE advent_edition SET closes_at = UTC_TIMESTAMP() - INTERVAL 1 SECOND WHERE id=' + edition);
+    await openAdventDocument(page, '/evenements/avent/' + edition + '#advent-door-24');
+    await expect(page.locator('.advent-board--history')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Cadeaux et réserves', exact: true })).toBeVisible();
+    await expect(finaleDoor.getByRole('link', { name: 'Voir le devis de cette remise' })).toBeVisible();
+});
+
+test('Avent : devis J6 et J12 maquetés, calcul et confirmation séparés', async ({ page, browser, baseURL }) => {
+    test.skip(process.env.ADVENT_BROWSER_FIXTURE !== '1', 'Édition positive uniquement dans la recette isolée.');
+    test.setTimeout(90_000);
+    const project = process.env.BROWSER_ROUTER;
+    const marker = crypto.randomUUID().slice(0, 8);
+    const email = 'advent-quotes-' + marker + '@example.test';
+    const password = crypto.randomUUID() + 'Aa!';
+    const now = Date.now();
+    const doors = Object.fromEntries(Array.from({ length: 24 }, (_, index) => [index + 1, {
+        opens_at: new Date(now + (index - 1) * 86400000).toISOString(),
+        options: { beginner: [{ kind: 'resources', resources: { metal: 7 } }] },
+    }]));
+    for (const day of [6, 12, 24]) doors[day].opens_at = new Date(now - 60_000).toISOString();
+    doors[6].options.beginner = [{ kind: 'ship_voucher', slug: 'transport', tier: 'basic', quantity: 1, budget_metal: 6000 }];
+    doors[12].options.beginner = [{ kind: 'research_discount', percent: 50, budget_metal: 7500 }];
+    doors[24].options.beginner = [{ kind: 'ship_voucher', slug: 'cruiser', tier: 'basic', quantity: 1, budget_metal: 16000 }];
+    runIsolatedSql(project, "INSERT INTO advent_edition (season,name,starts_at,closes_at,doors,published_at,plan) VALUES (2101,'Avent Devis','" + new Date(now - 86400000).toISOString().slice(0, 19).replace('T', ' ') + "',UTC_TIMESTAMP() + INTERVAL 30 DAY,'" + JSON.stringify(doors) + "',UTC_TIMESTAMP(),'consolidated')");
+    const edition = Number(queryIsolatedSql(project, 'SELECT id FROM advent_edition WHERE season=2101'));
+    await page.goto('/inscription');
+    await page.getByLabel('Adresse email').fill(email);
+    await page.getByLabel('Nom de commandant').fill('AventDevis-' + marker);
+    await page.getByLabel('Mot de passe (12 caractères minimum)', { exact: true }).fill(password);
+    await page.getByLabel('Confirmer le mot de passe').fill(password);
+    await page.getByRole('button', { name: 'Créer mon compte' }).click();
+    await expect(page).toHaveURL(/connexion/);
+    await page.getByLabel('Adresse email').fill(email);
+    await page.getByLabel('Mot de passe', { exact: true }).fill(password);
+    await page.getByRole('button', { name: /Connexion/ }).click();
+    await page.locator('.universe-card').filter({ has: page.getByRole('heading', { name: /Omega/ }) }).getByRole('button').click();
+    await expect(page).toHaveURL(/planetes\/\d+$/);
+    const colony = Number(new URL(page.url()).pathname.split('/').pop());
+    const native = await browser.newContext({
+        baseURL, javaScriptEnabled: false, viewport: { width: 390, height: 844 },
+        storageState: await page.context().storageState(),
+    });
+    const proof = process.env.GR_AVENT_QUOTE_PROOF_DIRECTORY;
+    async function captureActualQuote(view, name, width, height) {
+        if (!proof) return;
+        // Capturer la navigation standard avec JavaScript, distincte du contrôle natif.
+        await page.setViewportSize({ width, height });
+        await openAdventDocument(page, view.url());
+        await expect(page.locator('.advent-credit-board')).toBeVisible();
+        await expect(page.locator('.advent-credit-board')).toHaveAttribute(
+            'data-advent-credit-day', await view.locator('.advent-credit-board').getAttribute('data-advent-credit-day'));
+        await page.screenshot({ path: proof + '/' + name + '.png', fullPage: width === 390 });
+    }
+    const quoteUrl = {};
+    const heading = { 6: 'Bon de construction', 12: 'Remise de recherche' };
+    const rowName = { 6: /Cargo de ligne.*Basique/, 12: /niveau 1/ };
+    const countQueue = () => Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM queue_item'));
+    function setStocks(amount) {
+        runIsolatedSql(project, "UPDATE planet_resource SET last_updated_at=UTC_TIMESTAMP(), current_stock=" + amount + ' WHERE planet_id=' + colony);
+    }
+    const submit = (view) => view.getByRole('button', { name: 'Confirmer et utiliser la remise' });
+    async function pick(view, day) {
+        await view.getByLabel('Colonie destinataire').selectOption(String(colony));
+        if (day === 12) await view.getByLabel('Technologie et rang').selectOption('engineering_foundations:basic');
+        const calculate = view.getByRole('button', { name: 'Calculer le devis' });
+        await calculate.focus();
+        await expect(calculate).toBeFocused();
+        await calculate.press('Enter');
+        await expect(view.getByRole('heading', { name: rowName[day] })).toBeVisible();
+        await expect(view.getByRole('columnheader', { name: 'Remise' })).toBeVisible();
+        await expect(view.getByRole('columnheader', { name: 'À payer' })).toBeVisible();
+        await expect(view.getByLabel('Colonie destinataire')).toHaveValue(String(colony));
+    }
+    try {
+        const mobile = await native.newPage();
+        await mobile.goto('/evenements/avent/' + edition);
+        await mobile.getByRole('button', { name: /Confirmer .* pour cette édition/ }).press('Enter');
+        for (const day of [6, 12, 24]) {
+            await mobile.getByRole('link', { name: new RegExp('^Porte ' + day + ',') }).press('Enter');
+            const door = mobile.locator('#advent-door-' + day);
+            await door.getByRole('radio').press('Space');
+            await door.getByLabel('Colonie destinataire').selectOption(String(colony));
+            await door.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).press('Enter');
+            const link = door.getByRole('link', { name: 'Voir le devis de cette remise' });
+            const destination = await link.getAttribute('href');
+            expect(destination).toContain('/avoirs/');
+            await link.click();
+            await expect(mobile).toHaveURL(new URL(destination, baseURL).href);
+            quoteUrl[day] = mobile.url();
+            expect(countQueue()).toBe(0);
+            await expect(mobile.getByRole('table')).toHaveCount(0);
+            await expect(submit(mobile)).toHaveCount(0);
+            if (day === 24) {
+                await expect(mobile.locator('[data-advent-credit-day]')).toHaveCount(0);
+            } else {
+                await expect(mobile.getByRole('heading', { level: 1, name: heading[day] })).toBeVisible();
+                await expect(mobile.locator('[data-advent-credit-day="' + day + '"]')).toBeVisible();
+                if (day === 6) await captureActualQuote(mobile, 'AVENT_J6_AVANT_CHOIX_390', 390, 844);
+            }
+            await mobile.getByRole('link', { name: 'Retour au calendrier', exact: true }).click();
+            await expect(mobile).toHaveURL(new URL('/evenements/avent/' + edition, baseURL).href);
+        }
+
+        // On donne au compte synthétique les déblocages et le laboratoire de la recette PHP.
+        runIsolatedSql(project, "INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (" + colony + ",'lab','basic',1) ON DUPLICATE KEY UPDATE level=1");
+        runIsolatedSql(project, "UPDATE player_universe pu JOIN player p ON p.id=pu.player_id SET pu.catalog_unlocks=JSON_SET(COALESCE(pu.catalog_unlocks,JSON_OBJECT()), '$.\"v2:planet:" + colony + ":ships:transport:basic\"', true, '$.\"v2:universe:technologies:engineering_foundations:basic\"', true) WHERE p.email='" + email + "'");
+        setStocks(0);
+        await mobile.goto(quoteUrl[12]);
+        await pick(mobile, 12);
+        await expect(mobile.getByText('Le stock de la colonie ne suffit pas.', { exact: false })).toBeVisible();
+        await expect(submit(mobile)).toHaveCount(0);
+        await captureActualQuote(mobile, 'AVENT_J12_STOCK_INSUFFISANT_390', 390, 844);
+        setStocks(9900);
+        expect(countQueue()).toBe(0);
+
+        for (const theme of ['dark', 'light']) {
+            runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(IF(JSON_TYPE(preferences)='OBJECT',preferences,JSON_OBJECT()),'$.theme','" + theme + "') WHERE email='" + email + "'");
+            for (const [width, height] of [[1920, 1080], [390, 844], [360, 800]]) {
+                await mobile.setViewportSize({ width, height });
+                for (const day of [6, 12]) {
+                    await openAdventDocument(mobile, quoteUrl[day]);
+                    await expect(mobile.locator('body')).toHaveAttribute('data-theme', theme);
+                    await expect(mobile.getByLabel('Technologie et rang')).toHaveCount(day === 12 ? 1 : 0);
+                    await pick(mobile, day);
+                    await expect(submit(mobile)).toBeVisible();
+                    await expect(submit(mobile)).toHaveAttribute('aria-describedby', 'advent-credit-usage');
+                    const layout = await mobile.locator('.advent-credit-grid').evaluate((grid) => {
+                        const [choice, result] = [...grid.children].map((panel) => panel.getBoundingClientRect());
+                        return { stacked: result.top >= choice.bottom, inline: choice.right <= result.left && Math.abs(choice.top - result.top) <= 2 };
+                    });
+                    expect(width === 1920 ? layout.inline : layout.stacked).toBe(true);
+                    expect(await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
+                    if (width !== 360) {
+                        await captureActualQuote(mobile, 'AVENT_J' + day + '_DEVIS_' + width + '_' + theme, width, height);
+                    }
+                }
+            }
+        }
+        expect(countQueue()).toBe(0);
+        await submit(mobile).press('Enter');
+        await expect(mobile).toHaveURL(new RegExp('/evenements/avent/' + edition + '$'));
+        expect(countQueue()).toBe(1);
+        expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM advent_claim WHERE redeemed_queue_id IS NOT NULL AND door=12'))).toBe(1);
+    } finally {
+        await native.close();
     }
 });

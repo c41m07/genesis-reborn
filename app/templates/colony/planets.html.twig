@@ -12,18 +12,6 @@
             <a href="{{ path('app_planets') }}" {% if not table_view %}class="active" aria-current="page"{% endif %}>Mes colonies</a>
             <a href="{{ path('app_planets',{view:'table'}) }}" {% if table_view %}class="active" aria-current="page"{% endif %}>Comparer les colonies</a>
         </nav>
-        {% if table_view %}
-            <form class="colony-resource-picker" method="get" action="{{ path('app_planets') }}" data-controller="colony-comparison">
-                <input type="hidden" name="view" value="table">
-                <label for="comparison-resource">Ressource à comparer</label>
-                <select id="comparison-resource" name="resource" data-action="change->colony-comparison#select">
-                    {% for slug,label in {metal:'Métal',nano:'Nano',hydrogen:'Hydrogène',antimatter:'Antimatière',electricity:'Électricité'} %}
-                        <option value="{{ slug }}" {{ comparison_resource==slug ? 'selected' : '' }}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-                <button class="secondary">Comparer cette ressource</button>
-            </form>
-        {% endif %}
     </div>
     {% if table_view %}
         {% if comparison_activities.research and comparison_activities.researchOrigin is null %}
@@ -35,6 +23,16 @@
         <div class="panel colony-comparison-panel" aria-labelledby="planet-comparison-title">
             <h2 id="planet-comparison-title">Comparer vos colonies</h2>
             <p class="muted">Stocks, production nette et activités de votre empire.</p>
+            <form class="colony-resource-picker" method="get" action="{{ path('app_planets') }}" data-controller="colony-comparison">
+                <input type="hidden" name="view" value="table">
+                <label for="comparison-resource">Ressource à comparer</label>
+                <select id="comparison-resource" name="resource" data-action="change->colony-comparison#select">
+                    {% for slug,label in {metal:'Métal',nano:'Nano',hydrogen:'Hydrogène',antimatter:'Antimatière',electricity:'Électricité'} %}
+                        <option value="{{ slug }}" {{ comparison_resource==slug ? 'selected' : '' }}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button class="primary">Comparer cette ressource</button>
+            </form>
             <div class="table-scroll" role="region" tabindex="0" aria-label="Comparaison des colonies, défilement horizontal">
             <table class="data-table colony-comparison">
                 <caption>Stocks / capacités, soldes nets par heure et files de votre empire</caption>
@@ -90,11 +88,29 @@
             <h2 id="comparison-colonies-title">Accès rapide à vos colonies</h2>
             <div class="colony-comparison-cards">
                 {% for world in planets %}
-                <article class="panel">
-                    <h3>{{ world.name }}</h3>
-                    <p>{{ world.coordinates() }}{% if chrome.planet and chrome.planet.id == world.id %} · Colonie active{% endif %}</p>
-                    <a class="secondary" href="{{ path('app_colony',{id:world.id}) }}">Ouvrir cette colonie<span class="visually-hidden"> : {{ world.name }}</span></a>
-                    <a href="{{ path('app_planets',{_fragment:'planet-' ~ world.id}) }}">Renommer ou consulter ses bonus<span class="visually-hidden"> : {{ world.name }}</span></a>
+                {% set current_world = chrome.planet and chrome.planet.id == world.id %}
+                {% set local = comparison_activities.local[world.id]|default({}) %}
+                {% set research_here = comparison_activities.researchOrigin == world.id ? comparison_activities.research : null %}
+                {% set activity = local.building|default(local.shipyard|default(research_here)) %}
+                <article class="panel colony-comparison-card{{ current_world ? ' is-current' : '' }}" aria-labelledby="comparison-colony-{{ world.id }}">
+                    <div class="planet-board-hero">
+                        <div class="planet-index-art"><img src="{{ asset(current_world ? 'art/colony-overview.webp' : 'art/planet-desert.webp') }}" alt="" loading="lazy" decoding="async"></div>
+                        <div>
+                            <h3 id="comparison-colony-{{ world.id }}">{{ world.name }}</h3>
+                            <p>{{ world.coordinates() }}{% if current_world %} · Colonie active{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="colony-comparison-card-activity">
+                        {% if activity %}
+                            {% include 'colony/_comparison_activity.html.twig' with {activity: activity, timezone: preferences.timezone} only %}
+                        {% else %}
+                            <p>Aucune opération en cours</p>
+                        {% endif %}
+                    </div>
+                    <div class="colony-comparison-card-actions">
+                        <a class="{{ current_world ? 'secondary' : 'primary' }}" href="{{ path('app_colony',{id:world.id}) }}">Ouvrir cette colonie<span class="visually-hidden"> : {{ world.name }}</span></a>
+                        <a class="secondary" href="{{ path('app_planets',{_fragment:'planet-' ~ world.id}) }}">Renommer ou consulter ses bonus<span class="visually-hidden"> : {{ world.name }}</span></a>
+                    </div>
                 </article>
                 {% endfor %}
             </div>

@@ -154,8 +154,52 @@ test('Combats : filtre économique, pertes lisibles et défilement clavier', asy
   await page.setViewportSize({ width: 1920, height: 1080 });
   const [balance, roundsRail] = await Promise.all([page.locator('.player-combat-core').boundingBox(), page.locator('#combat-rounds').boundingBox()]);
   expect(roundsRail.x).toBeGreaterThanOrEqual(balance.x + balance.width);
+  const guideToggle = page.locator('.first-steps-popup[open] > summary');
+  if (await guideToggle.isVisible()) await guideToggle.click();
+  await expect(guideToggle).toHaveCount(0);
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   await page.screenshot({ path: testInfo.outputPath('P02-combat-rounds-1920x1080.png'), scale:'css', animations:'disabled' });
+
+  const round = page.locator('#combat-rounds .combat-round').first();
+  const roundSummary = round.locator('summary');
+  await roundSummary.focus();
+  await page.keyboard.press('Enter');
+  await expect(round).not.toHaveAttribute('open', '');
+  await page.keyboard.press('Enter');
+  await expect(round).toHaveAttribute('open', '');
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+
+  // La comparaison reste dans le rail, mais chaque camp conserve une ligne de valeurs entière.
+  const measureRound = () => round.locator('.combat-versus').evaluate(comparison => {
+    const [own, enemy] = [...comparison.querySelectorAll('.combat-side')];
+    const row = own.querySelector('tbody tr');
+    const firstValue = row.querySelector('[data-label="Début"]');
+    const nextValue = row.querySelector('[data-label="Pertes"]');
+    const first = firstValue.getBoundingClientRect();
+    const next = nextValue.getBoundingClientRect();
+    const range = document.createRange();
+    range.selectNodeContents(firstValue);
+    return {
+      comparisonWidth: Math.round(comparison.clientWidth),
+      campWidth: Math.round(own.getBoundingClientRect().width),
+      firstValueWidth: Math.round(first.width),
+      valueTextWidth: Math.round(range.getBoundingClientRect().width),
+      campsStacked: own.getBoundingClientRect().bottom <= enemy.getBoundingClientRect().top,
+      valuesFit: first.right <= next.left && range.getBoundingClientRect().right <= first.right,
+      inlineLabel: getComputedStyle(firstValue, '::before').content,
+      noOverflow: comparison.scrollWidth <= comparison.clientWidth + 1,
+    };
+  });
+  await expect.poll(measureRound).toMatchObject({
+    campsStacked: true,
+    valuesFit: true,
+    inlineLabel: '"Début"',
+    noOverflow: true,
+  });
+  await testInfo.attach('P02-round-ouvert-mesures-FHD.json', {
+    body: JSON.stringify(await measureRound(), null, 2),
+    contentType: 'application/json',
+  });
   const rebuilt = page.getByRole('table', { name: 'Bilan des défenses planétaires par type et par rang', exact: true });
   await expect(rebuilt.getByRole('row').filter({ hasText: 'Tourelle ionique' }).getByRole('cell')).toHaveText(['Intermédiaire', '10', '3', '−7']);
   const versus = page.getByRole('region', { name: 'Round 1, comparaison des camps', exact: true });

@@ -21,3 +21,13 @@ Point de départ : fusion `411f699f` et dossier de référence `GENESIS_REBORN_M
 - Captures de travail sur données synthétiques : Chromium en viewport CSS 1920 × 1080, 390 × 844 et 360 × 800, sombre et clair. Les PNG ne sont pas versés au dépôt. Les comparaisons reprennent le même cas thématique ; le rendu évolue avec les durées, le contexte et le nombre de lignes.
 - Premier passage `91ee1c6` : 22 images et geste Max sans envoi. À titre intermédiaire, comparées à `867b695`, la carte mobile 390 démarrait à y=666 au lieu de 744, et le Journal à y=1074 au lieu de 1170. La coordonnée mobile et le Journal demandaient encore un affinage ; ne pas faire passer ces mesures intermédiaires pour les valeurs finales.
 - La CI finale valide les parcours mais ne transforme pas les variantes non photographiées en preuves visuelles. Noter séparément les captures correspondantes, les intégrations réelles et les états non rejoués.
+
+### Deux confirmations de flotte
+
+La reprise du stationnement et le rappel après perte de l’origine reprennent les
+panneaux approuvés de choix/devis, côte à côte en grand écran et dans l’ordre du
+formulaire sur téléphone. Aucun chiffre de maquette n’est intégré. Les formulaires
+natifs restent distincts : calcul en GET, confirmation en POST seulement sur devis
+valide. Sans destination possible, la reprise attend et une mission déjà en cours
+continue ; aucun bouton de confirmation n’est rendu. Le rappel avec origine
+toujours possédée garde également son devis et sa confirmation.

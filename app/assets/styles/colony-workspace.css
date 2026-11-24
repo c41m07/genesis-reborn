@@ -509,17 +509,17 @@ body.authenticated.ui-refined .colony-redesign .colony-comparison th[data-compar
         margin-block: 0 16px;
     }
 
-    body.authenticated.ui-refined .colony-redesign .colony-comparison-toolbar .colony-resource-picker {
+    body.authenticated.ui-refined .colony-redesign .colony-comparison-panel .colony-resource-picker {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         gap: 8px;
         width: auto;
-        margin: 0;
+        margin-block: .9rem 1.1rem;
     }
 
-    .colony-redesign .colony-comparison-toolbar .colony-resource-picker label { margin: 0; }
-    .colony-redesign .colony-comparison-toolbar .colony-resource-picker select { width: auto; }
+    .colony-redesign .colony-comparison-panel .colony-resource-picker label { flex-basis: 100%; margin: 0; }
+    .colony-redesign .colony-comparison-panel .colony-resource-picker select { width: auto; }
 }
 .colony-redesign .colony-comparison [data-resource] { text-align: end; font-variant-numeric: tabular-nums; }
 
@@ -545,6 +545,12 @@ body.authenticated.ui-refined .colony-redesign.player-planets-board .empty-state
 .player-planets-board .colony-comparison-percent { display:block; margin-top:.25rem; color:var(--accent); }
 .player-planets-board .colony-comparison-quick { margin-top:1.2rem; }
 .player-planets-board .colony-comparison-cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
-.player-planets-board .colony-comparison-cards article { min-width:0; }
-.player-planets-board .colony-comparison-cards article .secondary { margin-inline-end:.65rem; }
+/* P10 : les cartes d’accès restent des raccourcis. La table conserve chaque ressource et chaque file. */
+.player-planets-board .colony-comparison-card { min-width:0; padding:1rem; display:grid; gap:.8rem; }
+.player-planets-board .colony-comparison-card.is-current { border-color:color-mix(in srgb,var(--accent) 30%,var(--line)); }
+.player-planets-board .colony-comparison-card .planet-board-hero h3 { margin:0; font-size:clamp(1.3rem,2vw,1.65rem); }
+.player-planets-board .colony-comparison-card .planet-board-hero p { margin:.3rem 0 0; color:var(--muted); }
+.player-planets-board .colony-comparison-card-activity p { margin:0; }
+.player-planets-board .colony-comparison-card-actions { display:flex; flex-wrap:wrap; align-self:end; gap:.55rem; }
+.player-planets-board .colony-comparison [data-resource].is-selected-resource { background:color-mix(in srgb,var(--accent) 7%,var(--panel)); }
 @media(max-width:850px) { .player-planets-board .colony-comparison-cards { grid-template-columns:minmax(0,1fr); } }

@@ -181,7 +181,30 @@ test('Files intégrées : commande active, supplément, durée totale et annulat
   const operation=row.locator('.catalog-follow-panel [data-controller="progress"][data-progress-total-value]');const end=Date.parse(await operation.getAttribute('data-progress-end-value')),total=Date.parse(await operation.getAttribute('data-progress-total-value'));expect(total).toBeGreaterThan(end);
   await expect(row.getByText('File complète ·',{exact:false})).toBeVisible();const bar=operation.getByRole('progressbar');const start=Number(await bar.getAttribute('aria-valuenow'));await expect.poll(async()=>Number(await bar.getAttribute('aria-valuenow')),{timeout:10000}).toBeGreaterThan(start);
   await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'})});
-  await row.getByRole('link',{name:/Préparer l’annulation de Mine à ciel ouvert.*et ses dépendances/}).first().click();await page.getByRole('button',{name:/Confirmer l’annulation/}).click();
+  await row.getByRole('link',{name:/Préparer l’annulation de Mine à ciel ouvert.*et ses dépendances/}).first().click();
+  await page.waitForLoadState('load');
+  const cancellation = page.locator('.catalogue-cancel');
+  const confirm = cancellation.getByRole('button', { name: 'Confirmer l’annulation de ces 2 commandes', exact: true });
+  await expect(confirm).toBeEnabled();
+  // Vérifier l’action et le repère visuel en plus du titre du formulaire.
+  await cancellation.getByRole('link', { name: 'Conserver les commandes' }).focus();
+  await page.keyboard.press('Tab');
+  await expect(confirm).toBeFocused();
+  await expect.poll(() => confirm.evaluate(button => {
+    const css = getComputedStyle(button);
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 1;
+    const context = canvas.getContext('2d');
+    context.fillStyle = css.borderColor;
+    context.fillRect(0, 0, 1, 1);
+    const [red, green, blue] = context.getImageData(0, 0, 1, 1).data;
+    return {
+      redBorder: red > green && red > blue,
+      keyboardFocus: button === document.activeElement && button.matches(':focus-visible'),
+      outlined: css.outlineStyle !== 'none',
+    };
+  })).toEqual({ redBorder: true, keyboardFocus: true, outlined: true });
+  await confirm.click();
   await expect(page.locator('.scene-operations [data-queue-type="building"]')).toContainText('Aucune commande en cours');await expect(page.locator('.queue-extra')).toHaveCount(0);
 });
 test('Bénéfices des niveaux, arbre technologique et prérequis visuels',async({page})=>{

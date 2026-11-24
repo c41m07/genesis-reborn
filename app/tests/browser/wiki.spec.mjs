@@ -118,7 +118,19 @@ test('Wiki : rendu mobile et bureau, thèmes, navigation active et accès depuis
         if(width<1100) {await expect(page.getByLabel('Choisir un chapitre')).toBeVisible();await expect(page.getByRole('navigation',{name:'Sommaire du wiki'})).toBeHidden();}
         else {await expect(page.getByRole('navigation',{name:'Sommaire du wiki'})).toBeVisible();expect(await page.locator('.wiki-navigation').evaluate(element=>getComputedStyle(element).position)).toBe('sticky');}
         await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-        if(name==='home') expect((await page.locator('.wiki-card-grid').first().evaluate(element=>getComputedStyle(element).gridTemplateColumns)).split(' ').length).toBe(1);
+        if(name==='home') {
+          expect((await page.locator('.wiki-card-grid').first().evaluate(element=>getComputedStyle(element).gridTemplateColumns)).split(' ').length).toBe(1);
+          await expect(page.getByRole('button',{name:'Rechercher',exact:true})).toHaveClass(/primary/);
+          await expect(page.getByRole('link',{name:'Commencer le manuel',exact:true})).toHaveClass(/secondary/);
+          const card=page.locator('#wiki-debuter');
+          const chapter=card.getByRole('link',{name:/Lire le chapitre/});
+          await expect(chapter).toHaveAttribute('href',chapterPath('debuter'));
+          const heading=await card.getByRole('heading',{level:3}).boundingBox();
+          const action=await chapter.boundingBox();
+          expect(action.height).toBeGreaterThanOrEqual(44);
+          if(width>=1100) expect(action.x).toBeGreaterThanOrEqual(heading.x+heading.width);
+          else expect(action.y).toBeGreaterThan(heading.y+heading.height);
+        }
         expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
         await page.evaluate(()=>{if(document.activeElement instanceof HTMLElement) document.activeElement.blur();window.scrollTo({top:0,left:0,behavior:'instant'});});
         await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBe(0);

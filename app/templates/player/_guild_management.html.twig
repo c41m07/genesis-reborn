@@ -1,7 +1,9 @@
 {% if own.leader.id==membership.id %}
-<div class="guild-hub-management">
-    <section class="panel guild-tag-settings" aria-labelledby="guild-tag-title">
-        <h3 id="guild-tag-title">{{ own.tag ? 'Modifier le tag de la guilde' : 'Choisir le tag de la guilde' }}</h3>
+<section class="panel guild-hub-management" aria-labelledby="guild-command-context-title">
+    <h3 id="guild-command-context-title">Réglages et commandement</h3>
+    <p class="guild-control-context">Actions réservées au commandant.</p>
+    <section class="guild-tag-settings" aria-labelledby="guild-tag-title">
+        <h4 id="guild-tag-title">{{ own.tag ? 'Modifier le tag de la guilde' : 'Choisir le tag de la guilde' }}</h4>
         <form method="post">
             <input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}">
             <input type="hidden" name="action" value="tag">
@@ -11,8 +13,8 @@
             <button class="primary">Enregistrer le tag</button>
         </form>
     </section>
-    <section class="panel" aria-labelledby="guild-command-title">
-        <h3 id="guild-command-title">Gérer le commandement</h3>
+    <section class="guild-transfer-settings" aria-labelledby="guild-command-title">
+        <h4 id="guild-command-title">Gérer le commandement</h4>
         <form method="post" class="guild-transfer-form">
             <input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}">
             <label for="successor">Nouveau commandant</label>
@@ -31,5 +33,5 @@
             </details>
         </form>
     </section>
-</div>
+</section>
 {% endif %}

@@ -95,7 +95,7 @@ final class VacationPreferencesTest extends WebTestCase
     public function testVacationFormFromAnotherSelectedUniverseIsRejected(): void
     {
         $crawler=$this->client->request('GET','/profil/vacances');
-        $form=$crawler->selectButton('Activer le mode vacances dans cet univers')->form();
+        $form=$crawler->selectButton('Activer le mode vacances')->form();
         $values=$form->getPhpValues();$values['confirm']='1';
         $oldMembership=$this->player->currentPlayerUniverse->id;
         $universe=$this->em->getRepository(Universe::class)->findOneBy(['slug'=>'turbo-1']);
@@ -131,7 +131,7 @@ final class VacationPreferencesTest extends WebTestCase
         $crawler=$this->client->request('GET','/profil/vacances');
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('label[for="vacation-confirm"]');
-        $form=$crawler->selectButton('Activer le mode vacances dans cet univers')->form();
+        $form=$crawler->selectButton('Activer le mode vacances')->form();
         $form['confirm']->tick();
         $this->client->submit($form);
         self::assertResponseRedirects('/profil/vacances#vacances');
@@ -158,7 +158,7 @@ final class VacationPreferencesTest extends WebTestCase
     public function testConfirmationIsRequiredOnServer(): void
     {
         $crawler=$this->client->request('GET','/profil/vacances');
-        $this->client->submit($crawler->selectButton('Activer le mode vacances dans cet univers')->form());
+        $this->client->submit($crawler->selectButton('Activer le mode vacances')->form());
         self::assertResponseRedirects('/profil/vacances#vacances');
         self::assertSame(0,$this->em->getRepository(VacationPeriod::class)->count([]));
         $this->client->followRedirect();
@@ -168,7 +168,7 @@ final class VacationPreferencesTest extends WebTestCase
     public function testTamperedMembershipIsRejected(): void
     {
         $crawler=$this->client->request('GET','/profil/vacances');
-        $form=$crawler->selectButton('Activer le mode vacances dans cet univers')->form();
+        $form=$crawler->selectButton('Activer le mode vacances')->form();
         $values=$form->getPhpValues();
         $values['membership_id']=(string)($this->player->currentPlayerUniverse->id+1000);
         $values['confirm']='1';
@@ -189,7 +189,7 @@ final class VacationPreferencesTest extends WebTestCase
     public function testForgedEarlyExitIsRejectedOnServer(): void
     {
         $crawler=$this->client->request('GET','/profil/vacances');
-        $form=$crawler->selectButton('Activer le mode vacances dans cet univers')->form();
+        $form=$crawler->selectButton('Activer le mode vacances')->form();
         $form['confirm']->tick();
         $this->client->submit($form);
         $crawler=$this->client->followRedirect();
@@ -272,7 +272,7 @@ final class VacationPreferencesTest extends WebTestCase
         $this->em->persist($queue);
         $this->em->flush();
         $crawler=$this->client->request('GET','/profil/vacances');
-        $form=$crawler->selectButton('Activer le mode vacances dans cet univers')->form();
+        $form=$crawler->selectButton('Activer le mode vacances')->form();
         $form['confirm']->tick();
         $this->client->submit($form);
         self::assertResponseRedirects('/profil/vacances#vacances');

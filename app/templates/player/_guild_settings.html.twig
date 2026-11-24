@@ -1,34 +1,42 @@
 <section id="guild-management" aria-labelledby="guild-management-title">
-<h2 id="guild-management-title" class="visually-hidden">Gestion de la guilde</h2>
-{% if own.leader.id==membership.id %}
-<div class="guild-management-layout">
-    {% include 'player/_guild_management.html.twig' %}
-    <section class="panel guild-management-danger" aria-labelledby="guild-disband-title">
-        <h3 id="guild-disband-title">Dissolution</h3>
-        <p>Dissoudre la guilde abandonne ses projets en cours, sans rembourser les dons. Les contrats personnels sont conservés.</p>
-        <details class="guild-action-review">
-            <summary>Examiner la dissolution</summary>
-            <p>Cette action mettra fin à la guilde et à l’appartenance de ses membres.</p>
-            {% if guild_has_hall(own) %}<p>Les contributions au Hall ne seront pas remboursées. Si le Hall est installé, le système sera libéré.</p>{% endif %}
-            <form method="post">
-                <input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}">
-                <button class="secondary guild-danger-button" name="action" value="disband">Dissoudre la guilde</button>
-            </form>
-        </details>
+    <h2 id="guild-management-title" class="visually-hidden">Gestion de la guilde</h2>
+    <div class="guild-management-layout{{ own.leader.id == membership.id ? '' : ' guild-management-layout--member' }}">
+    {% if own.leader.id==membership.id %}
+        {% include 'player/_guild_management.html.twig' %}
+        <section class="panel guild-management-sensitive" aria-labelledby="guild-management-sensitive-title">
+            <h3 id="guild-management-sensitive-title">Actions sensibles</h3>
+            <p class="guild-control-context">Les conséquences sont indiquées avant la confirmation.</p>
+            <div class="guild-management-danger" aria-labelledby="guild-disband-title">
+                <h4 id="guild-disband-title">Dissolution</h4>
+                <p>Dissoudre la guilde abandonne ses projets en cours, sans rembourser les dons. Les contrats personnels sont conservés.</p>
+                <details class="guild-action-review">
+                    <summary>Examiner la dissolution</summary>
+                    <p>Cette action mettra fin à la guilde et à l’appartenance de ses membres.</p>
+                    {% if guild_has_hall(own) %}<p>Les contributions au Hall ne seront pas remboursées. Si le Hall est installé, le système sera libéré.</p>{% endif %}
+                    <form method="post">
+                        <input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}">
+                        <button class="secondary guild-danger-button" name="action" value="disband">Dissoudre la guilde</button>
+                    </form>
+                </details>
+            </div>
+        </section>
+    {% else %}
+    <section class="panel guild-management-sensitive" aria-labelledby="guild-management-sensitive-title">
+        <h3 id="guild-management-sensitive-title">Actions sensibles</h3>
+        <p class="guild-control-context">Les conséquences sont indiquées avant la confirmation.</p>
+        <div class="guild-management-danger" aria-labelledby="guild-leave-title">
+            <h4 id="guild-leave-title">Départ de la guilde</h4>
+            <p>Les dons de projet restent définitifs après votre départ. Pour recevoir une récompense, vous devez appartenir à la guilde à la clôture du projet.</p>
+            <details class="guild-action-review">
+                <summary>Examiner le départ</summary>
+                <p>Vous quitterez la guilde. Vos contrats personnels seront conservés.</p>
+                <form method="post">
+                    <input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}">
+                    <button class="secondary guild-danger-button" name="action" value="leave">Quitter la guilde</button>
+                </form>
+            </details>
+        </div>
     </section>
-</div>
-{% else %}
-<section class="panel guild-management-danger" aria-labelledby="guild-leave-title">
-    <h3 id="guild-leave-title">Départ de la guilde</h3>
-    <p>Les dons de projet restent définitifs après votre départ. Pour recevoir une récompense, vous devez appartenir à la guilde à la clôture du projet.</p>
-    <details class="guild-action-review">
-        <summary>Examiner le départ</summary>
-        <p>Vous quitterez la guilde. Vos contrats personnels seront conservés.</p>
-        <form method="post">
-            <input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}">
-            <button class="secondary guild-danger-button" name="action" value="leave">Quitter la guilde</button>
-        </form>
-    </details>
-</section>
-{% endif %}
+    {% endif %}
+    </div>
 </section>

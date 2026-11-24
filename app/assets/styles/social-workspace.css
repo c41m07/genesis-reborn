@@ -318,16 +318,149 @@ body.authenticated .social-workspace .social-profile-scores dt {
     max-width: none;
 }
 
-.public-player-profile > .panel {
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
+.public-player-profile .commander-profile-navigation {
+    margin-block-end: 8px;
 }
 
-.public-player-profile > .panel h2 {
+.public-player-profile .panel {
+    margin-block-end: 0;
+}
+
+.public-player-profile .commander-profile-identity {
+    align-items: end;
+    gap: 20px;
+    padding: clamp(16px, 2vw, 28px);
+}
+
+.public-player-profile .commander-profile-identity > div {
+    min-width: 0;
+}
+
+.public-player-profile .commander-profile-identity .eyebrow {
+    color: var(--accent);
+    font-size: 11px;
+    margin-block-end: 6px;
+}
+
+.public-player-profile .commander-profile-identity h1 {
+    font-size: clamp(27px, 2.6vw, 46px);
+}
+
+.public-player-profile .commander-profile-identity > div > p:not(.eyebrow) {
+    font-size: 14px;
+    margin-block-start: 6px;
+}
+
+.public-player-profile .commander-profile-identity .commander-profile-title {
+    color: var(--gold);
+    background: color-mix(in srgb, var(--gold) 12%, var(--panel));
+    border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
+    white-space: normal;
+    font-size: 12px;
+    margin-block-end: 0;
+}
+
+.public-player-profile .commander-profile-write {
+    flex-shrink: 0;
+    justify-content: center;
+    max-inline-size: min(100%, 34ch);
+    text-align: center;
+    text-decoration: none;
+}
+
+.public-player-profile .commander-profile-details {
+    display: grid;
+    grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+    margin-block-start: 16px;
+}
+
+.public-player-profile .commander-profile-details .panel {
+    padding: clamp(14px, 1.6vw, 24px);
+}
+
+.public-player-profile .commander-profile-details h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 20px;
+    margin-block-end: 6px;
+}
+
+.public-player-profile .commander-profile-details h2 .icon {
+    color: var(--accent);
+}
+
+.public-player-profile .commander-profile-details p {
+    color: var(--muted);
+    margin-block-end: 8px;
+}
+
+.public-player-profile .commander-profile-guild-link {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 44px;
+    font-weight: 700;
+}
+
+body.authenticated .public-player-profile .social-profile-scores > div {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding: 9px 10px;
+    gap: 8px;
+}
+
+body.authenticated .public-player-profile .social-profile-scores .commander-profile-score-total {
+    background: color-mix(in srgb, var(--accent) 11%, var(--panel));
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    font-weight: 700;
+}
+
+body.authenticated .public-player-profile .social-profile-scores dd {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: end;
+    align-items: baseline;
+    column-gap: 14px;
+    font-variant-numeric: tabular-nums;
+}
+
+.public-player-profile .social-profile-scores dd span {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.public-player-profile .social-profile-scores dd strong {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+    .public-player-profile .commander-profile-identity {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .public-player-profile .commander-profile-write {
+        max-inline-size: none;
+    }
+
+    .public-player-profile .commander-profile-details {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        margin-block-start: 10px;
+    }
+
+    .public-player-profile .commander-profile-details h2 {
+        font-size: 18px;
+    }
+
+    body.authenticated .public-player-profile .social-profile-scores dd {
+        column-gap: 7px;
+    }
 }
 
 .message-search-workspace .search-filters {
@@ -1386,6 +1519,30 @@ body.authenticated .social-board :is(.social-report-actions, .message-report-act
     margin-top: 12px;
 }
 
+/* S07 : l’alerte des propositions reçues relie la recherche aux relations
+   existantes. Elle ne remplace ni le statut actif ni les commandes de la carte. */
+body.authenticated .guild-control--diplomacy .guild-treaty-notice {
+    margin-block: 1rem;
+    padding: .75rem 1rem;
+    border: 1px solid var(--social-border);
+    border-inline-start: 3px solid var(--gold);
+    background: var(--social-panel);
+}
+
+body.authenticated .guild-control--diplomacy .guild-treaty-notice p {
+    margin: 0;
+    color: var(--text);
+}
+
+body.authenticated .guild-control--diplomacy .guild-treaty-notice p + p { margin-block-start: .3rem; }
+body.authenticated .guild-control--diplomacy .guild-treaty-notice strong { color: color-mix(in srgb, var(--text) 55%, var(--gold)); }
+body.authenticated .guild-control--diplomacy .guild-treaty-search .relation-heading h2 > .icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    color: var(--accent);
+    vertical-align: -.12em;
+}
+
 body.authenticated .social-board .guild-relations-list .guild-treaty-no-proposal {
     grid-column: 2;
     margin: 0;
@@ -1397,6 +1554,11 @@ body.authenticated .social-board .guild-treaty-review {
     flex-wrap: wrap;
     align-items: start;
     gap: 6px 12px;
+}
+
+/* Le gris de la liste historique est prévu pour le fond sombre. */
+body.authenticated[data-theme="light"] .guild-control--diplomacy .guild-treaty-review > details > ol > li {
+    color: var(--text);
 }
 
 body.authenticated .social-board .guild-treaty-review:empty {
@@ -1436,7 +1598,7 @@ body.authenticated .social-board--messages .message-mobile-back {
     }
 }
 
-body.authenticated .social-board :is(.guild-hall-closed, .social-feedback-guidance) {
+body.authenticated .social-board :is(.guild-hall-closed, .guild-hall-funding-notice, .social-feedback-guidance) {
     margin-block: 18px 0;
     padding: 12px 16px;
     border: 1px solid var(--social-border);
@@ -1444,11 +1606,69 @@ body.authenticated .social-board :is(.guild-hall-closed, .social-feedback-guidan
     background: var(--social-panel);
 }
 
-body.authenticated .social-board :is(.guild-hall-closed, .social-feedback-guidance) :is(h2, h3) {
+body.authenticated .social-board :is(.guild-hall-closed, .guild-hall-funding-notice, .social-feedback-guidance) :is(h2, h3) {
     margin-block: 0 8px;
 }
 
 body.authenticated .social-board--messages .inbox-item--unavailable .inbox-guild-hint {
     margin: 3px 0 0;
     padding: 0;
+}
+
+
+body.authenticated .social-board--guild-hall .guild-hall-funding-notice {
+    border-inline-start: 3px solid var(--gold);
+}
+body.authenticated .social-board--guild-hall .guild-hall-funding-notice > p {
+    margin: .35rem 0 0;
+    color: var(--text);
+}
+
+
+/* S19 : une seule action existe dans chaque état du Hall. */
+body.authenticated .social-board--guild-hall :is(.guild-hall-placement, .guild-hall-installed) h2 .icon,
+body.authenticated .social-board--guild-hall .guild-hall-site-link .icon {
+    width: 1.15rem;
+    height: 1.15rem;
+    vertical-align: -.1em;
+}
+body.authenticated .social-board--guild-hall :is(.guild-hall-placement, .guild-hall-installed) h2 .icon {
+    color: var(--accent);
+}
+body.authenticated .social-board--guild-hall .guild-hall-installed progress::-webkit-progress-value {
+    background: var(--project-positive);
+}
+body.authenticated .social-board--guild-hall .guild-hall-installed progress::-moz-progress-bar {
+    background: var(--project-positive);
+}
+body.authenticated .social-board--guild-hall .guild-hall-site-link {
+    min-height: 44px;
+}
+/* La cible tactile est le libellé entier, pas la case agrandie à la largeur du formulaire. */
+body.authenticated .social-board--guild-hall .guild-hall-placement .guild-hall-confirm {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    min-height: 44px;
+    cursor: pointer;
+}
+body.authenticated .social-board--guild-hall .guild-hall-placement .guild-hall-confirm input[type="checkbox"] {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    min-height: 0;
+    margin: 0;
+}
+body.authenticated .social-board--guild-hall .guild-hall-confirm input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+@media (min-width: 1021px) {
+    .social-board--guild-hall .guild-hall-placement .guild-hall-site-search {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: .5rem .7rem;
+        align-items: end;
+    }
+    .social-board--guild-hall .guild-hall-site-search label { grid-column: 1 / -1; }
+    body.authenticated .social-board--guild-hall .guild-hall-site-search input { margin: 0; }
 }

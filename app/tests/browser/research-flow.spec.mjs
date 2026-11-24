@@ -36,3 +36,28 @@ test('Laboratoire débloque une recherche, la file progresse et le résultat est
   await expect(page.locator('.technology-tree')).toBeVisible();
   await expect(page.locator('#tech-engineering_foundations-basic')).toBeVisible();
 });
+
+test('La file Recherche vide garde le lien du Guide accessible sans masquer Premiers pas', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await enter(page);
+  const colony = new URL(page.url()).pathname;
+  await page.goto(colony + '?section=technologies');
+  const queue = page.locator('.catalog-queue-ribbon [data-queue-type="research"]');
+  await expect(queue).toHaveAttribute('data-queue-occupied', 'false');
+  await queue.locator(':scope > summary').press('Enter');
+  await expect(queue.getByText('Aucune recherche en cours', { exact: true })).toBeVisible();
+  const helper = page.locator('.app-frame > .first-steps-popup-enhanced[open]');
+  await expect(helper.locator('.first-steps-popup-mount')).toBeVisible();
+  const guide = queue.getByRole('link', { name: 'Voir le guide technologique', exact: true });
+  await guide.scrollIntoViewIfNeeded();
+  expect(await guide.evaluate(el => {
+    const r = el.getBoundingClientRect();
+    return [0.25, 0.75].every(y => el.contains(document.elementFromPoint(r.x + r.width / 2, r.y + y * r.height)));
+  })).toBe(true);
+  const [action, help] = await Promise.all([guide.boundingBox(), helper.boundingBox()]);
+  expect(help.y).toBeGreaterThanOrEqual(action.y + action.height);
+  await guide.focus();
+  await expect(guide).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/technologies$/);
+});

@@ -3,21 +3,26 @@
     <input type="hidden" name="action" value="rank_save">
     <input type="hidden" name="target" value="{{ rank.id|default(0) }}">
     <input type="hidden" name="version" value="{{ rank.version|default(0) }}">
-    <div>
-        <label for="{{ formKey }}-name">Nom du grade</label>
-        <input id="{{ formKey }}-name" name="name" value="{{ rank.name|default('') }}" maxlength="60" required>
-    </div>
-    <div>
-        <label for="{{ formKey }}-position">Priorité du grade</label>
-        <input id="{{ formKey }}-position" name="position" type="number" min="1" max="1000" value="{{ rank.position|default(1) }}" required>
+    <div class="guild-rank-fields">
+        <div>
+            <label for="{{ formKey }}-name">Nom du grade</label>
+            <input id="{{ formKey }}-name" name="name" value="{{ rank.name|default('') }}" maxlength="60" required>
+        </div>
+        <div>
+            <label for="{{ formKey }}-position">Priorité du grade</label>
+            <input id="{{ formKey }}-position" name="position" type="number" min="1" max="1000" aria-describedby="{{ formKey }}-priority-help" value="{{ rank.position|default(1) }}" required>
+        </div>
     </div>
     <fieldset><legend>Permissions déléguées</legend>
         {% for permission,label in rankPermissionLabels %}
             <label for="{{ formKey }}-permission-{{ loop.index }}">
                 <input id="{{ formKey }}-permission-{{ loop.index }}" type="checkbox" name="permissions[]" value="{{ permission }}" {% if rank and permission in rank.permissions %}checked{% endif %}>
-                {{ label }}
+                <span>{{ label }}</span>
             </label>
         {% endfor %}
     </fieldset>
-    <button class="primary">{{ rank ? 'Enregistrer le grade' : 'Créer le grade' }}</button>
+    <div class="guild-rank-submit">
+        <button class="primary">{{ rank ? 'Enregistrer le grade' : 'Créer le grade' }}</button>
+        <small id="{{ formKey }}-priority-help">Une priorité plus petite indique un grade supérieur.</small>
+    </div>
 </form>

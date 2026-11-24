@@ -25,7 +25,7 @@ function sql(project, query) {
   execFileSync('docker', ['compose', '--project-name', project, '--env-file', '.env.local', 'exec', '-T', 'app', 'php', 'bin/console', 'dbal:run-sql', query], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 }
 
-test('La prévisualisation valide autorise l’envoi, les erreurs backend et réseau le bloquent', async ({ page }) => {
+test('La prévisualisation valide autorise l’envoi, les erreurs backend et réseau le bloquent', async ({ page }, info) => {
   test.setTimeout(90000);
   const email = await enter(page);
   const project = process.env.BROWSER_ROUTER;
@@ -56,7 +56,12 @@ test('La prévisualisation valide autorise l’envoi, les erreurs backend et ré
   await form.getByRole('button', { name: 'Estimer le trajet' }).click();
   await expect(estimate).toContainText('Estimation en cours');
   await expect(send).toBeDisabled();
+  await page.setViewportSize({width:1920,height:1080});
+  await estimate.evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));
+  await page.screenshot({path:info.outputPath('0701-devis-flottes-retenu-par-harnais-1920.png'),scale:'css'});
   await page.setViewportSize({ width: 390, height: 844 });
+  await estimate.evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));
+  await page.screenshot({path:info.outputPath('0701-devis-flottes-retenu-par-harnais-390.png'),scale:'css'});
   await expect(page.locator('.sidebar')).toHaveAttribute('aria-hidden', 'true');
   await expect.poll(() => page.locator('.sidebar').evaluate(element => element.getBoundingClientRect().right)).toBeLessThanOrEqual(0);
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);

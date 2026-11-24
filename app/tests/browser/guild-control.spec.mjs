@@ -66,6 +66,16 @@ test('L1C A : rôles, formulaires, traités et confirmations natives de gestion'
     await expect(member.locator('.guild-rank-editor')).toContainText('Proposer et accepter les alliances de guilde');
     await expect(member.getByRole('button', { name: 'Enregistrer le grade', exact: true })).toHaveCount(0);
     await expect(member.getByRole('link', { name: 'Créer un grade', exact: true })).toHaveCount(0);
+    await expect(member.getByText('Lecture seule', { exact: true })).toBeVisible();
+    await member.goto('/guildes/gestion');
+    const memberActions = member.getByRole('region', { name: 'Actions sensibles', exact: true });
+    await expect(memberActions.getByRole('heading', { name: 'Départ de la guilde' })).toBeVisible();
+    await expect(member.getByRole('region', { name: 'Réglages et commandement' })).toHaveCount(0);
+    await expect(memberActions.getByRole('heading', { name: 'Dissolution' })).toHaveCount(0);
+    await expect(memberActions.getByRole('button', { name: 'Quitter la guilde' })).not.toBeVisible();
+    await member.setViewportSize({ width: 390, height: 844 });
+    await member.screenshot({ path: testInfo.outputPath('S05-membre-390.png'), animations: 'disabled' });
+
 
     const description = 'Nous explorons les confins ensemble.\nEntraide et projets collectifs : chaque commandant trouve sa place.';
     await page.goto('/guildes/' + guildId + '/personnaliser');
@@ -97,14 +107,15 @@ test('L1C A : rôles, formulaires, traités et confirmations natives de gestion'
 
     for (const theme of ['dark', 'light']) {
       runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${ownerEmail}'`);
-      for (const width of [1440, 768, 390, 320]) {
-        await page.setViewportSize({ width, height: 900 });
+      for (const width of [1920, 1440, 768, 390, 320]) {
+        await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
         for (const [url, key, title] of [
           ['/guildes/grades', 'grades', 'Grades et permissions'],
           ['/guildes/gestion', 'gestion', 'Gestion de ma guilde'],
           ['/guildes/' + guildId + '/personnaliser', 'personnalisation', 'Personnaliser la guilde'],
           ['/diplomatie', 'traites', 'Relations entre guildes'],
         ]) {
+          if (width === 1920 && key !== 'grades' && key !== 'gestion') continue;
           expect((await page.goto(url)).status()).toBe(200);
           await expect(page.getByRole('heading', { level: 1 })).toHaveText(title);
           await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
@@ -113,11 +124,52 @@ test('L1C A : rôles, formulaires, traités et confirmations natives de gestion'
           if (key === 'grades') {
             await expect(page.getByLabel('Nom du grade', { exact: true })).toHaveValue(rankName);
             await expect(page.locator('.guild-rank-editor input[type="checkbox"]')).toHaveCount(7);
-            const list = await page.locator('.guild-rank-navigation').boundingBox();
-            const editor = await page.locator('.guild-rank-editor').boundingBox();
-            if (width === 1440) expect(editor.x).toBeGreaterThan(list.x);
-            else expect(editor.y).toBeGreaterThanOrEqual(list.y + list.height);
+            await expect(page.getByRole('navigation', { name: 'Grades de la guilde' }).locator('a').first()).toHaveText('Créer un grade');
+            const selectedRank = page.locator('.guild-rank-navigation [aria-current="page"]');
+            await expect(selectedRank).toHaveText(rankName + ' · priorité 10');
+            expect(await selectedRank.evaluate((link) => {
+              const title = link.querySelector('span').getBoundingClientRect();
+              const priority = link.querySelector('small');
+              const priorityBounds = priority.getBoundingClientRect();
+              const card = link.getBoundingClientRect();
+              const range = document.createRange();
+              range.selectNodeContents(priority);
+              return {
+                belowName: priorityBounds.top >= title.bottom,
+                fitsCard: priorityBounds.left >= card.left && priorityBounds.right <= card.right,
+                textLines: range.getClientRects().length,
+              };
+            })).toEqual({ belowName: true, fitsCard: true, textLines: 1 });
+            if (width === 1920 || width === 390) {
+              const guide = page.locator('.first-steps-popup');
+              await expect(guide).toHaveAttribute('open', '');
+              await expect(guide.locator('.first-steps-popup-mount')).toBeVisible();
+              await expect(guide.locator('summary[aria-label="Fermer Premiers pas"]')).toBeVisible();
+              await expect(page.getByRole('button', { name: 'Enregistrer le grade' })).toBeEnabled();
+            }
+            const directory = await page.getByRole('region', { name: 'Grades de la guilde' }).boundingBox();
+            const editor = await page.getByRole('region', { name: rankName, exact: true }).boundingBox();
+            const name = await page.getByLabel('Nom du grade', { exact: true }).boundingBox();
+            const priority = await page.getByLabel('Priorité du grade').boundingBox();
+            if (width >= 1440) {
+              expect(editor.x).toBeGreaterThanOrEqual(directory.x + directory.width);
+              expect(priority.x).toBeGreaterThanOrEqual(name.x + name.width);
+            } else {
+              expect(editor.y).toBeGreaterThanOrEqual(directory.y + directory.height);
+              expect(priority.y).toBeGreaterThanOrEqual(name.y + name.height);
+            }
+            await expect(page.getByLabel('Proposer et accepter les alliances de guilde')).toBeChecked();
           } else if (key === 'gestion') {
+            const regular = page.getByRole('region', { name: 'Réglages et commandement' });
+            const sensitive = page.getByRole('region', { name: 'Actions sensibles' });
+            await expect(regular.getByLabel('Tag de la guilde', { exact: true })).toBeVisible();
+            await expect(regular.getByLabel('Nouveau commandant')).toBeEnabled();
+            await expect(sensitive.getByRole('heading', { name: 'Dissolution' })).toBeVisible();
+            await expect(sensitive.getByRole('heading', { name: 'Départ de la guilde' })).toHaveCount(0);
+            const settings = await regular.boundingBox();
+            const review = await sensitive.boundingBox();
+            if (width >= 1440) expect(review.x).toBeGreaterThanOrEqual(settings.x + settings.width);
+            else expect(review.y).toBeGreaterThanOrEqual(settings.y + settings.height);
             await expect(page.getByRole('button', { name: 'Enregistrer le tag', exact: true })).toBeVisible();
             await expect(page.getByRole('button', { name: 'Transférer le commandement' })).not.toBeVisible();
             await expect(page.getByRole('button', { name: 'Dissoudre la guilde' })).not.toBeVisible();
@@ -127,6 +179,9 @@ test('L1C A : rôles, formulaires, traités et confirmations natives de gestion'
             await expect(page.locator('.guild-relations-list .badge')).toHaveText('Relation actuelle : Alliés');
             await expect(page.locator('.guild-relations-list').getByText(/^Proposition reçue : Pacte de défense/)).toBeVisible();
             await expect(page.locator('.guild-relations-list')).toContainText('La relation actuelle reste applicable');
+          }
+          if (width === 1920 && (key === 'grades' || key === 'gestion')) {
+            await page.screenshot({ path: testInfo.outputPath('S04-S05-' + key + '-' + theme + '-1920.png'), animations: 'disabled', scale: 'css' });
           }
           if (width === 390) {
             expect((await new AxeBuilder({ page }).include('.guild-control')

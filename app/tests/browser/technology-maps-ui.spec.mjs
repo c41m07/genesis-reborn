@@ -100,7 +100,20 @@ test('Guide technologique : domaines, prérequis réels, filtres, objectif et ac
   await page.keyboard.press('Escape');
   await expect(research.locator('summary')).toBeFocused();
   await research.locator('summary').click();
-  await panel.getByRole('button', { name: 'Suivre cet objectif', exact: true }).click();
+  const follow = panel.getByRole('button', { name: 'Suivre cet objectif', exact: true });
+  for (let step = 0; step < 12 && !await follow.evaluate(el => el === document.activeElement); step++) {
+    await page.keyboard.press('Tab');
+  }
+  await expect(follow).toBeFocused();
+  const guide = page.locator('.app-frame > .first-steps-popup-enhanced');
+  await expect(guide.locator('.first-steps-popup-mount')).toBeVisible();
+  const [cta, help] = await Promise.all([follow.boundingBox(), guide.boundingBox()]);
+  expect(help.y).toBeGreaterThanOrEqual(cta.y + cta.height);
+  expect(await follow.evaluate(el => {
+    const box = el.getBoundingClientRect();
+    return [0.5, 0.85].every(x => el.contains(document.elementFromPoint(box.x + x * box.width, box.y + box.height / 2)));
+  })).toBe(true);
+  await page.keyboard.press('Enter');
   await page.reload();
   await expect(page.locator('[data-technology-graph-target="goal"]')).toContainText(label);
   await query.fill('fighter');

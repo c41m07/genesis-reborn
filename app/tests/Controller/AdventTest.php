@@ -83,6 +83,7 @@ final class AdventTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
         self::assertCount(24, $crawler->filter('.advent-door'));
+        self::assertSelectorNotExists('.advent-board--history');
         self::assertSelectorNotExists('#advent-door-1 form');
 
         // À minuit à Paris, seule la première porte est récupérable.
@@ -136,6 +137,8 @@ final class AdventTest extends WebTestCase
         self::assertSelectorExists('a[href="/evenements/avent"]');
         $crawler = $this->client->request('GET', $editionUrl);
         self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('.advent-board--history');
+        self::assertSelectorTextContains('.advent-notice', 'retirer vos cadeaux réservés');
         self::assertSelectorTextContains('#advent-door-2', 'Expiré');
         self::assertSelectorNotExists('#advent-door-2 form');
         $token = $crawler->filter('#advent-door-1 input[name="_token"]')->attr('value');
@@ -162,6 +165,12 @@ final class AdventTest extends WebTestCase
         self::assertEqualsWithDelta(507, (float) $db->fetchOne("SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = 'metal'", [$altPlanet->id]), .01);
         self::assertEqualsWithDelta(10000, (float) $db->fetchOne("SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = 'metal'", [$planet->id]), .01);
         $this->client->request('GET', $editionUrl);
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
+        self::assertSelectorTextContains('.advent-board--history .advent-history-notice', 'Aucun cadeau ne reste à retirer');
+        self::assertSelectorNotExists('.advent-board--history form[method="post"]');
+        self::assertSelectorExists('.advent-board--history a[href="/evenements"]');
+        self::assertSelectorTextContains('#advent-door-1', 'Le cadeau de cette porte a déjà été versé.');
         self::assertSelectorTextContains('#advent-door-1', 'Versé');
         self::assertSelectorTextContains('#advent-door-24', 'Expiré');
         $this->client->request('GET', '/evenements');
@@ -585,16 +594,23 @@ final class AdventTest extends WebTestCase
         $this->client->getCookieJar()->clear();
         $this->client->loginUser($member);
         $url = '/evenements/avent/'.$id.'/avoirs/'.$researchId;
+        $this->client->request('GET', $url);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[data-advent-credit-day="12"]');
+        self::assertSelectorNotExists('#advent-credit-quote-title');
+        self::assertNull($db->fetchOne('SELECT delivered_at FROM advent_claim WHERE id = ?', [$researchId]));
         $this->client->request('GET', $url.'?colony='.$colony.'&item=colonial_expansion%3Abasic');
         self::assertResponseStatusCodeSame(422);
         self::assertNull($db->fetchOne('SELECT delivered_at FROM advent_claim WHERE id = ?', [$researchId]));
         $crawler = $this->client->request('GET', $url.'?colony='.$colony.'&item=engineering_foundations%3Abasic');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('main', 'La remise est utilisée à l’ajout en file');
+        self::assertSelectorExists('.advent-credit-grid table');
+        self::assertSelectorExists('button[aria-describedby="advent-credit-usage"]');
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM queue_item'));
         $control = $this->em->find(Player::class, $member->id)->currentPlayerUniverse;
         $target = $this->em->find(Planet::class, $colony);
-        $offer = static::getContainer()->get(AdventQueueCredits::class)->offer($control, $id, $researchId);
+        $offer = static::getContainer()->get(AdventQueueCredits::class)->findRedeemableOffer($control, $id, $researchId)['award'];
         $queue = static::getContainer()->get(QueueService::class);
         $quote = $queue->adventPreview($control, $target, 'technologies', 'engineering_foundations', 'basic', $offer);
         $before = $db->fetchAllKeyValue('SELECT resource_type, current_stock FROM planet_resource WHERE planet_id = ?', [$colony]);
@@ -617,6 +633,8 @@ final class AdventTest extends WebTestCase
         $crawler = $this->client->request('GET', '/evenements/avent/'.$id.'/avoirs/'.$shipId.'?colony='.$colony);
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('main', 'équivalents métal');
+        self::assertSelectorExists('[data-advent-credit-day="6"]');
+        self::assertSelectorNotExists('#advent-credit-technology');
         $this->client->submit($crawler->selectButton('Confirmer et utiliser la remise')->form());
         self::assertResponseRedirects('/evenements/avent/'.$id, 303);
         $ship = $db->fetchAssociative("SELECT item_slug, tier, quantity FROM queue_item WHERE queue_type = 'shipyard'");

@@ -154,14 +154,102 @@
 .first-steps-preview h2 { overflow-wrap: anywhere; }
 body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: hidden; }
 
-/* Carte, composeur et choix de cadeau gardent leur espace : l’aide reste au-dessus dans le flux. */
-:is(.shell--galaxy-v2, .shell--messaging, .shell--advent) > .first-steps-popup-enhanced {
+/* À la confirmation de départ uniquement, garder le guide à la suite du
+   formulaire sans couvrir le devis ni son bouton, même quand l’aide est ouverte. */
+.app-frame:has(> .shell .fleet-wizard-ready[data-fleet-step="3"]) > .first-steps-popup-enhanced {
     position: relative;
     inset: auto;
     margin: 0 0 8px auto;
     max-width: 100%;
 }
-:is(.shell--galaxy-v2, .shell--messaging, .shell--advent) > .first-steps-popup-enhanced .first-steps-popup-panel { margin-top: 0; }
+
+/* Sur Boosts uniquement, sortir le guide de l’aperçu quand une opération
+   peut être accélérée. Ne pas fermer l’aide ni modifier les autres onglets. */
+.app-frame:has(> .shell .inventory-boost-use form button) > .first-steps-popup-enhanced {
+    position: relative;
+    inset: auto;
+    margin: 0 0 8px auto;
+    max-width: 100%;
+}
+
+/* Ne pas masquer le nom à ressaisir ni une des deux décisions d’abandon.
+   L’aide reste ouverte dans le flux et les pages sans formulaire gardent leur disposition. */
+.app-frame:has(> .shell .colony-abandon-confirmation .abandon-confirmation) > .first-steps-popup-enhanced {
+    position: relative;
+    inset: auto;
+    margin: 0 0 8px auto;
+    max-width: 100%;
+}
+
+/* Le hub Événements garde ses dates et ses liens entièrement accessibles.
+   Seule l’aide ouverte de cette page passe dans le flux, après le tableau. */
+.app-frame:has(> .shell .player-event-board) > .first-steps-popup-enhanced[open] {
+    position: relative;
+    inset: auto;
+    margin: 0 0 8px auto;
+    max-width: 100%;
+}
+
+/* Sur téléphone, l’aide ouverte suit le formulaire de signalement.
+   Les champs et le retour au classement restent accessibles sans fermer le guide. */
+@media (max-width: 740px) {
+    .app-frame:has(> .shell .player-report-workspace .player-report-form) > .first-steps-popup-enhanced[open] {
+        position: relative;
+        inset: auto;
+        margin: 0 0 8px auto;
+        max-width: 100%;
+    }
+}
+
+/* Le panneau de l’objectif n’est pas modal sur grand écran. L’aide reste
+   dépliée sous la page de détail, sans recouvrir l’action ni les prérequis. */
+@media (min-width: 901px) {
+    .app-frame:has(> .shell #technology-detail:not([hidden])) > .first-steps-popup-enhanced {
+        position: relative;
+        inset: auto;
+        margin: 0 0 8px auto;
+        max-width: 100%;
+    }
+}
+
+/* Le comparateur peut afficher des contrôles et des cartes sur toute sa largeur.
+   Garder l’aide ouverte après le contenu, sans changer la vue Cartes. */
+.app-frame:has(> .shell .player-planets-board .colony-resource-picker) > .first-steps-popup-enhanced {
+    position: relative;
+    inset: auto;
+    margin: 0 0 8px auto;
+    max-width: 100%;
+}
+
+/* Sur téléphone, dégager les liens réellement présents dans le suivi de la Vue
+   générale et la file Recherche ouverte ; un suivi vide garde l’aide à portée. */
+@media (max-width: 740px) {
+    .app-frame:has(> .shell .overview-page .core-empire-watch a[href]) > .first-steps-popup-enhanced,
+    .app-frame:has(> .shell #panel-technologies):has(> .shell .catalog-queue-ribbon [data-queue-type="research"][data-queue-occupied="false"][open]) > .first-steps-popup-enhanced {
+        position: relative;
+        inset: auto;
+        margin: 0 0 8px auto;
+        max-width: 100%;
+    }
+}
+
+/* Carte, composeur et choix de cadeau gardent leur espace : l’aide reste au-dessus dans le flux. */
+:is(.shell--galaxy-v2, .shell--messaging, .shell--advent, .shell--fleet-decision) > .first-steps-popup-enhanced {
+    position: relative;
+    inset: auto;
+    margin: 0 0 8px auto;
+    max-width: 100%;
+}
+:is(.shell--galaxy-v2, .shell--messaging, .shell--advent, .shell--fleet-decision) > .first-steps-popup-enhanced .first-steps-popup-panel { margin-top: 0; }
+
+/* Les explications dépliées du classement Joueurs et le guide restent visibles,
+   sans étendre la disposition à l’onglet Guildes ni à l’aide repliée. */
+.app-frame > .shell:has(.ranking-board-help details[open] ~ .ranking-board-help-facts) > .first-steps-popup-enhanced[open] {
+    position: relative;
+    inset: auto;
+    margin: 0 0 8px auto;
+    max-width: 100%;
+}
 
 /* Le tableau horizontal des guildes doit rester lisible sous l’aide ouverte sur téléphone. */
 @media (max-width: 740px) {
@@ -235,3 +323,39 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
 }
 .first-steps-board-rail .first-steps-refund-destination { display:grid; gap:.5rem; margin-block:.7rem; }
 .first-steps-refund-destination :is(select,button) { min-height:44px; }
+
+
+/* P21-B : les données du rapport et son action de rejeu restent dans la même carte. */
+.first-steps-exercise-report-heading > p { margin:0 0 .75rem; }
+.first-steps-exercise-metrics > .first-steps-exercise-metric { display:block; }
+.first-steps-exercise-metric > dt { font-weight:750; }
+.first-steps-exercise-metrics .first-steps-exercise-metric--pirates > dd { color:#e9bc73; }
+body[data-theme=light] .first-steps-exercise-metrics .first-steps-exercise-metric--escort > dd { color:#12536b; }
+body[data-theme=light] .first-steps-exercise-metrics .first-steps-exercise-metric--pirates > dd { color:#784a00; }
+.first-steps-exercise-board .first-steps-exercise-metric > dd.first-steps-exercise-metric-caption {
+    color:color-mix(in srgb,var(--text) 75%,var(--muted));
+    font-size:.76rem;
+    font-weight:400;
+}
+.first-steps-exercise-layout.has-report .first-steps-exercise-summary :is(th,td) {
+    border-bottom:1px solid var(--line);
+    padding-inline:clamp(.35rem,1vw,.85rem);
+}
+.first-steps-exercise-notice {
+    margin-block:1rem;
+    padding:.85rem 1rem;
+    border:1px solid color-mix(in srgb,#3f9271 65%,var(--line));
+    border-radius:6px;
+    background:color-mix(in srgb,#3f9271 14%,var(--panel));
+}
+.first-steps-exercise-notice h3 { margin:0 0 .35rem; }
+.first-steps-exercise-notice p { margin:0; color:var(--text); }
+.first-steps-exercise-notice + form { margin-block:1rem; }
+
+/* Ne pas superposer les actions pédagogiques et le guide non modal une fois le résultat affiché. */
+.app-frame:has(> .shell .first-steps-exercise-layout.has-report) > .first-steps-popup-enhanced[open] {
+    position:relative;
+    inset:auto;
+    margin:0 0 8px auto;
+    max-width:100%;
+}

@@ -76,3 +76,99 @@ body[data-theme=light] .simulation-workspace .simulation-survivors { color:#1767
 .player-simulation-board .simulation-trial-summary :is(th,td) { padding:.55rem .75rem; font-variant-numeric:tabular-nums; }
 .player-simulation-board .simulation-trial-summary td:nth-child(n+3) { text-align:end; }
 .player-simulation-board .simulation-trial > summary { scroll-margin-top:180px; }
+
+/* P13 : le scénario manuel dispose de deux cartes et d’un bloc de validation séparé. */
+.player-simulation-board--scenario .simulation-form { padding:0; border:0; background:none; box-shadow:none; }
+.player-simulation-board--scenario .simulation-form > .strategic-grid > section { padding:clamp(.85rem,1.25vw,1.4rem); }
+.player-simulation-board--scenario .strategic-grid input[id^="arrival-"] { width:min(100%,15rem); }
+.player-simulation-board--scenario .simulation-board-load { margin-block:0 .25rem; }
+.player-simulation-board--scenario .simulation-board-load label { flex-basis:100%; }
+.player-simulation-board--scenario .simulation-board-load select { min-width:0; max-width:100%; }
+.player-simulation-board--scenario .simulation-board-options { padding:clamp(.85rem,1.25vw,1.4rem); margin-top:1rem; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+.player-simulation-board--scenario #simulation-seed { width:min(100%,20rem); }
+.player-simulation-board--scenario .simulation-board-assumptions { display:flex; gap:.7rem; align-items:flex-start; margin:0; }
+.player-simulation-board--scenario .simulation-board-assumptions input { flex:none; margin-block:.18em 0; }
+.player-simulation-board--scenario .simulation-board-options > .simulation-board-note { grid-column:1 / -1; margin:0; }
+
+/* Le guide déplié suit ce scénario, au lieu de recouvrir la confirmation. */
+.app-frame:has(> .shell .player-simulation-board--scenario) > .first-steps-popup-enhanced[open] {
+    position:relative;
+    inset:auto;
+    margin:0 0 8px auto;
+    max-width:100%;
+}
+
+
+/* Le résumé « Vaisseaux » nomme déjà la zone ; la légende reste lue dans le tableau. */
+.player-simulation-board--scenario details:first-of-type .simulation-board-unit-scroll caption {
+    position:absolute;
+    width:1px;
+    height:1px;
+    overflow:hidden;
+    clip-path:inset(50%);
+}
+
+@media (min-width: 1280px) and (min-height: 900px) {
+    .player-simulation-board--scenario .page-heading > div > p:not(.simulation-board-eyebrow) { max-width:72ch; }
+    .player-simulation-board--scenario .simulation-board-load { min-height:44px; }
+    .player-simulation-board--scenario .simulation-board-load label { flex-basis:auto; }
+    .player-simulation-board--scenario .strategic-grid > section > .simulation-board-source-link {
+        display:flex;
+        align-items:center;
+        min-height:44px;
+        margin-block:0 .25rem;
+    }
+    .player-simulation-board--scenario details:first-of-type .simulation-board-unit-scroll { max-height:11.25rem; }
+    .player-simulation-board--scenario .simulation-board-options > button {
+        grid-column:1;
+        grid-row:2;
+        align-self:center;
+    }
+    .player-simulation-board--scenario .simulation-board-options > .simulation-board-note { grid-column:2; }
+}
+
+
+/* P21 : des libellés restent associés aux couleurs et les quatre issues réelles restent visibles. */
+.player-simulation-board #simulation-result { margin-top:1rem; padding:clamp(.85rem,1.6vw,1.65rem); scroll-margin-top:1rem; }
+@media (min-width: 741px) {
+    /* Garder le titre sous le bandeau fixe, y compris après redimensionnement. */
+    .player-simulation-board #simulation-result { scroll-margin-top:6rem; }
+}
+.simulation-result-heading > p { margin:0 0 .5rem; }
+.simulation-result-heading > h2 { margin:.1rem 0 .4rem; font-size:clamp(1.45rem,2vw,2rem); }
+.player-simulation-board .simulation-outcomes { grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr)); }
+.player-simulation-board .simulation-outcomes > .simulation-outcome { display:block; }
+.player-simulation-board .simulation-outcome > dt { font-weight:700; }
+.player-simulation-board .simulation-outcome > dd {
+    display:block;
+    margin:.5rem 0 0;
+    font-size:clamp(1.35rem,2vw,1.9rem);
+    line-height:1.15;
+    color:var(--simulation-outcome-color,var(--text));
+}
+.player-simulation-board .simulation-outcome > dd.simulation-outcome-sample {
+    display:block;
+    margin-top:.35rem;
+    color:color-mix(in srgb,var(--text) 80%,var(--muted));
+    font-size:.75rem;
+}
+.player-simulation-board .simulation-outcome--attacker_wins { --simulation-outcome-color:#87d8b4; }
+.player-simulation-board .simulation-outcome--draw { --simulation-outcome-color:#e9bc73; }
+.player-simulation-board .simulation-outcome--defender_wins { --simulation-outcome-color:#ffadab; }
+body[data-theme=light] .player-simulation-board .simulation-outcome--attacker_wins { --simulation-outcome-color:#176742; }
+body[data-theme=light] .player-simulation-board .simulation-outcome--draw { --simulation-outcome-color:#784a00; }
+body[data-theme=light] .player-simulation-board .simulation-outcome--defender_wins { --simulation-outcome-color:#a02830; }
+.player-simulation-board .simulation-outcome-label { color:var(--simulation-outcome-color,var(--text)); font-weight:650; }
+.player-simulation-board .simulation-trial-summary tbody tr > * { border-bottom:1px solid var(--line); }
+.player-simulation-board .simulation-trial-summary tbody tr:nth-child(even) { background:color-mix(in srgb,var(--accent) 3%,var(--panel)); }
+.player-simulation-board .simulation-trial-summary :is(th,td):nth-child(n+3) { text-align:end; }
+.player-simulation-board .simulation-result-actions { display:flex; align-items:center; flex-wrap:wrap; gap:.8rem; }
+.player-simulation-board .simulation-result-actions + h3 { margin-top:1.5rem; }
+
+/* Garder le résultat inspectable même si le guide se déplie automatiquement. */
+.app-frame:has(> .shell .player-simulation-board #simulation-result) > .first-steps-popup-enhanced[open] {
+    position:relative;
+    inset:auto;
+    margin:0 0 8px auto;
+    max-width:100%;
+}

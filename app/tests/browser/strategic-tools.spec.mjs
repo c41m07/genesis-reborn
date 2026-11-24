@@ -32,6 +32,94 @@ test('Compositions : refus, manques, chargement explicite et absence d’envoi a
  for(const theme of ['dark','light']){await setTheme(page,theme);await page.goto('/flottes/compositions');await expect(page.locator('body')).toHaveAttribute('data-theme',theme);for(const width of [1440,390,320]){await page.setViewportSize({width,height:900});await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);}expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);await page.screenshot({path:testInfo.outputPath(`compositions-${theme}.png`),fullPage:true});}
 });
 
+test('P13 : scénario du simulateur avec deux camps et contrôles natifs', async ({page,browser,baseURL},testInfo)=>{
+ test.setTimeout(180000);
+ const owner=await register(page);
+ ships(owner);
+ for (const theme of ['dark','light']) {
+  await setTheme(page,theme);
+  for (const viewport of [{width:1920,height:1080},{width:390,height:844}]) {
+   await page.setViewportSize(viewport);
+   await page.goto('/simulateur');
+   await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
+   const guide=page.locator('.first-steps-popup-enhanced');
+   const toggle=guide.locator(':scope > summary');
+   const checkbox=page.getByRole('checkbox',{name:/Je confirme les hypothèses/});
+   const submit=page.getByRole('button',{name:'Simuler 10 combats'});
+   await expect(toggle).toBeVisible();
+   if (await guide.getAttribute('open')===null) await toggle.press('Enter');
+   await expect(guide).toHaveAttribute('open','');
+   const panel=guide.locator('.first-steps-popup-mount');
+   await expect(panel).toBeVisible();
+   const options=page.locator('.simulation-board-options');
+   const panelRect=await panel.boundingBox();
+   const optionsRect=await options.boundingBox();
+   expect(panelRect.y).toBeGreaterThanOrEqual(optionsRect.y+optionsRect.height);
+   for (const control of [checkbox, submit]) {
+    await control.evaluate(element=>element.scrollIntoView({block:'center',behavior:'instant'}));
+    await expect.poll(()=>control.evaluate(element=>{
+     const r=element.getBoundingClientRect();
+     const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+     return element===hit || element.contains(hit);
+    })).toBe(true);
+   }
+   await page.screenshot({path:testInfo.outputPath('P13-guide-ouvert-'+theme+'-'+viewport.width+'.png'),scale:'css',animations:'disabled'});
+   await toggle.press('Enter');
+   await expect(guide).not.toHaveAttribute('open','');
+   await expect(page.getByRole('heading',{name:'Simulateur de combat'})).toBeVisible();
+   const attacker=page.locator('#sim-attacker-ships-fighter-basic');
+   const defender=page.locator('#sim-defender-ships-fighter-basic');
+   await attacker.fill('24');
+   await defender.fill('18');
+   await page.getByLabel('Graine de départ reproductible').fill('713040');
+   await page.getByRole('checkbox',{name:/Je confirme les hypothèses/}).check();
+   await expect(page.getByRole('button',{name:'Simuler 10 combats'})).toBeEnabled();
+   await expect(page.locator('#simulation-result')).toHaveCount(0);
+   await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+   await page.locator('.simulation-board-unit-scroll:visible').evaluateAll(elements=>elements.forEach(element=>element.scrollTo({top:0,left:0,behavior:'instant'})));
+   await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+   if (viewport.width===1920) {
+    const attackerRound=await page.locator('#arrival-attacker').boundingBox();
+    const defenderRound=await page.locator('#arrival-defender').boundingBox();
+    expect(Math.abs(attackerRound.y-defenderRound.y)).toBeLessThanOrEqual(4);
+    await expect(submit).toBeInViewport({ratio:1});
+    const shipTables=page.locator('.strategic-grid section > details:first-of-type .simulation-board-unit-scroll');
+    await expect(shipTables).toHaveCount(2);
+    for (const table of await shipTables.all()) {
+     expect(await table.evaluate(element=>{
+      const first=element.querySelector('tbody input').getBoundingClientRect();
+      const region=element.getBoundingClientRect();
+      return first.top>=region.top && first.bottom<=region.bottom;
+     })).toBe(true);
+    }
+   }
+   await page.screenshot({path:testInfo.outputPath('P13-scenario-'+theme+'-'+viewport.width+'.png'),scale:'css',animations:'disabled'});
+   if (viewport.width===390) {
+    await page.getByRole('button',{name:'Simuler 10 combats'}).scrollIntoViewIfNeeded();
+    await page.screenshot({path:testInfo.outputPath('P13-actions-'+theme+'-390.png'),scale:'css',animations:'disabled'});
+   }
+  }
+ }
+ const state=await page.context().storageState();
+ const context=await browser.newContext({baseURL,storageState:state,javaScriptEnabled:false});
+ try {
+  const tab=await context.newPage();
+  await tab.goto('/simulateur');
+  const options=tab.locator('#simulation-scenario details').filter({hasText:'Recherches'}).first();
+  const summary=options.locator('summary');
+  await summary.focus();
+  await tab.keyboard.press('Enter');
+  await expect(options).toHaveAttribute('open','');
+  const nativeImport=tab.getByRole('button',{name:'Charger mes forces'});
+  await expect(nativeImport).toHaveAttribute('form','simulation-own-forces');
+  const request=tab.waitForRequest(request=>new URL(request.url()).searchParams.get('own_planet')===String(owner.planet));
+  await nativeImport.click();
+  expect((await request).method()).toBe('GET');
+  await expect(tab).toHaveURL(/own_planet=/);
+  await expect(tab.locator('#sim-attacker-ships-fighter-basic')).toHaveValue('2');
+ } finally { await context.close(); }
+});
+
 test('Simulateur : dix combats reproductibles, détails accessibles et aucune mutation',async({page,browser,baseURL},testInfo)=>{
  test.setTimeout(180000);
  const owner=await register(page),p=process.env.BROWSER_ROUTER,errors=[];
@@ -44,7 +132,11 @@ test('Simulateur : dix combats reproductibles, détails accessibles et aucune mu
   await tab.getByRole('checkbox',{name:/Je confirme les hypothèses/}).check();
   const button=tab.getByRole('button',{name:'Simuler 10 combats'});
   if(keyboard){await button.focus();await tab.keyboard.press('Enter');}else await button.click();
-  await expect(tab.locator('#simulation-result')).toBeVisible();
+  const result=tab.locator('#simulation-result');
+  await expect(result).toBeVisible();
+  await expect(tab).toHaveURL(/#simulation-result$/);
+  await expect(result.getByRole('heading',{name:'Estimation sur 10 combats'})).toBeInViewport();
+
  };
  await page.goto('/simulateur');await calculate(page,true);
  const result=page.locator('#simulation-result'),trials=result.locator('.simulation-trial');
@@ -56,11 +148,23 @@ test('Simulateur : dix combats reproductibles, détails accessibles et aucune mu
  await result.evaluate(element=>element.scrollIntoView({block:'start',behavior:'instant'}));
  await page.screenshot({path:testInfo.outputPath('P21-resultat-reel-1920x1080.png'),animations:'disabled',scale:'css'});
  expect(await trials.evaluateAll(nodes=>nodes.map(node=>Number(node.dataset.simulationSeed)))).toEqual(Array.from({length:10},(_,index)=>42+index));
- const counts=(await result.locator('.simulation-outcomes dd').allTextContents()).map(Number);
+ const counts=(await result.locator('.simulation-outcomes dd:not(.simulation-outcome-sample)').allTextContents()).map(Number);
  expect(counts.reduce((total,count)=>total+count,0)).toBe(10);
+ await expect(result.locator('.simulation-outcomes dt')).toHaveText(['Victoires de l’attaquant','Égalités','Défaites de l’attaquant','Combats non terminés']);
+ const rowTotals=await trialOverview.locator('tbody tr').evaluateAll(rows=>rows.map(row=>[...row.querySelectorAll('td')].slice(1).map(cell=>Number(cell.textContent))));
+ for(const [engaged,surviving,lost] of rowTotals) expect(engaged).toBe(surviving+lost);
+ const guide=page.locator('.first-steps-popup-enhanced');
+ if(await guide.getAttribute('open')===null) await guide.locator(':scope > summary').press('Enter');
+ await expect(guide).toHaveAttribute('open','');
+ await expect.poll(()=>page.evaluate(()=>{
+  const result=document.querySelector('#simulation-result').getBoundingClientRect();
+  const guide=document.querySelector('.first-steps-popup-enhanced .first-steps-popup-mount').getBoundingClientRect();
+  return guide.top>=result.bottom;
+ })).toBe(true);
+
  await expect(result.locator('strong').first()).toContainText(counts[0]*10+' %');
  await expect(result).toContainText('7 victoires donnent 70 %, sans garantir cette probabilité réelle');
- const first=await result.innerText(),trial=trials.first(),summary=trial.locator(':scope > summary');
+ const first=await result.textContent(),trial=trials.first(),summary=trial.locator(':scope > summary');
  await summary.focus();await page.keyboard.press('Enter');await expect(trial).toHaveAttribute('open','');
  await expect(trial.getByRole('heading',{name:'Camp attaquant',exact:true})).toBeVisible();
  await expect(trial.getByRole('heading',{name:'Camp défenseur',exact:true})).toBeVisible();
@@ -80,21 +184,39 @@ test('Simulateur : dix combats reproductibles, détails accessibles et aucune mu
  await summary.click();await expect(trial).not.toHaveAttribute('open','');
  await page.getByRole('checkbox',{name:/Je confirme les hypothèses/}).check();
  await page.getByRole('button',{name:'Simuler 10 combats'}).click();
- expect(await result.innerText()).toBe(first);
+ await expect(result.getByRole('heading',{name:'Estimation sur 10 combats'})).toBeInViewport();
+ expect(await result.textContent()).toBe(first);
  expect(queryIsolatedSql(p,stockQuery)).toBe(before);
  expect(Number(queryIsolatedSql(p,'SELECT COUNT(*) FROM combat_event'))).toBe(0);
  for(const theme of ['dark','light']){
   await setTheme(page,theme);await page.goto('/simulateur');await calculate(page);
   await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
-  for(const width of [1440,390,320]){
-   await page.setViewportSize({width,height:900});
+  for(const width of [1920,1440,390,320]){
+   await page.setViewportSize({width,height:width===1920 ? 1080 : (width===390 ? 844 : 900)});
    await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-   await result.screenshot({path:testInfo.outputPath(`simulateur-resultat-${theme}-${width}.png`),animations:'disabled'});
+   await result.evaluate(element=>element.scrollIntoView({block:'start',behavior:'instant'}));
+   if(width===1920 || width===390) {
+    const heading=result.getByRole('heading',{name:'Estimation sur 10 combats'});
+    await expect(heading).toBeInViewport({ratio:1});
+    await expect.poll(()=>heading.evaluate(element=>{
+     const r=element.getBoundingClientRect();
+     return element===document.elementFromPoint(r.left+8,r.top+r.height/2);
+    })).toBe(true);
+    await expect.poll(()=>result.locator('.simulation-outcome').first().evaluate(card=>{
+     const label=card.querySelector('dt').getBoundingClientRect();
+     const value=card.querySelector('dd').getBoundingClientRect();
+     return value.top>=label.bottom;
+    })).toBe(true);
+    await page.screenshot({path:testInfo.outputPath(`P21-resultat-${theme}-${width}.png`),animations:'disabled',scale:'css'});
+   }
+   if(width===390) {
+    expect((await new AxeBuilder({page}).include('#simulation-result').analyze()).violations).toEqual([]);
+   }
   }
   expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
  }
  const context=await browser.newContext({baseURL,storageState:await page.context().storageState(),javaScriptEnabled:false});
- try{const tab=await context.newPage();await tab.goto('/simulateur');await calculate(tab);await expect(tab.locator('.simulation-trial')).toHaveCount(10);}finally{await context.close();}
+ try{const tab=await context.newPage();await tab.goto('/simulateur');await calculate(tab);await expect(tab.locator('.simulation-trial')).toHaveCount(10);await tab.getByRole('link',{name:'Voir le détail des combats'}).click();await expect(tab).toHaveURL(/#simulation-trial-1$/);const detail=tab.locator('#simulation-trial-1');await detail.focus();await tab.keyboard.press('Enter');await expect(tab.locator('.simulation-trial').first()).toHaveAttribute('open','');await tab.getByRole('link',{name:'Revenir au scénario'}).click();await expect(tab).toHaveURL(/#simulation-scenario$/);await expect(tab.locator('#sim-attacker-ships-fighter-basic')).toHaveValue('2');}finally{await context.close();}
  expect(queryIsolatedSql(p,stockQuery)).toBe(before);
  expect(Number(queryIsolatedSql(p,'SELECT COUNT(*) FROM combat_event'))).toBe(0);
  expect(errors).toEqual([]);
