@@ -435,7 +435,7 @@ body.authenticated .player-event-board .event-board-challenge {
     z-index: -1;
     background: linear-gradient(90deg, #06101df5, #06101dd6 48%, #06101d36);
 }
-body.authenticated .advent-board .advent-board-heading > div :is(h1, p) {
+body.authenticated .advent-board .advent-board-heading > div :is(h1, p:not(.advent-history-kicker)) {
     color: #f1f6ff;
 }
 body.authenticated .advent-board .advent-board-heading .advent-links > a {
