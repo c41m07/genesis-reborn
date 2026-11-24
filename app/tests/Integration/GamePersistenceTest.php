@@ -465,9 +465,11 @@ final class GamePersistenceTest extends KernelTestCase
         $clock = $this->clock();
         $slow = $this->prepareRelayQueue('RetryRelay');
         $fast = $this->prepareRelayQueue('HealthyRelay');
-        $clock->sleep(max($slow['duration'], $fast['duration']) + 1);
-
         $container = self::getContainer();
+        // Le classement quotidien rattrape lui-même les files avant son relevé.
+        // Le préparer avant l’échéance isole ici la fin qui doit venir du worker.
+        self::assertGreaterThan(0, $container->get(\App\Service\Player\DailyLeaderboard::class)->tick());
+        $clock->sleep(max($slow['duration'], $fast['duration']) + 1);
         $bus = $container->get(MessageBusInterface::class);
         $transport = $container->get('messenger.transport.async');
         self::assertInstanceOf(InMemoryTransport::class, $transport);
@@ -534,8 +536,10 @@ final class GamePersistenceTest extends KernelTestCase
     public function testRelayContinuesAfterCycleRollsBackAndClosesDoctrine(string $phase): void
     {
         $clock = $this->clock();
+        // Faire publier une commande future évite que le classement ne la termine
+        // avant le worker. Le transport de test et le jeu partagent la même horloge.
+        self::getContainer()->set('messenger.transport.async', new InMemoryTransport(clock: $clock));
         $job = $this->prepareRelayQueue('CycleRelay');
-        $clock->sleep($job['duration'] + 1);
         $listener = new class ($phase) {
             public bool $failed = false;
             public function __construct(private string $phase) {}
@@ -574,6 +578,8 @@ final class GamePersistenceTest extends KernelTestCase
             static fn (QueueItemFinished $message): int => $message->queueItemId,
             $this->sentQueueMessages($transport),
         ));
+        self::assertNotNull($this->em->find(QueueItem::class, $job['item']));
+        $clock->sleep($job['duration'] + 1);
         $this->consumeRelayQueue($transport, self::getContainer()->get(MessageBusInterface::class));
         self::assertNull($this->em->find(QueueItem::class, $job['item']));
         self::assertSame(1, $this->em->getRepository(PlanetBuilding::class)->findOneBy([
