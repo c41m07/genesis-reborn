@@ -2,8 +2,7 @@
 
 namespace App\Repository;
 
-use App\Entity\AdminAuditLog;
-use App\Entity\Player;
+use App\Entity\{AdminAuditLog, MessageReport, Player, PlayerReport};
 use App\Service\Search\SearchCriteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
@@ -110,6 +109,41 @@ final class AdminReadRepository
         // Le curseur de consultation et les compteurs portent sur tous les résultats filtrés, avant la pagination.
         $stats = (clone $query)->select("COUNT(f.id) AS total, COALESCE(MAX(f.id), 0) AS latest, SUM(CASE WHEN f.status = 'open' THEN 1 ELSE 0 END) AS openCount")->getQuery()->getSingleResult();
         return $this->page($query, 'f', $page, ['f.createdAt' => 'DESC', 'f.id' => 'DESC'], (int) $stats['total']) + ['latest' => (int) $stats['latest'], 'openCount' => (int) $stats['openCount']];
+    }
+
+    public function closedModerationReports(int $messagePage, int $playerPage): array
+    {
+        $closedStatuses = ['dismissed', 'actioned'];
+        // Partir des seuls messages signalés ; ne jamais parcourir les conversations.
+        $messages = $this->em->createQueryBuilder()
+            ->select('r', 'reviewer', 'message', 'reporter', 'sender', 'recipient', 'guild')
+            ->from(MessageReport::class, 'r')
+            ->leftJoin('r.reviewedBy', 'reviewer')
+            ->join('r.message', 'message')
+            ->join('r.reporter', 'reporter')
+            ->join('message.sender', 'sender')
+            ->leftJoin('message.recipient', 'recipient')
+            ->leftJoin('message.guild', 'guild')
+            ->where('r.status IN (:statuses)')
+            ->setParameter('statuses', $closedStatuses);
+        foreach (['reporter', 'sender', 'recipient'] as $alias) {
+            $messages
+                ->addSelect($alias . 'Player', $alias . 'Former')
+                ->leftJoin($alias . '.player', $alias . 'Player')
+                ->leftJoin($alias . '.formerPlayer', $alias . 'Former');
+        }
+        $players = $this->em->createQueryBuilder()
+            ->select('r', 'reviewer')
+            ->from(PlayerReport::class, 'r')
+            ->leftJoin('r.reviewedBy', 'reviewer')
+            ->where('r.status IN (:statuses)')
+            ->setParameter('statuses', $closedStatuses);
+        $order = ['r.reviewedAt' => 'DESC', 'r.id' => 'DESC'];
+
+        return [
+            'messages' => $this->page($messages, 'r', $messagePage, $order),
+            'players' => $this->page($players, 'r', $playerPage, $order),
+        ];
     }
 
     public function universes(int $page, string $search = '', string $status = ''): array
