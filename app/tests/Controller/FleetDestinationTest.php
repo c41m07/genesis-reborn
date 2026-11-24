@@ -1,7 +1,7 @@
 <?php
 namespace App\Tests\Controller;
 
-use App\Entity\{AllianceContract,Fleet,FleetShip,Planet,PlanetResource,Player,PlayerDiscovery,PlayerUniverse,Universe};
+use App\Entity\{AllianceContract,Fleet,FleetShip,Planet,Player,PlayerDiscovery,PlayerUniverse,Universe};
 use App\Repository\GameRepository;
 use App\Service\Fleet\DestinationCatalogue;
 use App\Service\Player\RegistrationService;
@@ -110,8 +110,7 @@ final class FleetDestinationTest extends WebTestCase
         $ship = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $sent, 'slug' => 'probe']);
         self::assertSame('intermediate', $ship->tier);
         self::assertSame(1, $ship->quantity);
-        $this->em->refresh($probe);
-        self::assertSame(1, $probe->quantity);
+        self::assertSame(1, $this->quickMissionInventory($probe->id));
     }
 
     public function testQuickEspionageKeepsIndependentRanksAndRejectsAStaleQuantityWithoutDebit(): void
@@ -135,8 +134,8 @@ final class FleetDestinationTest extends WebTestCase
         $oldForm = $forms->last()->form(['probe_quantity' => 3]);
 
         // Une autre action peut consommer une sonde entre l’affichage du formulaire et le départ.
-        $superior->quantity = 2;
-        $this->em->flush();
+        // Doctrine détache les entités entre deux requêtes KernelBrowser : utiliser l'identifiant persistant.
+        $this->em->getConnection()->update('fleet_ship', ['quantity' => 2], ['id' => $superior->id]);
         $before = $this->quickMissionFuel();
         $this->client->submit($oldForm);
         self::assertResponseRedirects($url);
@@ -144,8 +143,7 @@ final class FleetDestinationTest extends WebTestCase
         self::assertSelectorTextContains('body', 'La composition n’est plus disponible exactement.');
         self::assertSame(0, $this->em->getRepository(Fleet::class)->count(['mission' => 'spy', 'status' => 'traveling']));
         self::assertSame($before, $this->quickMissionFuel());
-        $this->em->refresh($superior);
-        self::assertSame(2, $superior->quantity);
+        self::assertSame(2, $this->quickMissionInventory($superior->id));
         $newForm = $this->quickMissionForms($updatedMap, 'spy', $target->id)->last();
         self::assertSame('2', $newForm->filter('input[name="probe_quantity"]')->attr('max'));
         $this->client->submit($newForm->form(['probe_quantity' => 1]));
@@ -155,10 +153,8 @@ final class FleetDestinationTest extends WebTestCase
         $ship = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $sent, 'slug' => 'probe']);
         self::assertSame('superior', $ship->tier);
         self::assertSame(1, $ship->quantity);
-        $this->em->refresh($superior);
-        $this->em->refresh($basic);
-        self::assertSame(1, $superior->quantity);
-        self::assertSame(10, $basic->quantity);
+        self::assertSame(1, $this->quickMissionInventory($superior->id));
+        self::assertSame(10, $this->quickMissionInventory($basic->id));
     }
 
     public function testExplorationChecksNewDiscoveryBeforeDispatchInBothFleetModesAndTheMap(): void
@@ -185,7 +181,10 @@ final class FleetDestinationTest extends WebTestCase
             self::assertResponseIsSuccessful();
         }
 
-        $this->discover($this->hidden);
+        $this->em->getConnection()->insert('player_discovery', [
+            'player_universe_id' => $this->player->currentPlayerUniverse->id,
+            'solar_system_id' => $target->id,
+        ]);
         $before = $this->quickMissionFuel();
         foreach (['custom', 'unexplored'] as $mode) {
             $this->client->request('POST', '/flottes/estimer', $params + ['destination_mode' => $mode]);
@@ -220,9 +219,15 @@ final class FleetDestinationTest extends WebTestCase
 
     private function quickMissionFuel(): float
     {
-        $fuel = $this->em->getRepository(PlanetResource::class)->findOneBy(['planet' => $this->home, 'resourceType' => 'hydrogen']);
-        $this->em->refresh($fuel);
-        return (float) $fuel->currentStock;
+        return (float) $this->em->getConnection()->fetchOne(
+            'SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = ?',
+            [$this->home->id, 'hydrogen'],
+        );
+    }
+
+    private function quickMissionInventory(int $shipId): int
+    {
+        return (int) $this->em->getConnection()->fetchOne('SELECT quantity FROM fleet_ship WHERE id = ?', [$shipId]);
     }
 
     public function testDedicatedPagesExposeOnlyTheirOwnRegionsAndActiveNavigation(): void

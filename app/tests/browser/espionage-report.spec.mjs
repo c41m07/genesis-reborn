@@ -91,7 +91,14 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
    runIsolatedSql(project, `INSERT INTO fleet_ship (fleet_id,slug,tier,quantity)
      SELECT id,'probe','basic',1 FROM fleet WHERE home_planet_id=${planet} AND status='idle'
      ON DUPLICATE KEY UPDATE quantity=1`);
-   const coordinates = planetCoordinates(project, planet).split(':').slice(0, 2).join(':');
+   // Le système de la colonie est déjà connu. Choisir une destination inconnue proche
+   // à partir de la carte et conserver le trajet réellement exécuté par les workers.
+   await page.goto('/carte-v2');
+   const map = JSON.parse(await page.locator('[data-galaxy-v2-map-value]').getAttribute('data-galaxy-v2-map-value'));
+   const system = map.systems.filter(candidate => !candidate.known && Number.isFinite(candidate.distanceFromOrigin))
+     .sort((a, b) => a.distanceFromOrigin - b.distanceFromOrigin)[0];
+   expect(system).toBeDefined();
+   const coordinates = system.galaxy + ':' + system.number;
    await page.getByRole('navigation',{name:page.viewportSize().width<=740?'Navigation mobile':'Navigation principale'}).getByRole('link', { name: 'Flottes', exact: true }).click();
    await page.getByRole('navigation',{name:'Navigation des flottes'}).getByRole('link',{name:'Préparer une mission',exact:true}).click();
    const form = page.locator('.fleet-form form').first();
