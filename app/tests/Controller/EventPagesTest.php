@@ -67,6 +67,9 @@ final class EventPagesTest extends WebTestCase
         self::assertInstanceOf(Planet::class, $planet);
         $stock = $this->em->getRepository(PlanetResource::class)->findOneBy(['planet' => $planet, 'resourceType' => 'metal']);
         self::assertInstanceOf(PlanetResource::class, $stock);
+        $planetId = $planet->id;
+        $stockId = $stock->id;
+        $universeId = $membership->universe->id;
         $stock->lastUpdatedAt = $this->clock->now();
         $stock->currentStock = 100.0;
         $this->em->flush();
@@ -94,7 +97,8 @@ final class EventPagesTest extends WebTestCase
         self::assertArrayNotHasKey('guided_key', $event->parameters);
 
         $this->clock->sleep(900);
-        $path = '/admin/events/'.$event->id.'/'.$action;
+        $eventId = $event->id;
+        $path = '/admin/events/'.$eventId.'/'.$action;
         $form = $this->client->request('GET', '/admin/events')->filter('form[action="'.$path.'"]')->form();
         if ($action === 'retirer') {
             $form['reason'] = 'Arrêt de recette après dix minutes de bonus.';
@@ -102,7 +106,9 @@ final class EventPagesTest extends WebTestCase
         }
         $this->client->submit($form);
         self::assertResponseRedirects('/admin/events');
-        $this->em->refresh($event);
+        // Le kernel peut vider le gestionnaire entre deux requêtes du client.
+        $event = $this->em->find(GameEvent::class, $eventId);
+        self::assertInstanceOf(GameEvent::class, $event);
         self::assertSame('cancelled', $event->status);
         self::assertSame($action === 'retirer', isset($event->parameters['archived_at']));
 
@@ -112,15 +118,26 @@ final class EventPagesTest extends WebTestCase
         $this->client->submit($form);
         self::assertResponseRedirects('/admin/events');
         $this->clock->sleep(600);
+        $universe = $this->em->find(Universe::class, $universeId);
+        self::assertInstanceOf(Universe::class, $universe);
         $events = self::getContainer()->get(GameEventService::class);
-        self::assertEqualsWithDelta(2.0, $events->productionMultiplier($membership->universe, new \DateTimeImmutable('2026-11-17T12:10:00Z')), 0.000001);
-        self::assertEqualsWithDelta(1.0, $events->productionMultiplier($membership->universe, new \DateTimeImmutable('2026-11-17T12:15:00Z')), 0.000001);
-        $this->em->refresh($stock);
+        self::assertEqualsWithDelta(2.0, $events->productionMultiplier($universe, new \DateTimeImmutable('2026-11-17T12:10:00Z')), 0.000001);
+        self::assertEqualsWithDelta(1.0, $events->productionMultiplier($universe, new \DateTimeImmutable('2026-11-17T12:15:00Z')), 0.000001);
+        $stock = $this->em->find(PlanetResource::class, $stockId);
+        self::assertInstanceOf(PlanetResource::class, $stock);
+        $planet = $this->em->find(Planet::class, $planetId);
+        self::assertInstanceOf(Planet::class, $planet);
         self::assertSame('2026-11-17T12:00:00+00:00', $stock->lastUpdatedAt->format(DATE_ATOM));
         $expected = 100 + 2400 * $ordinaryRate;
+        $resources = self::getContainer()->get(ResourceService::class);
         self::assertEqualsWithDelta($expected, $resources->materialize($planet)['metal']->currentStock, 0.001);
+        $this->em->flush();
+        $this->em->clear();
+        $planet = $this->em->find(Planet::class, $planetId);
+        self::assertInstanceOf(Planet::class, $planet);
         self::assertEqualsWithDelta($expected, $resources->materialize($planet)['metal']->currentStock, 0.001);
-        $this->em->refresh($event);
+        $event = $this->em->find(GameEvent::class, $eventId);
+        self::assertInstanceOf(GameEvent::class, $event);
         self::assertCount(1, $event->parameters['production_history']);
     }
 
