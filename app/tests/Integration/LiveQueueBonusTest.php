@@ -164,6 +164,7 @@ final class LiveQueueBonusTest extends KernelTestCase
         $defense = $this->order($this->remote, 'defenses', 'ground_turret_anti_light', 'b');
         $localYard = $this->earnedAt($this->local, 'building', 'shipyard', 40, 2);
         $remoteYard = $this->earnedAt($this->remote, 'building', 'shipyard', 45, 2);
+        $localYardId = $localYard->id;
         $shipEnd = $ship->finishAt();
         $defenseEnd = $defense->finishAt();
         $defenseToken = $defense->dispatchToken;
@@ -175,7 +176,7 @@ final class LiveQueueBonusTest extends KernelTestCase
         self::assertSame($defenseToken, $defense->dispatchToken);
         self::assertSame(40, $ship->liveTiming['checkpoint'] - $ship->startedAt->getTimestamp());
         // La fin arrivée en retard sur le worker a été traitée à sa vraie date.
-        self::assertNull($this->em->find(QueueItem::class, $localYard->id));
+        self::assertNull($this->em->find(QueueItem::class, $localYardId));
     }
 
     public function testBoostThenVacationPreservesTheWorkAtResume(): void
@@ -187,7 +188,20 @@ final class LiveQueueBonusTest extends KernelTestCase
         $oldToken = $head->dispatchToken;
         $beforePause = $head->finishAt()->getTimestamp() - $this->clock->now()->getTimestamp();
         $work = $head->liveTiming['work'];
-        $vacations = self::getContainer()->get(VacationEconomyService::class);
+        // PHPUnit désactive volontairement cette fonction en dehors de cette fixture.
+        $container = self::getContainer();
+        $vacations = new VacationEconomyService(
+            $container->get(\App\Manager\GameManager::class),
+            $container->get(\App\Repository\GameRepository::class),
+            $container->get(\App\Service\Colony\ActionGuard::class),
+            $container->get(ResourceService::class),
+            $this->queues,
+            new \App\Service\Player\VacationPolicy($this->clock),
+            $container->get(\App\Service\Player\EmpireActivityService::class),
+            $container->get(\App\Service\Fleet\FleetService::class),
+            $this->clock,
+            true,
+        );
         $vacations->start($this->membership);
         $this->clock->sleep(48 * 3600);
         $this->queues->complete($head->id, $oldToken);
