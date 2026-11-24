@@ -66,12 +66,21 @@ test('Avent : retrouver sans JavaScript un cadeau réservé après la clôture',
 
         // L’onglet déjà ouvert doit aussi quitter la page à la fermeture.
         runIsolatedSql(project, 'UPDATE advent_window SET visible_until = UTC_TIMESTAMP() + INTERVAL 2 MINUTE WHERE edition_id=' + edition);
+        runIsolatedSql(project, "INSERT INTO game_event (name, description, type, status, starts_at, ends_at, parameters, visible_to_players) VALUES ('Annonce de décembre', '', 'announcement', 'active', UTC_TIMESTAMP(), UTC_TIMESTAMP() + INTERVAL 1 DAY, '{}', 1)");
         await page.clock.install();
         await page.goto('/evenements/avent/' + edition);
         const shortcut = page.locator('header.topbar .advent-shortcut');
-        for (const width of [360, 390, 1440]) {
+        for (const width of [360, 390, 768, 1440, 1920]) {
             await page.setViewportSize({ width, height: 900 });
             await expect(shortcut).toBeInViewport();
+            const events = page.locator('header.topbar .event-drawer');
+            await expect(events).toBeInViewport();
+            const eventBox = await events.boundingBox();
+            const adventBox = await shortcut.boundingBox();
+            expect(adventBox.height).toBeCloseTo(eventBox.height, 0);
+            expect(adventBox.y).toBeCloseTo(eventBox.y, 0);
+            const headerGap = await page.locator('header.topbar').evaluate(header => parseFloat(getComputedStyle(header).columnGap));
+            expect(adventBox.x - eventBox.x - eventBox.width).toBeCloseTo(headerGap, 0);
             await expect(page.locator('main a[href="/evenements/avent"]')).toHaveCount(0);
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 2)).toBe(true);
         }

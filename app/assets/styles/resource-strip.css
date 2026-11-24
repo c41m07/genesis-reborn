@@ -24,11 +24,11 @@ body[data-theme="light"] .resource-strip .resource-protection-legend{color:#2263
 /* Sans JavaScript, réserver la hauteur habituelle des ressources dans les catalogues. */
 .app-frame:has(> .resource-event-stack > .resource-strip){--resource-stack-height:88px}
 .event-drawer summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.topbar > .event-drawer-wrap{flex:none}
+.topbar > .event-drawer-wrap{flex:none;--event-padding-inline:14px;--event-label-gap:9px}
 .event-drawer{border:1px solid #397b82;border-radius:6px;background:#10272d;color:#e7f5f4}
-.event-drawer summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 14px;font-size:11px;font-weight:700;letter-spacing:.04em;color:#a7ece5}
+.event-drawer summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px var(--event-padding-inline);font-size:11px;font-weight:700;letter-spacing:.04em;color:#a7ece5}
 .event-drawer summary::-webkit-details-marker{display:none}
-.event-drawer summary>span:first-child{display:flex;align-items:center;gap:9px}
+.event-drawer summary>span:first-child{display:flex;align-items:center;gap:var(--event-label-gap)}
 .event-drawer summary i{width:7px;height:7px;border-radius:50%;background:#77d5c8;box-shadow:0 0 9px #77d5c899}
 .event-drawer-count{display:grid;place-items:center;min-width:21px;height:21px;border-radius:50%;background:#21494f;color:#d5faf5;font-size:10px}
 /* Rattaché à la topbar, le panneau recouvre les ressources sans passer derrière ni modifier le flux. */
@@ -50,7 +50,8 @@ body[data-theme="light"] :is(.event-drawer,.event-drawer-list){background:#e8f7f
 body[data-theme="light"] .event-drawer summary,body[data-theme="light"] .event-drawer-item strong{color:#174d4b}
 body[data-theme="light"] .event-drawer-item small,body[data-theme="light"] .event-drawer-item p{color:#526d70}
 @media(max-width:740px){
-    .event-drawer summary{gap:6px;padding-inline:8px}
+    .topbar > .event-drawer-wrap{--event-padding-inline:8px}
+    .event-drawer summary{gap:6px}
     .event-drawer-list{right:10px;width:min(420px,calc(100% - 20px))}
     .event-drawer-item{gap:8px}.event-drawer-item time{font-size:10px}
 }
