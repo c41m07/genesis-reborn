@@ -600,7 +600,7 @@ body.authenticated .public-player-profile .social-profile-scores dd {
         white-space: normal;
     }
 
-    /* Le filet de variation peut être plus large que la cellule Rang (notamment « (= 0) »). */
+    /* Une variation de plusieurs places peut dépasser la largeur de la cellule Rang. */
     body.authenticated .social-workspace .ranking-table--players tbody td:first-child,
     body.authenticated .social-workspace .ranking-table--players .ranking-change {
         white-space: normal;

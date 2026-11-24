@@ -1461,7 +1461,7 @@ Cette demande remplace la présentation du classement joueur décidée le 5 nove
 (points totaux seuls et absence de colonne planètes). Les cinq catégories ont leur
 rang, les variations sont sur la même ligne et le nombre de planètes précède les
 points totaux. Formules de points et échéance quotidienne inchangées.
-Dans ce tableau : « (= 0) » si inchangé, « (—) » sans comparaison.
+Dans ce tableau : « (=) » si inchangé, « (—) » sans comparaison.
 
 Décisions confirmées pour les lots suivants, avec état d’implémentation dans le suivi :
 - Ancienneté : acquisition par le propriétaire actuel, conquête incluse.

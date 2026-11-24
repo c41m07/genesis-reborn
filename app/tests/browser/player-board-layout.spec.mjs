@@ -25,7 +25,6 @@ test('Planches joueur : rails de décision sur grand écran et flux mobile sans 
         ['/profil/preferences', 'P07', '.account-board-settings', '.account-board-rail'],
         ['/premiers-pas', 'P08', '.first-steps-board-layout > .first-steps', '.first-steps-board-rail'],
         ['/boosts', 'P11', '.inventory-board-stock', '.inventory-boost-use'],
-        ['/classement', 'P14', '.ranking-board-main', '.ranking-board-help'],
         ['/wiki', 'P15', '.wiki-chapters', '.wiki-navigation'],
 
     ];
@@ -53,6 +52,7 @@ test('Planches joueur : rails de décision sur grand écran et flux mobile sans 
     }
 
     const additional = [
+        ['/classement', 'P14', '.ranking-board-main'],
         ['/evenements/campagne-pirate', 'P05', '.player-campaign-board'],
         ['/planetes', 'P10', '.planet-board-hero'],
         ['/technologies', 'P12', '.player-technology-board'],
