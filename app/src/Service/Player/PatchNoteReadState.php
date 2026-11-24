@@ -19,56 +19,68 @@ final class PatchNoteReadState
 
     public function hasUnread(Player $player): bool
     {
-        $latest = $this->notes->latestPublished();
+        $note = $this->notes->latestPublished();
+        if ($note === null) {
+            return false;
+        }
 
-        return $latest !== null && $this->isAfterCursor($latest, $player);
+        $latest = $this->position($note);
+        $cursor = $this->cursor($player);
+
+        return $latest !== null && ($cursor === null || $latest > $cursor);
     }
 
     public function markRead(Player $player, PatchNote $note): void
     {
-        $this->manager->transaction(function () use ($player, $note): void {
-            // Ne pas faire reculer le curseur si une lecture plus récente a déjà été enregistrée.
+        $position = $this->position($note);
+        $stored = $this->storedCursor($player);
+        if ($position === null || ($stored !== null && $position <= $stored)) {
+            return;
+        }
+
+        $this->manager->transaction(function () use ($player, $position): void {
+            // Relire sous verrou : une consultation concurrente peut avoir enregistré une note plus récente.
             $this->manager->lockCurrent($player);
-            $time = $note->publishedAt?->getTimestamp();
-            $id = $note->id;
-            if ($time === null || $id === null) {
-                return;
-            }
             $cursor = $this->cursor($player);
-            if ($cursor !== null && [$time, $id] < $cursor) {
+            if ($cursor !== null && $position < $cursor) {
                 return;
             }
 
-            $player->preferences[self::READ_TIME] = $time;
-            $player->preferences[self::READ_ID] = $id;
+            [$player->preferences[self::READ_TIME], $player->preferences[self::READ_ID]] = $position;
         });
     }
 
-    private function isAfterCursor(PatchNote $note, Player $player): bool
+    /** @return array{int, int}|null */
+    private function position(PatchNote $note): ?array
     {
         $time = $note->publishedAt?->getTimestamp();
         $id = $note->id;
-        if ($time === null || $id === null) {
-            return false;
-        }
-        $cursor = $this->cursor($player);
 
-        return $cursor === null || [$time, $id] > $cursor;
+        return $time === null || $id === null ? null : [$time, $id];
+    }
+
+    /** @return array{int, int}|null */
+    private function storedCursor(Player $player): ?array
+    {
+        $id = (int) ($player->preferences[self::READ_ID] ?? 0);
+        $time = $player->preferences[self::READ_TIME] ?? null;
+
+        return $id > 0 && is_int($time) ? [$time, $id] : null;
     }
 
     /** @return array{int, int}|null */
     private function cursor(Player $player): ?array
     {
-        $id = (int) ($player->preferences[self::READ_ID] ?? 0);
-        if ($id <= 0) {
-            return null;
-        }
-        $time = $player->preferences[self::READ_TIME] ?? null;
-        if (!is_int($time)) {
-            // Les anciens comptes n’ont que l’ID. Lire sa date si la publication existe encore.
-            $time = $this->notes->find($id)?->publishedAt?->getTimestamp();
+        $stored = $this->storedCursor($player);
+        if ($stored !== null) {
+            return $stored;
         }
 
-        return $time === null ? null : [$time, $id];
+        // L’ancien ID n’est qu’un repli de lecture. Ne prendre que la date d’une note encore
+        // visible et ne pas la sauvegarder sans une véritable consultation de la liste.
+        $id = (int) ($player->preferences[self::READ_ID] ?? 0);
+        $legacyNote = $id > 0 ? $this->notes->publishedById($id) : null;
+
+        return $legacyNote === null ? null : $this->position($legacyNote);
     }
 }

@@ -24,9 +24,13 @@ final class PatchNoteRepository
         return $this->publishedInReadingOrder()->setMaxResults(1)->getQuery()->getOneOrNullResult();
     }
 
-    public function find(int $id): ?PatchNote
+    public function publishedById(int $id): ?PatchNote
     {
-        return $this->em->find(PatchNote::class, $id);
+        return $this->publishedInReadingOrder()
+            ->andWhere('p.id = :id')
+            ->setParameter('id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
     private function publishedInReadingOrder(): QueryBuilder

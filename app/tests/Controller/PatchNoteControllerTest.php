@@ -81,6 +81,17 @@ final class PatchNoteControllerTest extends WebTestCase
         $this->client->request('GET', '/univers');
         self::assertResponseIsSuccessful();
         self::assertSelectorCount(0, 'a.patchnote-shortcut .patchnote-unread-dot');
+
+        // La note déjà lue peut être retirée temporairement. Lire la suivante ne doit pas
+        // effacer son curseur, ni la faire réapparaître comme non lue si sa date est inchangée.
+        $db = self::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        $db->update('patch_note', ['status' => 'draft'], ['id' => $sameDateHighId]);
+        $this->client->request('GET', '/patchnotes');
+        self::assertSelectorTextContains('.patchnote-card:first-child h2', 'Première à heure égale');
+        $db = self::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        $db->update('patch_note', ['status' => 'published'], ['id' => $sameDateHighId]);
+        $this->client->request('GET', '/univers');
+        self::assertSelectorCount(0, 'a.patchnote-shortcut .patchnote-unread-dot');
     }
 
     private function publishedNote(string $title, string $date): int
