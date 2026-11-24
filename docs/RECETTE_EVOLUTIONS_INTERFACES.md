@@ -60,7 +60,7 @@ opérations sensibles et le confort d’utilisation du compte habituel.
 - [ ] Le triangle jaune des messages est utilisable au clavier et au toucher et ouvre les motifs de signalement.
 - [ ] Cliquer les cinq en-têtes du classement joueur : ordre et rang changent ; la colonne active est indiquée et la pagination conserve la catégorie sur le classement global.
 - [ ] Les valeurs et leurs variations sont sur la même ligne, y compris le nombre de planètes avant les points totaux.
-- [ ] Gains « + » verts, pertes « − » rouges, stabilité « (= 0) », comparaison absente « (—) ». Une progression de place est un gain.
+- [ ] Gains « + » verts, pertes « − » rouges, stabilité « (=) », comparaison absente « (—) ». Une progression de place est un gain.
 - [ ] Le tag apparaît sous la forme [TAG] Commandant au classement uniquement ; aucune paire de crochets vide.
 - [ ] Le tag est requis à la création d’une guilde et choisi par le commandant pour une guilde existante ; unicité dans l’univers.
 - [ ] Le signalement d’un joueur propose les motifs validés et transmet le contexte de classement uniquement à la modération.
