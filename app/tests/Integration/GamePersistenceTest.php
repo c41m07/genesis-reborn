@@ -463,6 +463,7 @@ final class GamePersistenceTest extends KernelTestCase
     public function testRelayContinuesAfterOneNonConfirmedPublicationAndWorkerCreditsOnce(): void
     {
         $clock = $this->clock();
+        self::getContainer()->set('messenger.transport.async', new InMemoryTransport(clock: $clock));
         $slow = $this->prepareRelayQueue('RetryRelay');
         $fast = $this->prepareRelayQueue('HealthyRelay');
         $container = self::getContainer();
@@ -503,9 +504,11 @@ final class GamePersistenceTest extends KernelTestCase
         $firstPass = $this->sentQueueMessages($transport);
         self::assertSame([$fast['item']], array_map(static fn (QueueItemFinished $message): int => $message->queueItemId, $firstPass));
 
+        $clock->sleep(1);
         $this->consumeRelayQueue($transport, $bus);
         self::assertNotNull($this->em->find(QueueItem::class, $slow['item']));
         self::assertNull($this->em->find(QueueItem::class, $fast['item']));
+        self::assertCount(1, $transport->getAcknowledged());
 
         self::assertSame(0, $command->execute([]));
         self::assertNull($this->em->find(OutboxMessage::class, $slow['outbox']));
@@ -515,8 +518,10 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertSame($slow['token'], $secondPass[1]->dispatchToken);
         // La remise peut être répétée si le broker avait accepté un premier envoi avant de répondre.
         $transport->send(new Envelope($secondPass[1]));
+        $clock->sleep(1);
         $this->consumeRelayQueue($transport, $bus);
         self::assertNull($this->em->find(QueueItem::class, $slow['item']));
+        self::assertCount(3, $transport->getAcknowledged());
         foreach ([$slow, $fast] as $finished) {
             self::assertSame(1, $this->em->getRepository(PlanetBuilding::class)->findOneBy([
                 'planet' => $finished['planet'],
