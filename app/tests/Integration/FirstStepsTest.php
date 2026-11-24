@@ -446,7 +446,7 @@ final class FirstStepsTest extends KernelTestCase
         self::assertSame([], $rewards->available($membership));
         self::assertSame([], $this->guide->completed($membership));
         // Conserver la colonie principale intacte pour les vraies commandes payées ci-dessous.
-        [$parallelMember, $parallelPlanet] = $this->select($this->player(), 'omega-1');
+        [$parallelMember, $parallelPlanet] = $this->select($this->player('Parallel'), 'omega-1');
         $levels = ['mine_metal' => ['basic' => 1], 'power_plant' => ['basic' => 1], 'mine_nano' => ['basic' => 1]];
         foreach (array_keys($levels) as $slug) {
             $this->seedBuilding($parallelPlanet, $slug);
@@ -649,11 +649,11 @@ final class FirstStepsTest extends KernelTestCase
         return $flight;
     }
 
-    private function player(): Player
+    private function player(string $suffix = ''): Player
     {
         $data = new RegistrationData();
-        $data->username = 'GuideFixture';
-        $data->email = 'guide-fixture@example.test';
+        $data->username = 'GuideFixture'.$suffix;
+        $data->email = 'guide-fixture'.strtolower($suffix).'@example.test';
         $data->plainPassword = bin2hex(random_bytes(24)).'Aa1!';
         $player = self::getContainer()->get(RegistrationService::class)->register($data);
         $player->emailVerifiedAt = $this->clock->now();
