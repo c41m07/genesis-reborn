@@ -77,11 +77,28 @@ test('Inscription, connexion, menus, ressources fixes et rendu responsive', asyn
   await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
   await page.getByRole('navigation',{name:'Navigation mobile'}).getByRole('button',{name:'Plus'}).click();await page.keyboard.press('Shift+Tab');await expect(page.getByRole('button',{name:'Déconnexion'})).toBeFocused();await page.keyboard.press('Tab');await expect(page.locator('.brand').first()).toBeFocused();await page.keyboard.press('Escape');await expect(page.getByRole('navigation',{name:'Navigation mobile'}).getByRole('button',{name:'Plus'})).toHaveAttribute('aria-expanded','false');await page.getByRole('navigation',{name:'Navigation mobile'}).getByRole('button',{name:'Plus'}).click();await page.getByRole('navigation',{name:'Navigation principale'}).getByRole('link',{name:'Galaxie',exact:true}).click();await page.getByRole('link',{name:'Liste des systèmes',exact:true}).click();await expect(page.getByRole('heading',{name:'Liste des systèmes',exact:true})).toBeVisible();await expect(page.getByText('Signal non cartographié').first()).toBeVisible();await page.getByRole('navigation',{name:'Navigation mobile'}).getByRole('button',{name:'Plus'}).click();await page.getByRole('link',{name:'Rapports',exact:true}).click();await expect(page.getByRole('heading',{name:'Rapports',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'Aucun rapport dans cette catégorie'})).toBeVisible();expect(errors).toEqual([]);
 });
-test('Construction réelle, notification privée et actualisation sans rechargement', async ({page}) => {
-  const eventRequests=[];page.on('requestfailed',r=>{if(r.url().includes('mercure')||r.url().includes('notifications'))eventRequests.push({url:r.url(),failure:r.failure()?.errorText});});page.on('response',r=>{if(r.url().includes('mercure')||r.url().includes('notifications'))eventRequests.push({url:r.url(),status:r.status()});});
-  const {email}=await enter(page,'Live');prepareOwnedColony(process.env.BROWSER_ROUTER,email);await page.getByRole('link',{name:'Bâtiments',exact:true}).click();const card=()=>page.locator('article.catalog-card').filter({has:page.getByRole('heading',{name:'Mine à ciel ouvert',exact:true})});
-  await card().getByRole('button',{name:/Améliorer .* niveau 1/}).click();accelerateQueuedItem(process.env.BROWSER_ROUTER,email,'building','mine_metal');await expect(page.locator('.event-toast')).toBeVisible({timeout:20000}).catch(error=>{console.log('Flux temps réel:',JSON.stringify(eventRequests));throw error;});
-  await expect(page.locator('#item-mine_metal-basic .catalogue-level-badge')).toHaveText('Niv. 1',{timeout:15000});
+test('Construction réelle, notification privée et actualisation sans rechargement', async ({ page }) => {
+  const { email } = await enter(page, 'Live');
+  prepareOwnedColony(process.env.BROWSER_ROUTER, email);
+  await page.getByRole('link', { name: 'Bâtiments', exact: true }).click();
+
+  const mine = page.locator('#item-mine_metal-basic');
+  // La commande redirige vers un nouveau document, qui ouvre son propre flux privé.
+  // Une fin de chantier accélérée avant cet abonnement peut passer inaperçue.
+  const streamAfterNavigation = page.waitForEvent('framenavigated', frame => frame === page.mainFrame())
+    .then(() => page.waitForResponse(response =>
+      new URL(response.url()).pathname === '/.well-known/mercure' && response.status() === 200
+    ));
+  await Promise.all([
+    streamAfterNavigation,
+    mine.getByRole('button', { name: /Améliorer .* niveau 1/ }).click(),
+  ]);
+
+  const documentStart = await page.evaluate(() => performance.timeOrigin);
+  accelerateQueuedItem(process.env.BROWSER_ROUTER, email, 'building', 'mine_metal');
+  await expect(page.locator('.event-toast').filter({ hasText: 'Mine à ciel ouvert' })).toBeVisible({ timeout: 20000 });
+  await expect(mine.locator('.catalogue-level-badge')).toHaveText('Niv. 1', { timeout: 15000 });
+  expect(await page.evaluate(() => performance.timeOrigin)).toBe(documentStart);
 });
 test('Chantier, estimation, colonisation, transport et exploration réels', async ({page}) => {
   test.setTimeout(320000);page.setDefaultTimeout(15000);const {email}=await enter(page,'Fleet');prepareOwnedColony(process.env.BROWSER_ROUTER,email,{showLockedItems:true});grantSecondColony(process.env.BROWSER_ROUTER,email);const origin=Number(page.url().split('/').pop());await page.getByRole('navigation',{name:'Navigation principale',exact:true}).getByRole('link',{name:'Bâtiments',exact:true}).click();

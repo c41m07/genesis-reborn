@@ -1093,15 +1093,19 @@ test('Premiers pas : le devis et le départ n’acceptent que la sonde basique e
             if (value === null) fields.delete(key); else fields.set(key, value);
         }
         const response = await fetch(path, { method: 'POST', body: fields });
-        return { status: response.status, text: await response.text() };
+        return { status: response.status, text: await response.text(), url: response.url, redirected: response.redirected };
     }, { path, body });
     const forbiddenTarget = { coordinates: forgottenCoordinates, ratio: '0.1' };
     const forbiddenQuantity = { coordinates: nativeCoordinates, ratio: '0.1', 'ships[probe][basic]': '2' };
+    const guidedRefusal = 'Pour l’exercice guidé, choisissez un monde PNJ découvert et envoyez exactement une Sonde de reconnaissance basique.';
     for (const invalid of [forbiddenTarget, forbiddenQuantity]) {
         const quote = await attempt(invalid);
         expect(quote.status).toBe(422);
-        expect(quote.text).toContain('Pour l’exercice guidé');
-        expect((await attempt(invalid, '/flottes/envoyer')).text).toContain('Pour l’exercice guidé');
+        expect(JSON.parse(quote.text)).toEqual({ error: guidedRefusal });
+        const departure = await attempt(invalid, '/flottes/envoyer');
+        expect(departure.redirected).toBe(true);
+        expect(new URL(departure.url).pathname).toBe('/flottes/preparer');
+        expect(departure.text).toContain(guidedRefusal);
     }
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM fleet WHERE player_universe_id=${member} AND mission='spy'`)).toBe('0');
     const ordinary = await attempt({ ...forbiddenQuantity, tutorial_spy: null });
