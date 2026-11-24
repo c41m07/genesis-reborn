@@ -708,10 +708,16 @@ final class AdventTest extends WebTestCase
     public function testAdminShowsClosedMissingReadoutWithoutOfferingRecovery(): void
     {
         $admin = $this->player('AdventClosedReadoutAdmin', admin: true);
+        $adminId = $admin->id;
         $id = $this->publishConsolidated($admin);
         $edition = $this->em->find(AdventEdition::class, $id);
         self::assertInstanceOf(AdventEdition::class, $edition);
         $this->clock->sleep($edition->closesAt->getTimestamp() - $this->clock->now()->getTimestamp());
+        // Avancer d’un mois expire la session ; la consultation après clôture
+        // se fait avec une nouvelle session administrateur normale.
+        $admin = $this->em->find(Player::class, $adminId);
+        self::assertInstanceOf(Player::class, $admin);
+        $this->client->loginUser($admin);
         $this->client->request('GET', '/admin/events/avent');
         self::assertResponseIsSuccessful();
         $selector = '[data-advent-readout="'.$id.'"]';
