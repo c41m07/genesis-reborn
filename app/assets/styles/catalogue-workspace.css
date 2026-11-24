@@ -186,13 +186,12 @@ body[data-theme=light] .catalog-workspace .card-benefits>summary::after { color:
     .catalog-workspace .catalog-condensed .catalog-level-complete { grid-area:4/1/5/3; }
 }
 
-/* Un seul cadre pour le déficit et son délai ; le bouton d’aide reste indépendant. */
+/* Un seul cadre pour le déficit et son estimation non contractuelle. */
 .catalog-payment:has(> .has-missing-resources) { border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
 .catalog-workspace .building-card .catalog-payment > .has-missing-resources { border: 0; background: transparent; }
-.catalog-wait:not([hidden]) { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px 4px 12px; }
+.catalog-wait:not([hidden]) { display: grid; gap: 2px; padding: 4px 12px 8px; }
 .catalog-wait > span { min-width: 0; overflow-wrap: anywhere; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text); }
-.catalog-wait > button { flex: 0 0 44px; min-width: 44px; min-height: 44px; padding: 0; }
-.catalog-wait-info { inset: auto; margin: 0; max-width: min(24rem, calc(100vw - 24px)); padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--text); }
+.catalog-wait > small { color: var(--text); font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
 
 /* L’art situe le catalogue ; le titre et ses commandes restent sur un fond thématique lisible. */
 .page-heading.core-catalogue-header {
