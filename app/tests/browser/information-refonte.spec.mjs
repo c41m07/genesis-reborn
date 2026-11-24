@@ -224,10 +224,17 @@ test('P20 : feedback non envoyé et deux patchnotes publiées', async ({ page, b
       const errors = page.locator('.feedback-errors');
       await expect(errors).toContainText('Le titre est obligatoire');
       await expect(errors).toBeFocused();
+      await page.waitForLoadState('load');
+      await page.evaluate(() => document.fonts.ready);
+      // Ne pas déplacer le document dans le test : l’erreur doit rester
+      // visible après le focus natif qui suit l’envoi et le rendu final.
       await expect.poll(() => errors.getByRole('heading').evaluate(element => {
         const box = element.getBoundingClientRect();
-        return document.elementFromPoint(box.x + 8, box.y + box.height / 2) === element;
-      })).toBe(true);
+        const x = box.left + Math.min(8, box.width / 2);
+        const y = box.top + box.height / 2;
+        const top = document.elementFromPoint(x, y);
+        return { visible: Boolean(top && element.contains(top)), occludedBy: top && !element.contains(top) ? top.className : null };
+      })).toEqual({ visible: true, occludedBy: null });
       await expect(description).toHaveValue(descriptionText);
       await expect(page.getByLabel('Type', { exact: true })).toHaveValue('improvement');
       expect(count()).toBe('0');

@@ -182,6 +182,7 @@ test('Files intégrées : commande active, supplément, durée totale et annulat
   await expect(row.getByText('File complète ·',{exact:false})).toBeVisible();const bar=operation.getByRole('progressbar');const start=Number(await bar.getAttribute('aria-valuenow'));await expect.poll(async()=>Number(await bar.getAttribute('aria-valuenow')),{timeout:10000}).toBeGreaterThan(start);
   await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'})});
   await row.getByRole('link',{name:/Préparer l’annulation de Mine à ciel ouvert.*et ses dépendances/}).first().click();
+  await page.waitForLoadState('load');
   const cancellation = page.locator('.catalogue-cancel');
   const confirm = cancellation.getByRole('button', { name: 'Confirmer l’annulation de ces 2 commandes', exact: true });
   await expect(confirm).toBeEnabled();
@@ -189,7 +190,7 @@ test('Files intégrées : commande active, supplément, durée totale et annulat
   await cancellation.getByRole('link', { name: 'Conserver les commandes' }).focus();
   await page.keyboard.press('Tab');
   await expect(confirm).toBeFocused();
-  expect(await confirm.evaluate(button => {
+  await expect.poll(() => confirm.evaluate(button => {
     const css = getComputedStyle(button);
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = 1;
@@ -197,8 +198,12 @@ test('Files intégrées : commande active, supplément, durée totale et annulat
     context.fillStyle = css.borderColor;
     context.fillRect(0, 0, 1, 1);
     const [red, green, blue] = context.getImageData(0, 0, 1, 1).data;
-    return red > green && red > blue && css.outlineStyle !== 'none';
-  })).toBe(true);
+    return {
+      redBorder: red > green && red > blue,
+      keyboardFocus: button === document.activeElement && button.matches(':focus-visible'),
+      outlined: css.outlineStyle !== 'none',
+    };
+  })).toEqual({ redBorder: true, keyboardFocus: true, outlined: true });
   await confirm.click();
   await expect(page.locator('.scene-operations [data-queue-type="building"]')).toContainText('Aucune commande en cours');await expect(page.locator('.queue-extra')).toHaveCount(0);
 });
