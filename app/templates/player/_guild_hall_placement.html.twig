@@ -14,7 +14,7 @@
             <label for="hall-system">Système à revendiquer</label>
             <select id="hall-system" name="system_id" required>
                 <option value="">Choisir un emplacement</option>
-                {% for system in sites %}<option value="{{ system.id }}">{{ system.galaxy.coordinateCode() }}:{{ system.number() }}:0 · {{ system.name }}</option>{% endfor %}
+                {% for system in sites %}<option value="{{ system.id }}">{{ system.galaxy.coordinateCode() }}:{{ system.number() }} · {{ system.name }}</option>{% endfor %}
             </select>
             <label class="guild-hall-confirm" for="hall-confirm">
             <input type="checkbox" id="hall-confirm" name="confirm" value="1" required>
