@@ -105,18 +105,14 @@ final class AdminGameEventController extends AbstractController
         return $this->redirectToRoute('app_admin_game_events');
     }
     #[Route('/admin/events/{id}/delete', name: 'app_admin_game_event_delete', methods: ['POST'], requirements: ['id' => '\d+'])]
-    public function delete(int $id, Request $request, GameEventService $events): Response
+    public function delete(int $id, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('game_event_delete_' . $id, $request->request->get('_token'))) {
             throw $this->createAccessDeniedException('Formulaire expiré.');
         }
-        try {
-            $events->deleteDraft($this->admin(), $id);
-            $this->addFlash('success', 'Brouillon supprimé.');
-        } catch (\DomainException $error) {
-            $this->addFlash('error', $error->getMessage());
-        }
-        return $this->redirectToRoute('app_admin_game_events');
+        // Un ancien onglet ne possède ni motif ni confirmation du retrait. Le POST ne modifie aucun événement.
+        $this->addFlash('error', 'Aucune suppression effectuée. Ouvrez « Retirer le brouillon », puis confirmez avec un motif.');
+        return $this->redirectToRoute('app_admin_game_events', ['_fragment' => 'event-removal-' . $id], Response::HTTP_SEE_OTHER);
     }
     #[Route('/admin/events/{id}/retirer', name: 'app_admin_game_event_remove', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function remove(

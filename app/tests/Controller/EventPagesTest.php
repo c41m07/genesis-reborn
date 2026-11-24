@@ -316,4 +316,73 @@ final class EventPagesTest extends WebTestCase
             self::assertResponseRedirects('/connexion');
         }
     }
+
+    public function testAdvancedDraftHasOneAuditedRemovalAndTheLegacyPostNeverDeletes(): void
+    {
+        $this->player->roles = ['ROLE_ADMIN'];
+        $draft = $this->event('Brouillon avancé', true);
+        $draft->status = 'draft';
+        $draft->visibleToPlayers = false;
+        $active = $this->event('Annonce en cours');
+        $this->em->flush();
+        $this->client->loginUser($this->player);
+        $base = '/admin/events/' . $draft->id;
+        $canonical = $base . '/retirer';
+        $expectedStatus = fn (): mixed => $this->em->getConnection()->fetchOne('SELECT status FROM game_event WHERE id = ?', [$draft->id]);
+        $auditRows = fn (): array => $this->em->getConnection()->fetchAllAssociative(
+            "SELECT actor_id, action, details FROM admin_audit_log WHERE target_type = 'game_event' AND target_id = ?",
+            [$draft->id],
+        );
+        $list = $this->client->request('GET', '/admin/events');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('form[action="' . $base . '/delete"]');
+        self::assertSelectorNotExists('form[action="' . $base . '/cancel"]');
+        self::assertSelectorExists('form[action="/admin/events/' . $active->id . '/cancel"]');
+        self::assertSelectorCount(1, 'form[action="' . $canonical . '"]');
+        self::assertSelectorTextSame('#event-removal-' . $draft->id . ' summary', 'Retirer le brouillon');
+        $token = $list->filter('form[action="' . $canonical . '"] input[name="_token"]')->attr('value');
+        self::assertNotEmpty($token);
+
+        foreach ([
+            ['_token' => 'invalid', 'reason' => 'Contexte normal', 'confirmed' => '1', 'status' => 403],
+            ['_token' => $token, 'reason' => 'Sans confirmation', 'status' => 302],
+            ['_token' => $token, 'reason' => '  ', 'confirmed' => '1', 'status' => 302],
+        ] as $payload) {
+            $status = $payload['status'];
+            unset($payload['status']);
+            $this->client->request('POST', $canonical, $payload);
+            self::assertResponseStatusCodeSame($status);
+            self::assertSame('draft', $expectedStatus());
+            self::assertSame([], $auditRows());
+        }
+
+        // Simuler un onglet ouvert avant le retrait du bouton, avec un jeton encore valide.
+        $legacyCsrf = bin2hex(random_bytes(32));
+        $session = static::getContainer()->get('session.factory')->createSession();
+        $session->setId($this->client->getCookieJar()->get($session->getName())->getValue());
+        $session->set('_csrf/game_event_delete_' . $draft->id, $legacyCsrf);
+        $session->save();
+        $this->client->request('POST', $base . '/delete', ['_token' => 'invalid']);
+        self::assertResponseStatusCodeSame(403);
+        $this->client->request('POST', $base . '/delete', ['_token' => $legacyCsrf]);
+        self::assertResponseRedirects('/admin/events#event-removal-' . $draft->id, 303);
+        self::assertSame('draft', $expectedStatus());
+        self::assertSame([], $auditRows());
+        $current = $this->client->followRedirect();
+        self::assertSelectorTextContains('.flash.error', 'Aucune suppression effectuée.');
+        $form = $current->filter('form[action="' . $canonical . '"]')->form([
+            'reason' => '  Doublon confirmé  ',
+            'confirmed' => '1',
+        ]);
+        $this->client->submit($form);
+        self::assertResponseRedirects('/admin/events');
+        self::assertFalse($expectedStatus());
+        $rows = $auditRows();
+        self::assertCount(1, $rows);
+        self::assertSame('admin_event_deleted', $rows[0]['action']);
+        self::assertSame($this->player->id, (int) $rows[0]['actor_id']);
+        self::assertSame(['reason' => 'Doublon confirmé', 'name' => 'Brouillon avancé'],
+            json_decode($rows[0]['details'], true, 512, JSON_THROW_ON_ERROR));
+        self::assertSame('active', $this->em->getConnection()->fetchOne('SELECT status FROM game_event WHERE id = ?', [$active->id]));
+    }
 }

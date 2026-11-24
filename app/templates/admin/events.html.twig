@@ -20,18 +20,15 @@
             <p>Univers : {{ event.universe ? event.universe.name : 'Global' }} · {{ event.startsAt|date('d/m/Y H:i') }} → {{ event.endsAt|date('d/m/Y H:i') }}</p>
             <div class="admin-event-actions">
                 <a class="secondary" href="{{ path('app_admin_game_event_edit', {id: event.id}) }}">Modifier {{ event.name }}</a>
-                <form method="post" action="{{ path('app_admin_game_event_cancel', {id: event.id}) }}">
-                    <input type="hidden" name="_token" value="{{ csrf_token('game_event_cancel_' ~ event.id) }}"><button class="secondary">Annuler l’événement</button>
-                </form>
-                {% if event.status == 'draft' %}
-                    <form method="post" action="{{ path('app_admin_game_event_delete', {id: event.id}) }}">
-                        <input type="hidden" name="_token" value="{{ csrf_token('game_event_delete_' ~ event.id) }}"><button class="danger">Supprimer le brouillon</button>
+                {% if event.status in ['planned', 'active'] %}
+                    <form method="post" action="{{ path('app_admin_game_event_cancel', {id: event.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('game_event_cancel_' ~ event.id) }}"><button class="secondary">Annuler l’événement</button>
                     </form>
                 {% endif %}
             </div>
         {% endif %}
         {% if not archived and not event.parameters.challenge_id|default(null) %}
-            {% include 'admin/_event_removal.html.twig' with {challengeRemoval: false, removalId: event.id} only %}
+            {% include 'admin/_event_removal.html.twig' with {challengeRemoval: false, removalId: event.id, draftRemoval: event.status == 'draft'} only %}
         {% endif %}
     </article>
 {% else %}<p class="panel">Aucun événement pour le moment.</p>{% endfor %}
