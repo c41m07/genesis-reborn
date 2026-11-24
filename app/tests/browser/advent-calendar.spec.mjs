@@ -170,11 +170,15 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
         await mobile.getByRole('button', { name: /Confirmer .* pour cette édition/ }).press('Enter');
         await expect(mobile).toHaveURL(new URL('/evenements/avent/' + edition, baseURL).href);
 
+        // La confirmation revient à la même URL. Le formulaire du cadeau
+        // apparaît dans le nouveau document, une fois l’univers enregistré.
+        await expect(door.locator('form')).toHaveCount(1);
+        await mobile.waitForLoadState('load');
         await mobile.getByRole('link', { name: /^Porte 1,/ }).press('Enter');
         await expect(mobile).toHaveURL(/#advent-door-1$/);
-        await expect(door).toBeVisible();
+        await expect(door).toBeFocused();
         const choice = door.getByText('Choisir mon cadeau', { exact: false });
-        await choice.focus();
+        await mobile.keyboard.press('Tab');
         await expect(choice).toBeFocused();
         await mobile.keyboard.press('Enter');
         await expect(door.locator('details')).toHaveAttribute('open', '');
@@ -392,7 +396,13 @@ test('Avent : devis J6 et J12 maquetés, calcul et confirmation séparés', asyn
         const calculate = view.getByRole('button', { name: 'Calculer le devis' });
         await calculate.focus();
         await expect(calculate).toBeFocused();
-        await calculate.press('Enter');
+        // Le calcul soumet le formulaire en GET. Attendre le document du devis
+        // et ses feuilles de style avant de mesurer les panneaux.
+        await Promise.all([
+            view.waitForURL(url => url.pathname === new URL(quoteUrl[day]).pathname
+                && url.searchParams.get('colony') === String(colony), { waitUntil: 'load' }),
+            calculate.press('Enter'),
+        ]);
         await expect(view.getByRole('heading', { name: rowName[day] })).toBeVisible();
         await expect(view.getByRole('columnheader', { name: 'Remise' })).toBeVisible();
         await expect(view.getByRole('columnheader', { name: 'À payer' })).toBeVisible();
@@ -455,7 +465,9 @@ test('Avent : devis J6 et J12 maquetés, calcul et confirmation séparés', asyn
                         const [choice, result] = [...grid.children].map((panel) => panel.getBoundingClientRect());
                         return { stacked: result.top >= choice.bottom, inline: choice.right <= result.left && Math.abs(choice.top - result.top) <= 2 };
                     });
-                    expect(width === 1920 ? layout.inline : layout.stacked).toBe(true);
+                    expect(layout, `Devis J${day}, thème ${theme}, largeur ${width}px`).toMatchObject(
+                        width === 1920 ? { inline: true } : { stacked: true },
+                    );
                     expect(await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2)).toBe(true);
                     if (width !== 360) {
                         await captureActualQuote(mobile, 'AVENT_J' + day + '_DEVIS_' + width + '_' + theme, width, height);
