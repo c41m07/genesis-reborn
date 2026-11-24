@@ -154,11 +154,13 @@ test('S20 : signalement accessible avec le guide ouvert et retour sans soumissio
     const form = page.getByRole('region',{name:'Commandant signalé : '+target.username});
     await expect(form).toContainText('Nombre de planètes');
     await expect(page.getByRole('heading',{name:'Signaler un commandant',exact:true})).toBeVisible();
-    const guide = page.locator('details.first-steps-popup');
-    if (await guide.getAttribute('open') === null) {
-      await guide.locator('summary').focus();
-      await page.keyboard.press('Enter');
+    const guide = page.locator('details.first-steps-popup-enhanced');
+    const summary = guide.locator('summary');
+    await expect(summary).toHaveAttribute('aria-expanded', /^(true|false)$/);
+    if (await summary.getAttribute('aria-expanded') === 'false') {
+      await summary.press('Enter');
     }
+    await expect(summary).toHaveAttribute('aria-expanded','true');
     await expect(guide).toHaveAttribute('open','');
     await expect(guide.locator('.first-steps-popup-mount')).toBeVisible();
     await page.evaluate(()=>window.scrollTo(0,0));

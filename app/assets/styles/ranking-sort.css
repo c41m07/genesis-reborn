@@ -49,4 +49,4 @@
     background: color-mix(in srgb, var(--accent) 8%, var(--panel));
 }
 .ranking-board-help-fact h3 { margin: 0 0 .3rem; color: var(--accent); font-size: .95rem; }
-.ranking-board-help-fact p { margin: 0; }
+.ranking-board-help-fact p { margin: 0; color: var(--text); }
