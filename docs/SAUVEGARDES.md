@@ -61,6 +61,51 @@ Les 13 tests Python des scripts sont inclus dans `make test` ; le test de restau
 
 Une base restaurée peut contenir des opérations dont le message a déjà quitté l’outbox pour RabbitMQ. Le dump SQL ne restaure pas les messages du broker. La comparaison de données ne prouve donc pas la poursuite automatique de ces opérations. Le runbook historique affirmait une reconstruction possible sans en fournir une commande générale vérifiée ; ne pas déduire que cette reconstruction est livrée. Prévoir une analyse et une réconciliation contrôlées, avec tests de doublons, avant une reprise complète après perte du transport. Le chantier G doit examiner cette reprise ; aucune opération de ce type n’a été exécutée sur l’Alpha.
 
+### Recette à exécuter : reprise avec un RabbitMQ vierge
+
+Objectif : distinguer les publications encore récupérables depuis MariaDB de
+celles déjà sorties de l'outbox. Cette recette complète `make test-backup`, qui
+vérifie les données sans consommateur. Les étapes ci-dessous n'ont pas été
+exécutées pour cette recette.
+
+1. Sur la même révision, utiliser deux projets Compose neufs, séquentiels si
+   le créneau l'exige : aucun port publié ni réseau partagé, base tmpfs,
+   planificateur SQL désactivé, SMTP nul et alertes désactivées. Utiliser les
+   vrais scripts ci-dessus avec un dossier d'archives privé. Le projet cible
+   dispose d'un broker neuf ; son volume ne vient pas du dump. Vérifier la
+   sélection du transport AMQP : l'environnement Symfony `test` utilise en
+   revanche un transport en mémoire.
+2. Créer nativement deux commandes de chantier fictives A et B, sur deux
+   participations distinctes pour éviter que le règlement d'une file traite
+   aussi l'autre. Sur la source, commencer par B : après son échéance, lancer
+   une passe `app:outbox:relay --kind=events`, sans worker. Observer une
+   publication dans la file AMQP source, puis vérifier en SQL la disparition
+   de l'outbox B sans clôture ni crédit. Créer ensuite A et vérifier que la
+   commande et sa ligne d'outbox restent en SQL, sans nouvelle passe avant
+   le dump. Utiliser des quantités connues et un scénario sans autres
+   opérations. Noter les échéances en UTC.
+3. Restaurer le dump et vérifier son manifeste. Sur la cible, avant tout
+   relais, worker ou écran qui synchronise les files, vérifier par lecture
+   SQL que A et B sont dues et non créditées, que seule A a une ligne
+   d'outbox et qu'AMQP est vide après création des files. Les deux échéances
+   doivent être atteintes avant la passe de validation.
+4. Lancer une passe `app:outbox:relay --kind=events`, puis
+   `messenger:consume async` avec limites de durée et de messages. Vérifier
+   la clôture d'A, son crédit exact et la disparition de sa ligne SQL ;
+   B reste due, non créditée et sans publication recréée. Répéter les passes
+   bornées sur la cible vide : aucun crédit supplémentaire pour A, aucun
+   changement pour B. Une absence en SQL seule ne prouve pas l'envoi de B :
+   c'est l'observation du broker source qui établit la publication dans
+   cette recette.
+5. Consigner le SHA, le transport sélectionné, les échéances UTC, les
+   quantités et les comptes de messages, sans afficher de jeton ni de
+   configuration privée. Supprimer uniquement les ressources et fichiers
+   créés par la recette et vérifier leur absence.
+
+La preuve est limitée aux commandes de chantier. Elle ne définit aucune
+réémission pour B, ne remplace pas les réconciliations déjà présentes et
+n'autorise aucune reconstruction globale.
+
 ## Images des guildes
 
 Les archives SQL ne contiennent pas les logos et bannières. Sauvegarder séparément le volume logique Compose `guild_media`, en conservant les noms des fichiers, en même temps que la base contenant leurs références dans `guild_profile`. Une sauvegarde de la base seule ne permet pas de restaurer les images.
