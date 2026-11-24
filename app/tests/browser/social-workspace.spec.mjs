@@ -34,8 +34,11 @@ test('L7E A : recherche, actualisation des non-lus et rédaction restent indépe
     const context = await browser.newContext({ baseURL });
     try {
         const peer = await register(await context.newPage(), 'Social-Peer');
-        runIsolatedSql(process.env.BROWSER_ROUTER,
-            `INSERT INTO social_message(sender_id,recipient_id,content,created_at) VALUES(${peer.member},${owner.member},'Transport reçu. Merci pour les ressources.',UTC_TIMESTAMP())`);
+        const project = process.env.BROWSER_ROUTER;
+        runIsolatedSql(project,
+            `UPDATE player p JOIN player_universe pu ON pu.player_id=p.id SET p.preferences=JSON_SET(CASE WHEN JSON_TYPE(p.preferences)='OBJECT' THEN p.preferences ELSE JSON_OBJECT() END,'$.timezone','America/St_Johns') WHERE pu.id=${owner.member}`);
+        runIsolatedSql(project,
+            `INSERT INTO social_message(sender_id,recipient_id,content,created_at) VALUES(${peer.member},${owner.member},'Transport reçu. Merci pour les ressources.','2026-11-10 14:45:00')`);
         const conversationUrl = `/messages?with=${peer.member}`;
         await page.goto('/messages');
         const contact = page.getByRole('link', { name: new RegExp(peer.name) }).first();
@@ -44,8 +47,17 @@ test('L7E A : recherche, actualisation des non-lus et rédaction restent indépe
         await expect(contact).not.toContainText('Transport reçu. Merci pour les ressources.');
         await page.goto(conversationUrl);
         await expect(page.locator('.message-day time')).toHaveCount(1);
-        const contactTime = await contact.locator('.inbox-contact-meta time').textContent();
-        expect(await page.locator('.message-meta time').textContent()).toContain(contactTime.slice(-5));
+        const contactTime = contact.locator('.inbox-contact-meta time');
+        const messageTime = page.locator('.message-meta time');
+        await expect(contactTime).toHaveText('10/11 11:15');
+        await expect(messageTime).toHaveText('10/11/2026 11:15');
+        expect(Date.parse(await contactTime.getAttribute('datetime'))).toBe(Date.parse(await messageTime.getAttribute('datetime')));
+        const refresh = await page.request.get('/messages/non-lus?with=' + peer.member);
+        expect(refresh.ok()).toBe(true);
+        const fragmentTime = await page.evaluate((markup) => {
+            return new DOMParser().parseFromString(markup, 'text/html').querySelector('.inbox-item[aria-current="page"] time')?.textContent;
+        }, (await refresh.json()).conversations);
+        expect(fragmentTime).toBe('10/11 11:15');
         await page.setViewportSize({ width: 1920, height: 1080 });
         await page.screenshot({ path: info.outputPath('social-S12-messagerie-1920x1080.png'), animations: 'disabled' });
         await page.setViewportSize({ width: 390, height: 844 });
