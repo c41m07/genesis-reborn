@@ -59,7 +59,12 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
     expect(right.y).toBeGreaterThanOrEqual(left.y+left.height);
    }
    const next=page.getByRole('link',{name:'Continuer : défenses'});
-   await next.scrollIntoViewIfNeeded();
+   const tables=shipsStep.locator('.simulation-board-unit-scroll');
+   for (const table of await tables.all()) {
+    expect(await table.evaluate(el=>el.scrollWidth<=el.clientWidth+1), 'les trois rangs tiennent dans la carte').toBe(true);
+   }
+   await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+   if (viewport.width===1920) await expect(next).toBeInViewport({ratio:1});
    await page.screenshot({path:testInfo.outputPath('P13-wizard-ships-'+theme+'-'+viewport.width+'.png'),scale:'css',animations:'disabled'});
    await next.focus();
    await page.keyboard.press('Enter');
@@ -130,17 +135,20 @@ test('Simulateur : sources datées, champs inconnus éditables et brouillon cons
  const reportInsert=(sender,planet,data)=>`INSERT INTO espionage_report (sender_id,target_id,result,created_at,probes_sent,intel_categories,detection_chance,sender_espionage_level,target_espionage_level,target_counter_espionage_level,snapshot) VALUES (${sender},${planet},'success','2026-11-20 17:42:00',1,2,3,0,0,0,'${JSON.stringify(data)}')`;
  runIsolatedSql(router,reportInsert(owner.member,target.planet,snapshot));
  runIsolatedSql(router,reportInsert(target.member,owner.planet,snapshot));
- const reportId=queryIsolatedSql(router,`SELECT id FROM espionage_report WHERE sender_id=${owner.member}`).trim();
+ const reportId=Number(queryIsolatedSql(router,`SELECT id FROM espionage_report WHERE sender_id=${owner.member}`));
+ expect(Number.isSafeInteger(reportId) && reportId>0).toBe(true);
  const nav=page.getByRole('navigation',{name:'Étapes du simulateur'});
  await page.goto('/simulateur');
  await page.locator('#sim-attacker-ships-fighter-basic').fill('12');
  await expect(page.locator('#simulation-intel option')).toHaveCount(2);
- await page.locator('#simulation-intel').selectOption(reportId);
+ await page.locator('#simulation-intel').selectOption(String(reportId));
  page.once('dialog',dialog=>dialog.accept());
  await page.getByRole('button',{name:'Importer',exact:true}).click();
  await expect(page.locator('#sim-attacker-ships-fighter-basic')).toHaveValue('12');
  await expect(page.locator('#sim-defender-ships-fighter-basic')).toHaveValue('8');
- await expect(page.getByRole('link',{name:'Relire le rapport source'})).toHaveAttribute('href','/rapports/espionage/'+reportId);
+ const reportLink=page.getByRole('link',{name:'Relire le rapport source'});
+ await expect(reportLink).toBeVisible();
+ expect(await reportLink.evaluate(link=>new URL(link.href).pathname)).toBe('/rapports/espionage/'+reportId);
  await expect(page.locator('time').filter({hasText:'20/11/2026'})).toHaveAttribute('datetime',/^2026-11-20T/);
  page.once('dialog',dialog=>dialog.accept());
  await page.getByRole('button',{name:'Charger mes forces'}).click();

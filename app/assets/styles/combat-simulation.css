@@ -275,10 +275,20 @@ body[data-theme=light] .player-simulation-board .simulation-outcome--defender_wi
     margin: 0 0 .6rem;
 }
 .simulation-wizard-camp .simulation-board-unit-scroll {
-    max-height: min(31vh, 20rem);
+    max-height: min(24vh, 15.5rem);
 }
-.simulation-wizard-camp .data-table {
+/* Le tableau générique impose 440 px et un dernier champ large.
+   Ici, les trois rangs tiennent sur le téléphone sans défilement horizontal. */
+.player-simulation-board .simulation-wizard-camp .data-table {
+    min-width: 0;
     table-layout: fixed;
+}
+.player-simulation-board .simulation-wizard-camp .data-table :is(th, td) {
+    padding: .36rem .45rem;
+    vertical-align: middle;
+}
+.player-simulation-board .simulation-wizard-camp .data-table td:last-child {
+    min-width: 0;
 }
 .simulation-wizard-camp th:first-child {
     width: 42%;
@@ -287,9 +297,11 @@ body[data-theme=light] .player-simulation-board .simulation-outcome--defender_wi
 .simulation-wizard-camp th:not(:first-child) {
     overflow-wrap: anywhere;
 }
-.simulation-wizard-camp input {
+.player-simulation-board .simulation-wizard-camp input[type="number"] {
     width: 100%;
+    min-width: 0;
     min-height: 44px;
+    margin: 0;
 }
 .simulation-tier-short {
     display: none;
@@ -301,10 +313,10 @@ body[data-theme=light] .player-simulation-board .simulation-outcome--defender_wi
     align-items: center;
     margin-top: .65rem;
 }
-.simulation-wizard-arrival input {
+.player-simulation-board .simulation-wizard-arrival input[type="number"] {
     width: 5rem;
 }
-.simulation-wizard-arrival label {
+.player-simulation-board .simulation-wizard-arrival label {
     margin: 0;
 }
 .simulation-wizard-source-status,
@@ -359,6 +371,15 @@ body[data-theme=light] .player-simulation-board .simulation-outcome--defender_wi
 .player-simulation-board--scenario .simulation-wizard-options.simulation-board-options > .simulation-board-note {
     grid-column: 1 / -1;
 }
+/* Le gris secondaire clair historique n’atteint pas 4,5:1 sur les nouveaux panneaux. */
+body[data-theme="light"] .player-simulation-board :is(
+    .simulation-wizard-source p,
+    .simulation-wizard-heading p:last-child,
+    .simulation-wizard-recap p
+) {
+    color: var(--text);
+}
+
 @media (max-width: 800px) {
     .simulation-wizard-sources > summary {
         display: list-item;
@@ -383,13 +404,13 @@ body[data-theme=light] .player-simulation-board .simulation-outcome--defender_wi
     .simulation-wizard-camps {
         grid-template-columns: minmax(0, 1fr);
     }
-    .simulation-wizard-camp .simulation-board-unit-scroll :is(th, td) {
+    .player-simulation-board .simulation-wizard-camp .data-table :is(th, td) {
         padding: .3rem .24rem;
     }
     .simulation-wizard-camp th {
         font-size: .71rem;
     }
-    .simulation-wizard-camp input {
+    .player-simulation-board .simulation-wizard-camp input[type="number"] {
         padding-inline: .2rem;
     }
     .simulation-tier-short { display: inline; }
