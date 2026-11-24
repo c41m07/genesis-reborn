@@ -57,6 +57,7 @@ final class AcceptedResourceCostsTest extends TestCase
         $property = new \ReflectionProperty(GameCatalog::class, 'data');
         $data = $property->getValue($catalog);
         $data['rules']['progression_curves'] = \App\Tests\Support\ProducerBalanceReference::fixture()['historical_rules']['progression_curves'];
+        unset($data['rules']['rank_entry_material_percent']);
         $property->setValue($catalog, $data);
         $calculator = new OperationCalculator($catalog);
         $current = new Universe();

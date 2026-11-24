@@ -206,6 +206,7 @@
       }
     ]
   },
+  "rank_entry_material_percent": 110,
   "building_level_growth": {"basic": 1.0025, "intermediate": 1.005, "superior": 1.01},
   "building_production_tier_factors": {
     "basic": 1.0,

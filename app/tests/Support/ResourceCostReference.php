@@ -13,7 +13,7 @@ final class ResourceCostReference
         $property = new \ReflectionProperty(GameCatalog::class, 'data');
         $data = $property->getValue($catalog);
         $data['rules']['progression_curves'] = ProducerBalanceReference::fixture()['historical_rules']['progression_curves'];
-        unset($data['rules']['building_level_growth']);
+        unset($data['rules']['building_level_growth'], $data['rules']['rank_entry_material_percent']);
         foreach ($fixture['entries'] as $group => $entries) {
             foreach ($entries as $slug => $entry) {
                 if (isset($data[$group][$slug])) {

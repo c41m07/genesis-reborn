@@ -4,10 +4,10 @@ Les [156 profils de prérequis](docs/DEBLOCAGES.md) utilisent une grille commune
 par rang, avec requalification explicite des accès existants. Les quatre producteurs
 de départ demandent Basique 25 et recherche industrielle Intermédiaire 5 pour
 l’Intermédiaire, puis Basique 50, Intermédiaire 25 et recherche Supérieure 5 pour
-le Supérieur. Le laboratoire utilise la recherche du rang précédent et reste à
-25/25 pour son Supérieur ; les accès déjà acquis sont conservés. Le Piège à
+le Supérieur. Le laboratoire utilise la recherche du rang précédent et demande les deux rangs précédents
+au niveau 10 pour son Supérieur ; les accès déjà acquis sont conservés. Le Piège à
 antimatière se débloque avec le producteur d’hydrogène niveau 5 et la recherche
-Génie civil colonial niveau 2, tous deux du rang visé. Les [durées et
+industrielle au niveau 5, tous deux du rang visé. Les [durées et
 consommations de carburant](docs/DUREES_CARBURANT.md) sont révisées par famille,
 avec conservation des commandes payées et des coefficients des missions lancées.
 Les [unités économiques](docs/UNITES_ECONOMIQUES.md) ajoutent des récolteurs mobiles

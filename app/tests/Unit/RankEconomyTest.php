@@ -58,6 +58,17 @@ final class RankEconomyTest extends TestCase
         }
     }
 
+    public function testStorageDurationLimitIsExplicitBeforeQueuePayment(): void
+    {
+        $catalog = new GameCatalog(dirname(__DIR__, 2).'/config/game');
+        $storage = $catalog->withTier($catalog->get('buildings', 'storage_metal'), 'superior');
+        $calculator = new OperationCalculator($catalog);
+        self::assertLessThanOrEqual(2147483647, $calculator->calculateQueuePlan($storage, 'buildings', 323, 1, [], [], [])['duration']);
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('dépasse la capacité de la file');
+        $calculator->calculateQueuePlan($storage, 'buildings', 324, 1, [], [], []);
+    }
+
     public function testInfrastructureReferenceLevelsAndCaps(): void
     {
         $catalog = new GameCatalog(dirname(__DIR__, 2).'/config/game');

@@ -35,15 +35,17 @@ final class ResourceService
     }
     public function capacity(Planet $planet,string $slug,array $buildings,?\DateTimeImmutable $at=null): float
     {
-        $storedLevels=$buildings['storage_'.$slug]??0;$added=0.0;
+        $rules = $this->catalog->rules();
+        $storedLevels = $buildings['storage_'.$slug] ?? 0;
+        $added = 0.0;
         foreach (GameCatalog::TIERS as $tier) {
             $level = $this->tierLevel($storedLevels, $tier);
-            $added += GameCatalog::compoundedLevels($level, $tier, $this->catalog->rules()['building_level_growth'] ?? []) * GameCatalog::tierFactor($tier) * $this->catalog->rules()['storage_capacity_per_level'];
+            $added += GameCatalog::compoundedLevels($level, $tier, $rules['building_level_growth'] ?? []) * GameCatalog::tierFactor($tier) * $rules['storage_capacity_per_level'];
         }
         if (!is_finite($added)) {
             throw new \DomainException('La capacité du dépôt dépasse la précision numérique disponible.');
         }
-        return $this->catalog->rules()['base_storage_capacity']+$added;
+        return $rules['base_storage_capacity'] + $added;
     }
     public function catalogueContext(Planet $planet): CatalogueProductionContext
     {
@@ -141,7 +143,7 @@ final class ResourceService
             foreach (GameCatalog::TIERS as $tier) {
                 $level = $this->tierLevel($levels[$building['slug']] ?? 0, $tier);
                 $factor = $this->catalog->productionTierFactor($tier);
-                $outputLevels += GameCatalog::compoundedLevels($level, $tier, $this->catalog->rules()['building_level_growth'] ?? []) * $factor;
+                $outputLevels += GameCatalog::compoundedLevels($level, $tier, $rules['building_level_growth'] ?? []) * $factor;
                 $powerLevels += $level * $factor;
             }
             if ($outputLevels <= 0) {

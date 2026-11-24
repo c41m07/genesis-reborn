@@ -3,6 +3,7 @@ namespace App\Service\Catalog;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Yaml\Yaml;
 use App\Entity\Universe;
+use App\Service\Requirement\RequirementChecker;
 final class GameCatalog
 {
     private array $data=[];
@@ -202,7 +203,7 @@ final class GameCatalog
         }
         $ancestors[$key] = true;
         $reference = null;
-        $requirements = \App\Service\Requirement\RequirementChecker::unlockRequirements($definition, $tier);
+        $requirements = RequirementChecker::unlockRequirements($definition, $tier);
         foreach (['buildings', 'technologies'] as $group) {
             foreach ($requirements[$group] ?? [] as $required) {
                 $slug = $required['slug'];
@@ -220,7 +221,7 @@ final class GameCatalog
             if ($profileValue <= 0) {
                 throw new \DomainException('Profil de matériaux vide pour '.$key);
             }
-            return ($reference * 11) / ($profileValue * 10);
+            return ($reference * $this->rules()['rank_entry_material_percent']) / ($profileValue * 100);
         }
         return $factor;
     }
@@ -246,7 +247,8 @@ final class GameCatalog
             $curveKey = 'production_building_cost';
         }
         $segments = $curves[$curveKey] ?? [];
-        if ($tier !== 'basic' && ($economic || $operationGroup === 'technologies') && isset($curves['economic_building_cost'])) {
+        $rankPricing = ($economic || $operationGroup === 'technologies') && isset($this->rules()['rank_entry_material_percent']);
+        if ($tier !== 'basic' && $rankPricing) {
             $factor = $this->entryFactor($definition, $tier, $operationGroup, $definitions, $ancestors, $base, $factor);
         }
         $levelFactor=$segments!==[]?self::growthMultiplier($level,$segments):max(0.01,(float)($definition['costs_scaling']??1))**($level-1);
@@ -260,8 +262,7 @@ final class GameCatalog
                 throw new \DomainException('Le prix dépasse la capacité numérique du devis.');
             }
             // Neutraliser le bruit binaire à proximité immédiate d’un entier du nouveau tarif.
-            if (($economic || $operationGroup === 'technologies') && isset($curves['economic_building_cost'])
-                && abs(round($scaled) - $scaled) <= min(1e-9, 4 * PHP_FLOAT_EPSILON * $scaled)) {
+            if ($rankPricing && abs(round($scaled) - $scaled) <= min(1e-9, 4 * PHP_FLOAT_EPSILON * $scaled)) {
                 $scaled = round($scaled);
             }
             $result[$resource]=(int)ceil($scaled);

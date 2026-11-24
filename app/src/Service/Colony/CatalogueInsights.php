@@ -99,7 +99,7 @@ final class CatalogueInsights
                 if ($target === null && (($effect['targets'] ?? null) !== 'ground_defenses' || ($effect['stat'] ?? null) !== 'hp')) {
                     return [];
                 }
-                // Le combat utilise le niveau de référence du bunker pour le bonus acquis.
+                // Le combat et la fiche utilisent le plafond du bunker de cet univers.
                 $maxLevel = max(1, (int) ($definition['max_level'] ?? 25));
                 $afterRanks = $next[$slug];
                 $cap = (float) ($effect['max_bonus'] ?? 25);

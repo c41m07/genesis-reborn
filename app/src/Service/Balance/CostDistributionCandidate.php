@@ -47,6 +47,7 @@ final class CostDistributionCandidate
         foreach ($this->catalog->forUniverse($universe)['catalog'] as $group => $definitions) {
             foreach ($definitions as $slug => $definition) {
                 foreach (GameCatalog::TIERS as $tier) {
+                    // La variante modifie la composition du profil, avant le calcul du budget d’entrée.
                     $current = $this->catalog->costs($this->catalog->withTier($definition, $tier), 1, 1);
                     $budget = self::value($current);
                     // L'autre rang conserve son profil effectif, sans nouvelle répartition ni arrondi.

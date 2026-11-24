@@ -26,8 +26,8 @@ final class OperationCalculator
         $timeCap=(float)($this->catalog->rules()['time_reduction_max_percent']??70);
         $timeReduction=match($group){
             'buildings'=>$this->discountProduct($universe,'engineering_foundations',$technologies['engineering_foundations']??[],'time_discount',$timeCap),
-            'technologies'=>$this->rankedBuildingBonus($universe['catalog']['buildings']['lab']??$this->catalog->get('buildings','lab'),$buildings['lab']??[],'research_time_reduction_percent_per_level',$timeCap),
-            'ships'=>$this->rankedBuildingBonus($universe['catalog']['buildings']['shipyard']??$this->catalog->get('buildings','shipyard'),$buildings['shipyard']??[],'build_time_reduction_percent_per_level',$timeCap),
+            'technologies'=>$this->rankedBuildingBonus($universe['catalog']['buildings']['lab']??$this->catalog->get('buildings','lab'),$buildings['lab']??[],$timeCap),
+            'ships'=>$this->rankedBuildingBonus($universe['catalog']['buildings']['shipyard']??$this->catalog->get('buildings','shipyard'),$buildings['shipyard']??[],$timeCap),
             default=>0.0,
         };
         $mult=(float)($universe['multipliers'][match($group){'buildings'=>'building_time','technologies'=>'research_time',default=>'ship_build_time'}]??1);
@@ -83,7 +83,7 @@ final class OperationCalculator
         return $low;
     }
 
-    private function rankedBuildingBonus(array $definition,array|int $levels,string $perField,float $cap):float
+    private function rankedBuildingBonus(array $definition,array|int $levels,float $cap):float
     {
         if(is_int($levels)||is_numeric($levels))$levels=['basic'=>(int)$levels];
         $maxLevel=max(1,(int)($definition['max_level']??25));
