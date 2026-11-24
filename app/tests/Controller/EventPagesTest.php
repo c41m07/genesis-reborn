@@ -2,8 +2,10 @@
 
 namespace App\Tests\Controller;
 
-use App\Entity\{BoostEvent, BoostEventContribution, GameEvent, Player, PlayerBoost, PlayerUniverse, Universe};
+use App\Entity\{BoostEvent, BoostEventContribution, GameEvent, Planet, PlanetResource, Player, PlayerBoost, PlayerUniverse, Universe};
 use App\Repository\GameRepository;
+use App\Service\Colony\ResourceService;
+use App\Service\Event\GameEventService;
 use App\Service\Player\RegistrationService;
 use App\Service\Universe\{UniverseImporter, UniverseService};
 use App\Validator\DTO\RegistrationData;
@@ -43,6 +45,83 @@ final class EventPagesTest extends WebTestCase
         $universe = $this->em->getRepository(Universe::class)->findOneBy(['slug' => 'omega-1']);
         static::getContainer()->get(UniverseService::class)->select($this->player, $universe->id);
         $this->client->loginUser($this->player);
+    }
+
+    public function testAdvancedProductionCancellationCreditsOnlyTheEarnedWindow(): void
+    {
+        $this->assertAdvancedProductionStop('cancel', 'planned');
+    }
+
+    public function testAdvancedProductionRemovalCreditsOnlyTheEarnedWindow(): void
+    {
+        $this->assertAdvancedProductionStop('retirer', 'active');
+    }
+
+    private function assertAdvancedProductionStop(string $action, string $status): void
+    {
+        // Aucun stock réel n’est utilisé. On laisse une marge sous le plafond pour observer le gain.
+        $this->player->roles = ['ROLE_ADMIN'];
+        $this->player->emailVerifiedAt = $this->clock->now();
+        $membership = $this->player->currentPlayerUniverse;
+        $planet = $this->em->getRepository(Planet::class)->findOneBy(['owner' => $membership]);
+        self::assertInstanceOf(Planet::class, $planet);
+        $stock = $this->em->getRepository(PlanetResource::class)->findOneBy(['planet' => $planet, 'resourceType' => 'metal']);
+        self::assertInstanceOf(PlanetResource::class, $stock);
+        $stock->lastUpdatedAt = $this->clock->now();
+        $stock->currentStock = 100.0;
+        $this->em->flush();
+        $this->client->loginUser($this->player);
+
+        $resources = self::getContainer()->get(ResourceService::class);
+        $ordinaryRate = $resources->snapshot($planet)['metal']['rate'];
+        self::assertGreaterThan(0, $ordinaryRate);
+        $form = $this->client->request('GET', '/admin/events/nouveau')->selectButton('Créer')->form([
+            'name' => 'Bonus avancé de recette',
+            'description' => 'Fenêtre de production fixe.',
+            'type' => 'production_bonus',
+            'status' => $status,
+            'starts_at' => '2026-11-17T12:05',
+            'ends_at' => '2026-11-17T13:00',
+            'universe_id' => (string) $membership->universe->id,
+            'percentage' => '100',
+            'visible' => '1',
+        ]);
+        $this->client->submit($form);
+        self::assertResponseRedirects('/admin/events');
+        $event = $this->em->getRepository(GameEvent::class)->findOneBy(['name' => 'Bonus avancé de recette']);
+        self::assertInstanceOf(GameEvent::class, $event);
+        self::assertSame($status, $event->status);
+        self::assertArrayNotHasKey('guided_key', $event->parameters);
+
+        $this->clock->sleep(900);
+        $path = '/admin/events/'.$event->id.'/'.$action;
+        $form = $this->client->request('GET', '/admin/events')->filter('form[action="'.$path.'"]')->form();
+        if ($action === 'retirer') {
+            $form['reason'] = 'Arrêt de recette après dix minutes de bonus.';
+            $form['confirmed']->tick();
+        }
+        $this->client->submit($form);
+        self::assertResponseRedirects('/admin/events');
+        $this->em->refresh($event);
+        self::assertSame('cancelled', $event->status);
+        self::assertSame($action === 'retirer', isset($event->parameters['archived_at']));
+
+        // La colonie n’a pas été synchronisée pendant l’événement. Après rejeu du même formulaire
+        // cinq minutes plus tard, elle reçoit 30 min normales + exactement 10 min de bonus.
+        $this->clock->sleep(300);
+        $this->client->submit($form);
+        self::assertResponseRedirects('/admin/events');
+        $this->clock->sleep(600);
+        $events = self::getContainer()->get(GameEventService::class);
+        self::assertEqualsWithDelta(2.0, $events->productionMultiplier($membership->universe, new \DateTimeImmutable('2026-11-17T12:10:00Z')), 0.000001);
+        self::assertEqualsWithDelta(1.0, $events->productionMultiplier($membership->universe, new \DateTimeImmutable('2026-11-17T12:15:00Z')), 0.000001);
+        $this->em->refresh($stock);
+        self::assertSame('2026-11-17T12:00:00+00:00', $stock->lastUpdatedAt->format(DATE_ATOM));
+        $expected = 100 + 2400 * $ordinaryRate;
+        self::assertEqualsWithDelta($expected, $resources->materialize($planet)['metal']->currentStock, 0.001);
+        self::assertEqualsWithDelta($expected, $resources->materialize($planet)['metal']->currentStock, 0.001);
+        $this->em->refresh($event);
+        self::assertCount(1, $event->parameters['production_history']);
     }
 
     private function event(string $name, bool $upcoming = false): GameEvent
