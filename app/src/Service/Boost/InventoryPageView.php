@@ -6,7 +6,7 @@ use App\Entity\{Planet, PlayerUniverse};
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Player\VacationCalendar;
-use App\Service\Queue\QueueTiming;
+use App\Service\Queue\LiveQueueTiming;
 use Psr\Clock\ClockInterface;
 
 /** Prépare chaque destination de l’inventaire ; la consommation reste dans les services métier. */
@@ -66,13 +66,13 @@ final class InventoryPageView
                     $definition = $definitions[$item->itemSlug] ?? null;
                     // L’aperçu emploie le même arrondi que le boost réellement consommé.
                     // Il est daté de l’ouverture ; le service réévalue le temps au clic.
-                    $elapsed = max(0, $now->getTimestamp() - $item->startedAt->getTimestamp());
-                    $after = QueueTiming::boostedDuration($item->durationSeconds, $elapsed, 1 / (1 - $ratio));
+                    $timestamp = $now->getTimestamp();
+                    $after = LiveQueueTiming::boostedRemainingSeconds($item, $timestamp, 1 / (1 - $ratio));
                     $data['active_queues'][] = [
                         'item' => $item,
                         'label' => $definition ? $this->catalog->withTier($definition, $item->tier)['label'] : $item->itemSlug,
-                        'seconds_before' => max(0, $item->durationSeconds - $elapsed),
-                        'seconds_after' => max(0, $after - $elapsed),
+                        'seconds_before' => max(0, $item->finishAt()->getTimestamp() - $timestamp),
+                        'seconds_after' => $after,
                     ];
                 }
             }

@@ -135,7 +135,7 @@ final class QueueService
                 }
                 $quantity = min($quantity, $maximum);
             }
-            $plan = $this->calculator->calculate($definition, $group, $level, $quantity, $buildings, $config, $technologies);
+            $plan = $this->calculator->calculateQueuePlan($definition, $group, $level, $quantity, $buildings, $config, $technologies);
             $duration = $plan['duration'];
             $credit = $adventCreditId === null ? null : $this->adventCredits->paymentLocked(
                 $adventCreditId, $membership, $group, $slug, $tier, $level, $quantity, $previousLevel === null, $plan['costs'],
@@ -159,6 +159,7 @@ final class QueueService
             $item->paidCosts = $paidCosts;
             $item->firstStepsGuided = $guided && FirstStepRewardPolicy::queueStep($queueType, $slug, $tier, $item->itemLevel) !== null;
             $item->durationSeconds = $duration;
+            $item->liveTiming = $plan['live_timing'];
             $item->queuedAt = $this->clock->now();
             $item->dependsOn = $previousLevel;
             $item->dispatchToken = Uuid::v4()->toRfc4122();
@@ -388,10 +389,18 @@ final class QueueService
 
     private function start(QueueItem $item, \DateTimeImmutable $at): void
     {
+        if ($item->startedAt === null && !$item->playerUniverse->isForgotten()) {
+            $this->prepareLiveStart($item, $at);
+        }
         $item->startedAt = $at;
         $startedAtField = $item->queueType . 'QueueStartedAt';
         $item->planet->{$startedAtField} = $at;
-        // Un nouveau jeton rend les anciens messages sans effet après un boost ou une reprise.
+        $this->schedule($item);
+    }
+
+    private function schedule(QueueItem $item): void
+    {
+        // Le jeton et l’outbox partagent la transaction ; un ancien message devient sans effet.
         $item->dispatchToken = Uuid::v4()->toRfc4122();
         $message = new OutboxMessage();
         $message->kind = 'queue';
@@ -399,6 +408,73 @@ final class QueueService
         $message->token = $item->dispatchToken;
         $message->dueAt = $item->finishAt();
         $this->manager->save($message);
+    }
+
+    private function prepareLiveStart(QueueItem $item, \DateTimeImmutable $at): void
+    {
+        // Aucun historique fiable des paramètres d’achat pour les anciennes commandes.
+        if ($item->liveTiming === null || ($group = $this->timedGroup($item)) === null) {
+            return;
+        }
+        $levels = $this->speedLevels($item, $group);
+        $item->durationSeconds = LiveQueueTiming::waitingDuration($item->liveTiming, $levels);
+        $item->liveTiming['full'] = $item->durationSeconds;
+        $item->liveTiming['checkpoint'] = $at->getTimestamp();
+    }
+
+    private function timedGroup(QueueItem $item): ?string
+    {
+        return match ($item->queueType) {
+            'building' => 'buildings',
+            'research' => 'technologies',
+            'shipyard' => isset($this->catalog->all('ships')[$item->itemSlug]) ? 'ships' : null,
+            default => null,
+        };
+    }
+
+    /** Les niveaux de vitesse de la recherche sont ceux de la colonie ayant payé la commande. */
+    private function speedLevels(QueueItem $item, string $group): array
+    {
+        if ($group === 'buildings') {
+            return $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $item->playerUniverse])['engineering_foundations'] ?? [];
+        }
+        $slug = $group === 'technologies' ? 'lab' : 'shipyard';
+
+        return $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $item->planet])[$slug] ?? [];
+    }
+
+    /** @param array<int, QueueItem> $items Commandes de la participation, chargées sous verrou. */
+    private function applyEarnedSpeed(QueueItem $completed, \DateTimeImmutable $at, array $items): void
+    {
+        $group = match ([$completed->queueType, $completed->itemSlug]) {
+            ['research', 'engineering_foundations'] => 'buildings',
+            ['building', 'lab'] => 'technologies',
+            ['building', 'shipyard'] => 'ships',
+            default => null,
+        };
+        if ($group === null) {
+            return;
+        }
+        $levels = $this->speedLevels($completed, $group);
+        foreach ($items as $item) {
+            if ($item->liveTiming === null || $item->startedAt === null || $item->finishAt() <= $at
+                || $this->timedGroup($item) !== $group
+                || ($group !== 'buildings' && $item->planet->id !== $completed->planet->id)) {
+                continue;
+            }
+            $full = LiveQueueTiming::fullDuration($item->liveTiming, $levels);
+            if ($full >= $item->liveTiming['full']) {
+                continue;
+            }
+            $previousEnd = $item->finishAt();
+            // Le rattrapage peut avoir démarré une tête à une date ultérieure ;
+            // aucun travail n’est crédité avant son checkpoint ou pendant une pause.
+            $effectiveAt = max($at->getTimestamp(), $item->liveTiming['checkpoint']);
+            LiveQueueTiming::checkpoint($item, $effectiveAt, $full);
+            if ($item->finishAt() != $previousEnd) {
+                $this->schedule($item);
+            }
+        }
     }
 
     /** Rattrape les commandes échues selon l’horloge et les vacances, avant une lecture ou une dépense. */
@@ -453,8 +529,11 @@ final class QueueService
                 usort($dueItems, fn($a, $b) => $a->finishAt() <=> $b->finishAt() ?: $a->id <=> $b->id);
                 $item = $dueItems[0];
                 $id = $item->id;
+                $finish = $item->finishAt();
                 $this->applyCompletion($item);
                 unset($items[$id]);
+                // Les fins dues au même instant ne sont pas repoussées par un bonus.
+                $this->applyEarnedSpeed($item, $finish, $items);
             }
         }
         $this->access->captureLocked($membership);
@@ -595,9 +674,22 @@ final class QueueService
         if (!$item->startedAt || $divisor <= 1) {
             throw new \DomainException('Opération active introuvable.');
         }
-        $elapsed = max(0, $this->clock->now()->getTimestamp() - $item->startedAt->getTimestamp());
-        $item->durationSeconds = QueueTiming::boostedDuration($item->durationSeconds, $elapsed, $divisor);
-        $this->start($item, $item->startedAt);
+        $this->reduceRemaining($item, $divisor);
+    }
+
+    private function reduceRemaining(QueueItem $item, float $divisor): void
+    {
+        $at = $this->clock->now()->getTimestamp();
+        if ($item->liveTiming !== null) {
+            if (!is_finite($divisor) || $divisor <= 1.0) {
+                throw new \InvalidArgumentException('Boost invalide.');
+            }
+            LiveQueueTiming::checkpoint($item, $at, $item->liveTiming['full'], $divisor);
+        } else {
+            $elapsed = max(0, $at - $item->startedAt->getTimestamp());
+            $item->durationSeconds = QueueTiming::boostedDuration($item->durationSeconds, $elapsed, $divisor);
+        }
+        $this->schedule($item);
     }
 
     /** Accélération administrative ; les boosts consommés par un joueur passent par applyPlayerBoost(). */
@@ -619,9 +711,7 @@ final class QueueService
             if (!$item || $item->playerUniverse->id !== $membership->id || !$item->startedAt) {
                 throw new \DomainException('Opération active introuvable.');
             }
-            $elapsed = max(0, $this->clock->now()->getTimestamp() - $item->startedAt->getTimestamp());
-            $item->durationSeconds = QueueTiming::boostedDuration($item->durationSeconds, $elapsed, $divisor);
-            $this->start($item, $item->startedAt);
+            $this->reduceRemaining($item, $divisor);
         });
     }
 
@@ -737,6 +827,10 @@ final class QueueService
         foreach ($this->repo->all(QueueItem::class, ['playerUniverse' => $membership]) as $item) {
             if ($item->startedAt === null) {
                 continue;
+            }
+            if (($item->liveTiming['checkpoint'] ?? null) !== null) {
+                // Déplacer le repère avec le départ empêche les vacances de consommer du travail.
+                $item->liveTiming['checkpoint'] += $seconds;
             }
             $this->start($item, $item->startedAt->setTimestamp($item->startedAt->getTimestamp() + $seconds));
         }
