@@ -693,6 +693,21 @@ final class GameRepository
         return $this->em->createQueryBuilder()->select('r')->from(\App\Entity\EspionageReport::class, 'r')->where('r.sender = :membership')->setParameter('membership', $membership)->orderBy('r.createdAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();
     }
 
+    /** @return list<array{id: int, createdAt: \DateTimeImmutable}> */
+    public function recentEspionageReportOptions(PlayerUniverse $membership): array
+    {
+        // Le sélecteur n’a besoin ni du contenu du rapport ni de l’état actuel de la cible.
+        return $this->em->createQueryBuilder()
+            ->select('r.id', 'r.createdAt')
+            ->from(\App\Entity\EspionageReport::class, 'r')
+            ->where('r.sender = :membership')
+            ->setParameter('membership', $membership)
+            ->orderBy('r.createdAt', 'DESC')
+            ->addOrderBy('r.id', 'DESC')
+            ->setMaxResults(20)
+            ->getQuery()->getArrayResult();
+    }
+
     public function combatLogsFor(PlayerUniverse $membership, int $limit = 50): array
     {
         return $this->em->createQueryBuilder()->select('DISTINCT l')->from(CombatLog::class, 'l')->join('l.combatEvent', 'e')->join('e.planet', 'p')->leftJoin(CombatParticipant::class, 'cp', 'WITH', 'cp.combatEvent = e')->where('cp.playerUniverse = :membership')->orWhere('p.owner = :membership')->setParameter('membership', $membership)->orderBy('l.resolvedAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();

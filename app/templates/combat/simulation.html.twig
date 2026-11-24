@@ -1,50 +1,105 @@
 {% extends 'base.html.twig' %}
 {% block title %}Simulateur de combat · Genesis Reborn{% endblock %}
-{% macro own_forces_controls(planets, separateForm) %}
-    <label for="simulation-own">Reprendre mes vaisseaux disponibles</label><select id="simulation-own" name="own_planet"{% if separateForm %} form="simulation-own-forces"{% endif %}>{% for planet in planets %}<option value="{{ planet.id }}">{{ planet.name }}</option>{% endfor %}</select>
-    <button type="submit" class="secondary"{% if separateForm %} form="simulation-own-forces"{% endif %}>Charger mes forces</button>
-{% endmacro %}
 {% block body %}
-{% import _self as controls %}
-{% set scenarioBoard = not result and not intel and not error %}
-{% set scenarioNote %}<p class="simulation-board-note">Deux camps paramétrés, sans occupation ni intervention future non saisie. Limite : {{ max_units }} unités au total et budget de calcul borné. Aucun vaisseau envoyé, aucune ressource dépensée. Les pertes calculées restent fictives.</p>{% endset %}
-<div class="strategic-page simulation-workspace player-simulation-board{{ scenarioBoard ? ' player-simulation-board--scenario' : '' }}">
-<div class="page-heading"><div><p class="simulation-board-eyebrow">Opérations · outil stratégique</p><h1>Simulateur de combat</h1><p>Dix combats avec la même configuration et des graines distinctes, pour une estimation sans garantie.</p></div><a class="secondary" href="{{ path('app_fleet_prepare') }}">Préparer une mission</a></div>
-{% if scenarioBoard %}
-    {# Le GET d’import reste indépendant du formulaire POST de simulation. #}
-    <form method="get" id="simulation-own-forces"></form>
-{% else %}
-    {{ scenarioNote }}
-    <form method="get" id="simulation-own-forces" class="simulation-board-load">
-        {{ controls.own_forces_controls(planets, false) }}
-        {% if intel %}<input type="hidden" name="report" value="{{ intel.id }}">{% endif %}
+{% set steps = {
+  ships: {title: 'Vaisseaux', help: 'Composez les deux flottes et leurs rounds d’arrivée.'},
+  defenses: {title: 'Défenses', help: 'Précisez les défenses fixes et la forteresse de la colonie défendue.'},
+  research: {title: 'Recherches', help: 'Seules les recherches qui influencent le combat sont prises en compte.'},
+  simulation: {title: 'Simulation', help: 'Vérifiez vos hypothèses avant de lancer le calcul.'}
+} %}
+{% set keys = steps|keys %}
+<div class="strategic-page simulation-workspace player-simulation-board player-simulation-board--scenario"
+     data-controller="simulation-wizard" data-simulation-wizard-step-value="{{ step }}">
+    <div class="page-heading"><div><p class="simulation-board-eyebrow">Opérations · outil stratégique</p><h1>Simulateur de combat</h1>
+        <p>Comparez deux camps avant de simuler. Aucun vaisseau envoyé, aucune ressource dépensée.</p></div>
+    </div>
+    {% if result %}<p><a href="#simulation-result">Voir les résultats</a></p>{% endif %}
+    {% if error %}<p class="flash error" role="alert">{{ error }}</p>{% endif %}
+    <nav class="simulation-wizard-nav" aria-label="Étapes du simulateur">
+    {% for key, item in steps %}
+        <a href="#simulation-{{ key }}" data-step="{{ key }}" data-simulation-wizard-target="link"
+           data-action="simulation-wizard#go" {% if key == step %}aria-current="step"{% endif %}>
+            <b aria-hidden="true">0{{ loop.index }}</b><span>{{ item.title }}</span>
+        </a>
+    {% endfor %}
+    </nav>
+    <form method="post" action="{{ path('app_combat_simulation') }}#simulation-result" class="panel simulation-form" id="simulation-scenario"
+          data-action="invalid->simulation-wizard#showInvalid:capture input->simulation-wizard#edited">
+        <input type="hidden" name="_token" value="{{ csrf_token('combat_simulation') }}">
+        <input type="hidden" name="report" value="{{ intel.id|default(0) }}">
+        <input type="hidden" name="own_source" value="{{ own_source }}">
+        <input type="hidden" name="wizard_step" value="{{ step }}" data-simulation-wizard-target="current">
+        {% include 'combat/_wizard_sources.html.twig' %}
+        {% for key, item in steps %}
+            <section class="simulation-wizard-stage" id="simulation-{{ key }}" data-step="{{ key }}"
+                     data-simulation-wizard-target="stage" aria-labelledby="simulation-{{ key }}-title">
+                <header class="simulation-wizard-heading">
+                    <p class="simulation-board-eyebrow">Étape 0{{ loop.index }} / 04</p>
+                    <h2 id="simulation-{{ key }}-title" tabindex="-1">{{ item.title }}</h2>
+                    <p>{{ item.help }}</p>
+                </header>
+                {% if key != 'simulation' %}
+                    <div class="simulation-wizard-camps">
+                    {% for camp, title in {attacker: 'Attaquant', defender: 'Défenseur'} %}
+                        <section class="simulation-wizard-camp panel" aria-labelledby="simulation-{{ key }}-{{ camp }}">
+                            <p class="simulation-board-eyebrow">{{ title }}</p>
+                            <h3 id="simulation-{{ key }}-{{ camp }}">{{ item.title }} · {{ title }}</h3>
+                            {% if key == 'defenses' and camp == 'attacker' %}
+                                <div class="simulation-wizard-not-applicable">
+                                    <strong>Non applicable</strong>
+                                    <p>Les défenses fixes et la forteresse n’interviennent que du côté de la colonie défendue.</p>
+                                </div>
+                            {% else %}
+                                {% include 'combat/_wizard_table.html.twig' with {group: key, definitions: choices[key], heading: item.title} %}
+                                {% if key == 'ships' %}
+                                    <div class="simulation-wizard-arrival">
+                                        <label for="arrival-{{ camp }}">Arrivée des vaisseaux au round</label>
+                                        <input id="arrival-{{ camp }}" name="forces[{{ camp }}][arrival]" type="number" min="1" max="10" value="{{ forces[camp].arrival|default(1) }}" required>
+                                    </div>
+                                {% elseif key == 'defenses' %}
+                                    <details class="simulation-wizard-fortress"><summary>Forteresse{% if intel and 'fortress' not in intel.known %} · non révélée{% endif %}</summary>
+                                        {% include 'combat/_wizard_table.html.twig' with {group: 'fortress', definitions: {fortress: {label: 'Forteresse', max_level: 25}}, heading: 'Forteresse'} %}
+                                    </details>
+                                {% endif %}
+                            {% endif %}
+                        </section>
+                    {% endfor %}
+                    </div>
+                {% else %}
+                    <section class="panel simulation-wizard-recap" aria-labelledby="simulation-recap-title">
+                        <h3 id="simulation-recap-title">Récapitulatif des deux camps</h3>
+                        <div class="simulation-wizard-camps">
+                            <div><strong>Attaquant</strong><p>{{ own_source ? 'Vaisseaux et recherches repris de votre empire, avec vos ajustements.' : 'Vaisseaux et recherches saisis manuellement.' }} Les défenses fixes ne s’appliquent pas.</p></div>
+                            <div><strong>Défenseur</strong><p>{% if intel %}Rapport n°{{ intel.id }} ; les données non révélées et vos ajustements restent des hypothèses.{% else %}Vaisseaux, défenses et recherches saisis manuellement.{% endif %}</p></div>
+                        </div>
+                    </section>
+                    <div class="simulation-board-options simulation-wizard-options">
+                        <div>
+                            <label for="simulation-seed">Graine de départ reproductible</label>
+                            <input id="simulation-seed" name="seed" type="number" min="0" max="4294967295" value="{{ seed }}" required aria-describedby="simulation-seed-help">
+                            <p id="simulation-seed-help">La même graine reproduit la série de dix combats.</p>
+                        </div>
+                        <label class="simulation-board-assumptions"><input type="checkbox" name="assumptions" value="1" required>
+                            <span>Je confirme les hypothèses saisies. Un renseignement inconnu laissé vide compte pour zéro dans cet essai uniquement. Le résultat ne prédit pas un combat réel.</span>
+                        </label>
+                        <p class="simulation-board-note">Au plus {{ max_units }} unités, avec un budget de calcul limité. Les pertes sont fictives.</p>
+                    </div>
+                {% endif %}
+                <div class="simulation-wizard-actions">
+                    {% if not loop.first %}
+                        {% set previous = keys[loop.index0 - 1] %}
+                        <a class="secondary" href="#simulation-{{ previous }}" data-step="{{ previous }}" data-action="simulation-wizard#go">Précédent : {{ steps[previous].title|lower }}</a>
+                    {% endif %}
+                    {% if not loop.last %}
+                        {% set next = keys[loop.index0 + 1] %}
+                        <a class="primary" href="#simulation-{{ next }}" data-step="{{ next }}" data-action="simulation-wizard#go">Continuer : {{ steps[next].title|lower }}</a>
+                    {% else %}
+                        <button class="primary" type="submit" name="wizard_action" value="simulate">Simuler 10 combats</button>
+                    {% endif %}
+                </div>
+            </section>
+        {% endfor %}
     </form>
-{% endif %}
-{% if intel %}<section class="panel" aria-label="Source des renseignements"><h2>Rapport d’espionnage du {{ intel.date|date('d/m/Y à H:i',preferences.timezone) }}</h2><p>Ces renseignements datés peuvent être obsolètes. Catégories révélées : {{ intel.known ? intel.known|map(category=>{ships:'vaisseaux',research:'recherches',defenses:'défenses',fortress:'forteresse'}[category])|join(', ') : 'aucune' }}. Toute catégorie absente reste inconnue ; ses valeurs ci-dessous sont des hypothèses à confirmer. Toute modification manuelle est également une hypothèse.</p><a href="{{ path('app_espionage_report',{id:intel.id}) }}">Relire le rapport source</a></section>{% endif %}
-{% if error %}<p class="flash error" role="alert">{{ error }}</p>{% endif %}
-<nav class="simulation-board-nav" aria-label="Parcours du simulateur">
-    <a href="#simulation-scenario">Scénario</a>
-    {% if result %}<a href="#simulation-result">Résultats</a>{% endif %}
-</nav>
-<form method="post" action="#simulation-result" class="panel simulation-form" id="simulation-scenario">
-<input type="hidden" name="_token" value="{{ csrf_token('combat_simulation') }}"><input type="hidden" name="report" value="{{ intel.id|default(0) }}">
-<div class="strategic-grid">{% for camp,title in {attacker:'Attaquant',defender:'Défenseur'} %}<section><h2>{{ title }}</h2>
-{% if camp == 'attacker' and scenarioBoard %}<div class="simulation-board-load">{{ controls.own_forces_controls(planets, true) }}</div>
-{% elseif camp == 'attacker' %}<a class="simulation-board-source-link" href="#simulation-own-forces">Reprendre les forces d’une colonie</a>{% elseif not intel %}<p class="simulation-board-source-link">Renseignements saisis manuellement.</p>{% endif %}
-<label for="arrival-{{ camp }}">Arrivée des vaisseaux au round</label><input id="arrival-{{ camp }}" name="forces[{{ camp }}][arrival]" type="number" min="1" max="10" value="{{ forces[camp].arrival|default(1) }}" required>
-{% for group,heading in {ships:'Vaisseaux',research:'Recherches',defenses:'Défenses'} %}{% if camp=='defender' or group!='defenses' %}<details {{ group=='ships' ? 'open' : '' }}><summary>{{ heading }}{% if camp=='defender' and intel %} · {{ sources[group] }}{% endif %}</summary><div class="table-scroll simulation-board-unit-scroll" tabindex="0" role="region" aria-label="{{ heading }} · {{ title }} · tableau défilant horizontalement"><table class="data-table"><caption>{{ heading }} · {{ title }} · niveaux ou quantités</caption><thead><tr><th>Élément</th>{% for tier,label in {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}<th>{{ label }}</th>{% endfor %}</tr></thead><tbody>
-{% for slug,definition in choices[group]|filter(definition => camp=='defender' or definition.economic_unit is not defined) %}<tr><th scope="row">{{ definition.label }}</th>{% for tier,label in {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}<td><label class="visually-hidden" for="sim-{{ camp }}-{{ group }}-{{ slug }}-{{ tier }}">{{ title }} · {{ definition.label }} · {{ label }}</label><input id="sim-{{ camp }}-{{ group }}-{{ slug }}-{{ tier }}" name="forces[{{ camp }}][{{ group }}][{{ slug }}][{{ tier }}]" type="number" min="0" max="{{ group=='research' ? definition.max_level|default(25) : max_units }}" value="{{ forces[camp][group][slug][tier]|default(0) }}" required></td>{% endfor %}</tr>{% endfor %}
-</tbody></table></div></details>{% endif %}{% endfor %}
-{% if camp=='defender' %}<details><summary>Forteresse · niveaux supposés{% if intel and 'fortress' not in intel.known %} · inconnus dans le rapport{% endif %}</summary>{% for tier,label in {basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}<label for="fortress-{{ tier }}">Forteresse · {{ label }}</label><input id="fortress-{{ tier }}" name="forces[defender][fortress][{{ tier }}]" type="number" min="0" max="25" value="{{ forces.defender.fortress[tier]|default(0) }}" required>{% endfor %}</details>{% endif %}
-</section>{% endfor %}</div>
-<div class="simulation-board-options"><div>
-<label for="simulation-seed">Graine de départ reproductible</label><input id="simulation-seed" name="seed" type="number" min="0" max="4294967295" value="{{ seed }}" required aria-describedby="simulation-seed-help">
-<p id="simulation-seed-help">La même graine de départ reproduit la série de dix combats. Chaque combat utilise une graine distincte.</p>
-</div><label class="simulation-board-assumptions"><input type="checkbox" name="assumptions" value="1" required> {% if scenarioBoard %}<span>{% endif %}Je confirme les hypothèses saisies, notamment les valeurs zéro pour les renseignements inconnus. Ce scénario ne prédit pas un combat réel.{% if scenarioBoard %}</span>{% endif %}</label>
-{% if scenarioBoard %}{{ scenarioNote }}{% endif %}
-<button class="primary">Simuler 10 combats</button>
-</div>
-</form>
 {% set unit_labels=choices.ships|merge(choices.defenses) %}{% set tier_labels={basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}
  {% set outcome_labels={attacker_wins:'Victoire de l’attaquant',defender_wins:'Défaite de l’attaquant',draw:'Égalité',ongoing:'Combat non terminé'} %}
 {% if result %}
@@ -69,7 +124,7 @@
 <h3>Issue et effectifs de l’attaquant</h3>
 <div class="simulation-result-actions">
     <a class="secondary" href="#simulation-trial-1">Voir le détail des combats</a>
-    <a href="#simulation-scenario">Revenir au scénario</a>
+    <a href="#simulation-scenario" data-action="simulation-wizard#returnToScenario">Revenir au scénario</a>
 </div>
 <div class="table-scroll simulation-trial-summary" role="region" tabindex="0" aria-label="Bilan par combat">
     <table class="data-table">
