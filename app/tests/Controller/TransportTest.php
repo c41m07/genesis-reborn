@@ -1,7 +1,7 @@
 <?php
 namespace App\Tests\Controller;
 
-use App\Entity\{AllianceContract, BoostEventContribution, Fleet, FleetShip, Planet, PlanetResource, Player, PlayerDiscovery, ReportNotice, TransportReport, Universe};
+use App\Entity\{AllianceContract, BoostEventContribution, DiplomaticReport, Fleet, FleetShip, Planet, PlanetResource, Player, PlayerDiscovery, ReportNotice, TransportReport, Universe};
 use App\Repository\ReportNoticeRepository;
 use App\Service\Fleet\{FleetService, TransportService};
 use App\Service\Colony\ResourceService;
@@ -97,16 +97,24 @@ final class TransportTest extends WebTestCase
     public function testReportNoticeMigrationMatchesMappingWithoutBackfill(): void
     {
         $tool = new SchemaTool($this->em);
-        $metadata = $this->em->getClassMetadata(ReportNotice::class);
-        $tool->dropSchema([$metadata]);
-        require_once dirname(__DIR__, 2).'/migrations/Version20261122010100.php';
-        $migration = new \DoctrineMigrations\Version20261122010100($this->em->getConnection(), new \Psr\Log\NullLogger());
-        $migration->up(new \Doctrine\DBAL\Schema\Schema());
-        foreach ($migration->getSql() as $query) {
-            $this->em->getConnection()->executeStatement($query->getStatement());
+        // Rejouer le chemin historique auquel s’ajoute l’extension diplomatique.
+        $tool->dropSchema([
+            $this->em->getClassMetadata(ReportNotice::class),
+            $this->em->getClassMetadata(DiplomaticReport::class),
+        ]);
+        $connection = $this->em->getConnection();
+        foreach (['Version20261122010100', 'Version20261124083000'] as $version) {
+            require_once dirname(__DIR__, 2).'/migrations/'.$version.'.php';
+            $class = 'DoctrineMigrations\\'.$version;
+            $migration = new $class($connection, new \Psr\Log\NullLogger());
+            $migration->up(new \Doctrine\DBAL\Schema\Schema());
+            foreach ($migration->getSql() as $query) {
+                $connection->executeStatement($query->getStatement());
+            }
         }
 
-        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM report_notice'));
+        self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM report_notice'));
+        self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM diplomatic_report'));
         self::assertSame([], $tool->getUpdateSchemaSql($this->em->getMetadataFactory()->getAllMetadata()));
     }
 
