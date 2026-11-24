@@ -93,6 +93,68 @@ final class ConcurrentQueueTest extends KernelTestCase
         self::assertEqualsWithDelta($before - $this->price(1)['metal'], $this->metal()->currentStock, 0.000001);
     }
 
+    public function testSimultaneousAddsAtNineLeaveExactlyTenOrders(): void
+    {
+        $this->seedLegacyBuildings(9);
+
+        $codes = $this->race([$this->addAction('a'), $this->addAction('b')]);
+        sort($codes);
+        self::assertSame([0, 10], $codes);
+        self::assertSame(10, $this->entityManager->getRepository(QueueItem::class)->count());
+        self::assertSame(1, $this->entityManager->getRepository(ActionReceipt::class)->count());
+    }
+
+    public function testLegacyBacklogKeepsOrdersUntilTheyFinishOrAreCancelled(): void
+    {
+        $legacy = $this->seedLegacyBuildings(11);
+        $service = self::getContainer()->get(\App\Service\Queue\QueueService::class);
+        $before = $this->entityManager->getConnection()->fetchAllAssociative('SELECT id, item_level, duration_seconds, paid_costs FROM queue_item ORDER BY id');
+
+        self::assertSame([10], $this->race([$this->addAction('a')]));
+        self::assertSame($before, $this->entityManager->getConnection()->fetchAllAssociative('SELECT id, item_level, duration_seconds, paid_costs FROM queue_item ORDER BY id'));
+        self::assertSame(0, $this->entityManager->getRepository(ActionReceipt::class)->count());
+
+        // Annuler une commande réellement en attente reste possible au-dessus du plafond.
+        $service->cancel($this->membership, $legacy[10]->id, str_repeat('b', 32));
+        self::assertSame(10, $this->entityManager->getRepository(QueueItem::class)->count());
+        self::assertSame([10], $this->race([$this->addAction('c')]));
+
+        self::getContainer()->get('clock')->sleep(3600);
+        self::getContainer()->get(QueueItemFinishedHandler::class)(new QueueItemFinished($legacy[0]->id, $legacy[0]->dispatchToken));
+        self::assertSame(9, $this->entityManager->getRepository(QueueItem::class)->count());
+        self::assertSame(1, $this->entityManager->getRepository(PlanetBuilding::class)->findOneBy(['slug' => 'power_plant'])->level);
+        self::assertNotNull($legacy[1]->startedAt);
+        self::assertSame(['metal' => 25], $legacy[1]->paidCosts);
+        self::assertSame(1, $service->add($this->membership, $this->planet, 'buildings', 'mine_metal', 1, str_repeat('d', 32)));
+        self::assertSame(10, $this->entityManager->getRepository(QueueItem::class)->count());
+    }
+
+    /** @return list<QueueItem> Commandes synthétiques déjà payées avant le changement de plafond. */
+    private function seedLegacyBuildings(int $count): array
+    {
+        $orders = [];
+        $now = new \DateTimeImmutable(self::NOW);
+        for ($index = 0; $index < $count; ++$index) {
+            $item = new QueueItem();
+            $item->planet = $this->planet;
+            $item->playerUniverse = $this->membership;
+            $item->queueType = 'building';
+            $item->itemSlug = 'power_plant';
+            $item->itemLevel = $index + 1;
+            $item->durationSeconds = 3600;
+            $item->queuedAt = $now;
+            $item->startedAt = $index === 0 ? $now : null;
+            $item->dispatchToken = 'backlog-'.$index;
+            $item->paidCosts = ['metal' => 25];
+            $this->entityManager->persist($item);
+            $orders[] = $item;
+        }
+        $this->planet->buildingQueueStartedAt = $now;
+        $this->entityManager->flush();
+
+        return $orders;
+    }
+
     public function testDuplicateWorkerMessagesCompleteOnlyOnce(): void
     {
         $item = $this->dueItem();
