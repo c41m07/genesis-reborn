@@ -30,6 +30,11 @@
 {% set cosmetics = consolidated ? edition.doors[24].cosmetics|default([]) : [] %}
 <div class="events-space event-redesign advent-board{{ closedReadOnly ? ' advent-board--history' : '' }}" data-page-sections="disabled">
     <div class="page-heading advent-board-heading">
+        <picture class="advent-heading-picture" aria-hidden="true">
+            <img src="{{ asset('art/genesis-avent-panorama-720.webp') }}"
+                 srcset="{{ asset('art/genesis-avent-panorama-720.webp') }} 720w, {{ asset('art/genesis-avent-panorama-1536.webp') }} 1536w"
+                 sizes="(max-width: 1020px) 100vw, calc(100vw - 260px)" alt="" width="1536" height="512" decoding="async">
+        </picture>
         <div>
             {% if closedReadOnly %}<p class="advent-history-kicker">Événements</p>{% endif %}
             <h1>{{ edition.name }}</h1>

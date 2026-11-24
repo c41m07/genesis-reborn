@@ -1003,6 +1003,7 @@ body.ui-refined[data-ui-page="accueil-public"] .entry-home--audit .public-previe
     border-radius: 0;
     margin: 0;
     object-fit: cover;
+    object-position: 50% 42%;
 }
 
 .entry-access--audit .entry-access-context::after {

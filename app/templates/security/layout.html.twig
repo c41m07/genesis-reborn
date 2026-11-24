@@ -18,9 +18,10 @@
         </section>
         {% if not compactAccess %}
             <div class="entry-access-context">
-                <picture>
-                    <source type="image/webp" srcset="{{ asset('art/genesis-reborn-planet.webp') }}">
-                    <img src="{{ asset('art/genesis-reborn-planet.png') }}" alt="" width="1448" height="1086">
+                <picture aria-hidden="true">
+                    <img src="{{ asset('art/genesis-acces-commandement-480.webp') }}"
+                         srcset="{{ asset('art/genesis-acces-commandement-480.webp') }} 480w, {{ asset('art/genesis-acces-commandement-864.webp') }} 864w"
+                         sizes="(min-width: 1600px) 640px, 43vw" alt="" width="864" height="1152" loading="lazy" decoding="async">
                 </picture>
                 <span class="entry-context-brand" aria-hidden="true">Genesis Reborn</span>
                 <div class="entry-context-copy">

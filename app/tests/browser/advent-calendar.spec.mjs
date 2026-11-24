@@ -209,6 +209,15 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
                     await openAdventDocument(page, '/evenements/avent/' + edition);
                     const history = page.locator('.advent-board--history');
                     await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+                    const heading = history.locator('.advent-board-heading');
+                    await expect(heading.getByRole('heading', { name: 'Avent des étoiles', exact: true })).toHaveCSS('color', 'rgb(241, 246, 255)');
+                    const artwork = heading.locator('.advent-heading-picture img');
+                    await expect(artwork).toHaveAttribute('alt', '');
+                    const source = await artwork.evaluate(async image => {
+                        await image.decode();
+                        return new URL(image.currentSrc).pathname;
+                    });
+                    expect(source).toMatch(width === 1920 ? /genesis-avent-panorama-1536[.]webp$/ : /genesis-avent-panorama-720[.]webp$/);
                     await expect(history.getByText('Édition close', { exact: true })).toBeVisible();
                     await expect(history.locator('.advent-day-tile')).toHaveCount(24);
                     await expect(history.locator('form[method="post"]')).toHaveCount(0);

@@ -41,7 +41,11 @@ test('Les visuels WebP et les cartes légères restent décodables sur les parco
   const id = crypto.randomUUID().slice(0, 8);
   const email = 'art-' + id + '@example.test';
   const password = crypto.randomUUID() + crypto.randomUUID().toUpperCase();
-  await imageDownload(page, '/connexion', '.entry-access-context img', /genesis-reborn-planet[.]webp$/, 150_000);
+  const authArtwork = /genesis-acces-commandement-(?:480|864)[.]webp$/;
+  await imageDownload(page, '/connexion', '.entry-access-context img', authArtwork, 85_000);
+  await imageDownload(page, '/inscription', '.entry-access-context img', authArtwork, 85_000);
+  await expect(page.locator('.entry-access-context img')).toHaveAttribute('alt', '');
+  await expect(page.locator('.entry-access-context img')).toHaveAttribute('loading', 'lazy');
   await imageDownload(page, '/', 'img[src*="ui-preview-galaxy.png"]', /ui-preview-galaxy[.]webp$/, 150_000, true);
   const galaxyZoom = page.locator('a[href*="ui-preview-galaxy.png"]');
   await expect(galaxyZoom).toHaveCount(1);
