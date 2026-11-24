@@ -14,9 +14,11 @@ use App\Validator\DTO\RegistrationData;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Clock\MockClock;
+use Symfony\Component\Console\Tester\CommandTester;
 use Symfony\Component\Process\Process;
 
 final class AdventTest extends WebTestCase
@@ -639,6 +641,100 @@ final class AdventTest extends WebTestCase
         self::assertSame('basic', $ship['tier']);
         self::assertSame(1, (int) $ship['quantity']);
         self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM fleet_ship WHERE slug = 'transport'"));
+    }
+
+    public function testAdminShowsScheduledNormalWindowAndActualOnTimeReadout(): void
+    {
+        $admin = $this->player('AdventReadoutAdmin', admin: true);
+        $id = $this->publishConsolidated($admin);
+        $selector = '[data-advent-readout="'.$id.'"]';
+        $this->client->request('GET', '/admin/events/avent');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains($selector, 'Relevé prévu.');
+        self::assertSelectorTextContains($selector, '01/12/2026 00:00:00');
+        self::assertSelectorNotExists($selector.' code');
+
+        $this->clock->sleep(8 * 3600 + 120);
+        $this->client->request('GET', '/admin/events/avent');
+        self::assertSelectorTextContains($selector, 'Fenêtre normale ouverte.');
+        self::assertSelectorNotExists($selector.' code');
+        $this->assertCohortReadoutMissing($id);
+
+        $command = $this->readoutCommand();
+        self::assertSame(0, $command->execute(['edition' => (string) $id]));
+        self::assertStringContainsString('captured ; observation UTC 2026-11-30 23:02:00', $command->getDisplay());
+        $this->client->request('GET', '/admin/events/avent');
+        self::assertSelectorTextContains($selector, 'Relevé effectué');
+        self::assertSelectorTextContains($selector, '01/12/2026 00:02:00');
+        self::assertSelectorTextNotContains($selector, 'tardivement');
+        self::assertSelectorNotExists($selector.' code');
+    }
+
+    public function testAdminOnlyOffersExplicitLateCaptureBeforeClosureAndDoesNotRepeatIt(): void
+    {
+        $this->player('AdventReadoutMember');
+        $admin = $this->player('AdventLateReadoutAdmin', admin: true);
+        $id = $this->publishConsolidated($admin);
+        $selector = '[data-advent-readout="'.$id.'"]';
+        $this->clock->sleep(8 * 3600 + 121);
+        $this->client->request('GET', '/admin/events/avent');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains($selector, 'Relevé d’ouverture manqué.');
+        self::assertSelectorTextSame($selector.' code', 'php bin/console app:advent:capture '.$id.' --accept-late');
+        self::assertSelectorNotExists($selector.' form');
+        $this->assertCohortReadoutMissing($id);
+
+        $command = $this->readoutCommand();
+        self::assertSame(1, $command->execute(['edition' => (string) $id]));
+        self::assertStringContainsString('Relevé de départ manqué', $command->getDisplay());
+        $this->assertCohortReadoutMissing($id);
+        self::assertSame(0, $command->execute(['edition' => (string) $id, '--accept-late' => true]));
+        self::assertStringContainsString('late ; observation UTC 2026-11-30 23:02:01', $command->getDisplay());
+        $this->client->request('GET', '/admin/events/avent');
+        self::assertSelectorTextContains($selector, 'Relevé effectué tardivement');
+        self::assertSelectorTextContains($selector, '01/12/2026 00:02:01');
+        self::assertSelectorTextContains($selector, 'Cet horaire ne représente pas l’ouverture.');
+        self::assertSelectorNotExists($selector.' code');
+
+        $db = $this->em->getConnection();
+        $profiles = (int) $db->fetchOne('SELECT COUNT(*) FROM advent_progression');
+        self::assertGreaterThan(0, $profiles);
+        $this->clock->sleep(3600);
+        self::assertSame(0, $command->execute(['edition' => (string) $id, '--accept-late' => true]));
+        self::assertStringContainsString('already ; observation UTC 2026-11-30 23:02:01', $command->getDisplay());
+        self::assertSame($profiles, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_progression'));
+    }
+
+    public function testAdminShowsClosedMissingReadoutWithoutOfferingRecovery(): void
+    {
+        $admin = $this->player('AdventClosedReadoutAdmin', admin: true);
+        $id = $this->publishConsolidated($admin);
+        $edition = $this->em->find(AdventEdition::class, $id);
+        self::assertInstanceOf(AdventEdition::class, $edition);
+        $this->clock->sleep($edition->closesAt->getTimestamp() - $this->clock->now()->getTimestamp());
+        $this->client->request('GET', '/admin/events/avent');
+        self::assertResponseIsSuccessful();
+        $selector = '[data-advent-readout="'.$id.'"]';
+        self::assertSelectorTextContains($selector, 'Édition clôturée sans relevé.');
+        self::assertSelectorTextContains($selector, 'Aucun rattrapage possible après la clôture.');
+        self::assertSelectorNotExists($selector.' code');
+
+        $command = $this->readoutCommand();
+        self::assertSame(1, $command->execute(['edition' => (string) $id, '--accept-late' => true]));
+        self::assertStringContainsString('Le relevé doit commencer pendant l’édition', $command->getDisplay());
+        $this->assertCohortReadoutMissing($id);
+    }
+
+    private function readoutCommand(): CommandTester
+    {
+        return new CommandTester((new Application(self::$kernel))->find('app:advent:capture'));
+    }
+
+    private function assertCohortReadoutMissing(int $id): void
+    {
+        $db = $this->em->getConnection();
+        self::assertNull($db->fetchOne('SELECT cohort_captured_at FROM advent_edition WHERE id = ?', [$id]));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_progression WHERE advent_edition_id = ?', [$id]));
     }
 
     public function testLateCaptureNeverPretendsToBeMidnight(): void
