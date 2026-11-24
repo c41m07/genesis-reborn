@@ -116,6 +116,43 @@ final class PlayerCombatSimulation
         return $result;
     }
 
+    /**
+     * Projette les champs non révélés laissés vides en zéros pour cet essai,
+     * uniquement après confirmation. Les valeurs invalides restent au moteur.
+     */
+    public function withConfirmedUnknownAssumptions(array $forces, ?array $intel, array $choices): array
+    {
+        if ($intel === null || !is_array($forces['defender'] ?? null)) {
+            return $forces;
+        }
+
+        foreach (['ships', 'defenses', 'research', 'fortress'] as $group) {
+            if (array_key_exists($group, $intel['forces']) || !is_array($forces['defender'][$group] ?? null)) {
+                continue;
+            }
+            if ($group === 'fortress') {
+                foreach (GameCatalog::TIERS as $tier) {
+                    if (($forces['defender'][$group][$tier] ?? null) === '') {
+                        $forces['defender'][$group][$tier] = 0;
+                    }
+                }
+                continue;
+            }
+            foreach ($forces['defender'][$group] as $slug => $tiers) {
+                if (!isset($choices[$group][$slug]) || !is_array($tiers)) {
+                    continue;
+                }
+                foreach (GameCatalog::TIERS as $tier) {
+                    if (($tiers[$tier] ?? null) === '') {
+                        $forces['defender'][$group][$slug][$tier] = 0;
+                    }
+                }
+            }
+        }
+
+        return $forces;
+    }
+
     private function canonical(array $values): array
     {
         // Normaliser les zéros et l’ordre des clés évite une fausse modification due au seul format de saisie.

@@ -1,11 +1,52 @@
 {% extends 'base.html.twig' %}
+{% import 'ui/macros.html.twig' as ui %}
 {% block title %}Vérifier l’annulation · Genesis Reborn{% endblock %}
 {% block body %}
 <div class="page-heading"><h1>Vérifier l’annulation</h1></div>
-<section class="panel sensitive-actions"><h2>Commandes concernées</h2>
-<p>La commande sélectionnée et ses niveaux dépendants seront supprimés. Estimation : 25 % des ressources payées, dans la place disponible sur chaque colonie. L’état sera revérifié à la confirmation.</p>
+<section class="panel sensitive-actions catalogue-cancel" aria-labelledby="catalogue-cancel-title">
+<h2 id="catalogue-cancel-title">Commandes concernées</h2>
+{% set selected = rows|filter(row => row.item.id == item.id)|first %}
+{% if selected %}
+    <div class="catalogue-cancel-item">
+        <small>{{ item.startedAt ? 'Commande démarrée' : 'Commande en file' }}</small>
+        <strong>{{ selected.label }} · {{ item.itemLevel ? 'niveau ' ~ item.itemLevel : 'quantité ' ~ item.quantity }}</strong>
+        <span>{{ selected.item.planet.name }}</span>
+        {% if item.itemLevel %}<span>Le niveau déjà acquis reste inchangé.</span>{% endif %}
+    </div>
+{% endif %}
+<p><strong>{{ rows|length }} {{ rows|length == 1 ? 'commande concernée' : 'commandes concernées' }}</strong> : la commande sélectionnée et ses niveaux dépendants.</p>
+<p>Estimation : 25 % des ressources payées, dans la place disponible sur chaque colonie. L’état sera revérifié à la confirmation.</p>
+{# Additionne les estimations déjà préparées pour l’affichage ; la confirmation reste recalculée côté serveur. #}
+{% set estimatedRefunds = {} %}
+{% for row in rows %}
+    {% for slug, amount in row.refund|filter(amount => amount > 0) %}
+        {% set estimatedRefunds = estimatedRefunds|merge({(slug): (estimatedRefunds[slug]|default(0)) + amount}) %}
+    {% endfor %}
+{% endfor %}
+<h3>Remboursement estimé</h3>
+{% if estimatedRefunds %}
+    <dl class="catalogue-cancel-refunds">
+        {% for slug, amount in estimatedRefunds %}
+            <div><dt>{{ resource_labels[slug] }}</dt><dd>{{ amount|quantity(2) }}</dd></div>
+        {% endfor %}
+    </dl>
+{% else %}
+    <p>Aucun remboursement estimé.</p>
+{% endif %}
+<details>
+<summary>Détail des commandes</summary>
 <ul>{% for row in rows %}<li><strong>{{ row.label }}</strong> · {{ row.item.planet.name }} · {{ row.item.itemLevel ? 'Niveau '~row.item.itemLevel : 'Quantité '~row.item.quantity }}{% if row.item.id != item.id %} · Dépendance annulée{% endif %}<ul>{% for slug,amount in row.refund|filter(amount => amount > 0) %}<li>{{ resource_labels[slug] }} : {{ amount|quantity(2) }} remboursés</li>{% else %}<li>Aucun remboursement.</li>{% endfor %}</ul></li>{% endfor %}</ul>
-<form method="post" action="{{ path('app_queue_cancel',{id:planet.id,itemId:item.id}) }}"><input type="hidden" name="_token" value="{{ csrf_token('cancel'~item.id) }}"><input type="hidden" name="request_key" value="{{ request_key() }}"><input type="hidden" name="section" value="{{ section }}"><button class="primary">Confirmer l’annulation de ces {{ rows|length }} commandes</button></form>
-<a class="secondary" href="{{ path('app_colony',{id:planet.id,section:section}) }}">Conserver les commandes</a>
+</details>
+<p class="catalogue-cancel-warning" id="catalogue-cancel-warning">
+    {{ ui.icon('notifications') }} <strong>Les commandes concernées seront arrêtées.</strong>
+    Vérifiez les conséquences et la colonie avant de confirmer.
+</p>
+<form class="catalogue-cancel-actions" method="post" action="{{ path('app_queue_cancel',{id:planet.id,itemId:item.id}) }}">
+    <input type="hidden" name="_token" value="{{ csrf_token('cancel'~item.id) }}">
+    <input type="hidden" name="request_key" value="{{ request_key() }}">
+    <input type="hidden" name="section" value="{{ section }}">
+    <a class="secondary" href="{{ path('app_colony',{id:planet.id,section:section}) }}">Conserver les commandes</a>
+    <button class="danger" type="submit" aria-describedby="catalogue-cancel-warning">{{ rows|length == 1 ? 'Confirmer l’annulation de cette commande' : 'Confirmer l’annulation de ces ' ~ rows|length ~ ' commandes' }}</button>
+</form>
 </section>
 {% endblock %}

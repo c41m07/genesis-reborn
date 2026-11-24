@@ -100,7 +100,20 @@ test('Guide technologique : domaines, prérequis réels, filtres, objectif et ac
   await page.keyboard.press('Escape');
   await expect(research.locator('summary')).toBeFocused();
   await research.locator('summary').click();
-  await panel.getByRole('button', { name: 'Suivre cet objectif', exact: true }).click();
+  const follow = panel.getByRole('button', { name: 'Suivre cet objectif', exact: true });
+  for (let step = 0; step < 12 && !await follow.evaluate(el => el === document.activeElement); step++) {
+    await page.keyboard.press('Tab');
+  }
+  await expect(follow).toBeFocused();
+  const guide = page.locator('.app-frame > .first-steps-popup-enhanced');
+  await expect(guide.locator('.first-steps-popup-mount')).toBeVisible();
+  const [cta, help] = await Promise.all([follow.boundingBox(), guide.boundingBox()]);
+  expect(help.y).toBeGreaterThanOrEqual(cta.y + cta.height);
+  expect(await follow.evaluate(el => {
+    const box = el.getBoundingClientRect();
+    return [0.5, 0.85].every(x => el.contains(document.elementFromPoint(box.x + x * box.width, box.y + box.height / 2)));
+  })).toBe(true);
+  await page.keyboard.press('Enter');
   await page.reload();
   await expect(page.locator('[data-technology-graph-target="goal"]')).toContainText(label);
   await query.fill('fighter');
@@ -219,33 +232,43 @@ test('Liste des systèmes : systèmes connu/inconnu, tableau défilant et sans J
   await page.goto('/carte');
   await page.getByLabel('Système', { exact: true }).selectOption(String(known.id));
   await page.getByRole('button', { name: 'Afficher le système' }).click();
-  await expect(page.locator('.galaxy-table')).toBeVisible();
-  await expect(page.locator('.galaxy-table').getByRole('link', { name: /Gérer/ })).toBeVisible();
+  const planets = page.locator('.galaxy-index-planets');
+  await expect(planets).toBeVisible();
+  await expect(planets.getByRole('link', { name: /Gérer/ })).toBeVisible();
   const knownUrl = page.url();
   for (const width of [1920, 1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
-  const scroll = page.getByRole('region', { name: 'Positions du système, défilement horizontal' });
+  const scroll = page.getByRole('region', { name: 'Liste des systèmes, zone défilante' });
+  // Après les changements de largeur, le focus peut encore faire défiler toute la
+  // page. Placer d’abord la région à l’écran isole le défilement interne au clavier.
+  await scroll.scrollIntoViewIfNeeded();
+  await expect(scroll).toBeInViewport({ ratio: 0.99 });
+  await expect.poll(() => scroll.evaluate(element => element.scrollHeight - element.clientHeight)).toBeGreaterThan(0);
   await scroll.focus();
-  await page.keyboard.press('ArrowRight');
-  await expect.poll(() => scroll.evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
+  await expect(scroll).toBeFocused();
+  const initialScrollTop = await scroll.evaluate(element => element.scrollTop);
+  await page.keyboard.press('ArrowDown');
+  await expect.poll(() => scroll.evaluate(element => element.scrollTop)).toBeGreaterThan(initialScrollTop);
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
   await page.screenshot({ path: testInfo.outputPath('map-classic-table-390.png'), fullPage: true, animations: 'disabled' });
-  await scroll.evaluate(element => { element.scrollLeft = element.scrollWidth; });
-  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await planets.getByRole('link', { name: /Gérer/ }).focus();
+  await expect(planets.getByRole('link', { name: /Gérer/ })).toBeFocused();
   await page.screenshot({ path: testInfo.outputPath('map-classic-actions-390.png'), fullPage: true, animations: 'disabled' });
-  await page.locator('.galaxy-table').getByRole('link', { name: /Gérer/ }).click();
+  await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/planetes\/\d+/);
   await page.goto(knownUrl);
   await page.getByLabel('Système', { exact: true }).selectOption(String(unknown.id));
   await page.getByRole('button', { name: 'Afficher le système' }).click();
   await expect(page.locator('.galaxy-unknown-panel')).toBeVisible();
-  await expect(page.locator('.galaxy-table')).toHaveCount(0);
+  await expect(planets).toHaveCount(0);
+  await expect(page.locator('.galaxy-system-panel').getByRole('link', { name: /Gérer|Ravitailler/ })).toHaveCount(0);
   const context = await browser.newContext({ javaScriptEnabled: false, storageState: await page.context().storageState() });
   const fallback = await context.newPage();
   await fallback.goto(knownUrl);
-  await expect(fallback.locator('.galaxy-table')).toBeVisible();
+  await expect(fallback.getByRole('region', { name: 'Liste des systèmes, zone défilante' })).toBeVisible();
+  await expect(fallback.locator('.galaxy-index-planets').getByRole('link', { name: /Gérer/ })).toBeVisible();
   await context.close();
   runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','light') WHERE email='${email}'`);
   await page.goto(knownUrl);

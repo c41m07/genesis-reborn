@@ -10,6 +10,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'report_notice_combat_unique', columns: ['player_universe_id', 'combat_log_id'])]
 #[ORM\UniqueConstraint(name: 'report_notice_espionage_unique', columns: ['player_universe_id', 'espionage_report_id'])]
 #[ORM\UniqueConstraint(name: 'report_notice_transport_unique', columns: ['player_universe_id', 'transport_report_id'])]
+#[ORM\UniqueConstraint(name: 'report_notice_diplomatic_unique', columns: ['player_universe_id', 'diplomatic_report_id'])]
+#[ORM\Index(name: 'report_notice_diplomatic_idx', columns: ['diplomatic_report_id'])]
 #[ORM\Index(name: 'report_notice_unread_idx', columns: ['player_universe_id', 'consulted_at'])]
 #[ORM\Index(name: 'report_notice_member_idx', columns: ['player_universe_id'])]
 #[ORM\Index(name: 'report_notice_combat_idx', columns: ['combat_log_id'])]
@@ -32,10 +34,13 @@ class ReportNotice
     #[ORM\ManyToOne, ORM\JoinColumn(onDelete: 'CASCADE')]
     private ?TransportReport $transportReport = null;
 
+    #[ORM\ManyToOne, ORM\JoinColumn(onDelete: 'CASCADE')]
+    private ?DiplomaticReport $diplomaticReport = null;
+
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $consultedAt = null;
 
-    public function __construct(PlayerUniverse $playerUniverse, CombatLog|EspionageReport|TransportReport $report)
+    public function __construct(PlayerUniverse $playerUniverse, CombatLog|EspionageReport|TransportReport|DiplomaticReport $report)
     {
         $this->playerUniverse = $playerUniverse;
         // Le type assure une seule référence. Doctrine peut l’écrire au même flush que le rapport.
@@ -43,6 +48,7 @@ class ReportNotice
             $report instanceof CombatLog => $this->combatLog = $report,
             $report instanceof EspionageReport => $this->espionageReport = $report,
             $report instanceof TransportReport => $this->transportReport = $report,
+            $report instanceof DiplomaticReport => $this->diplomaticReport = $report,
         };
     }
 }

@@ -6,10 +6,19 @@
 {% include 'ui/account_navigation.html.twig' %}
 <div id="vacances-info" tabindex="-1">
 {% if vacation_state and (vacation_state.enabled or vacation_state.active) %}
-    <section id="vacances" class="account-workspace" aria-labelledby="vacation-heading" tabindex="-1">
+    <section id="vacances" class="account-workspace{% if not vacation_state.active %} vacation-workspace--inactive{% endif %}" aria-labelledby="vacation-heading" tabindex="-1">
         <div class="panel account-panel vacation-information">
             <h2 id="vacation-heading">Vacances dans cet univers</h2>
-            <p>Univers : <strong>{{ vacation_membership.universe.name }}</strong>.</p>
+            {% if not vacation_state.active %}
+                <div class="vacation-inactive-notice">
+                    <strong>Mode vacances inactif</strong>
+                    <p>Consultez les restrictions de cet univers avant de confirmer.</p>
+                </div>
+                <h3 id="vacation-universe">Univers concerné</h3>
+                <p>{{ vacation_membership.universe.name }}</p>
+            {% else %}
+                <p>Univers : <strong>{{ vacation_membership.universe.name }}</strong>.</p>
+            {% endif %}
             {% if vacation_state.active %}
                 <p class="badge">Vacances actives</p>
                 <dl class="account-grid">
@@ -17,6 +26,7 @@
                     <div><dt>Fin automatique</dt><dd><time datetime="{{ vacation_state.active.scheduledEndAt|date('c') }}">{{ vacation_state.active.scheduledEndAt|date('d/m/Y à H:i',preferences.timezone) }}</time></dd></div>
                 </dl>
             {% endif %}
+            {% if not vacation_state.active %}<h3>Restrictions avant activation</h3>{% endif %}
             <ul id="vacation-rules">
                 <li>Production et files suspendues ; missions indisponibles ; protection contre les attaques et l’espionnage.</li>
                 <li>48 heures minimum avant une sortie volontaire et 90 jours maximum.</li>
@@ -38,12 +48,20 @@
         {% else %}
             <h2 id="vacation-action-heading">Activer mes vacances</h2>
             {% if vacation_state.cooldown %}<p>Nouvelle activation possible le <time datetime="{{ vacation_state.next_activation_at|date('c') }}">{{ vacation_state.next_activation_at|date('d/m/Y à H:i',preferences.timezone) }}</time> ({{ preferences.timezone }}).</p>{% endif %}
-            {% if vacation_state.start_blocker %}<p id="vacation-start-blocker">{{ vacation_state.start_blocker }}</p>{% endif %}
+            {% if vacation_state.start_blocker %}
+                <div class="vacation-unavailable-notice" id="vacation-start-blocker">
+                    <strong>Activation indisponible</strong>
+                    <p>{{ vacation_state.start_blocker }}</p>
+                </div>
+            {% endif %}
             <form method="post" action="{{ path('app_vacation_start') }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('vacation-start-'~vacation_membership.id) }}">
                 <input type="hidden" name="membership_id" value="{{ vacation_membership.id }}">
                 {% if vacation_state.can_start %}<p class="preference-toggle"><input id="vacation-confirm" type="checkbox" name="confirm" value="1" required aria-describedby="vacation-rules"><label for="vacation-confirm">J’ai lu ces conditions et je souhaite activer les vacances pour cet univers.</label></p>{% endif %}
-                <button class="primary full" {% if not vacation_state.can_start %}disabled aria-describedby="vacation-start-blocker"{% else %}aria-describedby="vacation-rules"{% endif %}>Activer le mode vacances dans cet univers</button>
+                <div class="vacation-start-actions">
+                    <button class="primary full" aria-label="Activer le mode vacances dans cet univers" {% if not vacation_state.can_start %}disabled aria-describedby="vacation-start-blocker"{% else %}aria-describedby="vacation-rules"{% endif %}>Activer le mode vacances</button>
+                    <a class="secondary" href="{{ path('app_preferences') }}">Retour aux préférences</a>
+                </div>
             </form>
         {% endif %}
         </section>

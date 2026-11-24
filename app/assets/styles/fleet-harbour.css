@@ -188,3 +188,10 @@ body.authenticated .fleet-harbour .fleet-resume-layout .report-facts > div {
         flex: 1;
     }
 }
+
+.fleet-harbour .orbit-request-deadline {
+    min-width: 0;
+    margin-block-start: 0;
+    font-variant-numeric: tabular-nums;
+}
+.fleet-harbour .orbit-request-deadline strong { color: var(--text); }

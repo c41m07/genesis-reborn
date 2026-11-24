@@ -171,12 +171,12 @@ final class GuildProjectPagesTest extends WebTestCase
         $crawler = $this->client->request('GET', '/guildes/projets/'.$project->id);
         self::assertResponseIsSuccessful();
         self::assertSelectorCount(25, '#project-contributions > ul > li');
-        self::assertSelectorTextContains('.project-overview > ul', '7 / 2');
-        self::assertSelectorTextContains('.project-overview', 'déjà gagné le boost');
+        self::assertSelectorTextContains('.project-overview > .project-personal-recap > ul > li', '7 / 2');
+        self::assertSelectorTextContains('.project-overview > .project-personal-recap', 'déjà gagné le boost');
         $this->client->click($crawler->selectLink('Voir les contributions précédentes')->link());
         self::assertSelectorCount(5, '#project-contributions > ul > li');
         self::assertSelectorExists('#project-contributions[open]');
-        self::assertSelectorTextContains('.project-overview > ul', '7 / 2');
+        self::assertSelectorTextContains('.project-overview > .project-personal-recap > ul > li', '7 / 2');
         self::assertSelectorTextContains('#project-contributions', 'ProjectPages');
         $this->client->request('GET', '/guildes/projets');
         self::assertSelectorTextContains('.guild-project-grid', 'déjà gagné le boost');

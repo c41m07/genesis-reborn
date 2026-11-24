@@ -117,10 +117,10 @@
     "superior": "Bombardier de percée"
   },
   "tier_descriptions": {
-    "basic": "Vaisseau spécialisé dans la destruction des bâtiments lourds. Il inflige d’importants dégâts aux croiseurs, destroyers, cuirassés et vaisseaux capitaux, mais reste vulnérable aux intercepteurs. Armement visible : deux tubes lance-torpilles sous le fuselage, lançant des torpilles à fusion.",
-    "intermediate": "Bombardier d’assaut conçu pour frapper les grandes coques à courte fenêtre d’exposition. Il menace les vaisseaux lourds mais dépend d’une escorte contre les intercepteurs. Armement visible : tubes lance-torpilles renforcés sous le fuselage, avec torpilles à fusion plus lumineuses.",
-    "superior": "Bombardier de percée optimisé pour ouvrir les lignes lourdes ennemies. Il concentre ses frappes sur croiseurs, destroyers, cuirassés et capitaux. Armement visible : doubles tubes lance-torpilles lourds, lançant des torpilles à fusion à forte traînée énergétique."
+    "basic": "Vaisseau spécialisé dans la destruction des bâtiments lourds. Il frappe les grandes coques et les défenses au sol, mais reste vulnérable aux intercepteurs. Armement visible : deux tubes lance-torpilles sous le fuselage, lançant des torpilles à fusion.",
+    "intermediate": "Bombardier d’assaut conçu pour frapper les grandes coques à courte fenêtre d’exposition. Il menace les vaisseaux lourds et les défenses au sol, mais dépend d’une escorte contre les intercepteurs. Armement visible : tubes lance-torpilles renforcés sous le fuselage, avec torpilles à fusion plus lumineuses.",
+    "superior": "Bombardier de percée optimisé pour ouvrir les lignes lourdes ennemies. Il concentre ses frappes sur les grandes coques et les défenses au sol. Armement visible : doubles tubes lance-torpilles lourds, lançant des torpilles à fusion à forte traînée énergétique."
   },
-  "description": "Vaisseau de frappe lourde conçu pour détruire les grandes coques. Il cible croiseurs, destroyers, cuirassés et vaisseaux capitaux avec deux tubes lance-torpilles à fusion, mais reste vulnérable aux intercepteurs.",
+  "description": "Vaisseau de frappe lourde conçu pour détruire les grandes coques. Il cible les grandes coques et les défenses au sol avec deux tubes lance-torpilles à fusion, mais reste vulnérable aux intercepteurs.",
   "combat_tier_growth": 1.5
 }

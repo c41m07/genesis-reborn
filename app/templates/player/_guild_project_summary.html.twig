@@ -1,12 +1,12 @@
 <article class="panel guild-project project-summary" aria-labelledby="project-title-{{ project.id }}">
     <div class="project-identity">
         <h2 id="project-title-{{ project.id }}"><a href="{{ path('app_guild_project',{id:project.id}) }}">{{ project.snapshot.name }}</a></h2>
-        <p class="project-started">Lancé le <time datetime="{{ project.startedAt|date('c') }}">{{ project.startedAt|date('d/m/Y',preferences.timezone) }}</time></p>
+        <p class="project-started">{% if project.completedAt %}Clos le <time datetime="{{ project.completedAt|date('c') }}">{{ project.completedAt|date('d/m/Y',preferences.timezone) }}</time>{% else %}Lancé le <time datetime="{{ project.startedAt|date('c') }}">{{ project.startedAt|date('d/m/Y',preferences.timezone) }}</time>{% endif %}</p>
         <p class="badge {{ project.status }}">{{ project.status=='completed' ? 'Terminé' : (project.status=='abandoned' ? 'Abandonné' : 'En cours') }}</p>
     </div>
     <div class="project-stage">
         {% if project.status=='active' %}
-            <h3>Palier {{ project.stageIndex+1 }} sur {{ project.snapshot.stages|length }} · {{ project.snapshot.stages[project.stageIndex].name }}</h3>
+            <h3>Progression collective · palier {{ project.stageIndex+1 }} sur {{ project.snapshot.stages|length }} · {{ project.snapshot.stages[project.stageIndex].name }}</h3>
             {% for resource,remaining in row.remaining %}{% set total=project.snapshot.stages[project.stageIndex].costs[resource] %}<label>{{ resources[resource] }} : {{ project.progress[resource]|default(0) }} / {{ total }}<progress max="{{ total }}" value="{{ project.progress[resource]|default(0) }}">{{ project.progress[resource]|default(0) }} / {{ total }}</progress></label>{% endfor %}
         {% elseif project.status=='completed' %}
             <p>{{ project.rewardsDeliveredAt ? 'Distribution des récompenses terminée.' : 'Récompenses en cours de distribution.' }}</p>

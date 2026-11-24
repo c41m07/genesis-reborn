@@ -33,10 +33,14 @@ test('Pages validées : diplomatie, profil et inventaire, thèmes, clavier et é
     }
   }
   await page.goto('/profil');
-  const passwordSummary=page.getByText('Changer de mot de passe — facultatif',{exact:true});
+  const passwordDetails = page.locator('details.profile-password');
+  const passwordSummary = passwordDetails.locator(':scope > summary');
+  await expect(passwordSummary).toContainText('Changer de mot de passe — facultatif');
   await passwordSummary.focus();
+  await expect(passwordSummary).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('group',{name:'Changer de mot de passe',exact:true})).toBeVisible();
+  await expect(passwordDetails).toHaveAttribute('open', '');
+  await expect(passwordDetails.getByRole('group',{name:'Changer de mot de passe',exact:true})).toBeVisible();
   expect(await passwordSummary.evaluate(el=>getComputedStyle(el).outlineStyle)).not.toBe('none');
   const accountMenu = page.locator('.space-navigation-menu');
   await accountMenu.locator(':scope > summary').focus();

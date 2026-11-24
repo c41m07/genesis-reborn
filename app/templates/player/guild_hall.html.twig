@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+{% block title %}Hall de guilde · Genesis Reborn{% endblock %}
+{% block body %}
+{% import 'ui/macros.html.twig' as ui %}
+{% set installed = hall and hall.solarSystem %}
+{# Même ordre de garde que le parcours de don : vacances puis financement puis pose. #}
+{% set showPlacement = may_act and remaining == 0 and may_place %}
+<div class="page-refinement guild-project-space project-redesign social-board social-board--guild-hall" data-page-sections="disabled">
+    <div class="page-heading"><div><h1>Hall de guilde</h1><p>Une construction collective pour {{ guild.name }} dans cet univers.</p></div></div>
+    {% include 'ui/guild_navigation.html.twig' with {compactNavigation:true} %}
+    <div class="guild-project-detail{% if (maximum > 0 and colonies) or showPlacement %} project-active-layout{% endif %}">
+        {# L’action passe avant le bilan sur mobile et dans l’ordre du clavier. #}
+        {% if showPlacement %}
+            {% include 'player/_guild_hall_placement.html.twig' %}
+        {% endif %}
+        <section class="panel{% if installed %} guild-hall-installed{% endif %}" aria-labelledby="hall-progress-title">
+            <h2 id="hall-progress-title">{% if installed %}{{ ui.icon('buildings') }} Hall installé{% else %}Progression de la construction{% endif %}</h2>
+            {% if installed %}
+                {% set system = hall.solarSystem %}
+                <p>Installé dans le système {{ system.galaxy.coordinateCode() }}:{{ system.number() }} · {{ system.name }}.</p>
+            {% endif %}
+            <p class="hall-progress-value">{{ (required - remaining)|number_format(0, ',', ' ') }} / {{ required|number_format(0, ',', ' ') }} unités de force</p>
+            <progress aria-labelledby="hall-progress-title" max="{{ required }}" value="{{ required - remaining }}">{{ (required - remaining)|number_format(0, ',', ' ') }} sur {{ required|number_format(0, ',', ' ') }}</progress>
+            <h3 id="hall-donors-title">Donateurs qualifiés</h3>
+            <p>{{ qualified_donors }} / {{ required_donors }} personnes ont donné au moins {{ minimum_donor_strength|number_format(0, ',', ' ') }} points chacun en étant membres de la guilde.</p>
+            <progress aria-labelledby="hall-donors-title" max="{{ required_donors }}" value="{{ qualified_donors }}">{{ qualified_donors }} sur {{ required_donors }}</progress>
+            <p>Votre contribution : {{ personal|number_format(0, ',', ' ') }} points. {% if personal_remaining %}Il vous manque {{ personal_remaining|number_format(0, ',', ' ') }} points pour compter parmi les donateurs qualifiés.{% else %}Votre minimum personnel est atteint.{% endif %}</p>
+            {% if installed %}
+                <a class="primary guild-hall-site-link" href="{{ path('app_map_v2', {galaxy:system.galaxy.id, system:system.id}) }}">{{ ui.icon('galaxy') }} Voir le système dans Galaxie</a>
+                <aside class="guild-hall-closed">
+                    <h3>Dons clos</h3>
+                    <p>Le Hall est installé : il n’est plus possible de contribuer ou de choisir un autre emplacement.</p>
+                </aside>
+            {% elseif remaining == 0 %}
+                <p>Le Hall est entièrement financé. Seul le commandant peut choisir et confirmer son emplacement.</p>
+                {% if current_roster < required_donors %}<p>Il faut {{ required_donors }} membres actuels dans la guilde pour installer le Hall ({{ current_roster }} actuellement). Les dons déjà validés restent acquis.</p>{% endif %}
+            {% else %}
+                <aside class="guild-hall-funding-notice">
+                    <h3>Le placement n’est pas encore disponible</h3>
+                    <p>Il reste {{ remaining|number_format(0, ',', ' ') }} unités de force à financer.{% if qualified_donors < required_donors %} Le nombre minimal de donateurs qualifiés n’est pas encore atteint.{% endif %}</p>
+                </aside>
+                <p>8 hydrogène, 4 métal, 2 nano ou 1 antimatière valent chacun 8 unités.</p>
+            {% endif %}
+            <p class="muted">Le Hall revendique le système. Il ne remplace aucune planète et ne donne ni bonus ni nouveau pouvoir.</p>
+        </section>
+        {% if not may_act %}
+            <p class="panel">Vous pouvez consulter le Hall, mais pas contribuer ni le placer pendant les vacances.</p>
+        {% elseif remaining > 0 %}
+            {% if maximum == 0 %}
+                <p class="panel">La force restante est réservée aux autres donateurs. Vous ne serez pas débité.</p>
+            {% elseif colonies %}
+                <section class="panel project-donation-panel" aria-labelledby="hall-donation-title">
+                    <h2 id="hall-donation-title">Contribuer à la construction</h2>
+                    <p>Les dons sont prélevés sur la colonie choisie.</p>
+                    <form method="post" action="{{ path('app_guild_hall_contribute') }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('guild_hall_donate_' ~ guild.id) }}">
+                        <input type="hidden" name="revision" value="{{ hall.revision|default(0) }}">
+                        <label for="hall-colony">Colonie qui finance le don</label>
+                        <select id="hall-colony" name="planet_id" required>
+                            {% for planet in colonies %}<option value="{{ planet.id }}">{{ planet.name }} · {{ planet.coordinates() }}</option>{% endfor %}
+                        </select>
+                        <fieldset class="hall-resource-fields">
+                            <legend>Ressources à donner</legend>
+                            {% for resource, field in resource_fields %}
+                                <div>
+                                <label for="hall-{{ resource }}">{{ field.label }}</label>
+                                <input id="hall-{{ resource }}" name="resources[{{ resource }}]" type="number" inputmode="numeric" min="0" step="1" placeholder="0" max="{{ field.maximum }}">
+                                </div>
+                            {% endfor %}
+                        </fieldset>
+                        <p>Les dons sont volontaires. Une part entière reste réservée à chaque donateur qui doit encore se qualifier.</p>
+                        {% if ordinary_limit > 0 %}<p>Sans utiliser la réserve : jusqu’à {{ ordinary_limit|number_format(0, ',', ' ') }} points.</p>{% endif %}
+                        {% if qualifies_from is not null %}<p>Pour atteindre votre minimum et utiliser une part réservée : de {{ qualifies_from|number_format(0, ',', ' ') }} à {{ maximum|number_format(0, ',', ' ') }} points.</p>{% endif %}
+                        <button type="submit" class="primary">Donner ces ressources</button>
+                    </form>
+                </section>
+            {% else %}
+                <p class="panel">Il faut une colonie dans cet univers pour contribuer.</p>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -31,8 +31,21 @@ test('Rapports A : transport complet, retour filtré, effacement, thèmes et lec
     runIsolatedSql(project, 'INSERT INTO report_notice (player_universe_id,espionage_report_id) VALUES ('+Number(member)+','+spy+')');
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
+    await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto('/rapports?type=economy');
     await expect(page.locator('.report-unread-count')).toHaveText('2');
+    const reportList = page.locator('.player-report-layout .report-center');
+    const reportHelp = page.locator('.player-report-layout .player-report-help');
+    const [listDesktop, helpDesktop] = await Promise.all([reportList.boundingBox(), reportHelp.boundingBox()]);
+    expect(listDesktop.width).toBeGreaterThan(helpDesktop.width);
+    expect(listDesktop.x + listDesktop.width).toBeLessThan(helpDesktop.x);
+    expect(Math.abs(listDesktop.y - helpDesktop.y)).toBeLessThanOrEqual(1);
+    await page.screenshot({ path: info.outputPath('P01-rapports-1920x1080.png'), scale: 'css', animations: 'disabled' });
+    await page.setViewportSize({ width: 390, height: 844 });
+    const [listMobile, helpMobile] = await Promise.all([reportList.boundingBox(), reportHelp.boundingBox()]);
+    expect(listMobile.y + listMobile.height).toBeLessThan(helpMobile.y);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    await page.screenshot({ path: info.outputPath('P01-rapports-390x844.png'), scale: 'css', animations: 'disabled' });
     await expect(page.locator('body')).toHaveAttribute('data-menu-notifications-unread-journal-value', 'false');
     await expect(page.locator('.report-row .report-new-label')).toHaveText('Nouveau');
     expect(await page.evaluate(async url => (await fetch(url, { headers: { 'Sec-Purpose': 'prefetch' } })).status, '/rapports/transport/'+id)).toBe(200);
@@ -50,18 +63,26 @@ test('Rapports A : transport complet, retour filtré, effacement, thèmes et lec
         expect(journal.y + journal.height <= reports.y || reports.y + reports.height <= journal.y).toBe(true);
     }
     await page.setViewportSize({ width:1440, height:1000 });
-    await page.getByLabel('Nom actuel de planète').fill(planetName);
+    await page.getByLabel('Nom de planète').fill(planetName);
     await page.getByRole('button', { name: 'Rechercher les rapports' }).click();
     await expect(page).toHaveURL(/planet=/);
     await page.locator(`a[href*="/rapports/transport/${id}"]`).click();
     const reportUrl = page.url();
+    await expect(page.locator('.core-transport-route .core-report-state')).toHaveText('Livraison effectuée');
     await expect(page.locator('.report-notice-form')).toBeHidden();
     await expect(page.locator('.report-unread-count')).toHaveText('1');
     const row = page.locator('.report-resource-table tbody tr').filter({ hasText: 'Métal' });
     await expect(row.locator('[data-label="Envoyé"]')).toHaveText('2 000,00');
     await expect(row.locator('[data-label="Livré"]')).toHaveText('1 500,00');
+    const delivered = page.locator('.transport-board-metrics > div').filter({hasText:'Quantité livrée'});
+    const nano = page.locator('.report-resource-table tbody tr').filter({ hasText: 'Nano' });
+    await expect(nano.locator('[data-label="Livré"]')).toHaveText('800,00');
+    // Le KPI additionne les deux ressources livrées, pas seulement la ligne Métal.
+    await expect(delivered.locator('dd').first()).toHaveText('2 300,00');
     await expect(row.locator('[data-label="Déposé au retour"]')).toHaveText('450,00');
     await expect(row.locator('[data-label="Perdu au retour"]')).toHaveText('−50,00');
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.screenshot({ path: info.outputPath('P16-transport-1920x1080.png'), scale: 'css', animations: 'disabled' });
     for (const width of [1440, 768, 390, 320]) {
         await page.setViewportSize({ width, height: 1000 });
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
@@ -74,10 +95,10 @@ test('Rapports A : transport complet, retour filtré, effacement, thèmes et lec
         await page.screenshot({ path: info.outputPath(`transport-A-${theme}.png`), fullPage: true, animations: 'disabled' });
     }
     await page.getByRole('link', { name: 'Retour aux rapports' }).click();
-    await expect(page.getByLabel('Nom actuel de planète')).toHaveValue(planetName);
+    await expect(page.getByLabel('Nom de planète')).toHaveValue(planetName);
     await expect(page).toHaveURL(/type=economy/);
     await page.getByRole('link', { name: 'Réinitialiser les filtres' }).click();
-    await expect(page.getByLabel('Nom actuel de planète')).toHaveValue('');
+    await expect(page.getByLabel('Nom de planète')).toHaveValue('');
     expect(new URL(page.url()).searchParams.has('planet')).toBe(false);
     expect(new URL(page.url()).searchParams.get('type')).toBe('economy');
     const context = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false, viewport: { width: 390, height: 1000 } });

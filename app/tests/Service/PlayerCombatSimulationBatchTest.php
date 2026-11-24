@@ -78,6 +78,31 @@ final class PlayerCombatSimulationBatchTest extends TestCase
         $this->simulation->runBatch($this->owner,$forces,42);
     }
 
+    public function testOnlyBlankApprovedUnknownInputsBecomeZeroForTheCalculation(): void
+    {
+        $choices = $this->simulation->choices($this->owner);
+        $draft = [
+            'attacker' => ['ships' => ['fighter' => ['basic' => '4']]],
+            'defender' => [
+                'ships' => ['fighter' => ['basic' => '2']],
+                'research' => ['weapons_engineering' => ['basic' => '3', 'intermediate' => '', 'superior' => '-1']],
+                'defenses' => ['ground_turret_anti_light' => ['basic' => '']],
+                'fortress' => ['basic' => '', 'intermediate' => '2'],
+            ],
+        ];
+        $intel = ['forces' => ['ships' => ['fighter' => ['basic' => 2]], 'defenses' => []]];
+
+        $calculation = $this->simulation->withConfirmedUnknownAssumptions($draft, $intel, $choices);
+
+        self::assertSame($draft['attacker'], $calculation['attacker']);
+        self::assertSame($draft['defender']['ships'], $calculation['defender']['ships']);
+        self::assertSame($draft['defender']['defenses'], $calculation['defender']['defenses']);
+        self::assertSame(['basic' => '3', 'intermediate' => 0, 'superior' => '-1'], $calculation['defender']['research']['weapons_engineering']);
+        self::assertSame(['basic' => 0, 'intermediate' => '2'], $calculation['defender']['fortress']);
+        self::assertSame('', $draft['defender']['research']['weapons_engineering']['intermediate']);
+        self::assertSame($draft, $this->simulation->withConfirmedUnknownAssumptions($draft, null, $choices));
+    }
+
     #[\PHPUnit\Framework\Attributes\DataProvider('invalidInputs')]
     public function testBatchRejectsInvalidInputsWithoutNormalizingTheFirstSeed(array $forces,int $seed,bool $forgotten=false): void
     {

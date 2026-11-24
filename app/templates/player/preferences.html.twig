@@ -1,32 +1,50 @@
 {% extends 'base.html.twig' %}
+{# Seule la confirmation des réglages généraux suit leur formulaire. Les autres messages restent à leur emplacement habituel. #}
+{% set preferenceFlashes = app.flashes %}
+{% set settingsSuccess = 'Préférences enregistrées.' %}
+{% block flash_messages %}
+    {% for type, messages in preferenceFlashes %}
+        {% for message in messages %}
+            {% if type != 'success' or message != settingsSuccess %}
+                <div class="flash {{ type }}" role="{{ type == 'error' ? 'alert' : 'status' }}">{{ message }}</div>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+{% endblock %}
 {% block title %}Préférences · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="page-refinement account-space preferences-page account-redesign" data-page-sections="disabled">
-<div class="page-heading"><div><h1>Préférences</h1><p>Ces réglages sont communs à votre compte, dans tous vos univers.</p></div></div>
+<div class="page-refinement account-space preferences-page account-redesign player-account-board" data-page-sections="disabled">
+<div class="page-heading"><div><p class="account-board-eyebrow">Compte · réglages</p><h1>Préférences</h1><p>Ces réglages sont communs à votre compte, dans tous vos univers.</p></div></div>
 {% include 'ui/account_navigation.html.twig' %}
-{{ form_start(form, {attr: {class: 'account-preferences-form'}}) }}
+<div class="account-board-grid">
+{{ form_start(form, {attr: {class: 'panel account-panel account-preferences-form account-board-settings'}}) }}
     {% if form.vars.submitted and not form.vars.valid %}<div class="form-error" role="alert"><strong>Paramètres non enregistrés.</strong><p>Corrigez les champs signalés puis réessayez.</p>{{ form_errors(form) }}</div>{% endif %}
-    <section class="panel account-panel">
+    <section>
         <fieldset class="account-section"><legend>Affichage et horloge</legend><div class="account-grid">{{ form_row(form.theme) }}{{ form_row(form.timezone) }}</div></fieldset>
     </section>
     <div class="account-preference-columns">
-        <section class="panel account-panel">
-            <fieldset class="account-section"><legend>Raccourcis de la galaxie</legend><p>Vitesse utilisée par défaut pour les missions rapides depuis la galaxie.</p><div class="account-shortcuts">{{ form_row(form.galaxySpySpeed) }}{{ form_row(form.galaxyColonizeSpeed) }}</div></fieldset>
+        <section>
+            <fieldset class="account-section"><legend>Raccourcis de la galaxie</legend><p>Dans tous vos univers, les missions rapides depuis la galaxie utilisent cette vitesse par défaut.</p><div class="account-shortcuts">{{ form_row(form.galaxySpySpeed) }}{{ form_row(form.galaxyColonizeSpeed) }}</div></fieldset>
         </section>
-        <section class="panel account-panel">
+        <section>
             <fieldset class="account-section"><legend>Réception des transports</legend>{{ form_row(form.transportReception) }}</fieldset>
         </section>
     </div>
-    <section class="panel account-panel">
+    <section>
         <fieldset class="account-section"><legend>Confort de lecture</legend>
+        <p>Ces préférences s’appliquent à tous vos univers.</p>
             <div class="preference-toggle">{{ form_widget(form.reducedMotion) }}{{ form_label(form.reducedMotion) }}{{ form_errors(form.reducedMotion) }}</div>
             <div class="preference-toggle">{{ form_widget(form.realtimeNotifications) }}{{ form_label(form.realtimeNotifications) }}{{ form_errors(form.realtimeNotifications) }}</div>
             <div class="preference-toggle">{{ form_widget(form.showLockedItems) }}{{ form_label(form.showLockedItems) }}{{ form_errors(form.showLockedItems) }}</div>
         </fieldset>
     </section>
     <button class="primary account-preferences-save">Enregistrer les paramètres</button>
+    {% if settingsSuccess in preferenceFlashes.success|default([]) %}
+        <p class="flash success account-preferences-confirmation" role="status">{{ settingsSuccess }}</p>
+    {% endif %}
 {{ form_end(form) }}
-<form method="post" action="{{ path('app_first_steps_preference') }}" class="panel account-panel first-steps-preference-form" data-turbo="false">
+<aside class="account-board-rail" aria-label="Guide et mode vacances">
+<form method="post" action="{{ path('app_first_steps_preference') }}" class="panel account-panel first-steps-preference-form account-board-card" data-turbo="false">
     <fieldset class="account-section">
         <legend>Guide Premiers pas</legend>
         <input type="hidden" name="_token" value="{{ csrf_token('first-steps-preference') }}">
@@ -38,8 +56,22 @@
         </div>
         <p id="first-steps-guide-help">Vous retrouverez vos étapes et récompenses acquises en le réactivant.</p>
         <p><a href="{{ path('app_first_steps') }}">Voir le guide complet et les remboursements</a></p>
-        <button class="primary" type="submit">Enregistrer le réglage du guide</button>
+        <button class="secondary" type="submit">Enregistrer le réglage du guide</button>
     </fieldset>
 </form>
+<section class="panel account-board-card account-vacation-card">
+    <h2>Mode vacances</h2>
+    {% if chrome.membership %}
+        <div class="account-vacation-summary{{ chrome.vacation ? '' : ' account-vacation-summary--inactive' }}">
+            <p><strong>{{ chrome.vacation ? 'Vacances actives' : 'Pas de vacances actives' }}</strong></p>
+            <p>Les restrictions et l’état de votre protection sont propres à l’univers sélectionné.</p>
+        </div>
+    {% else %}
+        <p>Les restrictions et l’état de votre protection sont propres à l’univers sélectionné.</p>
+    {% endif %}
+    <a class="secondary" href="{{ path('app_vacation') }}">Examiner les restrictions</a>
+</section>
+</aside>
+</div>
 </div>
 {% endblock %}

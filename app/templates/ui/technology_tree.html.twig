@@ -61,6 +61,13 @@
             {% endfor %}
             <button type="button" class="technology-more" data-technology-graph-target="more" data-action="technology-graph#showMore" hidden></button>
         </div>
+        {% if tree_standalone|default(false) %}
+        <aside class="technology-board-prompt" aria-labelledby="technology-board-prompt-title">
+            <h2 id="technology-board-prompt-title">Détail de l’objectif</h2>
+            <p>Sélectionnez un élément pour voir le niveau atteint, les conditions remplies et le prochain prérequis manquant.</p>
+            <p>Vous pourrez ensuite suivre cet objectif dans la barre haute.</p>
+        </aside>
+        {% endif %}
         <aside id="technology-detail" class="technology-detail" data-technology-graph-target="panel" aria-label="Détails de l’élément sélectionné" hidden>
             <button type="button" class="secondary technology-detail-close" data-action="technology-graph#close">Fermer les détails</button>
             <div data-technology-graph-target="detail" aria-live="polite"></div>

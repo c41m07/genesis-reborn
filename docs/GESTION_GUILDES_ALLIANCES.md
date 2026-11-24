@@ -16,6 +16,57 @@ Le lot 5 poursuit les services validés : trois listes dédiées et paginées, a
 la fiche existante pour contribuer. Les droits, dons et récompenses ne changent
 pas. [Navigation, vérifications et intégration](NAVIGATION_PAGES_DEDIEES.md).
 
+## Noyau du Hall de guilde — chantier non ouvert
+
+La construction est propre à une guilde et ne réutilise pas les paliers ou les
+récompenses des projets existants. Un don volontaire transforme 8 hydrogène,
+4 métal, 2 nano ou 1 antimatière en 8 unités de force, ce qui s'additionne sans
+arrondi. L'électricité ne finance pas le Hall. Le service refuse avant débit
+un don supérieur au restant dû ; aucun excédent n'est perdu.
+
+Le prix fixé est de 500 000 points, avec trois personnes distinctes ayant
+versé au moins 50 000 points chacune en étant membres. Les trois critères
+sont figés au premier don. Le système réserve **50 000 points entiers**
+pour chaque qualification manquante, et n'en débloque une part que si le
+don atteint le minimum personnel. Le plafond initial d'une personne est
+de 400 000 points. Les dons partiels sont autorisés dans le budget libre ;
+un départ avant qualification ne prive pas un autre membre de sa part.
+L'interface distingue le plafond libre de la plage qui permet de se
+qualifier. Tout don hors de ces bornes est refusé sans débit.
+
+L'identifiant de participation, commun à toutes ses colonies, ne compte
+qu'une fois en cas de départ puis retour. Son don et sa qualification ne
+sont pas remboursés ni transférés. Il faut aussi au moins trois membres
+jouables actuellement inscrits pour installer le Hall : un ancien trio
+n'autorise pas un commandant seul. Un nouveau membre renforce l'effectif,
+mais n'est pas compté comme donateur s'il n'a rien donné. Quitter la
+guilde après installation ne retire pas le Hall.
+
+`GUILD_HALL_ENABLED=0` reste le défaut. Une activation volontaire requiert
+un seuil et des minimums compatibles ; les configurations par défaut du
+pilote reprennent les valeurs validées ci-dessus. Aucune production n'est
+activée par ce lot. La migration des reçus ne crédite pas les anciens
+essais sans trace : elle refuse de continuer s'il reste un Hall du prototype
+précédent dans la base à migrer.
+
+Le premier modèle limite le Hall à un par guilde. Une fois la cible atteinte,
+seul le commandant en exercice peut l'installer à la position 0 d'un système
+libre déjà cartographié dans son univers. La position indique un Hall et non une
+planète, une flotte, une prise des colonies ou un bonus. Les autres lecteurs
+ne consultent que la projection du tag dans leurs propres systèmes découverts.
+
+Le même verrou de participation et d'univers que pour les actions de guilde
+et de stock sérialise les écritures. Une ancienne révision ne peut être débitée
+deux fois et une contrainte SQL interdit un second Hall dans le système.
+Le Hall n'ajoute ni capture, déplacement, remboursement ou privilège. La
+dissolution normale supprime réellement la guilde, et libère sa position 0
+dans la même transaction sans restituer les dons. Si le commandant est
+converti sans successeur éligible, la guilde cesse d'être jouable et la place
+est libérée également, sans détruire les messages, profils et grades
+conservés dans l'historique. S'il reste un successeur, celui-ci garde le Hall.
+ La migration additive conserve les Hall existants en cas de retour
+du code et ne doit être appliquée que selon la procédure habituelle.
+
 ## Périmètre validé
 
 - Grades personnalisés avec permissions détaillées pour les guildes.

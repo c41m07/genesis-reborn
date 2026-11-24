@@ -398,7 +398,9 @@ final class GamePersistenceTest extends KernelTestCase
         $clock=$this->clock();$p=$this->player();$planet=$this->join($p,'omega-1');$q=self::getContainer()->get(QueueService::class);
         $q->add($p->currentPlayerUniverse,$planet,'buildings','mine_metal',1,str_repeat('a',32));$q->add($p->currentPlayerUniverse,$planet,'buildings','mine_nano',1,str_repeat('b',32));
         $items=$this->em->getRepository(QueueItem::class)->findBy([],['id'=>'ASC']);$head=$items[0];$next=$items[1];$token=$head->dispatchToken;$nextDuration=$next->durationSeconds;
-        // Durée contrôlée pour tester le redispatch, indépendamment de l’équilibrage des mines.
+        // Simuler des commandes historiques : leurs secondes restent la source du boost.
+        // Les ordres modernes et leurs checkpoints sont exercés dans LiveQueueBonusTest.
+        $head->liveTiming=null;$next->liveTiming=null;
         $head->durationSeconds=120;$next->durationSeconds=120;$nextDuration=120;$this->em->flush();
         $clock->sleep(30);$q->boost($p->currentPlayerUniverse,$head->id,2,str_repeat('c',32));$newToken=$head->dispatchToken;
         self::assertSame(75,$head->durationSeconds);self::assertNotSame($token,$newToken);self::assertSame($nextDuration,$next->durationSeconds);
@@ -1676,17 +1678,49 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertSame(0,$this->em->getRepository(QueueItem::class)->count(['playerUniverse'=>$membership]));
     }
 
-    public function testResearchLimitOfThirtyCommandsIsSharedAcrossColonies(): void
+    public function testResearchLimitOfTenCommandsIsSharedAcrossColonies(): void
     {
         [$clock,$player,$one,$two,$service]=$this->researchColonies();$count=0;
         foreach(self::getContainer()->get(GameCatalog::class)->all('technologies') as $slug=>$definition) {
             foreach(GameCatalog::TIERS as $tier) {
                 $item=$this->recordedResearch($count%2?$two:$one,$slug,1,10000,$clock->now(),$count===0);$item->tier=$tier;
-                if(++$count===30) break 2;
+                if(++$count===10) break 2;
             }
         }
         $this->em->flush();$this->expectException(\DomainException::class);$this->expectExceptionMessage('File pleine');
         $service->add($player->currentPlayerUniverse,$two,'technologies','engineering_foundations',1,str_repeat('a',32));
+    }
+
+    public function testShipyardLimitOfTenCountsShipsAndDefensesTogether(): void
+    {
+        $clock = $this->clock();
+        $player = $this->player('ShipyardCap');
+        $planet = $this->join($player);
+        $member = $player->currentPlayerUniverse;
+        $service = self::getContainer()->get(QueueService::class);
+
+        for ($index = 0; $index < 10; ++$index) {
+            $item = new QueueItem();
+            $item->planet = $planet;
+            $item->playerUniverse = $member;
+            $item->queueType = 'shipyard';
+            $item->itemSlug = $index % 2 === 0 ? 'probe' : 'ground_turret_anti_light';
+            $item->durationSeconds = 3600;
+            $item->queuedAt = $clock->now();
+            $item->startedAt = $index === 0 ? $clock->now() : null;
+            $item->dispatchToken = 'shipyard-'.$index;
+            $this->em->persist($item);
+        }
+        $this->em->flush();
+
+        foreach (['ships' => 'probe', 'defenses' => 'ground_turret_anti_light'] as $group => $slug) {
+            $quote = $service->constructionPreview($member, $planet, $group, $slug, 'basic', 1);
+            self::assertSame(0, $quote['maximum']);
+            self::assertSame('File pleine (10 commandes maximum).', $quote['reason']);
+        }
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('File pleine (10 commandes maximum).');
+        $service->add($member, $planet, 'defenses', 'ground_turret_anti_light', 1, str_repeat('a', 32));
     }
 
     public function testResearchFilesRemainIndependentBetweenUniverses(): void

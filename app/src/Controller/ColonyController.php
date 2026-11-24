@@ -3,13 +3,14 @@
 namespace App\Controller;
 
 use App\Entity\{Planet, PlanetBuilding, PlayerTechnology, PlayerDiscovery, Fleet, FleetShip};
-use App\Repository\GameRepository;
+use App\Repository\{GameRepository, GuildHallRepository};
 use App\Service\Universe\UniverseContext;
 use App\Service\Notification\JournalService;
 use App\Service\Colony\{CatalogueInsights, CatalogueItemLink, ColonyComparisonActivities, ColonyView, GameShell, ResourceService, LiveRegionResponse};
 use App\Service\Queue\QueueService;
 use App\Service\Player\{FirstStepsView, LeaderboardService, PreferencesService, RelationResolver};
 use App\Service\Catalog\GameCatalog;
+use App\Service\Guild\GuildHallFunding;
 use App\Service\Fleet\{GalaxyGeometry, MovementCalculator};
 use App\Manager\GameManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -32,6 +33,8 @@ final class ColonyController extends AbstractController
         private LiveRegionResponse $liveResponses,
         private GalaxyGeometry $galaxyGeometry,
         private MovementCalculator $movementCalculator,
+        private GuildHallRepository $guildHalls,
+        private GuildHallFunding $hallFunding,
     )
     {
     }
@@ -110,6 +113,8 @@ final class ColonyController extends AbstractController
         JournalService $journal,
         \App\Service\Colony\EmpireDetails $details,
         FirstStepsView $firstSteps,
+        ColonyComparisonActivities $comparison,
+        ClockInterface $clock,
     ): Response
     {
         $p = $this->owned($id);
@@ -125,6 +130,8 @@ final class ColonyController extends AbstractController
                 $journal->open($m);
             }
             $data['journal_page'] = $journal->data($m, $id);
+            $data['overview_time'] = $clock->now();
+            $data['overview_deadlines'] = $comparison->upcomingForEmpire($m, $this->repo->planets($m->universe, $m));
             $points = [
                 'building_points' => 0,
                 'research_points' => 0,
@@ -171,6 +178,7 @@ final class ColonyController extends AbstractController
         if ($data['section'] === 'overview') {
             // Réutiliser les ressources déjà préparées ; le bandeau conserve son propre rendu.
             $templates['overview-attention'] = 'colony/_overview_attention.html.twig';
+            $templates['overview-deadlines'] = 'colony/_overview_deadlines.html.twig';
             $templates['overview-flight-metric'] = 'colony/_overview_flight_metric.html.twig';
         }
         $regions = [];
@@ -465,7 +473,10 @@ final class ColonyController extends AbstractController
         foreach ($this->repo->discoveredPlanets($m, $systemIds) as $planet) {
             $planetsBySystem[$planet->solarSystem->id][] = $planet;
         }
+        $claims = $this->hallFunding->availableIn($m->universe)
+            ? $this->guildHalls->claimsForKnownSystems($m, $systemIds) : [];
         foreach ($systems as &$row) {
+            $row['hall'] = $claims[$row['system']->id] ?? null;
             $row['planets'] = $planetsBySystem[$row['system']->id] ?? [];
         }
         unset($row);
@@ -564,7 +575,11 @@ final class ColonyController extends AbstractController
                         'npc' => $planet->npcPlanet || $planet->owner?->isForgotten(),
                         'conquestLevel' => $planet->conquestLevel,
                     ], $row['planets']),
-                ];
+                ] + ($row['hall'] ? ['hall' => [
+                    'position' => $row['hall']['position'],
+                    'tag' => $row['hall']['tag'],
+                    'profileUrl' => $this->generateUrl('app_guild_public_profile', ['id' => $row['hall']['guildId']]),
+                ]] : []);
             }
             $flights = $this->visibility->forMap($m, $selectedGalaxy);
             $campaignTraffic = $this->campaignTraffic->forGalaxy($m, $selectedGalaxy);

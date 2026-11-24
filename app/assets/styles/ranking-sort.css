@@ -3,3 +3,32 @@
 .ranking-sort:hover{text-decoration:underline;background:color-mix(in srgb,var(--accent) 8%,var(--panel))}
 .ranking-sort[aria-current=page]{background:color-mix(in srgb,var(--accent) 12%,var(--panel))}
 .ranking-sort:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
+
+.leaderboard-workspace .ranking-table thead :is(th:first-child,.ranking-sort-heading),
+.leaderboard-workspace .ranking-table--guilds thead th:nth-child(n+3),
+.leaderboard-workspace .ranking-table--players tbody :is(td:first-child,td[data-category]),
+.leaderboard-workspace .ranking-table--guilds tbody td {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+}
+
+.player-ranking-board .ranking-board-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+.player-ranking-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+.ranking-board-main { padding:1.2rem; min-width:0; }
+.ranking-board-help { margin-bottom:1rem; }
+.ranking-board-help summary { width:fit-content; min-height:44px; cursor:pointer; }
+.ranking-board-help > .panel { margin-top:.5rem; padding:1rem; }
+.ranking-board-help p:first-child { margin-top:0; }
+.ranking-board-help p:last-child { margin-bottom:0; }
+/* Le rang publié reste près du tableau, y compris si la ligne du joueur est sur une autre page. */
+.ranking-board-main-title { margin: 0 0 .85rem; }
+.ranking-board-main .ranking-board-own { margin: .9rem 0; }
+.ranking-board-main .ranking-board-own > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: .2rem .65rem;
+    color: var(--accent);
+}
+.ranking-board-main .ranking-board-own dd { margin: 0; color: inherit; font-weight: 750; font-variant-numeric: tabular-nums; }

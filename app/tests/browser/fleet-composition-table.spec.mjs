@@ -28,7 +28,7 @@ async function seed(page) {
     runIsolatedSql(project, "INSERT INTO fleet (player_universe_id,home_planet_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token) VALUES (" + owner + ',' + origin + ",'idle','idle',1,'{}',0,0,0,0,'')");
     const fleet = Number(queryIsolatedSql(project, "SELECT id FROM fleet WHERE home_planet_id=" + origin + " AND status='idle'"));
     runIsolatedSql(project, "INSERT INTO fleet_ship(fleet_id,slug,tier,quantity) VALUES (" + fleet + ",'fighter','basic',12),(" + fleet + ",'fighter','intermediate',6),(" + fleet + ",'fighter','superior',4),(" + fleet + ",'probe','basic',3)");
-    return { coordinates: planetCoordinates(project, target), fleet, owner, project };
+    return { coordinates: planetCoordinates(project, target), fleet, owner, project, email };
 }
 
 function ship(table, tier) {
@@ -37,13 +37,29 @@ function ship(table, tier) {
 
 test('Flottes : les trois rangs restent alignés et arrivent ensemble au devis, avec et sans JavaScript', async ({ page, browser, baseURL }) => {
     test.setTimeout(120000);
-    const { coordinates, fleet, owner, project } = await seed(page);
+    const { coordinates, fleet, owner, project, email } = await seed(page);
     const prepare = '/flottes/preparer?mission=station';
     await page.goto(prepare);
     const form = page.locator('.fleet-form form');
     const table = form.getByRole('table', { name: 'Composez votre flotte', exact: true });
     await expect(table.getByRole('columnheader')).toHaveText(['Élément', 'Basique', 'Intermédiaire', 'Supérieur']);
     await expect(table.getByRole('rowheader')).toHaveCount(2);
+    const background = locator => locator.evaluate(el => getComputedStyle(el).backgroundColor);
+    for (const theme of ['light', 'dark']) {
+        runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
+        await page.goto(prepare);
+        await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+        const unavailable = table.locator('input[data-ship-type="probe"][data-ship-tier="intermediate"]');
+        const unavailableMax = unavailable.locator('+ button');
+        await expect(unavailable).toBeDisabled();
+        await expect(unavailable).not.toHaveAttribute('name');
+        await expect(unavailableMax).toBeDisabled();
+        await expect(ship(table, 'intermediate')).toBeEnabled();
+        const disabledBackground = await background(unavailable);
+        expect(disabledBackground).toBe(await background(unavailableMax));
+        expect(disabledBackground).not.toBe(await background(ship(table, 'intermediate')));
+    }
+
     await expect(table.getByRole('row', { name: /Chasseur de patrouille/ }).locator('[data-fleet-stock-value]')).toHaveText(['(12)', '(6)', '(4)']);
     const absent = table.getByRole('row', { name: /Sonde/ }).locator('td').nth(1);
     await expect(absent.locator('[data-fleet-stock-value]')).toHaveText('(0)');
@@ -79,6 +95,9 @@ test('Flottes : les trois rangs restent alignés et arrivent ensemble au devis, 
     await expect(ship(table, 'intermediate')).toHaveValue('2');
     expect((await new AxeBuilder({ page }).include('.fleet-composition-table').analyze()).violations).toEqual([]);
 
+    const recap = form.getByRole('complementary', { name: 'Récapitulatif de mission' });
+    await expect(recap.getByRole('button', { name: /Choisir la destination/ })).toBeVisible();
+    await expect(form.getByRole('button', { name: /Choisir la destination/ })).toHaveCount(1);
     await form.getByRole('button', { name: /Choisir la destination/ }).click();
     const destination = form.getByRole('heading', { name: 'Choisissez la destination' });
     await expect(destination).toBeFocused();
@@ -94,7 +113,21 @@ test('Flottes : les trois rangs restent alignés et arrivent ensemble au devis, 
     expect(quoted.ship_adjusted).toBe(false);
     await form.getByRole('button', { name: /Vérifier la mission/ }).click();
     await expect(form.getByRole('heading', { name: 'Confirmez votre mission' })).toBeFocused();
-    await expect(form.locator('[data-fleet-wizard-target="summary"]')).toContainText('2 × Chasseur de patrouille, 2 × Chasseur multirôle, 3 × Chasseur d’assaut orbital');
+    const reviewTable = form.locator('[data-fleet-wizard-target="summary"]').getByRole('table', { name: 'Composition', exact: true });
+    await expect(reviewTable).toBeVisible();
+    await expect(reviewTable.getByRole('columnheader')).toHaveText(['Unité', 'Rang', 'Quantité']);
+    await expect(reviewTable.getByRole('row')).toHaveCount(4);
+    for (const [name, rank, quantity] of [
+        ['Chasseur de patrouille', 'Basique', '2'],
+        ['Chasseur multirôle', 'Intermédiaire', '2'],
+        ['Chasseur d’assaut orbital', 'Supérieur', '3'],
+    ]) {
+        const row = reviewTable.getByRole('row').filter({ has: page.getByRole('rowheader', { name, exact: true }) });
+        await expect(row.getByRole('cell')).toHaveText([rank, quantity]);
+    }
+
+    await expect(recap.getByRole('button', { name: /Envoyer la flotte/ })).toBeVisible();
+    await expect(recap.getByRole('heading', { name: 'Estimation du trajet' })).toBeVisible();
 
     const native = await browser.newContext({ baseURL, javaScriptEnabled: false, storageState: await page.context().storageState() });
     try {

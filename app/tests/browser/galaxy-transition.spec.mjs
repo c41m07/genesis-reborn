@@ -120,32 +120,56 @@ for (const motionReduced of [false, true]) {
 }
 
 
-test('La maison reste visible sans survol et le point inconnu reste centré', () => {
-  const calls = [];
-  const state = {
-    hiddenMarkers: new Set(), systemMarkers: GalaxyController.prototype.systemMarkers,
-    drawMarkers(...args) { calls.push(args); },
+test('Le système possédé garde son anneau vert et son libellé, sans maison ; le point inconnu reste centré', () => {
+  const text = [];
+  const strokes = [];
+  const ctx = {
+    clearRect() {}, save() {}, restore() {}, translate() {}, scale() {}, setLineDash() {},
+    fillRect() {}, beginPath() {}, moveTo() {}, lineTo() {}, arc() {}, closePath() {}, fill() {},
+    createRadialGradient: () => ({ addColorStop() {} }),
+    measureText: () => ({ width: 10 }),
+    strokeText() {},
+    fillText(value, x, y) { text.push({ value, x, y, color: this.fillStyle }); },
+    stroke() { strokes.push(this.strokeStyle); },
   };
-  const point = { x: 120, y: 90 };
-  const unknown = { known: false, planets: [] };
-  GalaxyController.prototype.drawSystemMarkers.call(state, null, unknown, point, false);
-  expect(calls[0].slice(2)).toEqual([120, 90, true]);
-  state.hiddenMarkers.add('unknown');
-  GalaxyController.prototype.drawSystemMarkers.call(state, null, unknown, point, true);
-  expect(calls).toHaveLength(1);
+  const known = {
+    known: true, galaxy: 1, number: 8, starRadius: 1, wx: 120, wy: 90,
+    planets: ['own', 'uninhabited', 'allied', 'neutral', 'npc', 'enemy'].map(relation => ({
+      relation, ownedByCurrentPlayer: relation === 'own',
+    })),
+  };
+  const unknown = { known: false, planets: [], starRadius: 1, wx: 185, wy: 110 };
+  const state = Object.assign(Object.create(GalaxyController.prototype), {
+    galaxyCanvasTarget: { getContext: () => ctx }, width: 330, height: 210, zoom: 1, galaxyExtentX: 200, galaxyExtentY: 100,
+    layout: 'grid', backgroundStars: [], nebulae: [], dust: [],
+    systems: [known, unknown], hiddenMarkers: new Set(), mapMode: 'exploration',
+    galaxyPoint: ({ wx, wy }) => ({ x: wx, y: wy }),
+    drawBackdrop() {}, drawGalaxyCore() {}, drawFlights() {}, drawSelection() {},
+  });
+  const draw = () => {
+    text.length = 0;
+    strokes.length = 0;
+    state.drawGalaxy(0);
+    expect(strokes).toContain('#00e676');
+  };
+  const unknownMarker = { value: '?', x: 185, y: 110, color: '#ffda66' };
+  const ownedLabel = { value: '1:8', x: 120, y: 112, color: '#e4fff4' };
 
-  const known = { known: true, planets: ['own', 'uninhabited', 'allied', 'neutral', 'npc', 'enemy'].map(relation => ({ relation })) };
-  GalaxyController.prototype.drawSystemMarkers.call(state, null, known, point, false);
-  expect(calls).toHaveLength(2);
-  expect(calls[1][1].map(marker => marker.symbol)).toEqual(['⌂']);
-  expect(calls[1].slice(2)).toEqual([120, 69, false]);
-  GalaxyController.prototype.drawSystemMarkers.call(state, null, known, point, true);
-  expect(calls[2][1].map(marker => marker.symbol)).toEqual(['⌂']);
-  expect(calls[2].slice(2)).toEqual([120, 69, false]);
-  state.hiddenMarkers.add('own');
-  GalaxyController.prototype.drawSystemMarkers.call(state, null, known, point, true);
-  expect(calls).toHaveLength(3);
-  expect(state.systemMarkers({ known: true, planets: [{ relation: 'enemy' }] })).toEqual([]);
+  draw();
+  expect(text).toEqual([unknownMarker]);
+
+  state.focusedSystem = known;
+  draw();
+  expect(text).toEqual([ownedLabel, unknownMarker]);
+
+  state.focusedSystem = null;
+  state.hoveredSystem = known;
+  draw();
+  expect(text).toEqual([ownedLabel, unknownMarker]);
+
+  state.hiddenMarkers.add('unknown');
+  draw();
+  expect(text).toEqual([ownedLabel]);
 });
 
 test('Les quatre quarts fixes suivent les catégories découvertes, les modes et les filtres', () => {
@@ -424,4 +448,32 @@ test('Revenir depuis une planète consultée en aperçu restaure la fiche, sans 
   expect(state.camera).toEqual({ x: 50, y: 90 });
   expect(state.zoom).toBe(.6);
   expect(focused).toBe(true);
+});
+
+test('La flotte entre par la frontière et rejoint la planète uniquement pendant son segment local', () => {
+  const arrows = [];
+  const flight = {
+    status: 'traveling', mission: 'transport', departureAt: '2026-11-24T10:00:00Z',
+    originSystemId: 1, destinationSystemId: 2, destinationPlanetId: 12,
+    localLegs: [{systemId: 2, from: 10, to: 4, start: .75, end: 1}],
+  };
+  const controller = Object.assign(Object.create(GalaxyController.prototype), {
+    flights: [flight], serverClockOffset: 0,
+    drawFlightArrow(ctx, x, y, dx, dy) { arrows.push({x, y, dx, dy}); },
+  });
+  const ctx = {save() {}, restore() {}, setLineDash() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}};
+  const system = {id: 2, planets: [{id: 12, position: 4, visual: {sx: 100, sy: 100}}]};
+  const draw = progress => {
+    controller.flightProgress = () => progress;
+    controller.drawLocalFlights(ctx, system, {x: 300, y: 200});
+  };
+  draw(.5);
+  expect(arrows).toEqual([]);
+  draw(.875);
+  expect(arrows.pop()).toEqual({x: 200, y: 150, dx: -200, dy: -100});
+  flight.status = 'returning';
+  draw(.125);
+  expect(arrows.pop()).toEqual({x: 200, y: 150, dx: 200, dy: 100});
+  draw(.5);
+  expect(arrows).toEqual([]);
 });

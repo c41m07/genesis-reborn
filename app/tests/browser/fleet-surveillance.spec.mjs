@@ -51,6 +51,44 @@ async function prepareThreat(page,browser) {
   return {project,defender,attacker,galaxy,fleet,target};
 }
 
+test('Le poste de commandement suit deux recherches et une attaque vers une autre colonie', async ({page, browser}) => {
+  test.setTimeout(120000);
+  const data = await prepareThreat(page, browser);
+  const {project, defender, galaxy} = data;
+  const outpost = Number(queryIsolatedSql(project, `SELECT p.id FROM planet p JOIN solar_system s ON s.id=p.solar_system_id
+    WHERE s.galaxy_id=${galaxy} AND p.owner_id IS NULL AND p.npc_planet=0 ORDER BY p.id LIMIT 1`));
+  expect(outpost).toBeGreaterThan(0);
+  runIsolatedSql(project, `
+    UPDATE planet SET owner_id=${defender.memberId},name='Balcon de Nérée' WHERE id=${outpost};
+    UPDATE fleet f JOIN planet p ON p.id=${outpost} SET f.destination_id=p.id,f.destination_system_id=p.solar_system_id WHERE f.id=${data.fleet};
+    INSERT INTO queue_item(planet_id,player_universe_id,queue_type,item_slug,tier,item_level,quantity,duration_seconds,paid_costs,queued_at,started_at,dispatch_token) VALUES
+      (${outpost},${defender.memberId},'research','engineering_foundations','basic',1,1,900,'{}',UTC_TIMESTAMP(),UTC_TIMESTAMP(),'watch-first-research'),
+      (${defender.planetId},${defender.memberId},'research','naval_engineering','basic',1,1,1200,'{}',UTC_TIMESTAMP(),UTC_TIMESTAMP(),'watch-second-research'),
+      (${outpost},${defender.memberId},'building','mine_metal','basic',1,1,1500,'{}',UTC_TIMESTAMP(),UTC_TIMESTAMP(),'watch-later-building'),
+      (${data.attacker.planetId},${data.attacker.memberId},'research','signature_masking','basic',1,1,300,'{}',UTC_TIMESTAMP(),UTC_TIMESTAMP(),'watch-foreign-research');
+  `);
+  await page.setViewportSize({width:1920,height:1080});
+  await page.goto('/planetes/'+defender.planetId);
+  const watch = page.locator('[data-live-region="overview-deadlines"]');
+  await expect(watch.locator('li')).toHaveCount(2);
+  await expect(watch.locator('li > div > span')).toHaveText(['Fin de recherche','Fin de recherche']);
+  await expect(watch.locator('li').first()).toContainText('Balcon de Nérée');
+  await expect(watch.locator('li').last()).toContainText(data.target);
+  await expect(watch).not.toContainText('Signature');
+  await expect(watch).not.toContainText('Attaque entrante');
+  await page.getByRole('heading',{name:'Vue générale',exact:true}).focus();
+  runIsolatedSql(project,`UPDATE fleet SET arrival_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 29 MINUTE) WHERE id=${data.fleet}`);
+  await expect(watch.locator('li').first()).toContainText('Attaque entrante',{timeout:15000});
+  await expect(watch.locator('li').first()).toContainText('Balcon de Nérée');
+  await expect(watch.locator('li')).toHaveCount(3);
+  await expect(watch).not.toContainText('Source confidentielle');
+  await expect(watch).not.toContainText('vaisseaux');
+  const deadlines = await watch.locator('time').evaluateAll(times => times.map(time => time.dateTime));
+  await page.goto('/planetes/'+outpost);
+  await expect(watch.locator('li').first()).toContainText('Balcon de Nérée');
+  expect(await watch.locator('time').evaluateAll(times => times.map(time => time.dateTime))).toEqual(deadlines);
+});
+
 test('Une attaque apparaît au seuil sans recharger, avec focus préservé et données privées masquées',async({page,browser},testInfo)=>{
   test.setTimeout(120000);
   const data=await prepareThreat(page,browser);
@@ -173,12 +211,13 @@ test('Flottes entrantes : transport neutre, propre retour séparé et demande d�
     if (label === 'vue-generale') {
       expect(await ownPanel.evaluate(element=>element.previousElementSibling.matches('.incoming-attacks'))).toBeTruthy();
       expect(ownBox.y).toBeGreaterThanOrEqual(incomingBox.y+incomingBox.height-1);
+      expect(Math.abs(incomingBox.x-ownBox.x)).toBeLessThan(2);
+      expect(Math.abs(incomingBox.width-ownBox.width)).toBeLessThan(2);
     } else {
-      expect(await ownPanel.evaluate(element=>element.nextElementSibling.matches('.incoming-attacks'))).toBeTruthy();
-      expect(incomingBox.y).toBeGreaterThanOrEqual(ownBox.y+ownBox.height-1);
+      await expect(incomingPanel.locator('xpath=ancestor::aside[1]')).toHaveAccessibleName('Arrivées et informations de composition autorisées');
+      expect(incomingBox.x).toBeGreaterThanOrEqual(ownBox.x+ownBox.width-1);
+      expect(Math.abs(incomingBox.y-ownBox.y)).toBeLessThan(2);
     }
-    expect(Math.abs(incomingBox.x-ownBox.x)).toBeLessThan(2);
-    expect(Math.abs(incomingBox.width-ownBox.width)).toBeLessThan(2);
     for(const property of ['backgroundImage','backgroundColor','borderRadius','padding','borderTopWidth']) {
       expect(await incomingPanel.evaluate((element,key)=>getComputedStyle(element)[key],property))
         .toEqual(await ownPanel.evaluate((element,key)=>getComputedStyle(element)[key],property));
@@ -191,6 +230,16 @@ test('Flottes entrantes : transport neutre, propre retour séparé et demande d�
     await expect(incomingPanel.locator('.flight-route')).toBeVisible();
     await expect(incomingPanel.getByRole('progressbar')).toBeVisible();
     await page.locator(container).screenshot({path:testInfo.outputPath('cadres-'+label+'.png'),animations:'disabled'});
+    if (label === 'flottes') {
+      await page.setViewportSize({width:390,height:844});
+      await expect.poll(async()=>{
+        const [mobileOwn,mobileIncoming]=await Promise.all([ownPanel.boundingBox(),incomingPanel.boundingBox()]);
+        return mobileIncoming.y>=mobileOwn.y+mobileOwn.height-1
+          && Math.abs(mobileIncoming.x-mobileOwn.x)<2
+          && Math.abs(mobileIncoming.width-mobileOwn.width)<2;
+      }).toBe(true);
+      await page.setViewportSize({width:1440,height:1000});
+    }
   }
   // Dans les catalogues validés, vols et arrivées occupent deux suivis dépliables.
   for (const section of ['buildings','technologies','ships','defenses']) {

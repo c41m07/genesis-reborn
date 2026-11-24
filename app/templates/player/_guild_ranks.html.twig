@@ -1,16 +1,39 @@
 <section class="guild-ranks-page" aria-labelledby="guild-ranks-title">
-<h2 id="guild-ranks-title" class="visually-hidden">Grades et permissions</h2>
-<p>Une priorité plus petite indique un grade supérieur. Sans grade personnalisé, un membre ne dispose d’aucune permission déléguée. Le commandement reste distinct des grades.</p>
-<p>Les attributions se trouvent dans <a href="{{ path('app_guild_members') }}">Membres</a> ; les alliances personnelles dans <a href="{{ path('app_personal_relations') }}">Relations commandants</a>.</p>
-<div class="guild-rank-layout">
-<nav class="guild-rank-navigation" aria-label="Grades de la guilde">
-{% for rank in ranks %}<a class="secondary" href="{{ path('app_guild_ranks',{rank:rank.id}) }}"{% if selectedRank and selectedRank.id==rank.id %} aria-current="page"{% endif %}>{{ rank.name }} · priorité {{ rank.position }}</a>{% endfor %}
-{% if own.leader.id==membership.id %}<a class="secondary" href="{{ path('app_guild_ranks',{rank:0}) }}"{% if not selectedRank %} aria-current="page"{% endif %}>Créer un grade</a>{% endif %}
-</nav>
-<div class="panel guild-rank-editor">
-{% if own.leader.id==membership.id %}<h3>{{ selectedRank ? selectedRank.name : 'Nouveau grade' }}</h3>{% include 'player/_guild_rank_form.html.twig' with {rank:selectedRank,formKey:selectedRank ? 'rank-'~selectedRank.id : 'rank-new'} %}
-{% elseif selectedRank %}<h3>{{ selectedRank.name }}</h3><ul>{% for permission in selectedRank.permissions %}<li>{{ rankPermissionLabels[permission]|default(permission) }}</li>{% else %}<li>Aucune permission déléguée.</li>{% endfor %}</ul>
-{% else %}<p>Aucun grade personnalisé.</p>{% endif %}
-</div>
-</div>
+    <h2 id="guild-ranks-title" class="visually-hidden">Grades et permissions</h2>
+    {% set canManageRanks = own.leader.id == membership.id %}
+    <div class="guild-rank-layout">
+        <section class="panel guild-rank-directory" aria-labelledby="guild-rank-directory-title">
+            <h3 id="guild-rank-directory-title">Grades de la guilde</h3>
+            <p class="guild-control-context">{{ canManageRanks ? 'Sélectionnez un grade ou créez-en un.' : 'Sélectionnez un grade pour consulter ses permissions.' }}</p>
+            <nav class="guild-rank-navigation" aria-labelledby="guild-rank-directory-title">
+                {% if canManageRanks %}
+                    <a class="primary" href="{{ path('app_guild_ranks',{rank:0}) }}"{% if not selectedRank %} aria-current="page"{% endif %}>Créer un grade</a>
+                {% endif %}
+                {% for rank in ranks %}
+                    <a class="secondary guild-rank-choice" href="{{ path('app_guild_ranks',{rank:rank.id}) }}"{% if selectedRank and selectedRank.id == rank.id %} aria-current="page"{% endif %}>
+                        <span>{{ rank.name }}</span>
+                        <small>· priorité {{ rank.position }}</small>
+                    </a>
+                {% endfor %}
+            </nav>
+            <div class="guild-rank-context">
+                {% if not canManageRanks %}
+                    <p><strong>Lecture seule</strong> : seul le commandant peut modifier les grades. Une priorité plus petite indique un grade supérieur.</p>
+                {% endif %}
+                <p>Sans grade personnalisé, un membre n’a aucune permission déléguée. Le commandement reste distinct des grades.</p>
+                <p>Retrouvez les attributions dans <a href="{{ path('app_guild_members') }}">Membres</a> et les alliances personnelles dans <a href="{{ path('app_personal_relations') }}">Relations commandants</a>.</p>
+            </div>
+        </section>
+        <section class="panel guild-rank-editor" aria-labelledby="guild-rank-editor-title">
+            <h3 id="guild-rank-editor-title">{{ selectedRank ? selectedRank.name : (canManageRanks ? 'Nouveau grade' : 'Permissions déléguées') }}</h3>
+            {% if canManageRanks %}
+                <p class="guild-control-context">{{ selectedRank ? 'Modifier un grade existant.' : 'Définir les permissions d’un nouveau grade.' }}</p>
+                {% include 'player/_guild_rank_form.html.twig' with {rank:selectedRank,formKey:selectedRank ? 'rank-'~selectedRank.id : 'rank-new'} %}
+            {% elseif selectedRank %}
+                <ul>{% for permission in selectedRank.permissions %}<li>{{ rankPermissionLabels[permission]|default(permission) }}</li>{% else %}<li>Aucune permission déléguée.</li>{% endfor %}</ul>
+            {% else %}
+                <p>Aucun grade personnalisé.</p>
+            {% endif %}
+        </section>
+    </div>
 </section>

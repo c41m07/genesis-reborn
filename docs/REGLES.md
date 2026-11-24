@@ -230,6 +230,8 @@ Les dégâts d’un tour sont multipliés par ((HP + bouclier restants)/(HP + bo
 
 Les neuf classes R14 ont une croissance de combat 1/1,5/2,25 ; les coûts par rang et les autres facteurs de mobilité/construction restent séparés. Une escorte est une composition financée par remplacement, sans interception ou interposition automatique. Un round reste une minute, dix rounds au maximum ; si les camps subsistent à la limite, le défenseur gagne officiellement. Les HP individuels ne sont pas persistés entre batailles.
 
+Le Bombardier inflige ×1,30 contre les défenses au sol aux trois rangs. Le même coefficient s’applique à la chance de toucher avant l’écart de rang, dans les bornes existantes. Les coefficients antérieurs du Cuirassé (×1,15) et du Capital (×1,30) ne changent pas ; les coûts et contres navals du Bombardier restent inchangés.
+
 Les statistiques, prix, coefficients, preuves de transposition et précautions de déploiement R14 sont détaillés dans [BALANCING_R14.md](EQUILIBRAGE.md#combat-r14).
 
 
@@ -413,14 +415,14 @@ s’appliquent toujours. Les joueurs retrouvent les rotations dans Événements 
 
 ## Saisie des quantités et boutons Max
 
-- Construction de vaisseaux et défenses : Max utilise les ressources disponibles et le coût réel du lot, sans limite fixe de 100. La limite de 30 commandes par file reste applicable.
+- Construction de vaisseaux et défenses : Max utilise les ressources disponibles et le coût réel du lot, sans limite fixe de 100. Le chantier partage un plafond de 10 commandes à l’ajout entre vaisseaux et défenses, par colonie. La file de bâtiments a son propre plafond de 10 par colonie. Au-delà de ce plafond, les commandes déjà payées restent en place et aucun ajout n’est possible tant que la file ne compte pas moins de 10 commandes.
 - Composition d’une flotte : Max sélectionne les unités disponibles d’un type et d’un rang, dans la place restante sous le plafond de flotte de l’univers.
 - Fret : un Max par ressource conserve les autres chargements et tient compte du stock, du carburant réservé et de la soute libre. La limite de saisie de 100 000 000 par ressource est conservée.
 - Les quantités excessives sont réduites automatiquement, avec un message d’ajustement et une vérification serveur au moment de l’action. Les entrées négatives, non entières ou inconnues restent refusées ; un maximum nul ne permet pas d’achat ni de départ sans vaisseau.
 
 ## File de recherche commune
 
-Dans un même univers, toutes les colonies d’un joueur partagent une file de recherche de 30 commandes maximum. Chaque ajout exige un laboratoire du même rang au niveau 1 ou plus sur la colonie choisie. Il paie ses coûts sur cette colonie et utilise ses bonus de laboratoire pour calculer la durée à cet instant. Les niveaux déjà en file sont pris en compte depuis toutes les colonies ; les commandes sont exécutées successivement, sans nouveau calcul de leurs coûts ou durées au démarrage.
+Dans un même univers, toutes les colonies d’un joueur partagent une file de recherche plafonnée à 10 commandes au moment d’un ajout. Chaque ajout exige un laboratoire du même rang au niveau 1 ou plus sur la colonie choisie. Il paie ses coûts sur cette colonie et utilise ses bonus de laboratoire pour le devis. Les niveaux déjà en file sont pris en compte depuis toutes les colonies. Les recherches sont exécutées successivement ; la durée des nouvelles commandes suit les bonus du laboratoire d’origine, jamais celui de la colonie affichée.
 
 Les recherches historiquement actives en parallèle terminent leur travail sans être annulées. La suite de la file attend la fin de toutes ces recherches, puis fonctionne avec une seule recherche active. Les univers restent indépendants. Annulations, remboursements, vacances et captures conservent leurs règles ; la colonie d’origine de chaque commande reste enregistrée.
 
@@ -429,7 +431,7 @@ Les recherches historiquement actives en parallèle terminent leur travail sans 
 
 Tous les classements (points totaux des joueurs, bâtiments, recherche, flotte, nombre de colonies et guildes) sont figés entre deux calculs quotidiens, à 00 h en Europe/Paris, en tenant compte des changements d’heure. Les points affichés dans l’aperçu de colonie et l’API utilisent le même instantané. Le calcul des points reste inchangé ; les scores utilisés pour les protections et combats restent en temps réel.
 
-Les évolutions comparent les deux derniers calculs persistés : points actuels moins points précédents ; rang précédent moins rang actuel (une place gagnée est positive). Dans le tableau joueur, gains et pertes sont signés et entre parenthèses sur la même ligne que la valeur ; une valeur inchangée s’affiche « (= 0) ». Sans référence précédente, l’évolution s’affiche « (—) ». La présentation des guildes et de l’aperçu conserve ses marqueurs existants. Les nouveaux inscrits et guildes entrent au prochain calcul. Les noms, relations diplomatiques et protections restent actuels ; les joueurs supprimés ou devenus empires oubliés et les guildes archivées ne sont plus affichés, sans renuméroter les rangs avant l’échéance suivante.
+Les évolutions comparent les deux derniers calculs persistés : points actuels moins points précédents ; rang précédent moins rang actuel (une place gagnée est positive). Dans le tableau joueur, gains et pertes sont signés et entre parenthèses sur la même ligne que la valeur ; une valeur inchangée s’affiche « (=) ». Sans référence précédente, l’évolution s’affiche « (—) ». La présentation des guildes et de l’aperçu conserve ses marqueurs existants. Les nouveaux inscrits et guildes entrent au prochain calcul. Les noms, relations diplomatiques et protections restent actuels ; les joueurs supprimés ou devenus empires oubliés et les guildes archivées ne sont plus affichés, sans renuméroter les rangs avant l’échéance suivante.
 
 Le classement joueur propose points totaux (défaut), bâtiments, recherche, flotte et nombre de planètes. Chaque catégorie possède son rang et sa variation ; le tri global, décroissant par défaut ou croissant après un second clic sur l’en-tête actif, précède la pagination de 50 lignes. Catégorie et sens sont conservés entre les pages et au retour d’un signalement. Le rang officiel de l’instantané ne change pas avec le sens d’affichage. Les égalités conservent l’ordre des rangs de l’instantané, issu du départage existant par pseudonyme, sans casse. Aucune variation de rang bâtiments/recherche n’est inventée pour les anciens instantanés : elle devient disponible après deux calculs contenant ce rang.
 
@@ -813,6 +815,15 @@ Le revenu de base total est désormais de **10 métal/h et 10 nano/h**, à vites
 
 Les recherches, vaisseaux et défenses paient une fois à l’ajout de chaque commande : **100 × arrondi supérieur de la durée effective en secondes / 60**. La durée retenue inclut les réductions et multiplicateurs applicables au moment de l’ajout ; les quantités sont calculées comme une commande entière, avec un seul arrondi final. Ce coût s’ajoute aux autres ressources et à un éventuel coût électrique défini par le catalogue. Les bâtiments ne paient pas ce nouveau coût. Ce n’est pas une consommation horaire continue.
 
+Les nouvelles commandes reprennent le rythme de leurs bonus acquis : recherche
+industrielle de l’empire pour les bâtiments, laboratoire de la colonie d’origine
+pour les recherches et chantier local pour les vaisseaux. En cours, seul le
+travail restant change de rythme ; une commande en attente utilise les bonus
+effectifs à son démarrage. La défense ne reçoit aucun bonus passif supplémentaire.
+Les vacances arrêtent le travail ; les boosts déjà utilisés restent acquis.
+Les commandes historiques sans suivi et les reconstructions gardent leur
+chronomètre antérieur. L’estimation d’une file ne prédit pas les futurs bonus.
+
 Les coûts payés sont figés avec la commande. Une accélération ultérieure ne recalcule pas le prix et ne rembourse aucune électricité. Une annulation rembourse 25 % des coûts effectivement payés, électricité comprise, pour la commande et chaque dépendance annulée, dans la capacité disponible de chaque colonie payeuse. La capture conserve sa règle d’annulation sans remboursement. Les reconstructions automatiques des empires oubliés paient aussi ce coût ; leurs conditions de ressources restent applicables.
 
 Les aperçus et maxima constructibles utilisent le même calculateur que les prélèvements serveur. Les commandes déjà enregistrées gardent leurs coûts payés : aucune taxe rétroactive ni migration. L’[étude chiffrée](ETUDE_COUT_ELECTRIQUE.md) conserve les hypothèses et les risques de blocage des gros lots.
@@ -917,3 +928,7 @@ vaisseaux restent indisponibles en attente, sans combat supplémentaire, coût
 de séjour, transfert ou perte automatique. Notification unique ; une reprise
 manuelle après devis utilise seulement la réserve existante et une colonie
 possédée et découverte. Sans solution, l’attente persiste.
+
+## Calendrier de l’Avent
+
+L’administration choisit la période de visibilité dans chaque univers. Les portes du 1er au 24 décembre s’ouvrent à minuit à Paris. Chaque compte peut rattraper les jours passés pendant la période et obtenir un lot par porte pour toute la saison. À l’heure de fermeture, la page et les portes ferment. Les lots déjà réservés restent retirables dans l’inventaire. [Détail du calendrier et des réservations](CALENDRIER_AVENT.md).

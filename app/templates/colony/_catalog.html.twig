@@ -3,7 +3,7 @@
 {% for group,items in cards %}{% if group==section %}
 <section id="panel-{{ group }}" data-controller="building-catalog" data-building-catalog-show-locked-value="{{ show_locked_items ? 'true' : 'false' }}" data-action="hashchange@window->building-catalog#followHash click->building-catalog#rememberFilter" aria-label="{{ {buildings:'Bâtiments',technologies:'Recherche',ships:'Chantier spatial',defenses:'Défenses'}[group] }}">
     <div class="catalog-section-title">
-        <h2 class="visually-hidden">Catalogue {{ {buildings:'des bâtiments',technologies:'des recherches',ships:'des vaisseaux',defenses:'des défenses'}[group] }}</h2>
+        <h2 class="core-catalogue-title">{{ {buildings:'Installations', technologies:'Catalogue des recherches', ships:'Catalogue des vaisseaux', defenses:'Catalogue des défenses'}[group] }}</h2>
         <div class="building-visibility"><button type="button" role="switch" aria-checked="false" data-building-catalog-target="compactSwitch" data-action="building-catalog#toggleCompact" hidden><span>Vue condensée</span><span class="building-switch-track" aria-hidden="true"></span></button></div>
         <form method="get" class="building-visibility">
             <input type="hidden" name="section" value="{{ group }}">
@@ -18,10 +18,12 @@
     {% if group == 'ships' %}
         {# Les familles utilisent la même disponibilité par rang ; garder cette aide visible sans Stimulus. #}
         {% set show_shipyard_help = items|length > 0 and not show_locked_items and not (items|filter(card => not card.failures or card.maximum)|length) %}
-        <div data-shipyard-empty{% if not show_shipyard_help %} hidden{% endif %}>
+        <div class="catalogue-ships-empty" data-shipyard-empty{% if not show_shipyard_help %} hidden{% endif %}>
             <p role="status">Aucun vaisseau débloqué sur cette colonie. Consultez les conditions de construction pour savoir quoi développer.</p>
-            <p><a href="{{ path('app_colony', {id:planet.id, section:'ships', showLockedItems:1}) }}">Voir les vaisseaux verrouillés</a> ·
-                <a href="{{ path('app_colony', {id:planet.id, section:'buildings', showLockedItems:1, focusItem:1, _fragment:'item-shipyard-basic'}) }}">Voir le chantier d’assemblage</a></p>
+            <div class="catalogue-empty-actions">
+                <a class="primary" href="{{ path('app_colony', {id:planet.id, section:'ships', showLockedItems:1}) }}">Voir les vaisseaux verrouillés</a>
+                <a class="secondary" href="{{ path('app_colony', {id:planet.id, section:'buildings', showLockedItems:1, focusItem:1, _fragment:'item-shipyard-basic'}) }}">Voir le chantier d’assemblage</a>
+            </div>
         </div>
     {% endif %}
     <p data-catalog-empty hidden role="status">Aucun élément accessible dans ce filtre. Activez l’affichage des éléments verrouillés pour explorer cette catégorie.</p>

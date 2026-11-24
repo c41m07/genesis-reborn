@@ -70,4 +70,28 @@ test('Les cadres verts isolent un niveau avec trois améliorations en file', asy
     const research = page.locator('#item-engineering_foundations-basic');
     expect(await readGain(research, 'Réduction du temps de construction des bâtiments')).toBeCloseTo(bonusGain(70, 25), 2);
     await expect(research.getByRole('button', { name: 'Rechercher le niveau 5', exact: true })).toBeVisible();
+    await expect(research.locator('[data-catalogue-main-gain]')).toContainText('Gain du niveau 5');
+
+    sql(`DELETE FROM queue_item WHERE planet_id=${planet} AND queue_type='building'`);
+    sql(`UPDATE planet_building SET level=24 WHERE planet_id=${planet} AND slug='lab' AND tier='basic'`);
+    sql(`INSERT INTO queue_item(planet_id,player_universe_id,queue_type,item_slug,tier,item_level,quantity,duration_seconds,paid_costs,queued_at,started_at,dispatch_token)
+        VALUES(${planet},${member},'building','lab','basic',25,1,86400,'{}',UTC_TIMESTAMP(),UTC_TIMESTAMP(),'queued-ui-lab-final')`);
+    sql(`UPDATE planet SET building_queue_started_at=UTC_TIMESTAMP() WHERE id=${planet}`);
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.goto(`${path}?section=buildings`);
+    await expect(page.getByText('Pont d’ingénierie', { exact: false })).toBeVisible();
+    const lab = page.locator('#item-lab-basic');
+    const labGain = lab.locator('[data-catalogue-main-gain]');
+    await expect(labGain).toContainText('Niveau 25 en file');
+    await expect(labGain).not.toContainText('Effet acquis');
+    await expect(lab.locator('.catalog-blocked-action')).toBeDisabled();
+    await page.getByRole('switch', { name: 'Vue condensée' }).click();
+    await expect(labGain).toBeVisible();
+
+    sql(`DELETE FROM queue_item WHERE planet_id=${planet} AND queue_type='building'`);
+    sql(`UPDATE planet_building SET level=25 WHERE planet_id=${planet} AND slug='lab' AND tier='basic'`);
+    await page.reload();
+    await expect(labGain).toContainText('Effet acquis · niveau 25');
+    await expect(labGain).not.toContainText('Niveau 25 en file');
+    await expect(lab.locator('.catalog-blocked-action')).toHaveText('Niveau maximum atteint');
 });

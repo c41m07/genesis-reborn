@@ -2,26 +2,84 @@
 {% set groupLabels = {'buildings':'Bâtiments','technologies':'Technologies','ships':'Vaisseaux','defenses':'Défenses'} %}
 {% block title %}{{ editing ? item.label : (query ? 'Recherche dans les catalogues' : groupLabels[group]) }} · {{ universe.name }}{% endblock %}
 {% block body %}
-<div class="page-heading"><div><p class="eyebrow">Équilibrage · {{ universe.name }}</p><h1>{{ editing ? 'Modifier '~item.label : (query ? 'Recherche dans les catalogues' : groupLabels[group]) }}</h1><p>Les valeurs s’appliquent uniquement à cet univers. Les opérations déjà en file conservent leurs coûts et durées enregistrés.</p></div>{% if editing %}<a class="secondary" href="{{ path('app_admin_catalogue_group',{id:universe.id,group:group}) }}">Retour aux {{ groupLabels[group]|lower }}</a>{% endif %}</div>
+<div class="page-heading admin-task-heading">
+    <div>
+        <p class="eyebrow">Équilibrage · {{ universe.name }}</p>
+        <h1>{{ editing ? 'Modifier '~item.label : (query ? 'Recherche dans les catalogues' : groupLabels[group]) }}</h1>
+        <p>Les valeurs s’appliquent uniquement à cet univers. Les opérations déjà en file conservent leurs coûts et durées enregistrés.</p>
+    </div>
+    {% if editing %}
+        <div class="admin-catalogue-history-link">
+            <a class="secondary" href="#catalogue-publication">Aller à la validation</a>
+            <a class="secondary" href="{{ path('app_admin_catalogue_history', {id: universe.id, group: group, slug: item.slug}) }}">Consulter l’historique et comparer les versions</a>
+            <a class="secondary" href="{{ path('app_admin_catalogue_group', {id: universe.id, group: group}) }}">Retour aux {{ groupLabels[group]|lower }}</a>
+        </div>
+    {% endif %}
+</div>
 <nav class="admin-page-navigation" aria-label="Familles de catalogues">{% for key,label in groupLabels %}<a href="{{ path('app_admin_catalogue_group',{id:universe.id,group:key}) }}"{% if key==group and not query %} aria-current="{{ editing ? 'location' : 'page' }}"{% endif %}>{{ label }}</a>{% endfor %}</nav>
- {% if editing %}<p><a class="secondary" href="{{ path('app_admin_catalogue_history', {id: universe.id, group: group, slug: item.slug}) }}">Consulter l’historique et comparer les versions</a></p>{% endif %}
-{% if editing %}<section class="panel"><h2>Valeurs de {{ item.label }}</h2><p>La production est matérialisée puis recalculée à l’enregistrement. Les références peuvent être restaurées pour cette entrée.</p>{% include 'admin/_catalogue_form.html.twig' %}</section>
+{% if editing %}<section class="panel admin-catalogue-entry"><h2>Valeurs de {{ item.label }}</h2><p>La production est matérialisée puis recalculée à l’enregistrement. Les références peuvent être restaurées pour cette entrée.</p>{% include 'admin/_catalogue_form.html.twig' %}</section>
 {% else %}
 <form method="get" action="{{ path('app_admin_catalogue',{id:universe.id}) }}" class="admin-page-search" role="search"><label for="catalogue-query">Rechercher dans toutes les familles</label><input id="catalogue-query" name="q" type="search" maxlength="150" value="{{ query }}" placeholder="Nom, identifiant ou rang"><button class="primary">Rechercher</button>{% if query %}<a href="{{ path('app_admin_catalogue_group',{id:universe.id,group:group}) }}">Effacer la recherche</a>{% endif %}</form>
+{% set rankLabels = {'basic':'Basique','intermediate':'Intermédiaire','superior':'Supérieur'} %}
 {% set resultCount = 0 %}
-<div class="admin-module-grid admin-catalogue-grid">
-    {% for family, items in catalogues %}
-        {% for entry in items %}
-            {% set resultCount = resultCount + 1 %}
-            <article class="panel">
-                <h2>{{ entry.label }}</h2>
-                <p class="admin-catalogue-reference">{{ groupLabels[family] }} · <code>{{ entry.slug }}</code></p>
-                <p>{{ entry.tier_labels|join(' · ') }}</p>
-                <a class="secondary" href="{{ path('app_admin_catalogue_edit', {id: universe.id, group: family, slug: entry.slug}) }}">Modifier {{ entry.label }}</a>
-            </article>
+{% for items in catalogues %}{% set resultCount = resultCount + items|length %}{% endfor %}
+{% set catalogueLink = {id: universe.id, group: group}|merge(query is not empty ? {q: query} : {}) %}
+<div class="admin-catalogue-composition{{ selection ? ' admin-catalogue-composition--with-selection' : '' }}">
+<section class="panel admin-catalogue-list" aria-labelledby="admin-catalogue-list-title">
+    <h2 id="admin-catalogue-list-title">Fiches du catalogue</h2>
+    {% if resultCount > 0 %}
+    <table class="admin-design-table" role="table" aria-labelledby="admin-catalogue-list-title">
+        <thead role="rowgroup">
+            <tr role="row">
+                <th scope="col" role="columnheader">Fiche</th>
+                <th scope="col" role="columnheader">Famille</th>
+                <th scope="col" role="columnheader">Rangs disponibles</th>
+                <th scope="col" role="columnheader">Ouvrir</th>
+            </tr>
+        </thead>
+        <tbody role="rowgroup">
+        {% for family, items in catalogues %}
+            {% for entry in items %}
+                <tr role="row">
+                    <th scope="row" role="rowheader">
+                        {% set focusKey = family ~ ':' ~ entry.slug %}
+                        <a class="admin-design-preview-link" href="{{ path('app_admin_catalogue_group', catalogueLink|merge({focus: focusKey})) }}#catalogue-selection" aria-label="Aperçu de {{ entry.label }}"{% if selection and selection.key == focusKey %} aria-current="true"{% endif %}>{{ entry.label }}</a>
+                        <small><code>{{ entry.slug }}</code></small>
+                    </th>
+                    <td role="cell" data-label="Famille">{{ groupLabels[family] }}</td>
+                    <td role="cell" data-label="Rangs disponibles">
+                        <ul class="admin-design-ranks">{% for rank, label in entry.tier_labels %}<li><strong>{{ rankLabels[rank]|default(rank) }}</strong> : {{ label }}</li>{% endfor %}</ul>
+                    </td>
+                    <td role="cell" class="admin-design-table-action">
+                        <a class="admin-design-row-link" href="{{ path('app_admin_catalogue_edit', {id: universe.id, group: family, slug: entry.slug}) }}">Modifier {{ entry.label }}</a>
+                    </td>
+                </tr>
+            {% endfor %}
         {% endfor %}
-    {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p role="status">Aucune entrée ne correspond à cette recherche.</p>
+    {% endif %}
+</section>
+{% if selection %}
+    <aside class="panel admin-catalogue-selection" id="catalogue-selection" aria-labelledby="catalogue-selection-title" tabindex="-1">
+        <p class="eyebrow">Fiche mise en avant · lecture seule</p>
+        <h2 id="catalogue-selection-title">{{ selection.entry.label }}</h2>
+        <p>{{ universe.name }} · {{ groupLabels[selection.family] }}</p>
+        <ul class="admin-design-ranks">
+            {% for rank, label in selection.entry.tier_labels %}
+                <li><strong>{{ rankLabels[rank]|default(rank) }}</strong> : {{ label }}</li>
+            {% endfor %}
+        </ul>
+        {% set itemLink = {id: universe.id, group: selection.family, slug: selection.entry.slug} %}
+        <div class="admin-design-actions">
+            <a class="primary" href="{{ path('app_admin_catalogue_edit', itemLink) }}">Ouvrir la fiche</a>
+            <a class="secondary" href="{{ path('app_admin_catalogue_history', itemLink) }}">Consulter l’historique</a>
+            <a href="{{ path('app_admin_catalogue_group', catalogueLink) }}#admin-catalogue-list-title">Fermer l’aperçu</a>
+        </div>
+    </aside>
+{% endif %}
 </div>
-{% if resultCount == 0 %}<p class="panel" role="status">Aucune entrée ne correspond à cette recherche.</p>{% endif %}
 {% endif %}
 {% endblock %}

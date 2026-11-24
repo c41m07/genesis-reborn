@@ -1,0 +1,10 @@
+{# Les textes et états proviennent exclusivement des messages existants. #}
+{% for type, messages in app.flashes %}
+    {% for message in messages %}
+        {% set neutralReceipt = type == 'success' and access_heading_id in ['verification-request-title', 'reset-request-title'] %}
+        <div class="entry-access-notice flash {{ type }}{{ neutralReceipt ? ' entry-access-notice--receipt' : '' }}" role="{{ type in ['error', 'warning'] ? 'alert' : 'status' }}">
+            {% if neutralReceipt %}<strong>Demande reçue</strong>{% endif %}
+            <span>{{ message }}</span>
+        </div>
+    {% endfor %}
+{% endfor %}

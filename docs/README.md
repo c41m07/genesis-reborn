@@ -46,6 +46,7 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Suivre l’évolution de progression, carburant et unités économiques | [Lots, vérifications et activation](PROGRESSION_CARBURANT_UNITES.md) |
 | Déployer récolteurs et satellites, comprendre leurs places et pertes | [Unités économiques](UNITES_ECONOMIQUES.md) |
 | Modifier l’interface | [Guide UI](ui-ux/GUIDE_INTERFACE.md) |
+| Comparer les maquettes de la console à la recette | [Mise en œuvre Admin](ui-ux/MISE_EN_OEUVRE_MAQUETTES_ADMIN.md) |
 | Recréer une illustration | [Prompts](ILLUSTRATIONS.md) |
 | Consulter une preuve ou décision historique | [Archives et liste de consolidation](archives/README.md) |
 
@@ -78,3 +79,5 @@ sont conservées.
 - [Recherche admin au clavier](ADMIN_ACCESSIBILITE_RECHERCHE.md) : focus après réponse différée et recette isolée.
 
 - [Recette intégrée locale des lots admin](ADMIN_RECETTE_INTEGREE.md) : références, validations et limites avant fusion.
+
+- [Calendrier de l’Avent](CALENDRIER_AVENT.md) : règles joueur, préparation administrative et pilote.

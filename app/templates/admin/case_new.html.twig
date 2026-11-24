@@ -2,7 +2,9 @@
 {% block title %}Nouveau dossier · Console{% endblock %}
 {% block body %}
 <a class="secondary admin-case-back" href="{{ path('app_admin_cases') }}">← Dossiers de surveillance</a>
-<h1>Nouveau dossier</h1>
+<div class="page-heading">
+    <div><p class="eyebrow">Dossiers de surveillance</p><h1>Nouveau dossier</h1><p>Consigner les observations initiales et le contexte associé.</p></div>
+</div>
 <section class="panel">
     <h2>Contexte et observations</h2>
     {% if membership %}<p>Commandant : {{ membership.displayName }} · {{ membership.universe.name }}</p>{% endif %}

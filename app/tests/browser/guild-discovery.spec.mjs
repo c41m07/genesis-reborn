@@ -83,8 +83,8 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
 
     for (const theme of ['dark', 'light']) {
       runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
-      for (const width of [1440, 768, 390, 320]) {
-        await page.setViewportSize({ width, height: 900 });
+      for (const width of [1920, 1440, 768, 390, 320]) {
+        await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
         for (const [url, key] of [['/guildes?q=Vig', 'recherche'], ['/guildes/creer', 'creation'], ['/guildes/' + guildId, 'presentation']]) {
           expect((await page.goto(url)).status()).toBe(200);
           await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
@@ -105,7 +105,7 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
             const second = await cards[1].boundingBox();
             expect(second.y).toBeGreaterThanOrEqual(first.y + first.height);
             const tops = await cards[0].locator('.guild-result-actions > *').evaluateAll(elements => elements.map(element => element.getBoundingClientRect().top));
-            if (width === 1440) {
+            if (width >= 1440) {
               expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(2);
             } else if (width <= 390) {
               expect(tops[2]).toBeGreaterThan(tops[1]);
@@ -115,20 +115,28 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
             await expect(page.getByLabel('Nom de votre nouvelle guilde')).toHaveValue('Les Éclaireurs d’Orion ' + suffix);
             const intro = await page.locator('.guild-foundation-intro').boundingBox();
             const form = await page.locator('.guild-create').boundingBox();
-            if (width === 1440) expect(form.x).toBeGreaterThan(intro.x);
+            if (width >= 1440) expect(form.x).toBeGreaterThan(intro.x);
             else expect(intro.y).toBeGreaterThanOrEqual(form.y + form.height);
           } else {
-            await expect(page.getByRole('heading', { level: 1 })).toContainText(guildName);
+            await expect(page.locator('.guild-public-heading').getByRole('heading', { level: 2 })).toContainText(guildName);
             await expect(page.getByRole('link', { name: 'Personnaliser la guilde', exact: true })).toHaveCount(0);
             await expect(page.locator('.guild-public-banner')).toBeVisible();
             const description = await page.locator('section[aria-labelledby="guild-public-description"]').boundingBox();
             const leader = await page.locator('section[aria-labelledby="guild-public-leader"]').boundingBox();
-            expect(leader.y).toBeGreaterThanOrEqual(description.y + description.height);
+            if (width > 850) {
+              expect(Math.abs(leader.y - description.y)).toBeLessThan(2);
+              expect(leader.x).toBeGreaterThanOrEqual(description.x + description.width);
+            } else {
+              expect(leader.y).toBeGreaterThanOrEqual(description.y + description.height);
+            }
           }
           if (width === 390) {
             expect((await new AxeBuilder({ page }).include('.guild-discovery')
               .withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()).violations).toEqual([]);
             await page.screenshot({ path: testInfo.outputPath(`jeu-L1B-A-${key}-${theme}-${width}-ecran.png`), animations: 'disabled' });
+          }
+          if (width === 1920) {
+            await page.screenshot({ path: testInfo.outputPath(`social-guild-${key}-${theme}-1920x1080.png`), animations: 'disabled' });
           }
           if (width !== 320) {
             await page.screenshot({ path: testInfo.outputPath(`jeu-L1B-A-${key}-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });
@@ -152,7 +160,7 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
     await expect(page.getByRole('status')).toHaveText('Saisissez au moins deux caractères.');
     await page.goto('/guildes');
     const directory = page.getByRole('region', { name: 'Guildes qui recrutent', exact: true });
-    await expect(directory.getByRole('link', { name: guildName, exact: true })).toHaveAttribute('href', '/guildes/' + guildId);
+    await expect(directory.getByRole('link', { name: 'Voir la guilde ' + guildName, exact: true })).toHaveAttribute('href', '/guildes/' + guildId);
     await expect(directory.getByRole('link')).toHaveCount(2);
     await expect(directory.locator('form')).toHaveCount(0);
     await expect(page.getByRole('searchbox', { name: 'Rechercher une guilde', exact: true })).toBeVisible();
@@ -162,14 +170,14 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
     try {
       const native = await nativeContext.newPage();
       await native.goto('/guildes');
-      await expect(native.getByRole('region', { name: 'Guildes qui recrutent', exact: true }).getByRole('link', { name: guildName, exact: true })).toBeVisible();
+      await expect(native.getByRole('region', { name: 'Guildes qui recrutent', exact: true }).getByRole('link', { name: 'Voir la guilde ' + guildName, exact: true })).toBeVisible();
       await native.goto('/guildes?q=Vig');
       await expect(native.getByRole('region', { name: 'Guildes qui recrutent', exact: true })).toHaveCount(0);
       const first = native.locator('.guild-card').first();
       await first.locator('summary').click();
       await expect(first.locator('details li')).toContainText('Orion-' + suffix);
       await first.getByRole('link', { name: 'Consulter la présentation', exact: true }).click();
-      await expect(native.getByRole('heading', { level: 1 })).toContainText(guildName);
+      await expect(native.locator('.guild-public-heading').getByRole('heading', { level: 2 })).toContainText(guildName);
       await native.getByRole('navigation', { name: 'Navigation de guilde' })
         .getByRole('link', { name: 'Créer une guilde', exact: true }).click();
       await native.getByRole('navigation', { name: 'Navigation de guilde' })
@@ -191,7 +199,7 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
   }
 });
 
-test('Annuaire initial : seuls les profils actifs du même univers sont proposés', async ({ page, browser, baseURL }) => {
+test('Annuaire initial : seuls les profils actifs du même univers sont proposés', async ({ page, browser, baseURL }, testInfo) => {
   const suffix = crypto.randomUUID().slice(0, 8);
   const project = process.env.BROWSER_ROUTER;
   const ownerContext = await browser.newContext({ baseURL });
@@ -203,9 +211,15 @@ test('Annuaire initial : seuls les profils actifs du même univers sont proposé
     const archivedName = 'Guilde archivée ' + suffix;
     const foreignName = 'Guilde hors univers ' + suffix;
     await enterUniverse(owner, 'Annuaire-' + suffix, 'annuaire-owner-' + suffix + '@example.test');
-    await createGuild(owner, guildName, 'A' + suffix.slice(0, 4));
+    const tag = 'A' + suffix.slice(0, 4).toUpperCase();
+    await createGuild(owner, guildName, tag);
     const guildId = Number(queryIsolatedSql(project, "SELECT id FROM guild WHERE name='"+guildName+"'"));
     expect(guildId).toBeGreaterThan(0);
+    await owner.goto('/guildes/' + guildId + '/personnaliser');
+    const description = 'Cette présentation publique décrit la guilde.';
+    await owner.getByLabel('Description', { exact: true }).fill(description);
+    await owner.getByRole('button', { name: 'Enregistrer la présentation' }).click();
+    await expect(owner.locator('.guild-public-description')).toHaveText(description);
     runIsolatedSql(project, "INSERT INTO guild(universe_id,leader_id,name,archived_at) SELECT universe_id,leader_id,'"+archivedName+"',UTC_TIMESTAMP() FROM guild WHERE id="+guildId);
     const foreignEmail = 'annuaire-foreign-' + suffix + '@example.test';
     await enterUniverse(foreign, 'Étranger-' + suffix, foreignEmail, /Turbo/);
@@ -215,7 +229,13 @@ test('Annuaire initial : seuls les profils actifs du même univers sont proposé
     await enterUniverse(page, 'Visiteur-' + suffix, 'annuaire-visitor-' + suffix + '@example.test');
     await page.goto('/guildes');
     const directory = page.getByRole('region', { name: 'Guildes qui recrutent', exact: true });
-    await expect(directory.getByRole('link', { name: guildName, exact: true })).toHaveAttribute('href', '/guildes/' + guildId);
+    await expect(directory.getByRole('link', { name: 'Voir la guilde ' + guildName, exact: true })).toHaveAttribute('href', '/guildes/' + guildId);
+    const card = directory.locator('.guild-recruitment-card').filter({ hasText: guildName });
+    await expect(card).toContainText('[' + tag + ']');
+    await expect(card).toContainText('1 membre');
+    await expect(card).toContainText(description);
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.screenshot({ path: testInfo.outputPath('social-S01-annuaire-1920x1080.png'), animations: 'disabled' });
     await expect(directory).not.toContainText(archivedName);
     await expect(directory).not.toContainText(foreignName);
     await expect(directory).not.toContainText('Annuaire-' + suffix);
@@ -227,7 +247,7 @@ test('Annuaire initial : seuls les profils actifs du même univers sont proposé
       const native = await nativeContext.newPage();
       await native.goto('/guildes');
       const suggestions = native.getByRole('region', { name: 'Guildes qui recrutent', exact: true });
-      await expect(suggestions.getByRole('link', { name: guildName, exact: true })).toBeVisible();
+      await expect(suggestions.getByRole('link', { name: 'Voir la guilde ' + guildName, exact: true })).toBeVisible();
       const search = native.getByRole('searchbox', { name: 'Rechercher une guilde', exact: true });
       await search.fill(guildName);
       await native.getByRole('button', { name: 'Rechercher', exact: true }).click();

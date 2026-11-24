@@ -1,0 +1,70 @@
+{% set milestoneDays = consolidated ? [6, 12, 18] : [] %}
+{% set reservedDays = milestoneDays|merge(pending|filter(day => day not in milestoneDays and (day != 24 or not consolidated))) %}
+{% set finalDoor = doors[24]|default(null) %}
+{% set finalState = statuses['door-24']|default(null) %}
+{% set hasTitle = 'guardian_of_stars' in cosmetics %}
+{% set hasBanner = 'polar_night' in cosmetics %}
+<section class="advent-rewards" id="advent-rewards" aria-labelledby="advent-rewards-title" tabindex="-1">
+    <div class="page-heading">
+        <div>
+            <h2 id="advent-rewards-title">Cadeaux et réserves</h2>
+            <p>Les cadeaux réservés restent disponibles dans votre inventaire après la clôture.</p>
+        </div>
+        <a class="secondary" href="#advent-calendar-title">Revenir aux 24 portes</a>
+    </div>
+
+    <div class="advent-reward-layout">
+        {% if reservedDays %}
+            <div class="advent-moments">
+                {% for day in reservedDays %}
+                    {% set status = statuses['door-' ~ day] %}
+                    {% set claim = doors[day].claim %}
+                    {% set credit = claim and not claim.deliveredAt and claim.award.kind|default('') in ['research_discount', 'ship_voucher'] %}
+                    <article class="panel advent-moment">
+                        <h3>J{{ day }}{% if consolidated and milestoneTitles[day] is defined %} · {{ milestoneTitles[day] }}{% endif %}</h3>
+                        <p><span class="badge advent-state" data-state="{{ status.key }}">{{ status.label }}</span></p>
+                        {% if credit and destinationsAllowed and colonies %}
+                            <p>{% include 'advent/_offer.html.twig' with {offer: claim.award, resources: resources, ships: ships} only %}</p>
+                            <a class="secondary" href="{{ path('app_advent_credit', {id: edition.id, claimId: claim.id}) }}">Voir le devis de la porte {{ day }}</a>
+                        {% else %}
+                            {% if claim and not claim.deliveredAt and destinationsAllowed and colonies %}
+                                {% if claim.award.kind|default('') == 'ship_pack' %}
+                                    <p>Lot réservé : {% include 'advent/_offer.html.twig' with {offer: claim.award, resources: resources, ships: ships} only %}</p>
+                                {% elseif claim.resources %}
+                                    <p>Reste à verser : {% for resource, amount in claim.resources %}{{ (amount - claim.creditedResources[resource]|default(0))|quantity(0) }} {{ resources[resource] }}{{ loop.last ? '' : ' · ' }}{% endfor %}.</p>
+                                {% endif %}
+                            {% endif %}
+                            <a class="secondary" href="#advent-door-{{ day }}">Voir la porte {{ day }}</a>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% if consolidated and finalDoor %}
+            <article class="panel advent-finale">
+                <h3>J24 · {{ hasTitle and hasBanner ? 'Deux cosmétiques et un cadeau' : milestoneTitles[24] }}</h3>
+                {% if hasTitle or hasBanner %}
+                    <div class="advent-finale-preview{% if hasBanner %} advent-finale-preview--banner{% endif %}">
+                        {% if hasBanner %}
+                            <img src="{{ asset('images/events/advent-j24-panorama.jpg') }}" alt="" width="2172" height="724" loading="lazy" decoding="async">
+                        {% endif %}
+                        <div>
+                            {% if hasBanner %}<p class="advent-banner-name">Nuit polaire</p>{% endif %}
+                            {% if hasTitle %}<p class="advent-title-name">Gardien des étoiles</p>{% endif %}
+                            <p>{{ hasTitle and hasBanner ? 'Titre et bannière de profil' : (hasTitle ? 'Titre de profil' : 'Bannière de profil') }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+                <p class="advent-finale-status"><strong>Un seul cadeau à choisir</strong><span class="badge advent-state" data-state="{{ finalState.key }}">{{ finalState.label }}</span></p>
+                {% if hasTitle or hasBanner %}
+                    <p class="advent-notice">Illustration de l’Avent : l’apparence équipée se retrouve dans le profil. Les cosmétiques sont acquis à l’ouverture de la porte, quel que soit le cadeau choisi. Vous pouvez les équiper ou les retirer dans votre profil.</p>
+                {% endif %}
+                {% if finalDoor.claim and not finalDoor.claim.deliveredAt and finalDoor.claim.award.kind|default('') in ['research_discount', 'ship_voucher'] and destinationsAllowed and colonies %}
+                    <a class="secondary" href="{{ path('app_advent_credit', {id: edition.id, claimId: finalDoor.claim.id}) }}">Voir le devis de la porte 24</a>
+                {% else %}
+                    <a class="{{ finalDoor.open and not finalDoor.claim and destinationsAllowed and colonies and finalDoor.options ? 'primary' : 'secondary' }}" href="#advent-door-24">{{ finalDoor.open and not finalDoor.claim and destinationsAllowed and colonies and finalDoor.options ? 'Choisir mon cadeau lourd' : 'Voir la porte 24' }}</a>
+                {% endif %}
+            </article>
+        {% endif %}
+    </div>
+</section>

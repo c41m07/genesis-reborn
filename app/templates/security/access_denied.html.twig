@@ -5,6 +5,7 @@
 {% block body %}
 <div class="entry-workspace entry-denied" data-page-sections="disabled">
 <section class="panel narrow auth-card access-denied-panel" aria-labelledby="access-denied-title">
+  <p class="entry-eyebrow">403 · Accès protégé</p>
   
   <h1 id="access-denied-title">Accès refusé</h1>
   {% if is_granted('ROLE_ADMIN') %}

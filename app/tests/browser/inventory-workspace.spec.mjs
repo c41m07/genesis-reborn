@@ -99,6 +99,12 @@ test('L3 A : inventaire guidé, confirmations, états vides et vacances dans les
           await expect(page.locator('.boost-operation:visible')).toHaveCount(1);
           await expect(page.locator('.boost-operation:visible')).toContainText('Avant-poste des Constellations Oubliées');
           await picker.selectOption('queue-' + queue);
+          const timings = page.locator('.boost-operation:visible .inventory-preview-times');
+          await expect(timings).toContainText('Avant');
+          await expect(timings).toContainText('Après');
+          const values = await timings.locator('dd').allTextContents();
+          expect(values).toHaveLength(2);
+          expect(values[0]).not.toEqual(values[1]);
           await expect(page.locator('.boost-operation:visible')).toHaveCount(1);
           if (width === 1440) {
             const stock = await page.locator('.inventory-boost-stock').boundingBox();
@@ -116,6 +122,21 @@ test('L3 A : inventaire guidé, confirmations, états vides et vacances dans les
         await verifyView(page, info, key, theme, width);
         if (key === 'boosts' || key === 'boxes') {
           const launcher = key === 'boosts' ? page.locator(`form[action$="/queue/${queue}"]`).getByRole('button') : page.locator('.resource-box-form').first().getByRole('button');
+          if (key === 'boosts' && [1440, 1920, 390].includes(width)) {
+            // Le guide d’un nouveau membre reste ouvert sans recouvrir l’action.
+            const guide = page.locator('.first-steps-popup-enhanced[open] .first-steps-popup-panel:visible');
+            await expect(guide).toBeVisible();
+            await page.getByLabel('Opération à accélérer', { exact: true }).focus();
+            await page.keyboard.press('Tab');
+            await expect(launcher).toBeFocused();
+            await launcher.scrollIntoViewIfNeeded();
+            const panel = await guide.boundingBox(), action = await launcher.boundingBox();
+            expect(panel.y).toBeGreaterThanOrEqual(action.y + action.height);
+            expect(await launcher.evaluate(button => {
+              const box = button.getBoundingClientRect();
+              return button.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+            })).toBe(true);
+          }
           await launcher.click();
           const dialog = page.getByRole('dialog');
           await expect(dialog).toBeVisible();

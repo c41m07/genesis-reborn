@@ -87,7 +87,12 @@ test('L’état Espionnage sans flotte conduit au chantier réel', async ({ page
     await expect(nativeHelp).toBeVisible();
     await nativeHelp.getByRole('link', { name: 'Voir les vaisseaux verrouillés' }).click();
     await expect(nativeHelp).toBeHidden();
-    await expect(native.locator('#item-fighter-basic').getByText(/Nécessite :/)).toBeVisible();
+    const requirements = native.locator('#item-fighter-basic .catalog-prerequisites');
+    const requiredBuilding = requirements.getByRole('link').first();
+    await expect(requirements).not.toHaveAttribute('open');
+    await requirements.getByText('Prérequis manquants', { exact: true }).click();
+    await expect(requiredBuilding).toBeVisible();
+    await expect(requiredBuilding).toHaveAttribute('href', /#item-/);
     await native.goto(colony+'?section=ships');
     await nativeHelp.getByRole('link', { name: 'Voir le chantier d’assemblage' }).click();
     await expect(native).toHaveURL(new RegExp(colony+'[?].*#item-shipyard-basic$'));

@@ -166,6 +166,36 @@ final class GameplayAccessTest extends WebTestCase
         $this->client->request('GET','/');self::assertResponseRedirects('/planetes/'.$secondId);
         $this->client->request('GET','/?colony='.$foreignId);self::assertResponseStatusCodeSame(404);
     }
+    public function testCatalogueShowsLegacyOrdersAboveTheNewCapWithoutEnablingAdd(): void
+    {
+        [$player, $planet] = $this->player('LegacyQueueUi');
+        $now = new \DateTimeImmutable();
+        $planet->buildingQueueStartedAt = $now;
+        for ($index = 0; $index < 11; ++$index) {
+            $item = new QueueItem();
+            $item->planet = $planet;
+            $item->playerUniverse = $player->currentPlayerUniverse;
+            $item->queueType = 'building';
+            $item->itemSlug = 'mine_metal';
+            $item->itemLevel = $index + 1;
+            $item->durationSeconds = 86400;
+            $item->queuedAt = $now;
+            $item->startedAt = $index === 0 ? $now : null;
+            $item->dispatchToken = 'catalogue-'.$index;
+            $this->em->persist($item);
+        }
+        $this->em->flush();
+
+        $this->client->loginUser($player);
+        $crawler = $this->client->request('GET', '/planetes/'.$planet->id.'?section=buildings');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextSame('[data-queue-type="building"] .queue-capacity', '11/10 commandes');
+        self::assertCount(11, $crawler->filter('[data-queue-type="building"] .queue-detail-item'));
+        self::assertCount(11, $crawler->filter('[data-queue-type="building"] .queue-detail-item a'));
+        self::assertSelectorTextContains('[data-queue-type="building"] .catalog-follow-panel', 'Les commandes déjà lancées sont conservées');
+        self::assertSelectorTextSame('#item-mine_metal-basic .catalog-build-action:disabled .catalog-action-label', 'File pleine');
+    }
+
     public function testSceneShowsQueueTotalAndOnlyOwnActiveFlightsAcrossColonies():void
     {
         [$a,$first]=$this->player('Alpha');[$b,$foreign]=$this->player('Beta');$m=$a->currentPlayerUniverse;
@@ -281,6 +311,8 @@ final class GameplayAccessTest extends WebTestCase
         $targets[3]->conquestLevel = 4;
         $targets[4]->owner = null;
         $targets[4]->npcPlanet = false;
+        $targets[4]->name = $home->solarSystem->name.' · '.$targets[4]->position;
+        $targets[3]->name = 'Oreaiel';
         $guilds = [];
         foreach ([$membership, $enemy->currentPlayerUniverse] as $index => $member) {
             $guild = new \App\Entity\Guild();
@@ -322,6 +354,11 @@ final class GameplayAccessTest extends WebTestCase
         self::assertSame('neutral', $relations[$targets[2]->id]);
         self::assertSame('npc', $relations[$targets[3]->id]);
         self::assertSame('uninhabited', $relations[$targets[4]->id]);
+        // La colonne de position suffit lorsque le nom est la désignation générée du système.
+        $unnamed = $crawler->filter('.gv2-planet-choice[data-planet-id="'.$targets[4]->id.'"]');
+        self::assertSame('', $unnamed->filter('.gv2-planet-choice-name')->text());
+        self::assertSame(sprintf('%02d', $targets[4]->position), $unnamed->filter('.gv2-planet-number')->text());
+        self::assertSame('Oreaiel', $crawler->filter('.gv2-planet-choice[data-planet-id="'.$targets[3]->id.'"] .gv2-planet-choice-name')->text());
         $unknown = array_filter($map['systems'], static fn (array $row): bool => !$row['known']);
         self::assertNotEmpty($unknown);
         foreach ($unknown as $row) {

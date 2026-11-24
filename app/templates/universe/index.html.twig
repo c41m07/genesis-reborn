@@ -3,22 +3,21 @@
 {% block title %}Univers · Genesis Reborn{% endblock %}
 
 {% block body %}
-<div class="entry-workspace entry-universes" data-page-sections="disabled">
+<div class="entry-workspace entry-universes entry-universes--audit" data-page-sections="disabled">
 <div class="page-heading">
   <div>
-    
-    <h1>Les univers</h1>
-    <p>Comparez les règles avant de choisir votre univers.</p>
+    {% if joined is empty %}
+      <p class="entry-eyebrow">Premier accès / Les univers</p>
+      <h1>Choisissez votre univers</h1>
+      <p>Un compte, plusieurs univers indépendants. Aucun empire actif pour le moment.</p>
+    {% else %}
+      <p class="entry-eyebrow">Centre de commandement / Univers</p>
+      <h1>Les univers</h1>
+      <p>Comparez les règles avant de choisir votre univers.</p>
+    {% endif %}
   </div>
   <span class="badge">{{ universes|length }} UNIVERS</span>
 </div>
-
-{% if joined is empty %}
-<section class="entry-first-universe" aria-labelledby="first-universe-title">
-  <h2 id="first-universe-title">Choisissez votre univers</h2>
-  <p>Un compte, plusieurs univers indépendants. Aucun empire actif pour le moment.</p>
-</section>
-{% endif %}
 
 <div class="universe-grid">
   {% for u in universes %}
@@ -31,17 +30,18 @@
     {% set shipSpeed = (1 / c.multipliers.ship_build_time)|round(2) %}
     {% set travelSpeed = (1 / c.multipliers.travel_time)|round(2) %}
     <article class="panel universe-card {{ current ? 'universe-card--current' : '' }}" aria-labelledby="universe-{{ u.id }}-title">
-      <h2 id="universe-{{ u.id }}-title">{{ u.name }}</h2>
       <div class="entry-universe-status">
       {% if accessible %}
         <span class="entry-universe-state entry-universe-state--open">OUVERT</span>
       {% elseif opensLater %}
-        <span class="entry-universe-state">OUVERTURE PROGRAMMÉE</span>
+        <span class="entry-universe-state entry-universe-state--scheduled">OUVERTURE PROGRAMMÉE</span>
       {% else %}
         <span class="entry-universe-state">INACCESSIBLE</span>
       {% endif %}
       {% if current %}<span class="badge universe-current">Univers actuel</span>{% endif %}
       </div>
+      <h2 id="universe-{{ u.id }}-title">{{ u.name }}</h2>
+      {% if opensLater %}<p class="universe-availability">Ouverture le <time datetime="{{ u.startsAt|date('c', 'UTC') }}">{{ u.startsAt|date('d/m/Y à H:i', 'UTC') }} UTC</time>.</p>{% endif %}
 
       {% include 'universe/_closing.html.twig' with {universe: u} %}
       <section class="universe-rules" aria-label="Règles de {{ u.name }}">
@@ -62,13 +62,13 @@
         </dl>
       </section>
 
+      <div class="entry-universe-choice">
       {% if accessible %}
         <form method="post" action="{{ path('app_universe_join', {id: u.id}) }}">
           <input type="hidden" name="_token" value="{{ csrf_token('join' ~ u.id) }}">
           <button class="primary full">{{ joined[u.id]|default(false) ? 'Reprendre mon empire' : 'Créer mon empire dans cet univers' }} ↗</button>
         </form>
       {% elseif opensLater %}
-        <p class="universe-availability">Ouverture le <time datetime="{{ u.startsAt|date('c', 'UTC') }}">{{ u.startsAt|date('d/m/Y à H:i', 'UTC') }} UTC</time>.</p>
         <div class="universe-opening-timer" data-controller="universe-opening" data-universe-opening-opens-at-value="{{ u.startsAt|date('c') }}" role="timer" aria-label="Compte à rebours avant l’ouverture de {{ u.name }}">
           <span>OUVERTURE DANS</span>
           <strong data-universe-opening-target="time">{{ u.startsAt|date('d/m/Y à H:i', 'UTC') }} UTC</strong>
@@ -76,6 +76,7 @@
       {% else %}
         <p class="universe-availability">Cet univers n’est pas accessible actuellement.</p>
       {% endif %}
+      </div>
     </article>
   {% else %}
     <section class="panel empty-state"><h2>Aucun univers disponible</h2><p>Les univers apparaîtront ici dès leur annonce.</p></section>

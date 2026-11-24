@@ -133,16 +133,19 @@ final class DailyRewardTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'Récompense quotidienne');
         self::assertSelectorTextContains('section[aria-labelledby="daily-reward-heading"]', $planet->name);
         self::assertSelectorTextContains('section[aria-labelledby="daily-reward-heading"]', 'form-reward');
+        $claimButtons = 'section[aria-labelledby="daily-reward-heading"] form button[type="submit"]';
+        $describedClaim = $claimButtons.'[aria-describedby~="daily-reward-rules"][aria-describedby~="daily-reward-destination"]';
+        self::assertSelectorTextContains($describedClaim, 'Récupérer');
         $this->client->submitForm('Récupérer');
         self::assertResponseRedirects('/recompense-quotidienne?colony='.$planet->id.'#daily-reward-heading', 303);
         $this->client->followRedirect();
         self::assertSelectorTextContains('[role="status"].flash', 'Jour 1 récupéré');
-        self::assertSelectorNotExists('button[type="submit"][aria-describedby="daily-reward-rules"]');
+        self::assertSelectorNotExists($claimButtons);
         $this->clock->sleep(60);
         $this->client->clickLink('Actualiser la récompense');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h2#daily-reward-heading', 'Jour 2 sur 7');
-        self::assertSelectorExists('button[type="submit"][aria-describedby="daily-reward-rules"]');
+        self::assertSelectorTextContains($describedClaim, 'Récupérer');
     }
 
     public function testPanelReadsTheParisDateWithoutCachingAndOnlyForTheOwnedColony(): void

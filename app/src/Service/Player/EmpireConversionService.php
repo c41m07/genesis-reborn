@@ -3,7 +3,7 @@ namespace App\Service\Player;
 
 use App\Entity\{AllianceContract,EmpireConversion,Guild,GuildMember,GuildRelation,PlayerUniverse};
 use App\Manager\GameManager;
-use App\Repository\GameRepository;
+use App\Repository\{GameRepository,GuildHallRepository};
 use App\Service\Colony\ActionGuard;
 use App\Service\Fleet\FleetService;
 use App\Service\Queue\QueueService;
@@ -15,7 +15,7 @@ final class EmpireConversionService
 {
     public function __construct(private GameManager $manager,private GameRepository $repo,private ActionGuard $guard,
         private EmpireActivityService $activity,private FleetService $fleets,private QueueService $queues,private ClockInterface $clock,private \App\Service\Combat\OccupationService $occupations,
-        #[Autowire('%env(bool:FORGOTTEN_EMPIRES_ENABLED)%')] private bool $enabled, private GuildProjectService $projects,private EmpireReconstructionScheduler $reconstruction) {}
+        #[Autowire('%env(bool:FORGOTTEN_EMPIRES_ENABLED)%')] private bool $enabled, private GuildProjectService $projects,private EmpireReconstructionScheduler $reconstruction,private GuildHallRepository $guildHalls) {}
 
     public function convert(PlayerUniverse $membership): array
     {
@@ -96,7 +96,10 @@ final class EmpireConversionService
                 $guild->archivedAt=$now;
                 $this->projects->abandonForGuild($guild);
                 $roster=array_map(static fn(GuildMember $row): array=>['member_id'=>$row->id,'membership_id'=>$row->playerUniverse->id],$members);
-                $result['guilds'][]=['id'=>$guild->id,'successor_id'=>null,'archived'=>true,'roster'=>$roster];
+                $entry=['id'=>$guild->id,'successor_id'=>null,'archived'=>true,'roster'=>$roster];
+                $releasedSystem = $this->guildHalls->releaseClaimForEndedGuild($guild);
+                if ($releasedSystem !== null) $entry['released_hall_system_id']=$releasedSystem;
+                $result['guilds'][]=$entry;
                 foreach($members as $member) $this->manager->remove($member);
                 foreach($this->repo->all(GuildRelation::class,['guildA'=>$guild]) as $relation) { $relation->status='neutral';$relation->proposal=null; }
                 foreach($this->repo->all(GuildRelation::class,['guildB'=>$guild]) as $relation) { $relation->status='neutral';$relation->proposal=null; }

@@ -8,8 +8,8 @@
         <p><strong>{{ labels[request.status]|default(request.status) }}</strong></p>
     </div>
     <div class="orbit-request-decision">
-    {% if request.legacy %}<p>Ancienne mission : réponse après l’arrivée, sans échéance ajoutée.</p>
-    {% elseif request.deadline %}<p>Arrivée et fin de validité : <time datetime="{{ request.deadline }}">{{ request.deadline|date('d/m/Y H:i:s', 'Europe/Paris') }} (Paris)</time><br><span data-orbit-deadline="{{ request.deadline }}"></span></p>{% endif %}
+    {% if request.legacy %}<p class="orbit-request-deadline">Ancienne mission : réponse après l’arrivée, sans échéance ajoutée.</p>
+    {% elseif request.deadline %}<p class="orbit-request-deadline"><strong>Arrivée et fin de validité</strong><br><time datetime="{{ request.deadline }}">{{ request.deadline|date('d/m/Y H:i:s', 'Europe/Paris') }} (Paris)</time><br><span data-orbit-deadline="{{ request.deadline }}"></span></p>{% endif %}
     <div class="mission-state">
     {% if request.can_respond %}
         <form method="post" action="{{ path('app_orbit_decision',{id:request.id}) }}">

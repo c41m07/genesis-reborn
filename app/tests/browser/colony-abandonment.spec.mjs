@@ -79,19 +79,41 @@ for(const touch of [false,true]) test('Abandon confirmé : pertes, trace et cont
       await input.press('Tab');
       await expect(page.getByRole('link',{name:'Conserver cette colonie',exact:true})).toBeFocused();
       await page.keyboard.press('Tab');await expect(confirm).toBeFocused();
-      expect(await confirm.evaluate(e=>e.matches(':focus-visible') && getComputedStyle(e).outlineStyle==='solid' && parseFloat(getComputedStyle(e).outlineWidth)>0)).toBeTruthy();
+      const keyboardFocus = confirm.and(page.locator(':focus-visible'));
+      await expect(keyboardFocus).toHaveCSS('outline-style', 'solid');
+      await expect.poll(() => keyboardFocus.evaluate(button => parseFloat(getComputedStyle(button).outlineWidth))).toBeGreaterThan(0);
     }
+    const guide = page.locator('.first-steps-popup-enhanced[open] .first-steps-popup-panel:visible');
+    await expect(guide).toBeVisible();
+    await confirm.scrollIntoViewIfNeeded();
+    const action = await confirm.boundingBox(), help = await guide.boundingBox();
+    // Un bouton peut intersecter le viewport tout en restant caché sous l’aide.
+    expect(help.y).toBeGreaterThanOrEqual(action.y + action.height);
+    expect(await confirm.evaluate(button => {
+      const box = button.getBoundingClientRect();
+      return button.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+    })).toBe(true);
     const body=await page.locator('.abandon-confirmation').evaluate(form=>Object.fromEntries(new FormData(form)));
-    await page.evaluate(()=>window.scrollTo(0,0));
+    // La capture en haut de page précède une action en bas du formulaire.
+    // Un défilement animé laisserait la cible bouger au moment du toucher.
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
     await page.screenshot({path:testInfo.outputPath(touch?'abandon-mobile.png':'abandon-bureau.png'),fullPage:true,animations:'disabled'});
-    if(touch) await confirm.tap();else await page.keyboard.press('Enter');
-    await expect(page.getByRole('status').filter({hasText:'Colonie abandonnée.'})).toBeVisible();
-    await expect(page).toHaveURL(new RegExp('/planetes#planet-'+user.other.id+'$'));
+    await test.step('Confirmer l’abandon et rejoindre la colonie restante', async () => {
+      if (touch) {
+        await confirm.scrollIntoViewIfNeeded();
+        await expect(confirm).toBeInViewport();
+        await confirm.tap();
+      } else {
+        await page.keyboard.press('Enter');
+      }
+      await page.waitForURL(new RegExp('/planetes#planet-' + user.other.id + '$'), { waitUntil: 'domcontentloaded' });
+      await expect(page.getByRole('status').filter({ hasText: 'Colonie abandonnée.' })).toBeVisible();
+    });
     expect(queryIsolatedSql(user.project,'SELECT owner_id IS NULL AND npc_planet=0 FROM planet WHERE id='+user.planetId)).toBe('1');
     expect(queryIsolatedSql(user.project,'SELECT COUNT(*) FROM planet_resource WHERE planet_id='+user.planetId)).toBe('0');
     expect(queryIsolatedSql(user.project,'SELECT COUNT(*) FROM queue_item WHERE planet_id='+user.planetId)).toBe('0');
     expect(queryIsolatedSql(user.project,"SELECT COUNT(*) FROM admin_audit_log WHERE action='player_colony_abandoned' AND target_id="+user.planetId)).toBe('1');
-    expect(await page.locator('#sidebar-colony').inputValue()).toBe(String(user.other.id));
+    await expect(page.locator('#sidebar-colony')).toHaveValue(String(user.other.id));
     const replay=await page.evaluate(async({id,body})=>(await fetch('/planetes/'+id+'/abandonner',{method:'POST',body:new URLSearchParams(body)})).status,{id:user.planetId,body});
     expect(replay).toBe(404);
     expect(queryIsolatedSql(user.project,"SELECT COUNT(*) FROM admin_audit_log WHERE action='player_colony_abandoned' AND target_id="+user.planetId)).toBe('1');

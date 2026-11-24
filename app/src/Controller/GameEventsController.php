@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class GameEventsController extends AbstractController
 {
     #[Route('/evenements', name: 'app_game_events', methods: ['GET'])]
-    public function index(Request $request, UniverseContext $context, GameRepository $repository, ClockInterface $clock, PiratePilotGate $pirateCampaign): Response
+    public function index(Request $request, UniverseContext $context, GameRepository $repository, ClockInterface $clock, PiratePilotGate $pirateCampaign, ChallengeQueryService $challenges): Response
     {
         $membership = $context->membership();
         $now = $clock->now();
@@ -24,8 +24,14 @@ final class GameEventsController extends AbstractController
             $groups[$group] = $repository->playerGameEventsPage($membership, $now, $group === 'upcoming', $request->query->getInt($group.'_page', 1));
         }
         $player = $this->getUser();
+        // Même sélection publique que la liste Défis, en aperçu court, sans classement
+        // ni données des autres joueurs. La progression personnelle est celle de cet empire.
+        $activeChallenges = array_map(
+            static fn ($event): array => $challenges->view($event, $membership, false),
+            $repository->playerChallengeEvents($membership, ['active'], 2),
+        );
 
-        return $this->render('player/events.html.twig', ['membership' => $membership, 'eventGroups' => $groups,
+        return $this->render('player/events.html.twig', ['membership' => $membership, 'eventGroups' => $groups, 'activeChallenges' => $activeChallenges,
             'pirateCampaignAvailable' => $pirateCampaign->admits($player instanceof Player ? $player : null, $membership, $now)]);
     }
 

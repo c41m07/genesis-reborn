@@ -353,3 +353,34 @@ body.authenticated .inventory-redesign .inventory-review-dialog {
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+
+body.authenticated .inventory-redesign .inventory-pending-list { padding-inline-start: 2.4em; }
+body.authenticated .inventory-redesign .inventory-pending-list li { list-style-position: outside; }
+.inventory-pending-entry {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: start;
+    gap: 8px 16px;
+}
+.inventory-pending-entry > div { min-width: 0; }
+.inventory-pending-state { color: var(--text); }
+
+/* P11 : le panneau de choix affiche le vrai devis natif ; aucun temps estimé n'est recalculé en CSS ou Twig. */
+.player-inventory-board .inventory-board-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+.player-inventory-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+.player-inventory-board .inventory-boost-layout { grid-template-columns:minmax(0,1.64fr) minmax(17rem,1fr); align-items:start; }
+.inventory-board-stock { min-width:0; display:grid; gap:.9rem; }
+.inventory-board-stock .inventory-capacity { margin:0; }
+.inventory-board-stock .inventory-board-shortcut { padding:1.2rem; }
+.inventory-board-stock .inventory-board-shortcut h3 { margin:0; }
+.inventory-board-stock :is(.inventory-boost-stock,.inventory-board-shortcut),
+.player-inventory-board .boost-operation { background:color-mix(in srgb,var(--accent) 5%,var(--panel)); }
+@media(max-width:880px) {
+    .player-inventory-board .inventory-boost-layout { grid-template-columns:minmax(0,1fr); }
+}
+
+.inventory-boost-use .inventory-preview-times { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.7rem; margin:.75rem 0; }
+.inventory-boost-use .inventory-preview-times > div { display:block; padding:.7rem; min-width:0; border-radius:6px; border:1px solid var(--line); background:color-mix(in srgb,var(--accent) 7%,var(--panel)); }
+.inventory-boost-use .inventory-preview-times dd { margin:.25rem 0 0; color:var(--text); font-weight:750; font-size:1.25rem; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }

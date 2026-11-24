@@ -80,8 +80,8 @@ test('L2A A : missions en lignes, trois étapes, devis et rappel sur ordinateur 
   const data = await prepare(page);
   for (const theme of ['light', 'dark']) {
     runIsolatedSql(data.project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${data.email}'`);
-    for (const width of [390, 1440, 768, 320]) {
-      await page.setViewportSize({ width, height: 900 });
+    for (const width of [1920, 390, 1440, 768, 320]) {
+      await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
       await page.goto('/flottes');
       await expect(page.locator('[data-active-fleet]')).toHaveCount(3);
       await expect(page.locator('.flight-details-action')).toHaveCount(3);
@@ -93,6 +93,16 @@ test('L2A A : missions en lignes, trois étapes, devis et rappel sur ordinateur 
       await page.goto('/flottes/preparer');
       const form = page.locator('.fleet-form form').first();
       await form.locator('[name="ships[transport]"]').fill('8');
+      const recap = form.locator('.core-fleet-recap');
+      await expect(recap.locator('[data-fleet-wizard-target="recapCount"]')).toHaveText('8');
+      await expect(recap).toContainText('8 Basique');
+      const recapBox = await recap.boundingBox();
+      const tableBox = await form.locator('.fleet-composition-table').boundingBox();
+      if (width >= 1200) expect(recapBox.x).toBeGreaterThanOrEqual(tableBox.x + tableBox.width);
+      else expect(recapBox.y + recapBox.height).toBeLessThanOrEqual(tableBox.y);
+      if (width === 1920) {
+        expect((await new AxeBuilder({ page }).include('.core-fleet-recap').analyze()).violations).toEqual([]);
+      }
       await checkLayout(page, width);
       await capture(page, testInfo, 'composition', theme, width);
       await form.getByRole('button', { name: /Choisir la destination/ }).click();
@@ -112,9 +122,41 @@ test('L2A A : missions en lignes, trois étapes, devis et rappel sur ordinateur 
       await expect(form.getByRole('heading', { name: 'Confirmez votre mission' })).toBeFocused();
       await expect(form.locator('[data-fleet-preview-target="result"]')).toContainText('Carburant aller-retour');
       await expect(form.getByRole('button', { name: /Envoyer la flotte/ })).toBeEnabled();
-      await expect(form.locator('[data-fleet-wizard-target="summary"]')).toContainText(/Métal\s*:\s*1\s*000/);
+      const review = form.locator('[data-fleet-wizard-target="summary"]');
+      const units = review.getByRole('table', { name: 'Composition' });
+      await expect(units.getByRole('columnheader')).toHaveText(['Unité', 'Rang', 'Quantité']);
+      await expect(units.getByRole('row').filter({ hasText: 'Cargo de ligne' }).getByRole('cell')).toHaveText(['Basique', '8']);
+      const freight = review.locator('.fleet-review-cargo');
+      await expect(freight.locator('dt')).toHaveText(['Métal', 'Nano', 'Hydrogène', 'Antimatière', 'Électricité']);
+      await expect(freight.locator('dd')).toHaveText([/1\s*000/, '0', '0', '0', '0']);
+      if (width === 1920) {
+        await page.evaluate(async () => {
+          await document.fonts.ready;
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        });
+        const send = form.getByRole('button', { name: /Envoyer la flotte/ });
+        await expect(send).toBeInViewport({ ratio: 1 });
+        await page.screenshot({ path: testInfo.outputPath(`confirmation-${theme}-1920x1080.png`), fullPage: false, scale: 'css' });
+      }
       await checkLayout(page, width);
       await capture(page, testInfo, 'confirmation', theme, width);
+      if ([1920, 390].includes(width)) {
+        // Le guide d’un nouveau joueur reste ouvert et la confirmation reste atteignable.
+        const guide = page.locator('.first-steps-popup-enhanced[open]');
+        const send = form.getByRole('button', { name: /Envoyer la flotte/ });
+        await expect(guide.locator('.first-steps-popup-panel:visible')).toBeVisible();
+        await form.getByRole('button', { name: 'Estimer le trajet', exact: true }).focus();
+        await page.keyboard.press('Tab');
+        await expect(send).toBeFocused();
+        await send.scrollIntoViewIfNeeded();
+        const panel = await guide.locator('.first-steps-popup-panel:visible').boundingBox();
+        const action = await send.boundingBox();
+        expect(panel.y).toBeGreaterThanOrEqual(action.y + action.height);
+        expect(await send.evaluate(button => {
+          const box = button.getBoundingClientRect();
+          return button.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+        })).toBe(true);
+      }
       await form.getByRole('button', { name: /Modifier la destination/ }).click();
       await expect(form.locator('[name="cargo[metal]"]')).toHaveValue('1000');
       await form.getByRole('button', { name: /Retour à la composition/ }).click();

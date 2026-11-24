@@ -21,7 +21,7 @@ async function registerAndLogin(page) {
   return { email, password };
 }
 
-test('Administration catalogue: accès, édition, sauvegarde et restauration responsive', async ({ page }) => {
+test('Administration catalogue: accès, édition, sauvegarde et restauration responsive', async ({ page }, testInfo) => {
   const { email, password } = await registerAndLogin(page);
   await page.goto('/admin');
   await expect(page).toHaveURL(/acces-refuse/);
@@ -40,7 +40,7 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
   await page.getByRole('navigation', { name: 'Console d’administration' }).getByRole('link', { name: 'Univers et activité', exact: true }).click();
   await page.getByRole('navigation', { name: 'Console d’administration' }).getByRole('link', { name: 'Univers', exact: true }).click();
   await expect(page.getByRole('link', { name: /Équilibrer les catalogues de cet univers/ }).first()).toBeVisible();
-  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.setViewportSize({ width: 1920, height: 1080 });
 
   await page.getByRole('link', { name: /Équilibrer les catalogues de cet univers/ }).first().click();
   await expect(page.getByRole('heading', { name: 'Bâtiments', exact: true })).toBeVisible();
@@ -49,6 +49,18 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
   await expect(breadcrumbs.locator('[aria-current="page"]')).toHaveText('Catalogue');
   await expect(page.locator('.admin-universe-navigation a')).toHaveCount(4);
   await expect(breadcrumbs.getByRole('link', { name: 'Univers', exact: true })).toHaveAttribute('href', '/admin/univers');
+  const browse = page.getByRole('link', { name: 'Aperçu de Mine à ciel ouvert', exact: true });
+  await browse.focus();
+  await page.keyboard.press('Enter');
+  const selection = page.getByRole('complementary', { name: 'Mine à ciel ouvert' });
+  await expect(selection.getByRole('link', { name: 'Ouvrir la fiche' })).toHaveAttribute('href', /\/buildings\/mine_metal$/);
+  await expect(selection.getByRole('link', { name: 'Consulter l’historique' })).toHaveAttribute('href', /\/buildings\/mine_metal\/historique$/);
+  await expect(page.locator('.admin-catalogue-composition')).toHaveClass(/--with-selection/);
+  await expect.poll(() => page.locator('.admin-catalogue-composition').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(2);
+  await page.evaluate(() => { window.scrollTo(0, 0); return document.fonts.ready; });
+  await page.screenshot({ path: testInfo.outputPath('catalogue-rail-1920x1080.png'), scale: 'css', animations: 'disabled' });
+  await selection.getByRole('link', { name: 'Fermer l’aperçu' }).click();
+  await expect(selection).toHaveCount(0);
 
   const unnamed = await page.locator('a[href],button,input:not([type="hidden"]),select,textarea').evaluateAll(nodes => nodes.flatMap(element => {
     const style = getComputedStyle(element);
@@ -76,10 +88,54 @@ test('Administration catalogue: accès, édition, sauvegarde et restauration res
   await firstEntry.getByRole('button', { name: 'Restaurer les valeurs de référence' }).click();
   await expect(page.locator('.flash[role="status"]')).toContainText('Équilibrage enregistré');
 
-  for (const width of [1440, 768, 390]) {
-    await page.setViewportSize({ width, height: 900 });
-    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  await page.getByRole('link', { name: /Consulter l’historique et comparer les versions/ }).click();
+  const history = page.url();
+  const universe = Number(new URL(history).pathname.match(/universes[/]([0-9]+)/)[1]);
+  const settings = queryIsolatedSql(project, `SELECT game_settings FROM universe WHERE id=${universe}`);
+  await page.getByRole('link', { name: 'Préparer la restauration de l’état après cette trace' }).last().click();
+  await expect(page.locator('.core-admin-universe')).toContainText('Univers :');
+  await expect(page.getByRole('navigation', { name: 'Fil d’Ariane' })).toContainText('Préparer une restauration');
+  const tables = page.locator('.core-admin-restoration table');
+  await expect(tables).toHaveCount(1);
+  await expect(tables.getByRole('columnheader')).toHaveText(['Élément','Actuel','Proposé']);
+  await expect(tables.getByRole('rowheader', { name: 'Durée' })).toBeVisible();
+  await expect(tables.getByRole('rowheader', { name: 'Champs modifiables' })).toBeVisible();
+  await expect(page.getByText('Aperçu non publié', { exact: true })).toBeVisible();
+  const modes = page.getByRole('navigation', { name: 'Présentation de la restauration' });
+  await modes.getByRole('link', { name: 'Vue linéaire' }).click();
+  await expect(page.locator('.admin-restoration-layout')).toHaveCSS('grid-template-columns', /^\d+(?:\.\d+)?px$/);
+  await expect(page.locator('form.admin-catalogue-restore')).toHaveCount(1);
+  await expect(page.getByLabel('Motif de restauration')).toHaveValue('');
+  await page.evaluate(() => document.fonts.ready);
+  await page.screenshot({ path: testInfo.outputPath('restauration-lineaire-1920x1080.png'), scale: 'css', animations: 'disabled' });
+  await modes.getByRole('link', { name: 'Vue côte à côte' }).click();
+  await expect(page.getByLabel('Motif de restauration')).toHaveValue('');
+  for (const theme of ['dark', 'light']) {
+    runIsolatedSql(project, `UPDATE player SET preferences=JSON_OBJECT('theme','${theme}') WHERE email='${email}'`);
+    await page.reload();
+    await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+    for (const width of [1920, 1440, 768, 390]) {
+      const height = width === 1920 ? 1080 : 900;
+      await page.setViewportSize({ width, height });
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      const layout = page.locator('.admin-restoration-layout');
+      await expect.poll(() => layout.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(width >= 1440 ? 2 : 1);
+      await expect(layout.getByRole('heading', { name: 'Valeurs à réappliquer' })).toBeVisible();
+      const confirmation = layout.getByRole('checkbox', { name: /Je confirme ces valeurs/ });
+      await expect(confirmation).toBeVisible();
+      await expect(confirmation).toHaveCSS('width', '18px');
+      await expect(layout.getByRole('button', { name: 'Publier ces valeurs historiques' })).toBeVisible();
+      if (width === 1920 || width === 390) {
+        const accessibility = await new AxeBuilder({ page }).include('#admin-main').analyze();
+        expect(accessibility.violations).toEqual([]);
+        await page.evaluate(() => document.fonts.ready);
+        await page.screenshot({ path: testInfo.outputPath(`restauration-${theme}-${width}x${height}.png`), scale: 'css', animations: 'disabled' });
+      }
+    }
   }
+  await page.getByRole('link', { name: 'Annuler et revenir à l’historique' }).click();
+  await expect(page).toHaveURL(history);
+  expect(queryIsolatedSql(project, `SELECT game_settings FROM universe WHERE id=${universe}`)).toBe(settings);
 });
 
 test('Catalogue B : comparaison des rangs, thèmes et formulaires natifs des quatre familles', async ({ page, browser }, testInfo) => {
@@ -97,19 +153,32 @@ test('Catalogue B : comparaison des rangs, thèmes et formulaires natifs des qua
   const before = queryIsolatedSql(project, `SELECT game_settings FROM universe WHERE id=${universe}`);
   for (const theme of ['dark', 'light']) {
     runIsolatedSql(project, `UPDATE player SET preferences=JSON_OBJECT('theme','${theme}') WHERE email='${email}'`);
-    for (const width of [1440, 768, 390]) {
-      await page.setViewportSize({ width, height: 900 });
+    for (const width of [1920, 1440, 768, 390]) {
+      const height = width === 1920 ? 1080 : 900;
+      await page.setViewportSize({ width, height });
       for (const [index, route] of [catalogue, `${catalogue}/buildings/power_plant`].entries()) {
         expect((await page.goto(route)).status()).toBe(200);
         await expect(page.locator('h1')).toHaveCount(1);
         await expect(page.locator('.page-contents')).toHaveCount(0);
         await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-        const grid = page.locator(index === 0 ? '.admin-catalogue-grid' : '.admin-catalogue-costs');
-        expect(await grid.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(width === 1440 ? (index === 0 ? 2 : 3) : 1);
+        if (index === 0) {
+          const table = page.getByRole('table', { name: 'Fiches du catalogue' });
+          await expect(table.getByRole('columnheader')).toHaveText(['Fiche', 'Famille', 'Rangs disponibles', 'Ouvrir']);
+          const row = table.getByRole('row').filter({ has: page.getByRole('link', { name: 'Modifier Mine à ciel ouvert', exact: true }) });
+          await expect(row.getByRole('rowheader')).toContainText('Mine à ciel ouvert');
+          await expect(row.getByRole('listitem')).toHaveText([/^Basique : Mine à ciel ouvert$/, /^Intermédiaire : .+/, /^Supérieur : .+/]);
+          await expect.poll(() => row.evaluate(element => getComputedStyle(element).display)).toBe(width <= 760 ? 'block' : 'table-row');
+        } else {
+          const grid = page.locator('.admin-catalogue-costs');
+          await expect.poll(() => grid.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(width >= 1440 ? 3 : 1);
+        }
         const accessibility = await new AxeBuilder({ page }).include('#admin-main').analyze();
         expect(accessibility.violations).toEqual([]);
-        await page.screenshot({ path: testInfo.outputPath(`catalogue-${index}-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });
+        if (width === 1920 || width === 390) {
+          await page.evaluate(() => document.fonts.ready);
+          await page.screenshot({ path: testInfo.outputPath(`catalogue-${index}-${theme}-${width}x${height}.png`), scale: 'css', animations: 'disabled' });
+        }
       }
     }
   }
@@ -151,7 +220,12 @@ test('Catalogue B : comparaison des rangs, thèmes et formulaires natifs des qua
   await native.goto(catalogue);
   await native.getByRole('searchbox', { name: 'Rechercher dans toutes les familles' }).fill('Chasseur');
   await native.getByRole('button', { name: 'Rechercher', exact: true }).click();
-  await expect(native.locator('.admin-catalogue-grid')).toContainText('Chasseur de patrouille');
+  await expect(native.getByRole('table', { name: 'Fiches du catalogue' })).toContainText('Chasseur de patrouille');
+  await native.getByRole('link', { name: 'Aperçu de Chasseur de patrouille', exact: true }).click();
+  const selection = native.getByRole('complementary', { name: 'Chasseur de patrouille' });
+  await expect(selection).toBeVisible();
+  await expect(native.getByRole('searchbox')).toHaveValue('Chasseur');
+  await selection.getByRole('link', { name: 'Fermer l’aperçu' }).click();
   await native.reload();
   await expect(native.getByRole('searchbox')).toHaveValue('Chasseur');
   await native.getByRole('link', { name: 'Modifier Chasseur de patrouille', exact: true }).click();

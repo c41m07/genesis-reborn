@@ -1,0 +1,34 @@
+# Calendrier de l’Avent
+
+## Parcours joueur
+
+Le bouton cadeau de la barre supérieure ouvre le calendrier dans l’univers actif pendant la période programmée. Une porte s’ouvre à minuit, heure de Paris, chaque jour du 1er au 24 décembre de la saison choisie. Un joueur arrivé le 10 décembre peut récupérer les dix premières portes si la page est visible. À l’heure précise de fermeture, le lien disparaît et les deux adresses de la page ferment.
+
+Le calendrier annonce la tranche attendue dans l’univers actif. Le compte choisit une seule fois son univers pour toute l’édition et reçoit au plus un cadeau par porte, même s’il change ensuite d’univers. Avant chaque versement il choisit une colonie qu’il possède dans cet univers. Il peut en choisir une autre pour reprendre un cadeau réservé, même après la clôture, mais pas dans un autre univers.
+
+La tranche ×1, ×6 ou ×24 est fixée par la constructibilité normale des coques dans les colonies possédées, pas par le stock, la file, les boosts, les coques déjà détenues ou le jour de retrait. La tranche ×24 exige de pouvoir construire un croiseur, un cuirassé ou un capital supérieur ; sinon une vraie coque de combat intermédiaire ou supérieure donne ×6 ; à défaut ×1. La condition est vérifiée sur une seule colonie à la fois.
+
+Durant les 48 premières heures depuis l’arrivée dans l’univers choisi, le compte peut recevoir au plus 2 000 métal et 1 000 nano de ce calendrier. Le crédit possible est atomique et le reliquat reste acquis. Si le stockage ne permet pas de verser la part exigible, elle reste réservée. Une coque exige encore son déblocage effectif dans la colonie choisie : le lot entier reste en réserve s’il manque un prérequis. Les satellites et collecteurs ne font partie d’aucun lot.
+
+Les bons J6 et J24 concernés financent une seule construction basique du type annoncé : il faut le déblocage ordinaire, payer la différence et attendre la durée normale. La remise J12 porte sur un prochain niveau éligible, pour 50 % de son coût matériel dans la limite affichée ; le premier niveau de Colonisation est exclu. Le droit est utilisé par une mise en file réussie. Annuler ne rend ni le bon ni la part non payée. L’ouverture J24 débloque aussi le titre « Gardien des étoiles » et la bannière « Nuit polaire » séparément, même si le lot principal reste réservé. Le joueur peut équiper ou retirer ces éléments sans effet de jeu.
+
+Le calendrier présente les 24 portes et ouvre le détail du jour à côté sur grand écran, sous la grille en largeur étroite. Les liens ancrés et les formulaires natifs restent utilisables sans JavaScript. « Cadeaux et réserves » réunit les étapes particulières et les droits encore à retirer ; les bons conservent leur devis séparé. L’illustration du J24 reprend le panorama de la planche approuvée : c’est un aperçu de l’Avent, pas une modification du profil équipé.
+
+Les joueurs retrouvent leurs lots déjà réservés et leurs bons dans **Inventaire → Récompenses en attente**, y compris après la fermeture du calendrier. Seuls les cadeaux déjà acquis par ce compte et retirables dans son univers actif sont proposés.
+
+Sur grand écran, lorsque J6 permet réellement de choisir un cadeau, son récapitulatif et le contexte d’univers sont rapprochés sans cacher le plafond ni le relevé. La porte visée est identifiable dans la grille. L’aperçu J24 avec les deux cosmétiques garde des libellés clairs sur le panorama sombre, y compris lorsque le thème du jeu est clair.
+
+Les devis J6 (bon de construction) et J12 (remise de recherche) affichent séparément la sélection et le résultat, côte à côte sur grand écran et dans l’ordre sur mobile. Aucun prix n’est annoncé avant le calcul. Le montant remisé, le reste à payer et la durée viennent du devis natif ; le stock insuffisant conserve l’explication sans afficher de confirmation. Les autres avoirs conservent la présentation habituelle.
+
+## Administration
+
+- Ouvrir **Administration → Événements → Préparer le calendrier de l’Avent**. Choisir l’univers, le nom, l’année des portes et les deux horaires de visibilité en heure de Paris. Vérifier l’aperçu et confirmer. Chaque période se programme explicitement, y compris l’année suivante. Les anciennes éditions attendent également une programmation.
+- Pour fermer au début du 31 décembre, saisir **31 décembre à 00:00**. Pour inclure toute la journée du 31, saisir **1er janvier à 00:00**. Deux périodes ne peuvent pas se chevaucher dans le même univers. Les éditions programmées dans plusieurs univers pour une même année partagent les cadeaux et les droits du compte.
+- La publication enregistre dans l’outbox le relevé de progression prévu pour la première porte. Le relais et le worker habituels l’exécutent. En cas de programmation après cette date, la confirmation autorise une observation tardive identifiable. La commande de reprise manuelle reste disponible.
+- La cohorte de départ est lue de façon cohérente en base à l’heure réelle affichée. Le jeu ne conserve pas le journal complet et horodaté de propriété et de constructibilité qui permettrait de reconstituer un minuit passé. L’observation des nouveaux arrivants se fait lors de la création de leur participation ; une ouverture de cadeau ne provoque jamais de recalcul.
+- Si le relevé est manqué, il faut décider explicitement d’accepter une photo tardive pendant l’édition : `php bin/console app:advent:capture <id-édition> --accept-late`. Cette provenance reste visible. Sinon les participations sans relevé ne peuvent pas choisir leur univers. Un échec de capture ne crée pas de profils partiels. Si un compte est en cours de modification, réessayer dans la fenêtre normale : le relevé n’attend pas en tenant l’édition. La lecture est bornée à 5 000 participations, par pages de 200, sans synchroniser leurs files. Au-delà, adapter et mesurer l’outil avant mise en service au lieu de relancer en boucle. Le plafond ne constitue pas une garantie de performance sur une base réelle.
+- Ne pas activer l’événement ni modifier le planning d’un environnement existant sans la recette et l’autorisation de mise en service. Le retour du code doit préserver les droits déjà ouverts.
+
+## Garanties de persistance
+
+Les dates sont calculées en heure de Paris pour ce mode uniquement, puis conservées en UTC. Les défis, rotatifs et récompenses quotidiennes ne changent pas. L’édition, le relevé compte/univers, le choix d’univers et la porte ont chacun leur contrainte d’unicité. Le reçu fige le choix et le lot au moment de l’ouverture ainsi que les destinations initiale et finale. Compte, participation active et colonie sont revalidés avant le versement. Les écritures d’inventaire ou de file et le crédit correspondant partagent une transaction. La suppression de compte efface les droits et cosmétiques personnels.

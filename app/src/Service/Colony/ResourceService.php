@@ -263,9 +263,9 @@ final class ResourceService
         foreach($rows as $slug=>$resource){$resource->currentStock=max(0.0,(float)($simulation['stocks'][$slug]??$resource->currentStock));$resource->lastUpdatedAt=$effective;}return $rows;
     }
 
-    public function consume(Planet $planet,array $costs): void
+    public function consume(Planet $planet,array $costs,bool $lockStocks=false): void
     {
-        $rows=$this->materialize($planet);
+        $rows=$this->materialize($planet,lockStocks:$lockStocks);
         foreach ($costs as $slug=>$amount) {
             if (!isset($rows[$slug]) || !is_finite((float)$amount) || $amount<0) throw new \DomainException('Coût invalide.');
             if ($rows[$slug]->currentStock+0.000001<$amount) throw new \DomainException('Ressources insuffisantes : '.$this->catalog->rules()['resources'][$slug].'.');

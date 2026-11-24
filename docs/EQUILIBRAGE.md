@@ -198,21 +198,23 @@ Un vaisseau survivant endommagé ne perd pas sa valeur de construction. Le carbu
 
 #### Coefficients de spécialisation
 
-Le coefficient multiplie les dégâts et la chance de toucher, avec les bornes décrites plus bas. Toutes les autres relations entre les neuf classes, y compris contre elles-mêmes, valent 1. Il n’y a aucune faiblesse réciproque automatique. Les relations historiques vers les classes extérieures sont conservées.
+Le coefficient multiplie les dégâts et la chance de toucher, avec les bornes décrites plus bas. Toutes les autres relations entre les neuf classes, y compris contre elles-mêmes, valent 1. Il n’y a aucune faiblesse réciproque automatique. Les relations vers les classes extérieures sont conservées, hors le bonus anti-défenses au sol ajouté au bombardier aux trois rangs.
 
 | Tireur | Cibles et coefficients |
 |---|---|
 | Chasseur | Intercepteur × 2.04, Bombardier × 2.42 |
 | Intercepteur | Chasseur lourd × 2.35, Bombardier × 2.52 |
 | Chasseur lourd | Destroyer × 4.03, Frégate × 4.44, Chasseur × 4.15 |
-| Bombardier | Capital × 4.38, Destroyer × 4.16, Cuirassé × 4.35 |
+| Bombardier | Capital × 4.38, Destroyer × 4.16, Cuirassé × 4.35, Défenses au sol × 1.30 |
 | Frégate | Intercepteur × 4.5, Bombardier × 4.6, Chasseur × 8 |
 | Croiseur | Chasseur lourd × 6, Frégate × 4.59 |
 | Destroyer | Croiseur × 5.31, Capital × 5.06, Cuirassé × 4.53 |
-| Cuirassé | Croiseur × 4.5, Frégate × 7.3 |
-| Capital | Croiseur × 8, Cuirassé × 4.8 |
+| Cuirassé | Croiseur × 4.5, Frégate × 7.3, Défenses au sol × 1.15 |
+| Capital | Croiseur × 8, Cuirassé × 4.8, Défenses au sol × 1.30 |
 
 Le groupe historique `fighters` garde ses trois membres (chasseur, furtif, intercepteur). Les neuf tireurs R14 utilisent désormais des relations explicites, ce qui permet de différencier les rôles de ces membres. La corvette conserve son groupe historique. Cela n’accorde pas de nouveaux rôles au furtif ou à la corvette.
+
+Le coefficient ×1,30 est un premier réglage du rôle anti-sol, pas une mesure du métajeu. Dans un essai synthétique sans recherche, 52 Bombardiers basiques (valeur 1 118 104) affrontent une défense de valeur 1 038 376, approximativement moitié tourelles, moitié chasseurs et intercepteurs. Sur 32 mêmes graines, ils ne gagnent aucune bataille et subissent des pertes intégrales à ×1,00, ×1,30 et ×1,40. La fraction moyenne de valeur adverse détruite passe de 13,7 % à 17,5 % puis 17,8 %. Aux rangs intermédiaire et supérieur, l’écart entre ×1,30 et ×1,40 reste inférieur à un point dans ce scénario. Les résultats justifient le réglage plus prudent mais ne préjugent pas d’autres budgets, compositions, recherches ou rangs mêlés.
 
 #### Mécaniques appliquées
 

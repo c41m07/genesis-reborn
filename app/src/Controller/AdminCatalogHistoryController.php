@@ -56,7 +56,11 @@ final class AdminCatalogHistoryController extends AbstractController
     public function restore(int $id, string $group, string $slug, int $source, Request $request, GameRepository $repository, CatalogBalanceService $balance): Response
     {
         $universe = $repository->find(Universe::class, $id);
-        if (!$universe instanceof Universe || empty($balance->entries($universe, $group, $slug)[$group])) {
+        if (!$universe instanceof Universe) {
+            throw $this->createNotFoundException('Fiche introuvable.');
+        }
+        $item = $balance->entries($universe, $group, $slug, false)[$group][0] ?? null;
+        if ($item === null) {
             throw $this->createNotFoundException('Fiche introuvable.');
         }
         $key = 'catalogue_restore_'.$id.'_'.$group.'_'.$slug.'_'.$source;
@@ -89,7 +93,7 @@ final class AdminCatalogHistoryController extends AbstractController
         $request->getSession()->set($key, $preview['revision']);
         return $this->render('admin/catalogue_restore.html.twig', [
             'universe' => $universe, 'group' => $group, 'slug' => $slug, 'source' => $source,
-            'preview' => $preview, 'tokenKey' => $key,
+            'preview' => $preview, 'tokenKey' => $key, 'itemLabel' => $item['label'],
         ]);
     }
 }

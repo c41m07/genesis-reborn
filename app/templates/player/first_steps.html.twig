@@ -4,8 +4,10 @@
 {% block body %}
 {% set colony = trainingPlanet %}
 {% set guideEnabled = app.user.preferences.firstStepsGuide ?? true %}
+<div class="first-steps-player-board">
 <div class="page-heading">
     <div>
+        <p class="first-steps-eyebrow">Commandement · parcours guidé</p>
         <h1>Premiers pas</h1>
         <p>Un ordre conseillé pour apprendre le jeu, pas des conditions supplémentaires. Jouez dans l’ordre qui vous convient.</p>
     </div>
@@ -16,26 +18,29 @@
 {% if not guideEnabled %}
     <p class="first-steps-paused">Le panneau d’aide est désactivé. <a href="{{ path('app_preferences') }}">Le réactiver dans Préférences</a>. Le guide et les remboursements restent disponibles ici.</p>
 {% endif %}
-{% if colony and trainingRewards is not empty %}
-    <section class="panel account-panel" aria-labelledby="training-reward-title">
-        <h2 id="training-reward-title">Remboursements disponibles</h2>
-        <p>Destination : <strong>{{ colony.name }}</strong>. Si les stocks sont pleins, les remboursements restent en attente. Vous pouvez choisir une autre colonie de cet empire puis revenir ici.</p>
-        {% for reward in trainingRewards %}
-            <form id="first-step-refund-{{ reward.step_key }}" method="post" action="{{ path('app_first_steps_claim') }}" data-turbo="false">
-                <input type="hidden" name="_token" value="{{ csrf_token('first-steps-reward-'~trainingMembership.id~'-'~colony.id~'-'~reward.step_key) }}">
-                <input type="hidden" name="planet" value="{{ colony.id }}">
-                <input type="hidden" name="step" value="{{ reward.step_key }}">
-                <p>{{ training.hints[reward.step_key].title }} : {{ reward.metal|quantity(0) }} métal et {{ reward.nano|quantity(0) }} nanos.</p>
-                <button class="primary" type="submit">Récupérer : {{ training.hints[reward.step_key].title }}</button>
-            </form>
-        {% endfor %}
-    </section>
-{% endif %}
+<nav class="first-steps-board-nav" aria-label="Sections des premiers pas">
+    <a href="#first-steps-heading">Parcours</a>
+    {% if colony and trainingRewards is not empty %}<a href="#training-reward-title">Remboursements</a>{% endif %}
+    <a href="{{ path('app_first_steps_exercise') }}">Exercice pirate</a>
+</nav>
+<div class="first-steps-board-layout">
 <section class="panel account-panel first-steps" aria-labelledby="first-steps-heading">
     <h2 id="first-steps-heading">Développer sa colonie et explorer</h2>
     <p><strong>{{ training.completed|length }} sur {{ training.hints|length }}</strong> étapes terminées dans <strong>{{ trainingMembership.universe.name }}</strong>.</p>
     <progress value="{{ training.completed|length }}" max="{{ training.hints|length }}" aria-label="Progression des premiers pas">{{ training.completed|length }} sur {{ training.hints|length }}</progress>
     {% if not colony %}<p>Vous n’avez pas de colonie active. Vous pouvez tout de même consulter le guide.</p>{% endif %}
+    {% set nextAction = training.next is not null and (colony or training.next == 'pirate_exercise') %}
+    {% if nextAction %}
+        <section class="first-steps-next" aria-labelledby="first-steps-next-title">
+            {% set nextExample = training.examples[training.next] %}
+            <img class="first-steps-next-art" src="{{ asset(nextExample[0]) }}" alt="" decoding="async">
+            <div>
+                <h3 id="first-steps-next-title">Prochaine étape conseillée</h3>
+                <p><strong>{{ training.hints[training.next].title }}</strong> · {{ training.hints[training.next].action }}</p>
+            </div>
+            {% include 'player/_first_steps_action.html.twig' with {step: training.next, guide: training.hints[training.next], colony: colony, actionStyle: 'primary'} only %}
+        </section>
+    {% endif %}
     {% if training.parallel and colony %}
         <p>N’attendez pas le Dépôt de minerais pour poursuivre le guide.</p>
         {% include 'player/_first_steps_action.html.twig' with {step: training.parallel, guide: training.hints[training.parallel], colony: colony} only %}
@@ -59,8 +64,8 @@
                         <p>Récompense disponible dès que vous avez une colonie.</p>
                     {% endif %}
                 {% endif %}
-                {% if step == 'pirate_exercise' or (colony and (not done or step == 'espionage')) %}
-                    {% include 'player/_first_steps_action.html.twig' with {step: step, guide: guide, colony: colony, done: done, actionStyle: step == training.next ? 'primary' : 'secondary'} only %}
+                {% if (not nextAction or step != training.next) and (step == 'pirate_exercise' or (colony and (not done or step == 'espionage'))) %}
+                    {% include 'player/_first_steps_action.html.twig' with {step: step, guide: guide, colony: colony, done: done, actionStyle: 'secondary'} only %}
                 {% endif %}
                 {% if colony and not done and step == 'exploration' %}
                     <a class="secondary" href="{{ path('app_map_v2') }}">Repérer un système dans Galaxie</a>
@@ -73,11 +78,46 @@
             </li>
         {% endfor %}
     </ol>
-    <p>Les demandes en file, les départs et les missions interrompues ne comptent pas. Les bâtiments de base de la colonie active et vos recherches basiques sont reconnus, sans paiement rétroactif. Si tous les anciens bâtiments qui manquaient aux relevés sont réunis sur une même colonie de votre empire, un guide terminé le reste en changeant de colonie.</p>
+    <p>Les demandes en file, les départs et les missions interrompues ne comptent pas. Les étapes validées sont communes à votre empire dans cet univers. Pour les bâtiments déjà présents, le guide retient une seule colonie, celle qui complète le plus d’étapes, sans remboursement rétroactif. Les raccourcis utilisent votre colonie active.</p>
     <p>Le pilote rembourse une seule Mine à ciel ouvert basique niveau 1 et un seul Génie civil colonial basique niveau 1 lancés depuis les fiches guidées. Le taux est de 25 % du prix en métal et nanos réellement payé, arrondi vers le bas, dans la limite de 96 métal et 52 nanos pour la mine, 240 métal et 130 nanos pour la recherche. Les autres étapes ne donnent aucun lot, hors remplacement de la sonde d’espionnage.</p>
     {% if campaignAccessible %}
     <p>Prêt à répondre aux appels civils ? <a class="inline-link" href="{{ path('app_pirate_campaign') }}">Ouvrir la campagne pirate</a>. L’exercice de ce guide reste indépendant.</p>
 {% endif %}
 {% if training.next is null %}<p><strong>Ces premiers objectifs sont terminés.</strong> Vous pouvez poursuivre librement votre découverte du jeu.</p>{% endif %}
 </section>
+{% set rewardPlanet = rewardPlanet|default(colony) %}
+<aside class="panel account-panel first-steps-board-rail" aria-labelledby="first-steps-actions-title">
+    <h2 id="first-steps-actions-title">Remboursements et aide</h2>
+    {% if colony and trainingRewards is not empty %}
+    <section class="first-steps-refunds" aria-labelledby="training-reward-title">
+        <h3 id="training-reward-title">Remboursements disponibles</h3>
+        <p id="training-refund-destination">Destination : <strong>{{ rewardPlanet.name }}</strong>. Si les stocks sont pleins, les remboursements restent en attente.</p>
+        {% if rewardPlanets|length > 1 %}
+        <form method="get" action="{{ path('app_first_steps', {_fragment:'training-reward-title'}) }}" class="first-steps-refund-destination">
+            <label for="first-steps-reward-planet">Colonie bénéficiaire</label>
+            <select id="first-steps-reward-planet" name="reward_planet">
+                {% for destination in rewardPlanets %}<option value="{{ destination.id }}"{{ destination.id == rewardPlanet.id ? ' selected' }}>{{ destination.name }} · {{ destination.coordinates() }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="secondary">Choisir cette colonie</button>
+        </form>
+        {% endif %}
+        {% for reward in trainingRewards %}
+            <form id="first-step-refund-{{ reward.step_key }}" method="post" action="{{ path('app_first_steps_claim') }}" data-turbo="false">
+                <input type="hidden" name="_token" value="{{ csrf_token('first-steps-reward-'~trainingMembership.id~'-'~rewardPlanet.id~'-'~reward.step_key) }}">
+                <input type="hidden" name="planet" value="{{ rewardPlanet.id }}">
+                <input type="hidden" name="step" value="{{ reward.step_key }}">
+                <div><strong>{{ training.hints[reward.step_key].title }}</strong><p>{{ reward.metal|quantity(0) }} métal et {{ reward.nano|quantity(0) }} nanos.</p></div>
+                <button class="secondary" aria-describedby="training-refund-destination" type="submit">Récupérer : {{ training.hints[reward.step_key].title }}</button>
+            </form>
+        {% endfor %}
+    </section>
+{% endif %}
+
+    {% if not colony or trainingRewards is empty %}<p>Aucun remboursement disponible pour la colonie active.</p>{% endif %}
+    <p>L’exercice pirate ne modifie pas vos flottes réelles.</p>
+    <a class="secondary" href="{{ path('app_first_steps_exercise') }}">Ouvrir l’exercice</a>
+    <a class="quiet-button" href="{{ path('app_preferences') }}">Réglages du guide</a>
+</aside>
+</div>
+</div>
 {% endblock %}

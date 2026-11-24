@@ -9,7 +9,13 @@ final class OperationCalculator
         $plan = $this->plan($d, $group, $level, $quantity, $buildings, $universe, $technologies);
         return ['duration' => $plan['duration'], 'costs' => $plan['costs']];
     }
-    private function plan(array $d,string $group,int $level,int $quantity,array $buildings,array $universe,array $technologies=[]):array
+    /** Le devis et le futur rythme utilisent la même base et le même arrondi. */
+    public function calculateQueuePlan(array $definition, string $group, int $level, int $quantity, array $buildings, array $universe, array $technologies): array
+    {
+        return $this->plan($definition, $group, $level, $quantity, $buildings, $universe, $technologies, true);
+    }
+
+    private function plan(array $d,string $group,int $level,int $quantity,array $buildings,array $universe,array $technologies=[], bool $captureTiming = false):array
     {
         if($level<1||$quantity<1)throw new \InvalidArgumentException('Niveau ou quantité invalide.');
         $tier=(string)($d['_tier']??'basic');$tierFactor=GameCatalog::tierFactor($tier);
@@ -27,13 +33,28 @@ final class OperationCalculator
         $mult=(float)($universe['multipliers'][match($group){'buildings'=>'building_time','technologies'=>'research_time',default=>'ship_build_time'}]??1);
         // Soustraire les pourcentages avant la division évite le faux dépassement
         // d'une seconde (et d'une minute électrique) à la réduction exacte de 70 %.
-        $rawDuration=$base*$levelFactor*$quantity*$mult*$tierFactor*((100-$timeReduction)/100);
+        $nominalDuration = $base * $levelFactor * $quantity * $mult * $tierFactor;
+        $rawDuration = $nominalDuration * ((100-$timeReduction)/100);
         $duration=max(1,(int)ceil($rawDuration));
         $costs=$this->catalog->costs($d,$level,$quantity,$group);
         $discountSlug=match($group){'buildings'=>'nanomaterial_synthesis','ships'=>'naval_engineering',default=>null};
         if($discountSlug!==null){$costCap=(float)($this->catalog->rules()['cost_reduction_max_percent']??40);$discount=$this->discountProduct($universe,$discountSlug,$technologies[$discountSlug]??[],'cost_discount',$costCap);foreach($costs as $resource=>$amount)$costs[$resource]=$amount>0?max(1,(int)ceil($amount*(1-$discount/100))):0;}
         if(in_array($group,['technologies','ships','defenses'],true)) $costs['electricity']=($costs['electricity']??0)+100*(int)ceil($duration/60);
-        return ['duration'=>$duration,'costs'=>$costs,'raw_duration'=>$rawDuration];
+        if (!$captureTiming) {
+            return ['duration' => $duration, 'costs' => $costs, 'raw_duration' => $rawDuration];
+        }
+        $source = match ($group) {
+            'buildings' => $universe['catalog']['technologies']['engineering_foundations'] ?? null,
+            'technologies' => $universe['catalog']['buildings']['lab'] ?? $this->catalog->get('buildings', 'lab'),
+            'ships' => $universe['catalog']['buildings']['shipyard'] ?? $this->catalog->get('buildings', 'shipyard'),
+            default => null,
+        };
+        $timing = $source !== null && ($group !== 'buildings' || ($source['effect']['type'] ?? null) === 'time_discount')
+            ? ['base' => $nominalDuration, 'cap' => $timeCap, 'max' => max(1, (int) ($source['max_level'] ?? 25)),
+                'checkpoint' => null, 'work' => 1.0, 'full' => $duration]
+            : null;
+
+        return ['duration'=>$duration,'costs'=>$costs,'raw_duration'=>$rawDuration,'live_timing' => $timing];
     }
     public function maximum(array $definition, string $group, array $stocks, array $buildings, array $universe, array $technologies = [], int $limit = 2147483647): int
     {

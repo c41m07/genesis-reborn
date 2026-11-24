@@ -123,7 +123,8 @@ final class EventPagesTest extends WebTestCase
         self::assertSelectorCount(2, 'section[aria-labelledby="events-current"] article');
         self::assertSelectorCount(2, 'section[aria-labelledby="events-upcoming"] article');
         self::assertSelectorTextContains('.event-drawer-count', '54');
-        self::assertSelectorTextContains('main > .events-space > p .badge', '54');
+        self::assertSelectorTextContains('section[aria-labelledby="events-current"] .core-event-group-heading .badge', '27 événements');
+        self::assertSelectorTextContains('section[aria-labelledby="events-upcoming"] .core-event-group-heading .badge', '27 événements');
     }
 
     public function testChallengePaginationFiltersBeforeItsLimitAndRootDoesNotHydrateHistory(): void

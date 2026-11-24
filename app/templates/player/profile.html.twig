@@ -1,26 +1,63 @@
 {% extends 'base.html.twig' %}
 {% block title %}Mes identifiants · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="page-refinement profile-page account-space account-redesign" data-page-sections="disabled">
-<div class="page-heading"><div><h1>Mes identifiants</h1><p>Les identifiants de votre compte sont communs à tous vos univers.</p></div></div>
+<div class="page-refinement profile-page account-space account-redesign player-account-board" data-page-sections="disabled">
+<div class="page-heading"><div><p class="account-board-eyebrow">Compte · portée sur tous les univers</p><h1>Mes identifiants</h1><p>Les identifiants de votre compte sont communs à tous vos univers.</p></div></div>
 {% include 'ui/account_navigation.html.twig' %}
-<p class="profile-notice">Toute modification enregistrée ferme cette session : reconnectez-vous ensuite avec vos identifiants.</p>
-{# Les deux panneaux appartiennent au même formulaire : le mot de passe actuel confirme toutes les modifications. #}
+<div class="account-board-grid">
+{# Les champs et leur confirmation appartiennent au même formulaire ; les actions sensibles restent distinctes. #}
 {{ form_start(form, {attr: {class: 'account-profile-form'}}) }}
     {% if form.vars.submitted and not form.vars.valid %}<div class="form-error" role="alert"><strong>Profil non enregistré.</strong><p>Vérifiez les champs signalés puis réessayez.</p>{{ form_errors(form) }}</div>{% endif %}
-    <div class="account-workspace">
         <section class="panel account-panel account-identifiers" aria-label="Modifier mon profil">
             <fieldset class="account-section"><legend>Identifiants</legend><div class="account-grid">{{ form_row(form.email) }}{{ form_row(form.username) }}</div></fieldset>
             <details class="profile-password" {% if form.vars.submitted and not form.vars.valid %}open{% endif %}>
-                <summary>Changer de mot de passe — facultatif</summary>
-                <fieldset class="account-section"><legend class="visually-hidden">Changer de mot de passe</legend><p>Laissez les deux champs vides pour conserver votre mot de passe. En cas de remplacement : 12 à 128 caractères.</p>{{ form_errors(form.newPassword) }}<div class="account-grid">{{ form_row(form.newPassword.first) }}{{ form_row(form.newPassword.second) }}</div></fieldset>
+                <summary>
+                    <span>Changer de mot de passe — facultatif</span>
+                    <small class="profile-password-hint">Laissez les deux champs vides pour conserver votre mot de passe.</small>
+                </summary>
+                <fieldset class="account-section"><legend class="visually-hidden">Changer de mot de passe</legend><p>En cas de remplacement : 12 à 128 caractères.</p>{{ form_errors(form.newPassword) }}<div class="account-grid">{{ form_row(form.newPassword.first) }}{{ form_row(form.newPassword.second) }}</div></fieldset>
             </details>
+            <fieldset class="account-section account-profile-confirmation"><legend>Confirmer la modification</legend>{{ form_row(form.currentPassword, {help: 'Votre mot de passe actuel est nécessaire pour enregistrer le profil.'}) }}</fieldset>
+            <button class="primary">Enregistrer mes identifiants</button>
+            <div class="profile-notice profile-validation-notice">
+                <strong>Validation des modifications</strong>
+                <p>Toute modification enregistrée ferme cette session : reconnectez-vous ensuite avec vos identifiants.</p>
+            </div>
         </section>
-        <section class="panel account-panel account-confirmation" aria-label="Confirmation des identifiants">
-            <fieldset class="account-section"><legend>Confirmer la modification</legend>{{ form_row(form.currentPassword, {help: 'Votre mot de passe actuel est nécessaire pour enregistrer le profil.'}) }}</fieldset>
-            <button class="primary full">Enregistrer mes identifiants</button>
-        </section>
-    </div>
 {{ form_end(form) }}
+<aside class="account-board-rail" aria-label="Portée et actions sensibles">
+    <section class="panel account-board-card profile-scope-card">
+        <h2>Portée du compte</h2>
+        <p>Vos identifiants sont utilisés dans tous vos univers.</p>
+        <dl>
+            <div><dt>Préférences</dt><dd>Affichage, horloge, raccourcis et transports.</dd></div>
+            <div><dt>Mode vacances</dt><dd>Règles et activation propres à chaque univers.</dd></div>
+        </dl>
+        <a class="secondary" href="{{ path('app_preferences') }}">Ouvrir les préférences</a>
+    </section>
+    <section class="panel account-board-card profile-danger-card">
+        <h2>Zone sensible</h2>
+        <div class="account-board-danger"><strong>Supprimer mon compte</strong><p>La confirmation détaille les conséquences pour tous vos univers.</p></div>
+        <a class="danger" href="{{ path('app_account_delete_page') }}">Voir la confirmation</a>
+    </section>
+</aside>
+</div>
+{% if cosmetics %}
+<section class="panel account-panel profile-cosmetics" aria-labelledby="profile-cosmetics">
+    <h2 id="profile-cosmetics" tabindex="-1">Apparence du profil</h2>
+    <p>Le titre et la bannière sont décoratifs. Ils ne modifient ni vos statistiques ni votre progression.</p>
+    {% if cosmetics.polar_night is defined %}<div class="profile-polar-night" aria-hidden="true"></div>{% endif %}
+    <form method="post" action="{{ path('app_profile_cosmetics') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('profile_cosmetics') }}">
+        <fieldset class="account-section">
+            <legend>Éléments équipés</legend>
+            {% for code, cosmetic in cosmetics %}
+                <p><label><input type="checkbox" name="equipped[]" value="{{ code }}"{{ cosmetic.equipped ? ' checked' }}> {{ cosmetic.slot == 'title' ? 'Titre' : 'Bannière' }} : {{ cosmetic.label }}</label></p>
+            {% endfor %}
+        </fieldset>
+        <button class="secondary">Enregistrer l’apparence</button>
+    </form>
+</section>
+{% endif %}
 </div>
 {% endblock %}

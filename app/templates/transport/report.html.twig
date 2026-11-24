@@ -1,11 +1,30 @@
 {% extends 'base.html.twig' %}
 {% block title %}Rapport de transport · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="mission-report report-workspace">
+<div class="mission-report report-workspace player-report-detail player-transport-detail">
 {% include 'ui/report_back_link.html.twig' %}
-<header class="report-heading"><p class="report-eyebrow">ÉCONOMIE · N° {{ report.id }}</p><h1>Rapport de transport</h1><p>{{ report.snapshot.origin }} → {{ report.snapshot.destination }} · {{ report.createdAt|date('d/m/Y H:i') }}</p></header>
+<header class="report-heading core-transport-heading">
+    <p class="report-eyebrow">ÉCONOMIE · N° {{ report.id }}</p>
+    <h1>Rapport de transport</h1>
+    <div class="core-transport-route"><p>{{ report.snapshot.origin }} → {{ report.snapshot.destination }} · <time datetime="{{ report.createdAt|date('c') }}">{{ report.createdAt|date('d/m/Y H:i') }}</time></p>
+        <span class="badge core-report-state{{ report.status == 'delivered' ? ' is-success' : (report.status == 'refused' ? ' is-risk' : '') }}">{{ {traveling:'Transport en route',delivered:'Livraison effectuée',refused:'Livraison refusée'}[report.status]|default(report.status) }}</span>
+    </div>
+</header>
 {% if app.request.attributes.get('_route') == 'app_transport_report' %}{% include 'ui/report_notice_form.html.twig' with {report_notice_kind:'transport'} %}{% endif %}
-<section class="panel report-summary"><h2>{{ {traveling:'Transport en route',delivered:'Livraison effectuée',refused:'Livraison refusée'}[report.status]|default(report.status) }}</h2><p>{{ report.snapshot.sender }} → {{ report.snapshot.recipient }}</p>{% if report.snapshot.returned_at is defined %}<p class="muted">Flotte rentrée le {{ report.snapshot.returned_at|date('d/m/Y H:i') }}.</p>{% endif %}</section>
-{% include 'transport/_details.html.twig' %}
+<div class="player-transport-core">
+<section class="transport-board-summary" aria-labelledby="transport-board-summary-title">
+    <h2 id="transport-board-summary-title" class="visually-hidden">Résumé du transport</h2>
+    <dl class="report-metrics transport-board-metrics">
+        <div><dt>Départ</dt><dd><time datetime="{{ report.createdAt|date('c') }}">{{ report.createdAt|date('d/m/Y à H:i', preferences.timezone) }}</time></dd><dd>{{ report.snapshot.origin }}</dd></div>
+        <div><dt>{{ report.status == 'refused' ? 'Refus' : 'Arrivée' }}</dt><dd>{% if report.resolvedAt %}<time datetime="{{ report.resolvedAt|date('c') }}">{{ report.resolvedAt|date('d/m/Y à H:i', preferences.timezone) }}</time>{% else %}Pas encore confirmée{% endif %}</dd><dd>{{ report.snapshot.destination }}</dd></div>
+        {# Les ressources encore en route ne sont jamais comptées dans le fret livré. #}
+        <div><dt>Quantité livrée</dt><dd>{% if report.status == 'traveling' %}Non confirmée{% else %}{{ report.snapshot.delivered|default({})|reduce((sum, amount) => sum + amount, 0)|quantity(2) }}{% endif %}</dd><dd>Total des ressources transférées</dd></div>
+    </dl>
+</section>
+<div class="transport-board-content">
+    {% include 'transport/_details.html.twig' with {balance_first: true} %}
+</div>
+<section class="panel report-summary"><h2>Participants</h2><p>{{ report.snapshot.sender }} → {{ report.snapshot.recipient }}</p>{% if report.snapshot.returned_at is defined %}<p class="muted">Flotte rentrée le {{ report.snapshot.returned_at|date('d/m/Y H:i') }}.</p>{% endif %}</section>
+</div>
 </div>
 {% endblock %}

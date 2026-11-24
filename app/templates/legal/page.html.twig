@@ -1,26 +1,32 @@
 {% extends 'base.html.twig' %}
 {% block title %}{{ pageTitle }} · Genesis Reborn{% endblock %}
 {% block body %}
-<article class="wiki-guide legal-page entry-workspace information-workspace" aria-labelledby="legal-title" data-page-sections="disabled">
-  <header><h1 id="legal-title">{{ pageTitle }}</h1><p>Dernière mise à jour : <time datetime="2026-11-07">7 novembre 2026</time>.</p></header>
+<article class="wiki-guide legal-page legal-page--audit entry-workspace information-workspace" aria-labelledby="legal-title" data-page-sections="disabled">
+  <header><p class="entry-eyebrow">Public / Informations juridiques</p><h1 id="legal-title">{{ pageTitle }}</h1><p>Dernière mise à jour : <time datetime="2026-11-07">7 novembre 2026</time>.</p></header>
   {% include 'legal/_navigation.html.twig' %}
-  <aside class="panel" aria-label="État de cette information"><h2>Information provisoire et incomplète</h2><p>Cette page présente les informations disponibles à ce jour. Certains éléments obligatoires restent à compléter : cette publication ne signifie pas que les mentions légales ou l’information sur les données personnelles sont complètes.</p><p>Pour une question ou une demande : <a href="mailto:contact@genesis-reborn.fr">contact@genesis-reborn.fr</a>.</p></aside>
-  <div class="panel legal-content">
-    {% if page == 'confidentialite' %}
-      <nav class="legal-contents" aria-labelledby="legal-contents-title">
-        <h2 id="legal-contents-title">Dans cette page</h2>
-        <ul>
-          <li><a href="#responsable-contact">Responsable et contact</a></li>
-          <li><a href="#donnees-utilisations">Données et utilisations</a></li>
-          <li><a href="#destinataires-prestataires">Destinataires et prestataires</a></li>
-          <li><a href="#conservation">Conservation</a></li>
-          <li><a href="#droits">Vos droits</a></li>
-          <li><a href="#mineurs">Joueurs mineurs</a></li>
-        </ul>
-      </nav>
-    {% endif %}
-    {% include 'legal/' ~ page ~ '.html.twig' %}
-    <a class="secondary legal-back-top" href="#legal-title">Revenir en haut</a>
+  {# Une seule liste d’ancres, visible avant le texte aussi au clavier et sur mobile. #}
+  {% set sectionLinks = {
+    'mentions-legales': {'editeur': 'Le site et son éditeur', 'contact': 'Contact', 'hebergement': 'Hébergement', 'droits-contenus': 'Droits sur les contenus'},
+    'cgu': {'presentation': 'Présentation du service', 'compte': 'Compte et connexion', 'echanges': 'Échanges et signalements', 'version-alpha': 'Version Alpha et disponibilité', 'donnees': 'Contenus et données personnelles', 'elements-a-finaliser': 'Éléments restant à finaliser'},
+    'confidentialite': {'responsable-contact': 'Responsable et contact', 'donnees-utilisations': 'Données et utilisations', 'destinataires-prestataires': 'Destinataires et prestataires', 'conservation': 'Conservation', 'droits': 'Vos droits', 'mineurs': 'Joueurs mineurs'},
+    'cookies': {'connexion-securite': 'Connexion et sécurité', 'memorisation': 'Se souvenir de moi', 'polices-services': 'Polices et autres services', 'choix': 'Vos choix'}
+  } %}
+  <div class="legal-audit-layout">
+    {# Même ordre de lecture et de clavier sur téléphone : avertissement, ancres, clauses. #}
+    <aside class="legal-warning" aria-label="État de cette information"><h2>Information provisoire et incomplète</h2><p>Cette page présente les informations disponibles à ce jour. Certains éléments obligatoires restent à compléter : cette publication ne signifie pas que les mentions légales ou l’information sur les données personnelles sont complètes.</p><p>Pour une question ou une demande : <a href="mailto:contact@genesis-reborn.fr">contact@genesis-reborn.fr</a>.</p></aside>
+    <nav class="panel legal-contents" aria-labelledby="legal-contents-title">
+      <h2 id="legal-contents-title">Dans cette page</h2>
+      <ul>
+        {% for id, label in sectionLinks[page] %}
+          <li><a href="#{{ id }}">{{ label }}</a></li>
+        {% endfor %}
+      </ul>
+      <a class="legal-back-top" href="#legal-title"><span aria-hidden="true">↑</span> Revenir en haut</a>
+    </nav>
+    <div class="panel legal-content">
+      {% include 'legal/' ~ page ~ '.html.twig' %}
+      <a class="secondary legal-back-top" href="#legal-title">Revenir en haut</a>
+    </div>
   </div>
 </article>
 {% endblock %}

@@ -1461,7 +1461,7 @@ Cette demande remplace la présentation du classement joueur décidée le 5 nove
 (points totaux seuls et absence de colonne planètes). Les cinq catégories ont leur
 rang, les variations sont sur la même ligne et le nombre de planètes précède les
 points totaux. Formules de points et échéance quotidienne inchangées.
-Dans ce tableau : « (= 0) » si inchangé, « (—) » sans comparaison.
+Dans ce tableau : « (=) » si inchangé, « (—) » sans comparaison.
 
 Décisions confirmées pour les lots suivants, avec état d’implémentation dans le suivi :
 - Ancienneté : acquisition par le propriétaire actuel, conquête incluse.
@@ -2236,3 +2236,22 @@ niveaux 50 Basique et 25 Intermédiaire pour débloquer le Supérieur.
 Le producteur d’hydrogène et la recherche industrielle restent requis au niveau
 5 du rang visé. La condition Basique reste inchangée. Il n’y a ni recalcul ou
 retrait des accès acquis, ni modification des commandes déjà payées.
+
+## Durée des files au rythme du bonus acquis — 24 novembre 2026
+
+Un bonus de durée gagné modifie seulement le travail restant des nouvelles
+commandes actives et le rythme des futures têtes de file. Le prix enregistré
+(y compris la taxe électrique), les avances déjà acquises, les boosts utilisés,
+les dépendances et l’ordre restent inchangés. Les commandes historiques sans
+checkpoint gardent leur chronomètre : le calcul ne reconstitue pas leur historique.
+La défense garde l’absence de bonus passif et les flottes ne sont pas concernées.
+Le catalogue de base, le multiplicateur d’univers et les paramètres du bonus sont
+figés à l’achat ; aucun changement administratif ne requalifie les files en masse.
+
+### Plafond de commandes des files de production (24/11/2026)
+
+Le plafond passe de 30 à **10 commandes à l’ajout** sur les files existantes : Bâtiments par colonie, Vaisseaux/Défenses dans la même file par colonie, et Recherche commune à toutes les colonies de la participation dans cet univers. Les commandes déjà payées restent en place, même au-delà de 10. Leur achèvement et leur annulation ne changent pas. Un ajout redevient possible à 9 commandes, sous réserve des autres conditions natives.
+
+## Programmation du calendrier de l’Avent par univers — 24 novembre 2026
+
+L’administration programme chaque période de visibilité avec un début inclus et une fin exclue en heure de Paris. Le bouton cadeau de la barre supérieure et l’accès direct suivent la même période. Les portes conservent les dates du 1er au 24 décembre et peuvent être rattrapées pendant la visibilité. Une nouvelle saison demande une publication explicite. L’inventaire assure le retrait des cadeaux déjà réservés après la fermeture.

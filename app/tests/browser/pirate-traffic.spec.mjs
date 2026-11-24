@@ -1,7 +1,27 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
 
-test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie', async ({ page }) => {
+test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie', async ({ page, browser }, info) => {
+  test.setTimeout(90000);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.addInitScript(() => {
+    const fill = CanvasRenderingContext2D.prototype.fillText;
+    const stroke = CanvasRenderingContext2D.prototype.stroke;
+    window.testGalaxyGlyphs = new Set();
+    window.testOwnedRing = false;
+    window.testFirstPlanet = null;
+    CanvasRenderingContext2D.prototype.fillText = function (text, x, y, ...rest) {
+      if (this.canvas.classList.contains('gv2-canvas--galaxy')) window.testGalaxyGlyphs.add(text);
+      if (this.canvas.classList.contains('gv2-canvas--system') && /^\d{2}$/.test(text) && text === window.testPlanetPosition) {
+        window.testFirstPlanet = [x, y];
+      }
+      return fill.call(this, text, x, y, ...rest);
+    };
+    CanvasRenderingContext2D.prototype.stroke = function (...args) {
+      if (this.canvas.classList.contains('gv2-canvas--galaxy') && this.strokeStyle === '#00e676' && this.lineWidth >= 3) window.testOwnedRing = true;
+      return stroke.apply(this, args);
+    };
+  });
   const stamp = crypto.randomUUID().slice(0, 8);
   const email = 'traffic-' + stamp + '@example.test';
   const password = crypto.randomUUID() + '!Aa1';
@@ -68,6 +88,89 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
   expect(payload.data.campaignTraffic).toEqual(read.campaignTraffic);
   await expect(page.locator('.gv2-flight-log [data-campaign-kind="scout"]')).toBeVisible();
   await expect(page.locator('.gv2-flight-log [data-campaign-kind="pirates"]')).toHaveCount(0);
+
+  const station = page.getByRole('link', { name: 'Station pirate repérée, aucune case planétaire', exact: true });
+  const enter = page.getByRole('button', { name: 'Entrer dans le système', exact: true });
+  await expect(shell).toHaveAttribute('data-view', 'galaxy');
+  await expect(page.getByRole("button", { name: /Votre monde/ })).toBeVisible();
+  expect(await page.evaluate(() => ({ ring: window.testOwnedRing, house: window.testGalaxyGlyphs.has('⌂') }))).toEqual({ ring: true, house: false });
+  await enter.click();
+  await expect(shell).toHaveAttribute('data-view', 'system');
+  await expect(station).toHaveCount(0);
+
+  // Rapport de test sur le reçu créé par le vrai départ. La durée native reste inchangée.
+  const shift = Number(queryIsolatedSql(project, 'SELECT GREATEST(TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), due_at), 0) + 2 FROM pirate_reconnaissance WHERE membership_id=' + member + ' AND reported_at IS NULL'));
+  expect(shift).toBeGreaterThanOrEqual(2);
+  runIsolatedSql(project, 'UPDATE pirate_reconnaissance SET departed_at=DATE_SUB(departed_at,INTERVAL ' + shift + ' SECOND), due_at=DATE_SUB(due_at,INTERVAL ' + shift + ' SECOND), reported_at=UTC_TIMESTAMP(), detected=0 WHERE membership_id=' + member + ' AND reported_at IS NULL');
+  const mapUrl = '/carte-v2?galaxy=' + galaxy + '&system=' + system;
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.goto(mapUrl);
+  const reported = JSON.parse(await shell.getAttribute('data-galaxy-v2-map-value')).campaignTraffic;
+  expect(reported).toHaveLength(1);
+  expect(reported[0]).toMatchObject({ kind: 'pirates', mission: 1, systems: [system], eta: null });
+  expect(Object.keys(reported[0]).sort()).toEqual(['eta', 'kind', 'label', 'mission', 'overdue', 'systems']);
+  await expect.poll(() => page.evaluate(() => window.testOwnedRing)).toBe(true);
+  expect(await page.evaluate(() => ['P', '◆', '◇'].some(symbol => window.testGalaxyGlyphs.has(symbol)))).toBe(false);
+  await expect(station).toHaveCount(0);
+  const viewData = JSON.parse(await shell.getAttribute('data-galaxy-v2-map-value'));
+  const own = viewData.systems.find(row => row.id === system);
+  const unknown = viewData.systems.find(row => !row.known);
+  expect(unknown).toBeTruthy();
+  expect(unknown.hall).toBeUndefined();
+  await page.goto('/carte-v2?galaxy=' + galaxy + '&system=' + unknown.id);
+  await expect(enter).toHaveCount(0);
+  await expect(station).toHaveCount(0);
+  await page.goto(mapUrl);
+  await enter.click();
+  await expect(station).toBeVisible();
+  const sprite = station.locator('img');
+  await expect.poll(() => sprite.evaluate(image => image.naturalWidth)).toBe(192);
+  const detail = page.locator('#gv2-station-detail');
+  const rest = await sprite.boundingBox();
+  expect(rest.width).toBeLessThanOrEqual(19);
+  expect((await station.boundingBox()).width).toBeGreaterThanOrEqual(44);
+  await sprite.hover();
+  await expect(detail).toContainText('aucune case planétaire');
+  const enlarged = await sprite.boundingBox();
+  expect(enlarged.width).toBeGreaterThan(rest.width);
+  expect(enlarged.width).toBeLessThanOrEqual(23);
+  expect(enlarged.x + enlarged.width / 2).toBeCloseTo(rest.x + rest.width / 2, 1);
+  await page.mouse.move(4, 4);
+  const animatedPosition = String(own.planets[0].position).padStart(2, '0');
+  await page.evaluate(position => { window.testPlanetPosition = position; }, animatedPosition);
+  await page.getByRole('button', { name: "Animer la galaxie et les planètes", exact: true }).click();
+  await expect.poll(() => page.evaluate(() => window.testFirstPlanet)).not.toBeNull();
+  const planetBefore = await page.evaluate(() => window.testFirstPlanet);
+  const fixedBefore = await station.getAttribute('style');
+  await expect.poll(() => page.evaluate(() => window.testFirstPlanet)).not.toEqual(planetBefore);
+  expect(await station.getAttribute('style')).toBe(fixedBefore);
+  await page.getByRole('button', { name: "Pause des animations", exact: true }).click();
+  await station.focus();
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Shift+Tab');
+  await expect(station).toBeFocused();
+  await expect(detail).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(detail).toBeHidden();
+  await expect(station).toBeFocused();
+  await expect(shell).toHaveAttribute('data-view', 'system');
+  await page.screenshot({ path: info.outputPath('stations-1920x1080.png'), animations: 'disabled' });
+
+  const mobile = await browser.newContext({ hasTouch: true, reducedMotion: 'reduce', viewport: { width: 390, height: 844 }, storageState: await page.context().storageState() });
+  try {
+    const screen = await mobile.newPage();
+    await screen.goto(new URL(mapUrl, page.url()).href);
+    await screen.getByRole('button', { name: 'Entrer dans le système', exact: true }).tap();
+    const mobileStation = screen.getByRole('link', { name: 'Station pirate repérée, aucune case planétaire', exact: true });
+    await expect(mobileStation).toBeVisible();
+    expect(await screen.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+    await mobileStation.scrollIntoViewIfNeeded();
+    await screen.screenshot({ path: info.outputPath('stations-390x844.png'), animations: 'disabled' });
+    await mobileStation.tap();
+    await expect(screen).toHaveURL(/\/evenements\/campagne-pirate$/);
+  } finally {
+    await mobile.close();
+  }
 
   // Entre deux réponses identiques, un détail natif garde le focus.
   await page.goto('/planetes/' + origin);

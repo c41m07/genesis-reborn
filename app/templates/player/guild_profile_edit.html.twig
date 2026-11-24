@@ -1,9 +1,18 @@
 {% extends 'base.html.twig' %}
 {% block title %}Personnaliser {{ profile.name }} · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="social-profile-page page-refinement guild-control guild-control--customize" data-page-sections="disabled">
+{% import 'ui/macros.html.twig' as ui %}
+<div class="social-profile-page page-refinement guild-control guild-control--customize social-board social-board--guild-customize" data-page-sections="disabled">
 <div class="page-heading"><div><h1>Personnaliser la guilde</h1><p>{{ profile.name }} · Commandant uniquement</p></div></div>
 {% include 'ui/guild_navigation.html.twig' with {compactNavigation: true} %}
+<section class="panel guild-public-hero guild-edit-identity" aria-label="Aperçu de l’identité actuelle">
+    {% if profile.has_banner %}<img class="guild-public-banner" src="{{ path('app_guild_media',{id:profile.id,kind:'banner'}) }}" alt="Bannière de {{ profile.name }}">{% endif %}
+    <div class="guild-public-heading">
+        {% if profile.has_logo %}<img class="guild-public-logo" src="{{ path('app_guild_media',{id:profile.id,kind:'logo'}) }}" alt="">
+        {% else %}<span class="guild-profile-emblem" aria-hidden="true">{{ ui.icon('diplomacy') }}</span>{% endif %}
+        <strong>{% if profile.tag %}[{{ profile.tag }}] {% endif %}{{ profile.name }}</strong>
+    </div>
+</section>
 <form class="panel guild-profile-form" method="post" enctype="multipart/form-data">
 <input type="hidden" name="_token" value="{{ csrf_token('guild_profile_'~profile.id) }}"><input type="hidden" name="version" value="{{ profile.version }}">
 <label for="guild-description">Description</label><textarea id="guild-description" name="description" rows="7" maxlength="2000" aria-describedby="guild-description-help">{{ description }}</textarea>

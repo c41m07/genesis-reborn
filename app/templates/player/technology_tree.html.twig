@@ -1,6 +1,8 @@
 {% extends 'base.html.twig' %}
 {% block title %}Technologie · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="page-heading"><div><h1>Guide technologique</h1><p>Déblocages de votre empire · infrastructure évaluée depuis {{ planet.name }}.</p></div>{% include 'ui/development_navigation.html.twig' %}</div>
+<div class="player-technology-board">
+<div class="page-heading"><div><p class="technology-board-eyebrow">Développement · prérequis et objectif</p><h1>Guide technologique</h1><p>Déblocages de votre empire · infrastructure évaluée depuis {{ planet.name }}.</p></div>{% include 'ui/development_navigation.html.twig' %}</div>
 {% include 'ui/technology_tree.html.twig' with {tree_standalone:true} %}
+</div>
 {% endblock %}

@@ -8,6 +8,15 @@
 - Le périmètre livré et les objectifs sont dans [README.md](README.md), [docs/README.md](docs/README.md) et [docs/FEUILLE_DE_ROUTE.md](docs/FEUILLE_DE_ROUTE.md). Les documents de `docs/archives/` sont historiques, sauf mention contraire ; leur index distingue les références conservées des bilans remplacés.
 - Conserver les logos et les SVG d’identité.
 
+## Quand une fonctionnalité est-elle terminée ?
+
+- Avant de coder, définir un critère de fin observable du point de vue du joueur, de l’administrateur ou de l’exploitant. Repérer le parcours qui répond déjà au besoin et les composants préparés pour ce même usage, y compris ceux sans appelant, sans option d’activation ou sans commentaire TODO.
+- Prolonger le parcours existant lorsqu’il convient. Si deux voies couvrent le même besoin, préciser ce que chacune apporte, laquelle fait référence et si elles peuvent déclencher deux fois le même effet. Pour une transition, documenter les données, liens ou messages à préserver et la condition de retrait de l’ancienne voie. Soumettre toute perte de comportement à une décision explicite.
+- Avant de clore le lot, exercer le parcours depuis son entrée réelle jusqu’au résultat attendu. Pour un traitement différé, vérifier aussi le déclencheur, le routage, le worker et l’effet final. Un message mis en file prouve seulement sa mise en file.
+- Vérifier quel service Symfony sélectionne avec la configuration de production livrée et si ses dépendances sont disponibles. Pour une option, vérifier le comportement par défaut et celui obtenu à l’activation. Un test avec un faux fournisseur doit être complété par la vérification du branchement livré. Faire les essais en environnement isolé, sans envoi réel ni exposition de secrets.
+- Consigner dans la PR le critère de fin, le résultat observé et la vérification qui le démontre. Terminer dans le lot tout branchement manquant relevant de son périmètre. Si une dépendance externe ou une décision bloque la suite, garder la fonctionnalité ouverte et inscrire dans le suivi de reprise le blocage, le travail restant et le critère de clôture.
+- Distinguer une fonctionnalité complète et désactivée par décision documentée d’un parcours inachevé. Si le déclenchement dépend d’une configuration du VPS inaccessible depuis le dépôt, indiquer « planification non vérifiable depuis le dépôt » et préciser la vérification d’exploitation restante.
+
 ## Qualité du code et continuité de la refactorisation
 
 - Poursuivre les conventions et la séparation des responsabilités établies dans le projet. Examiner les composants existants et la documentation d’architecture avant d’introduire une nouvelle organisation.
@@ -24,7 +33,7 @@
 
 ## Commentaires et documentation du code
 
-- Les commentaires utiles font partie du code attendu. Lors de chaque ajout ou modification, examiner les traitements concernés et ajouter ou actualiser les explications nécessaires à leur compréhension.
+- À chaque ajout ou modification de code, rédiger ou actualiser les commentaires utiles au fil du développement. Expliquer l’intention des traitements concernés pendant leur mise en œuvre.
 - Écrire les commentaires explicatifs en français simple, direct et naturel, comme des notes permettant de retrouver l’intention du code.
 - Commenter obligatoirement les choix non évidents et les traitements complexes ou sensibles lorsque le code seul ne permet pas de comprendre leur raison.
 - Expliquer notamment les étapes importantes d’un algorithme, les raisons et le périmètre d’un verrou, l’ordre nécessaire des opérations, les contrôles de confidentialité, les risques de données périmées, l’idempotence, les cas particuliers et les compatibilités historiques.
@@ -67,6 +76,15 @@
 - Pour les requêtes JavaScript, gérer les erreurs et réponses obsolètes, les changements de joueur/univers/colonie et les soumissions multiples. Préserver focus, sélection, saisies et formulaires modifiés lors des actualisations ; une annulation côté navigateur ne garantit pas l'arrêt du traitement serveur.
 - Préserver les contrats des messages asynchrones et événements, l'outbox, les jetons, les tentatives et la gestion des échecs. Une notification temps réel déclenche une récupération autorisée de l'état ; elle ne constitue pas une preuve qu'une action reste permise.
 - Pour HTML/CSS et les assets, réutiliser les composants et styles cohérents du projet, préserver la structure sémantique et les parcours sans JavaScript lorsqu'ils existent. Vérifier les chargements et contrôleurs requis avant de déplacer ou différer un fichier ; ne pas changer d'outillage frontend sans besoin démontré.
+
+## Dates et fuseaux horaires
+
+- Stocker chaque instant en UTC. Pour une colonne `DATETIME` sans fuseau, convertir l’instant en UTC à l’écriture et interpréter la valeur lue en UTC. Une colonne `DATE` représente un jour civil et se conserve sans conversion.
+- Afficher les heures dans le fuseau choisi dans les préférences du joueur. Pour un courriel ou une notification différée, utiliser le fuseau du destinataire et le repli prévu par l’application si sa préférence manque. Valider tout identifiant de fuseau reçu du client.
+- Avant de formater une date déjà chargée, appliquer explicitement le fuseau d’affichage. Préférer un objet immuable ou convertir une copie pour préserver la valeur de l’entité. Si un traitement change temporairement le fuseau de PHP ou de Twig, le rétablir dans un bloc `finally`, y compris dans les workers.
+- Pour filtrer les événements d’un jour, calculer le début de ce jour et le début du jour suivant dans le fuseau concerné, puis convertir les deux bornes en UTC pour la requête SQL ou DQL. Exclure la borne de fin. Lors d’un changement d’heure, deux minuits locaux peuvent être séparés de 23 ou 25 heures.
+- Pour une échéance de jeu, appliquer le fuseau fixé par la règle métier. Par exemple, le classement quotidien suit minuit en `Europe/Paris`, quel que soit le fuseau d’affichage du joueur. Préserver le format des API existantes et, pour tout nouvel horodatage textuel échangé, utiliser ISO 8601 avec `Z` ou un décalage explicite.
+- Dans les tests concernés, fixer l’instant et le fuseau. Vérifier que deux joueurs dans des fuseaux différents voient le même événement à leur heure locale et que l’instant stocké reste identique. Couvrir les changements d’heure pour les règles fondées sur le jour civil.
 
 ## Performances et protections contre les régressions
 
@@ -136,7 +154,7 @@
 - Avant fusion vers `dev` ou `alpha`, attendre la réussite de la CI complète sur la dernière version de la PR : validation Compose, lint, tests PHP et Python, compilation des assets, tests navigateur et vérification du diff ; la CI vérifie aussi la sauvegarde et la restauration isolées.
 - Pour reproduire les six contrôles localement : `make validate`, `make lint`, `make test`, `make assets`, `BROWSER_PERSISTENCE=1 make test-browser` et `git diff --check`. Une CI complète réussie ne nécessite pas de relancer systématiquement toute la suite locale.
 - Ouvrir les PR en brouillon pendant le développement. La CI légère vérifie le diff, Compose, PHP/Twig/YAML et le conteneur Symfony, compile les assets et lance les tests Python, sans base ni migration. Elle ne remplace pas les tests locaux ciblés nécessaires au changement.
-- Passer la PR en « prête à relire » lorsque le lot est prêt à fusionner : cela lance la CI complète. Toute nouvelle mise à jour d’une PR prête relance la CI complète ; repasser en brouillon si le développement reprend. Les push seuls sur les branches de travail et sur `dev` ne déclenchent pas de CI. Les push sur `alpha` (actuellement aussi branche par défaut) et le lancement manuel conservent la CI complète avant publication éventuelle.
+- Passer la PR en « prête à relire » lorsque le lot est prêt à fusionner : cela lance la CI complète. Toute nouvelle mise à jour d’une PR prête relance la CI complète ; repasser en brouillon si le développement reprend. Les push seuls sur les branches de travail et sur `dev` ne déclenchent pas de CI. Les push sur `alpha` conservent la CI complète. Le lancement manuel propose une catégorie ou la suite complète. Seule la suite complète peut publier sur une branche de livraison.
 - Les règles GitHub de `dev` doivent imposer une PR et les cinq jobs `quality` réussis avant fusion. Vérifier leur activation ; le workflow seul ne protège pas la branche et le job `publish`, absent des PR, ne doit pas être requis.
 - Poursuivre le travail pendant la CI : relire ou documenter le lot courant, ou développer un lot indépendant sur une autre branche issue de `dev` actualisée. Préserver la branche testée pour éviter les relances inutiles et ne pas partager une base de test entre exécutions simultanées. Examiner le résultat de chaque vérification avant de valider ou fusionner le lot ; attendre la CI ne bloque pas le développement indépendant.
 - Ne pas répéter un contrôle déjà réussi sur un contenu inchangé sans problème justifiant une nouvelle exécution. Une correction de code ou une actualisation de la branche impose une nouvelle validation adaptée, puis la CI complète sur la dernière version avant fusion.

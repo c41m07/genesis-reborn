@@ -126,3 +126,167 @@
 .admin-console--organized .admin-home-followup{font-size:12px;line-height:1.6;margin:10px 0 0;padding-top:12px;border-top:1px solid var(--line)}
 .admin-console--organized[data-theme=light] .table-wrap small{color:var(--muted)}
 .admin-console--organized .admin-content p a:not(.primary,.secondary){text-decoration:underline;text-underline-offset:3px}
+
+/* Le contexte reste lisible sans ajouter une rangée fixe en haut de chaque tâche. */
+.admin-console--organized .admin-topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    align-content: center;
+    gap: 4px 14px;
+    min-height: 54px;
+    height: auto;
+    padding-block: 8px;
+}
+.admin-console--organized .admin-topbar > span { min-width: 0; overflow-wrap: anywhere; }
+.admin-console--organized .admin-topbar .core-admin-universe { color: var(--text); }
+.admin-console--organized .core-admin-context {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 14px;
+    margin-block-end: 10px;
+}
+.admin-console--organized .core-admin-context :is(.admin-breadcrumbs, .admin-page-navigation) { min-width: 0; margin: 0; }
+.admin-console--organized .core-admin-context .admin-page-navigation { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.admin-console--organized .core-admin-context .admin-page-navigation a { min-height: 44px; }
+
+.admin-console--organized .admin-event-heading-actions { margin: 0; }
+.admin-console--organized .admin-event-heading-actions a { min-height: 44px; }
+.admin-console--organized .admin-report-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.admin-console--organized .admin-report-heading h3 { overflow-wrap: anywhere; }
+.admin-console--organized .admin-counter-scope { margin-bottom: 8px; }
+.admin-console--organized .admin-universe-opening { grid-column: 1 / -1; }
+.admin-console--organized .admin-universe-opening p { margin: 0 0 8px; }
+
+.admin-console--organized .admin-topbar { justify-content: flex-start; }
+.admin-console--organized .admin-topbar > span:last-child { margin-inline-start: auto; }
+
+/* La console partage les tokens du jeu sans réutiliser les cartes de colonie. */
+.admin-console--organized .admin-topbar .core-admin-universe {
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--admin-raised);
+    color: var(--accent);
+}
+
+.admin-console--organized .admin-content > :is(.page-heading, .feedback-admin-heading, .feedback-detail-heading) {
+    padding: clamp(14px, 2vw, 26px);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: linear-gradient(112deg, var(--admin-raised), var(--panel));
+}
+
+.admin-console--organized .admin-content > :is(.page-heading, .feedback-admin-heading, .feedback-detail-heading) > :is(div, h1) { min-width: 0; overflow-wrap: anywhere; }
+.admin-console--organized .admin-content > :is(.page-heading, .feedback-admin-heading, .feedback-detail-heading) .eyebrow { color: var(--accent); }
+.admin-console--organized .admin-content > :is(.page-heading, .feedback-admin-heading, .feedback-detail-heading) h1 { font-size: clamp(26px, 3vw, 42px); }
+.admin-console--organized[data-theme=light] .primary {
+    color: #1a202b;
+    background: #e7b76b;
+    border-color: #805719;
+}
+
+@media (max-width: 760px) {
+    .admin-console--organized .admin-content > :is(.page-heading, .feedback-admin-heading, .feedback-detail-heading) :is(a, button) { min-height: 44px; }
+}
+
+/* La composition pleine largeur laisse respirer la table et le rail de confirmation,
+   sans toucher aux panneaux ou aux menus responsifs existants. */
+@media (min-width: 1500px) {
+    .admin-console--organized .admin-shell { grid-template-columns: 258px minmax(0, 1fr); }
+    .admin-console--organized .admin-content { max-width: 1740px; padding-inline: 32px; }
+    .admin-console--organized .admin-topbar { min-height: 70px; padding-inline: 32px; }
+}
+
+.admin-console--organized .admin-ops-table thead th { background: var(--admin-raised); color: var(--muted); }
+.admin-console--organized .admin-ops-table tbody tr:nth-child(even) { background: color-mix(in srgb, var(--bg) 25%, var(--panel)); }
+
+/* Hiérarchies 05 : composants de présentation, jamais d’autorisation ni de contrôle métier. */
+.admin-console--organized .page-heading.admin-design-banner,
+.admin-console--organized .mission-report > .report-heading {
+    padding: clamp(14px, 2vw, 26px);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: linear-gradient(112deg, var(--admin-raised), var(--panel));
+}
+.admin-console--organized .page-heading.admin-design-banner .eyebrow { color: var(--accent); }
+.admin-console--organized .page-heading.admin-design-banner h1 { font-size: clamp(26px, 3vw, 42px); }
+.admin-console--organized .admin-design-panel-heading { margin-block-end: 12px; border-bottom: 1px solid var(--line); padding-block-end: 8px; }
+.admin-console--organized .admin-design-panel-heading :is(h2,h3,p) { margin: 0; }
+.admin-console--organized .admin-design-panel-heading p:not(.admin-design-badge) { margin-block-start: 4px; }
+.admin-console--organized .admin-design-panel-heading--split { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; justify-content: space-between; }
+.admin-console--organized .admin-design-badge {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    align-self: start;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--admin-raised);
+    padding: 4px 8px;
+    color: var(--text);
+    font-size: .875rem;
+    line-height: 1.4;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+.admin-console--organized .admin-design-badge--warning { color: var(--gold); }
+.admin-console--organized .admin-design-badge--danger { color: var(--danger); }
+.admin-console--organized .admin-design-badge--success { color: var(--accent); }
+.admin-console--organized .admin-design-notice {
+    border: 1px solid var(--line);
+    border-inline-start: 3px solid var(--accent);
+    padding: 10px 14px;
+    border-radius: 5px;
+    background: var(--admin-raised);
+    color: var(--text);
+}
+.admin-console--organized .admin-design-data-table thead { background: var(--admin-raised); }
+.admin-console--organized .admin-design-data-table tbody tr:nth-child(even) {
+    background: color-mix(in srgb, var(--bg) 25%, var(--panel));
+}
+.admin-console--organized .admin-design-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+    gap: 8px;
+    margin-block: 0 14px;
+}
+.admin-console--organized .admin-design-facts > div {
+    min-width: 0;
+    padding: 10px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+}
+.admin-console--organized .admin-design-facts dt { color: var(--muted); }
+.admin-console--organized .admin-design-facts dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+.admin-console--organized .admin-design-review-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+.admin-console--organized .admin-design-review-grid > * { min-width: 0; }
+.admin-console--organized .admin-design-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.admin-console--organized .admin-design-actions > * { min-width: 0; max-width: 100%; min-height: 44px; }
+.admin-console--organized :is(.admin-design-danger,.admin-danger-zone) {
+    border-inline-start: 3px solid var(--danger);
+}
+.admin-console--organized .admin-danger-zone .admin-design-actions > * { width: auto; }
+@media (min-width: 1100px) {
+    .admin-console--organized .admin-design-review-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .admin-console--organized .admin-design-review-grid--decision { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); }
+    .admin-console--organized .admin-design-review-grid > .admin-patchnote-actions { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+    .admin-console--organized .admin-danger-zone .admin-design-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .admin-console--organized .admin-danger-zone .admin-design-actions > * { width: 100%; }
+}
+
+.admin-console--organized .admin-design-nav-caption {
+    margin: 8px 10px 0;
+    color: var(--muted);
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.admin-console--organized .page-heading > .admin-design-badge { color: var(--text); }
+.admin-console--organized .page-heading > .admin-design-badge--warning { color: var(--gold); }
+.admin-console--organized .page-heading > .admin-design-badge--danger { color: var(--danger); }

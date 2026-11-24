@@ -164,7 +164,7 @@ body.ui-refined[data-ui-page="feedback"] .feedback-workspace .feedback-layout {
 }
 
 .feedback-workspace .feedback-preview {
-    margin: 18px 0;
+    margin: 18px 0 8px;
 }
 
 .feedback-workspace .feedback-preview :is(img,figcaption) {
@@ -182,6 +182,13 @@ body.ui-refined[data-ui-page="feedback"] .feedback-workspace .feedback-layout {
     margin: 10px 0;
     font-size: 12px;
     overflow-wrap: anywhere;
+}
+
+/* Les deux actions sont sœurs pour que le retrait reste visible même sans aperçu. */
+.feedback-preview-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .feedback-preview-dialog {
@@ -211,6 +218,17 @@ body.ui-refined[data-ui-page="feedback"] .feedback-workspace .feedback-layout {
     max-height: 65vh;
     margin: 16px auto;
     object-fit: contain;
+}
+
+.feedback-preview-dialog .feedback-preview-close {
+    display: block;
+    margin-inline-start: auto;
+}
+
+.feedback-preview-keyboard-help {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 13px;
 }
 
 .information-workspace.patchnotes-workspace .patchnote-card {
@@ -377,4 +395,332 @@ body[data-theme=light] .information-workspace a:not(.primary) {
     .information-workspace .legal-links {
         grid-template-columns: minmax(0,1fr) minmax(0,1fr);
     }
+}
+
+
+/* Le bandeau reste visible sans déplacer le début du document sous une
+   accumulation de marges. Ne modifier ni les articles ni les autres espaces. */
+.information-workspace.legal-page > :is(header,.legal-links,.legal-warning) {
+    margin-block-end: clamp(12px, 1.4vw, 18px);
+}
+
+.information-workspace.legal-page > header > p {
+    margin: 6px 0 0;
+}
+
+.information-workspace.legal-page > .legal-warning {
+    padding: 14px clamp(14px, 2.3vw, 22px);
+}
+
+.information-workspace.legal-page .legal-warning h2 {
+    margin: 0 0 6px;
+}
+
+.information-workspace.legal-page .legal-warning p {
+    margin: 0;
+}
+
+.information-workspace.legal-page .legal-warning p + p {
+    margin-top: 6px;
+}
+
+.information-workspace.legal-page .legal-content > h2:first-of-type,
+.information-workspace.legal-page .legal-contents h2 {
+    margin-top: 0;
+}
+
+.information-workspace.legal-page .legal-contents ul {
+    margin: 0 0 18px;
+}
+
+.information-workspace.legal-page .legal-contents + h2 {
+    margin-top: 0;
+}
+
+/* L’avertissement précède le sommaire et les clauses dans l’ordre de lecture. */
+body.ui-refined[data-ui-page="documents-legaux"] main > .legal-page--audit {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 1650px;
+}
+
+.information-workspace.legal-page--audit > header .entry-eyebrow {
+    margin: 20px 0 18px;
+    color: var(--accent);
+    font-size: 12px;
+    letter-spacing: .14em;
+}
+
+.information-workspace.legal-page--audit > header h1 {
+    font-size: clamp(30px, 2.7vw, 51px);
+    line-height: 1.12;
+}
+
+.information-workspace.legal-page--audit > header > h1 + p {
+    margin-block-start: 14px;
+}
+
+.information-workspace.legal-page--audit > .legal-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-block: 24px 32px;
+}
+
+.information-workspace.legal-page--audit > .legal-links a {
+    min-width: 76px;
+    min-height: 44px;
+    padding-inline: 15px;
+}
+
+.information-workspace.legal-page--audit > .legal-links a[aria-current=page] {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--panel) 88%, var(--accent));
+}
+
+.information-workspace.legal-page--audit .legal-audit-layout {
+    display: grid;
+    grid-template-columns: minmax(245px, 355px) minmax(0, 1fr);
+    grid-template-areas: "contents warning" "contents document";
+    grid-template-rows: auto 1fr;
+    gap: 0 clamp(16px, 1.4vw, 27px);
+    align-items: start;
+}
+
+.information-workspace.legal-page--audit .legal-audit-layout > .panel {
+    min-width: 0;
+    border-radius: 9px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--panel) 96%, var(--accent)), var(--panel));
+}
+
+.information-workspace.legal-page--audit .legal-contents {
+    grid-area: contents;
+    position: sticky;
+    top: 100px;
+}
+
+.information-workspace.legal-page--audit .legal-contents h2 {
+    margin: 0 0 16px;
+}
+
+.information-workspace.legal-page--audit .legal-contents ul {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+}
+
+.information-workspace.legal-page--audit .legal-contents a {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.information-workspace.legal-page--audit .legal-contents a:is(:hover,:focus-visible) {
+    border-color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.information-workspace.legal-page--audit .legal-contents .legal-back-top {
+    margin: 18px 0 0;
+    border-top-color: var(--line);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    color: var(--accent);
+}
+
+.information-workspace.legal-page--audit .legal-audit-layout > .legal-warning {
+    grid-area: warning;
+    margin: clamp(14px, 1.55vw, 30px) clamp(14px, 1.55vw, 30px) 0;
+    z-index: 1;
+    padding: 14px 18px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--panel) 89%, var(--accent));
+}
+
+.information-workspace.legal-page--audit .legal-warning h2 {
+    margin-block: 0 6px;
+    padding-block-start: 0;
+    font-size: 17px;
+    color: var(--accent);
+}
+
+.information-workspace.legal-page--audit .legal-warning p {
+    margin-block: 0;
+}
+
+.information-workspace.legal-page--audit .legal-warning p + p {
+    margin-block-start: 6px;
+}
+
+.information-workspace.legal-page--audit .legal-content > h2:first-of-type {
+    margin-block-start: 0;
+}
+
+.information-workspace.legal-page--audit .legal-content > h2:not(:first-of-type) {
+    padding-block-start: 20px;
+    border-block-start: 1px solid var(--line);
+}
+
+.information-workspace.legal-page--audit .legal-audit-layout > .legal-content {
+    grid-area: document;
+}
+
+/* Un seul panneau visuel sur bureau, sans dupliquer l’avertissement. */
+@media (min-width: 851px) {
+    .information-workspace.legal-page--audit .legal-audit-layout::before {
+        content: "";
+        grid-row: 1 / 3;
+        grid-column: 2;
+        align-self: stretch;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: linear-gradient(135deg, color-mix(in srgb, var(--panel) 96%, var(--accent)), var(--panel));
+    }
+
+    .information-workspace.legal-page--audit .legal-audit-layout > .legal-content {
+        background: transparent;
+        border-color: transparent;
+        box-shadow: none;
+    }
+}
+
+@media (max-width: 850px) {
+    .information-workspace.legal-page--audit .legal-audit-layout {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto;
+        grid-template-areas: "warning" "contents" "document";
+        gap: 14px;
+    }
+
+    .information-workspace.legal-page--audit .legal-audit-layout > .legal-warning {
+        margin: 0;
+    }
+
+    .information-workspace.legal-page--audit .legal-contents {
+        position: static;
+    }
+}
+
+@media (max-width: 760px) {
+    .information-workspace.legal-page--audit .legal-audit-layout > .legal-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .information-workspace.legal-page--audit > .legal-links {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        display: grid;
+        margin-block: 15px 21px;
+    }
+}
+
+/* Le lien existe au pied du texte quand le sommaire ne reste pas à côté. */
+.information-workspace.legal-page--audit .legal-content .legal-back-top {
+    display: none;
+}
+
+@media (max-width: 850px) {
+    .information-workspace.legal-page--audit .legal-contents .legal-back-top {
+        display: none;
+    }
+
+    .information-workspace.legal-page--audit .legal-content .legal-back-top {
+        display: inline-flex;
+        align-self: flex-start;
+    }
+}
+
+/* S17/S20 : la saisie et la pièce jointe suivent l'ordre du formulaire ; l'aperçu reste à droite. */
+body.ui-refined[data-ui-page="feedback"] .feedback-workspace.social-board .feedback-layout {
+    grid-template-columns: minmax(0, 1.65fr) minmax(270px, 1fr);
+    grid-template-areas: "primary context";
+    max-width: none;
+    margin-inline: 0;
+    align-items: start;
+}
+
+body.ui-refined[data-ui-page="feedback"] .feedback-workspace.social-board {
+    max-width: none;
+}
+
+.feedback-workspace.social-board .feedback-primary {
+    min-width: 0;
+}
+
+.feedback-workspace.social-board .feedback-source fieldset {
+    min-width: 0;
+    margin: 10px 0 0;
+    padding: 0;
+    border: 0;
+}
+
+.feedback-workspace.social-board .feedback-source legend,
+.feedback-workspace.social-board .feedback-upload h2 {
+    margin: 10px 0 3px;
+    padding: 0;
+    font-size: 14px;
+}
+
+.feedback-workspace.social-board .feedback-attachment-panel > h2 {
+    margin: 0 0 8px;
+}
+
+.feedback-workspace.social-board .feedback-actions {
+    margin-top: 14px;
+    padding: 14px 0 0;
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+}
+
+@media (max-width: 900px) {
+    body.ui-refined[data-ui-page="feedback"] .feedback-workspace.social-board .feedback-layout {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "primary" "context";
+    }
+}
+
+/* P20 : version, titre et date forment le repère stable d'une patchnote ; le contenu garde son dépliable natif. */
+.player-patchnotes-board .patchnotes-board-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+.player-patchnotes-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+.player-patchnotes-board .patchnote-card .section-heading { gap:.45rem; }
+.player-patchnotes-board .patchnote-card .section-heading .badge { display:inline-flex; margin:0 0 .45rem; }
+.player-patchnotes-board .patchnote-card .section-heading h2 { margin:0; }
+.player-patchnotes-board .stack-list { max-width:72rem; display:grid; gap:.8rem; }
+.player-patchnotes-board .patchnote-card { padding:clamp(1rem,1.5vw,1.5rem); }
+.player-patchnotes-board .patchnote-card .section-heading { margin-block:0 .65rem; }
+
+
+/* P20 : le lien facultatif reste disponible sans éloigner la capture et l’envoi. */
+.feedback-workspace.social-board .feedback-optional-fields > * { min-width:0; }
+.feedback-workspace.social-board .feedback-errors { scroll-margin-top:1rem; }
+@media (min-width: 1280px) and (min-height: 900px) {
+    .feedback-workspace.social-board .feedback-primary > .account-grid { margin-block:.75rem; }
+    .feedback-workspace.social-board .feedback-primary > p:first-of-type { margin-block:.35rem .6rem; }
+    .feedback-workspace.social-board .feedback-primary > .account-grid label { margin-top:0; }
+    .feedback-workspace.social-board .feedback-actions { margin-top:.55rem; padding-top:.55rem; }
+    .feedback-workspace.social-board .feedback-primary textarea { height:9rem; min-height:9rem; }
+    .feedback-workspace.social-board .feedback-optional-fields {
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:1rem;
+    }
+    .feedback-workspace.social-board .feedback-actions .primary { width:auto; min-width:min(12rem,100%); }
+}
+
+/* Le journal reste une colonne de lecture ; la dernière version n’est pas un état de non-lu. */
+.player-patchnotes-board .stack-list { max-width:60rem; gap:.9rem; }
+.player-patchnotes-board .patchnote-card { margin-bottom:0; }
+.player-patchnotes-board .patchnote-card .patchnote-version {
+    color:var(--text);
+    background:var(--panel);
+    border:1px solid var(--line);
+}
+.player-patchnotes-board .patchnote-card .patchnote-version--current {
+    color:var(--text);
+    background:color-mix(in srgb,var(--accent) 15%,var(--panel));
+    border-color:color-mix(in srgb,var(--accent) 65%,var(--line));
 }

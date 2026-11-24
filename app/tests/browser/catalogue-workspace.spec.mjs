@@ -96,11 +96,21 @@ test('L7B : manques multiples, devis de lot et suivi dépliable conservés aprè
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto(`${user.path}?section=ships`);
     const ship = page.locator('#item-fighter-basic');
+    await expect(ship.locator('[data-catalogue-main-gain]')).toContainText('Attaque par tir');
+    await expect(ship.getByRole('button', { name: 'Construire : Chasseur de patrouille × 1', exact: true })).toBeVisible();
+    await expect(ship.locator('.core-unit-price')).toBeHidden();
+    const unitMetalPrice = Number((await ship.locator('.building-costs>[data-resource=metal]').getAttribute('title')).split(' : ')[1].replace(/\s/g, ''));
     await ship.getByLabel('Quantité', { exact: true }).fill('5');
     const previewResponse = page.waitForResponse(response => response.url().includes('/construction-maximum'));
     await ship.getByLabel('Quantité', { exact: true }).press('Tab');
     const preview = await (await previewResponse).json();
     await expect(ship.locator('[data-construction-quantity-target=costHeading]')).toHaveText('Coût du lot × 5');
+    await ship.locator('.core-unit-details summary').click();
+    const unitMetalDetail = ship.locator('.core-unit-price li').filter({ hasText: 'Métal' });
+    await expect(unitMetalDetail).toBeVisible();
+    const detailAmount = await unitMetalDetail.locator('strong').innerText();
+    expect(Number(detailAmount.replace(/\s/g, ''))).toBe(unitMetalPrice);
+    await ship.locator('.core-unit-details summary').click();
     for (const [resource, amount] of Object.entries(preview.costs).filter(([,amount]) => amount > 0)) {
         const title = await ship.locator(`.building-costs>[data-resource=${resource}]`).getAttribute('title');
         expect(Number(title.split(' : ')[1].replace(/\s/g, ''))).toBe(amount);
@@ -108,8 +118,11 @@ test('L7B : manques multiples, devis de lot et suivi dépliable conservés aprè
     await page.evaluate(() => window.dispatchEvent(new Event('genesis:refresh')));
     await expect(ship.getByLabel('Quantité', { exact: true })).toHaveValue('5');
     await capture(page, info, 'lot-cinq-unites', 1440);
-    await ship.getByRole('button', { name: 'Construire 5', exact: true }).click();
+    await ship.getByRole('button', { name: 'Construire : Chasseur de patrouille × 5', exact: true }).click();
     const queue = page.locator('[data-catalog-disclosure=queue-shipyard]');
+    await expect(queue).toHaveAttribute('data-queue-occupied', 'true');
+    await expect(queue.locator(':scope>summary')).toContainText('1 en cours');
+    await expect(ship.getByRole('button', { name: 'Ajouter à la file : Chasseur de patrouille × 1', exact: true })).toBeVisible();
     await queue.locator(':scope>summary').click();
     await expect(queue.locator('.queue-detail-list')).toContainText('× 5');
     await expect(queue.getByRole('link', { name: /Préparer l’annulation/ })).toBeVisible();
@@ -151,8 +164,11 @@ test('L7B : manques multiples, devis de lot et suivi dépliable conservés aprè
     await expect(page.locator('.incoming-empty-message')).toBeVisible();
     await page.goto(`${user.path}?section=ships`);
     const unavailable = page.locator('#item-fighter-basic');
+    await expect(unavailable.getByRole('button', { name: /Max :/ })).toBeDisabled();
     const unavailableResponse = page.waitForResponse(response => response.url().includes('/construction-maximum'));
-    await unavailable.getByRole('button', { name: /Max :/ }).click();
+    const unavailableQuantity = unavailable.getByLabel('Quantité', { exact: true });
+    await unavailableQuantity.fill('2');
+    await unavailableQuantity.press('Tab');
     const quote = await (await unavailableResponse).json();
     expect(quote.maximum).toBe(0);
     expect(Object.keys(quote.missingResources).length).toBeGreaterThan(1);
@@ -162,4 +178,75 @@ test('L7B : manques multiples, devis de lot et suivi dépliable conservés aprè
     }
     await expect(unavailable.locator('.catalog-build-action')).toBeDisabled();
     await expect(unavailable.locator('[data-construction-quantity-target=costHeading]')).toHaveText('Coût d’une unité');
+});
+
+test('Fidélité catalogues : même composition en Full HD et actions lisibles sur téléphone', async ({ page }, info) => {
+    test.setTimeout(150000);
+    const user = await enter(page);
+    const sections = { buildings: 'building', technologies: 'research', ships: 'shipyard', defenses: 'shipyard' };
+    for (const theme of ['dark', 'light']) {
+        runIsolatedSql(user.project, "UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','" + theme + "') WHERE email='" + user.email + "'");
+        for (const width of [1920, 390]) {
+            await page.setViewportSize({ width, height: width === 1920 ? 1080 : 844 });
+            for (const [section, firstQueue] of Object.entries(sections)) {
+                await page.goto(user.path + '?section=' + section);
+                const catalog = page.locator('.catalog-workspace');
+                await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+                await expect(catalog.locator('.building-catalog-ready')).toBeVisible();
+                const guide = page.locator('.first-steps-popup[open] > summary');
+                if (await guide.isVisible()) await guide.click();
+                await expect(page.locator('.core-catalogue-header .development-navigation')).toHaveCount(0);
+                const rail = catalog.locator('.catalog-operations-rail');
+                const queues = rail.locator('.catalog-queue-ribbon');
+                await expect(queues.locator('[data-queue-type]')).toHaveCount(3);
+                await expect(queues.locator('[data-queue-type]').first()).toHaveAttribute('data-queue-type', firstQueue);
+                const widthDelta = (await rail.boundingBox()).width - (await queues.boundingBox()).width;
+                expect(Math.abs(widthDelta)).toBeLessThanOrEqual(1);
+                await expect(rail.locator('[data-catalog-disclosure="incoming"] > summary')).toBeVisible();
+                if (section === 'buildings') {
+                    const banner = page.locator('.core-catalogue-header-art');
+                    await expect(banner).toHaveAttribute('src', /catalogue-engineering-orbital[.]webp$/);
+                    expect(await banner.evaluate(async image => { await image.decode(); return image.naturalWidth; })).toBe(1448);
+                }
+                const cards = catalog.locator('.building-card:visible');
+                const panel = cards.first().getByRole('tabpanel');
+                await expect(panel.locator('.catalogue-level-badge')).toBeVisible();
+                const art = await panel.locator('.catalogue-card-visual').boundingBox();
+                const tabs = await cards.first().locator('.building-rank-tabs').boundingBox();
+                expect(art.y + art.height).toBeLessThanOrEqual(tabs.y + 1);
+                expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+                if (width === 1920) {
+                    const firstRow = await cards.evaluateAll(nodes => nodes.slice(0, 4).map(node => node.getBoundingClientRect().top));
+                    expect(firstRow).toHaveLength(4);
+                    expect(new Set(firstRow).size).toBe(1);
+                    expect(firstRow[0], 'Les quatre premières illustrations commencent dans la première moitié de l’écran').toBeLessThanOrEqual(560);
+                    if (section === 'buildings') {
+                        const action = panel.locator('button.catalog-build-action');
+                        await expect(action).toBeVisible();
+                        const box = await action.boundingBox();
+                        expect(box.y + box.height, 'La première action de construction tient dans le viewport').toBeLessThanOrEqual(1080);
+                    }
+                }
+                // Une capture correspond à la taille CSS affichée, pas à la page déroulée.
+                await cards.locator('.building-rank:not([hidden]) .catalog-card-art img').evaluateAll(images =>
+                    Promise.all(images.slice(0, 4).map(image => image.decode())),
+                );
+                await page.screenshot({ path: info.outputPath('CATALOGUE_' + section + '_' + theme + '_' + width + '.png'), animations: 'disabled', fullPage: false, scale: 'css' });
+                if (width === 390 && theme === 'dark') {
+                    await panel.locator('.catalogue-card-identity').scrollIntoViewIfNeeded();
+                    await page.screenshot({ path: info.outputPath('CATALOGUE_' + section + '_dark_390_CARD.png'), animations: 'disabled', fullPage: false, scale: 'css' });
+                }
+            }
+        }
+    }
+    await page.goto(user.path + '?section=technologies#item-colonial_expansion-basic');
+    const maximum = page.locator('#item-colonial_expansion-basic');
+    await expect(maximum.locator('.catalogue-family-mark')).toContainText('Au maximum');
+    await expect(maximum.locator('[data-catalogue-main-gain]')).toContainText('Effet acquis');
+    await expect(maximum.locator('.catalogue-no-quote dd')).toHaveText(['—', '—']);
+    await expect(maximum.locator('.catalog-blocked-action')).toBeDisabled();
+    const next = maximum.getByRole('link', { name: /^Rang suivant :/ });
+    await expect(next).toHaveAttribute('href', /#item-colonial_expansion-intermediate$/);
+    await next.press('Enter');
+    await expect(page.locator('#building-tab-colonial_expansion-intermediate')).toHaveAttribute('aria-selected', 'true');
 });

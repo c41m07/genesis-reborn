@@ -29,7 +29,7 @@ test('Le thème clair couvre les principaux écrans stratégiques sans débordem
   await page.setViewportSize({ width: 1440, height: 1000 });
   const screens = [
     ['/planetes', 'Planètes', 'planetes-theme.png'],
-    ['/carte', 'Galaxie', 'carte-theme.png'],
+    ['/carte', 'Liste des systèmes', 'carte-theme.png'],
     ['/flottes', 'Missions actives', 'flottes-theme.png'],
     ['/flottes/preparer?mission=spy', 'Espionnage', 'espionnage-composer-theme.png'],
     ['/diplomatie', 'Relations entre commandants', 'diplomatie-theme.png'],

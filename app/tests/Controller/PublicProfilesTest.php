@@ -86,7 +86,48 @@ final class PublicProfilesTest extends WebTestCase
         $html=$this->client->getResponse()->getContent();
         foreach([$this->member->email,'PRIVATE-PREFERENCES-MARKER','ROLE_ADMIN',$planet->coordinates()] as $private) self::assertStringNotContainsString($private,$html);
         self::assertSelectorTextContains('h1','PublicMember');self::assertSelectorCount(5,'.social-profile-scores > div');
+        self::assertSelectorTextContains('.commander-profile-score-total dt', 'Points totaux');
+        self::assertSelectorExists('.commander-profile-score-total dd strong');
+        self::assertSelectorTextContains('.commander-profile-score-total dd span', 'rang #');
+        self::assertSelectorTextContains('.commander-profile-guild-link', '[PUB] Public Guild');
+        self::assertSelectorTextContains('.commander-profile-write', 'Écrire à PublicMember');
         self::assertStringContainsString('no-store',$this->client->getResponse()->headers->get('Cache-Control'));
+    }
+
+    public function testOnlyEquippedKnownCosmeticLabelsExtendThePublicProfile(): void
+    {
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $db = $em->getConnection();
+        $target = $this->member->currentPlayerUniverse;
+        foreach (['guardian_of_stars' => 1, 'polar_night' => 0, 'unknown_fixture_cosmetic' => 1] as $code => $equipped) {
+            $db->executeStatement(
+                'INSERT INTO profile_cosmetic (player_id, code, awarded_at, equipped) VALUES (?, ?, ?, ?)',
+                [$this->member->id, $code, '2003-02-01 10:20:30', $equipped],
+            );
+        }
+        $profile = self::getContainer()->get(SocialProfileView::class)->player($this->leader->currentPlayerUniverse, $target->id);
+        self::assertSame(['id', 'username', 'scores', 'updated_at', 'guild', 'cosmetics'], array_keys($profile));
+        self::assertSame(['title' => 'Gardien des étoiles'], $profile['cosmetics']);
+
+        $route = '/joueurs/'.$target->id;
+        $this->client->request('GET', $route);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.page-heading .badge', 'Gardien des étoiles');
+        self::assertSelectorNotExists('.profile-polar-night');
+        $html = $this->client->getResponse()->getContent();
+        foreach (['guardian_of_stars', 'polar_night', 'unknown_fixture_cosmetic', 'Nuit polaire', '2003-02-01'] as $private) {
+            self::assertStringNotContainsString($private, $html);
+        }
+
+        $db->executeStatement('UPDATE profile_cosmetic SET equipped = (code = ?) WHERE player_id = ?', ['polar_night', $this->member->id]);
+        $this->client->request('GET', $route);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('[role="img"][aria-label="Bannière Nuit polaire"]');
+        self::assertSelectorNotExists('.page-heading .badge');
+        $this->client->loginUser($this->foreign);
+        $this->client->request('GET', $route);
+        self::assertResponseStatusCodeSame(404);
+        self::assertSelectorNotExists('.public-player-profile, .profile-polar-night');
     }
 
     public function testProfilesRequireAuthenticationAndTheSameUniverse(): void
@@ -102,6 +143,15 @@ final class PublicProfilesTest extends WebTestCase
         self::getContainer()->get(DailyLeaderboard::class)->forUniverse($this->leader->currentPlayerUniverse);
         $new=$this->player('PublicNew');$id=$new->currentPlayerUniverse->id;
         $this->client->request('GET','/joueurs/'.$id);self::assertResponseIsSuccessful();self::assertSelectorTextContains('.social-profile-scores','Pas encore classé');
+        $this->client->loginUser($new);
+        $this->client->request('GET', '/joueurs/'.$id);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.commander-profile-score-total dd', 'Pas encore classé');
+        self::assertSelectorNotExists('.commander-profile-score-total dd strong');
+        self::assertSelectorTextContains('[aria-labelledby="player-public-guild"]', 'Aucune guilde.');
+        self::assertSelectorNotExists('.commander-profile-write, .commander-profile-guild-link');
+        // La vue propre n’accorde aucun accès après l’oubli de la participation.
+        $this->client->loginUser($this->leader);
         self::getContainer()->get(EntityManagerInterface::class)->getConnection()->executeStatement('UPDATE player_universe SET forgotten_at=UTC_TIMESTAMP() WHERE id=?',[$id]);
         $this->client->request('GET','/joueurs/'.$id);self::assertResponseStatusCodeSame(404);
     }

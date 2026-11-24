@@ -37,7 +37,7 @@ async function checkView(page, info, key, theme, width) {
   }
   if (width !== 320) {
     await page.evaluate(() => { document.activeElement?.blur(); window.scrollTo({ top: 0, behavior: 'instant' }); });
-    await page.screenshot({ path: info.outputPath(`jeu-L2C-A-${key}-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });
+    await page.screenshot({ path: info.outputPath(`jeu-L2C-A-${key}-${theme}-${width}.png`), fullPage: width !== 1920, scale: 'css', animations: 'disabled' });
     if (width === 390) await page.screenshot({ path: info.outputPath(`jeu-L2C-A-${key}-${theme}-390-ecran.png`), animations: 'disabled' });
   }
 }
@@ -79,15 +79,31 @@ test('L2C A : quatre vues adaptatives, rangs réunis, saisie conservée et liens
   for (const theme of ['dark', 'light']) {
     runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${owner.email}'`);
     for (const [key, url, heading] of views) {
-      for (const width of [1440, 768, 390, 320]) {
-        await page.setViewportSize({ width, height: 900 });
+      for (const width of [1920, 1440, 768, 390, 320]) {
+        await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
         await page.goto(url);
         await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
         await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
         await expect(page.locator('.space-navigation a[aria-current="page"]')).toHaveText('Mes compositions');
         if (key === 'list') {
+          await expect(page.getByRole('region', { name: 'Tableau des compositions', exact: true })).toHaveCount(1);
           await expect(page.locator('.composition-card')).toHaveCount(3);
           const card = page.locator(`[data-composition="${composition}"]`);
+          if (width === 390) {
+            const column = page.getByRole('columnheader', { name: 'Unités prévues', exact: true });
+            const lines = await column.evaluate(cell => {
+              const range = document.createRange();
+              range.selectNodeContents(cell);
+              return range.getClientRects().length;
+            });
+            expect(lines).toBeLessThanOrEqual(2);
+            const region = page.getByRole('region', { name: 'Tableau des compositions', exact: true });
+            await expect(region).toHaveAttribute('tabindex', '0');
+            expect(await region.evaluate(node => node.scrollWidth > node.clientWidth)).toBe(true);
+          }
+          await expect(card.locator('.composition-library-total')).toHaveText('92 unités');
+          await card.locator('.composition-quantities summary').press('Enter');
+          await expect(card.locator('.composition-quantities ul')).toBeVisible();
           await expect(card).toContainText('Basique : 80');
           await expect(card).toContainText('Intermédiaire : 8');
           await expect(card).toContainText('Supérieur : 4');
@@ -169,7 +185,7 @@ test('L2C A : quatre vues adaptatives, rangs réunis, saisie conservée et liens
     await plain.locator('#composition-transport-basic').fill('1');
     await plain.getByRole('button', { name: 'Enregistrer la composition' }).click();
     const card = plain.locator('.composition-card').filter({ has: plain.getByRole('heading', { name: 'Modèle sans JavaScript', exact: true }) });
-    await card.locator('summary').click();
+    await card.locator('.composition-management summary').click();
     await expect(card.getByRole('button', { name: 'Supprimer cette composition' })).toBeVisible();
     await card.getByRole('button', { name: 'Supprimer cette composition' }).click();
     await expect(plain.getByRole('heading', { name: 'Modèle sans JavaScript', exact: true })).toHaveCount(0);

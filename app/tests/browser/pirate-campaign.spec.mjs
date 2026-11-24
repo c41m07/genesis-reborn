@@ -71,6 +71,7 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
   await expect(missionList.getByRole('link')).toHaveCount(0);
   await expect(page.getByText('Gain potentiel', { exact: true })).toHaveCount(0);
   await expect(page.getByText('Flotte pirate révélée', { exact: true })).toHaveCount(0);
+  await expect(page.locator('.pirate-campaign-intel--embedded')).toHaveCount(0);
   const shipForm = page.getByRole('region', { name: 'Préparer la reconnaissance', exact: true });
   await expect(shipForm.getByRole('button', { name: 'Envoyer la sonde', exact: true })).toBeVisible();
   for (const width of [1440, 768, 390, 360]) {
@@ -99,27 +100,72 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     await nativePage.keyboard.press('Enter');
     await expect(nativePage).toHaveURL(/campagne-pirate\/1$/);
     await expect(nativePage.getByText('Reconnaissance en cours', { exact: true })).toBeVisible();
+    await nativePage.setViewportSize({ width: 1920, height: 1080 });
+    await nativePage.screenshot({ path: info.outputPath('P22-reconnaissance-en-cours-1920x1080.png'), scale: 'css', animations: 'disabled' });
     await expect(nativePage.getByText('Flotte pirate révélée', { exact: true })).toHaveCount(0);
-    // Le vrai départ ci-dessus a figé la formation et le convoi. On avance seulement l’arrivée du fixture,
-    // sans attendre l’horloge du worker ; ses garanties restent dans les tests d’intégration métier.
-    runIsolatedSql(project, 'UPDATE pirate_reconnaissance SET due_at=UTC_TIMESTAMP(), reported_at=UTC_TIMESTAMP(), detected=0 WHERE membership_id=' + member + ' AND reported_at IS NULL');
+    await expect(nativePage.locator('.pirate-campaign-intel--embedded')).toHaveCount(0);
+    // Le vrai départ a figé le reçu d'hydrogène. Avancer les deux horodatages du même écart
+    // conserve la durée native, tandis que le worker reste couvert par sa recette métier.
+    const shift = Number(queryIsolatedSql(project, 'SELECT GREATEST(TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), due_at), 0) + 2 FROM pirate_reconnaissance WHERE membership_id=' + member + ' AND reported_at IS NULL'));
+    expect(Number.isSafeInteger(shift) && shift >= 2).toBe(true);
+    runIsolatedSql(project, 'UPDATE pirate_reconnaissance SET departed_at=DATE_SUB(departed_at,INTERVAL ' + shift + ' SECOND), due_at=DATE_SUB(due_at,INTERVAL ' + shift + ' SECOND), reported_at=UTC_TIMESTAMP(), detected=0 WHERE membership_id=' + member + ' AND reported_at IS NULL');
+    const setFighterQuantity = quantity => runIsolatedSql(project, "UPDATE fleet_ship fs JOIN fleet f ON f.id=fs.fleet_id SET fs.quantity=" + quantity + " WHERE f.home_planet_id=" + origin + " AND f.status='idle' AND fs.slug='fighter' AND fs.tier='basic'");
+    setFighterQuantity(0);
     await nativePage.getByRole('link', { name: 'Actualiser le dossier', exact: true }).click();
-    await expect(nativePage.getByRole('region', { name: 'Flotte pirate révélée', exact: true })).toContainText('Chasseur de patrouille');
-    await expect(nativePage.getByRole('region', { name: 'Gain potentiel', exact: true })).toContainText('Ce montant n’a pas été versé.');
+    const nativeDossier = nativePage.locator('.pirate-campaign-dossier');
+    await expect(nativeDossier.getByRole('region', { name: 'Flotte pirate révélée', exact: true })).toContainText('Chasseur de patrouille');
+    await expect(nativeDossier.getByRole('region', { name: 'Gain potentiel', exact: true })).toContainText('Ce montant n’a pas été versé.');
+    await expect(nativePage.getByRole('button', { name: 'Vérifier le devis d’attaque', exact: true })).toHaveCount(0);
+    await nativePage.screenshot({ path: info.outputPath('P05-sans-escorte-1920x1080.png'), scale: 'css', animations: 'disabled' });
 
-    await page.setViewportSize({ width: 1440, height: 900 });
+    setFighterQuantity(1);
+    await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto(campaignPath);
-    const briefing = page.locator('.pirate-campaign-briefing');
-    const intel = page.getByRole('complementary', { name: 'Renseignements de la mission', exact: true });
-    await expect(intel).toBeVisible();
-    const desktopBriefing = await briefing.boundingBox();
-    expect((await intel.boundingBox()).x).toBeGreaterThanOrEqual(desktopBriefing.x + desktopBriefing.width);
-    await page.screenshot({ path: info.outputPath('renseignement-1440.png'), fullPage: true, animations: 'disabled' });
-    await page.setViewportSize({ width: 390, height: 900 });
-    const mobileBriefing = await briefing.boundingBox();
-    expect((await intel.boundingBox()).y).toBeGreaterThanOrEqual(mobileBriefing.y + mobileBriefing.height);
-    await page.screenshot({ path: info.outputPath('renseignement-390.png'), fullPage: true, animations: 'disabled' });
+    const dossier = page.locator('.pirate-campaign-dossier');
+    const intel = dossier.getByRole('region', { name: 'Renseignements de la mission', exact: true });
+    const journal = page.getByRole('complementary', { name: 'Journal du dossier', exact: true });
+    const assault = dossier.getByRole('button', { name: 'Vérifier le devis d’attaque', exact: true });
+    await expect(intel.getByRole('region', { name: 'Flotte pirate révélée', exact: true })).toBeVisible();
+    await expect(journal).toContainText('Renseignement reçu');
+    await expect(journal).toContainText('Rapport de reconnaissance reçu');
+    await expect(journal.getByText('Gain potentiel')).toHaveCount(0);
+    await expect(page.locator('#pirate-intelligence-title')).toHaveCount(1);
+    await expect(assault).toBeEnabled();
+    expect((await dossier.getByRole('region', { name: 'Gain potentiel', exact: true }).boundingBox()).y).toBeGreaterThan((await assault.boundingBox()).y);
+    await expect(page.getByRole('link', { name: 'Voir les renseignements', exact: true })).toHaveCount(0);
+    const desktopDossier = await dossier.boundingBox();
+    expect((await journal.boundingBox()).x).toBeGreaterThanOrEqual(desktopDossier.x + desktopDossier.width);
+    for (const [width, height] of [[1920, 1080], [390, 844]]) {
+      await page.setViewportSize({ width, height });
+      await page.screenshot({ path: info.outputPath('P05-rapport-recu-' + width + 'x' + height + '.png'), scale: 'css', animations: 'disabled' });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+      if (width === 390) {
+        const mobileDossier = await dossier.boundingBox();
+        expect((await journal.boundingBox()).y).toBeGreaterThanOrEqual(mobileDossier.y + mobileDossier.height);
+      }
+      expect((await assault.boundingBox()).y).toBeGreaterThan((await intel.boundingBox()).y);
+      await assault.evaluate(button => button.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await assault.focus();
+      await expect(assault).toBeFocused();
+      await expect(assault).toBeInViewport({ ratio: 1 });
+      expect(await assault.evaluate(button => {
+        const rect = button.getBoundingClientRect();
+        return button.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+      })).toBe(true);
+      await page.screenshot({ path: info.outputPath('P05-action-' + width + 'x' + height + '.png'), scale: 'css', animations: 'disabled' });
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    }
     expect((await new AxeBuilder({ page }).include('.pirate-campaign').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()).violations).toEqual([]);
+
+    // L’aperçu natif n’envoie rien : la confirmation conserve son agencement existant.
+    await nativePage.reload();
+    const nativeAssault = nativeDossier.getByRole('button', { name: 'Vérifier le devis d’attaque', exact: true });
+    await nativeDossier.getByRole('spinbutton').fill('1');
+    await nativeAssault.click();
+    await expect(nativePage.getByRole('heading', { name: 'Confirmer l’attaque', exact: true })).toBeVisible();
+    await expect(nativePage.getByRole('link', { name: 'Voir les renseignements', exact: true })).toHaveAttribute('href', '#pirate-intelligence-title');
+    await expect(nativePage.getByRole('button', { name: 'Confirmer et envoyer l’escorte', exact: true })).toBeVisible();
+    await expect(nativePage.locator('.pirate-campaign-intel--embedded')).toHaveCount(0);
 
     runIsolatedSql(project, `UPDATE universe SET game_settings=JSON_MERGE_PATCH(game_settings,'{"features":{"pirate_campaign_enabled":false}}') WHERE id=${universe}`);
     const setting = "JSON_EXTRACT(game_settings,'$.features.pirate_campaign_enabled')";

@@ -7,115 +7,182 @@ on:
     branches: [dev, alpha]
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   workflow_dispatch:
+    inputs:
+      category:
+        description: Groupe à exécuter
+        type: choice
+        required: true
+        default: Suite complète
+        options:
+          - Suite complète
+          - Qualité et assets
+          - Unitaires
+          - Services
+          - Contrôleurs
+          - Intégration et schéma MariaDB
+          - Rendu Twig
+          - Audits d’interface
+          - Administration
+          - Empire et progression
+          - Flottes et interactions
+          - Sauvegarde et restauration
 permissions:
   contents: read
 concurrency:
-  group: genesis-ci-${{ github.ref }}
+  # Un lancement manuel ciblé ne doit pas interrompre une validation de livraison.
+  group: genesis-ci-${{ github.event_name }}-${{ github.ref }}-${{ inputs.category || 'all' }}
   cancel-in-progress: true
+
 jobs:
-  quality:
+  select:
+    name: Sélection des contrôles
+    runs-on: ubuntu-latest
+    outputs:
+      scope: ${{ steps.plan.outputs.scope }}
+      php: ${{ steps.plan.outputs.php }}
+      browser: ${{ steps.plan.outputs.browser }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - id: plan
+        env:
+          CATEGORY: ${{ github.event.pull_request.draft && 'development' || inputs.category || 'all' }}
+        run: |
+          python3 -m unittest discover -s app/tests/scripts -p test_ci_browser_batches.py
+          python3 scripts/ci-categories.py
+
+  static:
+    needs: select
+    if: contains(fromJSON('["all","development","quality"]'), needs.select.outputs.scope)
+    name: ${{ needs.select.outputs.scope == 'development' && 'development checks' || 'Qualité et assets' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 2
+      - run: git diff --check HEAD^ HEAD
+      - uses: ./.github/actions/prepare-ci
+      - run: make lint-static EXEC="docker compose --env-file .env.local run --rm --no-deps --user $(id -u):$(id -g) app"
+      - if: needs.select.outputs.scope == 'development'
+        run: make test-python
+
+  php:
+    needs: select
+    if: needs.select.outputs.php != '[]'
+    name: PHP · ${{ matrix.label }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
-        # Un brouillon ne crée pas les contrôles quality requis : un job ignoré
-        # pourrait être accepté par GitHub comme un contrôle réussi avant fusion.
-        include: >-
-          ${{ fromJSON(
-            github.event_name == 'pull_request' && github.event.pull_request.draft
-            && '[{"suite":"development","shard":0}]'
-            || '[{"suite":"php","shard":0},{"suite":"browser","shard":1},{"suite":"browser","shard":2},{"suite":"browser","shard":3},{"suite":"browser","shard":4}]'
-          ) }}
-    name: ${{ matrix.suite == 'development' && 'development checks' || format('quality ({0}, lot {1})', matrix.suite, matrix.shard) }}
+        include: ${{ fromJSON(needs.select.outputs.php) }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: ./.github/actions/prepare-ci
+      # PHPUnit force database-test et les transports en mémoire dans son bootstrap.
+      - run: docker compose --env-file .env.local up -d --no-deps --wait app
+      - run: make test-php PHP_TEST_PATH="tests/$CATEGORY"
+        env:
+          CATEGORY: ${{ matrix.category }}
+      - if: matrix.category == 'Integration'
+        run: |
+          docker compose --env-file .env.local up -d --wait database
+          make migrate lint-schema
+
+  backup:
+    needs: select
+    if: needs.select.outputs.scope == 'all' || needs.select.outputs.scope == 'backup'
+    name: Sauvegarde et restauration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: ./.github/actions/prepare-ci
         with:
-          fetch-depth: 2
-      - name: Check patch whitespace
-        if: matrix.suite != 'browser'
-        run: git diff --check HEAD^ HEAD
-      - name: Set up Node.js and npm cache
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+          frontend: none
+      - run: docker compose --env-file .env.local pull database
+      - run: make test-python test-backup
+
+  reference:
+    needs: select
+    if: needs.select.outputs.browser != '[]'
+    name: Base de référence et répartition navigateur
+    outputs:
+      batches: ${{ steps.batches.outputs.batches }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: ./.github/actions/prepare-ci
         with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: app/package-lock.json
-      - name: Cache locked PHP dependencies
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+          frontend: install
+      - run: make test-browser BROWSER_ARGS="--prepare-reference $RUNNER_TEMP/browser-reference"
+      - name: Répartir les fichiers découverts sur ce commit
+        id: batches
+        env:
+          CI_SCOPE: ${{ needs.select.outputs.scope }}
+          BROWSER_CATEGORIES: ${{ needs.select.outputs.browser }}
+        run: |
+          app/node_modules/.bin/playwright test --config app/playwright.config.mjs --list --reporter=json > "$RUNNER_TEMP/inventory.json"
+          python3 scripts/ci_browser_batches.py "$RUNNER_TEMP/inventory.json" "$RUNNER_TEMP/browser-reference/batches"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          path: app/vendor
-          key: ${{ runner.os }}-php84-vendor-${{ hashFiles('app/composer.json', 'app/composer.lock', 'app/symfony.lock') }}
-      - name: Prepare isolated Docker networks and local secrets
-        run: |
-          echo "LOCAL_UID=$(id -u)" >> "$GITHUB_ENV"
-          echo "LOCAL_GID=$(id -g)" >> "$GITHUB_ENV"
-          docker network create traefik_network || true
-          docker network create mail_network || true
-          docker run -d --name genesis-ci-traefik --network traefik_network -p 80:80 -v /var/run/docker.sock:/var/run/docker.sock traefik:v3.7.17@sha256:321153f6f732f912cf5c6f0597fe38743fc7895d482d7d8804a479ae0403e151 --providers.docker=true --providers.docker.exposedbydefault=false --entrypoints.web.address=:80
-          make configure
-      - name: Validate Compose
-        run: make validate
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
-      - name: Build and cache PHP image
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+          name: browser-reference-${{ github.sha }}
+          path: ${{ runner.temp }}/browser-reference/
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 7
+
+  browser:
+    needs: [select, reference]
+    if: needs.select.outputs.browser != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.reference.outputs.batches) }}
+    name: Navigateur · ${{ matrix.label }} · ${{ matrix.part }}/${{ matrix.total }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: ./.github/actions/prepare-ci
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          context: .
-          file: docker/dev/Dockerfile
-          load: true
-          tags: genesis-reborn-v2-app:local
-          build-args: |
-            LOCAL_UID=${{ env.LOCAL_UID }}
-            LOCAL_GID=${{ env.LOCAL_GID }}
-          cache-from: type=gha,scope=genesis-ci-php
-          cache-to: type=gha,scope=genesis-ci-php,mode=max
-      - name: Install locked PHP and frontend dependencies
-        run: make install
-      - name: Build production assets
-        run: make assets
-      - name: Static checks without database and Python tests
-        if: matrix.suite == 'development'
+          name: browser-reference-${{ github.sha }}
+          path: ${{ runner.temp }}/browser-reference
+      - name: Chromium
+        working-directory: app
+        run: npx playwright install --with-deps chromium
+      - name: Parcours · ${{ matrix.category }}
+        env:
+          CATEGORY: ${{ matrix.category }}
+          TEST_LIST: ${{ matrix.list }}
+          BROWSER_PERSISTENCE: '1'
+          BROWSER_REFERENCE_DIR: ${{ runner.temp }}/browser-reference
+        run: make test-browser BROWSER_ARGS="--project=$CATEGORY --test-list=$BROWSER_REFERENCE_DIR/batches/$TEST_LIST"
+
+  complete:
+    needs: [select, static, php, backup, reference, browser]
+    if: always() && needs.select.outputs.scope == 'all'
+    # Ces cinq noms sont déjà obligatoires sur dev et alpha. Les publier seulement
+    # pour le bilan complet évite de modifier les protections pendant la transition.
+    strategy:
+      matrix:
+        check: ${{ fromJSON(needs.select.outputs.scope == 'all' && '["quality (php, lot 0)","quality (browser, lot 1)","quality (browser, lot 2)","quality (browser, lot 3)","quality (browser, lot 4)"]' || '["Fin de sélection"]') }}
+    name: ${{ matrix.check }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exiger la réussite de chaque groupe sur ce commit
+        env:
+          RESULTS: ${{ toJSON(needs) }}
         run: |
-          make lint-static EXEC="docker compose --env-file .env.local run --rm --no-deps --user $(id -u):$(id -g) app"
-          python3 -m unittest discover -s app/tests/scripts -p "test_backup*.py"
-      - name: Start infrastructure and web application
-        if: matrix.suite == 'php'
-        run: docker compose --env-file .env.local up -d --wait app database rabbitmq mercure
-      - name: Apply migrations and import reference universe
-        if: matrix.suite == 'php'
-        run: make migrate import
-      - name: Start consumers after database initialization
-        if: matrix.suite == 'php'
-        run: make start
-      - name: PHP test suite
-        if: matrix.suite == 'php'
-        run: make test
-      - name: Static and schema checks
-        if: matrix.suite == 'php'
-        run: make lint
-      - name: Backup and restore in isolated instances
-        if: matrix.suite == 'php'
-        run: make test-backup
-      - name: Browser suite in disposable project
-        if: matrix.suite == 'browser'
-        run: |
-          (cd app && npx playwright install --with-deps chromium)
-          BROWSER_PERSISTENCE=1 make test-browser BROWSER_ARGS="--shard=${{ matrix.shard }}/4"
-      - name: Show service diagnostics on failure
-        if: failure()
-        run: |
-          docker compose --env-file .env.local ps -a
-          docker compose --env-file .env.local --profile test logs --no-color --tail=100 app worker relay notifier database database-test rabbitmq mercure
-          docker logs --tail=100 genesis-ci-traefik
-      - name: Teardown CI stack
-        if: always()
-        run: |
-          docker compose --env-file .env.local down --volumes --remove-orphans || true
-          docker rm -f genesis-ci-traefik || true
+          python3 - <<'PYTHON'
+          import json, os
+          for name, job in json.loads(os.environ['RESULTS']).items():
+              print(name, job['result'])
+              if job['result'] != 'success':
+                  raise SystemExit(1)
+          PYTHON
   publish:
-    needs: quality
-    if: (github.ref == 'refs/heads/alpha' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) && github.event_name != 'pull_request'
+    needs: complete
+    if: needs.complete.result == 'success' && (inputs.category == '' || inputs.category == 'Suite complète') && (github.ref == 'refs/heads/alpha' || github.ref == format('refs/heads/{0}', github.event.repository.default_branch)) && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:

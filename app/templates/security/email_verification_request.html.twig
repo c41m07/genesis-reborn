@@ -4,10 +4,10 @@
 {% block title %}Recevoir un lien de confirmation — Genesis Reborn{% endblock %}
 {% block access_content %}
 <h1 id="verification-request-title">Recevoir un nouveau lien</h1>
+{% include 'security/_access_notices.html.twig' %}
 {{ form_start(form, {attr: {class: 'auth-form'}}) }}
     {{ form_errors(form) }}
     {{ form_row(form.email) }}
     <button class="primary full" type="submit">Envoyer le lien de confirmation</button>
 {{ form_end(form) }}
-<p class="auth-back"><a href="{{ path('app_login') }}">Retour à la connexion</a></p>
 {% endblock %}

@@ -203,3 +203,46 @@ body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-intro h1 {
         font-size: 16px;
     }
 }
+
+
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-chapter > :is(p,ol,ul) {
+    max-inline-size: 76ch;
+}
+body.ui-refined[data-ui-page="wiki"] .wiki-pages .wiki-search {
+    margin-block-start: 12px;
+}
+
+/* P15 : sommaire durable à gauche, recherche dans le rail de lecture, aucun nouvel ordre du DOM par script. */
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-intro h1 { font-size:clamp(2rem,3vw,2.55rem); }
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-layout { grid-template-columns:minmax(13rem,.32fr) minmax(0,1fr); gap:1.1rem; }
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-chapters { min-width:0; }
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-search { grid-template-columns:minmax(0,1fr) auto; margin:0 0 1rem; }
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-search label { grid-column:1 / -1; }
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-summary a[aria-current] { background:color-mix(in srgb,var(--accent) 12%,var(--panel)); border-color:var(--accent); }
+@media(max-width:1099px) {
+    body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-layout { display:block; }
+}
+@media(max-width:560px) {
+    body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-search { grid-template-columns:minmax(0,1fr); }
+}
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-space-navigation { display:flex; flex-wrap:wrap; gap:.55rem; margin-block:1rem; }
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-chapters :is(.primary,.secondary) { width:max-content; max-width:100%; min-height:44px; justify-self:start; }
+body.ui-refined[data-ui-page="wiki"] .player-wiki-board :is(.wiki-summary,.wiki-chapter-card) { padding:1rem; }
+
+/* L’accès au chapitre reste secondaire au formulaire de recherche et hors du texte du résumé. */
+@media (min-width:1100px) {
+    body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-chapter-card {
+        display:grid;
+        grid-template-columns:minmax(0,1fr) auto;
+        gap:.25rem 1rem;
+        align-items:center;
+    }
+    body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-chapter-card > :is(h3,.wiki-chapter-preview) {
+        grid-column:1;
+        margin:0;
+    }
+    body.ui-refined[data-ui-page="wiki"] .player-wiki-board .wiki-chapter-card > a {
+        grid-column:2;
+        grid-row:1 / span 2;
+    }
+}

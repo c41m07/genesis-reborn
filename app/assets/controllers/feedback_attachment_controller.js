@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['input', 'preview', 'image', 'filename', 'remove', 'status', 'dialog', 'enlarged'];
+    static targets = ['input', 'preview', 'image', 'filename', 'zoom', 'remove', 'status', 'dialog', 'enlarged'];
     static values = { maxSize: Number };
 
     connect() {
@@ -37,6 +37,7 @@ export default class extends Controller {
             this.filenameTarget.textContent = file.name;
             this.enlargedTarget.src = this.previewUrl;
             this.previewTarget.hidden = false;
+            this.zoomTarget.hidden = false;
         }).catch(() => {
             if (version !== this.version || !this.element.isConnected) return;
             this.resetPreview();
@@ -61,7 +62,9 @@ export default class extends Controller {
     resetPreview() {
         this.version += 1;
         if (this.dialogTarget.open) this.dialogTarget.close();
+        // Retirer doit rester disponible même quand le fichier ne peut pas être prévisualisé.
         this.previewTarget.hidden = true;
+        this.zoomTarget.hidden = true;
         this.statusTarget.textContent = '';
         this.imageTarget.removeAttribute('src');
         this.enlargedTarget.removeAttribute('src');

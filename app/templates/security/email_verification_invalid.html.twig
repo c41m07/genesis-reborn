@@ -3,7 +3,7 @@
 {% block title %}Lien invalide — Genesis Reborn{% endblock %}
 {% block access_content %}
 <h1 id="verification-title">Lien invalide ou expiré</h1>
+{% include 'security/_access_notices.html.twig' %}
 <p>Ce lien de confirmation n’est plus valide.</p>
 <a class="primary full" href="{{ path('app_email_verify_request') }}">Recevoir un nouveau lien de confirmation</a>
-<p class="auth-back"><a class="secondary" href="{{ path('app_login') }}">Retour à la connexion</a></p>
 {% endblock %}

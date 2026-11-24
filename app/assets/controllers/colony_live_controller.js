@@ -16,12 +16,16 @@ export default class extends Controller {
             }
         };
         window.addEventListener('genesis:refresh', this.onRefresh);
+        if (this.element.matches('.overview-page')) {
+            window.addEventListener('genesis:overview-incoming-changed', this.onRefresh);
+        }
         document.addEventListener('focusout', this.onFocusOut);
     }
 
     disconnect() {
         ++this.generation;
         window.removeEventListener('genesis:refresh', this.onRefresh);
+        window.removeEventListener('genesis:overview-incoming-changed', this.onRefresh);
         document.removeEventListener('focusout', this.onFocusOut);
         clearTimeout(this.timer);
         this.abort?.abort();

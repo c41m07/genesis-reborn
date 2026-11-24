@@ -87,7 +87,8 @@ body[data-theme=light] .technology-tree{--tech-met:#376647;--tech-missing:#79562
 .tech-node-open{display:block;font-size:13px;margin:12px 0;text-decoration:underline;text-underline-offset:3px;color:var(--text)}
 .technology-more{display:block;background:none;border:0;padding:8px 0;margin-top:12px;text-align:left;text-decoration:underline;text-underline-offset:3px;color:var(--text);font-size:13px}
 .technology-detail{min-width:0;border-left:1px solid var(--line);padding-left:20px;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
-.technology-detail h2{font-size:21px;margin:18px 0 8px;scroll-margin-top:180px}
+/* Même repère que le nœud sélectionné, sans dépendre de la position dans la liste. */
+.technology-detail h2{font-size:21px;margin:18px 0 8px;scroll-margin-top:180px;border-inline-start:3px solid var(--gold);padding-inline-start:9px}
 .technology-detail h3{font-size:14px;margin:22px 0 10px}
 .technology-detail p{font-size:13px}
 .technology-detail ul{padding-left:18px}
@@ -114,4 +115,48 @@ body[data-theme=light] .technology-tree{--tech-met:#376647;--tech-missing:#79562
     .technology-detail-close{position:sticky;top:0;z-index:1}
     .technology-navigation button{flex:1;min-width:110px}
     .technology-more{min-height:44px}
+}
+
+/* P12 : liste de comparaison et rail stable sans sélectionner artificiellement un objectif. */
+.player-technology-board .technology-board-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+.player-technology-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+.player-technology-board .tech-node > summary,
+.player-technology-board .technology-detail:not([hidden]) { background:color-mix(in srgb,var(--accent) 6%,var(--panel)); }
+.player-technology-board .technology-detail:not([hidden]) { min-width:0; padding:1.1rem; border:1px solid var(--line); border-radius:8px; }
+.player-technology-board .technology-tree .technology-cards { grid-template-columns:minmax(0,1fr); gap:.35rem; }
+.player-technology-board .tech-node > summary {
+    display:grid;
+    grid-template-columns:minmax(0,1.3fr) minmax(7rem,.72fr) minmax(8rem,.9fr);
+    align-items:center;
+    gap:.6rem;
+    min-height:48px;
+    height:auto;
+    padding:.55rem .85rem;
+}
+.player-technology-board .tech-node > summary strong { order:-1; }
+.player-technology-board .tech-node-bottom { justify-content:flex-end; margin:0; overflow-wrap:anywhere; }
+.player-technology-board .technology-board-prompt { display:none; }
+@media(min-width:901px) {
+    .player-technology-board .technology-tree .technology-layout { display:grid; grid-template-columns:minmax(0,1.73fr) minmax(15rem,1fr); align-items:start; gap:1rem; }
+    .player-technology-board .technology-board-prompt { display:block; padding:1.1rem; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+    .player-technology-board .technology-layout:has(.technology-detail:not([hidden])) .technology-board-prompt { display:none; }
+}
+@media(max-width:580px) {
+    .player-technology-board .tech-node > summary { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+    .player-technology-board .tech-node > summary strong { grid-column:1 / -1; }
+}
+
+/* Le groupe conserve l’espacement de la barre et aligne les bords des deux contrôles. */
+.topbar-season { display: flex; align-items: stretch; column-gap: inherit; }
+.topbar .advent-shortcut {
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--event-label-gap);
+    min-height: 44px; padding: 0 var(--event-padding-inline); border: 1px solid #9d864d; border-radius: 6px;
+    background: #193c32; color: #fff1ce; font-weight: 700; font-size: 12px; white-space: nowrap;
+}
+.topbar .advent-shortcut:hover, .topbar .advent-shortcut[aria-current] { background: #285341; }
+@media (max-width: 1400px) {
+    .advent-shortcut-long { display: none; }
+}
+@media (max-width: 740px) {
+    .topbar .advent-shortcut { font-size: 11px; }
 }

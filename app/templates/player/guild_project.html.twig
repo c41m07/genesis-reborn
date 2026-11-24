@@ -2,14 +2,14 @@
 {% block title %}{{ project.snapshot.name }} · Projets collectifs · Genesis Reborn
 {% endblock %}
 {% block body %}
-<div class="page-refinement guild-project-space project-redesign" data-page-sections="disabled">
+<div class="page-refinement guild-project-space project-redesign social-board social-board--guild-project" data-page-sections="disabled">
 <div class="page-heading"><div><h1>{{ project.snapshot.name }}</h1><p>Projet collectif de {{ guild.name }}</p></div><a class="secondary" href="{{ path(project.status=='active' ? 'app_guild_projects' : 'app_guild_projects_history') }}">Retour aux projets</a></div>
 {% include 'ui/guild_navigation.html.twig' with {compactNavigation:true} %}
 {% include 'ui/guild_project_navigation.html.twig' %}
 {% if readOnly %}<p class="panel">Pendant les vacances, vous pouvez consulter ce projet mais pas donner de ressources.</p>{% endif %}
 <div class="guild-project-detail guild-project{% if project.status=='active' and not readOnly %} project-active-layout{% endif %}">
 {% include 'player/_guild_project.html.twig' %}
-{% if project.status=='active' and not readOnly %}<section class="panel project-donation-panel" aria-labelledby="project-donation-title" id="project-donation"><h2 id="project-donation-title">Contribuer au palier</h2>{% include 'player/_guild_project_donation.html.twig' %}</section>{% endif %}
+{% if project.status=='active' and not readOnly %}<section class="panel project-donation-panel" aria-labelledby="project-donation-title" id="project-donation"><h2 id="project-donation-title">Contribuer au palier</h2><p class="project-donation-context">Débit uniquement sur la colonie sélectionnée.</p>{% include 'player/_guild_project_donation.html.twig' %}</section>{% endif %}
 </div>
 </div>
 {% endblock %}

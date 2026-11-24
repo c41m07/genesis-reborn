@@ -59,6 +59,8 @@ final class AdminOperationsDiagnosticTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Diagnostic du relais');
         self::assertSelectorTextContains('.panel', 'Commande absente');
+        self::assertSelectorTextContains('.panel .report-facts', 'Cible absente du relevé');
+        self::assertSelectorTextContains('nav.admin-breadcrumbs', 'État des traitements');
         self::assertSelectorTextContains('.panel', 'Aucune relance autorisée');
         self::assertStringNotContainsString('secret-', $client->getResponse()->getContent());
         self::assertSelectorNotExists('#admin-main .panel form');

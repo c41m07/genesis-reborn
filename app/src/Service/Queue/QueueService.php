@@ -8,6 +8,7 @@ use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Requirement\RequirementChecker;
 use App\Service\Colony\{ResourceService, ActionGuard, ResourceWaitEstimate};
+use App\Service\Advent\AdventQueueCredits;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
 use App\Service\Player\FirstStepRewardPolicy;
@@ -20,6 +21,9 @@ use App\Service\Player\VacationCalendar;
  */
 final class QueueService
 {
+    // Un plafond à l’ajout uniquement : les commandes déjà payées restent dans leur file.
+    public const MAX_ORDERS = 10;
+    private const FULL_MESSAGE = 'File pleine (' . self::MAX_ORDERS . ' commandes maximum).';
     public function __construct(
         private GameManager $manager,
         private GameRepository $repo,
@@ -36,6 +40,7 @@ final class QueueService
         private \App\Service\Colony\EconomicUnitCapacity $economicUnits,
         private \App\Service\Combat\LocalGarrison $garrison,
         private FirstSteps $firstSteps,
+        private AdventQueueCredits $adventCredits,
     )
     {
     }
@@ -49,9 +54,11 @@ final class QueueService
         string $requestKey,
         string $tier = 'basic',
         bool $guided = false,
+        ?int $adventCreditId = null,
+        ?string $adventQuote = null,
     ): int
     {
-        return $this->manager->transaction(function () use ($membership, $planet, $group, $slug, $quantity, $requestKey, $tier, $guided) {
+        return $this->manager->transaction(function () use ($membership, $planet, $group, $slug, $quantity, $requestKey, $tier, $guided, $adventCreditId, $adventQuote) {
             $this->guard->lock($membership, $planet);
             $this->vacations->assertCanManageQueues($membership);
             // Les niveaux et les stocks doivent tenir compte des commandes déjà échues avant tout nouvel achat.
@@ -85,8 +92,8 @@ final class QueueService
                 default => 'shipyard',
             };
             $queue = $queueType === 'research' ? $this->repo->researchQueue($membership) : $this->repo->queue($planet, $queueType);
-            if (count($queue) >= 30) {
-                throw new \DomainException('File pleine (30 commandes maximum).');
+            if (count($queue) >= self::MAX_ORDERS) {
+                throw new \DomainException(self::FULL_MESSAGE);
             }
             $buildings = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]);
             $technologies = $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]);
@@ -115,7 +122,13 @@ final class QueueService
             if ($failures) {
                 throw new \DomainException('Déblocage initial : ' . implode(', ', array_unique($failures)) . '.');
             }
-            if (in_array($group, ['ships', 'defenses'], true)) {
+            if ($adventCreditId !== null && $group === 'ships') {
+                // Le bon porte sur une coque. Contrôler la place et la borne
+                // du stock sans exiger le prix entier avant la remise.
+                if ($quantity !== 1 || $this->unitCapacity($membership, $planet, $group, $slug, $tier, $definition, $buildings) < 1) {
+                    throw new \DomainException('Cette commande ne peut pas accueillir une coque avec le bon de l’Avent.');
+                }
+            } elseif (in_array($group, ['ships', 'defenses'], true)) {
                 $maximum = $this->unitMaximum($membership, $planet, $group, $slug, $tier, $definition, $buildings, $config, $technologies);
                 if ($maximum < 1) {
                     if ($this->economicUnits->constructionLimit($planet, $definition, $buildings) === 0) {
@@ -125,9 +138,19 @@ final class QueueService
                 }
                 $quantity = min($quantity, $maximum);
             }
-            $plan = $this->calculator->calculate($definition, $group, $level, $quantity, $buildings, $config, $technologies);
+            $plan = $this->calculator->calculateQueuePlan($definition, $group, $level, $quantity, $buildings, $config, $technologies);
             $duration = $plan['duration'];
-            $this->resources->consume($planet, $plan['costs']);
+            $credit = $adventCreditId === null ? null : $this->adventCredits->paymentLocked(
+                $adventCreditId, $membership, $group, $slug, $tier, $level, $quantity, $previousLevel === null, $plan['costs'],
+            );
+            // L’annulation utilise paidCosts, jamais le tarif avant la remise.
+            $paidCosts = $credit['paid'] ?? $plan['costs'];
+            if ($credit !== null && $adventQuote !== null && !hash_equals(
+                AdventQueueCredits::quoteKey($adventCreditId, $membership->id, $planet->id, $group, $slug, $tier, $level, $duration, $paidCosts), $adventQuote,
+            )) {
+                throw new \DomainException('Le devis a changé. Vérifiez le coût et la durée avant de confirmer. Votre remise est conservée.');
+            }
+            $this->resources->consume($planet, $paidCosts);
             $item = new QueueItem();
             $item->planet = $planet;
             $item->playerUniverse = $membership;
@@ -136,14 +159,18 @@ final class QueueService
             $item->tier = $tier;
             $item->itemLevel = in_array($group, ['buildings', 'technologies'], true) ? $level : null;
             $item->quantity = $quantity;
-            $item->paidCosts = $plan['costs'];
+            $item->paidCosts = $paidCosts;
             $item->firstStepsGuided = $guided && FirstStepRewardPolicy::queueStep($queueType, $slug, $tier, $item->itemLevel) !== null;
             $item->durationSeconds = $duration;
+            $item->liveTiming = $plan['live_timing'];
             $item->queuedAt = $this->clock->now();
             $item->dependsOn = $previousLevel;
             $item->dispatchToken = Uuid::v4()->toRfc4122();
             $this->manager->save($item);
             $this->manager->flush();
+            if ($credit !== null) {
+                $this->adventCredits->completeLocked($credit['claim'], $item, $planet);
+            }
             if (!$queue) {
                 $this->start($item, $this->clock->now());
             }
@@ -213,7 +240,7 @@ final class QueueService
             $definition = $this->catalog->getTierForUniverse($membership->universe, $group, $slug, $tier);
             $buildings = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]);
             $technologies = $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]);
-            if (count($this->repo->queue($planet, 'shipyard')) >= 30 || $this->access->failures($membership, $planet, $group, $definition, $tier, $buildings, $technologies)) {
+            if (count($this->repo->queue($planet, 'shipyard')) >= self::MAX_ORDERS || $this->access->failures($membership, $planet, $group, $definition, $tier, $buildings, $technologies)) {
                 return 0;
             }
             return $this->unitMaximum(
@@ -253,8 +280,8 @@ final class QueueService
         $paymentEstimate = null;
         if ($maximum === 0) {
             $failures = $this->access->failures($membership, $planet, $group, $definition, $tier, $buildings, $technologies);
-            if (count($this->repo->queue($planet, 'shipyard')) >= 30) {
-                $reason = 'File pleine (30 commandes maximum).';
+            if (count($this->repo->queue($planet, 'shipyard')) >= self::MAX_ORDERS) {
+                $reason = self::FULL_MESSAGE;
             } elseif ($failures) {
                 $reason = 'Prérequis manquants : ' . implode(', ', $failures) . '.';
             } elseif ($this->economicUnits->constructionLimit($planet, $definition, $buildings) === 0) {
@@ -287,6 +314,55 @@ final class QueueService
         ];
     }
 
+    /**
+     * Aperçu Avent sans synchronisation ni reçu : l’achat répète les
+     * contrôles et compare le devis sous les verrous de la file.
+     * @param array<string,mixed> $offer
+     * @return array{level:int,duration:int,paid:array<string,int>,discount:array<string,int>,affordable:bool}
+     */
+    public function adventPreview(PlayerUniverse $membership, Planet $planet, string $group, string $slug, string $tier, array $offer): array
+    {
+        if (!in_array($group, ['technologies', 'ships'], true) || !in_array($tier, GameCatalog::TIERS, true)
+            || $planet->owner?->id !== $membership->id || !isset($this->catalog->all($group)[$slug])) {
+            throw new \DomainException('Commande de l’Avent inaccessible.');
+        }
+        $definition = $this->catalog->getTierForUniverse($membership->universe, $group, $slug, $tier);
+        $buildings = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]);
+        $technologies = $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]);
+        $research = $group === 'technologies';
+        $queue = $research ? $this->repo->researchQueue($membership) : $this->repo->queue($planet, 'shipyard');
+        if (count($queue) >= self::MAX_ORDERS) {
+            throw new \DomainException(self::FULL_MESSAGE);
+        }
+        if ($research && !$this->access->hasLocalResearchLaboratory($buildings, $tier)) {
+            throw new \DomainException('Le laboratoire de cette colonie ne permet pas encore cette commande.');
+        }
+        $level = $research ? 1 + ($technologies[$slug][$tier] ?? 0) : 1;
+        $levelCap = (int) ($definition['effect']['tier_max_levels'][$tier] ?? $definition['max_level'] ?? PHP_INT_MAX);
+        if ($research && $level > $levelCap) {
+            throw new \DomainException('Niveau maximum atteint.');
+        }
+        if ($research) {
+            foreach ($queue as $item) {
+                if ($item->itemSlug === $slug && $item->tier === $tier) {
+                    throw new \DomainException('Attendez la fin des recherches déjà inscrites pour ce niveau.');
+                }
+            }
+        } elseif ($this->unitCapacity($membership, $planet, $group, $slug, $tier, $definition, $buildings) < 1) {
+            throw new \DomainException('Cette colonie ne peut pas accueillir cette coque dans sa file.');
+        }
+        $failures = $this->access->failures($membership, $planet, $group, $definition, $tier, $buildings, $technologies);
+        if ($failures) {
+            throw new \DomainException('Prérequis : '.implode(', ', array_unique($failures)).'.');
+        }
+        $plan = $this->calculator->calculate($definition, $group, $level, 1, $buildings, $this->catalog->forUniverse($membership->universe), $technologies);
+        $pay = $this->adventCredits->payment($offer, $group, $slug, $tier, $level, 1, true, $plan['costs']);
+        $stocks = $this->resources->snapshot($planet);
+        $missing = ResourceWaitEstimate::forCosts($pay['paid'], $stocks, $this->clock->now())['missing'];
+
+        return $pay + ['level' => $level, 'duration' => $plan['duration'], 'affordable' => $missing === []];
+    }
+
     private function unitMaximum(
         PlayerUniverse $membership,
         Planet $planet,
@@ -299,6 +375,13 @@ final class QueueService
         array $technologies,
     ): int
     {
+        $limit = $this->unitCapacity($membership, $planet, $group, $slug, $tier, $definition, $buildings);
+
+        return $this->calculator->maximum($definition, $group, $this->resources->snapshot($planet), $buildings, $config, $technologies, $limit);
+    }
+
+    private function unitCapacity(PlayerUniverse $membership, Planet $planet, string $group, string $slug, string $tier, array $definition, array $buildings): int
+    {
         $owned = $group === 'defenses' ? $this->repo->one(PlanetDefense::class, ['planet' => $planet, 'slug' => $slug, 'tier' => $tier])?->quantity ?? 0 : $this->repo->one(FleetShip::class, ['fleet' => $this->repo->one(Fleet::class, ['homePlanet' => $planet, 'playerUniverse' => $membership, 'status' => 'idle']), 'slug' => $slug, 'tier' => $tier])?->quantity ?? 0;
         $limit = 2147483647 - $owned;
         foreach ($this->repo->queue($planet, 'shipyard') as $item) {
@@ -307,15 +390,23 @@ final class QueueService
             }
         }
         $limit = min($limit, $this->economicUnits->constructionLimit($planet, $definition, $buildings));
-        return $this->calculator->maximum($definition, $group, $this->resources->snapshot($planet), $buildings, $config, $technologies, max(0, $limit));
+        return max(0, $limit);
     }
 
     private function start(QueueItem $item, \DateTimeImmutable $at): void
     {
+        if ($item->startedAt === null && !$item->playerUniverse->isForgotten()) {
+            $this->prepareLiveStart($item, $at);
+        }
         $item->startedAt = $at;
         $startedAtField = $item->queueType . 'QueueStartedAt';
         $item->planet->{$startedAtField} = $at;
-        // Un nouveau jeton rend les anciens messages sans effet après un boost ou une reprise.
+        $this->schedule($item);
+    }
+
+    private function schedule(QueueItem $item): void
+    {
+        // Le jeton et l’outbox partagent la transaction ; un ancien message devient sans effet.
         $item->dispatchToken = Uuid::v4()->toRfc4122();
         $message = new OutboxMessage();
         $message->kind = 'queue';
@@ -323,6 +414,73 @@ final class QueueService
         $message->token = $item->dispatchToken;
         $message->dueAt = $item->finishAt();
         $this->manager->save($message);
+    }
+
+    private function prepareLiveStart(QueueItem $item, \DateTimeImmutable $at): void
+    {
+        // Aucun historique fiable des paramètres d’achat pour les anciennes commandes.
+        if ($item->liveTiming === null || ($group = $this->timedGroup($item)) === null) {
+            return;
+        }
+        $levels = $this->speedLevels($item, $group);
+        $item->durationSeconds = LiveQueueTiming::waitingDuration($item->liveTiming, $levels);
+        $item->liveTiming['full'] = $item->durationSeconds;
+        $item->liveTiming['checkpoint'] = $at->getTimestamp();
+    }
+
+    private function timedGroup(QueueItem $item): ?string
+    {
+        return match ($item->queueType) {
+            'building' => 'buildings',
+            'research' => 'technologies',
+            'shipyard' => isset($this->catalog->all('ships')[$item->itemSlug]) ? 'ships' : null,
+            default => null,
+        };
+    }
+
+    /** Les niveaux de vitesse de la recherche sont ceux de la colonie ayant payé la commande. */
+    private function speedLevels(QueueItem $item, string $group): array
+    {
+        if ($group === 'buildings') {
+            return $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $item->playerUniverse])['engineering_foundations'] ?? [];
+        }
+        $slug = $group === 'technologies' ? 'lab' : 'shipyard';
+
+        return $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $item->planet])[$slug] ?? [];
+    }
+
+    /** @param array<int, QueueItem> $items Commandes de la participation, chargées sous verrou. */
+    private function applyEarnedSpeed(QueueItem $completed, \DateTimeImmutable $at, array $items): void
+    {
+        $group = match ([$completed->queueType, $completed->itemSlug]) {
+            ['research', 'engineering_foundations'] => 'buildings',
+            ['building', 'lab'] => 'technologies',
+            ['building', 'shipyard'] => 'ships',
+            default => null,
+        };
+        if ($group === null) {
+            return;
+        }
+        $levels = $this->speedLevels($completed, $group);
+        foreach ($items as $item) {
+            if ($item->liveTiming === null || $item->startedAt === null || $item->finishAt() <= $at
+                || $this->timedGroup($item) !== $group
+                || ($group !== 'buildings' && $item->planet->id !== $completed->planet->id)) {
+                continue;
+            }
+            $full = LiveQueueTiming::fullDuration($item->liveTiming, $levels);
+            if ($full >= $item->liveTiming['full']) {
+                continue;
+            }
+            $previousEnd = $item->finishAt();
+            // Le rattrapage peut avoir démarré une tête à une date ultérieure ;
+            // aucun travail n’est crédité avant son checkpoint ou pendant une pause.
+            $effectiveAt = max($at->getTimestamp(), $item->liveTiming['checkpoint']);
+            LiveQueueTiming::checkpoint($item, $effectiveAt, $full);
+            if ($item->finishAt() != $previousEnd) {
+                $this->schedule($item);
+            }
+        }
     }
 
     /** Rattrape les commandes échues selon l’horloge et les vacances, avant une lecture ou une dépense. */
@@ -377,8 +535,11 @@ final class QueueService
                 usort($dueItems, fn($a, $b) => $a->finishAt() <=> $b->finishAt() ?: $a->id <=> $b->id);
                 $item = $dueItems[0];
                 $id = $item->id;
+                $finish = $item->finishAt();
                 $this->applyCompletion($item);
                 unset($items[$id]);
+                // Les fins dues au même instant ne sont pas repoussées par un bonus.
+                $this->applyEarnedSpeed($item, $finish, $items);
             }
         }
         $this->access->captureLocked($membership);
@@ -519,9 +680,22 @@ final class QueueService
         if (!$item->startedAt || $divisor <= 1) {
             throw new \DomainException('Opération active introuvable.');
         }
-        $elapsed = max(0, $this->clock->now()->getTimestamp() - $item->startedAt->getTimestamp());
-        $item->durationSeconds = QueueTiming::boostedDuration($item->durationSeconds, $elapsed, $divisor);
-        $this->start($item, $item->startedAt);
+        $this->reduceRemaining($item, $divisor);
+    }
+
+    private function reduceRemaining(QueueItem $item, float $divisor): void
+    {
+        $at = $this->clock->now()->getTimestamp();
+        if ($item->liveTiming !== null) {
+            if (!is_finite($divisor) || $divisor <= 1.0) {
+                throw new \InvalidArgumentException('Boost invalide.');
+            }
+            LiveQueueTiming::checkpoint($item, $at, $item->liveTiming['full'], $divisor);
+        } else {
+            $elapsed = max(0, $at - $item->startedAt->getTimestamp());
+            $item->durationSeconds = QueueTiming::boostedDuration($item->durationSeconds, $elapsed, $divisor);
+        }
+        $this->schedule($item);
     }
 
     /** Accélération administrative ; les boosts consommés par un joueur passent par applyPlayerBoost(). */
@@ -543,9 +717,7 @@ final class QueueService
             if (!$item || $item->playerUniverse->id !== $membership->id || !$item->startedAt) {
                 throw new \DomainException('Opération active introuvable.');
             }
-            $elapsed = max(0, $this->clock->now()->getTimestamp() - $item->startedAt->getTimestamp());
-            $item->durationSeconds = QueueTiming::boostedDuration($item->durationSeconds, $elapsed, $divisor);
-            $this->start($item, $item->startedAt);
+            $this->reduceRemaining($item, $divisor);
         });
     }
 
@@ -661,6 +833,10 @@ final class QueueService
         foreach ($this->repo->all(QueueItem::class, ['playerUniverse' => $membership]) as $item) {
             if ($item->startedAt === null) {
                 continue;
+            }
+            if (($item->liveTiming['checkpoint'] ?? null) !== null) {
+                // Déplacer le repère avec le départ empêche les vacances de consommer du travail.
+                $item->liveTiming['checkpoint'] += $seconds;
             }
             $this->start($item, $item->startedAt->setTimestamp($item->startedAt->getTimestamp() + $seconds));
         }

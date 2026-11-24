@@ -36,6 +36,12 @@ class QueueItem
     public ?array $paidCosts = null;
     #[ORM\Column(options: ['default' => false])]
     public bool $firstStepsGuided = false;
+    /**
+     * Paramètres figés du calcul et dernier segment du travail restant.
+     * @var array{base: float, cap: float, max: int, checkpoint: ?int, work: float, full: int}|null
+     */
+    #[ORM\Column(type: 'json', nullable: true)]
+    public ?array $liveTiming = null;
     public function finishAt(): ?\DateTimeImmutable
     {
         return $this->startedAt?->modify('+'.$this->durationSeconds.' seconds');

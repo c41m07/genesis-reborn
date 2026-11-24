@@ -3,7 +3,7 @@
 {% block body %}
 <a class="secondary admin-surveillance-back" href="{{ path('app_admin_missions') }}">← Surveillance des missions</a>
 <div class="page-heading"><div><h1>Flotte n° {{ fleet.id }}</h1><p>{{ missions[fleet.mission]|default(fleet.mission) }} · {{ fleet.playerUniverse.universe.name }} · {{ fleet.playerUniverse.displayName }}</p></div><a class="secondary" href="{{ path('app_admin_mission', {id:fleet.id}) }}">Actualiser le contrôle</a></div>
-<p class="admin-monitor-note">État observé le {{ captured_at|date('d/m/Y H:i:s', preferences.timezone) }}. Les données actuelles ne reconstituent pas la composition ou la cargaison du départ.</p>
+<p class="admin-monitor-note admin-design-notice">État observé le {{ captured_at|date('d/m/Y H:i:s', preferences.timezone) }}. Les données actuelles ne reconstituent pas la composition ou la cargaison du départ.</p>
 <div class="admin-surveillance-links admin-mission-case-links"><a href="{{ path('app_admin_cases',{fleet:fleet.id}) }}">Dossiers de cette mission</a><a href="{{ path('app_admin_case_new',{fleet_id:fleet.id}) }}">Ouvrir un dossier</a></div>
 <section class="panel"><h2>Situation de la mission</h2><dl class="report-facts admin-mission-facts">
 <div><dt>État</dt><dd>{{ statuses[fleet.status]|default(fleet.status) }}</dd></div>

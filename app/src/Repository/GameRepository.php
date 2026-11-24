@@ -15,15 +15,32 @@ final class GameRepository
     {
     }
 
+    /** @return array{action: string, proposal: ?string, actorId: int, actorGuildId: int}|null */
+    public function latestGuildTreatyEvent(int $universeId, int $guildAId, int $guildBId): ?array
+    {
+        // Le verrou de l’univers est déjà détenu : lire l’événement fraîchement validé,
+        // même si une lecture précédant ce verrou a ouvert un instantané MariaDB.
+        $event = $this->em->getConnection()->fetchAssociative(
+            'SELECT action, proposal, actor_id, actor_guild_id FROM guild_treaty_event
+             WHERE universe_id = ? AND guild_a_id = ? AND guild_b_id = ?
+             ORDER BY id DESC LIMIT 1 LOCK IN SHARE MODE',
+            [$universeId, $guildAId, $guildBId],
+        );
+        return $event ? [
+            'action' => $event['action'], 'proposal' => $event['proposal'],
+            'actorId' => (int) $event['actor_id'], 'actorGuildId' => (int) $event['actor_guild_id'],
+        ] : null;
+    }
+
     /** @return list<GuildProject> Une ligne supplémentaire permet de proposer la page suivante. */
-    public function guildProjectsPage(Guild $guild, bool $history, int $beforeId): array
+    public function guildProjectsPage(Guild $guild, bool $history, int $beforeId, int $limit = 26): array
     {
         $query = $this->em->createQueryBuilder()->select('project')->from(GuildProject::class, 'project')
             ->where('project.guildId = :guild')->andWhere('project.universe = :universe')
             ->andWhere($history ? 'project.status != :active' : 'project.status = :active')
             ->setParameter('guild', $guild->id)->setParameter('universe', $guild->universe)->setParameter('active', 'active');
         if ($beforeId > 0) $query->andWhere('project.id < :before')->setParameter('before', $beforeId);
-        return $query->orderBy('project.id', 'DESC')->setMaxResults(26)->getQuery()->getResult();
+        return $query->orderBy('project.id', 'DESC')->setMaxResults(max(1, min(26, $limit)))->getQuery()->getResult();
     }
 
     /** @return list<GuildProjectDefinition> Les modèles déjà lancés restent exclus, quel que soit leur état. */
@@ -253,13 +270,17 @@ final class GameRepository
         return array_map('intval', array_column($rows, 'total', 'status'));
     }
 
-    /** @return list<array{id: int, name: string}> */
+    /** @return list<array{id: int, name: string, tag: ?string, description: ?string, members: int}> */
     public function recruitingGuildDirectory(PlayerUniverse $viewer): array
     {
-        // Dans le modèle actuel, le recrutement est ouvert aux guildes actives
-        // du même univers. La découverte ne charge ni dirigeants ni membres.
-        return $this->em->createQueryBuilder()->select('guild.id AS id', 'guild.name AS name')
-            ->from(\App\Entity\Guild::class, 'guild')
+        // Uniquement les informations déjà visibles sur la fiche de ces guildes : l’effectif
+        // est un agrégat, ni les membres ni leurs identités ne sont hydratés.
+        $memberCount = $this->em->createQueryBuilder()->select('COUNT(guildMember.id)')
+            ->from(\App\Entity\GuildMember::class, 'guildMember')->where('guildMember.guild = guild');
+        return $this->em->createQueryBuilder()->select('guild.id AS id', 'guild.name AS name', 'guild.tag AS tag', 'profile.description AS description')
+            ->addSelect('('.$memberCount->getDQL().') AS members')
+            ->from(Guild::class, 'guild')
+            ->leftJoin(\App\Entity\GuildProfile::class, 'profile', 'WITH', 'profile.guild = guild')
             ->where('guild.universe = :universe')->andWhere('guild.archivedAt IS NULL')
             ->setParameter('universe', $viewer->universe)->orderBy('guild.id', 'ASC')
             ->setMaxResults(6)->getQuery()->getArrayResult();
@@ -672,6 +693,21 @@ final class GameRepository
         return $this->em->createQueryBuilder()->select('r')->from(\App\Entity\EspionageReport::class, 'r')->where('r.sender = :membership')->setParameter('membership', $membership)->orderBy('r.createdAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();
     }
 
+    /** @return list<array{id: int, createdAt: \DateTimeImmutable}> */
+    public function recentEspionageReportOptions(PlayerUniverse $membership): array
+    {
+        // Le sélecteur n’a besoin ni du contenu du rapport ni de l’état actuel de la cible.
+        return $this->em->createQueryBuilder()
+            ->select('r.id', 'r.createdAt')
+            ->from(\App\Entity\EspionageReport::class, 'r')
+            ->where('r.sender = :membership')
+            ->setParameter('membership', $membership)
+            ->orderBy('r.createdAt', 'DESC')
+            ->addOrderBy('r.id', 'DESC')
+            ->setMaxResults(20)
+            ->getQuery()->getArrayResult();
+    }
+
     public function combatLogsFor(PlayerUniverse $membership, int $limit = 50): array
     {
         return $this->em->createQueryBuilder()->select('DISTINCT l')->from(CombatLog::class, 'l')->join('l.combatEvent', 'e')->join('e.planet', 'p')->leftJoin(CombatParticipant::class, 'cp', 'WITH', 'cp.combatEvent = e')->where('cp.playerUniverse = :membership')->orWhere('p.owner = :membership')->setParameter('membership', $membership)->orderBy('l.resolvedAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();
@@ -913,6 +949,23 @@ final class GameRepository
         }
         $contacts = array_filter($contacts, static fn(array $contact): bool => $contact['member']?->universe->id === $viewer->universe->id);
         usort($contacts, static fn(array $a, array $b): int => [(int) ($b['unread'] > 0), $b['latest']] <=> [(int) ($a['unread'] > 0), $a['latest']]);
+        if ($contacts === []) {
+            return [];
+        }
+
+        // Lire uniquement l’horodatage des identifiants privés autorisés par les contacts
+        // ci-dessus. Le contenu ne doit jamais être ajouté au fragment de notifications.
+        $latestDates = $this->em->createQueryBuilder()->select('message.id AS id', 'message.createdAt AS sentAt')
+            ->from(\App\Entity\SocialMessage::class, 'message')
+            ->where('message.id IN (:ids)')->andWhere('message.guild IS NULL AND message.recipient IS NOT NULL')
+            ->andWhere('(message.sender = :viewer OR message.recipient = :viewer)')
+            ->setParameter('ids', array_column($contacts, 'latest'))->setParameter('viewer', $viewer)
+            ->getQuery()->getArrayResult();
+        $latestById = array_column($latestDates, 'sentAt', 'id');
+        foreach ($contacts as &$contact) {
+            $contact['sentAt'] = $latestById[$contact['latest']] ?? null;
+        }
+        unset($contact);
         return $contacts;
     }
 
@@ -1072,9 +1125,9 @@ final class GameRepository
             ->getOneOrNullResult();
     }
 
-    public function outbox(bool $notifications): array
+    public function outbox(bool $notifications, \DateTimeImmutable $now): array
     {
-        return $this->em->createQueryBuilder()->select('o')->from(OutboxMessage::class, 'o')->where($notifications ? 'o.kind = :kind' : 'o.kind IN (:kind)')->setParameter('kind', $notifications ? 'notification' : [
+        $query = $this->em->createQueryBuilder()->select('o')->from(OutboxMessage::class, 'o')->where($notifications ? 'o.kind = :kind' : 'o.kind IN (:kind)')->setParameter('kind', $notifications ? 'notification' : [
             'queue',
             'fleet',
             'combat',
@@ -1082,11 +1135,21 @@ final class GameRepository
             'occupation',
             'guild_project',
             'reconstruction',
+            \App\Message\AdventCaptureDue::KIND,
             \App\Message\PirateReconnaissanceDue::KIND,
             \App\Message\PirateAttackDue::KIND,
             \App\Message\PirateConvoyDue::KIND,
             \App\Message\PirateSurvivorsDue::KIND,
-        ])->orderBy('o.id', 'ASC')->setMaxResults(100)->getQuery()->getResult();
+        ]);
+        if (!$notifications) {
+            // La programmation annuelle peut précéder Noël de plusieurs mois.
+            // L’outbox conserve le relevé jusqu’à son échéance, sans délai AMQP de longue durée.
+            $query->andWhere('o.kind != :capture OR o.dueAt <= :now')
+                ->setParameter('capture', \App\Message\AdventCaptureDue::KIND)
+                ->setParameter('now', $now->setTimezone(new \DateTimeZone('UTC')));
+        }
+
+        return $query->orderBy('o.id', 'ASC')->setMaxResults(100)->getQuery()->getResult();
     }
 
     public function activeQueueItems(): array

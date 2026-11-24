@@ -2,40 +2,82 @@
 {% import 'ui/macros.html.twig' as ui %}
 {% block title %}{{ archived ? 'Archives des rapports' : 'Rapports' }} · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="reports-workspace">
-{% set reportFilters = {all: 'Tous', combat: 'Combats', economy: 'Économie', espionage: 'Espionnage'} %}
+<div class="reports-workspace player-report-board">
+{% set reportKinds = {combat:'Combat', espionage:'Espionnage', economy:'Transport', diplomatic:'Diplomatie'} %}
+{% set reportFilters = {all: 'Tous', combat: 'Combats', economy: 'Économie', espionage: 'Espionnage', diplomatic: 'Diplomatie'} %}
 {% set search_filters=search_filters|default({}) %}
 {% set view = archived ? 'archives' : '' %}
-<div class="page-heading"><div><h1>{{ archived ? 'Archives des rapports' : 'Rapports' }}</h1><p>L’information au service de vos décisions.</p></div></div>
+<div class="page-heading"><div><p class="player-board-eyebrow">Renseignement · {{ membership.universe.name }}</p><h1>{{ archived ? 'Archives des rapports' : 'Rapports' }}</h1><p>L’information au service de vos décisions.</p></div></div>
 {% if search_error|default(null) %}<p class="flash error" role="alert">{{ search_error }}</p>{% endif %}
+<div class="player-report-nav">
+<nav class="report-tabs core-report-scope" aria-label="Liste ou archives des rapports"><a href="{{ path('app_combat_reports',search_filters|merge({type:filter})) }}" {{ not archived ? 'aria-current="page"' : '' }}>Rapports actifs</a><a href="{{ path('app_combat_reports',search_filters|merge({type:filter,view:'archives'})) }}" {{ archived ? 'aria-current="page"' : '' }}>Archives personnelles</a></nav>
+<nav class="report-tabs core-report-types" aria-label="Filtrer les rapports">{% for key,label in reportFilters %}<a href="{{ path('app_combat_reports',search_filters|merge({type:key,view:view})) }}" class="{{ filter == key ? 'active' : '' }}" {{ filter == key ? 'aria-current="page"' : '' }}>{{ label }}</a>{% endfor %}</nav>
+</div>
+<div class="player-report-layout">
 <section class="panel report-center" aria-labelledby="report-center-title">
 <div class="report-center-heading"><h2 id="report-center-title">Centre de rapports</h2><span class="badge">{{ report_count }} disponible{{ report_count == 1 ? '' : 's' }}</span></div>
-<nav class="report-tabs" aria-label="Liste ou archives des rapports"><a href="{{ path('app_combat_reports',search_filters|merge({type:filter})) }}" {{ not archived ? 'aria-current="page"' : '' }}>Rapports actifs</a><a href="{{ path('app_combat_reports',search_filters|merge({type:filter,view:'archives'})) }}" {{ archived ? 'aria-current="page"' : '' }}>Archives personnelles</a></nav>
-<nav class="report-tabs" aria-label="Filtrer les rapports">{% for key,label in reportFilters %}<a href="{{ path('app_combat_reports',search_filters|merge({type:key,view:view})) }}" class="{{ filter == key ? 'active' : '' }}" {{ filter == key ? 'aria-current="page"' : '' }}>{{ label }}</a>{% endfor %}</nav>
-<form method="get" class="panel search-filters report-search" role="search"><input type="hidden" name="type" value="{{ filter }}"><input type="hidden" name="view" value="{{ view }}"><label for="report-planet">Nom actuel de planète<input id="report-planet" name="planet" maxlength="80" value="{{ criteria.planet|default('') }}"></label><label for="report-person">Nom du participant<input id="report-person" name="participant" maxlength="80" value="{{ criteria.participant|default('') }}"></label><label for="report-from">Du<input id="report-from" name="from" type="date" value="{{ criteria.from|default('') }}"></label><label for="report-until">Au<input id="report-until" name="until" type="date" value="{{ criteria.until|default('') }}"></label><div class="report-search-actions"><button class="primary">Rechercher les rapports</button><a class="secondary" href="{{ path('app_combat_reports',{type:filter,view:view}) }}">Réinitialiser les filtres</a></div></form>
-<details class="report-search-help"><summary>Portée des filtres</summary><p>Planète : cible des combats/espionnages, origine ou destination des transports. Participant : commandants enregistrés au combat, expéditeur du rapport d’espionnage, expéditeur ou destinataire du transport. Les rapports restent limités à vos droits et à vos archives personnelles.</p></details>
+<p class="player-report-subtitle">Les rapports les plus récents s’affichent en premier.</p>
+<form method="get" class="panel search-filters report-search" role="search"><input type="hidden" name="type" value="{{ filter }}"><input type="hidden" name="view" value="{{ view }}"><label for="report-planet">Nom de planète<input id="report-planet" name="planet" maxlength="80" value="{{ criteria.planet|default('') }}"></label><label for="report-person">Nom du participant<input id="report-person" name="participant" maxlength="80" value="{{ criteria.participant|default('') }}"></label><label for="report-from">Du<input id="report-from" name="from" type="date" value="{{ criteria.from|default('') }}"></label><label for="report-until">Au<input id="report-until" name="until" type="date" value="{{ criteria.until|default('') }}"></label><div class="report-search-actions"><button class="primary">Rechercher les rapports</button><a class="secondary" href="{{ path('app_combat_reports',{type:filter,view:view}) }}">Réinitialiser les filtres</a></div></form>
 {% if entries is not empty %}
 <form method="post" action="{{ path('app_report_archive_change') }}" aria-label="{{ archived ? 'Restaurer des rapports' : 'Archiver des rapports' }}" data-controller="report-selection">
 <input type="hidden" name="_token" value="{{ csrf_token('report_archive') }}"><input type="hidden" name="operation" value="{{ archived ? 'restore' : 'archive' }}">
 <input type="hidden" name="type" value="{{ filter }}"><input type="hidden" name="view" value="{{ view }}"><input type="hidden" name="page" value="{{ page }}">
 {% for key,value in search_filters %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
-<div class="report-selection">
+<div class="report-selection core-report-selection"><strong>{{ archived ? 'Restaurer des rapports' : 'Archiver des rapports' }}</strong>
     <label hidden data-report-selection-target="allLabel"><input type="checkbox" data-report-selection-target="all" data-action="change->report-selection#toggleAll">Tout sélectionner sur cette page</label>
-    <p role="status" data-report-selection-target="count"></p>
+    <p class="core-report-selection-count" role="status" data-report-selection-target="count"></p>
     <button type="submit" class="secondary" data-report-selection-target="submit">{{ archived ? 'Restaurer la sélection' : 'Archiver la sélection' }}</button>
 </div>
+{# Les en-têtes visuels n’ajoutent pas une seconde structure interactive : chaque lien décrit toujours son rapport. #}
+<div class="player-report-list-heading" aria-hidden="true"><span>Rapport</span><span>Type / état</span><span>Origine ou cible</span><span>Reçu</span><span></span></div>
 <div class="report-list">
 {% for entry in entries %}{% set report = entry.report %}
 <div class="report-archive-entry">
-<label class="report-select" for="report-select-{{ entry.key }}"><input type="checkbox" id="report-select-{{ entry.key }}" name="selected[]" data-report-selection-target="item" data-action="change->report-selection#update" value="{{ entry.key }}"><span class="visually-hidden">Sélectionner le rapport {{ reportFilters[entry.kind] }} n° {{ report.id }}</span></label>
+<label class="report-select" for="report-select-{{ entry.key }}"><input type="checkbox" id="report-select-{{ entry.key }}" name="selected[]" data-report-selection-target="item" data-action="change->report-selection#update" value="{{ entry.key }}"><span class="visually-hidden">Sélectionner le rapport {{ reportKinds[entry.kind]|default(reportFilters[entry.kind]) }} n° {{ report.id }}</span></label>
+{% set entryNew = unread_report_keys[entry.key]|default(false) %}
 {% if entry.kind == 'combat' %}
-<a class="report-row" href="{{ path('app_combat_report',search_filters|merge({id:report.id,type:filter,view:view,page:page})) }}"><span class="report-kind report-kind--combat">{{ ui.icon('fleet') }}</span><span class="report-copy"><strong>Combat · {{ report.planet.name }}</strong>{% if unread_report_keys[entry.key]|default(false) %}<span class="report-new-label">Nouveau</span>{% endif %}<small>{{ report.resolvedAt|date('d/m/Y H:i') }} · {{ report.planet.coordinates() }} · {{ report.participantCount }} flottes impliquées</small></span><span class="badge">{{ report.outcome=='attacker_wins'?'Victoire attaquants':(report.outcome=='defender_wins'?'Victoire défense':'Égalité') }}</span><span class="report-chevron" aria-hidden="true">›</span></a>
+    {% set routeName = 'app_combat_report' %}
+    {% set title = 'Combat · '~report.planet.name %}
+    {% set location = report.planet.coordinates() %}
+    {% set occurredAt = report.resolvedAt %}
+    {% set state = report.outcome == 'attacker_wins' ? 'Victoire attaquants' : (report.outcome == 'defender_wins' ? 'Victoire défense' : 'Égalité') %}
+    {% set stateClass = '' %}
+    {% set extra = report.participantCount~' flottes impliquées' %}
 {% elseif entry.kind == 'espionage' %}
-<a class="report-row" href="{{ path('app_espionage_report',search_filters|merge({id:report.id,type:filter,view:view,page:page})) }}"><span class="report-kind report-kind--spy">{{ ui.icon('diplomacy') }}</span><span class="report-copy"><strong>Renseignements · {{ report.target.name }}</strong>{% if unread_report_keys[entry.key]|default(false) %}<span class="report-new-label">Nouveau</span>{% endif %}<small>{{ report.createdAt|date('d/m/Y H:i') }} · {{ report.target.coordinates() }}</small></span><span class="badge">{{ report.result == 'detected' ? 'Sondes détectées' : report.intelCategories ~ ' catégorie(s)' }}</span><span class="report-chevron" aria-hidden="true">›</span></a>
+    {% set routeName = 'app_espionage_report' %}
+    {% set title = 'Renseignements · '~report.target.name %}
+    {% set location = report.target.coordinates() %}
+    {% set occurredAt = report.createdAt %}
+    {% set state = report.result == 'detected' ? 'Sondes détectées' : report.intelCategories~' catégorie(s)' %}
+    {% set stateClass = report.result == 'detected' ? 'is-risk' : '' %}
+    {% set extra = '' %}
+{% elseif entry.kind == 'diplomatic' %}
+    {% set routeName = 'app_diplomatic_report' %}
+    {% set title = report.subjectLabel %}
+    {% set location = report.location ?? report.guildName ?? '—' %}
+    {% set occurredAt = report.createdAt %}
+    {% set state = report.outcomeLabel %}
+    {% set stateClass = report.outcome == 'accepted' ? 'is-success' : (report.outcome == 'refused' ? 'is-risk' : '') %}
+    {% set extra = '' %}
 {% else %}
-<a class="report-row" href="{{ path('app_transport_report',search_filters|merge({id:report.id,type:filter,view:view,page:page})) }}"><span class="report-kind">{{ ui.icon('storage') }}</span><span class="report-copy"><strong>Transport · {{ report.snapshot.sender }} → {{ report.snapshot.recipient }}</strong>{% if unread_report_keys[entry.key]|default(false) %}<span class="report-new-label">Nouveau</span>{% endif %}<small>{{ report.createdAt|date('d/m/Y H:i') }} · {{ report.snapshot.destination }}</small></span><span class="badge">{{ {traveling:'En route', delivered:'Livré', refused:'Refusé'}[report.status]|default(report.status) }}</span></a>
+    {% set routeName = 'app_transport_report' %}
+    {% set title = 'Transport · '~report.snapshot.sender~' → '~report.snapshot.recipient %}
+    {% set location = report.snapshot.destination %}
+    {% set occurredAt = report.createdAt %}
+    {% set state = {traveling:'En route', delivered:'Livré', refused:'Refusé'}[report.status]|default(report.status) %}
+    {% set stateClass = report.status == 'delivered' ? 'is-success' : (report.status == 'refused' ? 'is-risk' : '') %}
+    {% set extra = '' %}
 {% endif %}
-<button type="submit" class="secondary report-archive-action" name="single" value="{{ entry.key }}" aria-label="{{ archived ? 'Restaurer' : 'Archiver' }} le rapport {{ reportFilters[entry.kind] }} n° {{ report.id }}">{{ archived ? 'Restaurer' : 'Archiver' }}</button>
+<a class="report-row{{ entryNew ? ' is-unread' : '' }}" href="{{ path(routeName,search_filters|merge({id:report.id,type:filter,view:view,page:page})) }}">
+    <span class="report-copy"><strong>{{ title }}</strong>{% if entryNew %}<span class="report-new-label">Nouveau</span>{% endif %}{% if extra %}<small>{{ extra }}</small>{% endif %}</span>
+    <span class="player-report-type">
+        <span class="player-report-kind">{{ reportKinds[entry.kind]|default('Rapport') }}</span>
+        <span class="badge core-report-state {{ stateClass }}">{{ state }}</span>
+    </span>
+    <span class="player-report-location">{{ location }}</span>
+    <time datetime="{{ occurredAt|date('c') }}">{{ occurredAt|date('d/m/Y H:i', preferences.timezone) }}</time>
+</a>
+<button type="submit" class="secondary report-archive-action" name="single" value="{{ entry.key }}" aria-label="{{ archived ? 'Restaurer' : 'Archiver' }} le rapport {{ reportKinds[entry.kind]|default(reportFilters[entry.kind]) }} n° {{ report.id }}">{{ archived ? 'Restaurer' : 'Archiver' }}</button>
 </div>
 {% endfor %}
 </div>
@@ -45,5 +87,19 @@
 {% endif %}
 {% if pages > 1 %}<nav class="report-pagination" aria-label="Pagination des rapports">{% if page > 1 %}<a href="{{ path('app_combat_reports',search_filters|merge({type:filter,view:view,page:page-1})) }}">Page précédente</a>{% endif %}<span>Page {{ page }} / {{ pages }}</span>{% if page < pages %}<a href="{{ path('app_combat_reports',search_filters|merge({type:filter,view:view,page:page+1})) }}">Page suivante</a>{% endif %}</nav>{% endif %}
 </section>
+<aside class="panel player-report-help" aria-labelledby="player-report-help-title">
+    <h2 id="player-report-help-title">{{ ui.icon('overview') }} Portée des filtres</h2>
+    <p>Les filtres restent actifs en consultant un rapport.</p>
+    <p>Les transports figurent dans le filtre Économie.</p>
+    <dl>
+        <div><dt>Planète</dt><dd>Cible des combats et des espionnages, origine ou destination des transports, nom indiqué dans le rapport d’orbite.</dd></div>
+        <div><dt>Participant</dt><dd>Commandant associé au rapport.</dd></div>
+        <div><dt>Archives</dt><dd>Personnelles et restaurables. Aucun rapport n’est supprimé.</dd></div>
+    </dl>
+    {% if entries is empty and search_filters is not empty %}
+        <a class="secondary" href="{{ path('app_combat_reports',{type:filter,view:view}) }}">Effacer les filtres</a>
+    {% endif %}
+</aside>
+</div>
 </div>
 {% endblock %}

@@ -1,9 +1,9 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}Surveillance des missions · Console{% endblock %}
 {% block body %}
-<div class="page-heading"><div><h1>Surveillance des missions</h1><p>Suivre les flottes, leurs cargaisons et les rapports disponibles dans les univers.</p></div></div>
+<div class="page-heading"><div><p class="eyebrow">Observation des flottes</p><h1>Surveillance des missions</h1><p>Suivre les flottes, leurs cargaisons et les rapports disponibles dans les univers.</p></div></div>
 <section data-controller="admin-mission-monitor" aria-label="Suivi des missions">
-<form method="get" class="feedback-admin-filters">
+<form method="get" class="feedback-admin-filters admin-design-notice">
     <label for="mission-search">Joueur ou cible<input id="mission-search" name="q" type="search" maxlength="120" value="{{ filters.q }}" placeholder="Commandant, colonie, système…"></label>
     <label for="mission-universe">Univers<select id="mission-universe" name="universe"><option value="">Tous les univers</option>{% for universe in universes %}<option value="{{ universe.id }}" {{ filters.universe == universe.id ? 'selected' : '' }}>{{ universe.name }}</option>{% endfor %}</select></label>
     <label for="mission-type">Mission<select id="mission-type" name="mission"><option value="">Toutes les missions</option>{% for value,label in missions %}<option value="{{ value }}" {{ filters.mission == value ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select></label>
@@ -12,7 +12,8 @@
 </form>
 <div class="admin-monitor-toolbar"><p>Actualisation toutes les 20 secondes, suspendue pendant la consultation au clavier.</p><button type="button" class="secondary" data-action="admin-mission-monitor#refresh">Actualiser le suivi</button></div><p role="status" data-admin-mission-monitor-target="status"></p>
 <div data-admin-mission-monitor-target="results">
-<section class="admin-metrics" aria-label="Missions dans les résultats filtrés">{% for key,label in {active:'En cours',combat:'Engagées au combat',returning:'En retour',waiting:'Accord attendu'} %}<article class="admin-metric"><span>{{ label }}</span><strong>{{ summary[key] }}</strong></article>{% endfor %}</section>
+<p id="mission-counter-scope" class="admin-counter-scope">Compteurs des missions correspondant aux filtres ci-dessus.</p>
+<section class="admin-metrics" aria-labelledby="mission-counter-scope">{% for key,label in {active:'En cours',combat:'Engagées au combat',returning:'En retour',waiting:'Accord attendu'} %}<article class="admin-metric"><span>{{ label }}</span><strong>{{ summary[key] }}</strong></article>{% endfor %}</section>
 <p>{{ total }} mission{{ total == 1 ? '' : 's' }} trouvée{{ total == 1 ? '' : 's' }} · Relevé <time datetime="{{ captured_at|date('c') }}">{{ captured_at|date('d/m/Y H:i:s', preferences.timezone) }}</time>.</p>
 {% if fleets %}
     {# Les huit colonnes restent dans le HTML, y compris dans les fiches sur écran étroit. #}
@@ -49,7 +50,7 @@
                             {% endif %}
                         </span></td>
                         <td role="cell" data-label="Statut"><span>{{ statuses[fleet.status]|default(fleet.status) }}</span></td>
-                        <td role="cell" data-label="Dernier départ"><span>{{ fleet.departureAt ? fleet.departureAt|date('d/m/Y H:i:s', preferences.timezone) : '—' }}</span></td>
+                        <td role="cell" data-label="Dernier départ"><span>{% if fleet.departureAt %}<time datetime="{{ fleet.departureAt|date('c') }}">{{ fleet.departureAt|date('d/m/Y H:i:s', preferences.timezone) }}</time>{% else %}—{% endif %}</span></td>
                         <td role="cell" data-label="Échéance"><span>
                             {% if deadline %}
                                 <time datetime="{{ deadline|date('c') }}">{{ deadline|date('d/m/Y H:i:s', preferences.timezone) }}</time>

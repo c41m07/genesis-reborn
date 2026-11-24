@@ -12,7 +12,7 @@
                 {% for entry in auditLogs %}
                     {% set details = entry.details|json_encode(constant('JSON_UNESCAPED_UNICODE')) %}
                     <tr role="row" data-admin-filter-target="row" data-filter-action="{{ entry.action }}">
-                        <th scope="row" role="rowheader">{{ entry.createdAt|date('d/m/Y H:i:s') }}</th>
+                        <th scope="row" role="rowheader"><time datetime="{{ entry.createdAt|date('c') }}">{{ entry.createdAt|date('d/m/Y H:i:s') }}</time></th>
                         <td role="cell" data-label="Administrateur">{{ entry.actor ? entry.actor.username : 'Compte supprimé' }}</td>
                         <td role="cell" data-label="Action">{{ entry.action }}</td>
                         <td role="cell" data-label="Cible">{{ entry.targetType }} #{{ entry.targetId }}</td>

@@ -74,7 +74,7 @@ test('Proposition B : pages de guilde, cartes, menus mobiles et aperçu sans lec
     await memberPage.getByRole('button', { name: 'Rejoindre · recrutement ouvert' }).click();
     await memberPage.getByRole('link', { name: 'Ouvrir le canal de guilde' }).click();
     for (const message of ['Premier échange de test', 'Les projets sont disponibles.', 'La discussion continue dans le canal.', 'Bienvenue aux nouveaux commandants !']) {
-      await memberPage.getByLabel('Message pour la guilde').fill(message);
+      await memberPage.getByRole('textbox', { name: 'Message pour le canal de guilde', exact: true }).fill(message);
       await memberPage.getByRole('button', { name: 'Envoyer', exact: true }).click();
     }
 
@@ -86,8 +86,8 @@ test('Proposition B : pages de guilde, cartes, menus mobiles et aperçu sans lec
 
     for (const theme of ['dark', 'light']) {
       runIsolatedSql(process.env.BROWSER_ROUTER, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${leaderEmail}'`);
-      for (const width of [1440, 768, 390, 320]) {
-        await page.setViewportSize({ width, height: 900 });
+      for (const width of [1920, 1440, 768, 390, 320]) {
+        await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
         for (const [url, key, title] of [['/guildes', 'guilde', 'Ma guilde'], ['/guildes/membres', 'membres', 'Membres de ma guilde'], ['/diplomatie/commandants', 'relations', 'Relations entre commandants']]) {
           expect((await page.goto(url)).status()).toBe(200);
           await expect(page.getByRole('heading', { level: 1 })).toHaveText(title);
@@ -99,9 +99,17 @@ test('Proposition B : pages de guilde, cartes, menus mobiles et aperçu sans lec
             await expect(page.locator('.guild-overview-conversation')).not.toContainText('Premier échange de test');
             await expect(page.locator('.guild-overview-conversation')).toContainText('Bienvenue aux nouveaux commandants !');
             await expect(page.locator('body')).toHaveAttribute('data-menu-notifications-messages-value', /[1-9]/);
+            if (width === 1920) {
+              const latest = await page.locator('.guild-overview-conversation').boundingBox();
+              const status = await page.locator('.guild-overview-diplomacy').boundingBox();
+              expect(status.x).toBeGreaterThan(latest.x + latest.width);
+              expect(Math.abs(status.y - latest.y)).toBeLessThan(4);
+            }
             const order = await page.locator('.guild-overview-conversation, .guild-overview-details').evaluateAll(elements => elements.map(element => element.className));
             expect(order[0]).toContain('guild-overview-conversation');
             await expect(page.locator('.guild-public-banner')).toBeVisible();
+            await expect(page.locator('.guild-hub-stats')).toContainText('Votre rôle');
+            await expect(page.getByRole('link', { name: /Ouvrir le canal de guilde/ })).toBeVisible();
           }
           if (key === 'membres') {
             await expect(page.getByRole('row').filter({ hasText: memberName })).toContainText('En ligne');
@@ -125,7 +133,7 @@ test('Proposition B : pages de guilde, cartes, menus mobiles et aperçu sans lec
           if (width !== 320) {
             await page.screenshot({ path: testInfo.outputPath(`jeu-B-${key}-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });
           }
-          if (width === 390) {
+          if (width === 390 || width === 1920) {
             await page.screenshot({ path: testInfo.outputPath(`jeu-B-${key}-${theme}-${width}-ecran.png`), animations: 'disabled' });
           }
         }

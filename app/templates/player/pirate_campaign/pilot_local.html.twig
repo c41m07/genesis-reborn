@@ -9,9 +9,16 @@
 {% set canDeposit = deposit_token and dossier.convoy.selected_reward.state|default('') == 'full_pending' %}
 {% set hasIntel = briefing and (briefing.formation is not null or (briefing.quote is not null and not dossier.convoy.selected_reward)) %}
 
-<div class="page-refinement pirate-campaign" data-page-sections="disabled">
+{# La planche renseignée ne couvre ni la confirmation d’attaque ni les commandes de convoi/repli. #}
+{% set showIntelInDossier = hasIntel and briefing.intelligence_received|default(false)
+    and briefing.formation is not null and dossier.current == dossier.selected
+    and not canDeposit and not destination_form and not survivor_form
+    and (not encounter_form or encounter_form.kind == 'selection') %}
+
+<div class="page-refinement pirate-campaign player-campaign-board" data-page-sections="disabled">
     <header class="page-heading">
         <div>
+            <p class="campaign-eyebrow">Opérations · dossier {{ dossier.selected }}</p>
             <h1>Campagne pirate</h1>
             <p>Répondez aux signaux civils et rouvrez les routes de votre secteur.</p>
         </div>
@@ -20,8 +27,15 @@
         {% endif %}
     </header>
 
+    <nav class="campaign-board-navigation" aria-label="Sections du dossier">
+        <a href="#pirate-missions-title">Missions</a>
+        <a href="#pirate-dossier-title">Dossier actif</a>
+    </nav>
     <section class="pirate-campaign-banner" aria-label="Progression de la campagne">
         <img class="pirate-campaign-art" src="{{ asset('art/genesis-reborn-planet.webp') }}" width="1448" height="1086" alt="" decoding="async">
+        <div class="campaign-board-banner-text">
+            {% include 'player/pirate_campaign/_mission_heading.html.twig' with {narrative: narrative, status: dossier.signal_pending ? 'Signal de détresse' : briefing.status, compact: true} only %}
+        </div>
         <div class="pirate-campaign-progress">
             <div>
                 <strong aria-current="step">Chapitre {{ dossier.chapter.number }}</strong>
@@ -40,15 +54,29 @@
         </div>
     </section>
 
-    <section class="panel pirate-campaign-dossier{{ hasIntel ? ' pirate-campaign-dossier--has-intel' : '' }}" aria-labelledby="pirate-mission-title">
+    <div class="campaign-board-layout">
+    <section class="panel pirate-campaign-dossier" aria-labelledby="pirate-mission-title">
         <div class="pirate-campaign-briefing">
-            {% include 'player/pirate_campaign/_mission_heading.html.twig' with {narrative: narrative, status: dossier.signal_pending ? 'Signal de détresse' : briefing.status} only %}
+            <h2 id="pirate-dossier-title">{{ dossier.current == dossier.selected ? 'Dossier actif' : 'Dossier consulté' }}</h2>
+            <p>{{ narrative.message }}</p>
+            {% if narrative.guidance %}<p>{{ narrative.guidance }}</p>{% endif %}
+            {% if hasIntel and not showIntelInDossier %}
+            <dl class="campaign-board-briefing-summary">
+                <div><dt>Reconnaissance</dt><dd>{{ briefing.status }}</dd></div>
+                {% if briefing.formation is not null %}
+                    <div><dt>Flotte pirate</dt><dd>{{ briefing.formation|reduce((total, ship) => total + ship.quantity, 0)|quantity(0) }} unité(s) observée(s)</dd></div>
+                {% endif %}
+            </dl>
+            <a class="quiet-button" href="#pirate-intelligence-title">Voir les renseignements</a>
+            {% endif %}
 
+            {% if showIntelInDossier %}
+                {% include 'player/pirate_campaign/_intelligence.html.twig' with {
+                    briefing: briefing, has_durable_reward: dossier.convoy.selected_reward is not null, embedded: true
+                } only %}
+            {% endif %}
             {% if dossier.signal_pending and not encounter_form and not needs_colony %}
                 <p role="status">Un départ de reconnaissance n’est pas disponible depuis la colonie active.</p>
-            {% endif %}
-            {% if briefing %}
-                {% include 'player/pirate_campaign/_briefing.html.twig' with {briefing: briefing} only %}
             {% endif %}
 
             {# Les commandes restent dans leur ordre natif ; un seul bouton porte l'accent principal. #}
@@ -70,12 +98,16 @@
             {% elseif dossier.current is null %}
                 <p>Campagne terminée. Les dossiers gagnés restent consultables.</p>
             {% endif %}
+            {% if showIntelInDossier and briefing.quote is not null and dossier.convoy.selected_reward is null %}
+                <div class="campaign-board-potential">
+                    {% include 'player/pirate_campaign/_potential_reward.html.twig' with {
+                        briefing: briefing, has_durable_reward: dossier.convoy.selected_reward is not null
+                    } only %}
+                </div>
+            {% endif %}
             <p class="pirate-campaign-refresh"><a class="inline-link" href="{{ path('app_pirate_campaign', {missionNumber: dossier.selected}) }}">Actualiser le dossier</a></p>
         </div>
 
-        {% if hasIntel %}
-            {% include 'player/pirate_campaign/_intelligence.html.twig' with {briefing: briefing, has_durable_reward: dossier.convoy.selected_reward is not null} only %}
-        {% endif %}
     </section>
 
     <section class="panel pirate-campaign-missions" aria-labelledby="pirate-missions-title">
@@ -98,6 +130,9 @@
                     </li>
                 {% endfor %}
             </ol>
+            {% if dossier.chapter.missions|filter(mission => mission.state == 'locked') is not empty %}
+                <p class="pirate-campaign-lock-hint">Terminez les dossiers précédents pour débloquer les missions suivantes.</p>
+            {% endif %}
             {% set previousChapters = dossier.history|filter(entry => entry.number not in chapterMissions) %}
             {% if previousChapters is not empty %}
                 <details class="pirate-campaign-archives">
@@ -111,5 +146,22 @@
             {% endif %}
         </nav>
     </section>
+
+    <div class="campaign-board-side">
+        {% if hasIntel and not showIntelInDossier %}
+            {% include 'player/pirate_campaign/_intelligence.html.twig' with {briefing: briefing, has_durable_reward: dossier.convoy.selected_reward is not null} only %}
+        {% endif %}
+    <aside class="panel campaign-board-log" aria-labelledby="pirate-journal-title">
+        <h2 id="pirate-journal-title">Journal du dossier</h2>
+        {% if showIntelInDossier %}<p class="campaign-board-log-received">{{ briefing.status }}</p>{% endif %}
+        {% if briefing %}
+            {% include 'player/pirate_campaign/_briefing.html.twig' with {briefing: briefing} only %}
+        {% endif %}
+        {% if not briefing or not briefing.dates %}
+            <p>Aucune étape chronométrée à afficher pour ce dossier.</p>
+        {% endif %}
+    </aside>
+    </div>
+    </div>
 </div>
 {% endblock %}

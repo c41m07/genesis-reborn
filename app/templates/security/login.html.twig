@@ -2,8 +2,9 @@
 {% set access_heading_id = 'login-title' %}
 {% block title %}Connexion · Genesis Reborn{% endblock %}
 {% block access_content %}
-<h1 id="login-title">Reprendre le commandement</h1>
-<p>Connectez-vous pour retrouver vos univers.</p>
+<h1 id="login-title">Reprendre le <span>commandement</span></h1>
+<p>Connectez-vous pour retrouver votre empire.</p>
+{% include 'security/_access_notices.html.twig' %}
 {% if error %}<p id="login-error" class="flash error" role="alert">Connexion impossible. Vérifiez vos identifiants ou réessayez dans une minute.</p>{% endif %}
 <form class="auth-form" method="post" action="{{ path('app_login') }}">
     <label for="email">Adresse email</label>
@@ -13,6 +14,7 @@
         <input data-password-visibility-target="input" id="password" name="_password" type="password" autocomplete="current-password" required {% if error %}aria-invalid="true" aria-describedby="login-error"{% endif %}>
         {% include 'ui/password_toggle.html.twig' with {id: 'password'} only %}
     </div>
+    <a class="entry-recovery-link" href="{{ path('app_password_reset_request') }}">Mot de passe oublié ?</a>
     <div class="preference-toggle">
         <input id="remember-me" name="_remember_me" type="checkbox" value="1">
         <label for="remember-me">Se souvenir de moi pendant 30 jours</label>
@@ -21,7 +23,6 @@
     <button class="primary full" type="submit">Connexion <span aria-hidden="true">↗</span></button>
 </form>
 <nav class="entry-access-links" aria-label="Autres accès au compte">
-    <a href="{{ path('app_password_reset_request') }}">Mot de passe oublié ?</a>
     <a href="{{ path('app_email_verify_request') }}">Recevoir un lien de confirmation</a>
     <a href="{{ path('app_register') }}">Première mission ? Créer un compte</a>
 </nav>

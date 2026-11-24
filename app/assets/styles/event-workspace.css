@@ -273,3 +273,774 @@ body.authenticated .event-redesign > .inline-link {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
 }
+
+/* Un seul passage entre les deux espaces ; les comptes ne mélangent pas événements et défis. */
+.events-space .core-event-context { color:var(--text); }
+.core-event-group-heading { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:10px; }
+.core-event-group-heading h2 { margin:0; }
+.event-list .core-event-empty { padding:14px 16px; margin:0 0 14px; color:var(--text); }
+.event-period dd { font-variant-numeric:tabular-nums; }
+
+.advent-doors {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    align-items: start;
+    gap: 1rem;
+    padding: 0;
+    list-style: none;
+}
+
+.advent-door,
+.advent-door-form > * {
+    min-width: 0;
+}
+
+.advent-door-form {
+    display: grid;
+    gap: .55rem;
+    margin-top: .75rem;
+}
+
+.profile-cosmetics {
+    margin-block-start: 1rem;
+}
+
+.profile-polar-night {
+    min-block-size: 4.5rem;
+    margin-block: .75rem;
+    border: 1px solid var(--line);
+    border-radius: .4rem;
+    background:
+        radial-gradient(ellipse at 32% 94%, #a2d6ed 0%, #516ca5 14%, transparent 43%),
+        radial-gradient(ellipse at 70% 82%, #4daeba 0%, #263051 25%, transparent 51%),
+        linear-gradient(160deg, #0e1529, #182337 70%, #101725);
+}
+
+.advent-universe {
+    margin-block: 1rem;
+}
+
+.advent-choice {
+    display: grid;
+    gap: .5rem;
+    min-inline-size: 0;
+}
+
+.advent-choice label {
+    display: flex;
+    align-items: start;
+    gap: .65rem;
+    min-block-size: 44px;
+    padding-block: .45rem;
+    overflow-wrap: anywhere;
+}
+
+.advent-admin-brackets {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+}
+
+.advent-admin-brackets li + li {
+    margin-block-start: .65rem;
+}
+
+/* P04/P18 : une programmation et des dates à venir distinctes, les défis gardant leurs données propres. */
+body.authenticated .event-redesign.player-event-board .event-board-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+body.authenticated .event-redesign.player-event-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+body.authenticated .event-redesign.player-event-board .event-board-periods { display:flex; flex-wrap:wrap; gap:.55rem; margin-block:.75rem 1rem; }
+body.authenticated .event-redesign.player-event-board .event-board-periods a { display:inline-flex; align-items:center; min-height:44px; padding:.4rem .95rem; border:1px solid var(--line); border-radius:5px; background:var(--panel); color:var(--text); text-decoration:none; }
+body.authenticated .event-redesign.player-event-board .event-board-periods a:first-child { border-color:var(--accent); box-shadow:inset 0 -2px var(--accent); }
+body.authenticated .event-redesign.player-event-board .player-event-columns { display:grid; grid-template-columns:minmax(0,2.53fr) minmax(17rem,1fr); gap:1.1rem; align-items:start; }
+body.authenticated .event-redesign.player-event-board .player-event-period { min-width:0; padding:1.3rem; }
+body.authenticated .event-redesign.player-event-board .player-event-period--upcoming .event-card { display:block; padding:1rem 0; border:0; border-radius:0; border-bottom:1px solid var(--line); box-shadow:none; }
+body.authenticated .event-redesign.player-event-board .player-event-period--upcoming .event-period { grid-template-columns:minmax(0,1fr); gap:.4rem; margin-top:.6rem; }
+body.authenticated .event-redesign.player-event-board .player-event-period--current .event-card { margin:.8rem 0; background:color-mix(in srgb,var(--accent) 5%,var(--panel)); }
+body.authenticated .event-redesign.player-event-board .player-event-pirate { padding:1.2rem; margin-top:.9rem; border-color:color-mix(in srgb,var(--accent) 28%,var(--line)); }
+body.authenticated .event-redesign.player-event-board .player-event-more { margin-top:1.3rem; padding-top:1rem; border-top:1px solid var(--line); }
+body.authenticated .event-redesign.player-event-board :is(#events-current,#events-upcoming) { scroll-margin-top:180px; }
+body.authenticated .event-redesign.player-event-board #advent-link-title { margin:0; }
+@media (max-width:960px) {
+    body.authenticated .event-redesign.player-event-board .player-event-columns { grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:560px) {
+    body.authenticated .event-redesign.player-event-board .player-event-period { padding:.85rem; }
+}
+
+/* Pas de contribution inventée pour les annonces : seuls les vrais défis alimentent cet aperçu. */
+.player-event-board .event-board-challenges { margin-block:1rem; }
+body.authenticated .player-event-board .event-board-challenge {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(12rem,.6fr);
+    align-items:start;
+    gap:.7rem 1.2rem;
+    margin:.55rem 0;
+    background:color-mix(in srgb,var(--accent) 5%,var(--panel));
+}
+.player-event-board .event-board-challenge h4 { margin:0 0 .5rem; font-size:1.2rem; }
+.player-event-board .event-board-challenge p { margin:.35rem 0; }
+.player-event-board .event-board-participation { margin-block:1rem; padding:.85rem; border:1px solid var(--line); border-radius:6px; }
+.player-event-board .event-board-participation dl { margin:.35rem 0 0; }
+.player-event-board .event-board-participation dl > div { gap:.5rem; }
+@media(max-width:650px) {
+    body.authenticated .player-event-board .event-board-challenge { grid-template-columns:minmax(0,1fr); }
+}
+
+/* Les portes et leurs panneaux restent des ancres natives, y compris après
+   un retour de formulaire ou sans JavaScript. L'habillage ne concerne que l'Avent. */
+.event-redesign.advent-board {
+    --advent-line: color-mix(in srgb, var(--line) 72%, var(--accent));
+    --advent-open: color-mix(in srgb, var(--gold) 55%, var(--text));
+    --advent-delivered: color-mix(in srgb, var(--green) 55%, var(--text));
+    --advent-panel: color-mix(in srgb, var(--panel) 94%, var(--accent) 6%);
+}
+
+[data-theme="light"] .event-redesign.advent-board {
+    --advent-open: #644218;
+    --advent-delivered: #215a47;
+}
+
+/* Le panorama est décoratif. Le texte HTML et les liens restent lisibles
+   sur une surface nocturne stable, y compris dans le thème clair. */
+.advent-board .advent-board-heading {
+    position: relative;
+    isolation: isolate;
+    align-items: center;
+    min-block-size: 9rem;
+    padding: clamp(.8rem, 1.7vw, 1.6rem);
+    border: 1px solid #435770;
+    border-radius: .65rem;
+    background: #0a1422;
+}
+.advent-board .advent-heading-picture,
+.advent-board .advent-board-heading::before {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+}
+.advent-board .advent-heading-picture {
+    z-index: -2;
+    overflow: hidden;
+}
+.advent-board .advent-heading-picture img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 66% 48%;
+}
+.advent-board .advent-board-heading::before {
+    content: "";
+    z-index: -1;
+    background: linear-gradient(90deg, #06101df5, #06101dd6 48%, #06101d36);
+}
+body.authenticated .advent-board .advent-board-heading > div :is(h1, p:not(.advent-history-kicker)) {
+    color: #f1f6ff;
+}
+body.authenticated .advent-board .advent-board-heading .advent-links > a {
+    color: #eef6ff;
+    background: #142338;
+    border-color: #6f859f;
+}
+body.authenticated .advent-board .advent-board-heading .advent-links > a:hover {
+    background: #253854;
+}
+body.authenticated .advent-board .advent-board-heading .advent-links > a:focus-visible {
+    outline: 2px solid #9ce9fa;
+    outline-offset: 2px;
+}
+@media (max-width: 650px) {
+    .advent-board .advent-heading-picture img { object-position: 79% 48%; }
+    .advent-board .advent-board-heading::before {
+        background: linear-gradient(90deg, #06101df2, #06101dbd);
+    }
+}
+
+.advent-board :is(.advent-links, .advent-meta) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .65rem;
+}
+
+.advent-board .advent-links a {
+    min-height: 44px;
+}
+
+.advent-board :is(.advent-layout, .advent-reward-layout) {
+    display: grid;
+    grid-template-columns: minmax(0, 2.15fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 1.25rem;
+    margin-block: 1.25rem;
+}
+
+.advent-board .advent-reward-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.authenticated .advent-board :is(.advent-calendar, .advent-door, .advent-moment, .advent-finale) {
+    min-width: 0;
+    padding: clamp(1rem, 1.35vw, 1.5rem);
+    border: 1px solid var(--advent-line);
+    border-radius: 9px;
+    background: linear-gradient(154deg, var(--advent-panel), var(--panel));
+    overflow-wrap: anywhere;
+}
+
+body.authenticated .advent-board :is(.advent-calendar, .advent-door, .advent-moment, .advent-finale) :is(h2, h3) {
+    margin: 0 0 .45rem;
+    font-size: clamp(1.15rem, 1.4vw, 1.55rem);
+}
+
+.advent-board .advent-meta {
+    margin: .7rem 0 1rem;
+    padding: 0;
+    list-style: none;
+}
+
+.advent-board .advent-doors {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: clamp(.45rem, .75vw, .9rem);
+    align-items: stretch;
+    margin: 0;
+}
+
+.advent-board .advent-day-tile {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    align-content: space-between;
+    gap: .15rem .25rem;
+    height: 100%;
+    min-height: 84px;
+    padding: .65rem .75rem;
+    border: 1px solid var(--advent-line);
+    border-block-start: 4px solid var(--advent-line);
+    border-radius: 8px;
+    background-color: var(--panel);
+    color: var(--text);
+    text-decoration: none;
+}
+
+.advent-board .advent-day-tile[data-milestone] {
+    border-block-start-color: var(--gold);
+}
+
+.advent-board .advent-day-tile:is(:hover, :focus-visible) {
+    border-color: var(--accent);
+}
+
+.advent-board .advent-day-number {
+    font-size: clamp(1.3rem, 1.7vw, 1.9rem);
+    font-weight: 800;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+}
+
+.advent-board .advent-day-status {
+    grid-column: 1 / -1;
+    font-size: .75rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+body.authenticated .advent-board :is(.advent-day-tile, .advent-state)[data-state="delivered"] { color: var(--advent-delivered); }
+body.authenticated .advent-board :is(.advent-day-tile, .advent-state)[data-state="reserved"] { color: var(--advent-open); }
+.advent-board .advent-milestone {
+    color: var(--advent-open);
+    font-size: .64rem;
+    font-weight: 800;
+    letter-spacing: .035em;
+    text-transform: uppercase;
+}
+
+.advent-board :is(.advent-door, .advent-rewards, #advent-calendar-title) {
+    scroll-margin-top: var(--game-sticky-offset, 10rem);
+}
+
+.advent-board .advent-door:target {
+    border-color: var(--accent);
+}
+
+.advent-board :is(a, summary, input, select, button, .advent-door, .advent-rewards):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+/* Sans prise en charge de :has, tous les panneaux restent consultables. */
+@supports selector(:has(*)) {
+    .advent-board .advent-selection:not(:has(.advent-door:target)) .advent-door:not([data-default]),
+    .advent-board .advent-selection:has(.advent-door:target) .advent-door:not(:target) {
+        display: none;
+    }
+
+    .advent-board .advent-layout:not(:has(.advent-door:target)) .advent-day-tile[data-default] {
+        border-color: var(--accent);
+        background: var(--advent-panel);
+    }
+
+    .advent-board .advent-selection:has(.advent-door:target),
+    .advent-board .advent-selection:has([data-default]) {
+        min-width: 0;
+    }
+}
+
+/* Planche 08-01 : la porte 6 sélectionnée et réellement disponible reste
+   repérable sur la grille ; les autres états gardent leur présentation. */
+.advent-board:is(:has(#advent-door-6:target .advent-choice), :not(:has(.advent-door:target)):has(#advent-door-6[data-default] .advent-choice))
+    .advent-day-tile[href="#advent-door-6"] {
+    border-color: var(--advent-open);
+    background: color-mix(in srgb, var(--advent-open) 11%, var(--panel));
+}
+
+@media (min-width: 1021px) {
+    /* Le récapitulatif et le contexte d'univers restent visibles sans ouvrir
+       une seconde boîte. Premiers pas garde sa place et ses commandes. */
+    body.authenticated .advent-board:is(:has(#advent-door-6:target .advent-choice), :not(:has(.advent-door:target)):has(#advent-door-6[data-default] .advent-choice))
+        :is(.advent-board-heading, .advent-destination, .advent-universe) {
+        margin-block: .45rem;
+    }
+    body.authenticated .advent-board:is(:has(#advent-door-6:target .advent-choice), :not(:has(.advent-door:target)):has(#advent-door-6[data-default] .advent-choice))
+        .advent-universe {
+        display: grid;
+        grid-template-columns: minmax(13rem, .65fr) minmax(0, 1.35fr);
+        align-items: baseline;
+        column-gap: 1rem;
+        padding: .55rem .85rem;
+    }
+    /* Le mode J6 sélectionnable est déjà lié : identité à gauche,
+       plafond et origine du relevé à droite sans cacher de texte. */
+    body.authenticated .advent-board:has(#advent-door-6 .advent-choice):is(:has(#advent-door-6:target), :not(:has(.advent-door:target)):has(#advent-door-6[data-default]))
+        .advent-universe > p:nth-of-type(2) {
+        grid-column: 2;
+        grid-row: 1;
+    }
+    body.authenticated .advent-board:is(:has(#advent-door-6:target .advent-choice), :not(:has(.advent-door:target)):has(#advent-door-6[data-default] .advent-choice))
+        .advent-universe :is(p, h2) {
+        margin: .2rem 0;
+        line-height: 1.4;
+    }
+    body.authenticated .advent-board #advent-door-6:has(.advent-choice) :is(h2, p, summary) {
+        margin-block: .2rem;
+    }
+    body.authenticated .advent-board #advent-door-6:has(.advent-choice) > :is(h2, p) {
+        display: inline-block;
+        margin-inline-end: .45rem;
+    }
+    body.authenticated .advent-board #advent-door-6:has(.advent-choice) .advent-door-form {
+        gap: .45rem;
+    }
+    body.authenticated .advent-board #advent-door-6:has(.advent-choice) .advent-notice {
+        padding: .4rem .65rem;
+    }
+}
+
+.advent-board .advent-choice {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.advent-board .advent-choice legend { margin-bottom: .5rem; }
+.advent-board .advent-choice label {
+    margin: 0;
+    padding: .65rem .7rem;
+    border: 1px solid var(--advent-line);
+    border-radius: 6px;
+    background-color: var(--panel);
+}
+.advent-board .advent-choice label:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--advent-panel);
+}
+.advent-board .advent-choice input {
+    flex: 0 0 auto;
+    width: 1rem;
+    min-height: 1rem;
+    margin-top: .2rem;
+}
+
+.advent-board :is(summary, .advent-door-form select, .advent-door-form .primary) {
+    min-height: 44px;
+}
+.advent-board summary { padding-block: .6rem; cursor: pointer; }
+.advent-board .advent-door-form .primary {
+    width: 100%;
+    white-space: normal;
+}
+body.authenticated .advent-board .advent-notice {
+    margin-block: .8rem;
+    padding: .7rem .85rem;
+    border-inline-start: 3px solid var(--accent);
+    background: var(--advent-panel);
+    color: var(--text);
+}
+
+.advent-board .advent-moments { display: grid; gap: .9rem; }
+.advent-board .advent-moment,
+.advent-board .advent-finale { display: grid; gap: .65rem; }
+body.authenticated .advent-board :is(.advent-moment, .advent-finale) p { margin: 0; }
+.advent-board :is(.advent-moment, .advent-finale) a { justify-self: start; min-height: 44px; }
+.advent-board .advent-finale > a { justify-self: stretch; justify-content: center; text-align: center; }
+
+.advent-board .advent-finale-preview {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    align-items: end;
+    min-height: 8rem;
+    padding: clamp(.9rem, 2vw, 1.4rem);
+    border: 1px solid var(--advent-line);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--panel);
+}
+.advent-board .advent-finale-preview--banner {
+    min-height: clamp(9rem, 15vw, 14rem);
+    background: #101e31;
+    color: #f5f8ff;
+}
+.advent-board .advent-finale-preview--banner::after {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: linear-gradient(97deg, rgba(10, 22, 41, .98), rgba(10, 22, 41, .90) 52%, rgba(10, 22, 41, .24));
+    content: "";
+}
+/* Planche 08-02 : cette bannière reste sombre, quel que soit le thème.
+   Le voile garantit aussi le fond du titre si l'image n'est pas chargée. */
+.advent-board .advent-finale-preview--banner:has(.advent-banner-name):has(.advent-title-name)::after {
+    background: linear-gradient(97deg, rgba(10, 22, 41, .98), rgba(10, 22, 41, .90) 52%, rgba(10, 22, 41, .78));
+}
+
+body.authenticated .advent-board .advent-finale-preview--banner:has(.advent-banner-name):has(.advent-title-name) p {
+    color: #c3d7eb;
+}
+body.authenticated .advent-board .advent-finale-preview--banner:has(.advent-banner-name):has(.advent-title-name) .advent-banner-name {
+    color: #a7e8f5;
+}
+body.authenticated .advent-board .advent-finale-preview--banner:has(.advent-banner-name):has(.advent-title-name) .advent-title-name {
+    color: #f5f8ff;
+}
+
+.advent-board .advent-finale-preview img {
+    position: absolute;
+    z-index: -2;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.advent-board .advent-banner-name {
+    color: #a7e8f5;
+    font-weight: 750;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.advent-board .advent-title-name {
+    font-size: clamp(1.45rem, 2.25vw, 2.25rem);
+    font-weight: 800;
+    line-height: 1.18;
+}
+.advent-board .advent-finale-status {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: .5rem;
+    padding: .65rem .8rem;
+    border: 1px solid var(--advent-line);
+    border-radius: 6px;
+    background: var(--panel);
+}
+
+@media (max-width: 1300px) {
+    .advent-board .advent-doors { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 1020px) {
+    .advent-board :is(.advent-layout, .advent-reward-layout) { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+    .advent-board .advent-doors { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .advent-board .advent-day-tile { min-height: 68px; padding: .45rem .4rem; }
+}
+
+body.authenticated .advent-board :is(.advent-meta .badge, .advent-state) {
+    padding: .2rem .48rem;
+    border: 1px solid var(--advent-line);
+    border-radius: 4px;
+    background: var(--advent-panel);
+    color: var(--text);
+    font-size: .8rem;
+}
+
+body.authenticated .advent-board .advent-door-subtitle {
+    margin-bottom: .5rem;
+    color: var(--accent);
+    font-size: 1rem;
+    font-weight: 750;
+}
+
+/* Devis autonomes J6 et J12 validés : les autres bons gardent le gabarit natif.
+   Les états sans résultat et sans stock n'ajoutent aucun formulaire. */
+body.authenticated .advent-credit-board {
+    --advent-credit-border: color-mix(in srgb, var(--line) 78%, var(--accent));
+    --advent-credit-surface: color-mix(in srgb, var(--panel) 94%, var(--accent));
+    --advent-credit-ink: var(--text);
+    --advent-credit-remise: var(--accent);
+    --advent-credit-payment: var(--gold);
+    --advent-credit-danger: var(--danger, #ff9b9b);
+}
+body.authenticated[data-theme="light"] .advent-credit-board {
+    --advent-credit-remise: #0b5971;
+    --advent-credit-payment: #6c4410;
+    --advent-credit-danger: #9f2936;
+}
+body.authenticated .advent-credit-board .page-heading {
+    gap: 1rem 1.5rem;
+    margin-block-end: 1.15rem;
+}
+body.authenticated .advent-credit-board .page-heading h1 {
+    margin: .12rem 0 .45rem;
+    font-size: clamp(1.65rem, 3.1vw, 2.85rem);
+    overflow-wrap: anywhere;
+}
+body.authenticated .advent-credit-board .page-heading p {
+    margin: .45rem 0 0;
+}
+body.authenticated .advent-credit-board .advent-credit-context {
+    color: var(--accent);
+    font-size: .75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .11em;
+}
+body.authenticated .advent-credit-board .advent-credit-day {
+    display: inline-block;
+    margin-block: 0 .35rem;
+    padding: .27rem .62rem;
+    border: 1px solid color-mix(in srgb, var(--line) 65%, var(--gold));
+    border-radius: .3rem;
+    background: color-mix(in srgb, var(--panel) 89%, var(--gold));
+    color: var(--advent-credit-ink);
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+body.authenticated .advent-credit-board .advent-credit-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 38fr) minmax(0, 62fr);
+    align-items: start;
+    gap: 1rem;
+}
+body.authenticated .advent-credit-board .advent-credit-grid > .panel {
+    min-width: 0;
+    display: grid;
+    gap: .65rem;
+    padding: clamp(.9rem, 1.5vw, 1.4rem);
+    border: 1px solid var(--advent-credit-border);
+    border-radius: .6rem;
+    background: linear-gradient(155deg, var(--advent-credit-surface), var(--panel));
+    overflow-wrap: anywhere;
+}
+body.authenticated .advent-credit-board .advent-credit-grid > .panel h2 {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    margin: 0;
+    font-size: clamp(1.05rem, 1.7vw, 1.65rem);
+}
+body.authenticated .advent-credit-board h2 .icon {
+    flex: 0 0 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    color: var(--accent);
+}
+body.authenticated .advent-credit-board .advent-credit-grid p {
+    margin: 0;
+}
+body.authenticated .advent-credit-board .advent-door-form {
+    gap: .65rem;
+}
+body.authenticated .advent-credit-board .advent-door-form label {
+    color: var(--advent-credit-ink);
+    font-weight: 750;
+}
+body.authenticated .advent-credit-board .advent-door-form select,
+body.authenticated .advent-credit-board button,
+body.authenticated .advent-credit-board .page-heading a {
+    min-height: 44px;
+}
+body.authenticated .advent-credit-board button {
+    justify-self: start;
+    min-inline-size: min(14rem, 100%);
+    text-align: center;
+    white-space: normal;
+}
+body.authenticated .advent-credit-board table {
+    width: 100%;
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    font-variant-numeric: tabular-nums;
+}
+body.authenticated .advent-credit-board table :is(th, td) {
+    padding: .55rem .65rem;
+    border-block-end: 1px solid var(--advent-credit-border);
+    background: var(--advent-credit-surface);
+    text-align: end;
+}
+body.authenticated .advent-credit-board table :is(th, td):first-child {
+    width: 44%;
+    text-align: start;
+}
+body.authenticated .advent-credit-board thead th {
+    background: color-mix(in srgb, var(--panel) 87%, var(--accent));
+    color: var(--advent-credit-ink);
+}
+body.authenticated .advent-credit-board thead th:nth-child(2) {
+    color: var(--advent-credit-remise);
+}
+body.authenticated .advent-credit-board thead th:last-child {
+    color: var(--advent-credit-payment);
+}
+body.authenticated .advent-credit-board button[aria-describedby="advent-credit-usage"] {
+    min-inline-size: min(23rem, 100%);
+}
+body.authenticated .advent-credit-board tbody td:last-child {
+    color: var(--advent-credit-ink);
+    font-weight: 800;
+}
+body.authenticated .advent-credit-board :is(.advent-credit-note, .advent-credit-stock-warning) {
+    padding: .65rem .75rem;
+    border: 1px solid var(--advent-credit-border);
+    border-radius: .35rem;
+    background: var(--advent-credit-surface);
+    color: var(--advent-credit-ink);
+}
+body.authenticated .advent-credit-board .advent-credit-stock-warning {
+    border-color: color-mix(in srgb, var(--line) 52%, var(--advent-credit-danger));
+    background: color-mix(in srgb, var(--panel) 91%, var(--advent-credit-danger));
+}
+body.authenticated .advent-credit-board :is(a, select, button):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+@media (max-width: 850px) {
+    body.authenticated .advent-credit-board .advent-credit-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    body.authenticated .advent-credit-board .page-heading a {
+        justify-self: start;
+    }
+    body.authenticated .advent-credit-board button {
+        width: 100%;
+    }
+}
+@media (max-width: 480px) {
+    body.authenticated .advent-credit-board table :is(th, td) {
+        padding-inline: .32rem;
+    }
+}
+
+/* Saison close sans droit en attente : grille et récépissé restent consultables
+   par les ancres existantes. Aucun de ces styles ne touche le choix ou le retrait. */
+body.authenticated .advent-board--history .advent-history-kicker {
+    display: inline-flex;
+    margin: 0 0 .4rem;
+    padding: .28rem .65rem;
+    border: 1px solid var(--advent-line);
+    border-radius: .3rem;
+    background: var(--advent-panel);
+    color: var(--accent);
+    font-size: .72rem;
+    font-weight: 750;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.advent-board--history .advent-history-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: .65rem;
+    padding: .8rem 1rem;
+    border: 1px solid var(--advent-line);
+    border-radius: .45rem;
+    background: color-mix(in srgb, var(--panel) 92%, var(--accent));
+}
+
+body.authenticated .advent-board--history .advent-history-notice p { margin: 0; }
+.advent-board--history .advent-history-notice :is(strong, span) { display: block; }
+.advent-board--history .advent-history-notice strong { margin-bottom: .15rem; }
+
+.advent-board--history :is(.advent-history-notice, .advent-calendar h2, .advent-door h2) > .icon {
+    flex: 0 0 auto;
+    width: 1.2rem;
+    height: 1.2rem;
+    color: var(--accent);
+    vertical-align: -.1em;
+}
+
+body.authenticated .advent-board--history .advent-history-context {
+    min-width: 0;
+    padding: clamp(.8rem, 1.3vw, 1.5rem);
+    border: 1px solid var(--advent-line);
+    border-radius: .55rem;
+    background: linear-gradient(154deg, var(--advent-panel), var(--panel));
+    overflow-wrap: anywhere;
+}
+body.authenticated .advent-board--history .advent-history-context h2 { margin: 0 0 .5rem; font-size: 1.15rem; }
+.advent-board--history .advent-calendar h3 { margin: 1rem 0 .65rem; font-size: 1rem; }
+.advent-board--history .advent-history-gift { display: none; }
+
+body.authenticated .advent-board--history .advent-day-tile[data-state="delivered"] {
+    background: color-mix(in srgb, var(--panel) 93%, var(--advent-delivered));
+    color: var(--text);
+}
+
+.advent-board--history .advent-day-tile[data-state="delivered"] .advent-day-status { color: var(--advent-delivered); }
+.advent-board--history .advent-day-tile[data-state="expired"] .advent-day-status { color: var(--text); }
+.advent-board--history .advent-layout:not(:has(.advent-door:target)) .advent-day-tile[data-default],
+.advent-board--history .advent-day-tile:is(:hover, :focus-visible) {
+    border-color: var(--accent);
+}
+.advent-board--history :is(.advent-back-to-calendar, #advent-calendar-title):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+.advent-board--history .advent-back-to-calendar {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+}
+
+@media (min-width: 1021px) {
+    .advent-board--history .advent-layout:has(.advent-history-context) {
+        grid-template-areas: "calendar selection" "calendar history-context";
+        grid-template-rows: auto 1fr;
+    }
+    .advent-board--history .advent-layout:has(.advent-history-context) .advent-calendar { grid-area: calendar; }
+    .advent-board--history .advent-layout:has(.advent-history-context) .advent-selection { grid-area: selection; }
+    .advent-board--history .advent-history-context { grid-area: history-context; }
+}
+
+@media (max-width: 480px) {
+    body.authenticated .advent-board--history .advent-calendar { padding: .65rem; }
+    .advent-board--history .advent-doors { gap: .3rem; }
+    .advent-board--history .advent-day-tile {
+        min-height: 50px;
+        padding: .25rem .28rem;
+    }
+    .advent-board--history .advent-day-number { font-size: 1rem; }
+    .advent-board--history .advent-day-status { font-size: .67rem; }
+    .advent-board--history .advent-milestone-word { display: none; }
+    .advent-board--history .advent-history-gift { display: inline; }
+}
+
+@media (min-width: 380px) and (max-width: 480px) {
+    /* Six cases dans la largeur de la maquette ; à 360 px on garde des cibles lisibles. */
+    .advent-board--history .advent-doors { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}

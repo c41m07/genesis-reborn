@@ -46,8 +46,9 @@ test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsq
     await maximum.click();
     await expect(panel.getByRole('status')).toContainText('Ressources manquantes : 240 Métal, 130 Nano, 200 Électricité.');
     await expect(panel.getByRole('button', { name: /^Il manque :/ })).toBeDisabled();
+    await expect(maximum).toBeDisabled();
     await expect(panel.locator('.catalog-missing-resource')).toHaveText(['Métal : 240', 'Nano : 130', 'Électricité : 200']);
-    const wait = panel.locator('.catalog-wait > button');
+    const wait = panel.locator('.catalog-wait');
     const waitText = panel.locator('.catalog-wait > span');
     await expect(waitText).toContainText(/Délai (estimé|indisponible)/);
     await expect(panel.locator('.catalog-payment')).toContainText('Il manque :');
@@ -55,12 +56,14 @@ test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsq
     await page.reload();
     await expect(waitText).toContainText(/Délai (estimé|indisponible)/);
     await page.setViewportSize({ width: 1440, height: 900 });
-    await wait.hover();
-    await expect(panel.locator('.catalog-wait-info')).toBeVisible();
-    await wait.focus();
+    await expect(wait).toContainText('Au rythme actuel, sans garantie de disponibilité.');
+    await expect(wait.locator('button, [popover]')).toHaveCount(0);
+    const itemInfo = panel.getByRole('button', { name: 'Informations sur Sonde de reconnaissance', exact: true });
+    await itemInfo.press('Enter');
+    await expect(panel.getByRole('dialog')).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(panel.locator('.catalog-wait-info')).toBeHidden();
-    await expect(wait).toBeFocused();
+    await expect(panel.getByRole('dialog')).toBeHidden();
+    await expect(itemInfo).toBeFocused();
     await input.fill('2');
     await expect(wait).toBeHidden();
     await input.press('Tab');
@@ -71,13 +74,20 @@ test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsq
         const touchPage = await touch.newPage();
         await touchPage.goto('/planetes/' + planet + '?section=ships');
         const touchPanel = touchPage.locator('#item-probe-basic');
-        await touchPanel.locator('.catalog-wait > button').tap();
-        await expect(touchPanel.locator('.catalog-wait-info')).toBeVisible();
+        await expect(touchPanel.locator('.catalog-wait')).toContainText('Au rythme actuel, sans garantie de disponibilité.');
+        await expect(touchPanel.locator('.catalog-wait button')).toHaveCount(0);
+        await touchPanel.getByRole('button', { name: 'Informations sur Sonde de reconnaissance', exact: true }).tap();
+        await expect(touchPanel.getByRole('dialog')).toBeVisible();
     } finally {
         await touch.close();
     }
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM queue_item WHERE planet_id=${planet}`)).toBe('0');
     prepareOwnedColony(project, email, { stock: 150000 });
+    await page.evaluate(() => document.activeElement?.blur());
+    const stockRefresh = page.waitForResponse(response => response.request().headers()['x-genesis-live'] === '1');
+    await page.evaluate(() => window.dispatchEvent(new Event('genesis:refresh')));
+    await stockRefresh;
+    await expect(maximum).toBeEnabled();
     await maximum.click();
     await expect.poll(async () => Number(await input.inputValue())).toBeGreaterThan(100);
     // Le navigateur bloque une valeur supérieure à max avant l’envoi. Le parcours
@@ -124,6 +134,8 @@ test('Il manque : décompte estimatif sans requête, expiration prudente et nouv
     const timer = card.getByRole('timer');
     await expect(timer).toContainText(/Délai estimé : .+ \(Métal\)/);
     await expect(timer).toHaveAttribute('aria-live', 'off');
+    await expect(card.locator('.catalog-wait')).toContainText('Au rythme actuel, sans garantie de disponibilité.');
+    await expect(card.locator('.catalog-wait button')).toHaveCount(0);
     const initial = await timer.textContent();
     const estimateMs = await timer.evaluate(element => (Number(element.dataset.deadline) - Number(element.dataset.observedAt)) * 1000);
     expect(estimateMs).toBeGreaterThan(2000);
@@ -149,6 +161,8 @@ test('Il manque : décompte estimatif sans requête, expiration prudente et nouv
         const nativeCard = nativePage.locator('#item-mine_metal-basic .catalog-payment');
         await expect(nativeCard.getByRole('timer')).toContainText(/Délai estimé : .+ \(Nano\)/);
         await expect(nativeCard).toContainText('Il manque :');
+        await expect(nativeCard).toContainText('Au rythme actuel, sans garantie de disponibilité.');
+        await expect(nativeCard.locator('.catalog-wait button')).toHaveCount(0);
         await expect(nativeCard.getByRole('button', { name: /^Il manque :/ })).toBeDisabled();
     } finally {
         await native.close();

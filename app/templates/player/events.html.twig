@@ -1,21 +1,23 @@
 {% extends 'base.html.twig' %}
 {% block title %}Événements et bonus · Genesis Reborn{% endblock %}
 {% block body %}
-<div class="page-refinement events-space event-redesign" data-page-sections="disabled">
-<div class="page-heading"><div><h1>Événements et bonus</h1><p>Les rendez-vous en cours et à venir dans votre univers. Horaires : {{ preferences.timezone }}.</p></div><a class="primary" href="{{ path('app_game_challenges') }}">Consulter les défis et rotations</a></div>
+<div class="page-refinement events-space event-redesign player-event-board" data-page-sections="disabled">
+<div class="page-heading"><div><p class="event-board-eyebrow">Opérations · {{ membership.universe.name }}</p><h1>Événements et bonus</h1><p>Les rendez-vous en cours et à venir dans votre univers. Horaires : {{ preferences.timezone }}.</p></div></div>
 {% include 'ui/event_navigation.html.twig' %}
-{% if pirateCampaignAvailable|default(false) %}
-    <section class="campaign-transition" aria-label="Campagne pirate">
-        <span>La campagne pirate se trouve désormais sous <strong>Flottes</strong> dans le menu.</span>
-        <a class="inline-link" href="{{ path('app_pirate_campaign') }}">Ouvrir le dossier de campagne</a>
-    </section>
-{% endif %}
 {% set typeLabels = {'production_bonus':'Bonus de production','construction_speed':'Vitesse de construction','research_speed':'Vitesse de recherche','fleet_speed':'Vitesse des flottes','special':'Événement spécial','reward':'Récompense','announcement':'Annonce'} %}
-<p><span class="badge">{{ eventGroups.current.total + eventGroups.upcoming.total }} événement{{ eventGroups.current.total + eventGroups.upcoming.total > 1 ? 's' : '' }}</span> Annonces et bonus applicables à votre empire dans <strong>{{ membership.universe.name }}</strong>.</p>
-<div class="event-list">
+<p class="core-event-context">Annonces et bonus applicables à votre empire dans <strong>{{ membership.universe.name }}</strong>.</p>
+<nav class="event-board-periods" aria-label="Périodes de programmation">
+    <a href="#events-current">En cours · {{ eventGroups.current.total }}</a>
+    <a href="#events-upcoming">À venir · {{ eventGroups.upcoming.total }}</a>
+</nav>
+<div class="event-list player-event-columns">
 {% for eventGroup,groupLabel in {current:'En cours',upcoming:'À venir'} %}
 {% set listing=eventGroups[eventGroup] %}
-<section aria-labelledby="events-{{ eventGroup }}"><h2 id="events-{{ eventGroup }}" tabindex="-1">{{ groupLabel }}</h2>
+<section class="panel player-event-period player-event-period--{{ eventGroup }}" aria-labelledby="events-{{ eventGroup }}">
+    <div class="core-event-group-heading"><h2 id="events-{{ eventGroup }}" tabindex="-1">{{ groupLabel }}</h2>
+        <span class="badge">{{ listing.total }} événement{{ listing.total > 1 ? 's' : '' }}</span>
+    </div>
+    <p class="muted">{{ eventGroup == 'current' ? 'Consultez la période et les effets de chaque événement.' : 'Les dates annoncées sont affichées dans votre fuseau horaire.' }}</p>
 {% for event in listing.rows %}
     {% set upcoming = eventGroup=='upcoming' %}
     <article class="panel event-card" aria-labelledby="event-{{ event.id }}-title">
@@ -27,8 +29,56 @@
         </div>
         <dl class="event-period"><div><dt>Début</dt><dd><time datetime="{{ event.startsAt|date('c', 'UTC') }}">{{ event.startsAt|date('d/m/Y à H:i', preferences.timezone) }}</time></dd></div><div><dt>Fin</dt><dd><time datetime="{{ event.endsAt|date('c', 'UTC') }}">{{ event.endsAt|date('d/m/Y à H:i', preferences.timezone) }}</time></dd></div></dl>
     </article>
-{% else %}<p>{{ eventGroup=='current' ? 'Aucun événement en cours dans cet univers.' : 'Aucun événement à venir annoncé.' }}</p>
+{% else %}<p class="panel core-event-empty">{{ eventGroup=='current' ? 'Aucun événement en cours dans cet univers.' : 'Aucun événement à venir annoncé.' }}</p>
 {% endfor %}
+{% if eventGroup == 'current' and activeChallenges is not empty %}
+    <section class="event-board-challenges" aria-labelledby="active-challenges-title">
+        <h3 id="active-challenges-title">Défis et rotations en cours</h3>
+        {% for challenge in activeChallenges %}
+        <article class="panel event-board-challenge" aria-labelledby="event-preview-{{ challenge.event.id }}-title">
+            <div>
+                <h4 id="event-preview-{{ challenge.event.id }}-title">{{ challenge.name }}</h4>
+                <p>{{ challenge.weekly ? 'Rotation hebdomadaire' : 'Défi collectif' }} · {{ challenge.objective.label }}</p>
+                {% if challenge.goal %}
+                    <p><strong>{{ challenge.event.totalContribution|quantity(2) }} / {{ challenge.goal|quantity(2) }}</strong></p>
+                    <progress class="challenge-progress" max="100" value="{{ challenge.progress }}" aria-label="Progression collective : {{ challenge.name }}"></progress>
+                {% endif %}
+            </div>
+            <div>
+                <p>{{ challenge.status_label }}</p>
+                <p>Fin prévue · <time datetime="{{ challenge.expected_end|date('c') }}">{{ challenge.expected_end|date('d/m/Y à H:i', preferences.timezone) }}</time></p>
+                <a class="secondary" href="{{ path('app_challenge',{id:challenge.event.id}) }}">Voir le défi<span class="visually-hidden"> : {{ challenge.name }}</span></a>
+            </div>
+        </article>
+        {% endfor %}
+        <a class="inline-link" href="{{ path('app_game_challenges') }}">Voir tous les défis et rotations</a>
+    </section>
+{% endif %}
+{% if eventGroup == 'current' and pirateCampaignAvailable|default(false) %}
+    <section class="panel player-event-pirate" aria-labelledby="event-pirate-title">
+        <h3 id="event-pirate-title">Campagne pirate</h3>
+        <p>Progression individuelle · Retrouvez votre dossier depuis Flottes.</p>
+        <a class="secondary" href="{{ path('app_pirate_campaign') }}">Ouvrir le dossier de campagne</a>
+    </section>
+{% endif %}
+{% if eventGroup == 'upcoming' %}
+    {% if activeChallenges is not empty %}
+    <section class="event-board-participation" aria-labelledby="event-personal-progress-title">
+        <h3 id="event-personal-progress-title">Votre participation</h3>
+        <p>Votre contribution est distincte du résultat collectif.</p>
+        <dl>
+            {% for challenge in activeChallenges %}
+            <div><dt><a href="{{ path('app_challenge',{id:challenge.event.id}) }}">{{ challenge.name }}</a></dt><dd>{{ challenge.score|quantity(2) }}</dd></div>
+            {% endfor %}
+        </dl>
+    </section>
+    {% endif %}
+    <div class="player-event-more">
+        <h3>Défis et rotations</h3>
+        <p>Consultez vos objectifs et votre participation dans l’espace des défis.</p>
+        <a class="secondary" href="{{ path('app_game_challenges') }}">Ouvrir les défis</a>
+    </div>
+{% endif %}
 {% include 'ui/event_pagination.html.twig' with {pagination:listing,pageParameter:eventGroup~'_page',fragment:'events-'~eventGroup,paginationLabel:'Pagination des événements '~groupLabel|lower} %}
 </section>
 {% endfor %}

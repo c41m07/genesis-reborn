@@ -1,0 +1,28 @@
+{# Projection et valeur acquise viennent du catalogue ; ici on ne recompose ni taux net ni production. #}
+{% set benefit = maximumPending ? card.queued_benefit : (card.benefits|first) %}
+{% set achieved = card.maximum and not maximumPending %}
+<div class="core-catalogue-effects">
+    <div class="core-catalogue-gain{{ achieved ? ' is-achieved' : '' }}" data-catalogue-main-gain>
+        <p class="core-catalogue-gain-caption">{{ achieved ? 'Effet acquis · niveau ' ~ card.level : (maximumPending ? 'Niveau ' ~ card.max_level ~ ' en file' : 'Gain du niveau ' ~ card.target) }}</p>
+        {% if benefit %}
+            {% if benefit.label is defined %}<span>{{ benefit.label }}{{ d.production_resource is defined ? ' · nominale de la colonie' : '' }}</span>{% endif %}
+            <strong>
+                {% if benefit.text is defined %}{{ benefit.text }}
+                {% elseif achieved and benefit.before is defined %}
+                    {% include 'ui/catalogue_benefit_value.html.twig' with {benefit:{value:benefit.before, unit:benefit.unit, decimals:2}} only %}
+                {% else %}
+                    {% include 'ui/catalogue_benefit_value.html.twig' with {benefit:benefit} only %}
+                {% endif %}
+            </strong>
+            {% if not achieved and benefit.before is defined %}
+                <small class="core-catalogue-gain-comparison">
+                    {% include 'ui/catalogue_benefit_value.html.twig' with {benefit:{value:benefit.before, unit:benefit.unit, decimals:2}} only %}
+                    <span aria-label="vers">→</span>
+                    {% include 'ui/catalogue_benefit_value.html.twig' with {benefit:{value:benefit.after, unit:benefit.unit, decimals:2}} only %}
+                </small>
+            {% endif %}
+        {% else %}
+            <span>{{ achieved ? 'Rang terminé' : 'Consulter la fiche pour les conditions et les déblocages.' }}</span>
+        {% endif %}
+    </div>
+</div>

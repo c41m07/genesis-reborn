@@ -6,24 +6,60 @@
     <meta name="theme-color" content="#090f1b">
     <title>{% block title %}Incident · Genesis Reborn{% endblock %}</title>
     <link rel="icon" href="/art/genesis-reborn-emblem.webp" type="image/webp">
+    {# Garder un rendu de secours autonome : ni layout connecté, ni session, ni routeur, ni script. #}
     <style>
-        :root{color-scheme:dark;font-family:system-ui,sans-serif;background:#090f1b;color:#e7eef6}
-        *{box-sizing:border-box}body{min-height:100vh;margin:0;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 0,#18263d,transparent 60%),#090f1b}
-        .skip{position:fixed;top:-100px;left:16px;padding:12px;background:#fff;color:#111;z-index:2}.skip:focus{top:12px}
-        main{width:min(100%,620px);padding:clamp(24px,6vw,56px);border:1px solid #34475e;border-radius:12px;background:#101b2b;box-shadow:0 24px 80px #0007}
-        .brand{display:flex;align-items:center;gap:12px;margin-bottom:36px;color:#e7eef6;font-weight:800;letter-spacing:.16em}.brand img{width:38px;height:38px}
-        .code{color:#77d5e9;font-size:.8rem;font-weight:700;letter-spacing:.18em}.eyebrow{color:#9aabc2;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase}h1{margin:.5rem 0 1rem;font-size:clamp(2rem,7vw,3.4rem);line-height:1.08;letter-spacing:-.04em}p{line-height:1.7;color:#c2cede;max-width:48ch}
-        a.action{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin-top:18px;padding:12px 18px;border:1px solid #e7b76b;border-radius:5px;background:#e7b76b;color:#17191d;font-weight:700;text-decoration:none}a.action:hover{background:#f2cd91}a:focus-visible{outline:3px solid #77d5e9;outline-offset:4px}
+        :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #090f1b; color: #e7eef6; }
+        * { box-sizing: border-box; }
+        body { display: grid; grid-template-rows: auto 1fr auto; min-height: 100vh; margin: 0; background: radial-gradient(ellipse at 65% 10%, #182c44, transparent 65%), #090f1b; }
+        .skip { position: fixed; top: -100px; left: 16px; padding: 12px; background: #fff; color: #111; z-index: 2; }
+        .skip:focus { top: 12px; }
+        header { background: #101a29; border-bottom: 1px solid #2a3d55; }
+        .error-bar, footer { width: min(100% - 32px, 1740px); margin-inline: auto; }
+        .error-bar, .error-actions, footer, .legal-links { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 22px; }
+        .error-bar, footer { justify-content: space-between; padding-block: 12px; }
+        .brand { display: inline-flex; align-items: center; gap: 8px; color: #e7eef6; font-size: 14px; font-weight: 800; letter-spacing: .14em; text-decoration: none; }
+        .brand img { width: 38px; height: 38px; }
+        .brand strong { display: block; color: #e7b76b; font-size: 10px; }
+        .strapline { font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: #c2cede; }
+        .error-actions a { display: inline-flex; align-items: center; min-height: 44px; color: #e7eef6; font-size: 13px; font-weight: 700; text-decoration: none; }
+        .error-actions a:last-child { border: 1px solid #405670; border-radius: 5px; padding-inline: 12px; }
+        main { width: min(100% - 32px, 860px); align-self: start; margin: clamp(32px, 9vw, 168px) auto 32px; padding: clamp(20px, 4vw, 52px); border: 1px solid #34475e; border-radius: 9px; background: linear-gradient(135deg, #142539, #101b2b); box-shadow: inset 3px 0 #6db9d1; }
+        .code { margin: 0; color: #ffb2a7; font-size: .8rem; font-weight: 700; letter-spacing: .15em; }
+        h1 { margin: .65rem 0 1rem; font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.08; letter-spacing: -.035em; }
+        p { line-height: 1.65; color: #c2cede; max-width: 65ch; }
+        a.action { display: inline-flex; align-items: center; justify-content: center; gap: 16px; min-height: 50px; margin-top: 14px; padding: 12px 18px; border: 1px solid #e7b76b; border-radius: 5px; background: #e7b76b; color: #17191d; font-weight: 700; text-decoration: none; }
+        a.action:hover { background: #f2cd91; }
+        a:focus-visible { outline: 3px solid #77d5e9; outline-offset: 4px; }
+        footer { border-top: 1px solid #2a3d55; color: #c2cede; font-size: 13px; }
+        .legal-links a { display: inline-flex; align-items: center; min-height: 36px; color: #c2cede; text-underline-offset: 3px; }
+        @media (max-width: 720px) { .strapline { display: none; } .error-actions { gap: 8px 12px; } }
+        @media (max-width: 380px) { .error-bar { gap: 4px 12px; } .error-actions a:last-child { display: none; } }
     </style>
 </head>
 <body>
 <a class="skip" href="#main">Aller au contenu principal</a>
+<header>
+    <div class="error-bar">
+        <a href="/" class="brand"><img src="/art/genesis-reborn-emblem.webp" alt="" width="38" height="38"><span>GENESIS <strong>REBORN</strong></span></a>
+        <span class="strapline">Une colonie. Un empire. Votre histoire.</span>
+        <nav class="error-actions" aria-label="Accès au compte">
+            <a href="/connexion">Se connecter</a>
+            <a href="/inscription">Créer un compte</a>
+        </nav>
+    </div>
+</header>
 <main id="main" tabindex="-1" aria-labelledby="error-title">
-    <div class="brand"><img src="/art/genesis-reborn-emblem.webp" alt=""><span>GENESIS REBORN</span></div>
     <p class="code">{% block error_code %}INCIDENT{% endblock %}</p>
     <h1 id="error-title">{% block error_title %}Une erreur est survenue{% endblock %}</h1>
     <p>{% block error_message %}La page ne peut pas être affichée pour le moment. Réessayez plus tard.{% endblock %}</p>
-    <a class="action" href="/">Retour à l’accueil</a>
+    <a class="action" href="/">Retour à l’accueil <span aria-hidden="true">→</span></a>
 </main>
+<footer>
+    <span>GENESIS REBORN · Explorez. Développez. Écrivez votre histoire.</span>
+    <nav class="legal-links" aria-label="Informations juridiques">
+        <a href="/mentions-legales">Mentions légales</a><a href="/cgu">CGU</a>
+        <a href="/confidentialite">Confidentialité</a><a href="/cookies">Cookies</a>
+    </nav>
+</footer>
 </body>
 </html>

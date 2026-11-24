@@ -60,7 +60,18 @@ test('Attente : accessible malgré l’origine perdue, reprise tactile après de
     await expect.poll(()=>queryIsolatedSql(data.project,`SELECT status FROM fleet WHERE id=${id}`),{timeout:20000}).toBe('station_waiting');
     runIsolatedSql(data.project,`UPDATE planet SET owner_id=${data.member},acquired_at=UTC_TIMESTAMP() WHERE id=${data.own.id}`);
     await page.goto('/flottes/quai');await page.getByRole('link',{name:'Reprendre le stationnement de la flotte '+id,exact:true}).tap();
-    await page.getByLabel('Colonie de destination',{exact:true}).selectOption(String(data.own.id));await page.getByRole('button',{name:'Calculer le trajet',exact:true}).tap();
+    await page.getByLabel('Colonie de destination', { exact: true }).selectOption(String(data.own.id));
+    // Le toucher peut se terminer sur l’ancien document. Attendre le devis de
+    // cette flotte et de cette colonie avant de vérifier son bouton de confirmation.
+    const [quoteResponse] = await Promise.all([
+      page.waitForResponse(response => {
+        const url = new URL(response.url());
+        return response.request().isNavigationRequest() && response.request().method() === 'GET'
+          && url.pathname === `/flottes/${id}/reprendre` && url.searchParams.get('planet') === String(data.own.id);
+      }),
+      page.getByRole('button', { name: 'Calculer le trajet', exact: true }).tap(),
+    ]);
+    expect(quoteResponse.status()).toBe(200);
     await expect(page.getByRole('button',{name:'Confirmer la reprise',exact:true})).toBeVisible();
     expect((await new AxeBuilder({page}).include('main').analyze()).violations.filter(v=>['serious','critical'].includes(v.impact))).toEqual([]);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBeTruthy();

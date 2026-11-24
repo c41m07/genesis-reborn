@@ -5,8 +5,9 @@
 <div class="page-heading">
     <div>
         <h1>{{ caseFile.title }}</h1>
-        <p>Dossier n° {{ caseFile.id }} · {{ statuses[caseFile.status] }} · {{ caseFile.universe ? caseFile.universe.name : 'Plateforme' }}</p>
+        <p>Dossier n° {{ caseFile.id }} · {{ caseFile.universe ? caseFile.universe.name : 'Plateforme' }}</p>
     </div>
+    <p class="admin-design-badge">{{ statuses[caseFile.status] }}</p>
 </div>
 <div class="admin-case-detail-layout">
     <div class="admin-case-main">
@@ -26,7 +27,7 @@
             <ol class="admin-monitor-report-list">
                 {% for note in notes %}
                     <li>
-                        <strong>{{ note.author ? note.author.username : 'Compte supprimé' }}</strong> · {{ note.createdAt|date('d/m/Y H:i:s', preferences.timezone) }}
+                        <strong>{{ note.author ? note.author.username : 'Compte supprimé' }}</strong> · <time datetime="{{ note.createdAt|date('c') }}">{{ note.createdAt|date('d/m/Y H:i:s', preferences.timezone) }}</time>
                         <p class="admin-case-text">{{ note.body }}</p>
                     </li>
                 {% else %}

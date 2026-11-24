@@ -22,3 +22,378 @@ body[data-theme=light] .simulation-workspace .simulation-survivors { color:#1767
     .simulation-workspace .simulation-losses td { text-align:left; padding:4px 0 10px; font-size:22px; }
     .simulation-workspace .simulation-losses td::before { content:attr(data-label); display:block; color:var(--muted); font-size:12px; }
 }
+
+/* P13/P21 : le scénario, les hypothèses et le résultat restent des sections nommées du même calcul. */
+.player-simulation-board .simulation-board-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+.player-simulation-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+.simulation-board-nav { display:flex; flex-wrap:wrap; gap:.5rem; margin:.8rem 0; }
+.simulation-board-nav a { display:inline-flex; align-items:center; min-height:44px; padding:.4rem .85rem; border:1px solid var(--line); border-radius:5px; background:var(--panel); color:var(--text); text-decoration:none; }
+.simulation-board-nav a:first-child { border-color:var(--accent); box-shadow:inset 0 -2px var(--accent); }
+.player-simulation-board .strategic-grid > section { min-width:0; border:1px solid var(--line); border-radius:8px; padding:1rem; background:color-mix(in srgb,var(--accent) 4%,var(--panel)); }
+.player-simulation-board .strategic-grid h2 { margin-top:0; }
+.simulation-board-options { display:grid; grid-template-columns:minmax(13rem,.65fr) minmax(0,1fr); gap:1rem; align-items:start; margin:1rem 0; }
+.simulation-board-assumptions { min-width:0; padding:.85rem; border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 8%,var(--panel)); }
+.player-simulation-board :is(#simulation-scenario,#simulation-result) { scroll-margin-top:180px; }
+.player-simulation-board .simulation-outcomes > div { padding:1rem; border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 8%,var(--panel)); }
+@media(max-width:800px) {
+    .simulation-board-options { grid-template-columns:minmax(0,1fr); }
+}
+
+.player-simulation-board .simulation-board-note { max-width:92ch; margin:0 0 .65rem; }
+.player-simulation-board .simulation-board-load { display:flex; flex-wrap:wrap; align-items:center; gap:.55rem; scroll-margin-top:180px; }
+.player-simulation-board .simulation-board-load label { margin:0; }
+.player-simulation-board .simulation-board-load select { width:auto; min-width:min(15rem,100%); max-width:100%; min-height:44px; }
+.player-simulation-board .simulation-board-source-link { display:block; min-height:1.5rem; margin:.3rem 0 .75rem; }
+.player-simulation-board .simulation-board-options > button { grid-column:1 / -1; justify-self:start; margin:0; }
+/* À grand écran, les réglages avancés fermés partagent une ligne. Une
+   section ouverte retrouve toute la largeur, sans superposer de commandes. */
+@media (min-width: 1180px) and (min-height: 850px) {
+    .player-simulation-board .simulation-board-nav { margin-block:.55rem; }
+    .player-simulation-board .simulation-form { padding-block:.65rem; }
+    .player-simulation-board .simulation-form > .strategic-grid > section {
+        display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-content:start; align-items:start; gap:.25rem .6rem;
+        padding-block:.65rem;
+    }
+    .player-simulation-board .simulation-form > .strategic-grid > section > * { grid-column:1 / -1; }
+    .player-simulation-board .simulation-form > .strategic-grid > section > details:not([open]):not(:first-of-type) { grid-column:auto; }
+    .player-simulation-board .simulation-form > .strategic-grid > section > details { min-width:0; margin:0; }
+    .player-simulation-board .simulation-form > .strategic-grid > section > details > summary { padding:.35rem 0; overflow-wrap:anywhere; }
+    .player-simulation-board .simulation-form > .strategic-grid > section > label { margin:.2rem 0 0; }
+    .player-simulation-board .simulation-board-source-link { margin:0 0 .1rem; }
+    .player-simulation-board .simulation-board-options { gap:.4rem .85rem; margin:.55rem 0 0; }
+    .player-simulation-board .simulation-board-options > div > label { margin:0 0 .3rem; }
+    .player-simulation-board .simulation-board-options > div > p { margin:.3rem 0 0; }
+    .player-simulation-board .simulation-board-assumptions { margin:0; padding-block:.65rem; }
+}
+.player-simulation-board .simulation-trial-summary { margin:1rem 0; }
+.player-simulation-board .simulation-trial-summary :is(th,td) { padding:.55rem .75rem; font-variant-numeric:tabular-nums; }
+.player-simulation-board .simulation-trial-summary td:nth-child(n+3) { text-align:end; }
+.player-simulation-board .simulation-trial > summary { scroll-margin-top:180px; }
+
+/* P13 : le scénario manuel dispose de deux cartes et d’un bloc de validation séparé. */
+.player-simulation-board--scenario .simulation-form { padding:0; border:0; background:none; box-shadow:none; }
+.player-simulation-board--scenario .simulation-form > .strategic-grid > section { padding:clamp(.85rem,1.25vw,1.4rem); }
+.player-simulation-board--scenario .strategic-grid input[id^="arrival-"] { width:min(100%,15rem); }
+.player-simulation-board--scenario .simulation-board-load { margin-block:0 .25rem; }
+.player-simulation-board--scenario .simulation-board-load label { flex-basis:100%; }
+.player-simulation-board--scenario .simulation-board-load select { min-width:0; max-width:100%; }
+.player-simulation-board--scenario .simulation-board-options { padding:clamp(.85rem,1.25vw,1.4rem); margin-top:1rem; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+.player-simulation-board--scenario #simulation-seed { width:min(100%,20rem); }
+.player-simulation-board--scenario .simulation-board-assumptions { display:flex; gap:.7rem; align-items:flex-start; margin:0; }
+.player-simulation-board--scenario .simulation-board-assumptions input { flex:none; margin-block:.18em 0; }
+.player-simulation-board--scenario .simulation-board-options > .simulation-board-note { grid-column:1 / -1; margin:0; }
+
+/* Le guide déplié suit ce scénario, au lieu de recouvrir la confirmation. */
+.app-frame:has(> .shell .player-simulation-board--scenario) > .first-steps-popup-enhanced[open] {
+    position:relative;
+    inset:auto;
+    margin:0 0 8px auto;
+    max-width:100%;
+}
+
+
+@media (min-width: 1280px) and (min-height: 900px) {
+    .player-simulation-board--scenario .page-heading > div > p:not(.simulation-board-eyebrow) { max-width:72ch; }
+    .player-simulation-board--scenario .simulation-board-load { min-height:44px; }
+    .player-simulation-board--scenario .simulation-board-load label { flex-basis:auto; }
+    .player-simulation-board--scenario .strategic-grid > section > .simulation-board-source-link {
+        display:flex;
+        align-items:center;
+        min-height:44px;
+        margin-block:0 .25rem;
+    }
+    .player-simulation-board--scenario .simulation-board-options > button {
+        grid-column:1;
+        grid-row:2;
+        align-self:center;
+    }
+    .player-simulation-board--scenario .simulation-board-options > .simulation-board-note { grid-column:2; }
+}
+
+
+/* P21 : des libellés restent associés aux couleurs et les quatre issues réelles restent visibles. */
+.player-simulation-board #simulation-result { margin-top:1rem; padding:clamp(.85rem,1.6vw,1.65rem); scroll-margin-top:1rem; }
+@media (min-width: 741px) {
+    /* Garder le titre sous le bandeau fixe, y compris après redimensionnement. */
+    .player-simulation-board #simulation-result { scroll-margin-top:6rem; }
+}
+.simulation-result-heading > p { margin:0 0 .5rem; }
+.simulation-result-heading > h2 { margin:.1rem 0 .4rem; font-size:clamp(1.45rem,2vw,2rem); }
+.player-simulation-board .simulation-outcomes { grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr)); }
+.player-simulation-board .simulation-outcomes > .simulation-outcome { display:block; }
+.player-simulation-board .simulation-outcome > dt { font-weight:700; }
+.player-simulation-board .simulation-outcome > dd {
+    display:block;
+    margin:.5rem 0 0;
+    font-size:clamp(1.35rem,2vw,1.9rem);
+    line-height:1.15;
+    color:var(--simulation-outcome-color,var(--text));
+}
+.player-simulation-board .simulation-outcome > dd.simulation-outcome-sample {
+    display:block;
+    margin-top:.35rem;
+    color:color-mix(in srgb,var(--text) 80%,var(--muted));
+    font-size:.75rem;
+}
+.player-simulation-board .simulation-outcome--attacker_wins { --simulation-outcome-color:#87d8b4; }
+.player-simulation-board .simulation-outcome--draw { --simulation-outcome-color:#e9bc73; }
+.player-simulation-board .simulation-outcome--defender_wins { --simulation-outcome-color:#ffadab; }
+body[data-theme=light] .player-simulation-board .simulation-outcome--attacker_wins { --simulation-outcome-color:#176742; }
+body[data-theme=light] .player-simulation-board .simulation-outcome--draw { --simulation-outcome-color:#784a00; }
+body[data-theme=light] .player-simulation-board .simulation-outcome--defender_wins { --simulation-outcome-color:#a02830; }
+.player-simulation-board .simulation-outcome-label { color:var(--simulation-outcome-color,var(--text)); font-weight:650; }
+.player-simulation-board .simulation-trial-summary tbody tr > * { border-bottom:1px solid var(--line); }
+.player-simulation-board .simulation-trial-summary tbody tr:nth-child(even) { background:color-mix(in srgb,var(--accent) 3%,var(--panel)); }
+.player-simulation-board .simulation-trial-summary :is(th,td):nth-child(n+3) { text-align:end; }
+.player-simulation-board .simulation-result-actions { display:flex; align-items:center; flex-wrap:wrap; gap:.8rem; }
+.player-simulation-board .simulation-result-actions + h3 { margin-top:1.5rem; }
+
+/* Garder le résultat inspectable même si le guide se déplie automatiquement. */
+.app-frame:has(> .shell .player-simulation-board #simulation-result) > .first-steps-popup-enhanced[open] {
+    position:relative;
+    inset:auto;
+    margin:0 0 8px auto;
+    max-width:100%;
+}
+
+/* Assistant A : une catégorie à la fois, le même tableau pour les deux camps.
+   Sans JavaScript, les ancres et tous les champs restent dans le flux. */
+.simulation-wizard-nav,
+.simulation-wizard-source-grid,
+.simulation-wizard-camps {
+    display: grid;
+    gap: .75rem;
+}
+.simulation-wizard-nav {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-block: 1rem;
+}
+.simulation-wizard-nav a {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    min-height: 48px;
+    padding: .6rem .8rem;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--panel);
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 700;
+}
+.simulation-wizard-nav a[aria-current="step"] {
+    border-color: var(--accent);
+    box-shadow: inset 0 -2px var(--accent);
+    color: var(--accent);
+}
+.simulation-wizard-nav b,
+.simulation-wizard-source > h2 span {
+    color: var(--accent);
+}
+.simulation-wizard-sources > summary {
+    display: none;
+}
+.simulation-wizard-source-grid,
+.simulation-wizard-camps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+}
+.simulation-wizard-source,
+.simulation-wizard-camp {
+    min-width: 0;
+    padding: clamp(.75rem, 1vw, 1.15rem);
+    margin: 0;
+}
+.simulation-wizard-source > h2 {
+    margin: 0 0 .45rem;
+    font-size: 1.02rem;
+    overflow-wrap: anywhere;
+}
+.simulation-wizard-source > h2 span {
+    display: block;
+    margin-bottom: .2rem;
+    font-size: .73rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+.simulation-wizard-source p {
+    margin: .4rem 0 0;
+    color: var(--muted);
+}
+.simulation-wizard-source label {
+    font-size: .83rem;
+}
+.simulation-wizard-source-actions {
+    display: flex;
+    gap: .4rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.simulation-wizard-source-actions select {
+    width: auto;
+    max-width: 100%;
+    min-height: 44px;
+}
+.simulation-wizard-stage {
+    margin-block: 1rem;
+    scroll-margin-top: 180px;
+}
+.simulation-wizard-stage[hidden] {
+    display: none;
+}
+.simulation-wizard-heading {
+    margin-block: .9rem .7rem;
+}
+.simulation-wizard-heading h2 {
+    margin: 0 0 .25rem;
+    scroll-margin-top: 195px;
+}
+.simulation-wizard-heading p {
+    margin: 0 0 .3rem;
+}
+.simulation-wizard-heading p:last-child {
+    color: var(--muted);
+}
+.simulation-wizard-camp h3 {
+    margin: 0 0 .6rem;
+}
+/* Le tableau générique impose 440 px et un dernier champ large.
+   Ici, les trois rangs tiennent sur le téléphone sans défilement horizontal. */
+.player-simulation-board .simulation-wizard-camp .data-table {
+    min-width: 0;
+    table-layout: fixed;
+}
+.player-simulation-board .simulation-wizard-camp .data-table :is(th, td) {
+    padding: .36rem .45rem;
+    vertical-align: middle;
+}
+.player-simulation-board .simulation-wizard-camp .data-table td:last-child {
+    min-width: 0;
+}
+.simulation-wizard-camp th:first-child {
+    width: 42%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.simulation-wizard-camp th:not(:first-child) {
+    overflow-wrap: anywhere;
+}
+.player-simulation-board .simulation-wizard-camp input[type="number"] {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    margin: 0;
+}
+.simulation-tier-short {
+    display: none;
+}
+.simulation-wizard-arrival {
+    display: flex;
+    gap: .65rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: .65rem;
+}
+.player-simulation-board .simulation-wizard-arrival input[type="number"] {
+    width: 5rem;
+}
+.player-simulation-board .simulation-wizard-arrival label {
+    margin: 0;
+}
+.simulation-wizard-source-status,
+.simulation-wizard-not-applicable,
+.simulation-wizard-unknown {
+    border-inline-start: 3px solid var(--accent);
+    padding: .55rem .75rem;
+    margin-block: .45rem .65rem;
+    background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+}
+.simulation-wizard-unknown {
+    border-inline-start-color: var(--gold);
+}
+.simulation-wizard-fortress {
+    margin-block-start: .7rem;
+}
+.simulation-wizard-fortress summary {
+    min-height: 44px;
+    padding-block: .5rem;
+}
+.simulation-wizard-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: .6rem;
+    margin-block-start: .75rem;
+}
+.simulation-wizard-actions :is(a, button) {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+}
+.simulation-wizard-actions a.primary {
+    background: var(--gold);
+    color: #141923;
+    padding: .55rem .8rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 700;
+}
+.simulation-wizard-recap {
+    padding: .85rem 1rem;
+    margin: 0 0 .6rem;
+}
+.simulation-wizard-recap h3 {
+    margin: 0 0 .45rem;
+}
+.simulation-wizard-recap p {
+    margin: .3rem 0 0;
+    color: var(--muted);
+}
+.player-simulation-board--scenario .simulation-wizard-options.simulation-board-options > .simulation-board-note {
+    grid-column: 1 / -1;
+}
+/* Le gris secondaire clair historique n’atteint pas 4,5:1 sur les nouveaux panneaux. */
+body[data-theme="light"] .player-simulation-board :is(
+    .simulation-wizard-source p,
+    .simulation-wizard-heading p:last-child,
+    .simulation-wizard-recap p
+) {
+    color: var(--text);
+}
+
+@media (max-width: 800px) {
+    .simulation-wizard-sources > summary {
+        display: list-item;
+        padding: .6rem .7rem;
+        min-height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        cursor: pointer;
+        margin-block-end: .5rem;
+    }
+    .simulation-wizard-nav {
+        gap: .3rem;
+    }
+    .simulation-wizard-nav a {
+        justify-content: center;
+        flex-direction: column;
+        gap: .1rem;
+        padding: .3rem .2rem;
+        font-size: clamp(.68rem, 3vw, .9rem);
+    }
+    .simulation-wizard-source-grid,
+    .simulation-wizard-camps {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .player-simulation-board .simulation-wizard-camp .data-table :is(th, td) {
+        padding: .3rem .24rem;
+    }
+    .simulation-wizard-camp th {
+        font-size: .71rem;
+    }
+    .player-simulation-board .simulation-wizard-camp input[type="number"] {
+        padding-inline: .2rem;
+    }
+    .simulation-tier-short { display: inline; }
+    .simulation-tier-long { display: none; }
+}

@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+{% block title %}Devis de l’Avent · Genesis Reborn{% endblock %}
+{% block body %}
+{% import 'ui/macros.html.twig' as ui %}
+{# Cet écran natif est aussi utilisé par J24 : ses variants conservent leur présentation. #}
+{% set approvedDesign = (creditDoor == 6 and not research) or (creditDoor == 12 and research) %}
+<div class="events-space event-redesign{{ approvedDesign ? ' advent-credit-board' : '' }}" data-page-sections="disabled"{% if approvedDesign %} data-advent-credit-day="{{ creditDoor }}"{% endif %}>
+    <div class="page-heading">
+        <div>
+            {% if approvedDesign %}<p class="advent-credit-context">Événements / Avent</p>{% endif %}
+            <h1>{{ research ? 'Remise de recherche' : 'Bon de construction' }}</h1>
+            {% if approvedDesign %}<p class="advent-credit-day">J{{ creditDoor }} · {{ research ? 'Recherche' : 'Bon naval' }}</p>{% endif %}
+            <p>{% include 'advent/_offer.html.twig' with {offer: offer, resources: resources, ships: ships} only %}</p>
+        </div>
+        {% if calendarVisible %}<a class="secondary" href="{{ path('app_advent_edition', {id: editionId}) }}">Retour au calendrier</a>{% else %}<a class="secondary" href="{{ path('app_inventory_pending') }}">Retour aux récompenses en attente</a>{% endif %}
+    </div>
+    {% if approvedDesign %}<div class="advent-credit-grid">{% endif %}
+    <section class="panel" aria-labelledby="advent-credit-choice-title">
+        <h2 id="advent-credit-choice-title">{% if approvedDesign %}{{ ui.icon('galaxy') }} {% endif %}Commande dans {{ membership.universe.name }}</h2>
+        {% if error %}<p role="alert" id="advent-credit-error">{{ error }}</p>{% endif %}
+        <form method="get" action="{{ path('app_advent_credit', {id: editionId, claimId: claimId}) }}" class="advent-door-form">
+            <label for="advent-credit-colony">Colonie destinataire</label>
+            <select id="advent-credit-colony" name="colony" required>
+                <option value="">Choisir une colonie</option>
+                {% for planet in planets %}<option value="{{ planet.id }}"{{ selectedPlanet == planet.id ? ' selected' }}>{{ planet.name }} ({{ planet.coordinates() }})</option>{% endfor %}
+            </select>
+            {% if research %}
+                <label for="advent-credit-technology">Technologie et rang</label>
+                <select id="advent-credit-technology" name="item" required>
+                    <option value="">Choisir un prochain niveau à vérifier</option>
+                    {% for rank, tier in ranks %}
+                        <optgroup label="{{ tier.label }}">
+                            {% for slug, technology in technologies %}
+                                {% set key = slug ~ ':' ~ rank %}
+                                <option value="{{ key }}"{{ selection == key ? ' selected' }}>{{ technology.tier_labels[rank]|default(technology.label) }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    {% endfor %}
+                </select>
+            {% endif %}
+            <button class="{{ quote ? 'secondary' : 'primary' }}">Calculer le devis</button>
+        </form>
+    </section>
+    {% if quote %}
+        <section class="panel" aria-labelledby="advent-credit-quote-title">
+            <h2 id="advent-credit-quote-title">{% if approvedDesign %}{{ ui.icon('clock') }} {% endif %}{{ quote.label }}{% if research %}, niveau {{ quote.level }}{% elseif approvedDesign %} · {{ ranks[offer.tier].label }}{% endif %}</h2>
+            <p>Durée native : {{ quote.duration|quantity(0) }} s.{% if not approvedDesign %} La remise est utilisée à l’ajout en file ; une annulation ne la rend pas.{% endif %}</p>
+            <table>
+                {% if approvedDesign %}<caption class="visually-hidden">Remise et reste à payer par ressource</caption>{% endif %}
+                <thead><tr><th scope="col">Ressource</th><th scope="col">Remise</th><th scope="col">À payer</th></tr></thead>
+                <tbody>{% for resource, amount in quote.paid %}{% if amount or quote.discount[resource]|default(0) %}<tr><th scope="row">{{ resources[resource] }}</th><td>{{ quote.discount[resource]|default(0)|quantity(0) }}</td><td>{{ amount|quantity(0) }}</td></tr>{% endif %}{% endfor %}</tbody>
+            </table>
+            {% if approvedDesign %}<p class="advent-credit-note" id="advent-credit-usage">La remise est utilisée à l’ajout en file ; une annulation ne la rend pas.</p>{% endif %}
+            {% if quote.affordable %}
+                <form method="post" action="{{ path('app_advent_credit', {id: editionId, claimId: claimId}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('advent_credit_' ~ membership.id ~ '_' ~ claimId) }}">
+                    <input type="hidden" name="colony" value="{{ selectedPlanet }}">
+                    <input type="hidden" name="item" value="{{ selection }}">
+                    <input type="hidden" name="quote" value="{{ quote.proof }}">
+                    <input type="hidden" name="request_key" value="{{ requestKey }}">
+                    <button class="primary"{% if approvedDesign %} aria-describedby="advent-credit-usage"{% endif %}>Confirmer et utiliser la remise</button>
+                </form>
+            {% else %}
+                <p{% if approvedDesign %} class="advent-credit-stock-warning"{% endif %}>Le stock de la colonie ne suffit pas. Le devis n’utilise pas la remise et ne lance pas la commande.</p>
+            {% endif %}
+        </section>
+    {% endif %}
+    {% if approvedDesign %}</div>{% endif %}
+</div>
+{% endblock %}

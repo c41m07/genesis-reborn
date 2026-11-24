@@ -77,6 +77,40 @@ final class PersonalDiplomacyTest extends KernelTestCase
         self::assertSame(1, $this->em->getRepository(AllianceContract::class)->count());
     }
 
+    public function testReportsFollowTheHistoricalDirectionOfPersonalRequests(): void
+    {
+        [$proposer, $recipient] = $this->pair();
+        $this->diplomacy->alliance($proposer, $recipient->id, 'propose');
+        $this->diplomacy->alliance($proposer, $recipient->id, 'break'); // Retrait : aucun faux refus.
+        $this->diplomacy->alliance($proposer, $recipient->id, 'propose');
+        $this->diplomacy->alliance($recipient, $proposer->id, 'break');
+        $this->diplomacy->alliance($recipient, $proposer->id, 'break'); // Pas de demande : aucun deuxième rapport.
+        $this->diplomacy->alliance($recipient, $proposer->id, 'rival');
+        $this->diplomacy->alliance($recipient, $proposer->id, 'peace_propose');
+        $this->diplomacy->alliance($proposer, $recipient->id, 'peace_reject');
+        $this->diplomacy->alliance($proposer, $recipient->id, 'peace_propose');
+        $this->diplomacy->alliance($recipient, $proposer->id, 'peace_accept');
+
+        $rows = $this->em->getConnection()->fetchAllAssociative(
+            'SELECT recipient_id, counterpart_id, subject, outcome FROM diplomatic_report ORDER BY id',
+        );
+        $events = array_map(static fn (array $row): array => [
+            (int) $row['recipient_id'], (int) $row['counterpart_id'], $row['subject'], $row['outcome'],
+        ], $rows);
+        self::assertSame([
+            [$recipient->id, $proposer->id, 'personal_alliance', 'requested'],
+            [$recipient->id, $proposer->id, 'personal_alliance', 'requested'],
+            [$proposer->id, $recipient->id, 'personal_alliance', 'refused'],
+            [$proposer->id, $recipient->id, 'personal_peace', 'requested'],
+            [$recipient->id, $proposer->id, 'personal_peace', 'refused'],
+            [$recipient->id, $proposer->id, 'personal_peace', 'requested'],
+            [$proposer->id, $recipient->id, 'personal_peace', 'accepted'],
+        ], $events);
+        self::assertSame(7, (int) $this->em->getConnection()->fetchOne(
+            'SELECT COUNT(*) FROM report_notice WHERE diplomatic_report_id IS NOT NULL',
+        ));
+    }
+
     public function testGroupedDisplayKeepsPersonalAndGuildPrioritiesWithoutSharedCache(): void
     {
         [$actor, $target] = $this->pair('omega-1');

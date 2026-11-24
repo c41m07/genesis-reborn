@@ -1,13 +1,30 @@
+<section class="guild-discovery-banner" aria-labelledby="guild-discovery-banner-title">
+    <h2 id="guild-discovery-banner-title">Un empire se construit ensemble</h2>
+    <p>Rejoignez un équipage, coordonnez vos opérations et soutenez des projets communs.</p>
+</section>
 {% include 'player/_guild_search.html.twig' with {discoverySearch: true} %}
 
 {% if search is empty %}
-<section class="panel" aria-labelledby="guild-recruitment-title">
+<section class="guild-recruitment" aria-labelledby="guild-recruitment-title">
     <h2 id="guild-recruitment-title">Guildes qui recrutent</h2>
     {% if recruitingGuilds %}
         <p>Quelques guildes ouvertes au recrutement dans cet univers. Utilisez la recherche pour en trouver d’autres.</p>
-        <ul>
+        <ul class="guild-recruitment-grid">
             {% for guild in recruitingGuilds %}
-                <li><a href="{{ path('app_guild_public_profile', {id:guild.id}) }}">{{ guild.name }}</a></li>
+                <li class="panel guild-recruitment-card">
+                    <header>
+                        <span class="guild-recruitment-initial" aria-hidden="true">{{ guild.name|first|upper }}</span>
+                        <div>
+                            <h3>{% if guild.tag %}[{{ guild.tag }}] {% endif %}{{ guild.name }}</h3>
+                            <p>{{ guild.members|quantity(0) }} membre{{ guild.members == 1 ? '' : 's' }}</p>
+                        </div>
+                    </header>
+                    <p class="guild-recruitment-description">{{ guild.description ?: 'Cette guilde n’a pas encore ajouté de présentation.' }}</p>
+                    <div class="guild-recruitment-actions">
+                        <span class="badge">Recrutement ouvert</span>
+                        <a class="secondary" href="{{ path('app_guild_public_profile', {id:guild.id}) }}" aria-label="Voir la guilde {{ guild.name }}">Voir la guilde</a>
+                    </div>
+                </li>
             {% endfor %}
         </ul>
     {% else %}

@@ -2,8 +2,8 @@
 {% block title %}Événements · Console d’administration{% endblock %}
 {% block body %}
 {% set statusLabels = {'draft': 'Brouillon', 'planned': 'Planifié', 'active': 'En cours', 'finished': 'Terminé', 'cancelled': 'Annulé'} %}
-<section class="page-heading"><div><h1>Événements</h1><p>Planifiez des événements globaux ou associés à un univers.</p></div></section>
-<div class="admin-home-actions admin-event-models"><a class="primary" href="{{ path('app_admin_event_wizard') }}">Créer un événement guidé</a><a class="secondary" href="{{ path('app_admin_game_event_new') }}">Création avancée</a><a class="secondary" href="{{ path('app_admin_challenges') }}">Suivre les défis et contributions</a></div>
+<section class="page-heading"><div><h1>Événements</h1><p>Planifiez des événements globaux ou associés à un univers.</p></div><div class="admin-event-actions admin-event-heading-actions"><a class="primary" href="{{ path('app_admin_event_wizard') }}">Créer un événement guidé</a><a class="secondary" href="{{ path('app_admin_game_event_new') }}">Création avancée</a><a class="secondary" href="{{ path('app_admin_challenges') }}">Suivre les défis et contributions</a></div></section>
+<p><a class="secondary" href="{{ path('app_admin_game_event_advent') }}">Préparer le calendrier de l’Avent</a></p>
 <nav class="admin-page-navigation admin-event-list-navigation" aria-label="Listes des événements"><a href="{{ path('app_admin_game_events') }}"{% if not archived %} aria-current="page"{% endif %}>Événements courants</a><a href="{{ path('app_admin_game_events',{archived:1}) }}"{% if archived %} aria-current="page"{% endif %}>Historique des retraits</a></nav>
 <h2>{{ archived ? 'Historique des retraits' : 'Événements enregistrés' }}</h2>
 <div class="admin-events-list">

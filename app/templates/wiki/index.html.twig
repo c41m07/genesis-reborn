@@ -2,7 +2,7 @@
 {% block title %}Wiki du jeu · Genesis Reborn{% endblock %}
 {% block wiki_intro %}<p class="wiki-lead">De votre première colonie aux calculs d’une bataille : comprendre vos choix, préparer votre empire.</p>{% endblock %}
 {% block wiki_content %}
-<p class="wiki-start"><a class="primary" href="{{ path('app_wiki_chapter', {chapter: chapters[0].id}) }}">Commencer le manuel</a></p>
+<p class="wiki-start"><a class="secondary" href="{{ path('app_wiki_chapter', {chapter: chapters[0].id}) }}">Commencer le manuel</a></p>
 {% set currentPart = '' %}
 {% for chapter in chapters %}
     {% if chapter.part != currentPart %}

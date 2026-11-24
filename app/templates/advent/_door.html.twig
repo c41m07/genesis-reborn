@@ -1,0 +1,72 @@
+{% import 'ui/macros.html.twig' as ui %}
+{% set claim = door.claim %}
+{% set credit = claim.award.kind|default('') in ['research_discount', 'ship_voucher'] %}
+{% set actionable = destinationsAllowed and colonies and (claim ? not claim.deliveredAt : (door.open and door.options)) %}
+<article class="panel advent-door" id="advent-door-{{ day }}" tabindex="-1" aria-labelledby="advent-door-title-{{ day }}"{% if selected %} data-default{% endif %}>
+    <h2 id="advent-door-title-{{ day }}">Porte {{ day }}</h2>
+    {% if milestone %}<p class="advent-door-subtitle">{{ milestone }}</p>{% endif %}
+    <p><span class="badge advent-state" data-state="{{ status.key }}">{{ status.label }}</span> <time datetime="{{ door.opensAt|date('c', 'UTC') }}">{{ door.opensAt|date('d/m', 'Europe/Paris') }}</time></p>
+    {% if actionable and credit %}
+        {% include 'advent/_offer.html.twig' with {offer: claim.award, resources: resources, ships: ships} only %}
+        <p><a class="secondary" href="{{ path('app_advent_credit', {id: edition.id, claimId: claim.id}) }}">Voir le devis de cette remise</a></p>
+    {% elseif actionable %}
+        <details{% if milestone %} open{% endif %}>
+            <summary>{{ claim ? 'Reprendre le versement' : 'Choisir mon cadeau' }}<span class="visually-hidden">, porte {{ day }}</span></summary>
+            <form method="post" action="{{ path('app_advent_open', {id: edition.id, door: day}) }}" class="advent-door-form">
+                <input type="hidden" name="_token" value="{{ csrf_token('advent_' ~ edition.id ~ '_' ~ membership.id ~ '_' ~ day) }}">
+                {% if claim %}
+                    {% if claim.award.kind|default('') == 'ship_pack' %}
+                        <p>Lot réservé : {% include 'advent/_offer.html.twig' with {offer: claim.award, resources: resources, ships: ships} only %}.</p>
+                    {% else %}
+                        <p>Reste à verser : {% for resource, amount in claim.resources %}{{ (amount - claim.creditedResources[resource]|default(0))|quantity(0) }} {{ resources[resource] }}{{ loop.last ? '' : ' · ' }}{% endfor %}.</p>
+                    {% endif %}
+                    {% if colonies[claim.originalDestinationId] is defined %}
+                        {% set original = colonies[claim.originalDestinationId] %}
+                        <p>Destination initiale : <strong>{{ original.name }}</strong> ({{ original.coordinates() }}).</p>
+                    {% endif %}
+                    <input type="hidden" name="choice" value="{{ claim.choice }}">
+                {% else %}
+                    {% if consolidated %}
+                        <fieldset class="advent-choice">
+                            <legend>Cadeau de la porte {{ day }}</legend>
+                            {% for choice, offer in door.options %}
+                                <label>
+                                    <input type="radio" name="choice" value="{{ choice }}" required>
+                                    <span>
+                                        {% if milestone %}
+                                            <strong>{{ offer.kind == 'ship_pack' ? 'Lot de vaisseaux ' ~ loop.index : (offer.kind == 'research_discount' ? 'Remise de recherche' : (offer.kind == 'ship_voucher' ? 'Bon de chantier ' ~ loop.index : 'Lot de matériaux ' ~ loop.index)) }}</strong><br>
+                                        {% endif %}
+                                        {% include 'advent/_offer.html.twig' with {offer: offer, resources: resources, ships: ships} only %}
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        </fieldset>
+                    {% else %}
+                        <label for="advent-choice-{{ day }}">Cadeau de la porte {{ day }}</label>
+                        <select name="choice" id="advent-choice-{{ day }}" required>
+                            <option value="">Choisir le lot</option>
+                            {% for choice, amounts in door.options %}<option value="{{ choice }}">{% for resource, amount in amounts %}{{ amount|quantity(0) }} {{ resources[resource] }}{{ loop.last ? '' : ' · ' }}{% endfor %}</option>{% endfor %}
+                        </select>
+                    {% endif %}
+                {% endif %}
+                <label for="advent-colony-{{ day }}">Colonie destinataire</label>
+                <select name="colony" id="advent-colony-{{ day }}" required>
+                    <option value="">Choisir une de mes colonies</option>
+                    {% for colony in colonies %}<option value="{{ colony.id }}">{{ colony.name }} ({{ colony.coordinates() }})</option>{% endfor %}
+                </select>
+                {% if milestone and consolidated %}<p class="advent-notice">Si les conditions ne sont pas réunies, le cadeau choisi reste réservé. Les prérequis d’un lot de vaisseaux sont vérifiés sur la colonie destinataire.</p>{% endif %}
+                <button class="primary">{{ claim ? 'Retenter le versement' : 'Confirmer le cadeau et la destination' }}</button>
+            </form>
+        </details>
+    {% elseif claim and not claim.deliveredAt %}
+        <p>Le lot reste réservé. {{ consolidated ? 'Revenez dans l’univers fixé et choisissez une de vos colonies.' : 'Choisissez un univers où vous contrôlez une colonie.' }}</p>
+    {% endif %}
+    {% if claim and claim.deliveredAt %}<p>Le cadeau de cette porte a déjà été versé.</p>{% endif %}
+    {% if not claim and not actionable %}
+        {% if not door.open %}<p>Cette porte ouvrira le {{ door.opensAt|date('d/m/Y', 'Europe/Paris') }}, heure de Paris.</p>
+        {% elseif not destinationsAllowed %}<p>Vérifiez l’univers choisi pour cette édition avant de sélectionner un cadeau.</p>
+        {% elseif not colonies %}<p>Aucune colonie ne peut recevoir ce cadeau dans cet univers.</p>
+        {% else %}<p>Aucun cadeau n’est proposé pour cette porte dans votre tranche.</p>{% endif %}
+    {% endif %}
+    <a class="advent-back-to-calendar" href="#advent-calendar-title">Revenir aux 24 portes</a>
+</article>

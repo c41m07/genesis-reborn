@@ -1,16 +1,35 @@
 {% extends 'base.html.twig' %}
 
+{# Les notices natives suivent la tâche au lieu de repousser le formulaire sous le bandeau. #}
+{% block flash_messages %}{% endblock %}
 {% block body %}
-<div class="entry-workspace entry-access" data-page-sections="disabled">
-    <div class="entry-access-layout">
-        <div class="entry-access-context">
-            <p class="entry-context-title">Votre empire<br>commence ici.</p>
-            <p>Explorez des systèmes inconnus, développez vos colonies et préparez votre flotte. Chaque décision dessine votre avenir.</p>
-            <picture><source type="image/webp" srcset="{{ asset('art/genesis-reborn-planet.webp') }}"><img src="{{ asset('art/genesis-reborn-planet.png') }}" alt="" width="1448" height="1086"></picture>
-        </div>
+<div class="entry-workspace entry-access entry-access--audit{{ access_heading_id == 'login-title' ? ' entry-access--login' : '' }}" data-page-sections="disabled">
+    {# L'action est la première information de la page, y compris dans l'ordre de lecture. #}
+    {% set compactAccess = app.request.attributes.get('_route') not in ['app_login', 'app_register'] %}
+    <div class="entry-access-layout{{ compactAccess ? ' core-entry-access--compact' : ' core-entry-access--task-first' }}">
         <section class="panel auth-card entry-access-panel" aria-labelledby="{{ access_heading_id }}">
+            {% if not compactAccess %}<p class="entry-eyebrow">Accès au compte</p>{% endif %}
             {% block access_content %}{% endblock %}
+            {% if compactAccess %}
+                {% block access_footer %}
+                    <p class="auth-back"><a href="{{ path('app_login') }}">Retour à la connexion</a></p>
+                {% endblock %}
+            {% endif %}
         </section>
+        {% if not compactAccess %}
+            <div class="entry-access-context">
+                <picture aria-hidden="true">
+                    <img src="{{ asset('art/genesis-acces-commandement-480.webp') }}"
+                         srcset="{{ asset('art/genesis-acces-commandement-480.webp') }} 480w, {{ asset('art/genesis-acces-commandement-864.webp') }} 864w"
+                         sizes="(min-width: 1600px) 640px, 43vw" alt="" width="864" height="1152" loading="lazy" decoding="async">
+                </picture>
+                <span class="entry-context-brand" aria-hidden="true">Genesis Reborn</span>
+                <div class="entry-context-copy">
+                    <p class="entry-context-title">Votre empire <strong>vous attend.</strong></p>
+                    <p>Explorez les systèmes, développez vos colonies et préparez vos flottes.</p>
+                </div>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

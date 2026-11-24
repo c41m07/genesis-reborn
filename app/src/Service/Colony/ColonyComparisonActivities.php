@@ -111,6 +111,62 @@ final class ColonyComparisonActivities
         ];
     }
 
+    /**
+     * Deux véritables fins enregistrées, prises parmi les têtes locales et les recherches démarrées
+     * en parallèle. Un délai déjà écoulé, suspendu ou sans colonie possédée n'est pas une échéance.
+     *
+     * @param list<Planet> $planets
+     * @return list<array{kind: string, label: string, level: ?int, quantity: ?int, deadline: \DateTimeImmutable, planet: Planet}>
+     */
+    public function upcomingForEmpire(PlayerUniverse $membership, array $planets): array
+    {
+        $now = $this->clock->now();
+        if ($planets === [] || $this->vacations->isActive($membership, $now)) {
+            return [];
+        }
+
+        $owned = array_column($planets, null, 'id');
+        $headsSeen = [];
+        $upcoming = [];
+        // La requête existante est groupée, privée à l’empire, et retourne les files locales par ordre d’ID.
+        foreach ($this->repository->comparisonQueueRows($membership, $planets) as $row) {
+            $planetId = (int) $row['originId'];
+            if ((int) $row['ownerId'] !== $membership->id || !isset($owned[$planetId])) {
+                continue;
+            }
+            if ($row['kind'] !== 'research') {
+                $headKey = $planetId . ':' . $row['kind'];
+                if (isset($headsSeen[$headKey])) {
+                    continue;
+                }
+                $headsSeen[$headKey] = true;
+            }
+            $finish = $this->finish($row);
+            if ($row['started'] !== null && $row['started'] <= $now && $finish !== null && $finish > $now) {
+                $upcoming[] = $row + ['finish' => $finish];
+            }
+        }
+
+        usort($upcoming, static fn (array $left, array $right): int =>
+            $left['finish'] <=> $right['finish'] ?: $left['id'] <=> $right['id']
+        );
+        $catalogue = $this->catalogue->forUniverse($membership->universe)['catalog'];
+        $result = [];
+        foreach (array_slice($upcoming, 0, 2) as $row) {
+            $display = $this->summarize([$row], $catalogue, $now, false);
+            $result[] = [
+                'kind' => $row['kind'],
+                'label' => $display['label'],
+                'level' => $display['level'],
+                'quantity' => $display['quantity'],
+                'deadline' => $row['finish'],
+                'planet' => $owned[(int) $row['originId']],
+            ];
+        }
+
+        return $result;
+    }
+
     private function finish(array $row): ?\DateTimeImmutable
     {
         return $row['started']?->modify('+'.(int) $row['duration'].' seconds');

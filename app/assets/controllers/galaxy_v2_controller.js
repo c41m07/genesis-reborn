@@ -7,11 +7,6 @@ const missionColors = {
     explore: '#00d4ff', spy: '#a78bfa', colonize: '#2dd4a0', transport: '#34d399',
     attack: '#f43f5e', conquer: '#ffb040', defend: '#60a5fa', orbit: '#f472b6', station: '#2dd4a0',
 };
-// Les badges privés de campagne ne sont pas des flottes détectées ou des planètes PNJ.
-const campaignMapMarkers = {
-    movement: { symbol: '◇', color: '#66deff' },
-    pirates: { symbol: 'P', color: '#ffb960' },
-};
 const mapMarkers = {
     unknown: { symbol: '?', color: '#ffda66', label: 'Inexploré' },
     own: { symbol: '⌂', color: '#66deff', label: 'Vos planètes' },
@@ -43,6 +38,7 @@ export default class extends Controller {
         'systemPanel', 'systemContent', 'planetPanel', 'planetContent', 'minimapWrap',
         'minimapCanvas', 'fleetLog', 'motionToggle', 'galaxySelect', 'mapHelp',
         'mapMode', 'mapModeLabel', 'legend', 'filterToggle', 'mapSettings', 'layoutButton',
+        'stations', 'hallStation', 'pirateStation', 'stationDetail', 'stationTitle', 'stationText',
     ];
 
     static values = { map: Object, reducedMotion: Boolean };
@@ -50,6 +46,8 @@ export default class extends Controller {
     connect() {
         this.gameMap = this.mapValue;
         this.solarLayoutCache = null;
+        this.localFirstSteps = this.element.closest('main')?.querySelector('[data-gv2-local-first-steps]');
+        this.hoveredStation = this.focusedStation = this.displayedStation = null;
         this.systems = this.gameMap.systems.map((system) => ({ ...system, planets: system.planets || [] }));
         this.systemById = new Map(this.systems.map((system) => [Number(system.id), system]));
         this.flights = (this.gameMap.flights || []).map((flight) => ({
@@ -154,17 +152,8 @@ export default class extends Controller {
 
     setCampaignTraffic(traffic = []) {
         this.campaignTraffic = traffic;
-        this.campaignBySystem = new Map();
-        for (const row of traffic) {
-            const kind = row.kind === 'pirates' ? 'pirates' : 'movement';
-            for (const id of row.systems) {
-                const system = this.systemById.get(Number(id));
-                if (!system?.known) continue;
-                const markers = this.campaignBySystem.get(system.id) ?? new Set();
-                markers.add(kind);
-                this.campaignBySystem.set(system.id, markers);
-            }
-        }
+        this.pirateSystems = new Set(traffic.filter(row => row.kind === 'pirates')
+            .flatMap(row => row.systems.map(Number)));
     }
 
     updateCampaignLogState() {
@@ -603,7 +592,7 @@ export default class extends Controller {
             const diskRadius = radius + (isHovered ? 8 : 5);
             if (system.known) this.drawSystemDisk(ctx, system, point, diskRadius, isHovered);
             if (isHovered || system === this.focusedSystem) {
-                const label = system.galaxy + ':' + system.number;
+                const label = this.systemHoverCoordinates(system);
                 ctx.font = isHovered || this.systems.length <= 48 ? '600 13px "JetBrains Mono", monospace' : '12px "JetBrains Mono", monospace';
                 ctx.textAlign = 'center';
                 ctx.lineWidth = 3.5;
@@ -613,14 +602,16 @@ export default class extends Controller {
                 ctx.fillStyle = isHovered || hasOwnedPlanet ? '#e4fff4' : '#d5e8fa';
                 ctx.fillText(label, point.x, point.y + 22);
             }
-            this.drawSystemMarkers(ctx, system, point, isHovered);
+            if (!system.known && !this.hiddenMarkers.has('unknown')) {
+                this.drawMarkers(ctx, [mapMarkers.unknown], point.x, point.y, true);
+            }
             system.sx = point.x;
             system.sy = point.y;
         }
 
         this.drawFlights(ctx);
         if (this.hoveredSystem) this.drawSelection(ctx, this.hoveredSystem, '#00d4ff');
-        if (this.selectedSystem) this.drawSelection(ctx, this.selectedSystem, '#ffb040');
+        if (this.selectedSystem) this.drawSelection(ctx, this.selectedSystem, '#77d5e9');
     }
 
     toggleMapFilters() {
@@ -736,27 +727,12 @@ export default class extends Controller {
         ctx.lineWidth = isHovered ? 1.8 : 1.2;
         ctx.stroke();
         ctx.beginPath();
-        ctx.arc(point.x, point.y, radius + 3, 0, Math.PI * 2);
         const hasOwnedPlanet = system.planets.some((planet) => planet.ownedByCurrentPlayer);
+        ctx.arc(point.x, point.y, radius + (hasOwnedPlanet ? 6 : 3), 0, Math.PI * 2);
         ctx.strokeStyle = hasOwnedPlanet ? '#00e676' : (isHovered ? 'rgba(202,232,255,.9)' : 'rgba(157,202,239,.5)');
-        ctx.lineWidth = 1;
+        ctx.lineWidth = hasOwnedPlanet ? 3 : 1;
         ctx.stroke();
         ctx.restore();
-    }
-
-    systemMarkers(system) {
-        if (!system.known) return this.hiddenMarkers.has('unknown') ? [] : [mapMarkers.unknown];
-        const markers = !this.hiddenMarkers.has('own') && system.planets.some((planet) => planet.ownedByCurrentPlayer || planet.relation === 'own')
-            ? [mapMarkers.own] : [];
-        for (const kind of this.campaignBySystem?.get(system.id) ?? []) markers.push(campaignMapMarkers[kind]);
-
-        return markers;
-    }
-
-    drawSystemMarkers(ctx, system, point, isHovered) {
-        // La colonie personnelle reste identifiable sans survol ; les quarts sont cumulables.
-        const markers = this.systemMarkers(system);
-        if (markers.length) this.drawMarkers(ctx, markers, point.x, system.known ? point.y - 21 : point.y, !system.known);
     }
 
     drawMarkers(ctx, markers, x, y, centered = false) {
@@ -1032,22 +1008,28 @@ export default class extends Controller {
                 ctx.stroke();
             }
             ctx.globalAlpha = 1;
-            ctx.translate(x, y);
             const tangentX = (1 - progress) * (cx - a.x) + progress * (b.x - cx);
             const tangentY = (1 - progress) * (cy - a.y) + progress * (b.y - cy);
-            ctx.rotate(Math.atan2(tangentY, tangentX));
-            ctx.shadowColor = color;
-            ctx.shadowBlur = 10;
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.moveTo(8, 0);
-            ctx.lineTo(-5, -3.2);
-            ctx.lineTo(-2, 0);
-            ctx.lineTo(-5, 3.2);
-            ctx.closePath();
-            ctx.fill();
+            this.drawFlightArrow(ctx, x, y, tangentX, tangentY, color);
             ctx.restore();
         }
+    }
+
+    drawFlightArrow(ctx, x, y, dx, dy, color) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(Math.atan2(dy, dx));
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(8, 0);
+        ctx.lineTo(-5, -3.2);
+        ctx.lineTo(-2, 0);
+        ctx.lineTo(-5, 3.2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
     }
 
     drawMinimap() {
@@ -1293,13 +1275,18 @@ export default class extends Controller {
         });
     }
 
+    systemHoverCoordinates(system) {
+        const tag = system.known && system.hall?.tag;
+        return (tag ? '[' + tag + '] ' : '') + system.galaxy + ':' + system.number;
+    }
+
     renderSystemHover(system, distanceLabel) {
         const title = document.createElement('strong');
         title.className = 'gv2-tooltip-title';
         title.textContent = system.name;
         const coordinates = document.createElement('span');
         coordinates.className = 'gv2-tooltip-coordinates';
-        coordinates.textContent = system.galaxy + ':' + system.number;
+        coordinates.textContent = this.systemHoverCoordinates(system);
         const state = document.createElement('p');
         state.className = 'gv2-tooltip-state';
         state.textContent = system.known
@@ -1307,7 +1294,11 @@ export default class extends Controller {
             : 'Non exploré · contenu inconnu';
         const facts = document.createElement('dl');
         facts.className = 'gv2-tooltip-facts';
-        for (const row of this.systemSummary(system)) {
+        const summary = this.systemSummary(system);
+        if (system.known && system.hall) {
+            summary.unshift({ label: 'Hall de guilde', value: 'Installé' });
+        }
+        for (const row of summary) {
             const entry = document.createElement('div');
             const label = document.createElement('dt');
             const value = document.createElement('dd');
@@ -1543,6 +1534,8 @@ export default class extends Controller {
 
     setCanvasMode(mode) {
         this.element.dataset.view = mode;
+        if (this.localFirstSteps) this.localFirstSteps.hidden = mode === 'galaxy';
+        if (mode !== 'system') this.hideStations();
         this.galaxyCanvasTarget.classList.toggle('is-active', mode === 'galaxy');
         this.systemCanvasTarget.classList.toggle('is-active', mode === 'system');
         this.planetCanvasTarget.classList.toggle('is-active', mode === 'planet');
@@ -1596,6 +1589,12 @@ export default class extends Controller {
 
     navigateBack(event) {
         if (event.key !== 'Escape' || event.defaultPrevented || event.target.closest('input, select, textarea')) return;
+        if (this.displayedStation) {
+            this.hoveredStation = this.focusedStation = null;
+            this.updateStationDetail();
+            event.preventDefault();
+            return;
+        }
         if (!this.planetBackTarget.hidden) this.toSystem(true);
         else if (!this.planetPanelTarget.hidden) this.toSystem(true);
         else if (!this.systemPanelTarget.hidden) this.toGalaxy();
@@ -1697,7 +1696,7 @@ export default class extends Controller {
             }
             positions.push(best);
         });
-        return { centerX, centerY, positions };
+        return { centerX, centerY, positions, radiusX, aspect };
     }
 
     advanceSolarLayout(layout, dt) {
@@ -1733,6 +1732,7 @@ export default class extends Controller {
         ctx.scale(mobile ? .45 : .65, mobile ? .45 : .65);
         this.drawStar(ctx, 0, 0, system.starColor || '#ffe28c', this.elapsed);
         ctx.restore();
+
         for (const { planet, x: baseX, y: baseY, radius: orbitRadius, aspect } of positions) {
             const x = centerX + (baseX - layoutX) * this.systemScale;
             const y = centerY + (baseY - layoutY) * this.systemScale;
@@ -1794,7 +1794,102 @@ export default class extends Controller {
             const marker = mapMarkers[planet.relation] || mapMarkers.uninhabited;
             this.drawMarkers(ctx, [{ ...marker, symbol: marker.symbol + (planet.relation === 'npc' ? ' ' + planet.conquestLevel : '') }], x, y - planetRadius - 10);
         }
-        this.drawLocalFlights(ctx, system, centerX, centerY);
+        this.drawLocalFlights(ctx, system, { x: centerX + (this.solarLayoutCache.radiusX + 24) * this.systemScale, y: centerY });
+        if (this.mode === 'system') this.layoutStations(system, centerX, centerY, mobile);
+    }
+
+    hideStations() {
+        this.stationsTarget.hidden = true;
+        this.hallStationTarget.hidden = this.pirateStationTarget.hidden = true;
+        this.hoveredStation = this.focusedStation = null;
+        this.updateStationDetail();
+    }
+
+    layoutStations(system, centerX, centerY, mobile) {
+        const hall = system.known && system.hall;
+        // Le serveur publie ce signal privé après le vrai renseignement, pas à partir
+        // d'un trajet ni du contenu du système. Aucune coordonnée de planète n'est créée.
+        const pirate = system.known && this.pirateSystems.has(system.id);
+        if (!hall && !pirate) {
+            if (!this.stationsTarget.hidden) this.hideStations();
+            return;
+        }
+        this.stationsTarget.hidden = false;
+        const scale = this.systemScale;
+        const { radiusX, aspect, positions } = this.solarLayoutCache;
+        const diameter = Math.min(24, ...positions.map(({ planet }) => planet.visual.screenRadius * 2));
+        this.setStation(this.hallStationTarget, hall, centerX + (mobile ? 35 : 55) * scale, centerY - 16 * scale, diameter);
+        // La combinaison (.78, -.78) est en dehors de l'ellipse, y compris au zoom.
+        // Ce décalage graphique ancré dans le système est indépendant des angles planétaires.
+        this.setStation(this.pirateStationTarget, pirate, centerX + radiusX * .78 * scale, centerY - radiusX * aspect * .78 * scale, diameter);
+        if (!this.stationsTarget.contains(this.displayedStation) || this.displayedStation?.hidden) this.updateStationDetail();
+    }
+
+    setStation(link, available, x, y, diameter) {
+        const visible = Boolean(available) && x >= 22 && y >= 22 && x <= this.width - 22 && y <= this.height - 22;
+        if (!visible && link === document.activeElement) this.systemBackTarget.focus({ preventScroll: true });
+        if (link.hidden === visible) link.hidden = !visible;
+        if (!visible) {
+            if (this.hoveredStation === link) this.hoveredStation = null;
+            if (this.focusedStation === link) this.focusedStation = null;
+            return;
+        }
+        const image = link.querySelector('img');
+        if (!image.hasAttribute('src')) image.src = image.dataset.src;
+        const style = '--station-x:' + x.toFixed(1) + 'px;--station-y:' + y.toFixed(1) + 'px;--planet-diameter:' + diameter + 'px';
+        if (link.getAttribute('style') !== style) link.setAttribute('style', style);
+        if (available.profileUrl) {
+            if (link.getAttribute('href') !== available.profileUrl) link.setAttribute('href', available.profileUrl);
+            const label = available.tag ? 'Hall de guilde [' + available.tag + ']' : 'Hall de guilde';
+            if (link.getAttribute('aria-label') !== label) {
+                link.setAttribute('aria-label', label);
+                link.querySelector('.gv2-station-label').textContent = label;
+            }
+        }
+    }
+
+    stationLink(target) {
+        return target.closest('.gv2-station');
+    }
+
+    stationHover(event) {
+        if (event.pointerType !== 'mouse') return;
+        const link = this.stationLink(event.target);
+        if (!link || link.contains(event.relatedTarget)) return;
+        this.hoveredStation = link;
+        this.updateStationDetail();
+    }
+
+    stationLeave(event) {
+        const link = this.stationLink(event.target);
+        if (event.pointerType !== 'mouse' || !link || link.contains(event.relatedTarget)) return;
+        this.hoveredStation = null;
+        this.updateStationDetail();
+    }
+
+    stationFocus(event) {
+        const link = this.stationLink(event.target);
+        this.focusedStation = link?.matches(':focus-visible') ? link : null;
+        this.updateStationDetail();
+    }
+
+    stationBlur(event) {
+        if (!this.stationLink(event.target)) return;
+        this.focusedStation = null;
+        this.updateStationDetail();
+    }
+
+    updateStationDetail() {
+        const next = [this.focusedStation, this.hoveredStation]
+            .find((link) => link && !link.hidden) || null;
+        if (next === this.displayedStation) return;
+        this.displayedStation = next;
+        this.stationDetailTarget.hidden = !next;
+        if (!next) return;
+        const hall = next === this.hallStationTarget;
+        this.stationDetailTarget.dataset.kind = hall ? 'hall' : 'pirate';
+        this.stationTitleTarget.textContent = next.getAttribute('aria-label');
+        this.stationTextTarget.textContent = hall ? 'Repère fixe, à côté de l’étoile.' : 'Repère fixe, visible après reconnaissance.';
     }
 
     drawStar(ctx, x, y, color, time) {
@@ -1852,55 +1947,61 @@ export default class extends Controller {
         }
     }
 
-    drawLocalFlights(ctx, system, centerX, centerY) {
+    drawLocalFlights(ctx, system, entryPoint) {
         const now = Date.now() + this.serverClockOffset;
+        // La position 10 est la frontière du système. Les positions 1 à 9 suivent leurs globes.
+        const pointAt = position => {
+            if (position === 10) return entryPoint;
+            const visual = system.planets.find(planet => planet.position === position)?.visual;
+            return visual && { x: visual.sx, y: visual.sy };
+        };
         for (const flight of this.flights) {
-            if (!flight.originSystem || !flight.destinationSystem) continue;
-            if (flight.originSystem.id !== system.id && flight.destinationSystem.id !== system.id && Number(flight.recallRoute?.returnSystemId) !== system.id) continue;
-            const originPlanet = this.findPlanetByName(flight.originName, flight.originSystem);
-            const targetPlanet = this.findPlanetByName(flight.destinationName, flight.destinationSystem);
-            const startPlanet = flight.originSystem.id === system.id ? originPlanet : null;
-            const endPlanet = flight.destinationSystem.id === system.id ? targetPlanet : null;
-            const start = startPlanet?.visual ? { x: startPlanet.visual.sx, y: startPlanet.visual.sy } : { x: this.width * .04, y: centerY };
-            const end = endPlanet?.visual ? { x: endPlanet.visual.sx, y: endPlanet.visual.sy } : { x: this.width * .9, y: centerY };
-            const departure = Date.parse(flight.departureAt || ''), arrival = Date.parse(flight.arrivalAt || '');
-            if (flight.status === 'attacking' || flight.status === 'defending' || flight.status === 'orbiting' || flight.status === 'orbit_pending' || flight.status === 'station_waiting') {
-                const point = endPlanet?.visual ? end : { x: this.width * .9, y: centerY };
-                const color = missionColors[flight.mission] || '#00d4ff';
+            const color = missionColors[flight.mission] || '#00d4ff';
+            if (!['traveling', 'returning'].includes(flight.status)) {
+                const planet = system.planets.find(candidate => candidate.id === flight.destinationPlanetId);
+                if (!planet?.visual) continue;
+                ctx.save();
                 ctx.strokeStyle = color;
                 ctx.globalAlpha = .55 + .25 * Math.sin(this.elapsed * 2 + Number(flight.id));
                 ctx.beginPath();
-                ctx.arc(point.x, point.y, 8 + 3 * Math.sin(this.elapsed * 2), 0, Math.PI * 2);
+                ctx.arc(planet.visual.sx, planet.visual.sy, 8 + 3 * Math.sin(this.elapsed * 2), 0, Math.PI * 2);
                 ctx.stroke();
-                ctx.globalAlpha = 1;
+                ctx.restore();
                 continue;
             }
-            if (!Number.isFinite(departure) || !Number.isFinite(arrival) || arrival <= departure) continue;
-            let progress = this.flightProgress(flight, now);
-            let routeStart = start, routeEnd = end;
-            if (flight.recallRoute) {
-                if (flight.recallRoute.hidden) continue;
-                const p = clamp(Number(flight.recallRoute.startProgress), 0, 1);
-                routeStart = { x: start.x + (end.x - start.x) * p, y: start.y + (end.y - start.y) * p - Math.sin(p * Math.PI) * 36 };
-                const returnSystem = this.systemById.get(Number(flight.recallRoute.returnSystemId));
-                const returnPlanet = returnSystem ? this.findPlanetByName(flight.recallRoute.returnName, returnSystem) : null;
-                routeEnd = Number(flight.recallRoute.returnSystemId) === system.id && returnPlanet?.visual
-                    ? { x: returnPlanet.visual.sx, y: returnPlanet.visual.sy } : { x: this.width * .04, y: centerY };
-            } else if (flight.status === 'returning' && !flight.forwardRoute) progress = 1 - progress;
-            const x = routeStart.x + (routeEnd.x - routeStart.x) * progress;
-            const y = routeStart.y + (routeEnd.y - routeStart.y) * progress - Math.sin(progress * Math.PI) * 36;
+            if (!flight.departureAt || flight.recallRoute?.hidden) continue;
+            const progress = this.flightProgress(flight, now);
+            const returning = flight.status === 'returning' && (!flight.forwardRoute || Boolean(flight.recallRoute));
+            // Un rappel vers l’origine retrace la fraction déjà parcourue. Un repli vers
+            // une autre colonie n’a pas de segments figés pour sa nouvelle destination.
+            if (flight.recallRoute && (flight.recallRoute.returnSystemId !== flight.originSystemId
+                || flight.recallRoute.returnPosition !== Number(flight.originCoordinates?.split(':').at(-1)))) continue;
+            const routeProgress = returning ? (1 - progress) * (flight.recallRoute?.startProgress ?? 1) : progress;
+            let leg = flight.localLegs?.find(segment => segment.systemId === system.id
+                && routeProgress >= segment.start && routeProgress <= segment.end);
+            // Pour un ancien vol entièrement local, les deux positions et l’ETA suffisent.
+            if (!leg && !flight.localLegs?.length && flight.originSystemId === system.id && flight.destinationSystemId === system.id) {
+                leg = { from: Number(flight.originCoordinates.split(':').at(-1)),
+                    to: Number(flight.destinationCoordinates.split(':').at(-1)), start: 0, end: 1 };
+                if (!flight.destinationPlanetId) leg.to = 10;
+            }
+            if (!leg || leg.end <= leg.start || !Number.isFinite(routeProgress)) continue;
+            const start = pointAt(leg.from);
+            const end = pointAt(leg.to);
+            if (!start || !end) continue;
+            const part = (routeProgress - leg.start) / (leg.end - leg.start);
+            const dx = end.x - start.x, dy = end.y - start.y;
+            ctx.save();
+            ctx.strokeStyle = color + '99';
+            ctx.setLineDash([4, 7]);
             ctx.beginPath();
-            ctx.arc(x, y, 4, 0, Math.PI * 2);
-            ctx.fillStyle = missionColors[flight.mission] || '#00d4ff';
-            ctx.shadowColor = ctx.fillStyle;
-            ctx.shadowBlur = 12;
-            ctx.fill();
-            ctx.shadowBlur = 0;
+            ctx.moveTo(start.x, start.y);
+            ctx.lineTo(end.x, end.y);
+            ctx.stroke();
+            ctx.restore();
+            this.drawFlightArrow(ctx, start.x + dx * part, start.y + dy * part,
+                returning ? -dx : dx, returning ? -dy : dy, color);
         }
-    }
-
-    findPlanetByName(name, system) {
-        return system.planets.find((planet) => planet.name === name) || null;
     }
 
     drawPlanet(dt) {

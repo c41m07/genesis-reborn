@@ -23,21 +23,40 @@
 /* Les deux emplacements existent dès l'ouverture : pas de repère couvert ni de recadrage à la sélection. */
 .gv2-preview-placeholder { display:none; }
 .gv2-workspace[data-view=galaxy] .gv2-map-stage {
-    display:grid; grid-template-columns:minmax(0,1fr) clamp(220px,27%,320px); grid-template-rows:minmax(0,1fr) auto; gap:12px;
+    display:grid; grid-template-columns:minmax(0,1fr) clamp(270px,26%,430px); gap:14px;
+    align-items:stretch; min-width:0;
 }
-.gv2-workspace[data-view=galaxy] .gv2-scene { grid-area:1/1/3/2; min-width:0; }
-/* La mini-carte reste utilisable, sans intercepter les repères du canvas principal. */
-.gv2-workspace[data-view=galaxy] .gv2-minimap { grid-area:2/2; position:static; width:auto; margin:0 12px 0 0; }
+.gv2-workspace[data-view=galaxy] .gv2-stage-surface { grid-area:1/1; min-width:0; }
+.gv2-workspace[data-view=galaxy] .gv2-scene {
+    min-width:0;
+    height:clamp(530px,calc(100svh - 370px),720px);
+    border:1px solid var(--line); border-radius:6px;
+}
+/* Réserver la largeur du rail avant toute sélection ; elle ne change pas le zoom ni la surface de clic. */
+.gv2-workspace[data-view=galaxy] .gv2-inspection {
+    display:flex; flex-direction:column; gap:12px;
+    grid-area:1/2; min-width:0; padding:14px;
+    border:1px solid var(--line); border-radius:6px; background:var(--panel);
+}
+.gv2-workspace[data-view=galaxy] .gv2-minimap {
+    position:static; width:auto; margin:0; box-shadow:none;
+}
+.gv2-workspace[data-view=galaxy] .gv2-inspection .gv2-flight-log {
+    margin:0; box-shadow:none;
+}
 .gv2-workspace[data-view=galaxy] .gv2-system-panel,
 .gv2-workspace[data-view=galaxy] .gv2-preview-placeholder {
-    grid-area:1/2; min-width:0; max-height:460px; margin:0 12px 0 0; overflow:auto; overscroll-behavior:contain;
+    min-width:0; max-height:470px; margin:0; overflow:auto; overscroll-behavior:contain;
 }
 .gv2-workspace[data-view=galaxy] .gv2-map-stage:has(.gv2-system-panel[hidden]) .gv2-preview-placeholder {
     display:flex; align-items:center; justify-content:center; padding:12px; margin-block:0;
     background:var(--panel); color:var(--muted); border:1px solid var(--line); border-radius:5px; text-align:center;
 }
-.gv2-workspace[data-view=galaxy] .gv2-system-panel .gv2-planet-list { grid-template-columns:1fr; }
-.gv2-workspace[data-view=galaxy] .gv2-system-panel .gv2-planet-choice { min-width:0; }
+/* Dans le rail, une planète par ligne laisse la place à son nom et au marqueur. */
+.gv2-workspace .gv2-system-panel .gv2-planet-list { grid-template-columns:minmax(0,1fr); }
+.gv2-workspace .gv2-system-panel .gv2-planet-choice,
+.gv2-workspace .gv2-system-panel .gv2-planet-choice-name,
+.gv2-workspace .gv2-system-panel .gv2-planet-owner { min-width:0; white-space:normal; overflow-wrap:anywhere; }
 .galaxy-v2.gv2-workspace[data-view=galaxy] .gv2-map-settings { display:block; }
 .gv2-workspace .gv2-enter-system { display:none; }
 .gv2-workspace[data-view=galaxy] .gv2-enter-system { display:flex; min-height:44px; margin-bottom:12px; }
@@ -60,13 +79,16 @@
 .gv2-workspace .gv2-breadcrumbs:has(>[hidden]):not(:has(>button:not([hidden]))) { display:none; }
 @media(max-width:1000px) {
     .gv2-workspace[data-view=galaxy] .gv2-map-stage {
-        grid-template-columns:minmax(0,1fr); grid-template-rows:104px auto auto; gap:8px;
+        grid-template-columns:minmax(0,1fr) minmax(105px,30%); grid-template-rows:104px auto auto; gap:8px;
     }
-    .gv2-workspace[data-view=galaxy] .gv2-scene { grid-area:2/1; height:350px; }
-    .gv2-workspace[data-view=galaxy] .gv2-minimap { grid-area:3/1; width:114px; justify-self:end; }
+    .gv2-workspace[data-view=galaxy] .gv2-inspection { display:contents; }
+    .gv2-workspace[data-view=galaxy] .gv2-stage-surface { grid-area:2/1/3/3; }
+    .gv2-workspace[data-view=galaxy] .gv2-scene { height:350px; }
+    .gv2-workspace[data-view=galaxy] .gv2-minimap { grid-area:3/2; width:auto; }
+    .gv2-workspace[data-view=galaxy] .gv2-inspection .gv2-flight-log { grid-area:3/1; }
     .gv2-workspace[data-view=galaxy] .gv2-system-panel,
     .gv2-workspace[data-view=galaxy] .gv2-preview-placeholder {
-        grid-area:1/1; max-height:104px; margin:0 12px; padding:8px;
+        grid-area:1/1/2/3; max-height:104px; margin:0; padding:8px;
     }
     .gv2-workspace[data-view=galaxy] .gv2-system-panel>[data-galaxy-v2-target=systemContent] {
         display:grid; grid-template-columns:minmax(0,1fr) minmax(0,auto); gap:4px 8px;
@@ -97,4 +119,185 @@
     .gv2-workspace .gv2-minimap { width:100px; }
     .gv2-workspace .gv2-system-panel,
     .gv2-workspace .gv2-planet-panel { margin-inline:12px; padding:12px; }
+}
+
+.core-galaxy-heading { align-items:baseline; justify-content:flex-start; gap:12px 20px; margin-bottom:10px; }
+.core-galaxy-kicker,.core-galaxy-selection-label { color:var(--accent); font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+.core-galaxy-kicker { margin:0; }
+.core-galaxy-toolbar {
+    display:flex; flex-wrap:wrap; gap:4px 8px; align-items:center;
+    padding:6px; margin-bottom:12px; min-width:0;
+    border:1px solid var(--line); border-radius:6px; background:var(--panel);
+}
+.gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs { flex:0 1 auto; margin:0; gap:6px; }
+.gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a { min-height:34px; border-radius:4px; }
+/* Le canevas et sa barre restent sombres en thème clair ; les liens suivent
+   leurs propres couleurs, pas les teintes des onglets sur fond clair. */
+body.authenticated .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a:not([aria-current="page"]) {
+    color:var(--text);
+}
+.gv2-workspace[data-view] .gv2-map-stage .gv2-scene .gv2-locator {
+    position:absolute; z-index:3; inset:12px auto auto 12px;
+    min-width:0; max-width:55%; padding:6px 10px; pointer-events:none;
+    border:1px solid var(--line); border-radius:5px; background:#0c1929e8;
+    color:#c7e0ed; font-size:11px; overflow-wrap:anywhere;
+}
+/* Ne pas recouvrir les repères du canevas avec les commandes sur les petits écrans. */
+.gv2-workspace[data-view] .gv2-map-stage .gv2-stage-surface > .gv2-map-controls {
+    position:static; gap:5px; justify-content:flex-end; padding:0 0 8px;
+}
+.gv2-workspace[data-view] .gv2-map-stage .gv2-scene .gv2-map-help {
+    display:block; position:absolute; inset:auto auto 12px 12px; z-index:3;
+    max-width:min(calc(100% - 24px),65%); padding:8px 10px; pointer-events:none;
+    border:1px solid var(--line); border-radius:5px; background:#0c1929eb; color:#cfdeea;
+}
+.gv2-workspace .core-galaxy-toolbar .gv2-hud { flex:1 1 360px; min-width:0; padding:4px 6px; }
+.gv2-workspace .core-galaxy-toolbar .gv2-layout-modes { padding:4px 6px; }
+.gv2-workspace .core-galaxy-toolbar .gv2-layout-note { padding:4px 6px; }
+.gv2-workspace .gv2-enter-system {
+    background:#e7b76b;
+    border-color:#e7b76b;
+    color:#131b24;
+    font-weight:800;
+}
+.gv2-workspace .gv2-enter-system:hover { background:#f0c683; color:#131b24; }
+.gv2-workspace[data-view=galaxy] .gv2-system-panel:not([hidden]) { border-color:color-mix(in srgb,var(--accent) 55%,var(--line)); }
+.gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-map-stage:has(.gv2-planet-panel:not([hidden]),.gv2-system-panel:not([hidden])) {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) clamp(220px,27%,320px);
+    gap:12px;
+}
+.gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-stage-surface { grid-area:1/1; min-width:0; }
+.gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-inspection {
+    grid-area:1/2;
+    min-width:0;
+    max-height:560px;
+    margin:0 12px 0 0;
+    overflow:auto;
+    overscroll-behavior:contain;
+}
+@media(max-width:1000px) {
+    .gv2-workspace .core-galaxy-toolbar .gv2-hud { flex-basis:100%; }
+    .gv2-workspace[data-view] .gv2-map-stage .gv2-scene .gv2-locator { max-width:34%; }
+    .gv2-workspace[data-view] .gv2-map-stage .gv2-scene .gv2-map-help { max-width:calc(100% - 24px); }
+    .gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-map-stage:has(.gv2-planet-panel:not([hidden]),.gv2-system-panel:not([hidden])) {
+        grid-template-columns:minmax(0,1fr);
+        grid-template-rows:auto auto;
+        gap:8px;
+    }
+    .gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-inspection {
+        grid-area:1/1;
+        max-height:none;
+        margin:0 12px;
+    }
+    .gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-inspection > :is(.gv2-system-panel,.gv2-planet-panel) {
+        box-sizing:border-box; max-height:170px; overflow:auto; margin:0;
+    }
+    .gv2-workspace:is([data-view=system],[data-view=planet]) .gv2-map-stage:has(.gv2-planet-panel:not([hidden]),.gv2-system-panel:not([hidden])) .gv2-stage-surface { grid-area:2/1; }
+}
+
+/* Liste cartographique : les planètes restent dans la fiche côté droit, pas dupliquées dans chaque ligne. */
+.galaxy-list-toolbar, .galaxy-list-select {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:end;
+    gap:10px 14px;
+    min-width:0;
+}
+
+.galaxy-list-toolbar { justify-content:space-between; padding:14px; }
+.galaxy-list-toolbar .galaxy-view-tabs { margin:0; }
+.galaxy-list-select > div { display:grid; gap:4px; min-width:0; }
+.galaxy-list-select select { max-width:100%; }
+.galaxy-list-layout { display:grid; grid-template-columns:minmax(0,2fr) minmax(285px,1fr); align-items:start; gap:14px; }
+.galaxy-list-layout > * { min-width:0; margin:0; padding:16px; }
+.galaxy-index .section-heading { display:flex; flex-wrap:wrap; align-items:end; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.galaxy-index .section-heading h2 { margin:0; }
+.galaxy-index-filter:not([hidden]) { display:grid; gap:4px; max-width:100%; }
+.galaxy-index-scroll { max-height:520px; overflow:auto; border:1px solid var(--line); border-radius:5px; }
+.galaxy-index-table { width:100%; margin:0; }
+.galaxy-index-table thead th { position:sticky; top:0; z-index:1; background:var(--panel); }
+.galaxy-index-table th small { display:block; margin-top:3px; font-weight:400; color:var(--text); }
+.galaxy-index-table .active-row { background:color-mix(in srgb,var(--accent) 12%,var(--panel)); }
+.galaxy-index-table [hidden] { display:none; }
+.galaxy-index-coordinates { color:var(--accent); }
+.galaxy-index-guide { margin:12px 0 0; padding:10px; border:1px solid var(--line); border-radius:5px; }
+.galaxy-index-planets { display:grid; gap:8px; padding:0; list-style:none; }
+.galaxy-index-planets li { padding:10px; border:1px solid var(--line); border-radius:5px; }
+.galaxy-index-planets p { margin:4px 0; }
+.galaxy-index-planets .galaxy-actions { display:flex; flex-wrap:wrap; gap:6px; }
+.galaxy-open-map { display:flex; align-items:center; justify-content:center; min-height:44px; }
+@media(max-width:1000px) { .galaxy-list-layout { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:740px) {
+    .galaxy-list-toolbar,.galaxy-list-select { align-items:stretch; }
+    .galaxy-list-select { display:grid; grid-template-columns:minmax(0,1fr); width:100%; }
+    .galaxy-list-layout > * { padding:10px; }
+    .galaxy-index-scroll { max-height:340px; }
+}
+
+/* À une main, conserver de vraies cibles tactiles hors canevas avec une seule
+   rangée de zoom. La fiche garde le même emplacement avant et après le clic. */
+@media(max-width:600px) {
+    .gv2-workspace .core-galaxy-toolbar { gap:4px; padding:4px; margin-bottom:6px; }
+    .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs { gap:4px; }
+    .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a { min-height:44px; }
+    .gv2-workspace .core-galaxy-toolbar .gv2-hud {
+        display:grid; grid-template-columns:minmax(0,26%) minmax(0,1fr) minmax(60px,max-content);
+        gap:4px; padding:0;
+    }
+    .gv2-workspace .gv2-galaxy-form { grid-area:1/1; min-width:0; margin:0; }
+    .gv2-workspace .gv2-galaxy-form select { width:100%; min-height:44px; padding-inline:4px 14px; }
+    .gv2-workspace .gv2-search { grid-area:1/2; width:100%; height:44px; min-width:0; }
+    .gv2-workspace .gv2-search-results { width:max(100%,min(240px,70vw)); inset-inline-start:auto; }
+    .gv2-workspace .gv2-coordinate { grid-area:1/3; min-width:0; font-size:11px; text-align:center; white-space:nowrap; }
+    .gv2-workspace .core-galaxy-toolbar .gv2-layout-modes { flex:1 1 auto; gap:4px; padding:0; }
+    .gv2-workspace .core-galaxy-toolbar .gv2-layout-modes button { min-width:0; padding:4px; font-size:12px; }
+    .gv2-workspace .core-galaxy-toolbar .gv2-layout-note { flex:1 1 100%; padding:1px 4px; font-size:11px; }
+    .gv2-workspace[data-view=galaxy] .gv2-map-stage { grid-template-rows:94px auto auto; }
+    .gv2-workspace[data-view=galaxy] .gv2-map-stage :is(.gv2-system-panel,.gv2-preview-placeholder) { max-height:94px; }
+    .gv2-workspace[data-view] .gv2-map-stage .gv2-stage-surface > .gv2-map-controls {
+        flex-wrap:nowrap; justify-content:space-between; gap:3px; padding-block-end:4px;
+    }
+    .gv2-workspace .gv2-map-controls button { padding-inline:4px; font-size:12px; white-space:normal; }
+}
+
+/* Dans la liste, retrouver tous les contrôles de contexte dans le même bandeau. */
+.galaxy-list-toolbar .galaxy-index-filter:not([hidden]) { flex:1 1 min(100%,14rem); }
+.galaxy-list-toolbar .galaxy-index-filter input { min-width:0; width:100%; }
+
+/* Les liens des stations gardent une cible tactile plus large que leur dessin. */
+[data-gv2-local-first-steps][hidden], .gv2-stations[hidden], .gv2-station[hidden], .gv2-station-detail[hidden] { display:none; }
+.gv2-stations { position:absolute; inset:0; z-index:4; pointer-events:none; }
+.gv2-station {
+    --station-color:#ffdc93;
+    position:absolute; left:var(--station-x); top:var(--station-y); transform:translate(-50%,-50%);
+    display:grid; place-items:center; width:44px; height:44px; min-height:44px; padding:0;
+    border:0; background:none; box-shadow:none; pointer-events:auto;
+}
+.gv2-station--pirate { --station-color:#ffab93; }
+.gv2-station:hover, .gv2-station:active { background:none; border:0; box-shadow:none; }
+.gv2-station img {
+    display:block; width:min(19px,var(--planet-diameter,24px)); height:min(19px,var(--planet-diameter,24px));
+    object-fit:contain; pointer-events:none; filter:drop-shadow(0 1px 2px #000);
+}
+.gv2-station:is(:hover,:focus-visible) img {
+    width:min(23px,var(--planet-diameter,24px)); height:min(23px,var(--planet-diameter,24px));
+}
+.gv2-station:focus-visible { outline:2px solid #77d5e9; outline-offset:-5px; border-radius:50%; }
+.gv2-station-label, .gv2-station-detail {
+    border:1px solid #536980; border-radius:5px; background:#101b2bf5;
+    color:#e7eef6; text-align:left; line-height:1.35;
+}
+.gv2-station-label {
+    position:absolute; left:calc(100% + 3px); bottom:calc(50% + 6px);
+    padding:3px 7px; white-space:nowrap; color:var(--station-color); font-size:12px; pointer-events:none;
+}
+.gv2-station--pirate .gv2-station-label { left:auto; right:calc(100% + 3px); }
+.gv2-station-detail { position:absolute; inset:12px 12px auto auto; width:min(300px,calc(100% - 24px)); padding:8px 10px; }
+.gv2-station-detail strong, .gv2-station-detail small { display:block; }
+.gv2-station-detail strong { color:#ffdc93; }
+.gv2-station-detail[data-kind=pirate] strong { color:#ffab93; }
+@media(max-width:720px) {
+    .gv2-station-label { display:none; }
+    .gv2-station-detail { top:45px; }
 }

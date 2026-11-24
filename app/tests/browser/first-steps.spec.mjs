@@ -82,6 +82,9 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     const next = guide.locator('.first-step--next');
     await expect(progress).toHaveAttribute('value', '0');
     await expect(next.getByRole('heading', { name: 'Mine à ciel ouvert', exact: true })).toBeVisible();
+    const nextAction = guide.getByRole('region', { name: 'Prochaine étape conseillée' });
+    await expect(nextAction.getByRole('link')).toHaveAttribute('href', /section=buildings.*#item-mine_metal-basic$/);
+    await expect(guide.locator('.first-steps-next .primary')).toHaveCount(1);
     await expect(guide.getByRole('heading', { name: 'Première recherche', exact: true })).toBeVisible();
     await expect(progress).toHaveAttribute('max', '12');
     await expect(guide.getByRole('link', { name: 'Ouvrir la fiche de la sonde', exact: true })).toHaveAttribute('href', /section=ships.*#item-probe-basic$/);
@@ -122,7 +125,8 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     await expect(popup.locator('.first-steps-preview')).toBeVisible();
     await openIllustrations(popup);
     await guideLink.click();
-    await next.getByRole('link', { name: 'Ouvrir la Mine à ciel ouvert', exact: true }).click();
+    await guide.getByRole('region', { name: 'Prochaine étape conseillée', exact: true })
+        .getByRole('link', { name: 'Ouvrir la Mine à ciel ouvert', exact: true }).click();
     await expect(page).toHaveURL(/section=buildings.*#item-mine_metal-basic$/);
     const card = page.locator('#item-mine_metal-basic');
     await expect(card.getByRole('complementary', { name: 'Conseil Premiers pas' })).toContainText('paie le prix normal');
@@ -134,7 +138,7 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     const target = new URL(overview);
     target.searchParams.set('section', 'buildings');
     await page.goto(target.href);
-    await expect(page.locator('#building-tab-mine_metal-basic .building-rank-level')).toHaveText('1');
+    await expect(page.locator('#item-mine_metal-basic .catalogue-level-badge')).toHaveText('Niv. 1');
     await page.goto('/premiers-pas');
     await expect(progress).toHaveAttribute('value', '1');
     const refunds = page.getByRole('region', { name: 'Remboursements disponibles', exact: true });
@@ -157,7 +161,56 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     }
 });
 
-test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', async ({ page, browser, baseURL }) => {
+test('Premiers pas : la prochaine action précède deux remboursements natifs disponibles', async ({ page, browser, baseURL }) => {
+    test.setTimeout(120000);
+    const email = await register(page);
+    expect(email).toMatch(/^first-steps-[a-f0-9]{8}@example[.]test$/);
+    const project = process.env.BROWSER_ROUTER;
+    const [player, member, planet] = queryIsolatedSql(project,
+        "SELECT p.id, p.current_player_universe_id, planet.id FROM player p JOIN planet ON planet.owner_id = p.current_player_universe_id WHERE p.email = '" + email + "'"
+    ).split(/\s+/).map(Number);
+    expect([player, member, planet].every(id => Number.isSafeInteger(id) && id > 0)).toBe(true);
+    // Des preuves synthétiques coexistantes ; le scénario de construction réelle couvre leur émission.
+    runIsolatedSql(project, "INSERT INTO first_step_completion (player_universe_id, step_key, completed_at) VALUES (" + member + ", 'metal_mine', UTC_TIMESTAMP()), (" + member + ", 'research', UTC_TIMESTAMP())");
+    runIsolatedSql(project, "INSERT INTO first_step_reward (player_id, source_membership_id, step_key, metal, nano) VALUES (" + player + ", " + member + ", 'metal_mine', 96, 52), (" + player + ", " + member + ", 'research', 240, 130)");
+
+    const native = await browser.newContext({ baseURL, storageState: await page.context().storageState(), javaScriptEnabled: false });
+    try {
+        const fallback = await native.newPage();
+        await fallback.setViewportSize({ width: 390, height: 844 });
+        await fallback.goto('/premiers-pas');
+        const next = fallback.getByRole('region', { name: 'Prochaine étape conseillée', exact: true });
+        const refunds = fallback.getByRole('region', { name: 'Remboursements disponibles', exact: true });
+        await expect(next.getByRole('link', { name: 'Ouvrir la Centrale nucléaire', exact: true }))
+            .toHaveAttribute('href', /section=buildings.*#item-power_plant-basic$/);
+        await expect(next.locator('.primary')).toHaveCount(1);
+        expect(await next.evaluate(section => Boolean(
+            section.compareDocumentPosition(document.querySelector('#training-reward-title')) & Node.DOCUMENT_POSITION_FOLLOWING
+        ))).toBe(true);
+        expect((await next.boundingBox())?.y).toBeLessThan((await refunds.boundingBox())?.y);
+        const colony = await fallback.getByRole('link', { name: 'Retour à la vue générale', exact: true }).getAttribute('href');
+        expect(colony).toBe('/planetes/' + planet);
+        const colonyName = queryIsolatedSql(project, 'SELECT name FROM planet WHERE id = ' + planet);
+        expect(colonyName).not.toBe('');
+        await expect(refunds.locator('#training-refund-destination strong')).toHaveText(colonyName);
+        await expect(refunds.locator('#first-step-refund-metal_mine')).toContainText('96 métal et 52 nanos');
+        await expect(refunds.locator('#first-step-refund-research')).toContainText('240 métal et 130 nanos');
+        const metal = refunds.locator('#first-step-refund-metal_mine').getByRole('button', { name: /^Récupérer :/ });
+        const research = refunds.locator('#first-step-refund-research').getByRole('button', { name: /^Récupérer :/ });
+        for (const button of [metal, research]) {
+            await expect(button).toBeEnabled();
+            await expect(button).toHaveAccessibleDescription(new RegExp('^Destination :'));
+            await button.click();
+            await expect(fallback.getByRole('status').filter({ hasText: 'Remboursement ajouté aux stocks' })).toBeVisible();
+        }
+        await expect(refunds).toHaveCount(0);
+        await expect(next.getByRole('link', { name: 'Ouvrir la Centrale nucléaire', exact: true })).toBeEnabled();
+    } finally {
+        await native.close();
+    }
+});
+
+test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', async ({ page, browser, baseURL }, info) => {
     test.setTimeout(120000);
     const route = '/premiers-pas/exercice-pirate';
     const guest = await page.goto(route);
@@ -208,7 +261,41 @@ test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', a
         const report = view.getByRole('region', { name: 'Rapport d’exercice', exact: true });
         await expect(report).toBeVisible();
         await expect(report).toContainText('Le jalon d’apprentissage est validé quel que soit le résultat');
-        await expect(report).toContainText(/Escorte : [0-2] sur 2 en service, [0-2] perdues dans la simulation/);
+        const summary = report.getByRole('table', { name: 'Survivants et pertes par camp' });
+        await expect(summary.getByRole('columnheader', { name: 'Survivants' })).toBeVisible();
+        await expect(summary.getByRole('columnheader', { name: 'Pertes simulées' })).toBeVisible();
+        for (const side of ['Escorte', 'Pirates']) {
+            const row = summary.getByRole('row').filter({ has: view.getByRole('rowheader', { name: side, exact: true }) });
+            await expect(row).toHaveCount(1);
+            const values = await row.getByRole('cell').allTextContents();
+            expect(values).toHaveLength(2);
+            expect(values[0]).toMatch(/^[0-2] sur 2$/);
+            expect(values[1]).toMatch(/^[0-2]$/);
+            expect(Number(values[0][0]) + Number(values[1])).toBe(2);
+        }
+        const captureReport = async (tab, theme, mode) => {
+            await expect(tab.locator('body')).toHaveAttribute('data-theme', theme);
+            const resultCard = tab.getByRole('region', { name: 'Rapport d’exercice', exact: true });
+            await expect(resultCard.getByRole('heading', { name: 'Simulation pédagogique', exact: true })).toBeVisible();
+            await expect(tab.getByRole('button', { name: 'Rejouer la simulation', exact: true })).toHaveCount(1);
+            await expect(resultCard.getByRole('button', { name: 'Rejouer la simulation', exact: true })).toHaveAttribute('aria-describedby', 'training-rules');
+            await expect(resultCard.locator('.first-steps-exercise-metric > dd').filter({ hasText: /^[0-2] \/ 2$/ })).toHaveCount(2);
+            for (const viewport of [{ width: 390, height: 844 }, { width: 1920, height: 1080 }]) {
+                await tab.setViewportSize(viewport);
+                await expect.poll(() => tab.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+                await tab.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+                await tab.screenshot({ path: info.outputPath('P21-B-' + mode + '-resultat-' + theme + '-' + viewport.width + '.png'), animations: 'disabled', scale: 'css' });
+                if (viewport.width === 390) {
+                    await resultCard.getByRole('button', { name: 'Rejouer la simulation', exact: true }).scrollIntoViewIfNeeded();
+                    await tab.screenshot({ path: info.outputPath('P21-B-' + mode + '-actions-' + theme + '-390.png'), animations: 'disabled', scale: 'css' });
+                    if (mode === 'js') {
+                        expect((await new AxeBuilder({ page: tab }).include('.first-steps-exercise-notice').include('.first-steps-exercise-metrics').analyze()).violations).toEqual([]);
+                    }
+                }
+            }
+            await tab.setViewportSize({ width: 390, height: 844 });
+        };
+        await captureReport(view, 'dark', 'native');
         await report.getByText('Comprendre les tirs manche par manche', { exact: true }).click();
         await expect(report.getByText(/Manche 1 :/)).toBeVisible();
         await expect.poll(() => view.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
@@ -217,6 +304,38 @@ test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', a
         expect(first).toMatch(/^\d{4}-\d{2}-\d{2} /);
         await view.getByRole('button', { name: 'Rejouer la simulation', exact: true }).click();
         await expect(report).toBeVisible();
+        expect(completed()).toBe(first);
+        expect(assets()).toBe(before);
+        const setFixtureTheme = theme => runIsolatedSql(project, "UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','" + theme + "') WHERE email='" + email + "'");
+        setFixtureTheme('light');
+        await view.goto(route);
+        await view.getByRole('button', { name: 'Lancer la simulation', exact: true }).press('Enter');
+        await captureReport(view, 'light', 'native');
+
+        // Axe s’exécute uniquement dans le navigateur où JavaScript est disponible.
+        for (const theme of ['light', 'dark']) {
+            setFixtureTheme(theme);
+            await page.goto(route);
+            await page.getByRole('button', { name: 'Lancer la simulation', exact: true }).click();
+            await captureReport(page, theme, 'js');
+            const guide = page.locator('.first-steps-popup-enhanced');
+            const toggle = guide.locator(':scope > summary');
+            await expect(toggle).toBeVisible();
+            if (await guide.getAttribute('open') === null) await toggle.press('Enter');
+            await expect(guide).toHaveAttribute('open', '');
+            const replay = page.getByRole('button', { name: 'Rejouer la simulation', exact: true });
+            for (const viewport of [{ width: 390, height: 844 }, { width: 1920, height: 1080 }]) {
+                await page.setViewportSize(viewport);
+                await replay.evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
+                await expect.poll(() => replay.evaluate(element => {
+                    const button = element.getBoundingClientRect();
+                    const hit = document.elementFromPoint(button.x + button.width / 2, button.y + button.height / 2);
+                    const shell = document.querySelector('.first-steps-exercise-layout.has-report').getBoundingClientRect();
+                    const guide = document.querySelector('.first-steps-popup-enhanced .first-steps-popup-mount').getBoundingClientRect();
+                    return (element === hit || element.contains(hit)) && guide.top >= shell.bottom;
+                })).toBe(true);
+            }
+        }
         expect(completed()).toBe(first);
         expect(assets()).toBe(before);
         await view.getByRole('link', { name: 'Retour aux Premiers pas', exact: true }).click();
@@ -243,7 +362,7 @@ test('Exercice pirate : privé, formulaire natif, rejouable sans récompense', a
 });
 
 
-test('Premiers pas : panneau non modal, images à la demande et reprise par Préférences', async ({ page, browser, baseURL }) => {
+test('Premiers pas : panneau non modal, images à la demande et reprise par Préférences', async ({ page, browser, baseURL }, info) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await register(page);
     const overview = page.url();
@@ -289,6 +408,9 @@ test('Premiers pas : panneau non modal, images à la demande et reprise par Pré
     await popup.getByRole('button', { name: 'Suivant', exact: true }).click();
     await expect(second).toHaveAttribute('src', /mine-resultat[.]webp$/);
     await expect(popup.locator('output')).toHaveText('2 sur 2');
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.screenshot({ path: info.outputPath('P09-illustration-1920x1080.png'), scale: 'css', animations: 'disabled' });
+    await page.setViewportSize({ width: 1440, height: 900 });
     await page.keyboard.press('Escape');
     await expect(popup).not.toHaveAttribute('open', '');
     await expect(summary).toBeFocused();
@@ -431,25 +553,37 @@ test('Un clic natif avant Stimulus reste une ouverture volontaire du guide', asy
     }
 });
 
-test('Sur Galaxie, l’aperçu et ses commandes restent hors de la carte', async ({ page }) => {
+test('Premiers pas est absent des deux vues Galaxie et revient dans le système local', async ({ page }) => {
     await register(page);
-    await page.goto('/carte-v2');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     const popup = page.locator('.first-steps-popup');
-    const preview = popup.locator('.first-steps-preview');
-    const canvas = page.locator('.gv2-canvas--galaxy');
-    for (const width of [1440, 390]) {
-        await page.setViewportSize({ width, height: 844 });
+    for (const [width, height] of [[1920, 1080], [390, 844]]) {
+        await page.setViewportSize({ width, height });
+        await page.goto('/carte');
+        await expect(popup).toHaveCount(0);
+        await page.goto('/carte-v2');
+        await expect(popup).toBeHidden();
+        const map = page.locator('.gv2-workspace');
+        const data = JSON.parse(await map.getAttribute('data-galaxy-v2-map-value'));
+        const home = data.systems.find(system => system.planets.some(planet => planet.ownedByCurrentPlayer));
+        const search = page.getByRole('searchbox');
+        await search.fill(home.name);
+        await page.locator('.gv2-search-results button').filter({ hasText: home.name }).first().click();
+        await expect(popup).toBeHidden();
+        await page.getByRole('button', { name: 'Entrer dans le système', exact: true }).click();
+        await expect(map).toHaveAttribute('data-view', 'system');
+        const preview = popup.locator('.first-steps-preview');
         await expect(preview).toBeVisible();
         await expect(preview.getByRole('button', { name: 'Voir l’étape illustrée' })).toBeEnabled();
         await expect.poll(async () => {
-            const [panel, map] = await Promise.all([popup.boundingBox(), canvas.boundingBox()]);
-            return panel !== null && map !== null && panel.y + panel.height <= map.y;
+            const [panel, canvas] = await Promise.all([popup.boundingBox(), page.locator('.gv2-canvas--system').boundingBox()]);
+            return panel !== null && canvas !== null && panel.y + panel.height <= canvas.y;
         }).toBe(true);
+        await map.locator('[data-galaxy-v2-target=systemBack]').click();
+        await expect(popup).toBeHidden();
     }
-    await openIllustrations(popup);
-    await popup.getByRole('button', { name: 'Fermer', exact: true }).click();
-    await expect(popup).not.toHaveAttribute('open', '');
-    await expect(popup.locator('summary')).toBeFocused();
+    await page.goto('/flottes');
+    await expect(popup.locator('.first-steps-preview')).toBeVisible();
 });
 
 test('L’aperçu ne charge ni fragment ni image et reste fermé dans le même onglet après fermeture', async ({ page }) => {
@@ -468,7 +602,6 @@ test('L’aperçu ne charge ni fragment ni image et reste fermé dans le même o
         '/flottes',
         '/planetes',
         '/rapports',
-        '/carte-v2',
     ];
     const popup = page.locator('.first-steps-popup');
     const arrow = popup.locator('summary');
@@ -542,7 +675,7 @@ test('Le dernier vrai jalon masque la languette dans cet empire, sans retirer le
     await mine.getByRole('button', { name: 'Améliorer au niveau 1', exact: true }).click();
     accelerateQueuedItem(project, email, 'building', 'mine_metal');
     await page.goto(origin + '?section=buildings');
-    await expect(page.locator('#building-tab-mine_metal-basic .building-rank-level')).toHaveText('1');
+    await expect(page.locator('#item-mine_metal-basic .catalogue-level-badge')).toHaveText('Niv. 1');
 
     // Les dix autres jalons du passé sont préparés en DB jetable. L’exercice manquant est lancé dans le vrai formulaire.
     const past = ['power_plant', 'nano_workshop', 'metal_storage', 'laboratory', 'research', 'assembly_yard',
@@ -600,7 +733,7 @@ test('Un guide fermé relit le jalon acquis dans un autre onglet, puis masque un
         await other.locator('#item-mine_metal-basic').getByRole('button', { name: 'Améliorer au niveau 1', exact: true }).click();
         accelerateQueuedItem(process.env.BROWSER_ROUTER, email, 'building', 'mine_metal');
         await other.goto(overview + '?section=buildings');
-        await expect(other.locator('#building-tab-mine_metal-basic .building-rank-level')).toHaveText('1');
+        await expect(other.locator('#item-mine_metal-basic .catalogue-level-badge')).toHaveText('Niv. 1');
         expect(reads).toHaveLength(0);
 
         await arrow.press('Enter');
@@ -819,4 +952,54 @@ test('Événements passe devant le guide volontairement ouvert et restaure son p
     await expect(page).toHaveURL(/\/evenements$/);
     await expect(popup.locator('.first-steps-preview')).toBeVisible();
     await expect(popup.locator('img[src]')).toHaveCount(0);
+});
+
+test('Premiers pas : la progression historique reste stable en changeant de colonie', async ({ page }) => {
+    const email = await register(page);
+    const project = process.env.BROWSER_ROUTER;
+    const first = Number(new URL(page.url()).pathname.split('/').at(-1));
+    const member = Number(queryIsolatedSql(project, 'SELECT owner_id FROM planet WHERE id=' + first));
+    const { id: second } = revealVirginPlanet(project, email);
+    expect(member).toBeGreaterThan(0);
+    expect(second).not.toBe(first);
+    runIsolatedSql(project, "UPDATE planet SET owner_id=" + member + ", acquired_at=UTC_TIMESTAMP(), name='Colonie cadette' WHERE id=" + second);
+    runIsolatedSql(project, 'INSERT INTO planet_building(planet_id,slug,tier,level) VALUES (' + first
+        + ",'mine_metal','basic',1),(" + first + ",'power_plant','basic',1),(" + second
+        + ",'lab','basic',1) ON DUPLICATE KEY UPDATE level=VALUES(level)");
+    runIsolatedSql(project, 'INSERT INTO first_step_completion(player_universe_id,step_key,completed_at) VALUES ('
+        + member + ",'exploration',UTC_TIMESTAMP())");
+
+    const progress = page.getByRole('progressbar', { name: 'Progression des premiers pas' });
+    const popup = page.locator('.first-steps-popup');
+    const panel = popup.locator('[data-first-steps-guide-fragment]');
+    const selected = page.getByLabel('Choisir une colonie');
+    const before = () => queryIsolatedSql(project, 'SELECT step_key FROM first_step_completion WHERE player_universe_id=' + member);
+    expect(before()).toBe('exploration');
+    await page.goto('/planetes/' + first);
+    await expect(popup).toContainText('3/12');
+    await page.goto('/premiers-pas');
+    await expect(progress).toHaveAttribute('value', '3');
+    await page.goto('/planetes/' + first);
+
+    // Basculer par le contrôle réel : le compteur et l’étape restent communs,
+    // mais le lien illustré et la colonie de remboursement ne changent pas de propriétaire.
+    await selected.selectOption(String(second));
+    await expect(page).toHaveURL(url => url.pathname === '/planetes/' + second);
+    await expect(popup).toContainText('3/12');
+    await openIllustrations(popup);
+    await expect(panel).toHaveAttribute('data-first-steps-guide-step','nano_workshop');
+    await expect(panel.locator('a[href*="tutorial=mine_nano"]')).toHaveAttribute('href',
+        new RegExp('^/planetes/' + second + '\\?'));
+    await page.goto('/premiers-pas');
+    await expect(progress).toHaveAttribute('value','3');
+    const lab = page.getByRole('listitem').filter({ has: page.getByRole('heading',{name:'Laboratoire colonial',exact:true}) });
+    await expect(lab).toContainText('À faire');
+    expect(before()).toBe('exploration');
+    expect(Number(queryIsolatedSql(project,'SELECT COUNT(*) FROM first_step_reward WHERE source_membership_id=' + member))).toBe(0);
+
+    await page.locator('.topbar .universe-context').click();
+    await page.locator('.universe-card').filter({has:page.getByRole('heading',{name:/Turbo/})}).getByRole('button').click();
+    await expect(page).toHaveURL(/planetes\/\d+$/);
+    await page.goto('/premiers-pas');
+    await expect(progress).toHaveAttribute('value','0');
 });

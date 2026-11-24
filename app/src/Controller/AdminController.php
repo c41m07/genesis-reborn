@@ -239,8 +239,24 @@ final class AdminController extends AbstractController
                 $catalogues[$family] = array_filter($items, static fn(array $item): bool => str_contains(mb_strtolower($item['label'].' '.$item['slug'].' '.implode(' ', $item['tier_labels'])), mb_strtolower($query)));
             }
         }
+        $selection = null;
+        // Le rail de lecture ne sélectionne qu’une fiche déjà dans les résultats autorisés.
+        // Il n’utilise ni la route d’édition ni le brouillon de session.
+        $focus = $request->query->all()['focus'] ?? null;
+        if ($slug === null && is_string($focus) && strlen($focus) <= 180) {
+            foreach ($catalogues as $family => $items) {
+                foreach ($items as $entry) {
+                    if ($focus === $family.':'.$entry['slug']) {
+                        $selection = ['family' => $family, 'entry' => $entry, 'key' => $focus];
+                        break 2;
+                    }
+                }
+            }
+        }
+
         return $this->render('admin/catalogue.html.twig', [
             'universe' => $universe, 'catalogues' => $catalogues, 'group' => $group, 'query' => $query,
+            'selection' => $selection,
             'editing' => $slug !== null, 'item' => $slug !== null ? $catalogues[$group][0] : null,
         ]);
     }

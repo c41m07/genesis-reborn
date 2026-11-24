@@ -2,13 +2,28 @@ import { test, expect } from './support/isolated-test.mjs';
 import { prepareOwnedColony, runIsolatedSql, queryIsolatedSql } from './support/game-fixtures.mjs';
 
 async function checkLockedArtwork(page, panel, tab) {
-    const image=panel.locator('.catalog-card-art img');
-    await page.mouse.move(0,0);await tab.focus();
-    await expect(image).toHaveCSS('filter','grayscale(1)');
-    await image.hover();await expect(image).toHaveCSS('filter','none');
-    await page.mouse.move(0,0);await expect(image).toHaveCSS('filter','grayscale(1)');
-    await panel.locator('.requirement a').first().focus();await expect(image).toHaveCSS('filter','none');
-    await tab.focus();await expect(image).toHaveCSS('filter','grayscale(1)');
+    const image = panel.locator('.catalog-card-art img');
+    const state = panel.locator('.catalogue-family-mark');
+    await page.mouse.move(0, 0);
+    await page.getByRole('switch', { name: 'Afficher les éléments verrouillés' }).focus();
+    await expect(image).toHaveCSS('filter', 'grayscale(1)');
+    await image.hover();
+    await expect(image).toHaveCSS('filter', 'none');
+    await page.mouse.move(0, 0);
+    await tab.focus();
+    await expect(image).toHaveCSS('filter', 'none');
+    await expect(state).toContainText('Verrouillé');
+    await expect(tab).toHaveAccessibleDescription(/Rang verrouillé, consulter les prérequis/);
+    const requirements = panel.locator('.catalog-prerequisites');
+    const link = requirements.getByRole('link').first();
+    await expect(link).toBeHidden();
+    const height = (await panel.boundingBox()).height;
+    await requirements.locator('summary').press('Enter');
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute('href', /#item-/);
+    expect((await panel.boundingBox()).height).toBe(height);
+    await requirements.locator('summary').press('Enter');
+    await expect(link).toBeHidden();
 }
 
 test('Les rangs bâtiments partagent une carte accessible et conservent les filtres au rafraîchissement', async ({ page, browser }) => {
@@ -44,8 +59,9 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     const toggle = page.getByRole('switch', { name: 'Afficher les éléments verrouillés' });
     await expect(page.locator('.building-card')).toHaveCount(13);
     await expect(family.getByRole('tab')).toHaveCount(3);
+    await expect(family.locator('.building-rank-tabs .building-rank-level')).toHaveCount(0);
     await expect(tab('basic')).toHaveAttribute('aria-selected', 'true');
-    await expect(tab('basic').locator('.building-rank-level')).toHaveText('250');
+    await expect(panel('basic').locator('.catalogue-level-badge')).toHaveText('Niv. 250');
     await expect(tab('basic').locator('.building-rank-up')).toHaveCount(0);
     await expect(tab('basic')).toHaveAccessibleDescription(/Ressources insuffisantes/);
     await expect(family.locator('.card-stock-badge, .tier-label')).toHaveCount(0);
@@ -64,10 +80,9 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await page.keyboard.press('ArrowRight');
     await expect(tab('superior')).toBeFocused();
     await expect(panel('superior')).toBeVisible();
-    await expect(tab('superior').locator('.building-rank-cross')).toBeVisible();
+    await expect(tab('superior').locator('.building-rank-cross, .building-rank-up')).toHaveCount(0);
     await expect(panel('superior').locator('img')).toHaveAttribute('src', /power_plant__superior.webp$/);
-    await expect(panel('superior').locator('.requirement')).toContainText('Nécessite');
-    await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
+    await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','none');
     await checkLockedArtwork(page,panel('superior'),tab('superior'));
     await expect(panel('superior').locator('.card-body>form')).toHaveCount(0);
     await toggle.click();
@@ -122,7 +137,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
         await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('object-fit', 'cover');
         const positions = await family.getByRole('tab').evaluateAll(tabs => tabs.map(tab => Math.round(tab.getBoundingClientRect().top)));
         expect(new Set(positions).size).toBe(1);
-        await expect(tab('intermediate')).toHaveAccessibleName(/Interm\./);
+        await expect(tab('intermediate')).toHaveAccessibleName(width === 1920 ? /^Intermédiaire\b/ : /^Interm(?:\.|édiaire\b)/);
         await expect(tab('intermediate')).toHaveAccessibleDescription(/Intermédiaire/);
         const overflow = await family.getByRole('tab').evaluateAll(tabs => tabs.filter(tab => tab.scrollWidth > tab.clientWidth).map(tab => ({ label: tab.innerText, available: tab.clientWidth, content: tab.scrollWidth })));
         expect(overflow, `Onglets à ${width} px`).toEqual([]);
@@ -208,7 +223,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
             await family.screenshot({path:`output/playwright/catalogue-bloque-${theme}-${width}.png`});
             await tab('superior').click();
-            await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','grayscale(1)');
+            await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('filter','none');
         }
     }
     sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'power_plant','intermediate',25)`);
@@ -248,13 +263,22 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
     sql(`INSERT INTO planet_defense (planet_id,slug,tier,quantity) VALUES (${planet},'ground_turret_anti_light','basic',1250000)`);
     // Les unités conservées restent lisibles quand leur nouvelle construction n'est pas débloquée.
     await page.goto(`${path}?section=ships#item-fighter-intermediate`);
-    await expect(page.locator('#building-tab-fighter-intermediate .building-rank-level')).toHaveText('1,25 M');
+    await expect(page.locator('#item-fighter-intermediate .catalogue-level-badge')).toHaveText('1,25 M en réserve');
     await expect(page.locator('#building-tab-fighter-intermediate')).toHaveAccessibleDescription(/1 250 000 unités possédées.*Rang verrouillé/);
     await expect(page.locator('#item-fighter-intermediate .card-body>form')).toHaveCount(0);
     sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'shipyard','intermediate',1)`);
     for (const [group, slug, families] of [['technologies', 'engineering_foundations', 19], ['ships', 'fighter', 16], ['defenses', 'ground_turret_anti_light', 4]]) {
         await page.setViewportSize({ width: 1920, height: 1000 });
+        if (group === 'defenses') {
+            sql(`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','light') WHERE email='${email}'`);
+        }
         await page.goto(`${path}?section=${group}`);
+        if (group !== 'technologies') await expect(page.locator('body')).toHaveAttribute('data-theme', group === 'defenses' ? 'light' : 'dark');
+
+        const costFrames = tier => panel(tier).locator('.building-costs > span:not([hidden])').evaluateAll(chips => chips.map(chip => {
+            const style = getComputedStyle(chip);
+            return style.borderTopStyle === 'solid' && style.borderTopWidth === '1px' && style.backgroundColor !== 'rgba(0, 0, 0, 0)';
+        }));
         const family = page.locator(`.building-card[data-slug="${slug}"]`);
         const tab = tier => page.locator(`#building-tab-${slug}-${tier}`);
         const panel = tier => page.locator(`#item-${slug}-${tier}`);
@@ -264,21 +288,26 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
         await expect(panel('basic').locator('form [name="group"]')).toHaveValue(group);
         await expect(panel('basic').locator('form [name="tier"]')).toHaveValue('basic');
         await expect(family.locator('.card-stock-badge, .tier-label')).toHaveCount(0);
-        await expect(tab('basic').locator('.building-rank-level')).toHaveText(group === 'technologies' ? '5' : group === 'ships' ? '125,00 k' : '1,25 M');
+        await expect(panel('basic').locator('.catalogue-level-badge')).toHaveText(group === 'technologies' ? 'Niv. 5' : group === 'ships' ? '125,00 k en réserve' : '1,25 M installés');
         if (group !== 'technologies') {
             await expect(tab('basic')).toHaveAccessibleDescription(/unités possédées/);
             await panel('basic').getByLabel('Quantité', { exact: true }).fill('3');
             await tab('intermediate').click();
             if (group === 'ships') {
-                await expect(tab('intermediate').locator('.building-rank-level')).toHaveText('1,25 M');
+                await expect(panel('intermediate').locator('.catalogue-level-badge')).toHaveText('1,25 M en réserve');
                 await expect(panel('intermediate').getByLabel('Quantité', { exact: true })).toHaveValue('1');
             }
             await tab('basic').click();
             await expect(panel('basic').getByLabel('Quantité', { exact: true })).toHaveValue('3');
         }
+        if (group !== 'technologies') {
+            const frames = await costFrames('basic');
+            expect(frames.length).toBeGreaterThan(0);
+            expect(frames.every(Boolean), group + ' : cadres avant changement de rang').toBe(true);
+        }
         await tab('superior').click();
         await expect(panel('superior')).toBeVisible();
-        await expect(tab('superior').locator('.building-rank-cross')).toBeVisible();
+        await expect(tab('superior').locator('.building-rank-cross, .building-rank-up')).toHaveCount(0);
         await expect(panel('superior').locator('img')).toHaveAttribute('alt', /\S/);
         await checkLockedArtwork(page,panel('superior'),tab('superior'));
         await toggle.click();
@@ -288,9 +317,17 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
         await tab('superior').click();
         for (const width of [1920, 1440, 390, 320]) {
             await page.setViewportSize({ width, height: 1000 });
-            expect(await family.getByRole('tab').evaluateAll(tabs => tabs.every(tab => tab.scrollWidth <= tab.clientWidth))).toBe(true);
+            const overflowingTabs = await family.getByRole('tab').evaluateAll(tabs => tabs
+                .filter(tab => tab.scrollWidth > tab.clientWidth)
+                .map(tab => ({ text: tab.innerText, width: tab.clientWidth, actual: tab.scrollWidth })));
+            expect(overflowingTabs, 'Onglets ' + group + ' à ' + width + ' px').toEqual([]);
             const costRows = await panel('superior').locator('.building-costs > span').evaluateAll(costs => costs.map(cost => Math.round(cost.getBoundingClientRect().top)));
             if (group === 'ships') expect(costRows).toHaveLength(5);
+            if (group !== 'technologies') {
+                const frames = await costFrames('superior');
+                expect(frames).toHaveLength(costRows.length);
+                expect(frames.every(Boolean), group + ' : cadres après changement de rang à ' + width).toBe(true);
+            }
             expect(new Set(costRows).size, `${group} : ressources sur une ligne à ${width} px`).toBe(1);
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
             if (group === 'ships') await family.screenshot({path:`output/playwright/couts-cinq-ressources-${width}.png`});
@@ -319,7 +356,9 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
         await page.setViewportSize({ width: 1920, height: 1000 });
         await page.screenshot({ path: `output/playwright/catalogue-${group}-tabs.png`, fullPage: true });
         if (group === 'defenses') {
-            await panel('basic').getByRole('button', { name: /^Construire(?: 3)?$/ }).click();
+            const order = panel('basic').getByRole('button', { name: 'Construire : Canon laser anti-léger × 3', exact: true });
+            await expect(order).toBeEnabled();
+            await order.click();
             await expect.poll(() => queryIsolatedSql(process.env.BROWSER_ROUTER, `SELECT quantity FROM queue_item WHERE planet_id=${planet} AND item_slug='ground_turret_anti_light' AND tier='basic'`)).toBe('3');
         }
         await page.goto(`${path}?section=${group}&showLockedItems=0#item-${slug}-superior`);

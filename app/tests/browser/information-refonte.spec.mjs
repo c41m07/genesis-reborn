@@ -88,9 +88,9 @@ test('L9 A : aperçu local, agrandissement, retrait et reconnexion', async ({ pa
   await page.getByLabel('Joindre une capture').setInputFiles(capturePath);
   await expect(page.locator('.feedback-preview')).toBeVisible();
   const lastUrl = await page.locator('.feedback-preview img').getAttribute('src');
-  await page.locator('[data-controller="feedback-attachment"]').evaluate(element => { window.removedCapture = element; element.remove(); });
+  await page.locator('[data-controller="feedback-attachment"]').evaluate(element => { window.captureParent = element.parentElement; window.removedCapture = element; element.remove(); });
   await expect.poll(() => page.evaluate(url => window.captureUrls.revoked.includes(url), lastUrl)).toBe(true);
-  await page.locator('.feedback-context').evaluate(element => element.append(window.removedCapture));
+  await page.evaluate(() => window.captureParent.append(window.removedCapture));
   await expect(page.locator('.feedback-preview')).toBeVisible();
   await page.getByLabel('Joindre une capture').setInputFiles({ name: 'invalide.png', mimeType: 'image/png', buffer: Buffer.from('Ce fichier n’est pas une image.') });
   await expect(page.locator('[data-feedback-attachment-target=status]')).toContainText('Impossible d’afficher cet aperçu');
@@ -107,9 +107,9 @@ test('L9 A : aperçu local, agrandissement, retrait et reconnexion', async ({ pa
   });
   await page.getByLabel('Joindre une capture').setInputFiles(capturePath);
   const pendingUrl = await page.locator('[data-feedback-attachment-target=image]').getAttribute('src');
-  await page.locator('[data-controller="feedback-attachment"]').evaluate(element => { window.removedCapture = element; element.remove(); });
+  await page.locator('[data-controller="feedback-attachment"]').evaluate(element => { window.captureParent = element.parentElement; window.removedCapture = element; element.remove(); });
   await expect.poll(() => page.evaluate(url => window.captureUrls.revoked.includes(url), pendingUrl)).toBe(true);
-  await page.locator('.feedback-context').evaluate(element => element.append(window.removedCapture));
+  await page.evaluate(() => window.captureParent.append(window.removedCapture));
   await expect(page.getByRole('button', { name: 'Retirer la capture' })).toBeVisible();
   await page.getByLabel('Joindre une capture').setInputFiles({ ...payload, name: 'capture-recente.png' });
   await expect(page.locator('.feedback-preview figcaption')).toHaveText('capture-recente.png');
@@ -192,6 +192,91 @@ test('L9 A : publications, détail au clavier et état de lecture', async ({ pag
   }
 });
 
+test('P20 : feedback non envoyé et deux patchnotes publiées', async ({ page, browser, baseURL }, info) => {
+  test.setTimeout(120000);
+  const email = await account(page, { join: true });
+  const project = process.env.BROWSER_ROUTER;
+  const count = () => queryIsolatedSql(project, `SELECT COUNT(*) FROM user_feedback f JOIN player p ON p.id=f.player_id WHERE p.email=${quote(email)}`);
+  runIsolatedSql(project, "INSERT INTO patch_note (title,version,summary,content,status,published_at,created_at,updated_at) VALUES ('Lisibilité des rapports','0.9.2','Les filtres et le type de rapport sont affichés séparément.','Détail de l’amélioration des rapports.','published',DATE_SUB(UTC_TIMESTAMP(),INTERVAL 1 HOUR),UTC_TIMESTAMP(),UTC_TIMESTAMP()),('Classement et navigation','0.9.1','Repères de navigation harmonisés.','Détail du classement.','published',DATE_SUB(UTC_TIMESTAMP(),INTERVAL 2 HOUR),UTC_TIMESTAMP(),UTC_TIMESTAMP())");
+  for (const theme of ['dark', 'light']) {
+    runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email=${quote(email)}`);
+    for (const viewport of [{ width: 1920, height: 1080 }, { width: 390, height: 844 }]) {
+      await page.setViewportSize(viewport);
+      await page.goto('/feedback');
+      await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+      await page.getByLabel('Type', { exact: true }).selectOption('improvement');
+      await page.getByLabel('Titre', { exact: true }).fill('Contraste de l’indicateur de file');
+      const description = page.getByLabel('Description détaillée');
+      const descriptionText = 'Dans la vue condensée, le temps restant se confond avec le fond.';
+      await description.fill(descriptionText);
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+      if (viewport.width === 1920) {
+        await expect(page.getByRole('button', { name: 'Envoyer mon retour' })).toBeInViewport({ ratio: 1 });
+      }
+      await page.screenshot({ path: info.outputPath(`P20-A-feedback-${theme}-${viewport.width}.png`), animations:'disabled', scale:'css' });
+      if (viewport.width === 390) {
+        await page.getByRole('button', { name: 'Envoyer mon retour' }).scrollIntoViewIfNeeded();
+        await page.screenshot({ path: info.outputPath(`P20-A-actions-${theme}-390.png`), animations:'disabled', scale:'css' });
+      }
+      await page.getByLabel('Titre', { exact: true }).fill('   ');
+      await page.getByRole('button', { name: 'Envoyer mon retour' }).press('Enter');
+      const errors = page.locator('.feedback-errors');
+      await expect(errors).toContainText('Le titre est obligatoire');
+      await expect(errors).toBeFocused();
+      await page.waitForLoadState('load');
+      await page.evaluate(() => document.fonts.ready);
+      // Ne pas déplacer le document dans le test : l’erreur doit rester
+      // visible après le focus natif qui suit l’envoi et le rendu final.
+      await expect.poll(() => errors.getByRole('heading').evaluate(element => {
+        const box = element.getBoundingClientRect();
+        const x = box.left + Math.min(8, box.width / 2);
+        const y = box.top + box.height / 2;
+        const top = document.elementFromPoint(x, y);
+        return { visible: Boolean(top && element.contains(top)), occludedBy: top && !element.contains(top) ? top.className : null };
+      })).toEqual({ visible: true, occludedBy: null });
+      await expect(description).toHaveValue(descriptionText);
+      await expect(page.getByLabel('Type', { exact: true })).toHaveValue('improvement');
+      expect(count()).toBe('0');
+      await page.screenshot({ path: info.outputPath(`P20-A-erreur-${theme}-${viewport.width}.png`), animations:'disabled', scale:'css' });
+
+      await page.goto('/patchnotes');
+      const journal = page.locator('.player-patchnotes-board');
+      await expect(journal.getByRole('heading', { level: 2 })).toHaveText(['Lisibilité des rapports', 'Classement et navigation']);
+      await expect(journal.locator('time[datetime]')).toHaveCount(2);
+      await expect(journal.locator('.patchnote-version')).toHaveText(['Version 0.9.2','Version 0.9.1']);
+      await expect(journal.locator('.patchnote-version--current')).toHaveText('Version 0.9.2');
+      expect((await new AxeBuilder({ page }).include('.patchnote-version').analyze()).violations).toEqual([]);
+      const details = journal.locator('summary').first();
+      await details.press('Enter');
+      await expect(journal.locator('details').first()).toHaveAttribute('open','');
+      await expect(journal).toContainText('Détail de l’amélioration des rapports.');
+      await details.press('Enter');
+      await expect(journal.locator('details').first()).not.toHaveAttribute('open');
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+      await page.screenshot({ path: info.outputPath(`P20-B-patchnotes-${theme}-${viewport.width}.png`), animations:'disabled', scale:'css' });
+    }
+  }
+  const native = await browser.newContext({ baseURL, storageState: await page.context().storageState(), javaScriptEnabled: false });
+  try {
+    const tab = await native.newPage();
+    await tab.goto('/feedback');
+    await fillFeedback(tab);
+    await tab.getByLabel('Titre', { exact: true }).fill('   ');
+    await tab.getByRole('button', { name: 'Envoyer mon retour' }).press('Enter');
+    await expect(tab.locator('.feedback-errors')).toBeFocused();
+    await expect(tab.getByLabel('Description détaillée')).toHaveValue('Je consulte la page puis je recharge. Voici les étapes et le résultat attendu.');
+    await tab.goto('/patchnotes');
+    const details = tab.locator('.patchnote-details').first();
+    await details.locator('summary').press('Enter');
+    await expect(details).toHaveAttribute('open','');
+  } finally {
+    await native.close();
+  }
+  expect(count()).toBe('0');
+});
+
 test('L9 A : documents publics, ancres, métadonnées et contexte connecté', async ({ page }, testInfo) => {
   test.setTimeout(180000);
   for (const theme of ['dark', 'light']) {
@@ -206,6 +291,23 @@ test('L9 A : documents publics, ancres, métadonnées et contexte connecté', as
       }
       await expect(page.locator('main h1')).toHaveCount(1);
       await expect(page.getByRole('heading', { name: 'Information provisoire et incomplète' })).toBeVisible();
+      const warning = page.getByRole('complementary', { name: 'État de cette information' });
+      await expect(warning.getByRole('link', { name: 'contact@genesis-reborn.fr' })).toBeVisible();
+      const pad = await warning.evaluate(node => [
+        parseFloat(getComputedStyle(node).paddingTop),
+        parseFloat(getComputedStyle(node).paddingBottom),
+      ]);
+      expect(pad).toEqual([14, 14]);
+      const firstTopic = page.locator('.legal-content > h2').first();
+      await expect(firstTopic).toBeVisible();
+      if (path === '/confidentialite') await expect(firstTopic).toHaveAttribute('id', 'responsable-contact');
+      await expect(page.locator('.legal-audit-layout > aside.legal-warning')).toHaveCount(1);
+      const warningAndText = await page.locator('.legal-audit-layout').evaluate(node => ({
+        before: node.querySelector('.legal-warning').getBoundingClientRect().bottom,
+        after: node.querySelector('.legal-content > h2').getBoundingClientRect().top,
+      }));
+      expect(warningAndText.before).toBeLessThanOrEqual(warningAndText.after);
+      expect(await firstTopic.evaluate(node => getComputedStyle(node).marginTop)).toBe('0px');
       await expect(page.locator('main nav[aria-label="Informations juridiques"] a[aria-current=page]')).toHaveCount(1);
       await layout(page, testInfo, `legal-${path.slice(1)}-${theme}`);
       if (path==='/confidentialite') {

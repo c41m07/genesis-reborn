@@ -3,7 +3,10 @@
 {% block body %}
 <div class="admin-player-profile">
 <a class="secondary admin-player-back" href="{{ path('app_admin_players') }}">← Comptes joueurs</a>
-<div class="page-heading"><div><h1>{{ player.username }}</h1><p>Fiche joueur · {{ player.lockedAt ? 'Compte suspendu' : (player.emailVerifiedAt ? 'Compte actif' : 'Adresse à confirmer') }}</p></div></div>
+<div class="page-heading admin-design-banner">
+    <div><p class="eyebrow">Fiche joueur</p><h1>{{ player.username }}</h1></div>
+    <p class="admin-design-badge admin-design-badge--{{ player.lockedAt ? 'danger' : (player.emailVerifiedAt ? 'success' : 'warning') }}">{{ player.lockedAt ? 'Compte suspendu' : (player.emailVerifiedAt ? 'Compte actif' : 'Adresse à confirmer') }}</p>
+</div>
 <p class="admin-monitor-note">La présence et le temps de jeu sont des estimations de l’activité observée. Le suivi commence à la première visite enregistrée ; aucun historique antérieur n’est reconstitué. Les compteurs sont suspendus après cinq minutes sans activité. Les journées sont comptées en UTC.</p>
 {% include 'admin/_account_diagnostic.html.twig' %}
 {% for row in memberships %}{% set activity = row.activity %}

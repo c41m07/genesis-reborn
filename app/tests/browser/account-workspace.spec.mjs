@@ -69,15 +69,29 @@ test('L4 A : compte structuré, confirmations et états sensibles sur ordinateur
         await expect(page.locator('.account-redesign nav [aria-current="page"]')).toHaveAttribute('href', url);
         await verifyColumns(page, width);
         if (key === 'profile') {
-          await expect(page.locator('.account-profile-form')).toHaveCount(1);
+          const profile = page.locator('.account-profile-form');
+          const sensitiveRail = page.getByRole('complementary', { name: 'Portée et actions sensibles' });
+          await expect(profile).toHaveCount(1);
+          await expect(sensitiveRail).toBeVisible();
+          const [form, rail] = await Promise.all([profile.boundingBox(), sensitiveRail.boundingBox()]);
+          if (width === 1440) {
+            expect(rail.x).toBeGreaterThanOrEqual(form.x + form.width);
+            expect(Math.abs(rail.y - form.y)).toBeLessThanOrEqual(1);
+          } else {
+            expect(rail.y).toBeGreaterThanOrEqual(form.y + form.height);
+          }
           await expect(page.locator('.profile-password')).not.toHaveAttribute('open');
         }
         if (key === 'preferences') {
           await expect(page.locator('.account-preferences-form')).toHaveCount(1);
           await expect(page.locator('.account-preferences-form button[type="submit"], .account-preferences-save')).toHaveCount(1);
           if (width === 1440) {
-            const cards = page.locator('.account-preference-columns > .panel');
-            expect((await cards.nth(1).boundingBox()).x).toBeGreaterThanOrEqual((await cards.first().boundingBox()).x + (await cards.first().boundingBox()).width);
+            const shortcuts = page.getByRole('group', { name: 'Raccourcis de la galaxie' });
+            const transports = page.getByRole('group', { name: 'Réception des transports' });
+            await expect(shortcuts).toBeVisible();
+            await expect(transports).toBeVisible();
+            const [left, right] = await Promise.all([shortcuts.boundingBox(), transports.boundingBox()]);
+            expect(right.x).toBeGreaterThanOrEqual(left.x + left.width);
           }
         }
         if (key === 'vacation') {
@@ -141,4 +155,282 @@ test('L4 A : compte structuré, confirmations et états sensibles sur ordinateur
   await expect(page.locator('.profile-password')).toHaveAttribute('open');
   await verifyView(page, info, 'profile-erreur', 'light', 390);
   expect(errors).toEqual([]);
+});
+
+
+test('P07 : réglages enregistrés et vacances inactives', async ({ page, browser, baseURL }, info) => {
+  test.setTimeout(120000);
+  const id = crypto.randomUUID().slice(0, 8);
+  const email = 'p07-' + id + '@example.test';
+  const password = crypto.randomUUID() + 'aA1!';
+  await page.goto('/inscription');
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Nom de commandant').fill('Cadet-' + id);
+  await page.getByLabel('Mot de passe (12 caractères minimum)', {exact:true}).fill(password);
+  await page.getByLabel('Confirmer le mot de passe').fill(password);
+  await page.getByRole('button', {name:'Créer mon compte'}).click();
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Mot de passe', {exact:true}).fill(password);
+  await page.getByRole('button', {name:/Connexion/}).click();
+  await page.locator('.universe-card').filter({has:page.getByRole('heading',{name:/Omega/})}).getByRole('button').click();
+  await expect(page).toHaveURL(/planetes\/\d+$/);
+  const project = process.env.BROWSER_ROUTER;
+  const member = Number(queryIsolatedSql(project, `SELECT current_player_universe_id FROM player WHERE email='${email}'`));
+  expect(member).toBeGreaterThan(0);
+  const vacations = () => queryIsolatedSql(project, `SELECT COUNT(*) FROM vacation_period WHERE membership_id=${member}`);
+  const route = '/profil/preferences';
+  for (const theme of ['dark', 'light']) {
+    for (const viewport of [{width:1920,height:1080},{width:390,height:844}]) {
+      await page.setViewportSize(viewport);
+      await page.goto(route);
+      const settings = page.locator('.account-preferences-form');
+      const guide = page.locator('.first-steps-preference-form');
+      await expect(guide.getByLabel('Afficher le guide Premiers pas', {exact:true})).toBeChecked();
+      await expect(page.locator('.account-board-rail')).toContainText('Pas de vacances actives');
+      await settings.getByLabel('Thème de l’interface').selectOption(theme);
+      await settings.getByLabel('Fuseau horaire de l’horloge').selectOption('Europe/Paris');
+      for (const action of ['espionnage', 'colonisation']) {
+        await settings.getByLabel(new RegExp('Vitesse par défaut.*'+action)).selectOption({label:'100 %'});
+      }
+      await settings.getByLabel('Accepter les ressources envoyées par').selectOption('allies');
+      const submitted = page.waitForResponse(r=>r.request().method()==='POST' && new URL(r.url()).pathname===route);
+      await settings.getByRole('button',{name:'Enregistrer les paramètres',exact:true}).press('Enter');
+      expect((await submitted).status()).toBe(302);
+      await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
+      const confirmation = page.getByText('Préférences enregistrées.', {exact:true});
+      await expect(confirmation).toBeVisible();
+      await expect(settings.getByRole('status').filter({ hasText:'Préférences enregistrées.' })).toHaveCount(1);
+      const confirmationGap = await settings.evaluate(form => {
+        const save = form.querySelector('.account-preferences-save').getBoundingClientRect();
+        const feedback = form.querySelector('.account-preferences-confirmation').getBoundingClientRect();
+        return feedback.top - save.bottom;
+      });
+      expect(confirmationGap).toBeGreaterThanOrEqual(0);
+      await expect(page.locator('.account-vacation-summary--inactive')).toContainText('Pas de vacances actives');
+      if (viewport.width === 390) {
+        expect((await new AxeBuilder({page}).include('.account-preferences-confirmation').include('.account-vacation-summary').analyze()).violations).toEqual([]);
+      }
+      await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+      await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+      if (viewport.width === 1920) {
+        await expect(confirmation).toBeInViewport({ ratio:1 });
+      }
+      await page.screenshot({path:info.outputPath(`P07-preferences-${theme}-${viewport.width}.png`),animations:'disabled',scale:'css'});
+      if (viewport.width===390) {
+        await confirmation.evaluate(element=>element.scrollIntoView({block:'center',behavior:'instant'}));
+        await page.screenshot({path:info.outputPath(`P07-confirmation-${theme}-390.png`),animations:'disabled',scale:'css'});
+      }
+      await expect(guide.getByLabel('Afficher le guide Premiers pas',{exact:true})).toBeChecked();
+      expect(vacations()).toBe('0');
+    }
+  }
+  expect(queryIsolatedSql(project,`SELECT JSON_EXTRACT(preferences,'$.theme') FROM player WHERE email='${email}'`)).toBe('"light"');
+  const native = await browser.newContext({baseURL,storageState:await page.context().storageState(),javaScriptEnabled:false});
+  try {
+    const tab = await native.newPage();
+    await tab.goto(route);
+    const guide = tab.locator('.first-steps-preference-form');
+    await guide.getByLabel('Afficher le guide Premiers pas', {exact:true}).uncheck();
+    await guide.getByRole('button',{name:'Enregistrer le réglage du guide',exact:true}).press('Enter');
+    await expect(tab.getByText(/Guide désactivé/)).toBeVisible();
+    await expect(tab.locator('.account-preferences-confirmation')).toHaveCount(0);
+    await expect(tab.locator('body')).toHaveAttribute('data-theme','light');
+    await guide.getByLabel('Afficher le guide Premiers pas',{exact:true}).check();
+    await guide.getByRole('button',{name:'Enregistrer le réglage du guide',exact:true}).press('Enter');
+    await expect(tab.getByText(/Guide réactivé/)).toBeVisible();
+    await expect(tab.locator('.account-preferences-confirmation')).toHaveCount(0);
+    await tab.getByRole('link',{name:'Examiner les restrictions',exact:true}).press('Enter');
+    await expect(tab).toHaveURL(/profil\/vacances$/);
+    await expect(tab.getByRole('heading',{name:'Mode vacances',exact:true})).toBeVisible();
+  } finally { await native.close(); }
+  expect(vacations()).toBe('0');
+});
+
+
+test('P06 : mes identifiants et refus sans modification du compte', async ({ page, browser, baseURL }, info) => {
+  test.setTimeout(120000);
+  const id = crypto.randomUUID().slice(0,8);
+  const email = 'p06-' + id + '@example.test';
+  const name = 'Horizon-' + id;
+  const password = crypto.randomUUID() + 'aA1!';
+  await page.goto('/inscription');
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Nom de commandant').fill(name);
+  await page.getByLabel('Mot de passe (12 caractères minimum)',{exact:true}).fill(password);
+  await page.getByLabel('Confirmer le mot de passe').fill(password);
+  await page.getByRole('button',{name:'Créer mon compte'}).click();
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Mot de passe',{exact:true}).fill(password);
+  await page.getByRole('button',{name:/Connexion/}).click();
+  await page.locator('.universe-card').filter({has:page.getByRole('heading',{name:/Omega/})}).getByRole('button').click();
+  await expect(page).toHaveURL(/planetes\/\d+$/);
+  const project = process.env.BROWSER_ROUTER;
+  const accountName = () => queryIsolatedSql(project,`SELECT username FROM player WHERE email='${email}'`);
+  expect(accountName()).toBe(name);
+  for (const theme of ['dark','light']) {
+    runIsolatedSql(project,`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
+    for (const viewport of [{width:1920,height:1080},{width:390,height:844}]) {
+      await page.setViewportSize(viewport);
+      await page.goto('/profil');
+      const form = page.locator('.account-profile-form');
+      const rail = page.getByRole('complementary',{name:'Portée et actions sensibles'});
+      await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
+      await expect(form.locator('.profile-password')).not.toHaveAttribute('open');
+      await expect(form.locator('.profile-password-hint')).toContainText('conserver votre mot de passe');
+      const validation = form.locator('.profile-validation-notice');
+      await expect(validation).toContainText('Toute modification enregistrée ferme cette session');
+      const save = form.getByRole('button',{name:'Enregistrer mes identifiants'});
+      const saveBounds = await save.boundingBox();
+      const noticeBounds = await validation.boundingBox();
+      expect(noticeBounds.y).toBeGreaterThanOrEqual(saveBounds.y+saveBounds.height);
+      const scope = rail.locator('.profile-scope-card').locator('dl > div').first();
+      const scopeTerm = await scope.locator('dt').boundingBox();
+      const scopeDescription = await scope.locator('dd').boundingBox();
+      expect(scopeDescription.y).toBeGreaterThanOrEqual(scopeTerm.y+scopeTerm.height);
+      if (viewport.width===390) {
+        expect((await new AxeBuilder({page}).include('.profile-password-hint').include('.profile-validation-notice').include('.profile-danger-card').analyze()).violations).toEqual([]);
+      }
+      await expect(rail.getByRole('link',{name:'Voir la confirmation'})).toHaveAttribute('href','/profil/supprimer');
+      await expect(form.getByRole('link',{name:'Voir la confirmation'})).toHaveCount(0);
+      await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+      await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+      if (viewport.width===1920) {
+        await expect(validation).toBeInViewport({ratio:1});
+      }
+      await page.screenshot({path:info.outputPath(`P06-identifiants-${theme}-${viewport.width}.png`),scale:'css',animations:'disabled'});
+      if (viewport.width===390) {
+        await form.getByRole('button',{name:'Enregistrer mes identifiants'}).scrollIntoViewIfNeeded();
+        await page.screenshot({path:info.outputPath(`P06-action-${theme}-390.png`),scale:'css',animations:'disabled'});
+      }
+      await form.getByLabel('Nom de commandant').fill('Texte conservé');
+      const input = form.getByLabel('Mot de passe actuel',{exact:true});
+      await input.fill('Incorrect-synthetique-2026!');
+      const rejected = page.waitForResponse(r=>r.request().method()==='POST' && new URL(r.url()).pathname==='/profil');
+      await form.getByRole('button',{name:'Enregistrer mes identifiants'}).press('Enter');
+      expect((await rejected).status()).toBe(422);
+      await expect(form.getByLabel('Nom de commandant')).toHaveValue('Texte conservé');
+      await expect(form.getByLabel('Adresse email')).toHaveValue(email);
+      await expect(input).toHaveValue('');
+      await expect(form.getByRole('alert')).toContainText('Profil non enregistré.');
+      await expect(form.locator('.profile-password')).toHaveAttribute('open','');
+      expect(accountName()).toBe(name);
+      await page.screenshot({path:info.outputPath(`P06-refus-${theme}-${viewport.width}.png`),scale:'css',animations:'disabled'});
+    }
+  }
+  const context = await browser.newContext({baseURL,storageState:await page.context().storageState(),javaScriptEnabled:false});
+  try {
+    const tab = await context.newPage();
+    await tab.goto('/profil');
+    const summary = tab.locator('.profile-password > summary');
+    await summary.press('Enter');
+    await expect(tab.locator('.profile-password')).toHaveAttribute('open','');
+    await summary.press('Enter');
+    await expect(tab.locator('.profile-password')).not.toHaveAttribute('open');
+  } finally { await context.close(); }
+});
+
+
+test('P17 : consulter la suppression et revenir sans aucune soumission', async ({ page, browser, baseURL }, info) => {
+  test.setTimeout(120000);
+  const id = crypto.randomUUID().slice(0,8);
+  const email = 'p17-' + id + '@example.test';
+  const name = 'Horizon-' + id;
+  const password = crypto.randomUUID() + 'aA1!';
+  await page.goto('/inscription');
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Nom de commandant').fill(name);
+  await page.getByLabel('Mot de passe (12 caractères minimum)',{exact:true}).fill(password);
+  await page.getByLabel('Confirmer le mot de passe').fill(password);
+  await page.getByRole('button',{name:'Créer mon compte'}).click();
+  await page.getByLabel('Adresse email').fill(email);
+  await page.getByLabel('Mot de passe',{exact:true}).fill(password);
+  await page.getByRole('button',{name:/Connexion/}).click();
+  await page.locator('.universe-card').filter({has:page.getByRole('heading',{name:/Omega/})}).getByRole('button').click();
+  await expect(page).toHaveURL(/planetes\/\d+$/);
+  const project=process.env.BROWSER_ROUTER;
+  const account=()=>queryIsolatedSql(project,`SELECT username FROM player WHERE email='${email}'`);
+  expect(account()).toBe(name);
+  const attempted=[];
+  const preventDeletion=async route=>{
+    if(route.request().method()==='GET') return route.continue();
+    attempted.push(route.request().method());
+    return route.abort();
+  };
+  await page.route('**/profil/supprimer',preventDeletion);
+  for(const theme of ['dark','light']){
+    runIsolatedSql(project,`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
+    for(const viewport of [{width:1920,height:1080},{width:390,height:844}]){
+      await page.setViewportSize(viewport);
+      await page.goto('/profil');
+      await page.getByRole('link',{name:'Voir la confirmation',exact:true}).press('Enter');
+      await expect(page).toHaveURL(/profil\/supprimer$/);
+      await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
+      const warning=page.locator('.account-deletion-page .sensitive-actions');
+      const form=page.locator('.account-delete-form');
+      await expect(warning).toContainText('Action définitive · tous les univers');
+      await expect(warning).toContainText('empires oubliés');
+      await expect(warning).toContainText('historiques de jeu et messages sont conservés');
+      await expect(form).toContainText('tous les univers');
+      await expect(form).toHaveAttribute('method','post');
+      const field=form.getByLabel('Mot de passe pour supprimer le compte',{exact:true});
+      const confirmation=form.getByRole('checkbox');
+      const submit=form.getByRole('button',{name:'Supprimer définitivement mon compte',exact:true});
+      await expect(field).toHaveValue('');
+      await expect(field).toHaveAttribute('required','');
+      await expect(confirmation).not.toBeChecked();
+      await expect(confirmation).toHaveAttribute('required','');
+      await field.focus();
+      await page.keyboard.press('Tab');
+      await expect(confirmation).toBeFocused();
+      await page.keyboard.press('Tab');
+      await expect(submit).toBeFocused();
+      const safeBack=form.getByRole('link',{name:'Retour aux identifiants',exact:true});
+      await expect(safeBack).toHaveAttribute('href','/profil');
+      await page.keyboard.press('Tab');
+      await expect(safeBack).toBeFocused();
+      // La navigation au clavier peut rendre le DOM avant les feuilles de style.
+      // Mesurer les deux panneaux et leurs actions dans une seule image du rendu.
+      await page.waitForLoadState('load');
+      await page.evaluate(() => document.fonts.ready);
+      const geometry=await warning.evaluate(element => {
+        const workspace=element.closest('.account-workspace');
+        const confirmation=workspace.querySelector('.account-delete-form');
+        const rect=node=>node.getBoundingClientRect().toJSON();
+        return {
+          warning:rect(element),
+          form:rect(confirmation),
+          primary:rect(confirmation.querySelector('.account-delete-actions button[type="submit"]')),
+          alternative:rect(confirmation.querySelector('.account-delete-actions a[href="/profil"]')),
+        };
+      });
+      if(viewport.width===1920){
+        expect(geometry.form.left).toBeGreaterThanOrEqual(geometry.warning.right);
+        expect(geometry.form.width).toBeGreaterThanOrEqual(geometry.warning.width);
+        expect(Math.abs(geometry.primary.top-geometry.alternative.top)).toBeLessThanOrEqual(1);
+        expect(geometry.alternative.left).toBeGreaterThanOrEqual(geometry.primary.right);
+      }else{
+        expect(geometry.form.top).toBeGreaterThanOrEqual(geometry.warning.bottom);
+        expect((await new AxeBuilder({page}).include('.account-deletion-page .account-workspace').analyze()).violations).toEqual([]);
+      }
+      await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'});});
+      await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+      await page.screenshot({path:info.outputPath(`P17-B-confirmation-${theme}-${viewport.width}.png`),animations:'disabled',scale:'css'});
+      if(viewport.width===390){
+        await submit.evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));
+        await page.screenshot({path:info.outputPath(`P17-B-commandes-${theme}-390.png`),animations:'disabled',scale:'css'});
+      }
+      expect(account()).toBe(name);
+    }
+  }
+  const native=await browser.newContext({baseURL,storageState:await page.context().storageState(),javaScriptEnabled:false});
+  try{
+    const tab=await native.newPage();
+    await tab.route('**/profil/supprimer',preventDeletion);
+    await tab.goto('/profil/supprimer');
+    await expect(tab.getByRole('heading',{name:'Suppression du compte',exact:true})).toBeVisible();
+    await tab.locator('.account-delete-form').getByRole('link',{name:'Retour aux identifiants',exact:true}).press('Enter');
+    await expect(tab).toHaveURL(/profil$/);
+  } finally { await native.close(); }
+  expect(attempted).toEqual([]);
+  expect(account()).toBe(name);
 });

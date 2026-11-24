@@ -1,3 +1,4 @@
+<div class="admin-design-review-grid">
 <section class="panel admin-section" id="admin-reports" aria-labelledby="admin-reports-title" data-controller="admin-filter">
 
 <h2 id="admin-reports-title">Signalements de messages</h2>
@@ -5,7 +6,7 @@
 <div class="admin-search"><label for="report-search">Rechercher dans les messages</label><input id="report-search" type="search" placeholder="Joueur, guilde, motif…" data-admin-filter-target="query" data-action="input->admin-filter#filter"><output data-admin-filter-target="count"></output></div>
 {% for report in reports %}
 <article class="panel admin-report-card" data-admin-filter-target="row" aria-labelledby="message-report-{{ report.id }}">
-<h3 id="message-report-{{ report.id }}">Signalement #{{ report.id }}</h3>
+<header class="admin-report-heading"><h3 id="message-report-{{ report.id }}">Signalement #{{ report.id }} · {{ report.message.recipient ? 'Message privé' : 'Message de guilde' }}</h3><span class="badge">À traiter</span></header>
 <p>{{ report.createdAt|date('d/m/Y H:i') }} · {{ report.reporter.displayName }}</p>
 <p>{% if report.message.recipient %}Message privé de {{ report.message.sender.displayName }} à {{ report.message.recipient.displayName }}{% else %}Message de la guilde {{ report.message.guild.name }} par {{ report.message.sender.displayName }}{% endif %} · {{ report.message.createdAt|date('d/m/Y H:i') }}</p>
 <blockquote>{{ report.message.content }}</blockquote><p>Motif : {{ report.reason }}</p>
@@ -16,7 +17,7 @@
 </form>
 </article>
 {% endfor %}
-<p hidden data-admin-filter-target="empty" data-default-message="Aucun signalement à traiter." data-no-matches-message="Aucun signalement ne correspond à cette recherche.">Aucun signalement à traiter.</p>
+<p {% if reports %}hidden{% endif %} data-admin-filter-target="empty" data-default-message="Aucun signalement à traiter." data-no-matches-message="Aucun signalement ne correspond à cette recherche.">Aucun signalement à traiter.</p>
 </section>
 
 <section class="panel admin-section" id="admin-player-reports" aria-labelledby="admin-player-reports-title">
@@ -24,7 +25,7 @@
 <p>Contexte conservé au moment du signalement. Le traitement ne déclenche aucune sanction automatique.</p>
 {% for report in playerReports %}
 <article class="panel admin-report-card">
-<h3>Signalement joueur #{{ report.id }} · {{ report.context.target_username }}</h3>
+<header class="admin-report-heading"><h3>Signalement joueur #{{ report.id }} · {{ report.context.target_username }}</h3><span class="badge">À traiter</span></header>
 <p>{{ report.createdAt|date('d/m/Y H:i') }} · Univers {{ report.context.universe_name }} (#{{ report.context.universe_id }})</p>
 <p>Auteur : {{ report.context.reporter_username }} (#{{ report.context.reporter_id }}) · Joueur visé : {{ report.context.target_username }} (#{{ report.context.target_id }})</p>
 <p>Classement consulté : {{ playerReportCategories[report.context.category] }} · rang #{{ report.context.rank }} · calcul du {{ report.context.leaderboard_at|date('d/m/Y H:i') }}.</p>
@@ -38,3 +39,4 @@
 </article>
 {% else %}<p>Aucun signalement de joueur à traiter.</p>{% endfor %}
 </section>
+</div>

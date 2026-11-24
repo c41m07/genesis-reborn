@@ -6,8 +6,20 @@
     </a></p>
 {% endif %}
 {% if reward %}
-    <section class="pirate-campaign-command" aria-labelledby="pirate-convoy-title">
+    {% set visualState = {protected_travel: 'transit', full_pending: 'capacity'}[reward.state]|default('') %}
+    <section class="pirate-campaign-command{{ visualState ? ' pirate-campaign-economy-card pirate-campaign-economy-card--' ~ visualState : '' }}" aria-labelledby="pirate-convoy-title">
         <h3 id="pirate-convoy-title">Convoi de remerciement</h3>
+        {% set convoyStates = {
+            unassigned: 'Destination à attribuer',
+            protected_travel: 'En convoi',
+            arrival_confirmed: 'Arrivée confirmée',
+            full_pending: 'À déposer',
+            destination_lost: 'Destination perdue',
+            credited: 'Lot crédité',
+        } %}
+        {% if convoyStates[reward.state] is defined %}
+            <p class="badge{{ visualState ? ' pirate-economy-badge' : '' }}">{{ convoyStates[reward.state] }}</p>
+        {% endif %}
         {% if reward.state == 'unassigned' %}
             <p>Destination non attribuée. Aucun départ n’est confirmé.</p>
         {% elseif reward.state == 'protected_travel' %}
@@ -15,10 +27,11 @@
                 <time datetime="{{ reward.expected_arrival_at }}">{{ reward.expected_arrival_at|date('d/m/Y à H:i:s', 'UTC') }} UTC</time>.
                 {% if reward.awaiting_arrival_confirmation %}L’arrivée reste à confirmer.{% endif %}
             </p>
+            <a class="secondary" href="{{ path('app_fleets') }}">Voir le trajet dans Flottes</a>
         {% elseif reward.state == 'arrival_confirmed' %}
             <p>Arrivée confirmée, versement non confirmé.</p>
         {% elseif reward.state == 'full_pending' %}
-            <p>Lot entier en attente : espace insuffisant lors du dernier contrôle.</p>
+            <p><strong>Stockage insuffisant.</strong> Lot entier en attente : espace insuffisant lors du dernier contrôle.</p>
             {% if deposit_token|default(null) %}
                 <p>Libérez assez de place dans la colonie de destination, puis retentez la remise du lot entier.</p>
                 <form method="post" action="{{ path('app_pirate_campaign_convoy_deposit', {missionNumber: selected}) }}">
@@ -34,9 +47,11 @@
             </p>
         {% endif %}
         {% set labels = {metal: 'Métal', nano: 'Nanos', antimatter: 'Antimatière', hydrogen: 'Hydrogène'} %}
-        <dl>
+        <dl{% if visualState %} class="pirate-campaign-reward"{% endif %}>
             {% for resource, amount in reward.amounts %}
+                {% if visualState %}<div>{% endif %}
                 <dt>{{ labels[resource] }}</dt><dd>{{ amount }}</dd>
+                {% if visualState %}</div>{% endif %}
             {% endfor %}
         </dl>
     </section>

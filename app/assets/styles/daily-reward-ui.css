@@ -153,3 +153,27 @@
     .topbar:has(.has-daily-reward-shortcuts) { gap: 5px; padding-inline: 9px; }
     .has-daily-reward-shortcuts .daily-reward-shortcut { width: 36px; }
 }
+
+.daily-reward-resource-lines { max-width: 32rem; margin-block: 16px; }
+.daily-reward-resource-lines > div { align-items: center; }
+.daily-reward-resource-lines dt { display: flex; gap: 8px; align-items: center; }
+.daily-reward-resource-lines dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+/* P18 : calendrier du cycle natif ; aucun bouton ne prétend ouvrir un autre jour. */
+.daily-reward-player-board .daily-board-eyebrow { margin:0 0 .6rem; color:var(--accent); font-size:.72rem; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }
+.daily-reward-player-board .page-heading h1 { font-size:clamp(2rem,3vw,2.55rem); }
+.daily-reward-player-board .account-panel { max-width:none; }
+.daily-board-cycle { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:.5rem; margin:1rem 0; padding:0; list-style:none; }
+.daily-board-cycle li { display:grid; place-items:center; min-height:44px; padding:.35rem; border:1px solid var(--line); border-radius:6px; background:var(--panel); color:var(--muted); text-align:center; }
+.daily-board-cycle li[aria-current] { color:var(--text); border-color:var(--gold); background:color-mix(in srgb,var(--gold) 16%,var(--panel)); font-weight:750; }
+@media(max-width:600px) {
+    .daily-board-cycle { grid-template-columns:repeat(4,minmax(0,1fr)); }
+}
+.daily-reward-player-board .daily-board-kpis { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.7rem; max-width:35rem; margin-block:.85rem; }
+.daily-reward-player-board .daily-board-kpis > div { display:block; min-width:0; padding:.75rem; border:1px solid var(--line); border-radius:6px; background:color-mix(in srgb,var(--accent) 8%,var(--panel)); }
+.daily-reward-player-board .daily-board-kpis dd { margin:.35rem 0 0; color:var(--text); font-weight:750; font-size:1.3rem; }
+
+/* P18 : choisir la destination ne déclenche pas le retrait. */
+.daily-board-destination { display:flex; align-items:end; gap:.6rem; flex-wrap:wrap; margin-block:.7rem; }
+.daily-board-destination > div { display:grid; gap:.25rem; min-inline-size:0; }
+.daily-board-destination select { inline-size:100%; }
