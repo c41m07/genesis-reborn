@@ -316,7 +316,17 @@ body[data-theme=light] .catalog-workspace .catalog-build-action.primary:not(:dis
     grid-auto-flow:column;
     grid-auto-columns:minmax(0,1fr);
 }
-.catalog-workspace .core-construction-cost .building-costs > span { display:flex; min-width:0; font-size:12px; }
+/* Les coûts du Chantier et des Défenses gardent leur cadre quand le rang change.
+   Le nombre de ressources ne détermine que la disposition des tuiles. */
+.catalog-workspace .core-construction-cost .building-costs > span {
+    display:flex;
+    min-width:0;
+    font-size:12px;
+    border:1px solid var(--line);
+    border-radius:5px;
+    background:var(--bg);
+}
+.catalog-workspace .core-construction-cost .building-costs > span.insufficient { border-color:currentColor; }
 .catalog-workspace .core-construction-cost .building-costs > span[hidden] { display:none; }
 .catalog-workspace .core-construction-cost .building-costs small { overflow-wrap:anywhere; }
 .catalog-workspace .core-unit-details .card-benefits { margin:8px 0 0; }

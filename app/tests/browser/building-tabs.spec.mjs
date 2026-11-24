@@ -261,6 +261,10 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
     for (const [group, slug, families] of [['technologies', 'engineering_foundations', 19], ['ships', 'fighter', 16], ['defenses', 'ground_turret_anti_light', 4]]) {
         await page.setViewportSize({ width: 1920, height: 1000 });
         await page.goto(`${path}?section=${group}`);
+        const costFrames = tier => panel(tier).locator('.building-costs > span:not([hidden])').evaluateAll(chips => chips.map(chip => {
+            const style = getComputedStyle(chip);
+            return style.borderTopStyle === 'solid' && style.borderTopWidth === '1px' && style.backgroundColor !== 'rgba(0, 0, 0, 0)';
+        }));
         const family = page.locator(`.building-card[data-slug="${slug}"]`);
         const tab = tier => page.locator(`#building-tab-${slug}-${tier}`);
         const panel = tier => page.locator(`#item-${slug}-${tier}`);
@@ -282,6 +286,11 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
             await tab('basic').click();
             await expect(panel('basic').getByLabel('Quantité', { exact: true })).toHaveValue('3');
         }
+        if (group !== 'technologies') {
+            const frames = await costFrames('basic');
+            expect(frames.length).toBeGreaterThan(0);
+            expect(frames.every(Boolean), group + ' : cadres avant changement de rang').toBe(true);
+        }
         await tab('superior').click();
         await expect(panel('superior')).toBeVisible();
         await expect(tab('superior').locator('.building-rank-cross')).toBeVisible();
@@ -300,6 +309,11 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
             expect(overflowingTabs, 'Onglets ' + group + ' à ' + width + ' px').toEqual([]);
             const costRows = await panel('superior').locator('.building-costs > span').evaluateAll(costs => costs.map(cost => Math.round(cost.getBoundingClientRect().top)));
             if (group === 'ships') expect(costRows).toHaveLength(5);
+            if (group !== 'technologies') {
+                const frames = await costFrames('superior');
+                expect(frames).toHaveLength(costRows.length);
+                expect(frames.every(Boolean), group + ' : cadres après changement de rang à ' + width).toBe(true);
+            }
             expect(new Set(costRows).size, `${group} : ressources sur une ligne à ${width} px`).toBe(1);
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
             if (group === 'ships') await family.screenshot({path:`output/playwright/couts-cinq-ressources-${width}.png`});

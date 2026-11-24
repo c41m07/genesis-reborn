@@ -230,6 +230,15 @@ body.authenticated .fleet-redesign .fleet-composition-control > .fleet-compositi
     border-end-start-radius: 0;
 }
 
+/* Même état pour la quantité et Max ; la valeur désactivée reste lisible. */
+body.authenticated .fleet-redesign .fleet-composition-control > :is(input, button):disabled {
+    background: color-mix(in srgb, var(--muted) 19%, var(--panel));
+    color: var(--muted);
+    border-color: var(--line);
+    opacity: 1;
+    cursor: not-allowed;
+}
+
 .fleet-redesign .fleet-composition-control > :focus-visible {
     position: relative;
     z-index: 1;
