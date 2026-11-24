@@ -122,17 +122,20 @@ final class FleetController extends AbstractController
             if (!$destinationSystem || $destinationSystem->galaxy->universe->id !== $membership->universe->id) {
                 throw new \DomainException('Destination inaccessible.');
             }
-            if ($mission === 'explore') {
-                $composition = ['probe' => 1];
-            } elseif ($mission === 'colonize') {
-                $composition = ['colony_ship' => 1];
-            } else {
+            // Un ancien formulaire ouvert avant la mise à jour demandait le rang basique.
+            $tier = $request->request->getString('ship_tier', 'basic');
+            if (!in_array($tier, GameCatalog::TIERS, true)) {
+                throw new \DomainException('Rang de vaisseau invalide.');
+            }
+            $shipSlug = $mission === 'colonize' ? 'colony_ship' : 'probe';
+            $quantity = 1;
+            if ($mission === 'spy') {
                 $quantity = filter_var($request->request->get('probe_quantity'), FILTER_VALIDATE_INT);
                 if ($quantity === false || $quantity < 1 || $quantity > 100) {
                     throw new \DomainException('Choisissez entre 1 et 100 sondes.');
                 }
-                $composition = ['probe' => $quantity];
             }
+            $composition = [$shipSlug => [$tier => $quantity]];
             $savedPreferences = $preferences->for($membership->player);
             $defaultSpeed = match ($mission) {
                 'spy' => (float) $savedPreferences['galaxySpySpeed'],
@@ -147,10 +150,10 @@ final class FleetController extends AbstractController
                 $composition,
                 $defaultSpeed,
                 [],
-                (string) $request->request->get('request_key')
+                (string) $request->request->get('request_key'),
+                requireExactComposition: true,
             );
-            $shipSlug = $mission === 'colonize' ? 'colony_ship' : 'probe';
-            $shipLabel = $catalog->getTierForUniverse($membership->universe, 'ships', $shipSlug, 'basic')['label'];
+            $shipLabel = $catalog->getTierForUniverse($membership->universe, 'ships', $shipSlug, $tier)['label'];
             $this->addFlash('success', match ($mission) {
                 'explore' => $shipLabel . ' envoyée en exploration.',
                 'spy' => $shipLabel . ' envoyée en espionnage.',
