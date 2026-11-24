@@ -119,11 +119,16 @@ test('Événements A sans JavaScript : erreurs, aperçu, création, édition et 
     await native.getByRole('button', { name: 'Créer', exact: true }).click();
     await native.getByRole('link', { name: 'Modifier Annonce native', exact: true }).click();
     await native.getByLabel('Nom', { exact: true }).fill('Annonce native modifiée');
-    await native.getByLabel('Statut', { exact: true }).selectOption('planned');
+    const status = native.locator('form.admin-event-form select[name="status"]');
+    await expect(status).toHaveValue('draft');
+    await expect(status.locator('option[value="planned"]')).toHaveText('Planifié');
+    await status.selectOption('planned');
+    await expect(status).toHaveValue('planned');
     await native.getByRole('button', { name: 'Enregistrer', exact: true }).click();
     await expect(native.locator('.flash.success')).toContainText('Événement modifié');
     await native.reload();
     await expect(native.locator('.admin-events-list')).toContainText('Annonce native modifiée');
+    expect(queryIsolatedSql(project, "SELECT status FROM game_event WHERE name='Annonce native modifiée'")).toBe('planned');
     await native.getByRole('button', { name: 'Annuler l’événement', exact: true }).click();
     expect(queryIsolatedSql(project, "SELECT status FROM game_event WHERE name='Annonce native modifiée'")).toBe('cancelled');
     await createDraft('Brouillon à supprimer');
