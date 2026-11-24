@@ -15,6 +15,23 @@ final class GameRepository
     {
     }
 
+    /** @return array{action: string, proposal: ?string, actorId: int, actorGuildId: int}|null */
+    public function latestGuildTreatyEvent(int $universeId, int $guildAId, int $guildBId): ?array
+    {
+        // Le verrou de l’univers est déjà détenu : lire l’événement fraîchement validé,
+        // même si une lecture précédant ce verrou a ouvert un instantané MariaDB.
+        $event = $this->em->getConnection()->fetchAssociative(
+            'SELECT action, proposal, actor_id, actor_guild_id FROM guild_treaty_event
+             WHERE universe_id = ? AND guild_a_id = ? AND guild_b_id = ?
+             ORDER BY id DESC LIMIT 1 LOCK IN SHARE MODE',
+            [$universeId, $guildAId, $guildBId],
+        );
+        return $event ? [
+            'action' => $event['action'], 'proposal' => $event['proposal'],
+            'actorId' => (int) $event['actor_id'], 'actorGuildId' => (int) $event['actor_guild_id'],
+        ] : null;
+    }
+
     /** @return list<GuildProject> Une ligne supplémentaire permet de proposer la page suivante. */
     public function guildProjectsPage(Guild $guild, bool $history, int $beforeId, int $limit = 26): array
     {
@@ -674,6 +691,21 @@ final class GameRepository
     public function espionageReportsFor(PlayerUniverse $membership, int $limit = 50): array
     {
         return $this->em->createQueryBuilder()->select('r')->from(\App\Entity\EspionageReport::class, 'r')->where('r.sender = :membership')->setParameter('membership', $membership)->orderBy('r.createdAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();
+    }
+
+    /** @return list<array{id: int, createdAt: \DateTimeImmutable}> */
+    public function recentEspionageReportOptions(PlayerUniverse $membership): array
+    {
+        // Le sélecteur n’a besoin ni du contenu du rapport ni de l’état actuel de la cible.
+        return $this->em->createQueryBuilder()
+            ->select('r.id', 'r.createdAt')
+            ->from(\App\Entity\EspionageReport::class, 'r')
+            ->where('r.sender = :membership')
+            ->setParameter('membership', $membership)
+            ->orderBy('r.createdAt', 'DESC')
+            ->addOrderBy('r.id', 'DESC')
+            ->setMaxResults(20)
+            ->getQuery()->getArrayResult();
     }
 
     public function combatLogsFor(PlayerUniverse $membership, int $limit = 50): array

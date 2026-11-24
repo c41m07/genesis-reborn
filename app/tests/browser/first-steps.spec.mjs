@@ -942,3 +942,53 @@ test('Événements passe devant le guide volontairement ouvert et restaure son p
     await expect(popup.locator('.first-steps-preview')).toBeVisible();
     await expect(popup.locator('img[src]')).toHaveCount(0);
 });
+
+test('Premiers pas : la progression historique reste stable en changeant de colonie', async ({ page }) => {
+    const email = await register(page);
+    const project = process.env.BROWSER_ROUTER;
+    const first = Number(new URL(page.url()).pathname.split('/').at(-1));
+    const member = Number(queryIsolatedSql(project, 'SELECT owner_id FROM planet WHERE id=' + first));
+    const { id: second } = revealVirginPlanet(project, email);
+    expect(member).toBeGreaterThan(0);
+    expect(second).not.toBe(first);
+    runIsolatedSql(project, "UPDATE planet SET owner_id=" + member + ", acquired_at=UTC_TIMESTAMP(), name='Colonie cadette' WHERE id=" + second);
+    runIsolatedSql(project, 'INSERT INTO planet_building(planet_id,slug,tier,level) VALUES (' + first
+        + ",'mine_metal','basic',1),(" + first + ",'power_plant','basic',1),(" + second
+        + ",'lab','basic',1) ON DUPLICATE KEY UPDATE level=VALUES(level)");
+    runIsolatedSql(project, 'INSERT INTO first_step_completion(player_universe_id,step_key,completed_at) VALUES ('
+        + member + ",'exploration',UTC_TIMESTAMP())");
+
+    const progress = page.getByRole('progressbar', { name: 'Progression des premiers pas' });
+    const popup = page.locator('.first-steps-popup');
+    const panel = popup.locator('[data-first-steps-guide-fragment]');
+    const selected = page.getByLabel('Choisir une colonie');
+    const before = () => queryIsolatedSql(project, 'SELECT step_key FROM first_step_completion WHERE player_universe_id=' + member);
+    expect(before()).toBe('exploration');
+    await page.goto('/planetes/' + first);
+    await expect(popup).toContainText('3/12');
+    await page.goto('/premiers-pas');
+    await expect(progress).toHaveAttribute('value', '3');
+    await page.goto('/planetes/' + first);
+
+    // Basculer par le contrôle réel : le compteur et l’étape restent communs,
+    // mais le lien illustré et la colonie de remboursement ne changent pas de propriétaire.
+    await selected.selectOption(String(second));
+    await expect(page).toHaveURL(url => url.pathname === '/planetes/' + second);
+    await expect(popup).toContainText('3/12');
+    await openIllustrations(popup);
+    await expect(panel).toHaveAttribute('data-first-steps-guide-step','nano_workshop');
+    await expect(panel.locator('a[href*="tutorial=mine_nano"]')).toHaveAttribute('href',
+        new RegExp('^/planetes/' + second + '\\?'));
+    await page.goto('/premiers-pas');
+    await expect(progress).toHaveAttribute('value','3');
+    const lab = page.getByRole('listitem').filter({ has: page.getByRole('heading',{name:'Laboratoire colonial',exact:true}) });
+    await expect(lab).toContainText('À faire');
+    expect(before()).toBe('exploration');
+    expect(Number(queryIsolatedSql(project,'SELECT COUNT(*) FROM first_step_reward WHERE source_membership_id=' + member))).toBe(0);
+
+    await page.locator('.topbar .universe-context').click();
+    await page.locator('.universe-card').filter({has:page.getByRole('heading',{name:/Turbo/})}).getByRole('button').click();
+    await expect(page).toHaveURL(/planetes\/\d+$/);
+    await page.goto('/premiers-pas');
+    await expect(progress).toHaveAttribute('value','0');
+});

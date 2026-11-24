@@ -5,7 +5,7 @@ namespace App\Service\Colony;
 use App\Entity\{Planet, PlayerUniverse, PlanetBuilding, PlayerTechnology, Fleet, FleetShip, PlanetDefense};
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
-use App\Service\Queue\{OperationCalculator, QueueService};
+use App\Service\Queue\{LiveQueueTiming, OperationCalculator, QueueService};
 use App\Service\Requirement\CatalogAccess;
 use Psr\Clock\ClockInterface;
 
@@ -78,7 +78,6 @@ final class ColonyView
                 if ($queueItem->queueType !== $type) {
                     continue;
                 }
-                $sum += $queueItem->durationSeconds;
                 $field = $type . 'QueueStartedAt';
                 $start = $planet->{$field};
                 $group = match ($type) {
@@ -86,25 +85,52 @@ final class ColonyView
                     'research' => 'technologies',
                     default => isset($definitions['defenses'][$queueItem->itemSlug]) ? 'defenses' : 'ships',
                 };
-                $base = $definitions[$group][$queueItem->itemSlug] ?? $this->catalog->get($group, $queueItem->itemSlug);
+                $duration = $queueItem->durationSeconds;
+                if ($queueItem->startedAt === null && $queueItem->liveTiming !== null) {
+                    $speedLevels = $type === 'building' ? ($technologies['engineering_foundations'] ?? []) : ($buildings['shipyard'] ?? []);
+                    $duration = LiveQueueTiming::waitingDuration($queueItem->liveTiming, $speedLevels);
+                }
+                $sum += $duration;
                 $tierDefinition = $this->catalog->getTierForUniverse($membership->universe, $group, $queueItem->itemSlug, $queueItem->tier);
-                $queues[$type][] = ['item' => $queueItem, 'label' => $tierDefinition['label'], 'finish' => $start?->modify('+' . $sum . ' seconds')];
+                $queues[$type][] = [
+                    'item' => $queueItem, 'label' => $tierDefinition['label'],
+                    'finish' => $start?->modify('+' . $sum . ' seconds'), 'duration' => $duration,
+                    'progress' => LiveQueueTiming::progress($queueItem),
+                ];
             }
         }
         $research = $this->repo->researchQueue($membership);
         $researchActive = array_values(array_filter($research, fn(\App\Entity\QueueItem $item) => $item->startedAt !== null));
         $researchWaiting = array_values(array_filter($research, fn(\App\Entity\QueueItem $item) => $item->startedAt === null));
+        $labsByOrigin = [$planet->id => $buildings['lab'] ?? []];
+        $otherOrigins = [];
+        foreach ($researchWaiting as $item) {
+            $origin = $item->planet;
+            if ($origin->id !== $planet->id && $origin->owner?->id === $membership->id && $item->liveTiming !== null) {
+                $otherOrigins[$origin->id] = $origin;
+            }
+        }
+        if ($otherOrigins !== []) {
+            // Une seule lecture pour les laboratoires des colonies qui ont des recherches en attente.
+            foreach ($this->repo->all(PlanetBuilding::class, ['planet' => array_values($otherOrigins), 'slug' => 'lab']) as $lab) {
+                $labsByOrigin[$lab->planet->id][$lab->tier] = $lab->level;
+            }
+        }
         usort($researchActive, fn($a, $b) => $a->finishAt() <=> $b->finishAt() ?: $a->id <=> $b->id);
         $latest = $researchActive ? max(array_map(fn($item) => $item->finishAt()->getTimestamp(), $researchActive)) : null;
         foreach ([...$researchActive, ...$researchWaiting] as $item) {
             if ($item->startedAt !== null) {
+                $duration = $item->durationSeconds;
                 $finish = $item->finishAt();
             } else {
-                $latest = max($latest ?? $item->queuedAt->getTimestamp(), $item->queuedAt->getTimestamp()) + $item->durationSeconds;
+                $duration = $item->liveTiming !== null && $item->planet->owner?->id === $membership->id
+                    ? LiveQueueTiming::waitingDuration($item->liveTiming, $labsByOrigin[$item->planet->id] ?? [])
+                    : $item->durationSeconds;
+                $latest = max($latest ?? $item->queuedAt->getTimestamp(), $item->queuedAt->getTimestamp()) + $duration;
                 $finish = $item->queuedAt->setTimestamp($latest);
             }
             $definition = $this->catalog->getTierForUniverse($membership->universe, 'technologies', $item->itemSlug, $item->tier);
-            $queues['research'][] = ['item' => $item, 'label' => $definition['label'], 'finish' => $finish];
+            $queues['research'][] = ['item' => $item, 'label' => $definition['label'], 'finish' => $finish, 'duration' => $duration, 'progress' => LiveQueueTiming::progress($item)];
         }
         // Aucun état partagé : chaque préparation relit les événements et les vacances.
         $productionContext = in_array($section, ['buildings','ships'], true) ? $this->resources->catalogueContext($planet) : null;

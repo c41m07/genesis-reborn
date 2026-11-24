@@ -400,6 +400,63 @@ body.authenticated .player-event-board .event-board-challenge {
     --advent-delivered: #215a47;
 }
 
+/* Le panorama est décoratif. Le texte HTML et les liens restent lisibles
+   sur une surface nocturne stable, y compris dans le thème clair. */
+.advent-board .advent-board-heading {
+    position: relative;
+    isolation: isolate;
+    align-items: center;
+    min-block-size: 9rem;
+    padding: clamp(.8rem, 1.7vw, 1.6rem);
+    border: 1px solid #435770;
+    border-radius: .65rem;
+    background: #0a1422;
+}
+.advent-board .advent-heading-picture,
+.advent-board .advent-board-heading::before {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+}
+.advent-board .advent-heading-picture {
+    z-index: -2;
+    overflow: hidden;
+}
+.advent-board .advent-heading-picture img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 66% 48%;
+}
+.advent-board .advent-board-heading::before {
+    content: "";
+    z-index: -1;
+    background: linear-gradient(90deg, #06101df5, #06101dd6 48%, #06101d36);
+}
+body.authenticated .advent-board .advent-board-heading > div :is(h1, p:not(.advent-history-kicker)) {
+    color: #f1f6ff;
+}
+body.authenticated .advent-board .advent-board-heading .advent-links > a {
+    color: #eef6ff;
+    background: #142338;
+    border-color: #6f859f;
+}
+body.authenticated .advent-board .advent-board-heading .advent-links > a:hover {
+    background: #253854;
+}
+body.authenticated .advent-board .advent-board-heading .advent-links > a:focus-visible {
+    outline: 2px solid #9ce9fa;
+    outline-offset: 2px;
+}
+@media (max-width: 650px) {
+    .advent-board .advent-heading-picture img { object-position: 79% 48%; }
+    .advent-board .advent-board-heading::before {
+        background: linear-gradient(90deg, #06101df2, #06101dbd);
+    }
+}
+
 .advent-board :is(.advent-links, .advent-meta) {
     display: flex;
     flex-wrap: wrap;

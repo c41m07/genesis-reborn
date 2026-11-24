@@ -1,5 +1,6 @@
 <?php
 namespace App\Service\Fleet;
+use App\Service\Report\DiplomaticReportWriter;
 use App\Entity\{Fleet,FleetShip,Planet,PlayerUniverse,SolarSystem,PlayerDiscovery,PlayerTechnology};
 use App\Repository\GameRepository;
 use App\Manager\GameManager;
@@ -15,7 +16,7 @@ use App\Service\Player\FirstSteps;
 use App\Service\Player\VacationCalendar;
 final class FleetService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment, private FirstSteps $firstSteps) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment, private FirstSteps $firstSteps, private DiplomaticReportWriter $diplomaticReports) {}
     private function coords(SolarSystem $s,?int $position): array { return [$s->id,$s->galaxy->id,$s->coordX,$s->coordY,$position]; }
     public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0): array
     {
@@ -140,6 +141,9 @@ final class FleetService
                 if(!$this->orbitPolicy->canRequest($m,$f->destination)) throw new \DomainException('Cette planète n’accepte plus les demandes d’orbite.');
                 $automatic=$this->orbitPolicy->automatic($m,$f->destination);
                 $this->orbitRequests->open($f,$automatic);
+                if (!$automatic) {
+                    $this->diplomaticReports->record($f->destination->owner, $m, 'orbit', 'requested', $f->destination->name);
+                }
                 if($f->destination->owner->id!==$m->id) $this->notifications->enqueue($f->destination->owner,
                     $automatic?'Une flotte alliée de '.$m->getDisplayName().' se dirige vers '.$f->destination->name.'. Son orbite est acceptée automatiquement.'
                         :'Demande d’orbite de '.$m->getDisplayName().' vers '.$f->destination->name.'. Répondez depuis Flottes avant son arrivée.',
@@ -293,6 +297,9 @@ final class FleetService
                     return;
                 }
                 $f->status='orbit_pending';$f->arrivalAt=null;$f->dispatchToken=Uuid::v4()->toRfc4122();$this->combats->notifyOrbitRequest($f);
+                if ($f->destination->owner !== null) {
+                    $this->diplomaticReports->record($f->destination->owner, $m, 'orbit', 'requested', $f->destination->name);
+                }
                 return;
             } elseif($f->mission==='spy') {
                 if ($f->firstStepsSpy && $f->destination !== null) {
@@ -368,6 +375,7 @@ final class FleetService
                 if($accept && !$this->orbitPolicy->canRequest($fleet->playerUniverse,$fleet->destination)) throw new \DomainException('Cette flotte ne peut plus être acceptée en orbite.');
                 $quote=$accept?null:$this->recallPlanner->plan($fleet->playerUniverse,$fleet,null,$this->clock->now());
                 $this->orbitRequests->decide($fleet,$host->id,$requestKey,$accept,$this->clock->now());
+                $this->diplomaticReports->record($fleet->playerUniverse, $host, 'orbit', $accept ? 'accepted' : 'refused', $fleet->destination->name);
                 if(!$accept) {
                     // Le plan a été calculé avant la réponse ; préserver la décision dans son état privé.
                     $quote['navigation']=$fleet->navigation;
@@ -383,9 +391,14 @@ final class FleetService
             }
             $this->manager->lock($fleet->destination);
             $this->manager->lock($fleet);
+            // Une seconde décision peut avoir attendu le verrou de cette ancienne orbite.
+            if ($fleet->status !== 'orbit_pending' || $fleet->destination?->owner?->id !== $host->id) {
+                throw new \DomainException('Cette demande d’orbite n’est plus disponible.');
+            }
             if (!$this->combats->canOrbit($fleet->playerUniverse, $fleet->destination)) {
                 throw new \DomainException('Cette flotte n’est plus autorisée à demander une orbite chez vous.');
             }
+            $this->diplomaticReports->record($fleet->playerUniverse, $host, 'orbit', $accept ? 'accepted' : 'refused', $fleet->destination->name);
             if (!$accept) {
                 $this->releaseOrbitFuel($fleet);
                 $this->startReturn($fleet);

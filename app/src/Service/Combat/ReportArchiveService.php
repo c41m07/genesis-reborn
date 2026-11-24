@@ -2,7 +2,7 @@
 
 namespace App\Service\Combat;
 
-use App\Entity\{CombatLog, EspionageReport, PlayerUniverse, ReportArchive, TransportReport};
+use App\Entity\{CombatLog, DiplomaticReport, EspionageReport, PlayerUniverse, ReportArchive, TransportReport};
 use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use App\Service\Fleet\EspionageReportReader;
@@ -11,7 +11,7 @@ use Psr\Clock\ClockInterface;
 
 final class ReportArchiveService
 {
-    private const TYPES = ['combat' => [CombatLog::class, 'app_combat_report'], 'espionage' => [EspionageReport::class, 'app_espionage_report'], 'economy' => [TransportReport::class, 'app_transport_report']];
+    private const TYPES = ['combat' => [CombatLog::class, 'app_combat_report'], 'espionage' => [EspionageReport::class, 'app_espionage_report'], 'economy' => [TransportReport::class, 'app_transport_report'], 'diplomatic' => [DiplomaticReport::class, 'app_diplomatic_report']];
     public function __construct(
         private EntityManagerInterface $em,
         private GameManager $manager,
@@ -33,7 +33,11 @@ final class ReportArchiveService
     ): array
     {
         $page = max(1, min(1000000, $page));
-        $queries = ['combat' => "SELECT 'combat' AS kind, r.id, r.resolved_at AS happened_at FROM combat_log r JOIN combat_event e ON e.id=r.combat_event_id JOIN planet p ON p.id=e.planet_id JOIN solar_system s ON s.id=p.solar_system_id JOIN galaxy g ON g.id=s.galaxy_id WHERE g.universe_id=:universe AND (p.owner_id=:member OR EXISTS (SELECT 1 FROM combat_participant cp WHERE cp.combat_event_id=e.id AND cp.player_universe_id=:member))", 'espionage' => "SELECT 'espionage' AS kind, r.id, r.created_at AS happened_at FROM espionage_report r JOIN player_universe sender ON sender.id=r.sender_id WHERE r.sender_id=:member AND sender.universe_id=:universe", 'economy' => "SELECT 'economy' AS kind, r.id, r.created_at AS happened_at FROM transport_report r JOIN player_universe sender ON sender.id=r.sender_id JOIN player_universe recipient ON recipient.id=r.recipient_id WHERE (r.sender_id=:member OR r.recipient_id=:member) AND sender.universe_id=:universe AND recipient.universe_id=:universe"];
+        $queries = ['combat' => "SELECT 'combat' AS kind, r.id, r.resolved_at AS happened_at FROM combat_log r JOIN combat_event e ON e.id=r.combat_event_id JOIN planet p ON p.id=e.planet_id JOIN solar_system s ON s.id=p.solar_system_id JOIN galaxy g ON g.id=s.galaxy_id WHERE g.universe_id=:universe AND (p.owner_id=:member OR EXISTS (SELECT 1 FROM combat_participant cp WHERE cp.combat_event_id=e.id AND cp.player_universe_id=:member))", 'espionage' => "SELECT 'espionage' AS kind, r.id, r.created_at AS happened_at FROM espionage_report r JOIN player_universe sender ON sender.id=r.sender_id WHERE r.sender_id=:member AND sender.universe_id=:universe", 'economy' => "SELECT 'economy' AS kind, r.id, r.created_at AS happened_at FROM transport_report r JOIN player_universe sender ON sender.id=r.sender_id JOIN player_universe recipient ON recipient.id=r.recipient_id WHERE (r.sender_id=:member OR r.recipient_id=:member) AND sender.universe_id=:universe AND recipient.universe_id=:universe",
+            'diplomatic' => "SELECT 'diplomatic' AS kind, r.id, r.created_at AS happened_at
+                FROM diplomatic_report r JOIN player_universe recipient ON recipient.id=r.recipient_id
+                WHERE recipient.id=:member AND recipient.universe_id=:universe",
+        ];
         $params = ['member' => $member->id, 'universe' => $member->universe->id];
         foreach ($queries as $kind => &$sql) {
             if ($criteria) {
@@ -51,6 +55,7 @@ final class ReportArchiveService
                     $sql .= match ($kind) {
                         'combat' => " AND LOWER(p.name) LIKE :planet ESCAPE '!'",
                         'espionage' => " AND EXISTS (SELECT 1 FROM planet ep WHERE ep.id=r.target_id AND LOWER(ep.name) LIKE :planet ESCAPE '!')",
+                        'diplomatic' => " AND LOWER(r.location) LIKE :planet ESCAPE '!'",
                         'economy' => " AND EXISTS (SELECT 1 FROM fleet ef JOIN planet ep ON ep.id=ef.home_planet_id OR ep.id=ef.destination_id WHERE ef.id=r.fleet_id AND LOWER(ep.name) LIKE :planet ESCAPE '!')",
                     };
                 }
@@ -59,6 +64,7 @@ final class ReportArchiveService
                     $sql .= match ($kind) {
                         'combat' => " AND EXISTS (SELECT 1 FROM combat_participant pc JOIN player_universe pm ON pm.id=pc.player_universe_id LEFT JOIN player pp ON pp.id=pm.player_id WHERE pc.combat_event_id=e.id AND pm.universe_id=:universe AND LOWER(COALESCE(pp.username,'Empire oublié')) LIKE :person ESCAPE '!')",
                         'espionage' => " AND EXISTS (SELECT 1 FROM player pp WHERE pp.id=sender.player_id AND LOWER(pp.username) LIKE :person ESCAPE '!')",
+                        'diplomatic' => " AND EXISTS (SELECT 1 FROM player_universe counterparty JOIN player pp ON pp.id=counterparty.player_id WHERE counterparty.id=r.counterpart_id AND counterparty.universe_id=:universe AND counterparty.forgotten_at IS NULL AND LOWER(pp.username) LIKE :person ESCAPE '!')",
                         'economy' => " AND EXISTS (SELECT 1 FROM player pp WHERE (pp.id=sender.player_id OR pp.id=recipient.player_id) AND LOWER(pp.username) LIKE :person ESCAPE '!')",
                     };
                 }
@@ -86,6 +92,7 @@ final class ReportArchiveService
                 'combat' => $this->summaries->combats($member, $ids),
                 'espionage' => $this->summaries->espionage($member, $ids),
                 'economy' => $this->summaries->transports($member, $ids),
+                'diplomatic' => $this->summaries->diplomatic($member, $ids),
             };
         }
         $entries = [];
@@ -116,7 +123,7 @@ final class ReportArchiveService
             $this->manager->lock($member);
             $reports = [];
             foreach ($keys as $key) {
-                if (!is_string($key) || !preg_match('/^(combat|espionage|economy):([1-9][0-9]{0,9})$/D', $key, $match)) {
+                if (!is_string($key) || !preg_match('/^(combat|espionage|economy|diplomatic):([1-9][0-9]{0,9})$/D', $key, $match)) {
                     throw new \DomainException('Sélection de rapports invalide.');
                 }
                 $kind = $match[1];
@@ -125,10 +132,12 @@ final class ReportArchiveService
                     'combat' => $this->combats->findVisible($member, $id),
                     'espionage' => $this->espionage->findVisible($member, $id),
                     'economy' => $this->repo->find(TransportReport::class, $id),
+                    'diplomatic' => $this->repo->one(DiplomaticReport::class, ['id' => $id, 'recipient' => $member]),
                 };
                 $allowed = $report !== null && match ($kind) {
                     'combat' => $report->combatEvent->planet->solarSystem->galaxy->universe->id === $member->universe->id,
                     'espionage' => $report->sender->universe->id === $member->universe->id,
+                    'diplomatic' => $report->recipient->id === $member->id && $report->recipient->universe->id === $member->universe->id,
                     'economy' => in_array($member->id, [$report->sender->id, $report->recipient->id], true) && $report->sender->universe->id === $member->universe->id && $report->recipient->universe->id === $member->universe->id,
                 };
                 if (!$allowed) {

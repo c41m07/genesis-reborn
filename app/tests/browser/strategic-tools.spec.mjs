@@ -32,8 +32,8 @@ test('Compositions : refus, manques, chargement explicite et absence d’envoi a
  for(const theme of ['dark','light']){await setTheme(page,theme);await page.goto('/flottes/compositions');await expect(page.locator('body')).toHaveAttribute('data-theme',theme);for(const width of [1440,390,320]){await page.setViewportSize({width,height:900});await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);}expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);await page.screenshot({path:testInfo.outputPath(`compositions-${theme}.png`),fullPage:true});}
 });
 
-test('P13 : scénario du simulateur avec deux camps et contrôles natifs', async ({page,browser,baseURL},testInfo)=>{
- test.setTimeout(180000);
+test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({page,browser,baseURL},testInfo)=>{
+ test.setTimeout(120000);
  const owner=await register(page);
  ships(owner);
  for (const theme of ['dark','light']) {
@@ -42,20 +42,50 @@ test('P13 : scénario du simulateur avec deux camps et contrôles natifs', async
    await page.setViewportSize(viewport);
    await page.goto('/simulateur');
    await expect(page.locator('body')).toHaveAttribute('data-theme',theme);
+   const nav=page.getByRole('navigation',{name:'Étapes du simulateur'});
+   await expect(nav.getByRole('link')).toHaveText(['01Vaisseaux','02Défenses','03Recherches','04Simulation']);
+   await expect(nav.getByRole('link',{name:'Vaisseaux',exact:true})).toHaveAttribute('aria-current','step');
+   const attacker=page.locator('#sim-attacker-ships-fighter-basic');
+   const defender=page.locator('#sim-defender-ships-fighter-basic');
+   await attacker.fill('24');
+   await defender.fill('18');
+   const shipsStep=page.getByRole('region',{name:'Vaisseaux',exact:true});
+   const cards=shipsStep.locator('.simulation-wizard-camp');
+   await expect(cards).toHaveCount(2);
+   // Lire les deux rectangles au même instant même si le navigateur vient de défiler.
+   const [left,right]=await cards.evaluateAll(elements=>elements.map(el=>el.getBoundingClientRect().toJSON()));
+   if (viewport.width===1920) {
+    expect(right.left).toBeGreaterThanOrEqual(left.right);
+    expect(Math.abs(left.top-right.top)).toBeLessThanOrEqual(2);
+   } else {
+    expect(right.top).toBeGreaterThanOrEqual(left.bottom);
+   }
+   const next=page.getByRole('link',{name:'Continuer : défenses'});
+   const tables=shipsStep.locator('.simulation-board-unit-scroll');
+   for (const table of await tables.all()) {
+    expect(await table.evaluate(el=>el.scrollWidth<=el.clientWidth+1), 'les trois rangs tiennent dans la carte').toBe(true);
+   }
+   await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+   if (viewport.width===1920) await expect(next).toBeInViewport({ratio:1});
+   await page.screenshot({path:testInfo.outputPath('P13-wizard-ships-'+theme+'-'+viewport.width+'.png'),scale:'css',animations:'disabled'});
+   await next.focus();
+   await page.keyboard.press('Enter');
+   await expect(page.getByRole('heading',{name:'Défenses',exact:true})).toBeFocused();
+   await expect(page.getByText('Non applicable',{exact:true})).toBeVisible();
+   await expect(page.locator('[name^="forces[attacker][defenses]"]')).toHaveCount(0);
+   await expect(page.locator('[name^="forces[defender][defenses]"]').first()).toBeVisible();
+   await page.getByRole('link',{name:'Continuer : recherches'}).click();
+   await expect(page.getByRole('heading',{name:'Recherches',exact:true})).toBeFocused();
+   await expect(page.locator('[name^="forces[attacker][research]"]').first()).toBeVisible();
+   await expect(page.locator('[name^="forces[defender][research]"]').first()).toBeVisible();
+   await page.getByRole('link',{name:'Continuer : simulation'}).click();
    const guide=page.locator('.first-steps-popup-enhanced');
    const toggle=guide.locator(':scope > summary');
-   const checkbox=page.getByRole('checkbox',{name:/Je confirme les hypothèses/});
-   const submit=page.getByRole('button',{name:'Simuler 10 combats'});
-   await expect(toggle).toBeVisible();
    if (await guide.getAttribute('open')===null) await toggle.press('Enter');
    await expect(guide).toHaveAttribute('open','');
-   const panel=guide.locator('.first-steps-popup-mount');
-   await expect(panel).toBeVisible();
-   const options=page.locator('.simulation-board-options');
-   const panelRect=await panel.boundingBox();
-   const optionsRect=await options.boundingBox();
-   expect(panelRect.y).toBeGreaterThanOrEqual(optionsRect.y+optionsRect.height);
-   for (const control of [checkbox, submit]) {
+   const checkbox=page.getByRole('checkbox',{name:/Je confirme les hypothèses/});
+   const submit=page.getByRole('button',{name:'Simuler 10 combats'});
+   for (const control of [checkbox,submit]) {
     await control.evaluate(element=>element.scrollIntoView({block:'center',behavior:'instant'}));
     await expect.poll(()=>control.evaluate(element=>{
      const r=element.getBoundingClientRect();
@@ -64,60 +94,93 @@ test('P13 : scénario du simulateur avec deux camps et contrôles natifs', async
     })).toBe(true);
    }
    await page.screenshot({path:testInfo.outputPath('P13-guide-ouvert-'+theme+'-'+viewport.width+'.png'),scale:'css',animations:'disabled'});
-   await toggle.press('Enter');
-   await expect(guide).not.toHaveAttribute('open','');
-   await expect(page.getByRole('heading',{name:'Simulateur de combat'})).toBeVisible();
-   const attacker=page.locator('#sim-attacker-ships-fighter-basic');
-   const defender=page.locator('#sim-defender-ships-fighter-basic');
-   await attacker.fill('24');
-   await defender.fill('18');
-   await page.getByLabel('Graine de départ reproductible').fill('713040');
-   await page.getByRole('checkbox',{name:/Je confirme les hypothèses/}).check();
-   await expect(page.getByRole('button',{name:'Simuler 10 combats'})).toBeEnabled();
    await expect(page.locator('#simulation-result')).toHaveCount(0);
+   expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
+   await nav.getByRole('link',{name:'Vaisseaux',exact:true}).click();
+   await expect(attacker).toHaveValue('24');
+   await expect(defender).toHaveValue('18');
    await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
-   await page.locator('.simulation-board-unit-scroll:visible').evaluateAll(elements=>elements.forEach(element=>element.scrollTo({top:0,left:0,behavior:'instant'})));
-   await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
-   if (viewport.width===1920) {
-    const attackerRound=await page.locator('#arrival-attacker').boundingBox();
-    const defenderRound=await page.locator('#arrival-defender').boundingBox();
-    expect(Math.abs(attackerRound.y-defenderRound.y)).toBeLessThanOrEqual(4);
-    await expect(submit).toBeInViewport({ratio:1});
-    const shipTables=page.locator('.strategic-grid section > details:first-of-type .simulation-board-unit-scroll');
-    await expect(shipTables).toHaveCount(2);
-    for (const table of await shipTables.all()) {
-     expect(await table.evaluate(element=>{
-      const first=element.querySelector('tbody input').getBoundingClientRect();
-      const region=element.getBoundingClientRect();
-      return first.top>=region.top && first.bottom<=region.bottom;
-     })).toBe(true);
-    }
-   }
-   await page.screenshot({path:testInfo.outputPath('P13-scenario-'+theme+'-'+viewport.width+'.png'),scale:'css',animations:'disabled'});
-   if (viewport.width===390) {
-    await page.getByRole('button',{name:'Simuler 10 combats'}).scrollIntoViewIfNeeded();
-    await page.screenshot({path:testInfo.outputPath('P13-actions-'+theme+'-390.png'),scale:'css',animations:'disabled'});
-   }
   }
  }
- const state=await page.context().storageState();
- const context=await browser.newContext({baseURL,storageState:state,javaScriptEnabled:false});
+ const context=await browser.newContext({baseURL,storageState:await page.context().storageState(),javaScriptEnabled:false});
  try {
   const tab=await context.newPage();
   await tab.goto('/simulateur');
-  const options=tab.locator('#simulation-scenario details').filter({hasText:'Recherches'}).first();
-  const summary=options.locator('summary');
-  await summary.focus();
-  await tab.keyboard.press('Enter');
-  await expect(options).toHaveAttribute('open','');
+  const draft=tab.locator('#sim-defender-ships-fighter-basic');
+  await draft.fill('18');
+  const posts=[];
+  tab.on('request', request=>{if(request.method()==='POST') posts.push(request);});
+  await draft.press('Enter');
+  await expect(draft).toHaveValue('18');
+  expect(posts).toHaveLength(0);
   const nativeImport=tab.getByRole('button',{name:'Charger mes forces'});
-  await expect(nativeImport).toHaveAttribute('form','simulation-own-forces');
-  const request=tab.waitForRequest(request=>new URL(request.url()).searchParams.get('own_planet')===String(owner.planet));
+  const request=tab.waitForRequest(request=>request.method()==='POST' && new URL(request.url()).pathname==='/simulateur');
   await nativeImport.click();
-  expect((await request).method()).toBe('GET');
-  await expect(tab).toHaveURL(/own_planet=/);
+  expect(new URLSearchParams((await request).postData()).get('wizard_action')).toBe('load_own');
   await expect(tab.locator('#sim-attacker-ships-fighter-basic')).toHaveValue('2');
+  await expect(tab.locator('#sim-defender-ships-fighter-basic')).toHaveValue('18');
+  await expect(tab.locator('#simulation-research')).toBeVisible();
+  await expect(tab.locator('#simulation-defenses')).toBeVisible();
+  await expect(tab.locator('#simulation-result')).toHaveCount(0);
  } finally { await context.close(); }
+});
+
+test('Simulateur : sources datées, champs inconnus éditables et brouillon conservé', async ({page,browser},testInfo)=>{
+ test.setTimeout(95000);
+ const owner=await register(page);
+ ships(owner);
+ const otherPage=await browser.newPage();
+ const target=await register(otherPage);
+ await otherPage.close();
+ const router=process.env.BROWSER_ROUTER;
+ const snapshot={fleets:{'fighter:basic':{quantity:8}},defenses:[]};
+ const reportInsert=(sender,planet,data)=>`INSERT INTO espionage_report (sender_id,target_id,result,created_at,probes_sent,intel_categories,detection_chance,sender_espionage_level,target_espionage_level,target_counter_espionage_level,snapshot) VALUES (${sender},${planet},'success','2026-11-20 17:42:00',1,2,3,0,0,0,'${JSON.stringify(data)}')`;
+ runIsolatedSql(router,reportInsert(owner.member,target.planet,snapshot));
+ runIsolatedSql(router,reportInsert(target.member,owner.planet,snapshot));
+ const reportId=Number(queryIsolatedSql(router,`SELECT id FROM espionage_report WHERE sender_id=${owner.member}`));
+ expect(Number.isSafeInteger(reportId) && reportId>0).toBe(true);
+ const nav=page.getByRole('navigation',{name:'Étapes du simulateur'});
+ await page.goto('/simulateur');
+ await page.locator('#sim-attacker-ships-fighter-basic').fill('12');
+ await expect(page.locator('#simulation-intel option')).toHaveCount(2);
+ await page.locator('#simulation-intel').selectOption(String(reportId));
+ page.once('dialog',dialog=>dialog.accept());
+ await page.getByRole('button',{name:'Importer',exact:true}).click();
+ await expect(page.locator('#sim-attacker-ships-fighter-basic')).toHaveValue('12');
+ await expect(page.locator('#sim-defender-ships-fighter-basic')).toHaveValue('8');
+ const reportLink=page.getByRole('link',{name:'Relire le rapport source'});
+ await expect(reportLink).toBeVisible();
+ expect(await reportLink.evaluate(link=>new URL(link.href).pathname)).toBe('/rapports/espionnage/'+reportId);
+ await expect(page.locator('time').filter({hasText:'20/11/2026'})).toHaveAttribute('datetime',/^2026-11-20T/);
+ page.once('dialog',dialog=>dialog.accept());
+ await page.getByRole('button',{name:'Charger mes forces'}).click();
+ await expect(page.locator('#sim-attacker-ships-fighter-basic')).toHaveValue('2');
+ await expect(page.locator('#sim-defender-ships-fighter-basic')).toHaveValue('8');
+ await nav.getByRole('link',{name:'Défenses',exact:true}).click();
+ const defense=page.locator('[name^="forces[defender][defenses]"]').first();
+ await expect(defense).toHaveValue('0');
+ await nav.getByRole('link',{name:'Recherches',exact:true}).click();
+ const unknown=page.locator('#simulation-research [name^="forces[defender][research]"]').first();
+ const stillUnknown=page.locator('#simulation-research [name^="forces[defender][research]"]').nth(1);
+ await expect(unknown).toHaveValue('');
+ await expect(unknown).toHaveAttribute('placeholder','?');
+ await unknown.fill('3');
+ await expect(page.locator('#simulation-defender-research-source')).toContainText('hypothèse saisie');
+ await expect(stillUnknown).toHaveValue('');
+ for (const width of [1920,390]) {
+  await page.setViewportSize({width,height:width===1920?1080:844});
+  await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  await unknown.scrollIntoViewIfNeeded();
+  await page.screenshot({path:testInfo.outputPath('P13-wizard-intel-dark-'+width+'.png'),scale:'css',animations:'disabled'});
+ }
+ await nav.getByRole('link',{name:'Simulation',exact:true}).click();
+ await page.getByRole('checkbox',{name:/Je confirme les hypothèses/}).check();
+ await page.getByRole('button',{name:'Simuler 10 combats'}).click();
+ await expect(page.locator('#simulation-result')).toBeVisible();
+ await nav.getByRole('link',{name:'Recherches',exact:true}).click();
+ await expect(unknown).toHaveValue('3');
+ await expect(stillUnknown).toHaveValue('');
+ expect(Number(queryIsolatedSql(router,'SELECT COUNT(*) FROM combat_event'))).toBe(0);
 });
 
 test('Simulateur : dix combats reproductibles, détails accessibles et aucune mutation',async({page,browser,baseURL},testInfo)=>{
@@ -129,6 +192,7 @@ test('Simulateur : dix combats reproductibles, détails accessibles et aucune mu
  const calculate=async(tab,keyboard=false)=>{
   await tab.locator('#sim-attacker-ships-fighter-basic').fill('2');
   await tab.locator('#sim-defender-ships-fighter-basic').fill('1');
+  await tab.getByRole('navigation',{name:'Étapes du simulateur'}).getByRole('link',{name:'Simulation',exact:true}).click();
   await tab.getByRole('checkbox',{name:/Je confirme les hypothèses/}).check();
   const button=tab.getByRole('button',{name:'Simuler 10 combats'});
   if(keyboard){await button.focus();await tab.keyboard.press('Enter');}else await button.click();

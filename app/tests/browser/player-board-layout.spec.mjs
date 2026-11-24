@@ -56,7 +56,7 @@ test('Planches joueur : rails de décision sur grand écran et flux mobile sans 
         ['/evenements/campagne-pirate', 'P05', '.player-campaign-board'],
         ['/planetes', 'P10', '.planet-board-hero'],
         ['/technologies', 'P12', '.player-technology-board'],
-        ['/simulateur', 'P13', '.simulation-board-options'],
+        ['/simulateur', 'P13', '#simulation-ships'],
         ['/profil/supprimer', 'P17', '.account-delete-form'],
         ['/recompense-quotidienne', 'P18', '.daily-board-cycle'],
         ['/planetes?view=table', 'P10-comparaison', '.colony-comparison-panel'],
@@ -72,9 +72,9 @@ test('Planches joueur : rails de décision sur grand écran et flux mobile sans 
                 await expect.soft(page.locator(landmark).first()).toBeVisible({ timeout: 3000 });
                 expect.soft(await page.evaluate(() => document.documentElement.scrollWidth), model).toBeLessThanOrEqual(width);
                 if (model === 'P13' && width === 1920) {
-                    const launch = page.getByRole('button', { name: 'Simuler 10 combats', exact: true });
-                    await expect(launch).toBeInViewport({ ratio: 1 });
-                    const grids = page.locator('.simulation-form .strategic-grid > section');
+                    const next = page.getByRole('link', { name: 'Continuer : défenses', exact: true });
+                    await expect(next).toBeInViewport({ ratio: 1 });
+                    const grids = page.locator('#simulation-ships .simulation-wizard-camp');
                     await expect(grids).toHaveCount(2);
                     for (const grid of await grids.all()) await expect(grid).toBeInViewport({ ratio: 0.9 });
                 }

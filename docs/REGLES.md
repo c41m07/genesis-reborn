@@ -420,7 +420,7 @@ s’appliquent toujours. Les joueurs retrouvent les rotations dans Événements 
 
 ## File de recherche commune
 
-Dans un même univers, toutes les colonies d’un joueur partagent une file de recherche de 30 commandes maximum. Chaque ajout exige un laboratoire du même rang au niveau 1 ou plus sur la colonie choisie. Il paie ses coûts sur cette colonie et utilise ses bonus de laboratoire pour calculer la durée à cet instant. Les niveaux déjà en file sont pris en compte depuis toutes les colonies ; les commandes sont exécutées successivement, sans nouveau calcul de leurs coûts ou durées au démarrage.
+Dans un même univers, toutes les colonies d’un joueur partagent une file de recherche de 30 commandes maximum. Chaque ajout exige un laboratoire du même rang au niveau 1 ou plus sur la colonie choisie. Il paie ses coûts sur cette colonie et utilise ses bonus de laboratoire pour le devis. Les niveaux déjà en file sont pris en compte depuis toutes les colonies. Les recherches sont exécutées successivement ; la durée des nouvelles commandes suit les bonus du laboratoire d’origine, jamais celui de la colonie affichée.
 
 Les recherches historiquement actives en parallèle terminent leur travail sans être annulées. La suite de la file attend la fin de toutes ces recherches, puis fonctionne avec une seule recherche active. Les univers restent indépendants. Annulations, remboursements, vacances et captures conservent leurs règles ; la colonie d’origine de chaque commande reste enregistrée.
 
@@ -812,6 +812,15 @@ Le revenu de base total est désormais de **10 métal/h et 10 nano/h**, à vites
 ### Électricité ponctuelle des opérations — décision du 13 novembre 2026
 
 Les recherches, vaisseaux et défenses paient une fois à l’ajout de chaque commande : **100 × arrondi supérieur de la durée effective en secondes / 60**. La durée retenue inclut les réductions et multiplicateurs applicables au moment de l’ajout ; les quantités sont calculées comme une commande entière, avec un seul arrondi final. Ce coût s’ajoute aux autres ressources et à un éventuel coût électrique défini par le catalogue. Les bâtiments ne paient pas ce nouveau coût. Ce n’est pas une consommation horaire continue.
+
+Les nouvelles commandes reprennent le rythme de leurs bonus acquis : recherche
+industrielle de l’empire pour les bâtiments, laboratoire de la colonie d’origine
+pour les recherches et chantier local pour les vaisseaux. En cours, seul le
+travail restant change de rythme ; une commande en attente utilise les bonus
+effectifs à son démarrage. La défense ne reçoit aucun bonus passif supplémentaire.
+Les vacances arrêtent le travail ; les boosts déjà utilisés restent acquis.
+Les commandes historiques sans suivi et les reconstructions gardent leur
+chronomètre antérieur. L’estimation d’une file ne prédit pas les futurs bonus.
 
 Les coûts payés sont figés avec la commande. Une accélération ultérieure ne recalcule pas le prix et ne rembourse aucune électricité. Une annulation rembourse 25 % des coûts effectivement payés, électricité comprise, pour la commande et chaque dépendance annulée, dans la capacité disponible de chaque colonie payeuse. La capture conserve sa règle d’annulation sans remboursement. Les reconstructions automatiques des empires oubliés paient aussi ce coût ; leurs conditions de ressources restent applicables.
 

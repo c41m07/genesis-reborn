@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 export default class extends Controller {
     static targets = ['bar', 'fill', 'remaining', 'total'];
-    static values = {start:String, end:String, total:String};
+    static values = {start:String, end:String, total:String, earned:Number};
     connect() { this.tick();this.timer=setInterval(()=>this.tick(),1000); }
     disconnect() { clearInterval(this.timer); }
     label(seconds) {
@@ -12,7 +12,9 @@ export default class extends Controller {
     tick() {
         const now=Date.now(),start=Date.parse(this.startValue),end=Date.parse(this.endValue);
         if(!Number.isFinite(start)||!Number.isFinite(end))return;
-        const percent=Math.max(0,Math.min(100,(now-start)/Math.max(1,end-start)*100));
+        const earned = this.earnedValue;
+        // Le serveur fournit l’avancement acquis au dernier changement de rythme.
+        const percent = Math.max(earned, Math.min(100, earned + (now - start) / Math.max(1, end - start) * (100 - earned)));
         this.fillTarget.style.width=`${percent}%`;this.barTarget.setAttribute('aria-valuenow',String(Math.round(percent)));
         this.remainingTarget.textContent=this.label(Math.max(0,Math.ceil((end-now)/1000)));
         if(this.hasTotalTarget)this.totalTarget.textContent=this.label(Math.max(0,Math.ceil((Date.parse(this.totalValue)-now)/1000)));

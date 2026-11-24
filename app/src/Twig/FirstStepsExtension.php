@@ -32,6 +32,6 @@ final class FirstStepsExtension extends AbstractExtension
             return null;
         }
 
-        return $this->view->preview($membership, $planet, $exerciseInResponse);
+        return $this->view->preview($membership, $exerciseInResponse);
     }
 }

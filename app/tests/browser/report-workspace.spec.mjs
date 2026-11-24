@@ -63,7 +63,7 @@ test('Rapports A : transport complet, retour filtré, effacement, thèmes et lec
         expect(journal.y + journal.height <= reports.y || reports.y + reports.height <= journal.y).toBe(true);
     }
     await page.setViewportSize({ width:1440, height:1000 });
-    await page.getByLabel('Nom actuel de planète').fill(planetName);
+    await page.getByLabel('Nom de planète').fill(planetName);
     await page.getByRole('button', { name: 'Rechercher les rapports' }).click();
     await expect(page).toHaveURL(/planet=/);
     await page.locator(`a[href*="/rapports/transport/${id}"]`).click();
@@ -95,10 +95,10 @@ test('Rapports A : transport complet, retour filtré, effacement, thèmes et lec
         await page.screenshot({ path: info.outputPath(`transport-A-${theme}.png`), fullPage: true, animations: 'disabled' });
     }
     await page.getByRole('link', { name: 'Retour aux rapports' }).click();
-    await expect(page.getByLabel('Nom actuel de planète')).toHaveValue(planetName);
+    await expect(page.getByLabel('Nom de planète')).toHaveValue(planetName);
     await expect(page).toHaveURL(/type=economy/);
     await page.getByRole('link', { name: 'Réinitialiser les filtres' }).click();
-    await expect(page.getByLabel('Nom actuel de planète')).toHaveValue('');
+    await expect(page.getByLabel('Nom de planète')).toHaveValue('');
     expect(new URL(page.url()).searchParams.has('planet')).toBe(false);
     expect(new URL(page.url()).searchParams.get('type')).toBe('economy');
     const context = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false, viewport: { width: 390, height: 1000 } });

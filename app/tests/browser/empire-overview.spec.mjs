@@ -2,6 +2,42 @@ import { test, expect } from './support/isolated-test.mjs';
 import { runIsolatedSql } from './support/game-fixtures.mjs';
 import AxeBuilder from '@axe-core/playwright';
 
+async function verifyBannerLayers(banner) {
+    const style = await banner.evaluate(element => {
+        const image = element.querySelector(':scope > picture');
+        const hero = element.querySelector(':scope > .hero-content');
+        const bottom = element.querySelector(':scope > .overview-summary');
+        const action = hero.querySelector('a');
+        const rect = element.getBoundingClientRect();
+        const cover = image.getBoundingClientRect();
+        const title = hero.getBoundingClientRect();
+        const summary = bottom.getBoundingClientRect();
+        const cta = action.getBoundingClientRect();
+        return {
+            imagePosition: getComputedStyle(image).position,
+            imagePointer: getComputedStyle(image).pointerEvents,
+            facePosition: getComputedStyle(element, '::before').position,
+            facePointer: getComputedStyle(element, '::before').pointerEvents,
+            faceGradient: getComputedStyle(element, '::before').backgroundImage,
+            contentGradient: getComputedStyle(hero).backgroundImage,
+            coverTopOffset: cover.top - rect.top,
+            bottomCoverOffset: rect.bottom - cover.bottom,
+            contentTopOffset: title.top - rect.top,
+            summaryBottomOffset: rect.bottom - summary.bottom,
+            actionReachable: action.contains(document.elementFromPoint(cta.x + cta.width / 2, cta.y + cta.height / 2)),
+        };
+    });
+    expect(style).toMatchObject({
+        imagePosition: 'absolute', imagePointer: 'none', facePosition: 'absolute',
+        facePointer: 'none', contentGradient: 'none', actionReachable: true,
+    });
+    expect(style.faceGradient.match(/linear-gradient/g)).toHaveLength(1);
+    expect(style.coverTopOffset).toBeLessThanOrEqual(2);
+    expect(style.bottomCoverOffset).toBeLessThanOrEqual(2);
+    expect(style.contentTopOffset).toBeLessThanOrEqual(2);
+    expect(style.summaryBottomOffset).toBeLessThanOrEqual(18);
+}
+
 test('La Vue générale validée regroupe les accès et actualise les alertes sans perdre le focus', async ({ page, browser, baseURL }, info) => {
     test.setTimeout(180000);
     const id = Date.now();
@@ -37,6 +73,16 @@ test('La Vue générale validée regroupe les accès et actualise les alertes sa
     const colony = Number(new URL(colonyUrl).pathname.split('/').at(-1));
     const project = process.env.BROWSER_ROUTER;
     const resourceStocks = stock => runIsolatedSql(project, `UPDATE planet_resource SET current_stock=${stock},last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${colony}`);
+    for (const theme of ['dark', 'light']) {
+      runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
+      for (const width of [1920, 390]) {
+        await page.setViewportSize({ width, height: width === 1920 ? 1080 : 844 });
+        await page.goto(colonyUrl);
+        await expect(page.locator('[data-live-region="overview-deadlines"]')).toContainText('Aucune échéance confirmée');
+        await verifyBannerLayers(banner);
+        await page.screenshot({ path: info.outputPath(`vue-voile-calme-${theme}-${width}.png`), animations: 'disabled' });
+      }
+    }
     resourceStocks(999999);
     for (const theme of ['dark', 'light']) {
       runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
@@ -106,6 +152,22 @@ test('La Vue générale validée regroupe les accès et actualise les alertes sa
     await page.locator('#item-mine_metal-basic').getByRole('button', { name: /Améliorer .* niveau 1/ }).click();
     // Allonger uniquement la commande de cette base jetable pour vérifier un état occupé stable.
     runIsolatedSql(project, `UPDATE queue_item SET started_at=UTC_TIMESTAMP(),duration_seconds=86400 WHERE planet_id=${colony} AND queue_type='building'`);
+    runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(preferences,'$.theme','dark') WHERE email='${email}'`);
+    for (const theme of ['dark', 'light']) {
+      runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(preferences,'$.theme','${theme}') WHERE email='${email}'`);
+      for (const width of [1920, 390]) {
+        await page.setViewportSize({ width, height: width === 1920 ? 1080 : 844 });
+        await page.goto(colonyUrl);
+        await expect(page.locator('.core-empire-deadlines')).toContainText('Mine à ciel ouvert');
+        await expect(page.locator('.core-empire-watch')).toContainText('Stockages pleins');
+        await verifyBannerLayers(banner);
+        if (width === 390) {
+            expect((await new AxeBuilder({ page }).include('.empire-banner').analyze()).violations).toEqual([]);
+        }
+        await page.screenshot({ path: info.outputPath(`vue-voile-echeance-${theme}-${width}.png`), animations: 'disabled' });
+      }
+    }
+    // La recette historique de la file active reprend dans son thème initial.
     runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(preferences,'$.theme','dark') WHERE email='${email}'`);
     await page.goto(colonyUrl);
     const queue = page.locator('[data-queue-type="building"]');

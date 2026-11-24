@@ -398,7 +398,9 @@ final class GamePersistenceTest extends KernelTestCase
         $clock=$this->clock();$p=$this->player();$planet=$this->join($p,'omega-1');$q=self::getContainer()->get(QueueService::class);
         $q->add($p->currentPlayerUniverse,$planet,'buildings','mine_metal',1,str_repeat('a',32));$q->add($p->currentPlayerUniverse,$planet,'buildings','mine_nano',1,str_repeat('b',32));
         $items=$this->em->getRepository(QueueItem::class)->findBy([],['id'=>'ASC']);$head=$items[0];$next=$items[1];$token=$head->dispatchToken;$nextDuration=$next->durationSeconds;
-        // Durée contrôlée pour tester le redispatch, indépendamment de l’équilibrage des mines.
+        // Simuler des commandes historiques : leurs secondes restent la source du boost.
+        // Les ordres modernes et leurs checkpoints sont exercés dans LiveQueueBonusTest.
+        $head->liveTiming=null;$next->liveTiming=null;
         $head->durationSeconds=120;$next->durationSeconds=120;$nextDuration=120;$this->em->flush();
         $clock->sleep(30);$q->boost($p->currentPlayerUniverse,$head->id,2,str_repeat('c',32));$newToken=$head->dispatchToken;
         self::assertSame(75,$head->durationSeconds);self::assertNotSame($token,$newToken);self::assertSame($nextDuration,$next->durationSeconds);

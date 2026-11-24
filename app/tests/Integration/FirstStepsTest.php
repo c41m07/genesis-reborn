@@ -115,10 +115,10 @@ final class FirstStepsTest extends KernelTestCase
             }
         }
         $view = self::getContainer()->get(FirstStepsView::class);
-        self::assertTrue($view->hasPending($membership, $planet));
-        self::assertFalse($view->hasPending($membership, $planet, exerciseInResponse: true));
+        self::assertTrue($view->hasPending($membership));
+        self::assertFalse($view->hasPending($membership, exerciseInResponse: true));
         self::assertArrayNotHasKey(FirstStep::PirateExercise->value, $this->guide->completed($membership));
-        self::assertTrue($view->hasPending($membership, $planet));
+        self::assertTrue($view->hasPending($membership));
     }
 
     public function testHistoricCompletionDoesNotCombineSeveralColoniesOrCreateProofs(): void
@@ -143,17 +143,22 @@ final class FirstStepsTest extends KernelTestCase
         $this->seedBuilding($second, 'lab');
         $view = self::getContainer()->get(FirstStepsView::class);
 
-        // Chaque colonie seule ne couvre pas encore les deux derniers bâtiments historiques.
-        self::assertTrue($view->hasPending($membership, $home));
-        self::assertTrue($view->hasPending($membership, $second));
-        self::assertSame('metal_mine', $view->panel($membership, $second)['next']);
-        self::assertSame('metal_mine', $view->progress($membership, ['lab' => ['basic' => 1]], [])['next']);
+        // À égalité on choisit le même identifiant de colonie pour tout l’empire.
+        // Aucun des deux bâtiments isolés ne permet de compléter l’autre.
+        $expectedNext = $home->id < $second->id ? 'laboratory' : 'metal_mine';
+        $homeLevels = ['mine_metal' => ['basic' => 1]];
+        $secondLevels = ['lab' => ['basic' => 1]];
+        self::assertTrue($view->hasPending($membership));
+        self::assertSame(11, $view->panel($membership)['count']);
+        self::assertSame($expectedNext, $view->panel($membership)['next']);
+        self::assertSame($expectedNext, $view->progress($membership, $homeLevels)['next']);
+        self::assertSame($expectedNext, $view->progress($membership, $secondLevels)['next']);
 
         $this->seedBuilding($home, 'lab');
-        self::assertFalse($view->hasPending($membership, $home));
-        self::assertFalse($view->hasPending($membership, $second));
-        self::assertNull($view->panel($membership, $second));
-        self::assertNull($view->progress($membership, ['lab' => ['basic' => 1]], [])['next']);
+        self::assertFalse($view->hasPending($membership));
+        self::assertNull($view->panel($membership));
+        self::assertNull($view->progress($membership, $homeLevels)['next']);
+        self::assertNull($view->progress($membership, $secondLevels)['next']);
         self::assertCount(10, $this->guide->completed($membership));
     }
 
@@ -436,16 +441,22 @@ final class FirstStepsTest extends KernelTestCase
         $rewards = self::getContainer()->get(FirstStepRewards::class);
         $this->seedBuilding($planet, 'lab');
         $view = self::getContainer()->get(FirstStepsView::class);
-        $recognized = $view->progress($membership, ['lab' => ['basic' => 1]], []);
+        $recognized = $view->progress($membership, ['lab' => ['basic' => 1]]);
         self::assertTrue($recognized['existing']['laboratory']);
         self::assertSame([], $rewards->available($membership));
         self::assertSame([], $this->guide->completed($membership));
+        // Conserver la colonie principale intacte pour les vraies commandes payées ci-dessous.
+        [$parallelMember, $parallelPlanet] = $this->select($this->player('Parallel'), 'omega-1');
         $levels = ['mine_metal' => ['basic' => 1], 'power_plant' => ['basic' => 1], 'mine_nano' => ['basic' => 1]];
-        $pendingStorage = $view->progress($membership, $levels, []);
+        foreach (array_keys($levels) as $slug) {
+            $this->seedBuilding($parallelPlanet, $slug);
+        }
+        $pendingStorage = $view->progress($parallelMember, $levels);
         self::assertSame('metal_storage', $pendingStorage['next']);
         self::assertSame('laboratory', $pendingStorage['parallel']);
+        $this->seedBuilding($parallelPlanet, 'lab');
         $levels['lab']['basic'] = 1;
-        self::assertSame('research', $view->progress($membership, $levels, [])['parallel']);
+        self::assertSame('research', $view->progress($parallelMember, $levels)['parallel']);
 
         $cancelled = $this->order($membership, $planet, 'buildings', 'mine_metal', '1', guided: true);
         $cancelledId = $cancelled->id;
@@ -638,11 +649,11 @@ final class FirstStepsTest extends KernelTestCase
         return $flight;
     }
 
-    private function player(): Player
+    private function player(string $suffix = ''): Player
     {
         $data = new RegistrationData();
-        $data->username = 'GuideFixture';
-        $data->email = 'guide-fixture@example.test';
+        $data->username = 'GuideFixture'.$suffix;
+        $data->email = 'guide-fixture'.strtolower($suffix).'@example.test';
         $data->plainPassword = bin2hex(random_bytes(24)).'Aa1!';
         $player = self::getContainer()->get(RegistrationService::class)->register($data);
         $player->emailVerifiedAt = $this->clock->now();

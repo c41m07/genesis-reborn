@@ -2236,3 +2236,14 @@ niveaux 50 Basique et 25 Intermédiaire pour débloquer le Supérieur.
 Le producteur d’hydrogène et la recherche industrielle restent requis au niveau
 5 du rang visé. La condition Basique reste inchangée. Il n’y a ni recalcul ou
 retrait des accès acquis, ni modification des commandes déjà payées.
+
+## Durée des files au rythme du bonus acquis — 24 novembre 2026
+
+Un bonus de durée gagné modifie seulement le travail restant des nouvelles
+commandes actives et le rythme des futures têtes de file. Le prix enregistré
+(y compris la taxe électrique), les avances déjà acquises, les boosts utilisés,
+les dépendances et l’ordre restent inchangés. Les commandes historiques sans
+checkpoint gardent leur chronomètre : le calcul ne reconstitue pas leur historique.
+La défense garde l’absence de bonus passif et les flottes ne sont pas concernées.
+Le catalogue de base, le multiplicateur d’univers et les paramètres du bonus sont
+figés à l’achat ; aucun changement administratif ne requalifie les files en masse.

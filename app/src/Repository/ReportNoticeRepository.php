@@ -36,6 +36,10 @@ final readonly class ReportNoticeRepository
             EXISTS (SELECT 1 FROM espionage_report report WHERE report.id = n.espionage_report_id
                 AND report.sender_id = n.player_universe_id)
             SQL,
+        'diplomatic' => <<<'SQL'
+            EXISTS (SELECT 1 FROM diplomatic_report report WHERE report.id = n.diplomatic_report_id
+                AND report.recipient_id = n.player_universe_id)
+            SQL,
         'transport' => <<<'SQL'
             EXISTS (
                 SELECT 1 FROM transport_report report
@@ -48,8 +52,8 @@ final readonly class ReportNoticeRepository
             SQL,
     ];
 
-    private const COLUMNS = ['combat' => 'combat_log_id', 'espionage' => 'espionage_report_id', 'transport' => 'transport_report_id'];
-    private const LIST_KINDS = ['combat' => 'combat', 'espionage' => 'espionage', 'economy' => 'transport'];
+    private const COLUMNS = ['combat' => 'combat_log_id', 'espionage' => 'espionage_report_id', 'transport' => 'transport_report_id', 'diplomatic' => 'diplomatic_report_id'];
+    private const LIST_KINDS = ['combat' => 'combat', 'espionage' => 'espionage', 'economy' => 'transport', 'diplomatic' => 'diplomatic'];
 
     public function __construct(private EntityManagerInterface $em)
     {

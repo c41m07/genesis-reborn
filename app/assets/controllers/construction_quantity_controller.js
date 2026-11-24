@@ -100,10 +100,6 @@ export default class extends Controller {
         }
         this.waitTarget.hidden = !text;
         timer.dispatchEvent(new CustomEvent('resource-eta:change', { bubbles: true }));
-        const panel = this.waitTarget.querySelector('[popover]');
-        if (!text && typeof panel?.hidePopover === 'function' && panel.matches(':popover-open')) {
-            panel.hidePopover();
-        }
     }
 
     renderPreview(data) {

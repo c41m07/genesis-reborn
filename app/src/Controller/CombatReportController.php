@@ -19,7 +19,7 @@ final class CombatReportController extends AbstractController
     {
         $membership = $context->membership();
         $filter = $request->query->getString('type', 'all');
-        if (!in_array($filter, ['all', 'combat', 'economy', 'espionage'], true)) $filter = 'all';
+        if (!in_array($filter, ['all', 'combat', 'economy', 'espionage', 'diplomatic'], true)) $filter = 'all';
         $archived = $request->query->getString('view') === 'archives';
         $error=null;$status=200;
         try {
@@ -38,7 +38,7 @@ final class CombatReportController extends AbstractController
         if (!$this->isCsrfTokenValid('report_archive', $request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
         $member = $context->membership();
         $filter = $request->request->getString('type', 'all');
-        if (!in_array($filter, ['all', 'combat', 'economy', 'espionage'], true)) $filter = 'all';
+        if (!in_array($filter, ['all', 'combat', 'economy', 'espionage', 'diplomatic'], true)) $filter = 'all';
         $view = $request->request->getString('view') === 'archives' ? 'archives' : '';
         try {
             $operation = $request->request->getString('operation');

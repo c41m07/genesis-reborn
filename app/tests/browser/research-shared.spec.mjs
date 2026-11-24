@@ -62,7 +62,8 @@ test('Une recherche ajoutée depuis une autre colonie rejoint la même file et l
     await openQueue();
     await expect(queue.locator('.queue-detail-item')).toHaveCount(2);
     await expect(queue.locator('.queue-detail-item').nth(0)).toContainText('En cours · Aster');
-    await expect(queue.locator('.queue-detail-item').nth(1)).toContainText('En attente · Beryl');
+    await expect(queue.locator('.queue-detail-item').nth(1).locator('small'))
+        .toHaveText(/^Niveau 2 · En attente · (?:\d+ (?:j|h|min|s) ?)+ estimé · Beryl$/);
     await expect(card.getByRole('button', { name: /Rechercher le niveau 3/ })).toBeVisible();
     for (const width of [320, 390, 768, 1440]) {
         await page.setViewportSize({ width, height: 900 });

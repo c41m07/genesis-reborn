@@ -1,0 +1,60 @@
+<details class="simulation-wizard-sources" data-simulation-wizard-target="sources" open>
+    <summary>Sources · {{ own_source ? 'colonie chargée' : 'attaquant manuel' }} · {% if intel %}rapport n°{{ intel.id }} · {{ intel.date|date('d/m à H:i', preferences.timezone) }}{% else %}défenseur manuel{% endif %}</summary>
+    <div class="simulation-wizard-source-grid">
+        <section class="panel simulation-wizard-source" aria-labelledby="simulation-source-own-title">
+            <h2 id="simulation-source-own-title"><span>Attaquant</span>{% if own_source %}{{ (planets|filter(planet => planet.id == own_source)|first).name }} · valeurs modifiables{% else %}Forces saisies manuellement{% endif %}</h2>
+            {% if planets %}
+                <label for="simulation-own">Colonie de départ du scénario</label>
+                <div class="simulation-wizard-source-actions">
+                    <select id="simulation-own" name="own_planet">
+                        {% for planet in planets %}
+                            <option value="{{ planet.id }}" {% if planet.id == (own_source ?: active_planet) %}selected{% endif %}>{{ planet.name }}{% if planet.id == active_planet %} · active{% endif %}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="secondary" name="wizard_action" value="load_own" formnovalidate
+                            formaction="{{ path('app_combat_simulation') }}"
+                            data-controller="confirmation" data-action="confirmation#confirm"
+                            data-confirmation-message-value="Remplacer les vaisseaux et recherches saisis pour l’attaquant ? Les données du défenseur seront conservées.">Charger mes forces</button>
+                </div>
+                <p>Cette copie remplace les vaisseaux et recherches de l’attaquant. Elle ne change rien en jeu.</p>
+            {% else %}
+                <p>Aucune colonie disponible à charger. Vous pouvez compléter ce scénario manuellement.</p>
+            {% endif %}
+        </section>
+        <section class="panel simulation-wizard-source" aria-labelledby="simulation-source-intel-title">
+            <h2 id="simulation-source-intel-title"><span>Défenseur</span>{% if intel %}Rapport d’espionnage n°{{ intel.id }}{% else %}Renseignements saisis manuellement{% endif %}</h2>
+            {% if intel %}
+                <p><time datetime="{{ intel.date|date('c') }}">{{ intel.date|date('d/m/Y à H:i', preferences.timezone) }}</time> · {{ preferences.timezone }} · <a href="{{ path('app_espionage_report', {id: intel.id}) }}">Relire le rapport source</a></p>
+                <p>Instantané daté. Seules les catégories révélées sont importées.</p>
+            {% endif %}
+            {% if report_options %}
+                <label for="simulation-intel">Choisir un rapport d’espionnage</label>
+                <div class="simulation-wizard-source-actions">
+                    <select id="simulation-intel" name="report_choice">
+                        {% if not intel %}<option value="">Choisir un rapport</option>{% endif %}
+                        {% if intel and intel.id not in report_options|map(option => option.id) %}
+                            <option value="{{ intel.id }}" selected>Rapport n°{{ intel.id }} · {{ intel.date|date('d/m/Y à H:i', preferences.timezone) }}</option>
+                        {% endif %}
+                        {% for option in report_options %}
+                            <option value="{{ option.id }}" {% if intel and intel.id == option.id %}selected{% endif %}>Rapport n°{{ option.id }} · {{ option.createdAt|date('d/m/Y à H:i', preferences.timezone) }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="secondary" name="wizard_action" value="load_intel" formnovalidate
+                            formaction="{{ path('app_combat_simulation') }}"
+                            data-controller="confirmation" data-action="confirmation#confirm"
+                            data-confirmation-message-value="Remplacer les vaisseaux, défenses et recherches saisis pour le défenseur ? Les données de l’attaquant seront conservées.">Importer</button>
+                </div>
+            {% elseif not intel %}
+                <p>Aucun rapport disponible dans cet univers. Continuez en saisie manuelle.</p>
+            {% endif %}
+            {% if intel %}
+                <button type="submit" class="secondary" name="wizard_action" value="manual_intel" formnovalidate
+                        formaction="{{ path('app_combat_simulation') }}"
+                        data-controller="confirmation" data-action="confirmation#confirm"
+                        data-confirmation-message-value="Retirer le rapport et remettre les forces du défenseur à zéro pour une saisie manuelle ?">Repartir en saisie manuelle</button>
+            {% elseif report_options %}
+                <p>Importer un rapport remplace uniquement les renseignements du défenseur.</p>
+            {% endif %}
+        </section>
+    </div>
+</details>
