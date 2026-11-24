@@ -80,7 +80,7 @@
     {route:'app_leaderboard',label:'Classements',icon:'research'},
     {route:'app_game_events',label:'Événements',icon:'clock'}
 ] %}
-{% set active = route==item.route or (item.route=='app_guilds' and route in guildRoutes) or (item.route=='app_diplomacy' and route=='app_personal_relations') or (item.route=='app_game_events' and route in ['app_game_challenges','app_challenge','app_advent','app_advent_edition','app_advent_credit']) or (item.route=='app_messages' and route=='app_message_search') or (item.route=='app_leaderboard' and route in ['app_player_public_profile','app_player_report']) %}
+{% set active = route==item.route or (item.route=='app_guilds' and route in guildRoutes) or (item.route=='app_diplomacy' and route=='app_personal_relations') or (item.route=='app_game_events' and route in ['app_game_challenges','app_challenge']) or (item.route=='app_messages' and route=='app_message_search') or (item.route=='app_leaderboard' and route in ['app_player_public_profile','app_player_report']) %}
 <a href="{{ path(item.route) }}"{% if active %} class="active" aria-current="page"{% endif %}>{{ ui.icon(item.icon) }}<span>{{ item.label }}</span>{% if item.route=='app_messages' %}<span class="message-unread-dot" data-message-notifications-target="badge" role="img" aria-label="Messages non lus" {% if not chrome.unreadMessages|default(0) %}hidden{% endif %}></span>{% endif %}</a>
 {% endfor %}
 <div class="nav-section-label">Compte</div>
@@ -96,7 +96,17 @@
 {% set showEventDrawer = app.user and chrome.membership and chrome.events is not empty %}
 <header class="topbar{{ entryPublicPage ? ' entry-public-header' : '' }}">{% if app.user %}<button class="mobile-menu" data-navigation-target="toggle" data-action="navigation#toggle" aria-controls="command-navigation" aria-expanded="false" aria-label="Ouvrir le menu"{% if chrome.membership %} aria-describedby="report-unread-description"{% endif %}>{{ ui.icon('menu') }}<span class="menu-unread-dot" data-menu-notifications-target="badge" role="img" aria-label="Notifications à consulter dans le menu" {% if not chrome.unreadMessages|default(0) and not unreadPatchNote and not chrome.journal.unreadCount|default(0) %}hidden{% endif %}></span>{% if chrome.membership %}<span class="report-mobile-indicator" data-report-badge-target="indicator" aria-hidden="true"{% if not unreadReports %} hidden{% endif %}></span>{% endif %}</button><a class="universe-context" href="{{ path('app_universes') }}" aria-label="Ouvrir les univers · {{ chrome.membership?chrome.membership.universe.name:'Centre de commandement' }}" {% if route=='app_universes' %}aria-current="page"{% endif %}>{{ ui.icon('universe') }}<span>{{ chrome.membership?chrome.membership.universe.name:'Centre de commandement' }}</span><span class="connection-dot"></span></a>
 {% if showTechnologyGoal %}{% include 'ui/header_technology_goal.html.twig' with {passive: campaignPage} %}{% endif %}
-{% if showEventDrawer %}{% include 'ui/event_drawer.html.twig' %}{% endif %}
+{% if chrome.adventUntil|default(null) %}
+<div class="event-drawer-wrap topbar-season">
+    {% if showEventDrawer %}{% include 'ui/event_drawer.html.twig' %}{% endif %}
+    <a class="advent-shortcut" data-controller="advent-shortcut"
+       data-advent-shortcut-end-value="{{ chrome.adventUntil|date('c') }}" data-advent-shortcut-server-value="{{ chrome.serverNow }}"
+       {% if route in ['app_advent', 'app_advent_edition'] %}data-advent-shortcut-return-value="{{ path('app_game_events') }}"{% endif %}
+       data-action="pageshow@window->advent-shortcut#refresh visibilitychange@document->advent-shortcut#refresh" href="{{ path('app_advent') }}" aria-label="Calendrier de l’Avent"{% if route in ['app_advent', 'app_advent_edition'] %} aria-current="page"{% endif %}>
+        <span aria-hidden="true">🎁</span><span><span class="advent-shortcut-long">Calendrier de l’</span>Avent</span>
+    </a>
+</div>
+{% elseif showEventDrawer %}{% include 'ui/event_drawer.html.twig' %}{% endif %}
 <div class="header-tools has-daily-reward-shortcuts" data-controller="daily-reward-ui"
     data-daily-reward-ui-auto-open-value="{{ rewardHeader.autoOpen ? 'true' : 'false' }}"
     {% if rewardHeader.available %}data-daily-reward-ui-panel-url-value="{{ path('app_daily_reward_panel', {colony: chrome.planet.id}) }}"{% endif %}

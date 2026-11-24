@@ -15,6 +15,7 @@ final class InventoryPageView
     public function __construct(
         private GameRepository $repo,
         private BoostGrantService $grants,
+        private \App\Service\Advent\AdventRewards $adventRewards,
         private GameCatalog $catalog,
         private VacationCalendar $vacations,
         private ClockInterface $clock,
@@ -39,7 +40,13 @@ final class InventoryPageView
         if ($page === 'pending') {
             $pages = max(1, (int) ceil($counts['pending'] / 25));
             $number = max(1, min($pages, $number));
-            return $data + ['pending_items' => $this->repo->pendingInventoryItems($membership, $number), 'pending_page' => $number, 'pending_pages' => $pages];
+            $reservations = $this->adventRewards->pending($membership);
+            return $data + [
+                'advent_reservations' => $reservations,
+                'advent_colonies' => $reservations ? $this->repo->planets($membership->universe, $membership) : [],
+                'advent_ships' => $reservations ? $this->catalog->all('ships') : [],
+                'advent_resources' => \App\Service\Advent\AdventGifts::RESOURCES,
+                'pending_items' => $this->repo->pendingInventoryItems($membership, $number), 'pending_page' => $number, 'pending_pages' => $pages];
         }
         $data['vacation'] = $this->vacations->currentPeriod($membership);
         if ($page === 'boxes') {

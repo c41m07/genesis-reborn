@@ -10,7 +10,6 @@ use App\Service\Advent\{AdventCohortCapture, AdventParticipation, AdventRewards}
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Clock\MockClock;
 
-$_SERVER['ADVENT_ENABLED'] = $_ENV['ADVENT_ENABLED'] = '1';
 $input = json_decode($argv[1], true, 512, JSON_THROW_ON_ERROR);
 $kernel = new Kernel('test', true);
 $kernel->boot();
@@ -62,4 +61,4 @@ if (($input['action'] ?? 'open') === 'bind') {
 }
 
 $service = $container->get(AdventRewards::class);
-echo $service->open($player, $membership, $planet, $edition, 1, $input['choice'])['state']."\n";
+echo $service->open($player, $membership, $planet, $edition, 1, $input['choice'], reservationOnly: $input['reservation'] ?? false)['state']."\n";

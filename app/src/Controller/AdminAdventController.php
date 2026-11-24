@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Player;
+use App\Entity\{Player, Universe};
+use App\Repository\{AdventWindowRepository, GameRepository};
 use App\Service\Advent\{AdventCalendar, AdventEditions, AdventGifts};
 use App\Service\Catalog\GameCatalog;
 use Psr\Clock\ClockInterface;
@@ -19,23 +20,24 @@ final class AdminAdventController extends AbstractController
     private const PREVIEW = 'admin_advent_preview';
 
     #[Route('/admin/events/avent', name: 'app_admin_game_event_advent', methods: ['GET', 'POST'])]
-    public function form(Request $request, AdventEditions $editions, AdventCalendar $calendar, ClockInterface $clock): Response
+    public function form(Request $request, AdventEditions $editions, GameRepository $game, AdventWindowRepository $windows, ClockInterface $clock): Response
     {
-        if (!$editions->enabled) {
-            throw $this->createNotFoundException();
-        }
-        $draft = $calendar->defaults($clock->now()) + ['name' => 'Calendrier de l’Avent'];
+        $season = (int) $clock->now()->setTimezone(new \DateTimeZone(AdventCalendar::PARIS))->format('Y');
+        $draft = ['name' => 'Calendrier de l’Avent', 'season' => $season, 'universe' => null,
+            'from' => $season.'-12-01T00:00', 'until' => $season.'-12-31T00:00'];
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid(self::PREVIEW, $request->request->getString('_token'))) {
                 throw $this->createAccessDeniedException('Formulaire expiré.');
             }
             $draft = [
                 'name' => $request->request->getString('name'),
-                'first' => $request->request->getString('first'),
-                'last' => $request->request->getString('last'),
+                'season' => $request->request->getInt('season'),
+                'universe' => $request->request->getInt('universe'),
+                'from' => $request->request->getString('from'),
+                'until' => $request->request->getString('until'),
             ];
             try {
-                $prepared = $editions->prepareConsolidated($draft['name'], $draft['first'], $draft['last']);
+                $prepared = $editions->prepare(...$draft);
                 $key = bin2hex(random_bytes(16));
                 // Une seule prévisualisation bornée par session. Les lignes de
                 // cadeaux ne sont pas ressoumises par le bouton de publication.
@@ -47,14 +49,15 @@ final class AdminAdventController extends AbstractController
             }
         } elseif ($request->query->getBoolean('edit')) {
             $preview = $request->getSession()->get(self::PREVIEW);
-            if ($preview !== null) {
+            if (isset($preview['draft']['universe'])) {
                 $draft = $preview['draft'];
             }
         }
 
         return $this->render('admin/advent_form.html.twig', [
             'draft' => $draft,
-            'published' => $editions->visible(),
+            'published' => $windows->scheduled(),
+            'universes' => $game->all(Universe::class, [], ['name' => 'ASC']),
         ], new Response(status: $request->isMethod('POST') ? 422 : 200));
     }
 
@@ -62,7 +65,7 @@ final class AdminAdventController extends AbstractController
     public function preview(Request $request, string $key, AdventEditions $editions, GameCatalog $catalog): Response
     {
         $saved = $request->getSession()->get(self::PREVIEW);
-        if (!$editions->enabled || $saved === null || !hash_equals($saved['key'], $key)) {
+        if (!isset($saved['draft']['universe']) || !hash_equals($saved['key'], $key)) {
             throw $this->createNotFoundException('Cet aperçu a expiré.');
         }
         if ($request->isMethod('POST')) {
@@ -76,7 +79,7 @@ final class AdminAdventController extends AbstractController
             try {
                 $editions->publish($actor, $saved['draft']);
                 $request->getSession()->remove(self::PREVIEW);
-                $this->addFlash('success', 'Édition de l’Avent publiée pour tous les univers accessibles.');
+                $this->addFlash('success', 'Calendrier programmé pour '.$saved['draft']['universeName'].'.');
 
                 return $this->redirectToRoute('app_admin_game_event_advent', status: Response::HTTP_SEE_OTHER);
             } catch (\DomainException $error) {

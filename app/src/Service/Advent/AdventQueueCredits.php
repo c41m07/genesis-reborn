@@ -12,7 +12,6 @@ use Psr\Clock\ClockInterface;
 final readonly class AdventQueueCredits
 {
     public function __construct(
-        private AdventEditions $editions,
         private AdventAllowance $allowance,
         private EntityManagerInterface $em,
         private ClockInterface $clock,
@@ -25,7 +24,7 @@ final readonly class AdventQueueCredits
      */
     public function paymentLocked(int $id, PlayerUniverse $membership, string $group, string $slug, string $tier, int $level, int $quantity, bool $fromCompletedLevel, array $costs): array
     {
-        if (!$this->editions->enabled || $membership->player?->id === null) {
+        if ($membership->player?->id === null) {
             throw new \DomainException('Remise de l’Avent indisponible.');
         }
         $db = $this->em->getConnection();
@@ -65,7 +64,7 @@ final readonly class AdventQueueCredits
      */
     public function findRedeemableOffer(PlayerUniverse $membership, int $editionId, int $claimId): ?array
     {
-        if (!$this->editions->enabled || $membership->player?->id === null) {
+        if ($membership->player?->id === null) {
             return null;
         }
         $row = $this->em->getConnection()->fetchAssociative(

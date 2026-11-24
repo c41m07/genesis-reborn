@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Entity\Player;
 use App\Repository\GameRepository;
 use App\Service\Event\ChallengeQueryService;
-use App\Service\Advent\AdventEditions;
 use App\Service\PirateCampaign\PiratePilotGate;
 use App\Service\Universe\UniverseContext;
 use Psr\Clock\ClockInterface;
@@ -16,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class GameEventsController extends AbstractController
 {
     #[Route('/evenements', name: 'app_game_events', methods: ['GET'])]
-    public function index(Request $request, UniverseContext $context, GameRepository $repository, ClockInterface $clock, PiratePilotGate $pirateCampaign, AdventEditions $advent, ChallengeQueryService $challenges): Response
+    public function index(Request $request, UniverseContext $context, GameRepository $repository, ClockInterface $clock, PiratePilotGate $pirateCampaign, ChallengeQueryService $challenges): Response
     {
         $membership = $context->membership();
         $now = $clock->now();
@@ -32,7 +31,7 @@ final class GameEventsController extends AbstractController
             $repository->playerChallengeEvents($membership, ['active'], 2),
         );
 
-        return $this->render('player/events.html.twig', ['membership' => $membership, 'eventGroups' => $groups, 'activeChallenges' => $activeChallenges, 'adventEditions' => $player instanceof Player ? $advent->listedFor($player) : [],
+        return $this->render('player/events.html.twig', ['membership' => $membership, 'eventGroups' => $groups, 'activeChallenges' => $activeChallenges,
             'pirateCampaignAvailable' => $pirateCampaign->admits($player instanceof Player ? $player : null, $membership, $now)]);
     }
 

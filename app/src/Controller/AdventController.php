@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\{Planet, Player, Universe};
-use App\Repository\GameRepository;
-use App\Service\Advent\{AdventCalendar, AdventEditions, AdventGifts, AdventParticipation, AdventRewards};
+use App\Entity\{AdventClaim, Planet, Player, Universe};
+use App\Repository\{AdventWindowRepository, GameRepository};
+use App\Service\Advent\{AdventCalendar, AdventGifts, AdventParticipation, AdventRewards};
 use App\Service\Universe\UniverseContext;
 use App\Service\Catalog\GameCatalog;
 use Psr\Clock\ClockInterface;
@@ -18,29 +18,16 @@ final class AdventController extends AbstractController
 {
     #[Route('/evenements/avent', name: 'app_advent', methods: ['GET'])]
     #[Route('/evenements/avent/{id}', name: 'app_advent_edition', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function calendar(UniverseContext $context, AdventEditions $editions, AdventRewards $rewards, AdventCalendar $calendar, GameRepository $game, ClockInterface $clock, AdventParticipation $participation, GameCatalog $catalog, ?int $id = null): Response
+    public function calendar(UniverseContext $context, AdventWindowRepository $windows, AdventRewards $rewards, AdventCalendar $calendar, GameRepository $game, ClockInterface $clock, AdventParticipation $participation, GameCatalog $catalog, ?int $id = null): Response
     {
         $membership = $context->membership();
         $player = $this->player();
-        $available = $editions->listedFor($player);
+        $window = $windows->current($membership->universe, $id);
+        if ($window === null) {
+            throw $this->createNotFoundException('Aucun calendrier de l’Avent ouvert dans cet univers.');
+        }
+        $edition = $window->edition;
         $now = $clock->now();
-        $edition = null;
-        if ($id !== null) {
-            $edition = $editions->forPlayer($player, $id);
-        } else {
-            // Retrouver d’abord l’édition ouverte ; les réservations des
-            // saisons closes gardent chacune leur propre adresse.
-            foreach ($available as $candidate) {
-                if ($candidate->startsAt <= $now && $candidate->closesAt > $now) {
-                    $edition = $candidate;
-                    break;
-                }
-            }
-            $edition ??= $available[0] ?? null;
-        }
-        if ($edition === null) {
-            throw $this->createNotFoundException('Aucune édition de l’Avent annoncée.');
-        }
         $colonies = $game->planets($membership->universe, $membership);
         $coloniesById = [];
         foreach ($colonies as $colony) {
@@ -61,15 +48,14 @@ final class AdventController extends AbstractController
             $doors[$door] = [
                 'options' => $options,
                 'opensAt' => $opensAt,
-                'open' => $calendar->canOpen($now, $opensAt, $edition->closesAt),
+                'open' => $calendar->canOpen($now, $opensAt, $window->visibleUntil),
                 'claim' => $claims[$door] ?? null,
             ];
         }
 
         $response = $this->render('player/advent.html.twig', [
             'edition' => $edition,
-            'otherEditions' => $available,
-            'closed' => $now >= $edition->closesAt,
+            'window' => $window,
             'membership' => $membership,
             'doors' => $doors,
             'colonies' => $coloniesById,
@@ -80,7 +66,7 @@ final class AdventController extends AbstractController
             'bindingUniverse' => $bindingUniverse,
             'progression' => $progression,
             'destinationsAllowed' => $destinationsAllowed,
-            'openPeriod' => $edition->startsAt <= $now && $now < $edition->closesAt,
+            'openPeriod' => $edition->startsAt <= $now && $now < $window->visibleUntil,
             'bracketLabels' => ['beginner' => 'Débutant ×1', 'intermediate' => 'Intermédiaire ×6', 'veteran' => 'Vétéran ×24'],
             'claimed' => count($claims),
         ]);
@@ -91,11 +77,11 @@ final class AdventController extends AbstractController
     }
 
     #[Route('/evenements/avent/{id}/univers', name: 'app_advent_bind', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function bind(Request $request, int $id, UniverseContext $context, AdventEditions $editions, AdventParticipation $participation): Response
+    public function bind(Request $request, int $id, UniverseContext $context, AdventWindowRepository $windows, AdventParticipation $participation): Response
     {
         $player = $this->player();
         $membership = $context->membership();
-        $edition = $editions->forPlayer($player, $id);
+        $edition = $windows->current($membership->universe, $id)?->edition;
         if ($edition === null) {
             throw $this->createNotFoundException();
         }
@@ -112,12 +98,19 @@ final class AdventController extends AbstractController
         return $this->redirectToRoute('app_advent_edition', ['id' => $id], Response::HTTP_SEE_OTHER);
     }
 
+    #[Route('/inventaire/recompenses/avent/{id}/{door}', name: 'app_advent_reserved', requirements: ['id' => '\d+', 'door' => '\d+'], methods: ['POST'])]
     #[Route('/evenements/avent/{id}/portes/{door}', name: 'app_advent_open', requirements: ['id' => '\d+', 'door' => '\d+'], methods: ['POST'])]
-    public function open(Request $request, int $id, int $door, UniverseContext $context, AdventEditions $editions, AdventRewards $rewards, GameRepository $game): Response
+    public function open(Request $request, int $id, int $door, UniverseContext $context, AdventWindowRepository $windows, AdventRewards $rewards, GameRepository $game): Response
     {
         $membership = $context->membership();
         $player = $this->player();
-        $edition = $editions->forPlayer($player, $id);
+        $reserved = $request->attributes->get('_route') === 'app_advent_reserved';
+        if ($reserved) {
+            $claim = $game->one(AdventClaim::class, ['player' => $player, 'adventEdition' => $id, 'door' => $door]);
+            $edition = $claim?->adventEdition;
+        } else {
+            $edition = $windows->current($membership->universe, $id)?->edition;
+        }
         if ($edition === null || !isset($edition->doors[$door])) {
             throw $this->createNotFoundException();
         }
@@ -131,7 +124,7 @@ final class AdventController extends AbstractController
         }
 
         try {
-            $result = $rewards->open($player, $membership, $planet, $edition, $door, $request->request->getInt('choice', -1));
+            $result = $rewards->open($player, $membership, $planet, $edition, $door, $request->request->getInt('choice', -1), reservationOnly: $reserved);
         } catch (\DomainException) {
             $result = ['state' => 'stale'];
         }
@@ -150,6 +143,10 @@ final class AdventController extends AbstractController
             default => 'Cette porte ou ce choix de cadeau n’est pas disponible.',
         };
         $this->addFlash(in_array($result['state'], ['delivered', 'already', 'partial', 'credit_ready'], true) ? 'success' : 'error', $message);
+
+        if ($reserved) {
+            return $this->redirectToRoute('app_inventory_pending', status: Response::HTTP_SEE_OTHER);
+        }
 
         return $this->redirectToRoute('app_advent_edition', ['id' => $id, '_fragment' => 'advent-door-'.$door], Response::HTTP_SEE_OTHER);
     }

@@ -3,7 +3,7 @@
 {% set credit = claim.award.kind|default('') in ['research_discount', 'ship_voucher'] %}
 {% set actionable = destinationsAllowed and colonies and (claim ? not claim.deliveredAt : (door.open and door.options)) %}
 <article class="panel advent-door" id="advent-door-{{ day }}" tabindex="-1" aria-labelledby="advent-door-title-{{ day }}"{% if selected %} data-default{% endif %}>
-    <h2 id="advent-door-title-{{ day }}">{% if closedReadOnly %}{{ ui.icon('clock') }} {% endif %}Porte {{ day }}</h2>
+    <h2 id="advent-door-title-{{ day }}">Porte {{ day }}</h2>
     {% if milestone %}<p class="advent-door-subtitle">{{ milestone }}</p>{% endif %}
     <p><span class="badge advent-state" data-state="{{ status.key }}">{{ status.label }}</span> <time datetime="{{ door.opensAt|date('c', 'UTC') }}">{{ door.opensAt|date('d/m', 'Europe/Paris') }}</time></p>
     {% if actionable and credit %}
@@ -61,10 +61,9 @@
     {% elseif claim and not claim.deliveredAt %}
         <p>Le lot reste réservé. {{ consolidated ? 'Revenez dans l’univers fixé et choisissez une de vos colonies.' : 'Choisissez un univers où vous contrôlez une colonie.' }}</p>
     {% endif %}
-    {% if closedReadOnly and claim and claim.deliveredAt %}<p>Le cadeau de cette porte a déjà été versé.</p>{% endif %}
+    {% if claim and claim.deliveredAt %}<p>Le cadeau de cette porte a déjà été versé.</p>{% endif %}
     {% if not claim and not actionable %}
-        {% if closed %}<p>Cette porte n’a pas été ouverte avant la clôture.</p>
-        {% elseif not door.open %}<p>Cette porte ouvrira le {{ door.opensAt|date('d/m/Y', 'Europe/Paris') }}, heure de Paris.</p>
+        {% if not door.open %}<p>Cette porte ouvrira le {{ door.opensAt|date('d/m/Y', 'Europe/Paris') }}, heure de Paris.</p>
         {% elseif not destinationsAllowed %}<p>Vérifiez l’univers choisi pour cette édition avant de sélectionner un cadeau.</p>
         {% elseif not colonies %}<p>Aucune colonie ne peut recevoir ce cadeau dans cet univers.</p>
         {% else %}<p>Aucun cadeau n’est proposé pour cette porte dans votre tranche.</p>{% endif %}

@@ -145,3 +145,18 @@ body[data-theme=light] .technology-tree{--tech-met:#376647;--tech-missing:#79562
     .player-technology-board .tech-node > summary { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
     .player-technology-board .tech-node > summary strong { grid-column:1 / -1; }
 }
+
+/* Les deux rendez-vous partagent la même case de la barre compacte. */
+.topbar-season { display: flex; align-items: center; gap: 6px; }
+.topbar .advent-shortcut {
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    min-height: 40px; padding: 0 9px; border: 1px solid #9d864d; border-radius: 6px;
+    background: #193c32; color: #fff1ce; font-weight: 700; font-size: 12px; white-space: nowrap;
+}
+.topbar .advent-shortcut:hover, .topbar .advent-shortcut[aria-current] { background: #285341; }
+@media (max-width: 1400px) {
+    .advent-shortcut-long { display: none; }
+}
+@media (max-width: 740px) {
+    .topbar .advent-shortcut { min-height: 44px; padding-inline: 5px; font-size: 11px; }
+}

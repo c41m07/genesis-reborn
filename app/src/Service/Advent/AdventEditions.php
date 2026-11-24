@@ -4,59 +4,49 @@ declare(strict_types=1);
 
 namespace App\Service\Advent;
 
-use App\Entity\{AdminAuditLog, AdventClaim, AdventEdition, Player};
+use App\Entity\{AdminAuditLog, AdventEdition, AdventWindow, OutboxMessage, Player, Universe};
 use App\Manager\GameManager;
+use App\Message\AdventCaptureDue;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 final readonly class AdventEditions
 {
     public function __construct(
         private AdventCalendar $calendar,
-        private AdventGifts $gifts,
         private AdventSeasonPlan $seasonPlan,
         private EntityManagerInterface $em,
         private GameManager $manager,
         private ClockInterface $clock,
-        #[Autowire('%env(bool:ADVENT_ENABLED)%')] public bool $enabled,
     ) {}
 
-    /** @return array{name: string, first: string, last: string, doors: array<int, array{opens_at: string, options: list<array<string, int>>}>} */
-    public function prepare(string $name, string $first, string $last, array $options): array
+    /** L’aperçu en session fige le périmètre et les cadeaux effectivement proposés. */
+    public function prepare(string $name, int $season, int $universe, string $from, string $until): array
     {
         $name = trim($name);
         if ($name === '' || mb_strlen($name) > 120) {
             throw new \DomainException('Saisissez un nom d’édition de 120 caractères maximum.');
         }
-        $dates = $this->calendar->schedule($first, $last);
-        $gifts = $this->gifts->validate($options);
-        if ($dates['startsAt'] <= $this->clock->now()) {
-            throw new \DomainException('Choisissez une première porte à une date future, à minuit heure de Paris.');
+        $dates = $this->calendar->schedule($season.'-12-01', $season.'-12-31');
+        $start = $this->calendar->instant($from);
+        $end = $this->calendar->instant($until);
+        if ($start >= $end || $end <= $this->clock->now() || $end <= $dates['startsAt']) {
+            throw new \DomainException('La fermeture doit suivre le début de visibilité et la première porte, et être encore à venir.');
         }
-
-        $doors = [];
-        foreach ($dates['doors'] as $door => $opensAt) {
-            $doors[$door] = ['opens_at' => $opensAt->format(DATE_ATOM), 'options' => $gifts[$door]];
+        $world = $this->em->find(Universe::class, $universe);
+        if ($world === null) {
+            throw new \DomainException('Choisissez un univers existant.');
         }
-
-        return ['name' => $name, 'first' => $first, 'last' => $last, 'doors' => $doors];
-    }
-
-    /** @return array{name:string,first:string,last:string,plan:string,doors:array<int,array<string,mixed>>} */
-    public function prepareConsolidated(string $name, string $first, string $last): array
-    {
-        $name = trim($name);
-        if ($name === '' || mb_strlen($name) > 120) {
-            throw new \DomainException('Saisissez un nom d’édition de 120 caractères maximum.');
-        }
-        $dates = $this->calendar->schedule($first, $last);
-        if ($dates['startsAt'] <= $this->clock->now()) {
-            throw new \DomainException('Choisissez une première porte à une date future, à minuit heure de Paris.');
-        }
-        $doors = $this->seasonPlan->doors();
+        $existing = $this->em->getRepository(AdventEdition::class)->findOneBy(['season' => $season]);
+        $doors = $existing?->doors ?? $this->seasonPlan->doors();
         foreach ($dates['doors'] as $number => $opensAt) {
+            // Un ancien barème publié reste figé. Une édition déplacée historiquement
+            // ne doit pas être présentée comme un calendrier du 1er au 24 décembre.
+            if ($existing !== null && ($existing->plan !== 'consolidated'
+                || new \DateTimeImmutable($doors[$number]['opens_at']) != $opensAt)) {
+                throw new \DomainException('Cette saison contient déjà une édition incompatible avec les portes de décembre.');
+            }
             $doors[$number]['opens_at'] = $opensAt->format(DATE_ATOM);
             foreach ($doors[$number]['options'] as $choices) {
                 foreach ($choices as $offer) {
@@ -67,111 +57,81 @@ final readonly class AdventEditions
             }
         }
 
-        return ['name' => $name, 'first' => $first, 'last' => $last, 'plan' => 'consolidated', 'doors' => $doors];
+        return compact('name', 'season', 'universe', 'from', 'until', 'doors') + ['universeName' => $world->name];
     }
 
-    /** @param array{name: string, first: string, last: string, doors: array<int, array{opens_at: string, options: list<array<string, int>>}>} $preview */
-    public function publish(Player $actor, array $preview): AdventEdition
+    public function publish(Player $actor, array $preview): AdventWindow
     {
         try {
-            return $this->manager->transaction(function () use ($actor, $preview): AdventEdition {
+            return $this->manager->transaction(function () use ($actor, $preview): AdventWindow {
                 $this->manager->lockCurrent($actor);
-                if (!$this->enabled || !in_array('ROLE_ADMIN', $actor->getRoles(), true) || $actor->lockedAt !== null) {
+                if (!in_array('ROLE_ADMIN', $actor->getRoles(), true) || $actor->lockedAt !== null) {
                     throw new \DomainException('La publication de l’Avent est indisponible.');
                 }
-                // Publication = instantané du brouillon validé côté serveur et stocké
-                // en session. Revalider en particulier le début après l’attente du verrou.
-                if (($preview['plan'] ?? null) === 'consolidated') {
-                    $prepared = $this->prepareConsolidated($preview['name'], $preview['first'], $preview['last']);
-                    if ($prepared !== $preview) {
-                        throw new \DomainException('Le barème a changé depuis votre aperçu. Préparez un nouvel aperçu.');
-                    }
-                } else {
-                    $prepared = $this->prepare($preview['name'], $preview['first'], $preview['last'], array_map(
-                        static fn (array $door): array => $door['options'],
-                        $preview['doors'],
-                    ));
+                $world = $this->em->find(Universe::class, $preview['universe']);
+                if ($world === null) {
+                    throw new \DomainException('L’univers de cet aperçu n’existe plus.');
                 }
-                $dates = $this->calendar->schedule($prepared['first'], $prepared['last']);
-                $event = new AdventEdition();
-                $event->season = (int) substr($prepared['first'], 0, 4);
-                $event->name = $prepared['name'];
-                $event->plan = $prepared['plan'] ?? 'custom';
-                $event->startsAt = $dates['startsAt'];
-                $event->closesAt = $dates['closesAt'];
-                $event->doors = $prepared['doors'];
-                $event->publishedAt = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
-                $this->manager->save($event);
-                $this->manager->flush();
-
+                // Sérialiser les publications du même univers avant de vérifier leurs périodes.
+                $this->manager->lockCurrent($world);
+                $current = $this->prepare($preview['name'], $preview['season'], $world->id, $preview['from'], $preview['until']);
+                if ($current != $preview) {
+                    throw new \DomainException('L’édition a changé depuis votre aperçu. Préparez un nouvel aperçu.');
+                }
+                $start = $this->calendar->instant($preview['from']);
+                $end = $this->calendar->instant($preview['until']);
+                $db = $this->em->getConnection();
+                if ($db->fetchOne('SELECT id FROM advent_window WHERE universe_id = ? AND visible_from < ? AND visible_until > ? LIMIT 1 FOR UPDATE',
+                    [$world->id, $end->format('Y-m-d H:i:s'), $start->format('Y-m-d H:i:s')])) {
+                    throw new \DomainException('Un calendrier est déjà programmé sur cette période dans cet univers.');
+                }
+                $edition = $this->em->getRepository(AdventEdition::class)->findOneBy(['season' => $preview['season']]);
+                $now = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
+                if ($edition === null) {
+                    $edition = new AdventEdition();
+                    $edition->season = $preview['season'];
+                    $edition->name = $preview['name'];
+                    $edition->plan = 'consolidated';
+                    $edition->startsAt = new \DateTimeImmutable($preview['doors'][1]['opens_at']);
+                    $edition->closesAt = $end;
+                    $edition->doors = $preview['doors'];
+                    $edition->publishedAt = $now;
+                    $this->manager->save($edition);
+                    $this->manager->flush();
+                } else {
+                    $this->manager->lockCurrent($edition);
+                    // La cohorte et les droits sont communs à la saison. Chaque univers
+                    // garde sa propre fermeture même si une autre fenêtre dure davantage.
+                    $edition->closesAt = max($edition->closesAt, $end);
+                }
+                if ($edition->cohortCapturedAt === null) {
+                    $message = new OutboxMessage();
+                    $message->kind = AdventCaptureDue::KIND;
+                    $message->targetId = $edition->id;
+                    $message->dueAt = max($now, $edition->startsAt);
+                    $message->token = $now > $edition->startsAt ? 'late' : 'scheduled';
+                    $this->manager->save($message);
+                }
+                $window = new AdventWindow();
+                $window->edition = $edition;
+                $window->universe = $world;
+                $window->name = $preview['name'];
+                $window->visibleFrom = $start;
+                $window->visibleUntil = $end;
+                $this->manager->save($window);
                 $audit = new AdminAuditLog();
                 $audit->actor = $actor;
                 $audit->action = 'advent_edition_published';
                 $audit->targetType = 'advent_edition';
-                $audit->targetId = $event->id;
-                $audit->details = ['season' => $event->season, 'plan' => $event->plan, 'starts_at' => $event->startsAt->format(DATE_ATOM), 'closes_at' => $event->closesAt->format(DATE_ATOM)];
-                $audit->createdAt = $event->publishedAt;
+                $audit->targetId = $edition->id;
+                $audit->details = ['season' => $edition->season, 'universe' => $world->id, 'visible_from' => $start->format(DATE_ATOM), 'visible_until' => $end->format(DATE_ATOM)];
+                $audit->createdAt = $now;
                 $this->manager->save($audit);
 
-                return $event;
+                return $window;
             });
         } catch (UniqueConstraintViolationException $error) {
-            // Deux confirmations ou deux admins ne peuvent créer deux éditions
-            // de la même saison, même si un navigateur avait conservé son aperçu.
-            throw new \DomainException('Il existe déjà une édition publiée pour cette année de départ.', previous: $error);
+            throw new \DomainException('Cette saison vient d’être créée. Vérifiez son barème dans un nouvel aperçu.', previous: $error);
         }
-    }
-
-    public function visible(): ?AdventEdition
-    {
-        if (!$this->enabled) {
-            return null;
-        }
-
-        return $this->em->getRepository(AdventEdition::class)->createQueryBuilder('edition')
-            ->andWhere('edition.closesAt > :now')
-            ->setParameter('now', $this->clock->now()->setTimezone(new \DateTimeZone('UTC')))
-            ->orderBy('edition.startsAt', 'ASC')
-            ->setMaxResults(1)
-            ->getQuery()->getOneOrNullResult();
-    }
-
-    /** @return list<AdventEdition> */
-    public function listedFor(Player $player): array
-    {
-        if (!$this->enabled) {
-            return [];
-        }
-
-        // Le lien persiste pour un droit en attente, mais pas pour les
-        // éditions closes que le joueur n’a pas ou plus besoin de récupérer.
-        return $this->em->createQuery(
-            'SELECT e FROM '.AdventEdition::class.' e
-             WHERE e.closesAt > :now OR EXISTS (
-                 SELECT c.id FROM '.AdventClaim::class.' c
-                 WHERE c.player = :player AND c.adventEdition = e AND c.deliveredAt IS NULL
-             ) ORDER BY e.startsAt DESC',
-        )->setParameter('player', $player)->setParameter('now', $this->utcNow())->getResult();
-    }
-
-    public function forPlayer(Player $player, int $id): ?AdventEdition
-    {
-        if (!$this->enabled) {
-            return null;
-        }
-
-        // Une fiche close reste consultable par son bénéficiaire pour lire le
-        // reçu et retrouver les autres portes expirées, jamais par un tiers.
-        return $this->em->createQuery(
-            'SELECT e FROM '.AdventEdition::class.' e
-             WHERE e.id = :id AND (e.closesAt > :now OR EXISTS (
-                 SELECT c.id FROM '.AdventClaim::class.' c WHERE c.player = :player AND c.adventEdition = e
-             ))',
-        )->setParameter('id', $id)->setParameter('player', $player)->setParameter('now', $this->utcNow())->getOneOrNullResult();
-    }
-
-    private function utcNow(): \DateTimeImmutable
-    {
-        return $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
     }
 }
