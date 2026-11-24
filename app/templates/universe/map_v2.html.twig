@@ -125,7 +125,7 @@
                 <button type="button" class="gv2-action-link gv2-enter-system" data-action="click->galaxy-v2#enterSelectedSystem">Entrer dans le système</button>
                 <ul class="gv2-planet-list">{% for p in row.planets|sort((a,b)=>a.position<=>b.position) %}
                     <li><button type="button" class="gv2-planet-choice" data-action="click->galaxy-v2#selectPlanet" data-planet-id="{{ p.id }}">
-                        <span class="gv2-planet-number">{{ '%02d'|format(p.position) }}</span><span class="gv2-planet-choice-name">{{ p.name }}</span>
+                        <span class="gv2-planet-number">{{ '%02d'|format(p.position) }}</span><span class="gv2-planet-choice-name">{% if p.name != (system.name ~ ' · ' ~ p.position) %}{{ p.name }}{% endif %}</span>
                         {% set relation = map_planet_relations[p.id] %}
                         <span class="gv2-planet-owner"><span class="gv2-marker gv2-marker--{{ relation }}" aria-hidden="true">{{ relation_symbols[relation] }}</span> {{ relation_labels[relation] }}{% if relation == 'npc' %} · niv. {{ p.conquestLevel }}{% elseif p.owner and relation != 'own' %} · {{ p.owner.displayName }}{% endif %}</span>
                     </button></li>
