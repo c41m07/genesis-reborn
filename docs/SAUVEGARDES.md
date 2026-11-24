@@ -61,12 +61,11 @@ Les 13 tests Python des scripts sont inclus dans `make test` ; le test de restau
 
 Une base restaurée peut contenir des opérations dont le message a déjà quitté l’outbox pour RabbitMQ. Le dump SQL ne restaure pas les messages du broker. La comparaison de données ne prouve donc pas la poursuite automatique de ces opérations. Le runbook historique affirmait une reconstruction possible sans en fournir une commande générale vérifiée ; ne pas déduire que cette reconstruction est livrée. Prévoir une analyse et une réconciliation contrôlées, avec tests de doublons, avant une reprise complète après perte du transport. Le chantier G doit examiner cette reprise ; aucune opération de ce type n’a été exécutée sur l’Alpha.
 
-### Recette à exécuter : reprise avec un RabbitMQ vierge
+### Recette : reprise avec un RabbitMQ vierge
 
 Objectif : distinguer les publications encore récupérables depuis MariaDB de
 celles déjà sorties de l'outbox. Cette recette complète `make test-backup`, qui
-vérifie les données sans consommateur. Les étapes ci-dessous n'ont pas été
-exécutées pour cette recette.
+vérifie les données sans consommateur.
 
 1. Sur la même révision, utiliser deux projets Compose neufs, séquentiels si
    le créneau l'exige : aucun port publié ni réseau partagé, base tmpfs,
@@ -109,6 +108,28 @@ exécutées pour cette recette.
 Le scénario est limité aux commandes de construction. Elle ne définit aucune
 réémission pour B, ne remplace pas les réconciliations déjà présentes et
 n'autorise aucune reconstruction globale.
+
+#### Résultat observé le 24 novembre 2026
+
+Recette exécutée sur le code `678eb22b6310528696158780ef2dbc672c8d9a0a`
+avec MariaDB et AMQP réels, dans deux projets jetables séquentiels. Les
+deux commandes de bâtiment proviennent du service métier natif ; elles
+ne concernent aucun compte réel. A et B visaient chacune le passage de la
+mine de métal du niveau 0 au niveau 1.
+
+| Point de contrôle | File AMQP | A | B |
+| --- | --- | --- | --- |
+| Source avant sauvegarde | 1 tâche prête (B) | Échue, outbox présente, niv. 0 | Échue, outbox retirée, niv. 0 |
+| Cible avant les processus de jeu | Vide | Échue, outbox présente, niv. 0 | Échue, outbox absente, niv. 0 |
+| Cible après relais, worker et seconde passe vide | Vide | Clôturée, outbox absente, niv. 1 | Échue, outbox absente, niv. 0 |
+
+Un premier passage avec un classement encore à calculer a effectivement
+terminé B avant le démarrage du worker. La preuve du tableau isole les
+deux voies en réalisant d'abord le classement quotidien par le relais
+normal, sans le désactiver. Les deux projets, leurs volumes/réseaux et le
+dump privé de la recette ont été supprimés. Cette recette ne démontre
+ni une restauration de production ni une reprise automatique des tâches
+déjà sorties de l'outbox.
 
 ## Images des guildes
 
