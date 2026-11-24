@@ -708,16 +708,12 @@ final class AdventTest extends WebTestCase
     public function testAdminShowsClosedMissingReadoutWithoutOfferingRecovery(): void
     {
         $admin = $this->player('AdventClosedReadoutAdmin', admin: true);
-        $adminId = $admin->id;
-        $id = $this->publishConsolidated($admin);
+        // Une courte période publiée par le formulaire natif isole la clôture
+        // sans introduire de saut de temps qui invaliderait la session.
+        $id = $this->publishConsolidated($admin, '2026-12-01T00:03');
         $edition = $this->em->find(AdventEdition::class, $id);
         self::assertInstanceOf(AdventEdition::class, $edition);
         $this->clock->sleep($edition->closesAt->getTimestamp() - $this->clock->now()->getTimestamp());
-        // Avancer d’un mois expire la session ; la consultation après clôture
-        // se fait avec une nouvelle session administrateur normale.
-        $admin = $this->em->find(Player::class, $adminId);
-        self::assertInstanceOf(Player::class, $admin);
-        $this->client->loginUser($admin);
         $this->client->request('GET', '/admin/events/avent');
         self::assertResponseIsSuccessful();
         $selector = '[data-advent-readout="'.$id.'"]';
@@ -790,7 +786,7 @@ final class AdventTest extends WebTestCase
         return $edition->id;
     }
 
-    private function publishConsolidated(Player $admin): int
+    private function publishConsolidated(Player $admin, string $until = '2027-01-01T00:00'): int
     {
         $this->client->loginUser($admin);
         $crawler = $this->client->request('GET', '/admin/events/avent');
@@ -799,7 +795,7 @@ final class AdventTest extends WebTestCase
         $token = $crawler->filter('.admin-event-form input[name="_token"]')->attr('value');
         $this->client->request('POST', '/admin/events/avent', [
             '_token' => $token, 'name' => 'Avent synthétique', 'season' => 2026, 'universe' => $admin->currentPlayerUniverse->universe->id,
-            'from' => '2026-12-01T00:00', 'until' => '2027-01-01T00:00',
+            'from' => '2026-12-01T00:00', 'until' => $until,
             'options' => array_fill(1, 24, [['metal' => '7'], ['nano' => '3']]),
         ]);
         self::assertResponseStatusCodeSame(303);
