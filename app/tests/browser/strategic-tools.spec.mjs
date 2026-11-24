@@ -61,12 +61,14 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
     expect(right.top).toBeGreaterThanOrEqual(left.bottom);
    }
    const next=page.getByRole('link',{name:'Continuer : défenses'});
-   const tables=shipsStep.locator('.simulation-board-unit-scroll');
+   const tables=shipsStep.getByRole('table');
    for (const table of await tables.all()) {
     expect(await table.evaluate(el=>el.scrollWidth<=el.clientWidth+1), 'les trois rangs tiennent dans la carte').toBe(true);
    }
    await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
-   if (viewport.width===1920) await expect(next).toBeInViewport({ratio:1});
+   for (const card of await cards.all()) {
+    expect(await card.evaluate(el => el.querySelector('tbody tr:last-child').getBoundingClientRect().bottom <= el.getBoundingClientRect().bottom)).toBe(true);
+   }
    await page.screenshot({path:testInfo.outputPath('P13-wizard-ships-'+theme+'-'+viewport.width+'.png'),scale:'css',animations:'disabled'});
    await next.focus();
    await page.keyboard.press('Enter');

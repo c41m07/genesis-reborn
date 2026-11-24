@@ -265,7 +265,7 @@ body.authenticated .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a:not([
 .galaxy-list-toolbar .galaxy-index-filter:not([hidden]) { flex:1 1 min(100%,14rem); }
 .galaxy-list-toolbar .galaxy-index-filter input { min-width:0; width:100%; }
 
-/* Les commandes des stations restent des boutons DOM : on peut les lire et les activer sans viser le dessin. */
+/* Les liens des stations gardent une cible tactile plus large que leur dessin. */
 [data-gv2-local-first-steps][hidden], .gv2-stations[hidden], .gv2-station[hidden], .gv2-station-detail[hidden] { display:none; }
 .gv2-stations { position:absolute; inset:0; z-index:4; pointer-events:none; }
 .gv2-station {
@@ -280,7 +280,7 @@ body.authenticated .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a:not([
     display:block; width:min(19px,var(--planet-diameter,24px)); height:min(19px,var(--planet-diameter,24px));
     object-fit:contain; pointer-events:none; filter:drop-shadow(0 1px 2px #000);
 }
-.gv2-station:is(:hover,[aria-expanded=true],:focus-visible) img {
+.gv2-station:is(:hover,:focus-visible) img {
     width:min(23px,var(--planet-diameter,24px)); height:min(23px,var(--planet-diameter,24px));
 }
 .gv2-station:focus-visible { outline:2px solid #77d5e9; outline-offset:-5px; border-radius:50%; }

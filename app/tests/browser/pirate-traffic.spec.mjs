@@ -18,7 +18,7 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
       return fill.call(this, text, x, y, ...rest);
     };
     CanvasRenderingContext2D.prototype.stroke = function (...args) {
-      if (this.canvas.classList.contains('gv2-canvas--galaxy') && this.strokeStyle === '#00e676') window.testOwnedRing = true;
+      if (this.canvas.classList.contains('gv2-canvas--galaxy') && this.strokeStyle === '#00e676' && this.lineWidth >= 3) window.testOwnedRing = true;
       return stroke.apply(this, args);
     };
   });
@@ -89,7 +89,7 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
   await expect(page.locator('.gv2-flight-log [data-campaign-kind="scout"]')).toBeVisible();
   await expect(page.locator('.gv2-flight-log [data-campaign-kind="pirates"]')).toHaveCount(0);
 
-  const station = page.getByRole('button', { name: 'Station pirate repérée, aucune case planétaire', exact: true });
+  const station = page.getByRole('link', { name: 'Station pirate repérée, aucune case planétaire', exact: true });
   const enter = page.getByRole('button', { name: 'Entrer dans le système', exact: true });
   await expect(shell).toHaveAttribute('data-view', 'galaxy');
   await expect(page.getByRole("button", { name: /Votre monde/ })).toBeVisible();
@@ -109,7 +109,8 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
   expect(reported).toHaveLength(1);
   expect(reported[0]).toMatchObject({ kind: 'pirates', mission: 1, systems: [system], eta: null });
   expect(Object.keys(reported[0]).sort()).toEqual(['eta', 'kind', 'label', 'mission', 'overdue', 'systems']);
-  await expect.poll(() => page.evaluate(() => window.testGalaxyGlyphs.has('P'))).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.testOwnedRing)).toBe(true);
+  expect(await page.evaluate(() => ['P', '◆', '◇'].some(symbol => window.testGalaxyGlyphs.has(symbol)))).toBe(false);
   await expect(station).toHaveCount(0);
   const viewData = JSON.parse(await shell.getAttribute('data-galaxy-v2-map-value'));
   const own = viewData.systems.find(row => row.id === system);
@@ -160,15 +161,13 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
     const screen = await mobile.newPage();
     await screen.goto(new URL(mapUrl, page.url()).href);
     await screen.getByRole('button', { name: 'Entrer dans le système', exact: true }).tap();
-    const mobileStation = screen.getByRole('button', { name: 'Station pirate repérée, aucune case planétaire', exact: true });
+    const mobileStation = screen.getByRole('link', { name: 'Station pirate repérée, aucune case planétaire', exact: true });
     await expect(mobileStation).toBeVisible();
-    await mobileStation.tap();
-    await expect(screen.locator('#gv2-station-detail')).toBeVisible();
-    await mobileStation.tap();
-    await expect(screen.locator('#gv2-station-detail')).toBeHidden();
     expect(await screen.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
     await mobileStation.scrollIntoViewIfNeeded();
     await screen.screenshot({ path: info.outputPath('stations-390x844.png'), animations: 'disabled' });
+    await mobileStation.tap();
+    await expect(screen).toHaveURL(/\/evenements\/campagne-pirate$/);
   } finally {
     await mobile.close();
   }

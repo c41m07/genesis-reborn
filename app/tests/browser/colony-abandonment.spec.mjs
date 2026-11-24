@@ -79,7 +79,9 @@ for(const touch of [false,true]) test('Abandon confirmé : pertes, trace et cont
       await input.press('Tab');
       await expect(page.getByRole('link',{name:'Conserver cette colonie',exact:true})).toBeFocused();
       await page.keyboard.press('Tab');await expect(confirm).toBeFocused();
-      expect(await confirm.evaluate(e=>e.matches(':focus-visible') && getComputedStyle(e).outlineStyle==='solid' && parseFloat(getComputedStyle(e).outlineWidth)>0)).toBeTruthy();
+      const keyboardFocus = confirm.and(page.locator(':focus-visible'));
+      await expect(keyboardFocus).toHaveCSS('outline-style', 'solid');
+      await expect.poll(() => keyboardFocus.evaluate(button => parseFloat(getComputedStyle(button).outlineWidth))).toBeGreaterThan(0);
     }
     const guide = page.locator('.first-steps-popup-enhanced[open] .first-steps-popup-panel:visible');
     await expect(guide).toBeVisible();

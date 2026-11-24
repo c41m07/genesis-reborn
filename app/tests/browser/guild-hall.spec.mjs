@@ -18,7 +18,7 @@ async function register(page, key) {
     await expect(page).toHaveURL(/planetes\/\d+$/);
 }
 
-test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Galaxie', async ({ page, browser, baseURL }, testInfo) => {
+test('Pilote Hall : don natif, confirmation du commandant et présentation depuis Galaxie', async ({ page, browser, baseURL }, testInfo) => {
     test.skip(process.env.GUILD_HALL_BROWSER_FIXTURE !== '1', 'Seuil positif réservé au pilote isolé.');
     const key = crypto.randomUUID().slice(0, 8);
     await page.addInitScript(() => {
@@ -160,7 +160,7 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
         await screen.getByLabel('Système à revendiquer').selectOption(String(system));
         await screen.getByLabel('Je confirme l’emplacement de mon Hall.').check();
         await screen.getByRole('button', { name: 'Installer le Hall' }).click();
-        await expect(screen.getByText(/Installé à la position 0/)).toBeVisible();
+        await expect(screen.getByText(/Installé dans le système/)).toBeVisible();
         const installed = screen.getByRole('region', { name: 'Hall installé' });
         await expect(installed.getByRole('heading', { name: 'Dons clos' })).toBeVisible();
         await expect(screen.getByRole('region', { name: 'Placer le Hall' })).toHaveCount(0);
@@ -170,7 +170,7 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
         await installed.getByRole('link', { name: 'Voir le système dans Galaxie' }).press('Enter');
         await expect(screen).toHaveURL(/\/carte-v2\?/);
         await screen.goto('/carte?galaxy=' + galaxy + '&system=' + system);
-        await expect(screen.locator('[data-system-guild-hall]')).toContainText('Position 0 · Hall de guilde · [HAL]');
+        await expect(screen.locator('[data-system-guild-hall]')).toContainText('Hall de guilde · [HAL]');
     } finally {
         await native.close();
     }
@@ -181,11 +181,11 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
     const shell = page.locator('.galaxy-v2');
     const map = JSON.parse(await shell.getAttribute('data-galaxy-v2-map-value'));
     const site = map.systems.find(row => row.id === system);
-    expect(site.hall).toEqual({ position: 0, tag: 'HAL' });
+    expect(site.hall).toEqual({ position: 0, tag: 'HAL', profileUrl: '/guildes/' + guild });
     const search = page.getByRole('searchbox', { name: 'Rechercher un système ou une planète connue' });
     await search.fill(site.name);
     await page.locator('.gv2-search-results button').filter({ hasText: site.name }).first().focus();
-    const code = site.galaxy + ':' + site.number;
+    const code = '[HAL] ' + site.galaxy + ':' + site.number;
     await expect.poll(() => page.evaluate(key => Boolean(window.hallPoints[key]), code)).toBe(true);
     const point = await page.evaluate(key => window.hallPoints[key], code);
     await search.fill('');
@@ -193,12 +193,14 @@ test('Pilote Hall : don natif, confirmation du commandant et position 0 dans Gal
     await canvas.scrollIntoViewIfNeeded();
     const bounds = await canvas.boundingBox();
     await page.mouse.move(bounds.x + point.x, bounds.y + point.y);
-    await expect(page.locator('.gv2-tooltip-facts')).toContainText('[HAL] · Position 0');
+    await expect(page.locator('.gv2-tooltip-coordinates')).toHaveText(code);
     await expect(page.getByRole('complementary', { name: 'Informations sur le système sélectionné' }).locator('[data-system-guild-hall]')).toContainText('[HAL]');
     await page.getByRole('button', { name: 'Entrer dans le système' }).click();
     await expect(shell).toHaveAttribute('data-view', 'system');
-    const station = page.getByRole('button', { name: 'Hall de guilde [HAL] · Position 0', exact: true });
+    const station = page.getByRole('link', { name: 'Hall de guilde [HAL]', exact: true });
     await expect(station).toBeVisible();
     await expect.poll(() => station.locator('img').evaluate(image => image.naturalWidth)).toBe(192);
-    await expect(page.getByRole('button', { name: /Station pirate/ })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /Station pirate/ })).toHaveCount(0);
+    await station.press('Enter');
+    await expect(page).toHaveURL(new RegExp('/guildes/' + guild + '$'));
 });

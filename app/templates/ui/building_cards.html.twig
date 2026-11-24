@@ -38,16 +38,16 @@
                 {% set affordable = true %}
                 {% for resource, cost in card.costs %}{% if cost > resources[resource].stock %}{% set affordable = false %}{% endif %}{% endfor %}
                 {% set count = leveled ? card.level : card.quantity %}
-                {% set compactCount = leveled ? count|number_format(0, ',', ' ') : count|compact_number %}
                 {% set stockStatus = leveled ? 'Niveau '~card.level : card.quantity|number_format(0, ',', ' ')~' unités possédées' %}
                 {% set missingLocalLaboratory = card.missing_research_laboratory|default(null) %}
                 {% set upgradeable = not missingLocalLaboratory and not vacation and not locked and not card.maximum and affordable and not queueFull and not card.capacity_full|default(false) %}
                 {% set tabId = 'building-tab-'~slug~'-'~card.tier %}
-                {# Le nom accessible suit le libellé et le compteur visibles ; le statut décrit les conditions. #}
+                {# La description accessible précise le stock et la raison d’une commande indisponible. #}
                 <a id="{{ tabId }}" href="#item-{{ slug }}-{{ card.tier }}" class="building-rank-tab {{ locked ? 'is-locked' : '' }}" data-building-catalog-target="tab" data-tier="{{ card.tier }}" data-locked="{{ locked ? 'true' : 'false' }}" data-action="building-catalog#select keydown->building-catalog#navigate" aria-describedby="{{ tabId }}-status" {% if locked and not show_locked_items %}hidden{% endif %}>
                     <span id="{{ tabId }}-name"><span class="building-rank-full">{{ card.definition._tier_label }}</span><span class="building-rank-short">{{ {basic:'Basique',intermediate:'Interm.',superior:'Sup.'}[card.tier] }}</span></span>
-                    {# Le verrou porte sur les nouvelles commandes, pas sur les possessions conservées. #}
-                    <span class="building-rank-indicators">{% if locked and count == 0 %}<span id="{{ tabId }}-count" class="building-rank-cross">×</span>{% else %}{% if upgradeable %}<span class="building-rank-up">{{ ui.icon('arrow') }}</span>{% endif %}<span id="{{ tabId }}-count" class="building-rank-level" title="{{ count|number_format(0, ',', ' ') }} {{ leveled ? 'niveaux' : 'unités possédées' }}">{{ compactCount }}</span>{% endif %}</span>
+                    {% if upgradeable %}
+                        <span class="building-rank-up" aria-hidden="true">{{ ui.icon('arrow') }}</span>
+                    {% endif %}
                     <span id="{{ tabId }}-status" hidden>
                         {{ card.definition._tier_label }} ·
                         {% if locked %}
@@ -129,7 +129,9 @@
                         {% include 'ui/core_construction_benefit.html.twig' %}
                     {% endif %}
                     {% if card.economic|default(null) %}{% include 'ui/economic_units.html.twig' with {state:card.economic,definition:d} %}{% endif %}
-                    {% if card.maximum or card.failures or vacation %}<div class="catalog-blocked">
+                    {% set missingLaboratory = card.missing_research_laboratory|default(null) %}
+                    {% set blockedCard = card.maximum or card.failures or missingLaboratory or vacation %}
+                    {% if blockedCard %}<div class="catalog-blocked">
                         {% if not leveled %}
                             <div class="core-construction-order">
                                 {% include 'ui/core_construction_quantity.html.twig' with {inactive: true} %}
@@ -143,15 +145,20 @@
                         {% if nextRank and not maximumPending %}
                             <p class="catalogue-next-rank"><a href="{{ catalogue_item_url(planet.id, group, slug, nextRank.tier) }}">Rang suivant : {{ nextRank.definition.label }} · {{ nextRank.definition._tier_label }} {{ ui.icon('arrow') }}</a></p>
                         {% endif %}
-                    {% elseif card.failures %}<p class="requirement">{{ ui.icon('diplomacy') }} <span>Nécessite : {% for requirement in card.details.requirements|filter(requirement => not requirement.met) %}<a href="{{ catalogue_item_url(planet.id, requirement.group, requirement.slug, requirement.rank) }}">{{ requirement.label }} · {{ requirement.tier }}{% if requirement.required is not null %} · niveau {{ requirement.required }}{% endif %}</a>{% if not loop.last %}, {% endif %}{% else %}{{ card.failures|join(', ') }}{% endfor %}</span></p>
-                    {% elseif card.missing_research_laboratory|default(null) %}
-                        <p class="requirement">
-                            {{ ui.icon('diplomacy') }}
-                            <span>Installez le bâtiment
-                                <a href="{{ catalogue_item_url(planet.id, 'buildings', 'lab', card.tier) }}">{{ card.missing_research_laboratory }} de niveau 1</a>
-                                sur cette colonie pour lancer la recherche.
-                            </span>
-                        </p>
+                    {% elseif card.failures or missingLaboratory %}
+                        <details class="catalog-prerequisites" data-catalog-disclosure="requirements-{{ group }}-{{ slug }}-{{ card.tier }}">
+                            <summary>Prérequis manquants</summary>
+                            <ul class="card-benefits-content">
+                                {% for requirement in card.details.requirements|filter(requirement => card.failures and not requirement.met) %}
+                                    <li><a href="{{ catalogue_item_url(planet.id, requirement.group, requirement.slug, requirement.rank) }}">{{ requirement.label }} · {{ requirement.tier }}{% if requirement.required is not null %} · niveau {{ requirement.required }}{% endif %}</a></li>
+                                {% else %}
+                                    {% for failure in card.failures %}<li>{{ failure }}</li>{% endfor %}
+                                {% endfor %}
+                                {% if missingLaboratory %}
+                                    <li>Sur cette colonie : <a href="{{ catalogue_item_url(planet.id, 'buildings', 'lab', card.tier) }}">{{ missingLaboratory }} de niveau 1</a></li>
+                                {% endif %}
+                            </ul>
+                        </details>
                     {% elseif vacation %}<p class="requirement">Mode vacances : les constructions et recherches sont suspendues.</p>
                     {% else %}
                         {% set missingResources = card.payment.missing %}
@@ -185,7 +192,11 @@
                             </div>
                         </form>
                     {% endif %}
-                    {% if card.maximum or card.failures or vacation %}<button type="button" class="secondary full catalog-blocked-action" disabled>{{ card.maximum ? (maximumPending ? 'Niveau maximum en file' : 'Niveau maximum atteint') : (card.failures ? 'Prérequis manquants' : 'Mode vacances') }}</button></div>{% endif %}
+                    {% if blockedCard %}
+                        {% if card.maximum or vacation %}
+                            <button type="button" class="secondary full catalog-blocked-action" disabled>{{ card.maximum ? (maximumPending ? 'Niveau maximum en file' : 'Niveau maximum atteint') : 'Mode vacances' }}</button>
+                        {% endif %}
+                    </div>{% endif %}
                     {% if not leveled or (not card.maximum and card.benefits) %}
                         <div class="core-unit-details">{% include 'ui/catalogue_benefits.html.twig' %}</div>
                     {% endif %}

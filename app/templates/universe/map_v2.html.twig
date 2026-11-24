@@ -72,15 +72,15 @@
                 <canvas class="gv2-canvas gv2-canvas--system" data-galaxy-v2-target="systemCanvas" aria-label="Vue du système solaire. Cliquez sur une planète pour ouvrir sa vue rapprochée ; sa fiche est accessible dans la liste."></canvas>
                 <canvas class="gv2-canvas gv2-canvas--planet" data-galaxy-v2-target="planetCanvas" aria-label="Vue rapprochée de la planète"></canvas>
                 <div class="gv2-stations" data-galaxy-v2-target="stations" hidden
-                     data-action="pointerover->galaxy-v2#stationHover pointerout->galaxy-v2#stationLeave focusin->galaxy-v2#stationFocus focusout->galaxy-v2#stationBlur click->galaxy-v2#stationToggle">
-                    <button type="button" class="gv2-station gv2-station--hall" data-galaxy-v2-target="hallStation" aria-label="Hall de guilde, Position 0" aria-expanded="false" aria-controls="gv2-station-detail" hidden>
+                     data-action="pointerover->galaxy-v2#stationHover pointerout->galaxy-v2#stationLeave focusin->galaxy-v2#stationFocus focusout->galaxy-v2#stationBlur">
+                    <a class="gv2-station gv2-station--hall" data-galaxy-v2-target="hallStation" aria-label="Hall de guilde" hidden>
                         <img data-src="{{ asset('images/map/hall-guilde.png') }}" alt="" width="19" height="19">
-                        <span class="gv2-station-label" aria-hidden="true">Hall de guilde · Position 0</span>
-                    </button>
-                    <button type="button" class="gv2-station gv2-station--pirate" data-galaxy-v2-target="pirateStation" aria-label="Station pirate repérée, aucune case planétaire" aria-expanded="false" aria-controls="gv2-station-detail" hidden>
+                        <span class="gv2-station-label" aria-hidden="true">Hall de guilde</span>
+                    </a>
+                    <a class="gv2-station gv2-station--pirate" data-galaxy-v2-target="pirateStation"{% if campaignAccessible %} href="{{ path('app_pirate_campaign') }}"{% endif %} aria-label="Station pirate repérée, aucune case planétaire" hidden>
                         <img data-src="{{ asset('images/map/station-pirate.png') }}" alt="" width="19" height="19">
                         <span class="gv2-station-label" aria-hidden="true">Station pirate</span>
-                    </button>
+                    </a>
                     <div id="gv2-station-detail" class="gv2-station-detail" role="status" data-galaxy-v2-target="stationDetail" hidden>
                         <strong data-galaxy-v2-target="stationTitle"></strong>
                         <small data-galaxy-v2-target="stationText"></small>
@@ -125,7 +125,7 @@
                 <button type="button" class="gv2-action-link gv2-enter-system" data-action="click->galaxy-v2#enterSelectedSystem">Entrer dans le système</button>
                 <ul class="gv2-planet-list">{% for p in row.planets|sort((a,b)=>a.position<=>b.position) %}
                     <li><button type="button" class="gv2-planet-choice" data-action="click->galaxy-v2#selectPlanet" data-planet-id="{{ p.id }}">
-                        <span class="gv2-planet-number">{{ '%02d'|format(p.position) }}</span><span class="gv2-planet-choice-name">{{ p.name }}</span>
+                        <span class="gv2-planet-number">{{ '%02d'|format(p.position) }}</span><span class="gv2-planet-choice-name">{% if p.name != (system.name ~ ' · ' ~ p.position) %}{{ p.name }}{% endif %}</span>
                         {% set relation = map_planet_relations[p.id] %}
                         <span class="gv2-planet-owner"><span class="gv2-marker gv2-marker--{{ relation }}" aria-hidden="true">{{ relation_symbols[relation] }}</span> {{ relation_labels[relation] }}{% if relation == 'npc' %} · niv. {{ p.conquestLevel }}{% elseif p.owner and relation != 'own' %} · {{ p.owner.displayName }}{% endif %}</span>
                     </button></li>

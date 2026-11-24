@@ -10,36 +10,34 @@
         {{ camp == 'defender' ? sources[group] : (group == 'research' ? 'Niveaux repris de vos recherches dans cet univers.' : 'Quantités reprises des vaisseaux disponibles de votre colonie.') }}
     </p>
 {% endif %}
-<div class="table-scroll simulation-board-unit-scroll" tabindex="0" role="region" aria-label="{{ heading }} · {{ title }} · tableau défilant">
-    <table class="data-table">
-        <caption class="visually-hidden">{{ heading }} · {{ title }} · niveaux ou quantités</caption>
-        <thead><tr><th scope="col">Élément</th>
+<table class="data-table">
+    <caption class="visually-hidden">{{ heading }} · {{ title }} · niveaux ou quantités</caption>
+    <thead><tr><th scope="col">Élément</th>
+    {% for tier, label in tiers %}
+        <th scope="col"{% if tier == 'intermediate' %} aria-label="{{ label }}"{% endif %}>
+            {% if tier == 'intermediate' %}<span class="simulation-tier-long">{{ label }}</span><span class="simulation-tier-short" aria-hidden="true">Interm.</span>{% else %}{{ label }}{% endif %}
+        </th>
+    {% endfor %}
+    </tr></thead>
+    <tbody>
+    {% for slug, definition in definitions|filter(definition => camp == 'defender' or definition.economic_unit is not defined) %}
+        <tr><th scope="row">{{ definition.label }}</th>
         {% for tier, label in tiers %}
-            <th scope="col"{% if tier == 'intermediate' %} aria-label="{{ label }}"{% endif %}>
-                {% if tier == 'intermediate' %}<span class="simulation-tier-long">{{ label }}</span><span class="simulation-tier-short" aria-hidden="true">Interm.</span>{% else %}{{ label }}{% endif %}
-            </th>
+            {% set inputId = 'sim-' ~ camp ~ '-' ~ group ~ '-' ~ slug ~ '-' ~ tier %}
+            {% set name = group == 'fortress' ? 'forces[defender][fortress][' ~ tier ~ ']' : 'forces[' ~ camp ~ '][' ~ group ~ '][' ~ slug ~ '][' ~ tier ~ ']' %}
+            {% set value = group == 'fortress' ? (forces[camp].fortress[tier] is defined ? forces[camp].fortress[tier] : (unknown ? '' : 0)) : (forces[camp][group][slug][tier] is defined ? forces[camp][group][slug][tier] : (unknown ? '' : 0)) %}
+            <td>
+                <label class="visually-hidden" for="{{ inputId }}">{{ title }} · {{ definition.label }} · {{ label }}</label>
+                <input id="{{ inputId }}" name="{{ name }}" type="number" min="0"
+                       max="{{ group in ['research', 'fortress'] ? definition.max_level|default(25) : max_units }}"
+                       value="{{ value }}" {% if unknown %}placeholder="?"{% else %}required{% endif %}
+                       {% if intel and camp == 'defender' or camp == 'attacker' and own_source %}aria-describedby="{{ infoId }}"{% endif %}>
+            </td>
         {% endfor %}
-        </tr></thead>
-        <tbody>
-        {% for slug, definition in definitions|filter(definition => camp == 'defender' or definition.economic_unit is not defined) %}
-            <tr><th scope="row">{{ definition.label }}</th>
-            {% for tier, label in tiers %}
-                {% set inputId = 'sim-' ~ camp ~ '-' ~ group ~ '-' ~ slug ~ '-' ~ tier %}
-                {% set name = group == 'fortress' ? 'forces[defender][fortress][' ~ tier ~ ']' : 'forces[' ~ camp ~ '][' ~ group ~ '][' ~ slug ~ '][' ~ tier ~ ']' %}
-                {% set value = group == 'fortress' ? (forces[camp].fortress[tier] is defined ? forces[camp].fortress[tier] : (unknown ? '' : 0)) : (forces[camp][group][slug][tier] is defined ? forces[camp][group][slug][tier] : (unknown ? '' : 0)) %}
-                <td>
-                    <label class="visually-hidden" for="{{ inputId }}">{{ title }} · {{ definition.label }} · {{ label }}</label>
-                    <input id="{{ inputId }}" name="{{ name }}" type="number" min="0"
-                           max="{{ group in ['research', 'fortress'] ? definition.max_level|default(25) : max_units }}"
-                           value="{{ value }}" {% if unknown %}placeholder="?"{% else %}required{% endif %}
-                           {% if intel and camp == 'defender' or camp == 'attacker' and own_source %}aria-describedby="{{ infoId }}"{% endif %}>
-                </td>
-            {% endfor %}
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
 {% if unknown %}
     <p class="simulation-wizard-unknown">« ? » signifie non révélé, pas zéro. Vous pouvez formuler une hypothèse ici.</p>
 {% endif %}

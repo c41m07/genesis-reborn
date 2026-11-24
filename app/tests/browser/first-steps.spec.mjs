@@ -138,7 +138,7 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     const target = new URL(overview);
     target.searchParams.set('section', 'buildings');
     await page.goto(target.href);
-    await expect(page.locator('#building-tab-mine_metal-basic .building-rank-level')).toHaveText('1');
+    await expect(page.locator('#item-mine_metal-basic .catalogue-level-badge')).toHaveText('Niv. 1');
     await page.goto('/premiers-pas');
     await expect(progress).toHaveAttribute('value', '1');
     const refunds = page.getByRole('region', { name: 'Remboursements disponibles', exact: true });
@@ -675,7 +675,7 @@ test('Le dernier vrai jalon masque la languette dans cet empire, sans retirer le
     await mine.getByRole('button', { name: 'Améliorer au niveau 1', exact: true }).click();
     accelerateQueuedItem(project, email, 'building', 'mine_metal');
     await page.goto(origin + '?section=buildings');
-    await expect(page.locator('#building-tab-mine_metal-basic .building-rank-level')).toHaveText('1');
+    await expect(page.locator('#item-mine_metal-basic .catalogue-level-badge')).toHaveText('Niv. 1');
 
     // Les dix autres jalons du passé sont préparés en DB jetable. L’exercice manquant est lancé dans le vrai formulaire.
     const past = ['power_plant', 'nano_workshop', 'metal_storage', 'laboratory', 'research', 'assembly_yard',
@@ -733,7 +733,7 @@ test('Un guide fermé relit le jalon acquis dans un autre onglet, puis masque un
         await other.locator('#item-mine_metal-basic').getByRole('button', { name: 'Améliorer au niveau 1', exact: true }).click();
         accelerateQueuedItem(process.env.BROWSER_ROUTER, email, 'building', 'mine_metal');
         await other.goto(overview + '?section=buildings');
-        await expect(other.locator('#building-tab-mine_metal-basic .building-rank-level')).toHaveText('1');
+        await expect(other.locator('#item-mine_metal-basic .catalogue-level-badge')).toHaveText('Niv. 1');
         expect(reads).toHaveLength(0);
 
         await arrow.press('Enter');

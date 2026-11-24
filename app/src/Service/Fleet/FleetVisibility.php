@@ -26,9 +26,46 @@ final class FleetVisibility
             $owner=$fleet->playerUniverse->id;
             $allies[$owner]??=$this->relations->allied($viewer,$fleet->playerUniverse);
             if(!$this->visible($viewer,$fleet,$known,$level,$now,$allies[$owner])) continue;
-            $rows[]=$this->row($viewer,$fleet,$known);
+            $row = $this->row($viewer, $fleet, $known);
+            // Une attaque détectée ne révèle ni son départ ni sa progression précise.
+            $row['localLegs'] = $row['departureAt'] && !($row['recallRoute']['hidden'] ?? false)
+                ? $this->localLegs($fleet, $known, $row['ownedByCurrentPlayer']) : [];
+            $rows[] = $row;
         }
         return $rows;
+    }
+
+    /**
+     * Les durées figées au départ placent les frontières de l’hyperespace sur la progression du vol.
+     * La carte ne reçoit que les segments locaux autorisés, sans carburant ni vitesse des vaisseaux.
+     * @return list<array{systemId:int, from:int, to:int, start:float, end:float}>
+     */
+    private function localLegs(Fleet $fleet, array $known, bool $own): array
+    {
+        $navigation = $fleet->navigation;
+        $duration = $navigation['seconds'] ?? 0;
+        $segments = [];
+        $elapsed = 0.0;
+        if ($duration <= 0 || !in_array($fleet->status, ['traveling', 'returning'], true)) {
+            return [];
+        }
+        foreach ($navigation['legs'] ?? [] as $leg) {
+            $start = $elapsed / $duration;
+            $elapsed += $leg['seconds'];
+            $systemId = $leg['from'][0];
+            if ($leg['hyper'] || $systemId !== $leg['to'][0] || (!$own && !isset($known[$systemId]))) {
+                continue;
+            }
+            $segments[] = [
+                'systemId' => $systemId,
+                'from' => $leg['from'][4] ?? 10,
+                'to' => $leg['to'][4] ?? 10,
+                'start' => $start,
+                'end' => $elapsed / $duration,
+            ];
+        }
+
+        return $segments;
     }
 
     public function incoming(PlayerUniverse $viewer, bool $includeDetails = true): array

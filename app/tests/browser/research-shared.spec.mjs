@@ -46,6 +46,8 @@ test('Une recherche ajoutée depuis une autre colonie rejoint la même file et l
     await expect(card).toBeVisible();
     await expect(card.getByRole('button', { name: /Rechercher le niveau 2/ })).toHaveCount(0);
     const laboratoryLink = card.getByRole('link', { name: 'Laboratoire colonial de niveau 1', exact: true });
+    await expect(laboratoryLink).toBeHidden();
+    await card.locator('.catalog-prerequisites summary').press('Enter');
     await expect(laboratoryLink).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
     await laboratoryLink.press('Enter');
@@ -102,6 +104,7 @@ test('Une recherche avancée débloquée dans l’empire demande son laboratoire
     const research = page.locator('#item-engineering_foundations-intermediate');
     await expect(research).toBeVisible();
     await expect(research.getByRole('button', { name: /Rechercher le niveau 1/ })).toHaveCount(0);
+    await research.locator('.catalog-prerequisites summary').click();
     await research.getByRole('link', { name: 'Institut de recherche orbitale de niveau 1', exact: true }).click();
     await expect(page.locator('#item-lab-intermediate').getByRole('heading', { name: 'Institut de recherche orbitale', exact: true })).toBeVisible();
 
