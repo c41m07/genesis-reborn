@@ -116,6 +116,34 @@ final class TransportTest extends WebTestCase
         self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM report_notice'));
         self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM diplomatic_report'));
         self::assertSame([], $tool->getUpdateSchemaSql($this->em->getMetadataFactory()->getAllMetadata()));
+
+        // Le schéma réellement migré doit accepter le quatrième type et en exiger un seul.
+        $recipient = $this->recipient->currentPlayerUniverse;
+        $report = new DiplomaticReport($recipient, $this->sender->currentPlayerUniverse, 'orbit', 'requested', null, null, $this->clock->now());
+        $this->em->persist($report);
+        $this->em->persist(new ReportNotice($recipient, $report));
+        $this->em->flush();
+        self::assertSame(1, (int) $connection->fetchOne(
+            'SELECT COUNT(*) FROM report_notice WHERE player_universe_id = ? AND diplomatic_report_id = ?',
+            [$recipient->id, $report->id],
+        ));
+        $check = (string) $connection->fetchOne(
+            "SELECT CHECK_CLAUSE FROM information_schema.CHECK_CONSTRAINTS
+             WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'report_notice' AND CONSTRAINT_NAME = 'report_notice_one_report'",
+        );
+        self::assertSame(
+            ['combat_log_id', 'espionage_report_id', 'transport_report_id', 'diplomatic_report_id'],
+            array_column((static function (string $clause): array {
+                preg_match_all('/`?(\w+)`?\s+is\s+not\s+null/i', $clause, $parts, PREG_SET_ORDER);
+                return $parts;
+            })($check), 1),
+        );
+        try {
+            $connection->insert('report_notice', ['player_universe_id' => $recipient->id]);
+            self::fail('La base migrée ne doit pas accepter une notice sans rapport.');
+        } catch (\Doctrine\DBAL\Exception\DriverException $exception) {
+            self::assertStringContainsString('report_notice_one_report', $exception->getMessage());
+        }
     }
 
     public function testUnreadTransportIsCreatedAtDepartureAndOnlyMarksOneAuthorizedReader(): void
