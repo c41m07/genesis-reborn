@@ -8,6 +8,15 @@
 - Le périmètre livré et les objectifs sont dans [README.md](README.md), [docs/README.md](docs/README.md) et [docs/FEUILLE_DE_ROUTE.md](docs/FEUILLE_DE_ROUTE.md). Les documents de `docs/archives/` sont historiques, sauf mention contraire ; leur index distingue les références conservées des bilans remplacés.
 - Conserver les logos et les SVG d’identité.
 
+## Quand une fonctionnalité est-elle terminée ?
+
+- Avant de coder, définir un critère de fin observable du point de vue du joueur, de l’administrateur ou de l’exploitant. Repérer le parcours qui répond déjà au besoin et les composants préparés pour ce même usage, y compris ceux sans appelant, sans option d’activation ou sans commentaire TODO.
+- Prolonger le parcours existant lorsqu’il convient. Si deux voies couvrent le même besoin, préciser ce que chacune apporte, laquelle fait référence et si elles peuvent déclencher deux fois le même effet. Pour une transition, documenter les données, liens ou messages à préserver et la condition de retrait de l’ancienne voie. Soumettre toute perte de comportement à une décision explicite.
+- Avant de clore le lot, exercer le parcours depuis son entrée réelle jusqu’au résultat attendu. Pour un traitement différé, vérifier aussi le déclencheur, le routage, le worker et l’effet final. Un message mis en file prouve seulement sa mise en file.
+- Vérifier quel service Symfony sélectionne avec la configuration de production livrée et si ses dépendances sont disponibles. Pour une option, vérifier le comportement par défaut et celui obtenu à l’activation. Un test avec un faux fournisseur doit être complété par la vérification du branchement livré. Faire les essais en environnement isolé, sans envoi réel ni exposition de secrets.
+- Consigner dans la PR le critère de fin, le résultat observé et la vérification qui le démontre. Terminer dans le lot tout branchement manquant relevant de son périmètre. Si une dépendance externe ou une décision bloque la suite, garder la fonctionnalité ouverte et inscrire dans le suivi de reprise le blocage, le travail restant et le critère de clôture.
+- Distinguer une fonctionnalité complète et désactivée par décision documentée d’un parcours inachevé. Si le déclenchement dépend d’une configuration du VPS inaccessible depuis le dépôt, indiquer « planification non vérifiable depuis le dépôt » et préciser la vérification d’exploitation restante.
+
 ## Qualité du code et continuité de la refactorisation
 
 - Poursuivre les conventions et la séparation des responsabilités établies dans le projet. Examiner les composants existants et la documentation d’architecture avant d’introduire une nouvelle organisation.
