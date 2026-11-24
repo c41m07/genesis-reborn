@@ -553,25 +553,37 @@ test('Un clic natif avant Stimulus reste une ouverture volontaire du guide', asy
     }
 });
 
-test('Sur Galaxie, l’aperçu et ses commandes restent hors de la carte', async ({ page }) => {
+test('Premiers pas est absent des deux vues Galaxie et revient dans le système local', async ({ page }) => {
     await register(page);
-    await page.goto('/carte-v2');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
     const popup = page.locator('.first-steps-popup');
-    const preview = popup.locator('.first-steps-preview');
-    const canvas = page.locator('.gv2-canvas--galaxy');
-    for (const width of [1440, 390]) {
-        await page.setViewportSize({ width, height: 844 });
+    for (const [width, height] of [[1920, 1080], [390, 844]]) {
+        await page.setViewportSize({ width, height });
+        await page.goto('/carte');
+        await expect(popup).toHaveCount(0);
+        await page.goto('/carte-v2');
+        await expect(popup).toBeHidden();
+        const map = page.locator('.gv2-workspace');
+        const data = JSON.parse(await map.getAttribute('data-galaxy-v2-map-value'));
+        const home = data.systems.find(system => system.planets.some(planet => planet.ownedByCurrentPlayer));
+        const search = page.getByRole('searchbox');
+        await search.fill(home.name);
+        await page.locator('.gv2-search-results button').filter({ hasText: home.name }).first().click();
+        await expect(popup).toBeHidden();
+        await page.getByRole('button', { name: 'Entrer dans le système', exact: true }).click();
+        await expect(map).toHaveAttribute('data-view', 'system');
+        const preview = popup.locator('.first-steps-preview');
         await expect(preview).toBeVisible();
         await expect(preview.getByRole('button', { name: 'Voir l’étape illustrée' })).toBeEnabled();
         await expect.poll(async () => {
-            const [panel, map] = await Promise.all([popup.boundingBox(), canvas.boundingBox()]);
-            return panel !== null && map !== null && panel.y + panel.height <= map.y;
+            const [panel, canvas] = await Promise.all([popup.boundingBox(), page.locator('.gv2-canvas--system').boundingBox()]);
+            return panel !== null && canvas !== null && panel.y + panel.height <= canvas.y;
         }).toBe(true);
+        await map.locator('[data-galaxy-v2-target=systemBack]').click();
+        await expect(popup).toBeHidden();
     }
-    await openIllustrations(popup);
-    await popup.getByRole('button', { name: 'Fermer', exact: true }).click();
-    await expect(popup).not.toHaveAttribute('open', '');
-    await expect(popup.locator('summary')).toBeFocused();
+    await page.goto('/flottes');
+    await expect(popup.locator('.first-steps-preview')).toBeVisible();
 });
 
 test('L’aperçu ne charge ni fragment ni image et reste fermé dans le même onglet après fermeture', async ({ page }) => {
@@ -590,7 +602,6 @@ test('L’aperçu ne charge ni fragment ni image et reste fermé dans le même o
         '/flottes',
         '/planetes',
         '/rapports',
-        '/carte-v2',
     ];
     const popup = page.locator('.first-steps-popup');
     const arrow = popup.locator('summary');

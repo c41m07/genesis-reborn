@@ -43,6 +43,7 @@ export default class extends Controller {
         'systemPanel', 'systemContent', 'planetPanel', 'planetContent', 'minimapWrap',
         'minimapCanvas', 'fleetLog', 'motionToggle', 'galaxySelect', 'mapHelp',
         'mapMode', 'mapModeLabel', 'legend', 'filterToggle', 'mapSettings', 'layoutButton',
+        'stations', 'hallStation', 'pirateStation', 'stationDetail', 'stationTitle', 'stationText',
     ];
 
     static values = { map: Object, reducedMotion: Boolean };
@@ -50,6 +51,8 @@ export default class extends Controller {
     connect() {
         this.gameMap = this.mapValue;
         this.solarLayoutCache = null;
+        this.localFirstSteps = this.element.closest('main')?.querySelector('[data-gv2-local-first-steps]');
+        this.pinnedStation = this.hoveredStation = this.focusedStation = this.displayedStation = null;
         this.systems = this.gameMap.systems.map((system) => ({ ...system, planets: system.planets || [] }));
         this.systemById = new Map(this.systems.map((system) => [Number(system.id), system]));
         this.flights = (this.gameMap.flights || []).map((flight) => ({
@@ -746,8 +749,8 @@ export default class extends Controller {
 
     systemMarkers(system) {
         if (!system.known) return this.hiddenMarkers.has('unknown') ? [] : [mapMarkers.unknown];
-        const markers = !this.hiddenMarkers.has('own') && system.planets.some((planet) => planet.ownedByCurrentPlayer || planet.relation === 'own')
-            ? [mapMarkers.own] : [];
+        // L’anneau de propriété et les libellés restent natifs ; pas de maison en double sur le système.
+        const markers = [];
         for (const kind of this.campaignBySystem?.get(system.id) ?? []) markers.push(campaignMapMarkers[kind]);
         if (system.hall) markers.push({ symbol: '◆', color: '#f1c374' });
 
@@ -1548,6 +1551,8 @@ export default class extends Controller {
 
     setCanvasMode(mode) {
         this.element.dataset.view = mode;
+        if (this.localFirstSteps) this.localFirstSteps.hidden = mode === 'galaxy';
+        if (mode !== 'system') this.hideStations();
         this.galaxyCanvasTarget.classList.toggle('is-active', mode === 'galaxy');
         this.systemCanvasTarget.classList.toggle('is-active', mode === 'system');
         this.planetCanvasTarget.classList.toggle('is-active', mode === 'planet');
@@ -1601,6 +1606,12 @@ export default class extends Controller {
 
     navigateBack(event) {
         if (event.key !== 'Escape' || event.defaultPrevented || event.target.closest('input, select, textarea')) return;
+        if (this.displayedStation) {
+            this.pinnedStation = this.hoveredStation = this.focusedStation = null;
+            this.updateStationDetail();
+            event.preventDefault();
+            return;
+        }
         if (!this.planetBackTarget.hidden) this.toSystem(true);
         else if (!this.planetPanelTarget.hidden) this.toSystem(true);
         else if (!this.systemPanelTarget.hidden) this.toGalaxy();
@@ -1702,7 +1713,7 @@ export default class extends Controller {
             }
             positions.push(best);
         });
-        return { centerX, centerY, positions };
+        return { centerX, centerY, positions, radiusX, aspect };
     }
 
     advanceSolarLayout(layout, dt) {
@@ -1738,18 +1749,7 @@ export default class extends Controller {
         ctx.scale(mobile ? .45 : .65, mobile ? .45 : .65);
         this.drawStar(ctx, 0, 0, system.starColor || '#ffe28c', this.elapsed);
         ctx.restore();
-        if (system.hall) {
-            // Une petite orbite dédiée figure la position 0 sans créer de cible planète.
-            const radius = (mobile ? 34 : 46) * this.systemScale;
-            ctx.save();
-            ctx.beginPath();
-            ctx.ellipse(centerX, centerY, radius, radius * .65, 0, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(241,195,116,.65)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-            ctx.restore();
-            this.drawMarkers(ctx, [{ symbol: '◆', color: '#f1c374' }], centerX + radius, centerY + 4);
-        }
+
         for (const { planet, x: baseX, y: baseY, radius: orbitRadius, aspect } of positions) {
             const x = centerX + (baseX - layoutX) * this.systemScale;
             const y = centerY + (baseY - layoutY) * this.systemScale;
@@ -1812,6 +1812,115 @@ export default class extends Controller {
             this.drawMarkers(ctx, [{ ...marker, symbol: marker.symbol + (planet.relation === 'npc' ? ' ' + planet.conquestLevel : '') }], x, y - planetRadius - 10);
         }
         this.drawLocalFlights(ctx, system, centerX, centerY);
+        if (this.mode === 'system') this.layoutStations(system, centerX, centerY, mobile);
+    }
+
+    hideStations() {
+        this.stationsTarget.hidden = true;
+        this.hallStationTarget.hidden = this.pirateStationTarget.hidden = true;
+        this.pinnedStation = this.hoveredStation = this.focusedStation = null;
+        this.updateStationDetail();
+    }
+
+    layoutStations(system, centerX, centerY, mobile) {
+        const hall = system.known && system.hall;
+        // Le serveur publie ce signal privé après le vrai renseignement, pas à partir
+        // d'un trajet ni du contenu du système. Aucune coordonnée de planète n'est créée.
+        const pirate = system.known && this.campaignBySystem.get(system.id)?.has('pirates');
+        if (!hall && !pirate) {
+            if (!this.stationsTarget.hidden) this.hideStations();
+            return;
+        }
+        this.stationsTarget.hidden = false;
+        const scale = this.systemScale;
+        const { radiusX, aspect, positions } = this.solarLayoutCache;
+        const diameter = Math.min(24, ...positions.map(({ planet }) => planet.visual.screenRadius * 2));
+        this.setStation(this.hallStationTarget, hall, centerX + (mobile ? 35 : 55) * scale, centerY - 16 * scale, diameter);
+        // La combinaison (.78, -.78) est en dehors de l'ellipse, y compris au zoom.
+        // Ce décalage graphique ancré dans le système est indépendant des angles planétaires.
+        this.setStation(this.pirateStationTarget, pirate, centerX + radiusX * .78 * scale, centerY - radiusX * aspect * .78 * scale, diameter);
+        if (!this.stationsTarget.contains(this.displayedStation) || this.displayedStation?.hidden) this.updateStationDetail();
+    }
+
+    setStation(button, available, x, y, diameter) {
+        const visible = Boolean(available) && x >= 22 && y >= 22 && x <= this.width - 22 && y <= this.height - 22;
+        if (!visible && button === document.activeElement) this.systemBackTarget.focus({ preventScroll: true });
+        if (button.hidden === visible) button.hidden = !visible;
+        if (!visible) {
+            if (this.pinnedStation === button) this.pinnedStation = null;
+            if (this.hoveredStation === button) this.hoveredStation = null;
+            if (this.focusedStation === button) this.focusedStation = null;
+            return;
+        }
+        const image = button.querySelector('img');
+        if (!image.hasAttribute('src')) image.src = image.dataset.src;
+        const style = '--station-x:' + x.toFixed(1) + 'px;--station-y:' + y.toFixed(1) + 'px;--planet-diameter:' + diameter + 'px';
+        if (button.getAttribute('style') !== style) button.setAttribute('style', style);
+        if (available.tag !== undefined) {
+            const title = available.tag ? 'Hall de guilde [' + available.tag + ']' : 'Hall de guilde';
+            const label = title + ' · Position 0';
+            if (button.getAttribute('aria-label') !== label) {
+                button.setAttribute('aria-label', label);
+                button.querySelector('.gv2-station-label').textContent = label;
+            }
+        }
+    }
+
+    stationButton(target) {
+        return target.closest('.gv2-station');
+    }
+
+    stationHover(event) {
+        if (event.pointerType !== 'mouse') return;
+        const button = this.stationButton(event.target);
+        if (!button || button.contains(event.relatedTarget)) return;
+        this.hoveredStation = button;
+        this.updateStationDetail();
+    }
+
+    stationLeave(event) {
+        const button = this.stationButton(event.target);
+        if (event.pointerType !== 'mouse' || !button || button.contains(event.relatedTarget)) return;
+        this.hoveredStation = null;
+        this.updateStationDetail();
+    }
+
+    stationFocus(event) {
+        const button = this.stationButton(event.target);
+        this.focusedStation = button?.matches(':focus-visible') ? button : null;
+        this.updateStationDetail();
+    }
+
+    stationBlur(event) {
+        if (!this.stationButton(event.target)) return;
+        this.focusedStation = null;
+        this.updateStationDetail();
+    }
+
+    stationToggle(event) {
+        const button = this.stationButton(event.target);
+        if (!button) return;
+        if (this.pinnedStation === button) {
+            this.pinnedStation = this.hoveredStation = this.focusedStation = null;
+        } else {
+            this.pinnedStation = button;
+        }
+        this.updateStationDetail();
+    }
+
+    updateStationDetail() {
+        const next = [this.pinnedStation, this.focusedStation, this.hoveredStation]
+            .find((button) => button && !button.hidden) || null;
+        if (next === this.displayedStation) return;
+        this.displayedStation?.setAttribute('aria-expanded', 'false');
+        this.displayedStation = next;
+        this.stationDetailTarget.hidden = !next;
+        if (!next) return;
+        next.setAttribute('aria-expanded', 'true');
+        const hall = next === this.hallStationTarget;
+        this.stationDetailTarget.dataset.kind = hall ? 'hall' : 'pirate';
+        this.stationTitleTarget.textContent = next.getAttribute('aria-label');
+        this.stationTextTarget.textContent = hall ? 'Repère fixe, à côté de l’étoile.' : 'Repère fixe, visible après reconnaissance.';
     }
 
     drawStar(ctx, x, y, color, time) {
