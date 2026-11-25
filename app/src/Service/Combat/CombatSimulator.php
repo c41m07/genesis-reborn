@@ -19,7 +19,7 @@ final class CombatSimulator
      * Les participants doivent déjà être regroupés dans leurs camps par l'appelant.
      * Chaque entrée de participant contient id, role, camp, arrival_round et units.
      */
-    public function simulate(array $participants, array $stationaryDefenses, array $modifiers, int $maxRounds, int $seed, ?int $roundLimit = null, float $shieldRechargePercent = 5.0, bool $restoreSurvivorShields = true, bool $independentCamps = false): array
+    public function simulate(array $participants, array $stationaryDefenses, array $modifiers, int $maxRounds, int $seed, ?int $roundLimit = null, float $shieldRechargePercent = 5.0, bool $restoreSurvivorShields = true, bool $independentCamps = false, bool $playerPreview = false): array
     {
         if ($maxRounds < 1 || $maxRounds > 100) {
             throw new \DomainException('Nombre de rounds invalide.');
@@ -32,6 +32,13 @@ final class CombatSimulator
         }
         $roundLimit = max(1, min($maxRounds, $roundLimit ?? $maxRounds));
         $units = $this->snapshot($participants, $stationaryDefenses, $maxRounds);
+        if ($playerPreview) {
+            // Seul le face-à-face du simulateur joueur suit cette règle d’hostilité.
+            $attackers = array_filter($participants, static fn (array $participant): bool => $participant['role'] === 'attacker');
+            if ($independentCamps || count($attackers) > 1) {
+                throw new \LogicException('Le mode aperçu est réservé aux combats joueur à deux camps.');
+            }
+        }
         $this->validateModifiers($modifiers);
         $random = new Randomizer(new Mt19937($seed));
         $rounds = [];
@@ -47,16 +54,20 @@ final class CombatSimulator
             }
             $order = $random->shuffleArray($order);
             $shots = [];
+            $summary = ['number' => $roundNumber, 'shots' => 0, 'hits' => 0, 'destroyed' => 0];
+            $targetIndex = $playerPreview ? new PlayerCombatTargets($units, $roundNumber) : null;
 
             foreach ($order as $attackerKey) {
                 if ($units[$attackerKey]['hp'] <= 0 || (float) ($units[$attackerKey]['base_attack'] ?? 0) <= 0) {
                     continue;
                 }
-                $targets = $this->targetsFor($attackerKey, $units, $roundNumber, $independentCamps);
-                if ($targets === []) {
+                $attacker = $units[$attackerKey];
+                $hasTarget = $targetIndex !== null
+                    ? $targetIndex->hasOpponent($attacker)
+                    : $this->targetsFor($attackerKey, $units, $roundNumber, $independentCamps) !== [];
+                if (!$hasTarget) {
                     continue;
                 }
-                $attacker = $units[$attackerKey];
                 $baseShotCount = $random->getInt($attacker['shots_min'], $attacker['shots_max']);
                 $shotSchedule = [];
                 for ($baseShot = 0; $baseShot < $baseShotCount; ++$baseShot) {
@@ -67,8 +78,11 @@ final class CombatSimulator
                 }
                 $targetKey = null;
                 foreach ($shotSchedule as $shotIndex => $isExtraShot) {
-                    $availableTargets = $this->targetsFor($attackerKey, $units, $roundNumber, $independentCamps);
-                    if ($targetKey === null || !isset($units[$targetKey]) || $units[$targetKey]['hp'] <= 0) $targetKey = $this->selectTarget($random, $availableTargets, $units);
+                    if ($targetKey === null || $units[$targetKey]['hp'] <= 0) {
+                        $targetKey = $targetIndex !== null
+                            ? $targetIndex->draw($random, $attacker)
+                            : $this->selectTarget($random, $this->targetsFor($attackerKey, $units, $roundNumber, $independentCamps), $units);
+                    }
                     if ($targetKey === null) break;
                     $target = $units[$targetKey];$modifier=$this->counterMultiplier($attacker,$target,$modifiers);$chance = $this->hitChance($attacker, $target, 0, $modifier);
                     $hit = $random->getInt(1, 10000) <= ($chance * 100);$damage = 0.0;$shieldDamage = 0.0;$structureDamage = 0.0;$destroyed = false;
@@ -83,7 +97,16 @@ final class CombatSimulator
                             $damage = $shieldDamage + $structureDamage;$destroyed = $units[$targetKey]['hp'] <= 0;
                         }
                     }
-                    $shots[] = ['attacker'=>$attackerKey,'target'=>$targetKey,'weapon'=>'primary','shot'=>$shotIndex+1,'extra_shot'=>$isExtraShot,'hit'=>$hit,'chance'=>$chance,'damage'=>$damage,'shield_damage'=>$shieldDamage,'structure_damage'=>$structureDamage,'target_hp'=>$units[$targetKey]['hp'],'target_shield'=>$units[$targetKey]['shield'],'destroyed'=>$destroyed];
+                    if ($targetIndex !== null) {
+                        ++$summary['shots'];
+                        $summary['hits'] += (int) $hit;
+                        $summary['destroyed'] += (int) $destroyed;
+                        if ($hit) {
+                            $targetIndex->update($targetKey, $units[$targetKey]);
+                        }
+                    } else {
+                        $shots[] = ['attacker'=>$attackerKey,'target'=>$targetKey,'weapon'=>'primary','shot'=>$shotIndex+1,'extra_shot'=>$isExtraShot,'hit'=>$hit,'chance'=>$chance,'damage'=>$damage,'shield_damage'=>$shieldDamage,'structure_damage'=>$structureDamage,'target_hp'=>$units[$targetKey]['hp'],'target_shield'=>$units[$targetKey]['shield'],'destroyed'=>$destroyed];
+                    }
                 }
                 $secondaryCount=max(0,(int)($attacker['secondary_shots_min']??0));$secondaryMax=max($secondaryCount,(int)($attacker['secondary_shots_max']??$secondaryCount));
                 if($secondaryMax>0 && (float)($attacker['secondary_attack']??0)>0){
@@ -96,9 +119,17 @@ final class CombatSimulator
                     $secondaryCount=count($secondarySchedule);
 
                     for($secondaryShot=0;$secondaryShot<$secondaryCount;$secondaryShot++){
-                        $availableTargets=$this->targetsFor($attackerKey,$units,$roundNumber,$independentCamps);$targetCategory=$attacker['secondary_target_category']??null;
-                        $availableTargets=array_values(array_filter($availableTargets,static fn(string $key):bool=>($units[$key]['category']??null)===$targetCategory));
-                        $secondaryTarget=$this->selectTarget($random,$availableTargets,$units);if($secondaryTarget===null)break;
+                        $targetCategory = $attacker['secondary_target_category'];
+                        if ($targetIndex !== null) {
+                            $secondaryTarget = $targetIndex->draw($random, $attacker, $targetCategory);
+                        } else {
+                            $availableTargets = $this->targetsFor($attackerKey, $units, $roundNumber, $independentCamps);
+                            $availableTargets = array_values(array_filter($availableTargets, static fn (string $key): bool => $units[$key]['category'] === $targetCategory));
+                            $secondaryTarget = $this->selectTarget($random, $availableTargets, $units);
+                        }
+                        if ($secondaryTarget === null) {
+                            break;
+                        }
                         $target=$units[$secondaryTarget];$modifier=$this->counterMultiplier($attacker,$target,$modifiers);$chance=$this->hitChance($attacker,$target,(int)($attacker['secondary_precision_modifier']??0),$modifier);
                         $hit=$random->getInt(1,10000)<=($chance*100);$damage=0.0;$shieldDamage=0.0;$structureDamage=0.0;$destroyed=false;
                         if($hit&&$units[$secondaryTarget]['hp']>0){
@@ -113,7 +144,16 @@ final class CombatSimulator
                                 $damage=$shieldDamage+$structureDamage;$destroyed=$units[$secondaryTarget]['hp']<=0;
                             }
                         }
-                        $shots[]=['attacker'=>$attackerKey,'target'=>$secondaryTarget,'weapon'=>'anti_light','shot'=>$secondaryShot+1,'extra_shot'=>$secondarySchedule[$secondaryShot],'hit'=>$hit,'chance'=>$chance,'damage'=>$damage,'shield_damage'=>$shieldDamage,'structure_damage'=>$structureDamage,'target_hp'=>$units[$secondaryTarget]['hp'],'target_shield'=>$units[$secondaryTarget]['shield'],'destroyed'=>$destroyed];
+                        if ($targetIndex !== null) {
+                            ++$summary['shots'];
+                            $summary['hits'] += (int) $hit;
+                            $summary['destroyed'] += (int) $destroyed;
+                            if ($hit) {
+                                $targetIndex->update($secondaryTarget, $units[$secondaryTarget]);
+                            }
+                        } else {
+                            $shots[]=['attacker'=>$attackerKey,'target'=>$secondaryTarget,'weapon'=>'anti_light','shot'=>$secondaryShot+1,'extra_shot'=>$secondarySchedule[$secondaryShot],'hit'=>$hit,'chance'=>$chance,'damage'=>$damage,'shield_damage'=>$shieldDamage,'structure_damage'=>$structureDamage,'target_hp'=>$units[$secondaryTarget]['hp'],'target_shield'=>$units[$secondaryTarget]['shield'],'destroyed'=>$destroyed];
+                        }
                     }
                 }
             }
@@ -124,7 +164,8 @@ final class CombatSimulator
                 }
             }
             unset($unit);
-            $rounds[] = ['number' => $roundNumber, 'shots' => $shots];
+            // L’aperçu n’affiche que les compteurs ; les combats du jeu conservent leurs journaux détaillés.
+            $rounds[] = $playerPreview ? $summary : ['number' => $roundNumber, 'shots' => $shots];
             if($independentCamps) {
                 $camps=[];
                 foreach($units as $unit) if($unit['hp']>0) $camps[$unit['camp']][]=$unit['role'];

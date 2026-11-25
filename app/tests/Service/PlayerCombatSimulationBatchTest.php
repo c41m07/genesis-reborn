@@ -67,15 +67,41 @@ final class PlayerCombatSimulationBatchTest extends TestCase
         self::assertSame(70,$batch['win_percent']);self::assertSame(10,array_sum($batch['outcomes']));
     }
 
-    public function testExistingUnitAndWorkLimitsArePreservedForEachCombat(): void
+    public function testLargePairOfFleetsAndDefensesCompletesTenTrials(): void
     {
-        $this->owner->universe->gameSettings=['catalog_overrides'=>['ships'=>['fighter'=>['base_attack'=>0,'shots_min'=>2,'shots_max'=>2]]]];
-        $forces=['attacker'=>['ships'=>['fighter'=>['basic'=>250]]],'defender'=>['ships'=>['fighter'=>['basic'=>250]]]];
-        $batch=$this->simulation->runBatch($this->owner,$forces,42);
-        self::assertCount(10,$batch['trials']);self::assertCount(500,$batch['trials'][0]['survivors']);
-        $this->owner->universe->gameSettings['catalog_overrides']['ships']['fighter']['shots_max']=3;
-        $this->expectException(\DomainException::class);$this->expectExceptionMessage('Scénario trop volumineux');
-        $this->simulation->runBatch($this->owner,$forces,42);
+        $unit = ['hp' => 1000000000, 'shield' => 0, 'base_attack' => 1, 'shots_min' => 1, 'shots_max' => 1];
+        $this->owner->universe->gameSettings = ['catalog_overrides' => [
+            'ships' => ['fighter' => $unit],
+            'defenses' => ['ground_turret_anti_light' => $unit],
+        ]];
+        $forces = [
+            'attacker' => ['ships' => ['fighter' => ['basic' => 600]]],
+            'defender' => ['defenses' => ['ground_turret_anti_light' => ['basic' => 550]]],
+        ];
+
+        $batch = $this->simulation->runBatch($this->owner, $forces, 42);
+
+        self::assertCount(10, $batch['trials']);
+        foreach ($batch['trials'] as $trial) {
+            self::assertCount(1150, $trial['survivors']);
+            self::assertNotEmpty($trial['rounds']);
+            self::assertSame(1150, $trial['rounds'][0]['shots']);
+        }
+    }
+
+    public function testLargeVolumeOfShotsIsRejectedWithoutReducingTheScenario(): void
+    {
+        $this->owner->universe->gameSettings = ['catalog_overrides' => [
+            'ships' => ['fighter' => ['base_attack' => 1, 'shots_min' => 20, 'shots_max' => 20]],
+        ]];
+        $forces = [
+            'attacker' => ['ships' => ['fighter' => ['basic' => 250]]],
+            'defender' => ['ships' => ['fighter' => ['basic' => 250]]],
+        ];
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('dépasse le budget de calcul');
+        $this->simulation->runBatch($this->owner, $forces, 42);
     }
 
     public function testOnlyBlankApprovedUnknownInputsBecomeZeroForTheCalculation(): void
@@ -116,7 +142,8 @@ final class PlayerCombatSimulationBatchTest extends TestCase
         $valid=['attacker'=>['ships'=>['fighter'=>['basic'=>1]]]];
         return ['negative seed'=>[$valid,-1],'overflow seed'=>[$valid,0x100000000],
             'forgotten owner'=>[$valid,42,true],'empty forces'=>[[],42],
-            'too many units'=>[['attacker'=>['ships'=>['fighter'=>['basic'=>501]]]],42],
+            'too many units in one field'=>[['attacker'=>['ships'=>['fighter'=>['basic'=>5001]]]],42],
+            'too many units in total'=>[['attacker'=>['ships'=>['fighter'=>['basic'=>2600]]], 'defender'=>['ships'=>['fighter'=>['basic'=>2500]]]],42],
             'malformed forces'=>[['attacker'=>['ships'=>'bad']],42],
             'invalid arrival'=>[['attacker'=>['ships'=>['fighter'=>['basic'=>1]],'arrival'=>11]],42]];
     }

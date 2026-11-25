@@ -1,6 +1,14 @@
 # Lot 2 — Outils stratégiques et recherche avancée
 
 
+## Scénarios étendus du simulateur joueur — 25 novembre 2026
+
+- La série accepte jusqu’à 5 000 vaisseaux et défenses cumulés, sous réserve du budget de tirs. La borne existante du moteur et les règles des combats réels ne changent pas.
+- Chaque essai est plafonné à 60 000 tirs potentiels avant calcul : on multiplie la somme des maximums par unité combattante (armes principales et secondaires, tirs supplémentaires compris) par le nombre maximal de rounds. Ce calcul est conservateur ; la limite de six séries par minute par compte est maintenue.
+- Les dix simulations restent exactes et reproductibles, sans réduire les effectifs. L’index de ciblage conserve les poids, la priorité des cibles endommagées et l’ordre du tirage. Les tirs de l’aperçu sont comptés pendant le round plutôt que gardés en mémoire. Les journaux détaillés des combats du jeu restent inchangés.
+
+Les limites et mesures chiffrées des sections suivantes décrivent l’ancienne version et servent uniquement de référence historique.
+
 ## Série de dix combats — évolution du 14 novembre 2026
 
 Développement sur `feature/simulateur-dix-combats`, depuis `dev` `a1abf08`

@@ -118,7 +118,7 @@ final class StrategicToolsTest extends WebTestCase
     public function testSimulationRejectsOversizedAndMalformedForces(): void
     {
         $service=static::getContainer()->get(PlayerCombatSimulation::class);
-        foreach([['attacker'=>['ships'=>'bad']],['attacker'=>['ships'=>['fighter'=>['basic'=>501]]]],['attacker'=>['ships'=>['fighter'=>['unknown'=>1]]]],['attacker'=>['ships'=>['fighter'=>['basic'=>'1.5']]]]] as $forces) {
+        foreach([['attacker'=>['ships'=>'bad']],['attacker'=>['ships'=>['fighter'=>['basic'=>5001]]]],['attacker'=>['ships'=>['fighter'=>['unknown'=>1]]]],['attacker'=>['ships'=>['fighter'=>['basic'=>'1.5']]]]] as $forces) {
             try {$service->run($this->owner->currentPlayerUniverse,$forces,42);self::fail('Entrée invalide acceptée.');} catch(\DomainException $e) {self::assertNotEmpty($e->getMessage());}
         }
     }
@@ -164,6 +164,29 @@ final class StrategicToolsTest extends WebTestCase
         self::assertSelectorTextContains('#simulation-result','7 victoires donnent 70 %, sans garantir cette probabilité réelle');
         self::assertSame($before,$this->em->getConnection()->fetchAllAssociative('SELECT * FROM planet_resource ORDER BY id'));
         $payload['_token']='forged';$this->client->request('POST','/simulateur',$payload);self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testSimulationHttpKeepsAllShipsAndDefensesAboveTheOldLimit(): void
+    {
+        $this->client->loginUser($this->owner);
+        $crawler = $this->client->request('GET', '/simulateur');
+        self::assertResponseIsSuccessful();
+        $token = $crawler->filter('.simulation-form input[name="_token"]')->attr('value');
+
+        $this->client->request('POST', '/simulateur', [
+            '_token' => $token,
+            'seed' => '42',
+            'assumptions' => '1',
+            'forces' => [
+                'attacker' => ['ships' => ['fighter' => ['basic' => 401]]],
+                'defender' => ['defenses' => ['ground_turret_anti_light' => ['basic' => 110]]],
+            ],
+        ]);
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(10, '.simulation-trial');
+        self::assertSelectorTextContains('#simulation-result', '401');
+        self::assertSelectorTextContains('#simulation-result', '110');
     }
 
     public function testIntelProvenanceDistinguishesUnknownAndModifiedValues(): void

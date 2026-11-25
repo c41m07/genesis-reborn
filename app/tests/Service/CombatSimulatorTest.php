@@ -272,4 +272,47 @@ final class CombatSimulatorTest extends TestCase
         foreach($tiers as $i=>$attackerTier)foreach($tiers as $j=>$targetTier)self::assertSame((float)$expected[$i][$j],$simulator->hitChance($base+['tier'=>$attackerTier],$base+['tier'=>$targetTier]));
     }
 
+    public function testPlayerPreviewKeepsTheSameTargetsAndOutcomesWithSecondaryFire(): void
+    {
+        $carrier = $this->unit('carrier', 280, 48, 2) + [
+            'secondary_attack' => 20,
+            'secondary_shots_min' => 1,
+            'secondary_shots_max' => 2,
+            'secondary_precision_modifier' => 10,
+            'secondary_target_category' => 'light',
+            'extra_shot_chances' => [0.25],
+        ];
+        $carrier['quantity'] = 4;
+        $lightShip = $this->unit('fighter', 90, 25) + ['category' => 'light'];
+        $lightShip['signature'] = 10;
+        $lightShip['shield'] = 32;
+        $lightShip['quantity'] = 6;
+        $lightDefense = $this->unit('turret', 160, 24) + [
+            'id' => 'turret',
+            'camp' => 'defenders',
+            'category' => 'light',
+        ];
+        $lightDefense['signature'] = 80;
+        $lightDefense['quantity'] = 3;
+        $defense = $this->unit('bunker', 310, 5) + ['id' => 'bunker', 'camp' => 'defenders'];
+        $participants = $this->participants();
+        $participants[0]['units'] = [$carrier];
+        $participants[1]['units'] = [$lightShip];
+        $participants[1]['arrival_round'] = 2;
+        $simulator = new CombatSimulator();
+
+        // Comparer chaque graine au journal réel couvre aussi l’ordre de tirage et les destructions lues dans le round.
+        for ($seed = 0; $seed < 12; ++$seed) {
+            $result = $simulator->simulate($participants, [$defense, $lightDefense], [], 8, $seed);
+            $result['rounds'] = array_map(static fn (array $round): array => [
+                'number' => $round['number'],
+                'shots' => count($round['shots']),
+                'hits' => count(array_filter($round['shots'], static fn (array $shot): bool => $shot['hit'])),
+                'destroyed' => count(array_filter($round['shots'], static fn (array $shot): bool => $shot['destroyed'])),
+            ], $result['rounds']);
+
+            self::assertSame($result, $simulator->simulate($participants, [$defense, $lightDefense], [], 8, $seed, playerPreview: true));
+        }
+    }
+
 }

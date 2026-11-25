@@ -9,8 +9,10 @@ use App\Service\Fleet\EspionageReportReader;
 
 final class PlayerCombatSimulation
 {
-    public const MAX_UNITS = 500;
-    public const MAX_WORK = 5000000;
+    public const MAX_UNITS = CombatSimulator::MAX_UNITS;
+
+    // Chaque série contient dix combats : le plafond borne le coût des tirs, pas seulement le nombre d’unités.
+    private const MAX_POTENTIAL_SHOTS_PER_TRIAL = 60000;
     public const TRIALS = 10;
     public function __construct(
         private CombatSimulator $simulator,
@@ -181,7 +183,9 @@ final class PlayerCombatSimulation
                 $n = filter_var($value, FILTER_VALIDATE_INT);
                 $max = $levels ? (int) ($definitions[$slug]['max_level'] ?? 25) : self::MAX_UNITS;
                 if (!in_array($tier, GameCatalog::TIERS, true) || $n === false || $n < 0 || $n > $max) {
-                    throw new \DomainException('Rang, niveau ou quantité invalide. Limite de simulation : 500 unités au total.');
+                    throw new \DomainException($levels
+                        ? 'Rang ou niveau invalide.'
+                        : sprintf('Rang ou quantité invalide. La simulation accepte au plus %d unités au total.', self::MAX_UNITS));
                 }
                 if ($n) {
                     $result[$slug][$tier] = $n;
@@ -193,6 +197,7 @@ final class PlayerCombatSimulation
 
     public function runBatch(PlayerUniverse $owner, array $forces, int $seed): array
     {
+        $scenario = $this->prepareScenario($owner, $forces, $seed);
         $trials = [];
         $trialSeed = $seed;
         $outcomes = [
@@ -203,15 +208,9 @@ final class PlayerCombatSimulation
         ];
         // Dériver les dix graines de celle saisie permet de rejouer la même série de simulations.
         for ($index = 0; $index < self::TRIALS; $index++) {
-            $trial = $this->run($owner, $forces, $trialSeed);
+            $trial = $this->resolveScenario($scenario, $trialSeed, true);
             $trialSeed = ($trialSeed + 1) % 0x100000000;
             $outcomes[$trial['outcome']] = ($outcomes[$trial['outcome']] ?? 0) + 1;
-            $trial['rounds'] = array_map(static fn(array $round): array => [
-                'number' => $round['number'],
-                'shots' => count($round['shots']),
-                'hits' => count(array_filter($round['shots'], static fn(array $shot): bool => $shot['hit'])),
-                'destroyed' => count(array_filter($round['shots'], static fn(array $shot): bool => $shot['destroyed'])),
-            ], $trial['rounds']);
             $trials[] = $trial;
         }
         return [
@@ -222,7 +221,14 @@ final class PlayerCombatSimulation
         ];
     }
 
+    /** Calcul de référence à un essai, avec le journal détaillé du moteur. */
     public function run(PlayerUniverse $owner, array $forces, int $seed): array
+    {
+        return $this->resolveScenario($this->prepareScenario($owner, $forces, $seed), $seed, false);
+    }
+
+    /** Les forces, bonus et limites ne changent pas entre les dix graines de la série. */
+    private function prepareScenario(PlayerUniverse $owner, array $forces, int $seed): array
     {
         if (!$owner->isPlayerControlled() || $seed < 0 || $seed > 0xffffffff) {
             throw new \DomainException('Paramètres de simulation invalides.');
@@ -231,7 +237,9 @@ final class PlayerCombatSimulation
         $participants = [];
         $defenses = [];
         $total = 0;
-        $weight = 0;
+        $potentialShots = 0;
+        $rules = $this->catalog->rules();
+        $rounds = (int) $rules['max_combat_rounds'];
         foreach (['attacker', 'defender'] as $camp) {
             $input = $forces[$camp] ?? [];
             if (!is_array($input)) {
@@ -246,7 +254,6 @@ final class PlayerCombatSimulation
             }
             $ships = $this->units->ships($owner->universe, $composition, $research);
             $arrival = filter_var($input['arrival'] ?? 1, FILTER_VALIDATE_INT);
-            $rounds = (int) $this->catalog->rules()['max_combat_rounds'];
             if ($arrival === false || $arrival < 1 || $arrival > $rounds) {
                 throw new \DomainException('Round d’arrivée invalide.');
             }
@@ -277,23 +284,50 @@ final class PlayerCombatSimulation
             }
             foreach ($all as $unit) {
                 $total += $unit['quantity'];
-                $weight += $unit['quantity'] * (($unit['shots_max'] ?? 1) + ($unit['secondary_shots_max'] ?? 0)) * (1 + count($unit['extra_shot_chances'] ?? []));
+                // Les unités sans arme principale ne jouent pas dans le moteur. Au-delà, compter
+                // par prudence tous les tirs possibles de chaque arme et chaque tir supplémentaire.
+                if (($unit['base_attack'] ?? 0) > 0) {
+                    $potentialShots += $unit['quantity']
+                        * (($unit['shots_max'] ?? 1) + ($unit['secondary_shots_max'] ?? 0))
+                        * (1 + count($unit['extra_shot_chances'] ?? []));
+                }
             }
         }
-        $rules = $this->catalog->rules();
-        $rounds = (int) $rules['max_combat_rounds'];
-        if ($total < 1 || $total > self::MAX_UNITS || $total * $weight * $rounds > self::MAX_WORK) {
-            throw new \DomainException('Scénario trop volumineux : au plus 500 unités et un budget de calcul limité. Réduisez les forces ou les tirs supplémentaires ; aucune quantité n’a été tronquée.');
+        if ($total < 1) {
+            throw new \DomainException('Ajoutez au moins un vaisseau ou une défense pour simuler le combat.');
         }
+        if ($total > self::MAX_UNITS) {
+            throw new \DomainException(sprintf(
+                'Scénario trop volumineux : %d unités saisies, pour un maximum de %d (vaisseaux et défenses cumulés). Aucune quantité n’a été tronquée.',
+                $total,
+                self::MAX_UNITS
+            ));
+        }
+        if ($potentialShots * $rounds > self::MAX_POTENTIAL_SHOTS_PER_TRIAL) {
+            throw new \DomainException('Ce scénario dépasse le budget de calcul à cause du nombre de tirs possibles, même si le total d’unités est accepté. Réduisez les forces ou les tirs supplémentaires. Aucune quantité n’a été tronquée.');
+        }
+
+        return [
+            'participants' => $participants,
+            'defenses' => $defenses,
+            'modifiers' => $this->catalog->all('combat_modifiers')['modifiers'] ?? [],
+            'rounds' => $rounds,
+            'recharge' => (float) ($rules['shield_recharge_percent_per_round'] ?? 5),
+            'restore_shields' => (bool) ($rules['restore_survivor_shields_after_combat'] ?? true),
+        ];
+    }
+
+    private function resolveScenario(array $scenario, int $seed, bool $playerPreview): array
+    {
         return $this->simulator->simulate(
-            $participants,
-            $defenses,
-            $this->catalog->all('combat_modifiers')['modifiers'] ?? [],
-            $rounds,
+            $scenario['participants'],
+            $scenario['defenses'],
+            $scenario['modifiers'],
+            $scenario['rounds'],
             $seed,
-            null,
-            (float) ($rules['shield_recharge_percent_per_round'] ?? 5),
-            (bool) ($rules['restore_survivor_shields_after_combat'] ?? true)
+            shieldRechargePercent: $scenario['recharge'],
+            restoreSurvivorShields: $scenario['restore_shields'],
+            playerPreview: $playerPreview
         );
     }
 }
