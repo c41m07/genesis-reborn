@@ -35,9 +35,17 @@ final class ResourceService
     }
     public function capacity(Planet $planet,string $slug,array $buildings,?\DateTimeImmutable $at=null): float
     {
-        $storedLevels=$buildings['storage_'.$slug]??0;$added=0.0;
-        foreach(GameCatalog::TIERS as $tier)$added+=$this->tierLevel($storedLevels,$tier)*$this->catalog->tierFactor($tier)*$this->catalog->rules()['storage_capacity_per_level'];
-        return $this->catalog->rules()['base_storage_capacity']+$added;
+        $rules = $this->catalog->rules();
+        $storedLevels = $buildings['storage_'.$slug] ?? 0;
+        $added = 0.0;
+        foreach (GameCatalog::TIERS as $tier) {
+            $level = $this->tierLevel($storedLevels, $tier);
+            $added += GameCatalog::compoundedLevels($level, $tier, $rules['building_level_growth'] ?? []) * GameCatalog::tierFactor($tier) * $rules['storage_capacity_per_level'];
+        }
+        if (!is_finite($added)) {
+            throw new \DomainException('La capacité du dépôt dépasse la précision numérique disponible.');
+        }
+        return $rules['base_storage_capacity'] + $added;
     }
     public function catalogueContext(Planet $planet): CatalogueProductionContext
     {
@@ -125,7 +133,29 @@ final class ResourceService
         foreach($base as $slug=>$rate)$base[$slug]*=$eventMultiplier;
         foreach($civilSources as &$sources)foreach($sources as &$rate)$rate*=$eventMultiplier;
         unset($sources,$rate);
-        foreach($universe['catalog']['buildings'] as $building){$resource=$building['production_resource']??null;if(!is_string($resource))continue;$ranked=$levels[$building['slug']]??0;$weighted=0.0;foreach(GameCatalog::TIERS as $tier)$weighted+=$this->tierLevel($ranked,$tier)*$this->catalog->productionTierFactor($tier);if($weighted<=0)continue;$per=(float)($building['production_per_level']??$rules['mine_production_per_level']??0);$rate=$weighted*$per*$this->positionFactor($planet,$resource)*$mult*$eventMultiplier;$electricity=$resource==='electricity'?0.0:$weighted*(float)($building['electricity_use_per_level']??$rules['factory_electricity_use_per_level']??0)*$this->positionFactor($planet,$resource)*$mult;$hydrogen=$resource==='antimatter'?$rate*(float)($building['hydrogen_per_output']??$rules['antimatter_hydrogen_per_unit']??8):0.0;$factories[]=['slug'=>$building['slug'],'resource'=>$resource,'rate'=>$rate,'electricity'=>$electricity,'hydrogen'=>$hydrogen];}
+        foreach ($universe['catalog']['buildings'] as $building) {
+            $resource = $building['production_resource'] ?? null;
+            if (!is_string($resource)) {
+                continue;
+            }
+            $outputLevels = 0.0;
+            $powerLevels = 0.0;
+            foreach (GameCatalog::TIERS as $tier) {
+                $level = $this->tierLevel($levels[$building['slug']] ?? 0, $tier);
+                $factor = $this->catalog->productionTierFactor($tier);
+                $outputLevels += GameCatalog::compoundedLevels($level, $tier, $rules['building_level_growth'] ?? []) * $factor;
+                $powerLevels += $level * $factor;
+            }
+            if ($outputLevels <= 0) {
+                continue;
+            }
+            // La consommation électrique dépend des niveaux installés, l’hydrogène du débit produit.
+            $location = $this->positionFactor($planet, $resource) * $mult;
+            $rate = $outputLevels * ($building['production_per_level'] ?? $rules['mine_production_per_level']) * $location * $eventMultiplier;
+            $electricity = $resource === 'electricity' ? 0.0 : $powerLevels * ($building['electricity_use_per_level'] ?? $rules['factory_electricity_use_per_level']) * $location;
+            $hydrogen = $resource === 'antimatter' ? $rate * ($building['hydrogen_per_output'] ?? $rules['antimatter_hydrogen_per_unit']) : 0.0;
+            $factories[] = ['slug' => $building['slug'], 'resource' => $resource, 'rate' => $rate, 'electricity' => $electricity, 'hydrogen' => $hydrogen];
+        }
         return ['base'=>$base,'factories'=>$factories,'civil_sources'=>$civilSources];
     }
 

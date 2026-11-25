@@ -147,6 +147,7 @@ final class CatalogAccessTest extends KernelTestCase
     {
         $this->level('buildings', 'lab', 10, $tier);
         if ($tier !== 'basic') {
+            $this->level('technologies', 'engineering_foundations', 5, $tier === 'superior' ? 'intermediate' : 'basic');
             $this->level('buildings', 'lab', 10, planet: $this->other);
         }
         $queue = self::getContainer()->get(QueueService::class);
@@ -174,13 +175,23 @@ final class CatalogAccessTest extends KernelTestCase
     {
         // Le niveau 2 sur la première colonie débloque l’architecture navale pour tout l’univers.
         $this->level('buildings', 'lab', 2, $tier);
+        if ($tier !== 'basic') {
+            $this->level('technologies', 'naval_engineering', 5, $tier === 'superior' ? 'intermediate' : 'basic');
+        }
         $this->level('technologies', 'engineering_foundations', 2, $tier);
         $this->level('buildings', 'lab', 1, $tier, $this->other);
 
         $queue = self::getContainer()->get(QueueService::class);
+        $view = self::getContainer()->get(ColonyView::class)->data($this->membership, $this->other, true, 'technologies');
+        $card = array_values(array_filter($view['cards']['technologies'], static fn(array $card): bool => $card['definition']['slug'] === 'naval_engineering' && $card['tier'] === $tier))[0];
         $queue->add($this->membership, $this->other, 'technologies', 'naval_engineering', 1, str_repeat('6', 32), $tier);
 
         $item = $this->em->getRepository(QueueItem::class)->findOneBy(['planet' => $this->other]);
+        self::assertSame($card['costs'], $item->paidCosts);
+        self::assertSame($card['duration'], $item->durationSeconds);
+        foreach ($this->em->getRepository(PlanetResource::class)->findBy(['planet' => $this->other]) as $stock) {
+            self::assertEqualsWithDelta(100000000 - $card['costs'][$stock->resourceType], $stock->currentStock, 1e-6);
+        }
         self::assertNotNull($item, $laboratoryLabel . ' de niveau 1 doit suffire après le déblocage.');
         self::assertSame($tier, $item->tier);
         self::assertSame(1, $item->itemLevel);
