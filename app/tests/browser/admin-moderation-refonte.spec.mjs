@@ -166,3 +166,89 @@ test('L10C A : filtres natifs, pagination et suivi privé', async ({ page, brows
     expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM admin_audit_log WHERE action='feedback_updated' AND target_id=${id}`)).toBe('1');
     await native.close();
 });
+
+test('Modération : archives natives des deux types, pagination et aucune nouvelle consultation', async ({ page, browser }) => {
+    test.setTimeout(120000);
+    const project = process.env.BROWSER_ROUTER;
+    const adminId = await enter(page, true, true);
+    const participant = await browser.newPage();
+    const participantId = await enter(participant, false, true);
+    const [sender, reporter, universe] = queryIsolatedSql(project, `SELECT a.current_player_universe_id,p.current_player_universe_id,pu.universe_id FROM player a JOIN player p ON p.id=${participantId} JOIN player_universe pu ON pu.id=p.current_player_universe_id WHERE a.id=${adminId}`).split('\t').map(Number);
+    expect(sender).toBeGreaterThan(0);
+    expect(reporter).toBeGreaterThan(0);
+    const createMessage = text => {
+        runIsolatedSql(project, `INSERT INTO social_message (sender_id,recipient_id,content,content_format,created_at) VALUES (${sender},${reporter},${quote(text)},'plain',UTC_TIMESTAMP())`);
+        return Number(queryIsolatedSql(project, `SELECT id FROM social_message WHERE sender_id=${sender} AND recipient_id=${reporter} AND content=${quote(text)}`));
+    };
+    const archiveReportReason = 'Motif du message à masquer';
+    const archivePlayerComment = 'Contexte conservé pour réexamen';
+    const hiddenMessage = createMessage('TEXTE_AVANT_MASQUAGE');
+    createMessage('MESSAGE_NON_SIGNALE_A_NE_PAS_AFFICHER');
+    const evidence = quote(JSON.stringify({
+        target_username: 'Commandant visé', target_username_seen: 'Ancien pseudonyme',
+        reporter_username: 'Commandant témoin', target_id: sender, reporter_id: reporter,
+        universe_name: 'Omega de recette', universe_id: universe, category: 'points',
+        rank: 12, leaderboard_at: '2026-11-19T09:00:00Z',
+    }));
+    runIsolatedSql(project, `INSERT INTO message_report (message_id,reporter_id,reason,status,created_at) VALUES (${hiddenMessage},${reporter},${quote(archiveReportReason)},'open',UTC_TIMESTAMP())`);
+    runIsolatedSql(project, `INSERT INTO player_report (universe_id,reporter_id,target_id,request_key,reason,comment,context,status,created_at) VALUES (${universe},${reporter},${sender},'${'b'.repeat(32)}','other',${quote(archivePlayerComment)},${evidence},'open',UTC_TIMESTAMP())`);
+    const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 900 }, storageState: await page.context().storageState() });
+    const native = await context.newPage();
+    await native.goto('/admin');
+    await native.locator('a.admin-metric[href="/admin/moderation"]').click();
+    const modes = native.getByRole('navigation', { name: 'État des signalements' });
+    await expect(modes.getByRole('link', { name: 'Ouverts', exact: true })).toHaveAttribute('aria-current', 'page');
+    const messages = native.locator('#admin-reports');
+    const players = native.locator('#admin-player-reports');
+    await messages.locator('article').filter({ hasText: archiveReportReason }).getByRole('button', { name: 'Masquer le message', exact: true }).click();
+    await players.locator('article').filter({ hasText: archivePlayerComment }).getByRole('button', { name: 'Classer sans suite', exact: true }).click();
+    await expect(messages).not.toContainText(archiveReportReason);
+    await expect(players).not.toContainText(archivePlayerComment);
+
+    // 51 dossiers clos dans chaque groupe : la page d’une liste ne déplace pas l’autre.
+    const historicMessage = createMessage('Contenu signalé conservé sans masquage');
+    const messageValues = Array.from({ length: 50 }, (_, i) =>
+        `(${historicMessage},${reporter},'Archive message ${i}','dismissed',${adminId},'2020-01-01 12:00:00','2020-01-01 11:00:00')`).join(',');
+    const playerValues = Array.from({ length: 50 }, (_, i) =>
+        `(${universe},${reporter},${sender},'${i.toString(16).padStart(32, '0')}','other','Archive joueur ${i}',${evidence},'actioned',${adminId},'2020-01-01 12:00:00','2020-01-01 11:00:00')`).join(',');
+    runIsolatedSql(project, `INSERT INTO message_report (message_id,reporter_id,reason,status,reviewed_by_id,reviewed_at,created_at) VALUES ${messageValues}`);
+    runIsolatedSql(project, `INSERT INTO player_report (universe_id,reporter_id,target_id,request_key,reason,comment,context,status,reviewed_by_id,reviewed_at,created_at) VALUES ${playerValues}`);
+    runIsolatedSql(project, `INSERT INTO message_report (message_id,reporter_id,reason,status,created_at) VALUES (${historicMessage},${reporter},'Nouveau dossier à ne pas acquitter','open',UTC_TIMESTAMP())`);
+    const recorded = () => ({
+        audits: queryIsolatedSql(project, `SELECT COUNT(*) FROM admin_audit_log WHERE actor_id=${adminId} AND target_type IN ('message_report','player_report')`),
+        seen: queryIsolatedSql(project, `SELECT JSON_EXTRACT(preferences,'$.admin_last_seen') FROM player WHERE id=${adminId}`),
+    });
+    const beforeArchive = recorded();
+    await modes.getByRole('link', { name: 'Clos', exact: true }).click();
+    await expect(modes.getByRole('link', { name: 'Clos', exact: true })).toHaveAttribute('aria-current', 'page');
+    const review = messages.locator('article').filter({ hasText: archiveReportReason });
+    await expect(review).toContainText('Message masqué');
+    await expect(review).toContainText('[Message masqué après modération]');
+    await expect(review.locator('time')).toHaveAttribute('datetime', /^\d{4}-\d{2}-\d{2}T/);
+    await expect(review.locator('.admin-report-review')).toContainText('par ModerationUI-');
+    const playerReview = players.locator('article').filter({ hasText: archivePlayerComment });
+    await expect(playerReview).toContainText('Classé sans suite');
+    await expect(playerReview).toContainText('Ancien pseudonyme');
+    await expect(playerReview.locator('time')).toHaveAttribute('datetime', /^\d{4}-\d{2}-\d{2}T/);
+    await expect(native.locator('.admin-report-card form')).toHaveCount(0);
+    await expect(native.locator('#admin-main')).not.toContainText('TEXTE_AVANT_MASQUAGE');
+    await expect(native.locator('#admin-main')).not.toContainText('MESSAGE_NON_SIGNALE_A_NE_PAS_AFFICHER');
+    await expect(messages).not.toContainText('Nouveau dossier à ne pas acquitter');
+    await expect(messages.locator('.admin-report-card')).toHaveCount(50);
+    await expect(players.locator('.admin-report-card')).toHaveCount(50);
+    await messages.getByRole('link', { name: 'Page suivante' }).click();
+    await expect(messages.locator('.admin-report-card')).toHaveCount(1);
+    await expect(players.locator('.admin-report-card')).toHaveCount(50);
+    await players.getByRole('link', { name: 'Page suivante' }).click();
+    await expect(messages.locator('.admin-report-card')).toHaveCount(1);
+    await expect(players.locator('.admin-report-card')).toHaveCount(1);
+    expect(recorded()).toEqual(beforeArchive);
+
+    const denied = await participant.goto('/admin/moderation?status=closed');
+    expect(denied.status()).toBe(403);
+    await expect(participant.locator('main')).not.toContainText(archivePlayerComment);
+    await modes.getByRole('link', { name: 'Ouverts', exact: true }).click();
+    await expect(messages).toContainText('Nouveau dossier à ne pas acquitter');
+    await context.close();
+    await participant.close();
+});

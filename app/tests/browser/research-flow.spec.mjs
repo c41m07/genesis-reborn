@@ -43,6 +43,9 @@ test('La file Recherche vide garde le lien du Guide accessible sans masquer Prem
   const colony = new URL(page.url()).pathname;
   await page.goto(colony + '?section=technologies');
   const queue = page.locator('.catalog-queue-ribbon [data-queue-type="research"]');
+  const resources = page.getByRole('button', { name: /afficher ou masquer les détails et les files de la colonie/ });
+  await expect(queue).toBeHidden();
+  await resources.press('Enter');
   await expect(queue).toHaveAttribute('data-queue-occupied', 'false');
   await queue.locator(':scope > summary').press('Enter');
   await expect(queue.getByText('Aucune recherche en cours', { exact: true })).toBeVisible();

@@ -18,7 +18,7 @@ final class FleetService
 {
     public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment, private FirstSteps $firstSteps, private DiplomaticReportWriter $diplomaticReports) {}
     private function coords(SolarSystem $s,?int $position): array { return [$s->id,$s->galaxy->id,$s->coordX,$s->coordY,$position]; }
-    public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0): array
+    public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0, bool $requireUnexplored = false): array
     {
         if($origin->owner?->id!==$m->id || $origin->solarSystem->galaxy->universe->id!==$m->universe->id) throw new \DomainException('Planète inaccessible.');
         $this->vacations->assertCanSendFleet($m);
@@ -28,6 +28,10 @@ final class FleetService
         $system=$target instanceof Planet?$target->solarSystem:$target;
         if($system->galaxy->universe->id!==$m->universe->id) throw new \DomainException('Destination hors de cet univers.');
         $known=$this->repo->one(PlayerDiscovery::class,['playerUniverse'=>$m,'solarSystem'=>$system]);
+        // La reconnaissance pirate réutilise le calcul de trajet, pas la règle de départ d’une exploration.
+        if ($requireUnexplored && $mission === 'explore' && $known) {
+            throw new \DomainException(DestinationCatalogue::UNEXPLORED_SYSTEM_UNAVAILABLE);
+        }
         if($mission!=='explore' && !$known) throw new \DomainException('Explorez ce système avant de cibler une planète.');
         if($target instanceof Planet && $target->id===$origin->id) throw new \DomainException('Choisissez une autre planète.');
         if($target instanceof Planet && $target->owner!==null && $this->vacations->isActive($target->owner)) throw new \DomainException('Cet empire est protégé par le mode vacances.');
@@ -104,7 +108,7 @@ final class FleetService
     {
         return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours){
             $this->guard->lock($m,$origin);$this->queues->synchronize($m);
-            $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours);
+            $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours, requireUnexplored: true);
             return ['arrival_at'=>$this->clock->now()->modify('+'.$q['seconds'].' seconds')->format(DATE_ATOM)]+array_intersect_key($q,array_flip(['distance','normal_distance','hyper_distance','seconds','one_way_fuel','orbit_fuel','total_fuel','stored_fuel_used','planet_fuel','fuel_capacity','cargo_capacity','freight_capacity','composition','freight','cargo_available','cargo_maximum','ship_available','ship_adjusted','adjusted']));
         });
     }
@@ -112,7 +116,7 @@ final class FleetService
     {
         return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$key,$orbitHours,$requireExactComposition,$tutorialSpy){
             $this->guard->lock($m,$origin);$this->queues->synchronize($m);if(!$this->guard->receipt($m,$key)) return false;
-            $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours);
+            $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours, requireUnexplored: true);
             if($requireExactComposition && $q['ship_adjusted']) throw new \DomainException('La composition n’est plus disponible exactement. Vérifiez à nouveau les quantités avant envoi.');
             if($q['target'] instanceof Planet) $this->manager->lock($q['target']);
             if ($tutorialSpy) {

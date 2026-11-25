@@ -21,7 +21,12 @@ final class AdminEventRemovalService
             if (!in_array('ROLE_ADMIN',$actor->getRoles(),true) || $actor->lockedAt) throw new \DomainException('Droits administrateur requis.');
             $universes=$event->universe ? [$event->universe] : $this->em->getRepository(Universe::class)->findBy([],['id'=>'ASC']);
             foreach ($universes as $universe) $this->manager->lock($universe);
-            $this->manager->lock($event);
+            if ($event instanceof GameEvent) {
+                // La lecture courante empêche un retrait concurrent de repartir de l’état d’avant l’annulation.
+                $this->manager->lockCurrent($event);
+            } else {
+                $this->manager->lock($event);
+            }
             if ($event instanceof BoostEvent) {
                 if (!($event->configuration['guided'] ?? false)) throw new \DomainException('Les rotations hebdomadaires s’annulent depuis leur fiche et ne sont jamais supprimées.');
                 if (!empty($event->configuration['archived_at'])) return false;
@@ -49,11 +54,7 @@ final class AdminEventRemovalService
                 $unused=($event->status==='draft' || ($event->startsAt>$this->clock->now() && $event->status!=='active')) && empty($event->parameters['production_history']);
                 if (!$unused) {
                     if (in_array($event->status,['planned','active'],true) && $event->endsAt>$this->clock->now()) {
-                        if (empty($event->parameters['guided_key']) && $event->type==='production_bonus' && $event->startsAt<$this->clock->now()) {
-                            $event->parameters['production_history']=[['from'=>$event->startsAt->format(DATE_ATOM),'until'=>$this->clock->now()->format(DATE_ATOM),
-                                'percentage'=>(float)$event->parameters['percentage'],'universe_id'=>$event->universe?->id]];
-                            $this->manager->flush();
-                        }
+                        // Annuler fige aussi le bonus déjà produit ; le retrait archive ensuite la fiche.
                         $this->events->cancel($actor,$event->id,$reason,true);
                     }
                     $event->visibleToPlayers=false;$event->parameters['archived_at']=$this->clock->now()->format(DATE_ATOM);

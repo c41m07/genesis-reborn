@@ -87,6 +87,9 @@ body[data-theme="light"] .player-protection-shield{color:#226344}
     .resource-strip--collapsible:not(.resource-strip--expanded) .resource-details{display:contents}
     .resource-strip--collapsible:not(.resource-strip--expanded) .resource-details>.resource{display:contents}
     .resource-strip--collapsible:not(.resource-strip--expanded) .resource-details>.resource>:not(.resource-economy){display:none}
+    /* Le ruban suit le même volet que les ressources, même après mise à jour de la file.
+       Sans contrôleur actif, les deux zones restent consultables avec leurs commandes natives. */
+    .app-frame:has(> .resource-event-stack > .resource-strip--collapsible:not(.resource-strip--expanded)) #colony-catalog-queues{display:none}
 }
 
 .event-drawer-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;margin:8px 0;font-size:11px}

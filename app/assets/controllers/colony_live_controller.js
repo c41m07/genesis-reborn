@@ -59,6 +59,11 @@ export default class extends Controller {
                 }
                 const next = doc.querySelector(`[data-live-region="${region.dataset.liveRegion}"]`);
                 if (next) {
+                    // Le volet mobile pilote aussi les files : ne pas le replier si seul le HTML est rafraîchi.
+                    if (region.dataset.liveRegion === 'resources' && region.classList.contains('resource-strip--expanded')
+                        && next.querySelector('[aria-controls~="colony-catalog-queues"]')) {
+                        next.classList.add('resource-strip--expanded');
+                    }
                     // Les panneaux du suivi restent ouverts après la mise à jour de leur contenu.
                     const panelScrolls = [];
                     for (const disclosure of region.querySelectorAll('details[data-catalog-disclosure][open]')) {

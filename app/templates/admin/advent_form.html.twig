@@ -7,6 +7,41 @@
             {% for window in published %}<li>{{ window.universe.name }} · {{ window.name }} · du {{ window.visibleFrom|date('d/m/Y H:i', 'Europe/Paris') }} au {{ window.visibleUntil|date('d/m/Y H:i', 'Europe/Paris') }} (heure de Paris)</li>{% endfor %}
         </ul></section>
     {% endif %}
+    {% if readouts %}
+        <section class="panel" aria-labelledby="advent-readouts">
+            <h2 id="advent-readouts">Relevés de progression à l’ouverture</h2>
+            <p>Un relevé par édition, commun aux univers programmés. Les heures sont affichées en heure de Paris.</p>
+            <ul>
+                {% for readout in readouts %}
+                    {% set edition = readout.edition %}
+                    <li data-advent-readout="{{ edition.id }}">
+                        <h3>{{ edition.name }} · {{ edition.season }}</h3>
+                        {% if readout.state == 'legacy' %}
+                            <p>Ancien format : aucun relevé de cohorte à reprendre.</p>
+                        {% else %}
+                            <p>Ouverture prévue : <time datetime="{{ edition.startsAt|date('c', 'UTC') }}">{{ edition.startsAt|date('d/m/Y H:i:s', 'Europe/Paris') }}</time></p>
+                            {% if readout.state in ['captured', 'captured_late'] %}
+                                <p><strong>{{ readout.state == 'captured_late' ? 'Relevé effectué tardivement' : 'Relevé effectué' }}</strong> :
+                                    <time datetime="{{ edition.cohortCapturedAt|date('c', 'UTC') }}">{{ edition.cohortCapturedAt|date('d/m/Y H:i:s', 'Europe/Paris') }}</time>.
+                                    {% if readout.state == 'captured_late' %}Cet horaire ne représente pas l’ouverture.{% endif %}
+                                </p>
+                            {% elseif readout.state == 'scheduled' %}
+                                <p><strong>Relevé prévu.</strong> Le relais le traitera à partir de l’ouverture.</p>
+                            {% elseif readout.state == 'normal_window' %}
+                                <p><strong>Fenêtre normale ouverte.</strong> Aucun relevé n’est encore enregistré.</p>
+                            {% elseif readout.state == 'closed_missing' %}
+                                <p><strong>Édition clôturée sans relevé.</strong> Aucun rattrapage possible après la clôture.</p>
+                            {% elseif readout.state == 'missed' %}
+                                <p><strong>Relevé d’ouverture manqué.</strong> Vérifiez le traitement du relais. Si aucun relevé n’est enregistré et que vous acceptez explicitement une observation à l’heure actuelle, lancez en exploitation :</p>
+                                <p><code>php bin/console app:advent:capture {{ edition.id }} --accept-late</code></p>
+                                <p>Cette reprise ne reconstitue pas l’ouverture et reste possible seulement avant la clôture de l’édition.</p>
+                            {% endif %}
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
     <form class="admin-event-form admin-rotation-form" method="post" action="{{ path('app_admin_game_event_advent') }}">
         <input type="hidden" name="_token" value="{{ csrf_token('admin_advent_preview') }}">
         <section class="panel" aria-labelledby="advent-dates-title">
