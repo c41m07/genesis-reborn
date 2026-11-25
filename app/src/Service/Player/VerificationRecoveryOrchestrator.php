@@ -19,13 +19,18 @@ final class VerificationRecoveryOrchestrator
     public function candidateForForm(int $playerId): ?int
     {
         $candidate = $this->db->fetchAssociative(
-            'SELECT r.id, r.state, r.resolved_at FROM verification_delivery_request r
+            'SELECT r.id, r.state, r.resolved_at, g.version AS active_version, parent_event.original_request_id AS source_recovery
+             FROM verification_delivery_request r
              INNER JOIN player p ON p.id = r.player_id
+             LEFT JOIN player_verification_generation g ON g.player_id = r.player_id
+                 AND g.version = r.versioned_generation_version AND g.state = ? AND g.expires_at > ?
+             LEFT JOIN verification_recovery_event parent_event ON parent_event.recovery_request_id = r.id
              WHERE r.player_id = ? AND p.email_verified_at IS NULL AND p.locked_at IS NULL
              ORDER BY r.id DESC LIMIT 1',
-            [$playerId],
+            ['active', $this->clock->now()->getTimestamp(), $playerId],
         );
         return $candidate !== false && $candidate['state'] === 'unknown' && $candidate['resolved_at'] !== null
+            && $candidate['active_version'] !== null && $candidate['source_recovery'] === null
             ? (int) $candidate['id']
             : null;
     }
@@ -88,8 +93,8 @@ final class VerificationRecoveryOrchestrator
             }
             // Verrou compte d'abord, puis le reçu du même compte. La requête
             // ne découvre pas une intention de récupération d'un autre joueur.
-            $initial = $this->db->fetchAssociative('SELECT state, resolved_at, cooldown_until FROM verification_delivery_request WHERE id = ? AND player_id = ? FOR UPDATE', [$originalId, $playerId]);
-            if ($initial === false || $initial['state'] !== 'unknown' || $initial['resolved_at'] === null) {
+            $initial = VerificationRecoveryOrigin::lock($this->db, $originalId, $playerId);
+            if ($initial === null) {
                 return $this->result('ineligible');
             }
             $journal = $this->db->fetchAssociative('SELECT request_key_hash, recovery_request_id FROM verification_recovery_event WHERE original_request_id = ? FOR UPDATE', [$originalId]);
@@ -119,7 +124,8 @@ final class VerificationRecoveryOrchestrator
                 return $this->result('legacy_active');
             }
             $row = $this->db->fetchAssociative('SELECT * FROM player_verification_generation WHERE player_id = ? FOR UPDATE', [$playerId]);
-            if ($row === false || $row['state'] !== 'active' || (int) $row['expires_at'] <= $now->getTimestamp()
+            if ($row === false || $row['state'] !== 'active' || (int) $row['version'] !== $initial['version']
+                || (int) $row['expires_at'] <= $now->getTimestamp()
                 || !VerificationRecipientBinding::matches($row['recipient_fingerprint'], $player['email'], $row['fingerprint'])) {
                 return $this->result('generation_unavailable');
             }
