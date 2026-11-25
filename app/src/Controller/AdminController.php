@@ -77,13 +77,19 @@ final class AdminController extends AbstractController
             default => [],
         };
         $counters = $reads->counters();
-        $reports = $screen === 'reports' ? $repo->all(MessageReport::class, ['status' => 'open'], ['createdAt' => 'DESC']) : [];
-        $playerReports = $screen === 'reports' ? $repo->all(PlayerReport::class, ['status' => 'open'], ['createdAt' => 'DESC', 'id' => 'DESC']) : [];
-        // Ouvrir la modération est une consultation journalisée ; les autres rubriques ne doivent pas la déclencher.
-        if ($screen === 'reports') {
+        $closedReports = $screen === 'reports' && $request->query->getString('status') === 'closed';
+        $openModeration = $screen === 'reports' && !$closedReports;
+        $reportArchive = $closedReports ? $reads->closedModerationReports(
+            $request->query->getInt('messages_page', 1),
+            $request->query->getInt('players_page', 1),
+        ) : [];
+        $reports = $reportArchive['messages']['entries']
+            ?? ($openModeration ? $repo->all(MessageReport::class, ['status' => 'open'], ['createdAt' => 'DESC']) : []);
+        $playerReports = $reportArchive['players']['entries']
+            ?? ($openModeration ? $repo->all(PlayerReport::class, ['status' => 'open'], ['createdAt' => 'DESC', 'id' => 'DESC']) : []);
+        // Seule la file des signalements à traiter journalise la consultation et acquitte les nouveautés.
+        if ($openModeration) {
             $admin->recordReportViews($this->getUser(), $reports);
-        }
-        if ($screen === 'reports') {
             $playerReportService->recordViews($this->getUser(), $playerReports);
         }
         $universePage = $screen === 'universes' ? $reads->universes($request->query->getInt('page', 1), $listFilters['q'], $listFilters['status']) : [];
@@ -102,7 +108,7 @@ final class AdminController extends AbstractController
         $closedUniverseCount = count(array_filter($universes, static fn(Universe $universe): bool => $universe->status === 'closed'));
         $auditLogs = $screen === 'audit' ? $listPage['entries'] : ($screen === 'overview' ? $reads->recentActions() : []);
         $securityIncidents = $screen === 'security' ? $reads->securityIncidents() : [];
-        if ($screen === 'reports') {
+        if ($openModeration) {
             $notifications->markVisited($this->getUser(), ['reports' => max([0, ...array_map(static fn(MessageReport $report): int => $report->id, $reports)]), 'player_reports' => max([0, ...array_map(static fn(PlayerReport $report): int => $report->id, $playerReports)])]);
         }
         if ($screen === 'security') {
@@ -145,6 +151,8 @@ final class AdminController extends AbstractController
             'universeScheduleDraft' => [],
             'universeSettingsDraft' => [],
             'reports' => $reports,
+            'closedReports' => $closedReports,
+            'reportArchive' => $reportArchive,
             'playerReports' => $playerReports,
             'playerReportReasons' => \App\Service\Player\PlayerReportService::REASONS,
             'playerReportCategories' => \App\Service\Player\PlayerReportService::CATEGORIES,
