@@ -1,23 +1,62 @@
+{% macro reviewed(report) %}
+<p class="admin-report-review">
+    Décision enregistrée
+    {% if report.reviewedAt %}le <time datetime="{{ report.reviewedAt|date('c') }}">{{ report.reviewedAt|date('d/m/Y H:i') }}</time>{% else %}· Date non conservée{% endif %}
+    {% if report.reviewedBy %}par {{ report.reviewedBy.username }}{% endif %}.
+</p>
+{% endmacro %}
+
+{% macro archivePages(listing, other, group) %}
+{% if listing.pages > 1 %}
+    {% set messageGroup = group == 'messages' %}
+    <nav class="admin-mission-pages" aria-label="{{ messageGroup ? 'Pagination des messages clos' : 'Pagination des signalements joueurs clos' }}">
+        {% if listing.page > 1 %}
+            <a class="secondary" href="{{ path('app_admin_reports', {status: 'closed', messages_page: messageGroup ? listing.page - 1 : other.page, players_page: messageGroup ? other.page : listing.page - 1, _fragment: messageGroup ? 'admin-reports' : 'admin-player-reports'}) }}">Page précédente</a>
+        {% endif %}
+        <span>Page {{ listing.page }} / {{ listing.pages }}</span>
+        {% if listing.page < listing.pages %}
+            <a class="secondary" href="{{ path('app_admin_reports', {status: 'closed', messages_page: messageGroup ? listing.page + 1 : other.page, players_page: messageGroup ? other.page : listing.page + 1, _fragment: messageGroup ? 'admin-reports' : 'admin-player-reports'}) }}">Page suivante</a>
+        {% endif %}
+    </nav>
+{% endif %}
+{% endmacro %}
+
+<nav class="admin-mission-pages" aria-label="État des signalements">
+    <a class="{{ closedReports ? 'secondary' : 'primary' }}" href="{{ path('app_admin_reports') }}"{% if not closedReports %} aria-current="page"{% endif %}>Ouverts</a>
+    <a class="{{ closedReports ? 'primary' : 'secondary' }}" href="{{ path('app_admin_reports', {status: 'closed'}) }}"{% if closedReports %} aria-current="page"{% endif %}>Clos</a>
+</nav>
+
 <div class="admin-design-review-grid">
-<section class="panel admin-section" id="admin-reports" aria-labelledby="admin-reports-title" data-controller="admin-filter">
+<section class="panel admin-section" id="admin-reports" aria-labelledby="admin-reports-title"{% if not closedReports %} data-controller="admin-filter"{% endif %}>
 
 <h2 id="admin-reports-title">Signalements de messages</h2>
 <p>Seuls les messages ayant été signalés par un participant apparaissent ici.</p>
+{% if not closedReports %}
 <div class="admin-search"><label for="report-search">Rechercher dans les messages</label><input id="report-search" type="search" placeholder="Joueur, guilde, motif…" data-admin-filter-target="query" data-action="input->admin-filter#filter"><output data-admin-filter-target="count"></output></div>
+{% endif %}
 {% for report in reports %}
-<article class="panel admin-report-card" data-admin-filter-target="row" aria-labelledby="message-report-{{ report.id }}">
-<header class="admin-report-heading"><h3 id="message-report-{{ report.id }}">Signalement #{{ report.id }} · {{ report.message.recipient ? 'Message privé' : 'Message de guilde' }}</h3><span class="badge">À traiter</span></header>
+<article class="panel admin-report-card"{% if not closedReports %} data-admin-filter-target="row"{% endif %} aria-labelledby="message-report-{{ report.id }}">
+<header class="admin-report-heading"><h3 id="message-report-{{ report.id }}">Signalement #{{ report.id }} · {{ report.message.recipient ? 'Message privé' : 'Message de guilde' }}</h3><span class="badge">{{ closedReports ? (report.status == 'dismissed' ? 'Classé sans suite' : 'Message masqué') : 'À traiter' }}</span></header>
 <p>{{ report.createdAt|date('d/m/Y H:i') }} · {{ report.reporter.displayName }}</p>
 <p>{% if report.message.recipient %}Message privé de {{ report.message.sender.displayName }} à {{ report.message.recipient.displayName }}{% else %}Message de la guilde {{ report.message.guild.name }} par {{ report.message.sender.displayName }}{% endif %} · {{ report.message.createdAt|date('d/m/Y H:i') }}</p>
 <blockquote>{{ report.message.content }}</blockquote><p>Motif : {{ report.reason }}</p>
+{% if closedReports %}
+{{ _self.reviewed(report) }}
+{% else %}
 <form method="post" action="{{ path('app_admin_report_review',{id:report.id}) }}">
 <input type="hidden" name="_token" value="{{ csrf_token('admin_report_'~report.id) }}">
 <button class="secondary" name="decision" value="dismiss">Classer sans suite</button>
 <button class="primary" name="decision" value="redact">Masquer le message</button>
 </form>
+{% endif %}
 </article>
 {% endfor %}
+{% if closedReports %}
+{% if not reports %}<p>Aucun signalement de message clos.</p>{% endif %}
+{{ _self.archivePages(reportArchive.messages, reportArchive.players, 'messages') }}
+{% else %}
 <p {% if reports %}hidden{% endif %} data-admin-filter-target="empty" data-default-message="Aucun signalement à traiter." data-no-matches-message="Aucun signalement ne correspond à cette recherche.">Aucun signalement à traiter.</p>
+{% endif %}
 </section>
 
 <section class="panel admin-section" id="admin-player-reports" aria-labelledby="admin-player-reports-title">
@@ -25,18 +64,23 @@
 <p>Contexte conservé au moment du signalement. Le traitement ne déclenche aucune sanction automatique.</p>
 {% for report in playerReports %}
 <article class="panel admin-report-card">
-<header class="admin-report-heading"><h3>Signalement joueur #{{ report.id }} · {{ report.context.target_username }}</h3><span class="badge">À traiter</span></header>
+<header class="admin-report-heading"><h3>Signalement joueur #{{ report.id }} · {{ report.context.target_username }}</h3><span class="badge">{{ closedReports ? (report.status == 'dismissed' ? 'Classé sans suite' : 'Traité') : 'À traiter' }}</span></header>
 <p>{{ report.createdAt|date('d/m/Y H:i') }} · Univers {{ report.context.universe_name }} (#{{ report.context.universe_id }})</p>
 <p>Auteur : {{ report.context.reporter_username }} (#{{ report.context.reporter_id }}) · Joueur visé : {{ report.context.target_username }} (#{{ report.context.target_id }})</p>
 <p>Classement consulté : {{ playerReportCategories[report.context.category] }} · rang #{{ report.context.rank }} · calcul du {{ report.context.leaderboard_at|date('d/m/Y H:i') }}.</p>
 {% if report.context.target_username_seen != report.context.target_username %}<p>Pseudonyme lors de la consultation : {{ report.context.target_username_seen }}</p>{% endif %}
 <p>Motif : {{ playerReportReasons[report.reason] }}</p>{% if report.comment %}<p class="player-report-comment">Commentaire : {{ report.comment }}</p>{% endif %}
+{% if closedReports %}
+{{ _self.reviewed(report) }}
+{% else %}
 <form method="post" action="{{ path('app_admin_player_report_review',{id:report.id}) }}">
 <input type="hidden" name="_token" value="{{ csrf_token('admin_player_report_'~report.id) }}">
 <button class="secondary" name="decision" value="dismiss">Classer sans suite</button>
 <button class="primary" name="decision" value="actioned">Marquer comme traité</button>
 </form>
+{% endif %}
 </article>
-{% else %}<p>Aucun signalement de joueur à traiter.</p>{% endfor %}
+{% else %}<p>{{ closedReports ? 'Aucun signalement de joueur clos.' : 'Aucun signalement de joueur à traiter.' }}</p>{% endfor %}
+{% if closedReports %}{{ _self.archivePages(reportArchive.players, reportArchive.messages, 'players') }}{% endif %}
 </section>
 </div>

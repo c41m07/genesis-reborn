@@ -310,6 +310,19 @@ des scripts et les six parcours navigateur concernés réussissent. Les cartes o
 été agrandies après revue mobile et le contraste du lien Patchnotes partagé a été
 corrigé en vrai thème clair ; les trois parcours de boîtes ont réussi à nouveau.
 
+## Retrait d’un brouillon avancé
+
+Dans les événements courants, un brouillon a une seule action de retrait. Elle
+demande un motif et une confirmation, même sans JavaScript. Un brouillon
+jamais démarré est effacé et son motif conservé dans le journal d’audit.
+L’annulation reste une action distincte des événements planifiés ou en cours ;
+le parcours des défis et l’historique des retraits ne changent pas.
+
+Un ancien formulaire déjà ouvert menant à `POST /admin/events/{id}/delete`
+conserve la vérification CSRF, mais ne supprime plus rien. Il renvoie vers la
+liste et indique d’utiliser le retrait journalisé. Mettre à jour ou recharger
+l’onglet avant de confirmer.
+
 ## Lot événements guidés — vérifié localement
 
 Complexité 5/5 : planification, récompenses et production différée. L’assistant

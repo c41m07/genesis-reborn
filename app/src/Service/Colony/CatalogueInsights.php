@@ -85,8 +85,8 @@ final class CatalogueInsights
                 $maxLevel = max(1, (int) ($definition['max_level'] ?? 25));
                 $afterRanks = $next[$slug];
                 $cap = (float) ($this->catalog->rules()['time_reduction_max_percent'] ?? 70);
-                $before = GameCatalog::diminishingBonus($levels[$slug] ?? [], $cap, $maxLevel);
-                $after = GameCatalog::diminishingBonus($afterRanks, $cap, $maxLevel);
+                $before = GameCatalog::infrastructureBonus($levels[$slug] ?? [], $cap, $maxLevel, $this->catalog->rules()['building_level_growth'] ?? []);
+                $after = GameCatalog::infrastructureBonus($afterRanks, $cap, $maxLevel, $this->catalog->rules()['building_level_growth'] ?? []);
                 return [[
                     'label' => $slug === 'lab' ? 'Réduction du temps de recherche' : 'Réduction du temps de construction des vaisseaux',
                     'before' => $before,
@@ -99,14 +99,14 @@ final class CatalogueInsights
                 if ($target === null && (($effect['targets'] ?? null) !== 'ground_defenses' || ($effect['stat'] ?? null) !== 'hp')) {
                     return [];
                 }
-                // Le combat utilise le niveau de référence du bunker pour le bonus acquis.
-                $maxLevel = max(1, (int) (($target === null ? $this->catalog->get('buildings', $slug) : $definition)['max_level'] ?? 25));
+                // Le combat et la fiche utilisent le plafond du bunker de cet univers.
+                $maxLevel = max(1, (int) ($definition['max_level'] ?? 25));
                 $afterRanks = $next[$slug];
                 $cap = (float) ($effect['max_bonus'] ?? 25);
                 return [[
                     'label' => 'Structure supplémentaire des défenses',
-                    'before' => GameCatalog::diminishingBonus($levels[$slug] ?? [], $cap, $maxLevel),
-                    'after' => GameCatalog::diminishingBonus($afterRanks, $cap, $maxLevel),
+                    'before' => GameCatalog::infrastructureBonus($levels[$slug] ?? [], $cap, $maxLevel, $this->catalog->rules()['building_level_growth'] ?? []),
+                    'after' => GameCatalog::infrastructureBonus($afterRanks, $cap, $maxLevel, $this->catalog->rules()['building_level_growth'] ?? []),
                     'unit' => '%',
                 ]];
             }

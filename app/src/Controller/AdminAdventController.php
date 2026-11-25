@@ -6,7 +6,7 @@ namespace App\Controller;
 
 use App\Entity\{Player, Universe};
 use App\Repository\{AdventWindowRepository, GameRepository};
-use App\Service\Advent\{AdventCalendar, AdventEditions, AdventGifts};
+use App\Service\Advent\{AdventAdminCaptureStatus, AdventCalendar, AdventEditions, AdventGifts};
 use App\Service\Catalog\GameCatalog;
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,7 +20,7 @@ final class AdminAdventController extends AbstractController
     private const PREVIEW = 'admin_advent_preview';
 
     #[Route('/admin/events/avent', name: 'app_admin_game_event_advent', methods: ['GET', 'POST'])]
-    public function form(Request $request, AdventEditions $editions, GameRepository $game, AdventWindowRepository $windows, ClockInterface $clock): Response
+    public function form(Request $request, AdventEditions $editions, GameRepository $game, AdventWindowRepository $windows, ClockInterface $clock, AdventAdminCaptureStatus $captureStatus): Response
     {
         $season = (int) $clock->now()->setTimezone(new \DateTimeZone(AdventCalendar::PARIS))->format('Y');
         $draft = ['name' => 'Calendrier de l’Avent', 'season' => $season, 'universe' => null,
@@ -54,9 +54,20 @@ final class AdminAdventController extends AbstractController
             }
         }
 
+        $now = $clock->now();
+        $scheduled = $windows->scheduled($now);
+        $readouts = [];
+        foreach ($scheduled as $window) {
+            $readouts[$window->edition->id] ??= $captureStatus->forEdition($window->edition, $now);
+        }
+        foreach ($windows->recentlyClosedEditions($now) as $edition) {
+            $readouts[$edition->id] ??= $captureStatus->forEdition($edition, $now);
+        }
+
         return $this->render('admin/advent_form.html.twig', [
             'draft' => $draft,
-            'published' => $windows->scheduled(),
+            'published' => $scheduled,
+            'readouts' => $readouts,
             'universes' => $game->all(Universe::class, [], ['name' => 'ASC']),
         ], new Response(status: $request->isMethod('POST') ? 422 : 200));
     }

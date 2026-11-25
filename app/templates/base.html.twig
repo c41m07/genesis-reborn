@@ -31,7 +31,7 @@
 {% set firstStepsInFlow = fleetDecisionPage or adventPage or route in ['app_map_v2', 'app_messages', 'app_leaderboard'] %}
 {% set entryPublicPage = not app.user and route in ['app_home','app_login','app_register','app_password_reset_request','app_password_reset','app_email_verify_request','app_email_verify','app_access_denied','app_legal_mentions','app_legal_terms','app_legal_privacy','app_legal_cookies'] %}
 
-{% set unreadPatchNote = app.user and latest_patch_note_id() > (app.user.preferences.last_patch_note_read_id|default(0)) %}
+{% set unreadPatchNote = app.user and has_unread_patch_note(app.user) %}
 {% set preferences = {'timezone':'Europe/Paris','reducedMotion':false,'realtimeNotifications':true,'theme':'dark'}|merge(app.user ? app.user.preferences|default({}) : {}) %}
 <!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#090f1b"><title>{% block title %}Genesis Reborn{% endblock %}</title>
 {% if metadata %}
