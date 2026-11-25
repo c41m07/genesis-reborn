@@ -19,11 +19,13 @@
     </div>
     <button class="secondary">Filtrer</button>
 </form>
+{# La liste publique ouvre une note dès publishedAt <= maintenant, en UTC. #}
+{% set publicationNow = date('now', 'UTC') %}
 <ul class="admin-patchnote-list">
     {% for note in patchNotes %}
         <li><article class="panel patchnote-editor">
             <h2>{{ note.title }}</h2>
-            <p class="badge">{{ note.version }} · {{ note.status == 'published' ? 'Publié' : 'Brouillon' }}</p>
+            <p class="badge">{{ note.version }} · {{ note.status != 'published' ? 'Brouillon' : (note.publishedAt and note.publishedAt > publicationNow ? 'Planifié' : 'Publié') }}</p>
             {% if note.publishedAt %}<p>Publication (UTC) : {{ note.publishedAt|date('d/m/Y H:i', 'UTC') }}</p>{% endif %}
             <div class="admin-patchnote-actions">
                 <a class="secondary" href="{{ path('app_admin_patchnote_edit', {id: note.id}) }}">Modifier la patchnote<span class="sr-only"> {{ note.title }}</span></a>

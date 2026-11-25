@@ -6,7 +6,7 @@ use App\Entity\Player;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-/** Sélecteur unique pour inscription et renvoi public, sans SMTP raccordé. */
+/** Sélecteur unique pour l’inscription et le renvoi public. */
 final class EmailVerificationEmissionSelector
 {
     public function __construct(
@@ -18,6 +18,7 @@ final class EmailVerificationEmissionSelector
         #[Autowire('%env(bool:EMAIL_VERIFICATION_VERSIONED_WRITER_ENABLED)%')] private bool $versioned,
         #[Autowire('%env(bool:EMAIL_VERIFICATION_MIXED_READER_ENABLED)%')] private bool $reader,
         #[\SensitiveParameter] private ?VerificationEmissionProvider $provider = null,
+        private ?VerificationEmissionProviderFactory $configuredProvider = null,
     ) {
     }
 
@@ -26,13 +27,21 @@ final class EmailVerificationEmissionSelector
         if (!$this->versioned) {
             return $this->legacy->sendWelcomeAndVerification($player, $welcome);
         }
-        if (!$this->reader || $this->provider === null || $player->id === null) {
-            // Aucun chemin historique ne peut être sélectionné par erreur.
-            // Le contrôleur conserve l'avertissement usuel à l'inscription.
+        if (!$this->reader || $player->id === null) {
+            return false;
+        }
+        try {
+            // Ne construire ni valider le transport si la voie classique est sélectionnée.
+            $provider = $this->provider ?? $this->configuredProvider?->create();
+        } catch (\DomainException) {
+            // Le précontrôle opérateur explique l’échec ; le formulaire public reste neutre.
+            return false;
+        }
+        if ($provider === null) {
             return false;
         }
         $prepared = $this->writer->prepareForEmission(
-            $player->id, $this->provider->keyId, $this->clock->now()->modify('+24 hours'), $this->provider->keys,
+            $player->id, $provider->keyId, $this->clock->now()->modify('+24 hours'), $provider->keys,
         );
         if (!in_array($prepared['result'], ['created', 'reused'], true)) {
             return false;
@@ -51,14 +60,14 @@ final class EmailVerificationEmissionSelector
         if ($claim['result'] !== 'claimed') {
             return false;
         }
-        $snapshot = $this->lifecycle->prepareVersionedEmission($id, $claim['claim_token'], $this->provider->keys);
+        $snapshot = $this->lifecycle->prepareVersionedEmission($id, $claim['claim_token'], $provider->keys);
         if ($snapshot === null) {
             $this->lifecycle->complete($id, $claim['claim_token'], 'cancelled');
             return false;
         }
 
         try {
-            $outcome = $this->provider->transport->confirmation($snapshot['email'], $snapshot['link'], $snapshot['username']);
+            $outcome = $provider->transport->confirmation($snapshot['email'], $snapshot['link'], $snapshot['username']);
         } catch (\Throwable) {
             // Une exception peut survenir après une remise : pas de retry.
             $outcome = VerificationRecoveryOutcome::Unknown;
@@ -69,7 +78,7 @@ final class EmailVerificationEmissionSelector
         );
         if ($welcome) {
             try {
-                $this->provider->transport->welcome($snapshot['email'], $snapshot['username']);
+                $provider->transport->welcome($snapshot['email'], $snapshot['username']);
             } catch (\Throwable) {
                 // Message distinct et sans secret de confirmation. Ne pas
                 // répéter une exception de fournisseur ni lancer de reprise.

@@ -5,7 +5,7 @@ namespace App\Service\Fleet;
 use App\Entity\{Planet, PlayerDiscovery, PlayerUniverse, SolarSystem};
 use App\Repository\GameRepository;
 use App\Service\Combat\CombatEventService;
-use App\Service\Player\{RelationResolver, VacationCalendar};
+use App\Service\Player\{FirstStepRewardPolicy, RelationResolver, VacationCalendar};
 use App\Service\Universe\CoordinateResolver;
 
 final class DestinationCatalogue
@@ -54,10 +54,11 @@ final class DestinationCatalogue
     {
     }
 
-    public function choices(PlayerUniverse $viewer, string $mission, ?string $query = null): array
+    public function choices(PlayerUniverse $viewer, string $mission, ?string $query = null, bool $tutorialSpy = false): array
     {
         $this->assertMission($mission);
-        $modes = self::MISSION_GROUPS[$mission];
+        $tutorialSpy = $tutorialSpy && $mission === 'spy';
+        $modes = $tutorialSpy ? ['npc'] : self::MISSION_GROUPS[$mission];
         $result = [
             'groups' => array_fill_keys(array_keys(self::GROUPS), []),
             'labels' => self::GROUPS,
@@ -110,8 +111,16 @@ final class DestinationCatalogue
             if (!isset($known[$planet->solarSystem->id])) {
                 continue;
             }
-            if ($query !== null && ($planet->owner?->player === null || mb_stripos($planet->owner->player->username, $query) === false)) {
+            if ($tutorialSpy && !FirstStepRewardPolicy::isNativeNpc($planet)) {
                 continue;
+            }
+            if ($query !== null) {
+                $searchValue = $tutorialSpy
+                    ? $planet->name.' '.$planet->coordinates()
+                    : $planet->owner?->player?->username;
+                if ($searchValue === null || mb_stripos($searchValue, $query) === false) {
+                    continue;
+                }
             }
             if (!$this->allows($viewer, $planet, $mission, false)) {
                 continue;

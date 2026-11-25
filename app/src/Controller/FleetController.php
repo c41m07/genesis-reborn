@@ -6,7 +6,7 @@ use App\Entity\{Fleet, Planet, SolarSystem};
 use App\Repository\GameRepository;
 use App\Service\Universe\UniverseContext;
 use App\Service\Fleet\{FleetService, DestinationCatalogue};
-use App\Service\Player\PreferencesService;
+use App\Service\Player\{FirstStepRewardPolicy, PreferencesService};
 use App\Service\Catalog\GameCatalog;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
@@ -43,6 +43,7 @@ final class FleetController extends AbstractController
             'origin' => $request->query->getInt('origin'), 'confirmation' => $request->query->getString('confirmation'),
             'adjust' => $request->query->getBoolean('adjust'), 'page' => $request->query->getInt('page', 1),
             'colony' => $request->query->getInt('colony'), 'focus' => $request->query->getInt('fleet'),
+            'tutorial_spy' => $request->query->getBoolean('tutorial'),
         ];
         try {
             $data = $view->prepare($member, (int) $request->getSession()->get('selected_planet_'.$member->id, 0), $page, $parameters);
@@ -53,7 +54,6 @@ final class FleetController extends AbstractController
             $this->addFlash('error', 'Les disponibilités ou la composition ont changé. Vérifiez les quantités avant de charger.');
             return $this->redirectToRoute('app_fleet_composition_load', $data['composition_review']);
         }
-        $data['tutorial_spy'] = $page === 'prepare' && $parameters['mission'] === 'spy' && $request->query->getBoolean('tutorial');
         if ($request->headers->get('X-Genesis-Live') === '1' && $request->getPreferredFormat() === 'json') {
             $data['chrome'] = $shell->get($this->getUser(), $data['fleet_planet'], rememberSelection: false);
             $data['section'] = 'overview';
@@ -86,7 +86,12 @@ final class FleetController extends AbstractController
     {
         $membership = $context->membership();
         try {
-            $data = $destinations->choices($membership, $request->query->getString('mission', 'explore'), $request->query->has('q') ? $request->query->getString('q') : null);
+            $data = $destinations->choices(
+                $membership,
+                $request->query->getString('mission', 'explore'),
+                $request->query->has('q') ? $request->query->getString('q') : null,
+                tutorialSpy: $request->query->getBoolean('tutorial_spy'),
+            );
             return $this->json($data, 200, ['Cache-Control' => 'private, no-store']);
         } catch (\DomainException $error) {
             return $this->json(['error' => $error->getMessage()], 422, ['Cache-Control' => 'private, no-store']);
@@ -216,8 +221,11 @@ final class FleetController extends AbstractController
                 $request->request->all('ships'),
                 $ratio,
                 $request->request->all('cargo'),
-                $orbitHours
+                $orbitHours,
             );
+            if ($request->request->getBoolean('tutorial_spy')) {
+                FirstStepRewardPolicy::assertSpyQuote($mission, $destination, $result['composition'], $result['ship_adjusted']);
+            }
             if ($request->request->getBoolean('require_exact_composition') && $result['ship_adjusted']) {
                 throw new \DomainException('La composition n’est plus disponible exactement. Modifiez vos quantités ou vérifiez à nouveau la composition enregistrée.');
             }
@@ -299,7 +307,7 @@ final class FleetController extends AbstractController
                 (string) $request->request->get('request_key'),
                 $orbitHours,
                 $request->request->getBoolean('require_exact_composition'),
-                tutorialSpy: $mission === 'spy' && $request->request->getBoolean('tutorial_spy'),
+                tutorialSpy: $request->request->getBoolean('tutorial_spy'),
             );
             $this->addFlash('success', 'Flotte envoyée. Carburant aller-retour réservé.' . ($adjusted ? ' Quantités ajustées aux stocks et capacités disponibles.' : ''));
         } catch (\DomainException $e) {

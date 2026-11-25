@@ -40,7 +40,7 @@
       "Le chantier spatial exige les producteurs de métal et de nano de son rang au niveau 2 et les chantiers des rangs précédents au niveau 20. Le bunker exige les producteurs de métal et de nano de son rang au niveau 1 et les bunkers des rangs précédents au niveau 8. Les stockages demandent leur producteur du même rang au niveau 5 sur la colonie.",
       "Le stockage Intermédiaire exige aussi le stockage Basique de la même ressource au niveau 5. Le Supérieur exige les deux rangs précédents au niveau 5. Les nouvelles améliorations s’arrêtent au niveau 5 en Basique et en Intermédiaire. Le stockage Supérieur peut continuer à progresser.",
       "Le Piège à antimatière exige le producteur d’hydrogène niveau 5 sur votre colonie et la recherche industrielle niveau 5 dans votre univers, tous deux du rang visé. Cette recherche s’appelle Génie civil colonial, Ingénierie de chantier automatisée ou Planification industrielle intégrée selon le rang.",
-      "Les recherches sont partagées entre vos colonies d’un même univers, avec une file commune. Le laboratoire du rang concerné fait partie du déblocage initial. Pour lancer une recherche, la colonie doit avoir au moins le niveau 1 du laboratoire correspondant : Laboratoire colonial en Basique, Institut de recherche orbitale en Intermédiaire ou Complexe scientifique planétaire en Supérieur. Les technologies acquises sont utilisables sur toutes les colonies du même univers. Les coûts, durées et plafonds restent applicables.",
+      "Les recherches sont partagées entre vos colonies d’un même univers, avec une file commune. Le laboratoire du rang concerné fait partie du déblocage initial. Pour lancer une recherche, la colonie doit avoir au moins le niveau 1 du laboratoire correspondant : Laboratoire colonial en Basique, Institut de recherche orbitale en Intermédiaire ou Complexe scientifique planétaire en Supérieur. Les technologies acquises sont utilisables sur toutes les colonies du même univers. Les coûts, durées et plafonds restent applicables. Dans le catalogue de référence, chaque recherche Intermédiaire exige sa propre recherche Basique au niveau 5. Pour le Supérieur, il faut l’Intermédiaire de la même famille au niveau 5. Les autres prérequis figurent sur la fiche.",
       "L’arbre technologique aide à suivre les liens entre recherches. Les conditions complètes, notamment les bâtiments requis, restent dans les fiches. Ne confondez pas accès débloqué et ressources suffisantes pour commander.",
       "Les prérequis des cartes et des fiches sont des liens : ils ouvrent la bonne page, dans votre colonie active, avec le rang requis sélectionné. Ils restent consultables même lorsque le rang est verrouillé ; ses règles de déblocage ne changent pas.",
       "Un lien direct vers un élément du catalogue révèle son rang et l’encadre en jaune pendant cinq secondes. Avec les mouvements réduits, le cadre reste fixe. Sur grand écran, événements, activités de colonie et flottes restent accessibles au défilement."
@@ -136,24 +136,24 @@
     "title": "Production et stockage en chiffres",
     "paragraphs": [
       "Les débits du moteur sont exprimés par seconde. Pour obtenir une valeur horaire, multipliez par 3 600. Les formules suivantes séparent la production nominale, les consommations et les plafonds : c’est cette distinction qui explique les variations du débit affiché. La production de base totale est de 10 métal et 10 nano par heure en position 5 et univers ×1, avant les modificateurs existants ; les vacances suspendent la production. Les fiches du bandeau de ressources, accessibles au survol, au clavier ou au toucher, présentent les sources, les consommations et les estimations de saturation ou d’épuisement au rythme actuel, sans reconstituer un historique. Le revenu de base est nul pour l’électricité, l’antimatière et l’hydrogène ; leurs bâtiments ou les unités civiles adaptées sont nécessaires pour les produire ; l’antimatière dépend du piège.",
-      "À position 5 dans un univers ×1, les bâtiments de nano produisent 180, 270 ou 405 nano par niveau et par heure et consomment autant d’électricité à plein rendement, selon leur rang.",
-      "Aux débits nominaux de référence, le piège consomme directement 1 électricité et 4 hydrogène par antimatière. Produire ces 4 hydrogène au moyen d’une raffinerie demande 1 électricité. Le total est donc de 2 électricité par antimatière, comme pour 8 hydrogène, 4 métal ou 2 nano.",
+      "En position 5 et en univers ×1, les bases horaires des producteurs de nano sont de 180, 270 et 405 par niveau selon le rang. Le bonus composé augmente leur production. Leur consommation électrique à plein rendement reste de 180, 270 et 405 par niveau.",
+      "Le piège utilise 4 hydrogène par unité d’antimatière effectivement produite. Sa consommation électrique à plein rendement dépend des niveaux installés. Elle vaut 90 électricité par heure et par niveau Basique en position 5 et en univers ×1.",
       "La production civile s’ajoute séparément de celle des usines : unités actives de chaque rang multipliées par leur débit horaire de référence, puis position, univers et événement. Aucun second facteur de rang ne s’ajoute au débit déjà propre au rang. Ces unités ne consomment pas l’entretien électrique des usines et ne subissent pas leur rendement réduit ; les plafonds de stockage et pauses de vacances restent applicables."
     ],
     "calculations": [
       {
         "title": "Calculer la production nominale d’un bâtiment",
-        "explanation": "Les niveaux producteurs des trois rangs sont additionnés avec leurs facteurs de production, puis les modificateurs sont appliqués. Le débit net tient ensuite compte de la production de base, du rendement et des consommations locales.",
-        "formula": "N = B + 1,5 × I + 2,25 × S\nProduction nominale par seconde = N × p × f × u × e\nProduction horaire = production par seconde × 3 600",
+        "explanation": "Chaque rang produit dès son premier niveau. Additionnez les apports des trois rangs avant d’appliquer la position, l’univers, l’événement et le rendement industriel. Le revenu passif de la planète s’ajoute séparément.",
+        "formula": "N = B × 1,0025^B + 1,5 × I × 1,005^I + 2,25 × S × 1,01^S\nProduction nominale par seconde = N × p × f × u × e\nProduction horaire = production par seconde × 3 600",
         "variables": ["B, I, S : niveaux Basique, Intermédiaire et Supérieur du même producteur.", "p : production par niveau ; f : facteur de position ; u : multiplicateur de production de l’univers ; e : multiplicateur d’événement (1 en son absence)."],
-        "example": "Une centrale de niveau 10 Basique et 4 Intermédiaire a N = 16. Avec p = 0,3 et f = u = e = 1, elle produit 4,8 électricité/s, soit 17 280/h, avant déduction des consommations. La production de base de la planète se compte séparément."
+        "example": "En position 5 et en univers ×1, à plein rendement et sans événement, les mines de métal 50/25/1 produisent ensemble 36 504,33 métal par heure. Les bases horaires par niveau sont de 360, 540 et 810."
       },
       {
         "title": "Comprendre le stockage et une absence",
-        "explanation": "Le stockage utilise des facteurs distincts de ceux de la production. Le calcul du stock ci-dessous s’applique à un intervalle où le débit net reste constant ; le serveur recommence le calcul à chaque changement de rendement ou de plafond.",
-        "formula": "Capacité = C₀ + c × (B + 1,25 × I + 1,5625 × S)\nStock final = min(capacité, max(0, stock initial + débit net × secondes))",
-        "variables": ["C₀ : capacité de base, 200 000 dans les règles de référence ; c : ajout par niveau pondéré, 100 000.", "B, I, S : niveaux du stockage de la ressource ; le débit net est exprimé en unités par seconde."],
-        "example": "Un stockage Basique niveau 2 donne 400 000 de capacité. Avec 390 000 unités et un débit constant de +2/s pendant 2 heures, le calcul brut donne 404 400 ; vous conservez 400 000. La simulation adapte les consommations lorsqu’une production atteint son plafond."
+        "explanation": "La capacité de départ est comptée une fois par ressource. Chaque dépôt ajoute des places dès son premier niveau. Un ancien surplus reste disponible pour vos dépenses et suspend les nouveaux apports tant que le stock dépasse la capacité.",
+        "formula": "Capacité = C₀ + c × (B × 1,0025^B + 1,25 × I × 1,005^I + 1,5625 × S × 1,01^S)",
+        "variables": ["C₀ désigne la capacité de la colonie pour cette ressource et c l’apport par niveau Basique avant bonus. Pour le métal, ces valeurs sont de 10 000 et 100 000 places.", "B, I et S sont les niveaux des dépôts Basique, Intermédiaire et Supérieur. Les deux premiers sont limités au niveau 5."],
+        "example": "Avec les dépôts de métal aux niveaux 5/5/1, la colonie dispose d’environ 1 314 876 places."
       }
     ]
   },
@@ -162,7 +162,7 @@
     "part": "3. Comprendre les calculs",
     "title": "Coûts, durées et bonus de recherche",
     "paragraphs": [
-      "Les coûts viennent du profil propre à l’élément et au rang. Une courbe fait évoluer ce profil avec le niveau ; les réductions éventuelles et les arrondis s’appliquent ensuite. Les pourcentages de composition économique ne représentent pas des pourcentages de quantités brutes.",
+      "Le premier niveau Basique conserve les matériaux du catalogue. En Intermédiaire et Supérieur, le budget d’entrée vaut 110 % du prix du seul niveau exigé du prérequis admissible le plus cher, avant remise et hors électricité. Pour une recherche, seules les recherches de sa famille entrent dans la comparaison. Pour un producteur, un dépôt, le laboratoire, le chantier spatial ou le bunker, comparez tous les bâtiments et recherches exigés. Le budget est réparti selon le profil du rang à construire.",
       "Par défaut, les parts de valeur métal/nano/antimatière/hydrogène sont 48/52/0/0 en Basique, 34/36/30/0 en Intermédiaire et 28/31/31/10 en Supérieur. La pondération vaut 2 pour le métal, 4 pour le nano, 8 pour l’antimatière et 1 pour l’hydrogène. Elle sert à répartir les prix et ne permet pas d’échanger les ressources. Les réglages de l’univers restent prioritaires ; une commande déjà payée conserve son coût et sa durée.",
       "Dans les références actuelles, une réduction de durée est plafonnée à 70 % et une réduction de coût à 40 %. Le laboratoire réduit la durée des recherches, le chantier celle des vaisseaux. Les défenses ne reçoivent aucune réduction de durée du chantier ou du bunker."
     ],
@@ -170,23 +170,23 @@
       {
         "title": "Calculer un coût et comprendre les arrondis",
         "explanation": "Pour chaque ressource positive, le prix de base du profil est multiplié par la courbe du niveau et la quantité, puis arrondi au supérieur. Si une réduction de coût s’applique, un second arrondi supérieur est effectué. Une ressource à zéro reste à zéro.",
-        "formula": "Coût brut = plafond(prix du profil × G(n) × quantité)\nCoût payé = plafond(coût brut × (1 − réduction / 100))",
-        "variables": ["plafond(x) : plus petit entier supérieur ou égal à x ; G(n) : produit des multiplicateurs de chaque passage de niveau de 2 à n ; G(1) = 1.", "Pour un producteur : ×1,12 jusqu’à 20, ×1,09 de 21 à 40, ×1,035 de 41 à 80, ×1,015 de 81 à 120, puis ×1,01. Les autres bâtiments et recherches ont leurs propres courbes."],
-        "example": "Exemple pédagogique : un profil exige 101 métal au niveau 1. Au niveau 2 avec une croissance de 1,12, le coût brut vaut plafond(113,12) = 114. Avec une réduction applicable de 10 %, le prix payé vaut plafond(102,6) = 103 métal."
+        "formula": "Coût brut par ressource = plafond(montant d’entrée non arrondi × G(n) × quantité)\nCoût payé = plafond(coût brut × (1 − réduction / 100))",
+        "variables": ["Pour les recherches, G(n) = 1,35^(n − 1). L’arrondi à l’entier supérieur intervient sur le devis de chaque ressource.", "Pour les bâtiments indiqués ci-dessus, multipliez par 1,10 à chaque passage des niveaux 2 à 10. La hausse passe à 9 % du niveau 11 à 20, puis diminue d’un point par tranche de dix niveaux, jusqu’à 1 % par niveau dès le niveau 91."],
+        "example": "Avec 101 métal de base pour une recherche, le niveau 2 coûte 137 métal avant remise. Le niveau 3 coûte 185 métal, en arrondissant 101 × 1,35²."
       },
       {
         "title": "Calculer une durée d’opération",
-        "explanation": "La durée dépend de son propre profil et de sa propre courbe, distincts du prix. La réduction s’applique avant l’arrondi à la seconde supérieure, avec un minimum d’une seconde.",
+        "explanation": "La durée dépend de son propre profil et de sa propre courbe, distincts du prix. La réduction s’applique avant l’arrondi à la seconde supérieure, avec un minimum d’une seconde. Pour une recherche, la durée augmente de 35 % par niveau entre 2 et 5, de 25 % entre 6 et 10, de 18 % entre 11 et 15, puis de 12 % à partir du niveau 16.",
         "formula": "Durée = max(1, plafond(T₀ × Gtemps(n) × quantité × u × r × (1 − réduction / 100)))",
         "variables": ["T₀ : durée de base en secondes ; Gtemps(n) : croissance de durée jusqu’au niveau visé ; u : multiplicateur de durée de l’univers.", "r : facteur de rang, 1 / 1,25 / 1,5625. La quantité concerne les commandes d’unités ; pour une amélioration de niveau, elle vaut 1."],
         "example": "Avec une base fictive de 100 secondes, sans croissance supplémentaire, une unité Intermédiaire, u = 1 et une réduction applicable de 20 %, la durée vaut plafond(100 × 1,25 × 0,8) = 100 secondes. Un multiplicateur de durée inférieur à 1 accélère l’opération."
       },
       {
         "title": "Comprendre les rendements décroissants",
-        "explanation": "Les recherches à bonus progressif et les effets de réduction du laboratoire et du chantier utilisent un investissement commun aux trois rangs. Le gain initial est plus rapide ; les niveaux suivants rapprochent progressivement du plafond. Cette formule ne s’applique pas à la limite de colonies.",
-        "formula": "x = (B + 1,25 × I + 1,5625 × S) / (m × (1 + 1,25 + 1,5625))\nProgression = ln(1 + 2 × x) / ln(3)\nBonus = plafond du bonus × progression",
-        "variables": ["B, I, S : niveaux de chaque rang, chacun borné entre 0 et m ; m : niveau maximal de la progression concernée, généralement 25.", "ln : logarithme naturel ; le plafond du bonus dépend de l’effet. Ici, « plafond du bonus » désigne la limite maximale, pas un arrondi."],
-        "example": "Avec 25 niveaux dans chacun des trois rangs et m = 25, x = 1 : la progression vaut 100 %. À moitié de l’investissement pondéré, x = 0,5 : la progression vaut environ 63,09 %. Pour un plafond de réduction de 70 %, cela donne environ 44,17 % de réduction."
+        "explanation": "Le laboratoire accélère les recherches de la colonie de lancement, le chantier accélère ses vaisseaux et le bunker renforce la structure de ses défenses au sol. Les contributions des rangs s’additionnent. Pour les technologies à rendement décroissant, la même courbe s’applique avec des niveaux pondérés sans bonus composé.",
+        "formula": "Infrastructures : A(B,I,S) = B × 1,0025^B + 1,25 × I × 1,005^I + 1,5625 × S × 1,01^S\nTechnologies à rendement décroissant : A(B,I,S) = B + 1,25 × I + 1,5625 × S\nx = A(B,I,S) / A(m,m,m)\nEffet = maximum de l’effet × ln(1 + 2 × x) / ln(3)",
+        "variables": ["B, I et S sont les niveaux des trois rangs. Le maximum m vaut 25 pour le laboratoire et le chantier, et 10 pour le bunker.", "Le maximum de l’effet vaut 70 % pour le laboratoire et le chantier, et 25 % pour le bunker."],
+        "example": "Un laboratoire 10/10/1 réduit la durée de recherche de 23,48 %. Un chantier 20/20/1 réduit la durée de construction des vaisseaux de 40,76 %. Un bunker 8/8/1 ajoute 15,67 % de structure."
       },
       {
         "title": "Calculer votre limite de planètes",

@@ -240,8 +240,8 @@ final class CatalogBalanceService
             $fields[$durationField] = 'La croissance de durée utilise la courbe commune '.$durationCurve.', pas le coefficient historique de cette fiche.';
         }
         $costCurve = match ($group) {
-            'buildings' => isset($definition['production_resource']) && !empty($curves['production_building_cost'])
-                ? 'production_building_cost' : 'building_cost',
+            'buildings' => GameCatalog::isEconomicBuilding($definition) && !empty($curves['economic_building_cost'])
+                ? 'economic_building_cost' : 'building_cost',
             'technologies' => 'research_cost',
             default => null,
         };

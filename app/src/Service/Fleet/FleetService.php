@@ -119,9 +119,8 @@ final class FleetService
             $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours, requireUnexplored: true);
             if($requireExactComposition && $q['ship_adjusted']) throw new \DomainException('La composition n’est plus disponible exactement. Vérifiez à nouveau les quantités avant envoi.');
             if($q['target'] instanceof Planet) $this->manager->lock($q['target']);
-            if ($tutorialSpy && ($mission !== 'spy' || !FirstStepRewardPolicy::isNativeNpc($q['target'] instanceof Planet ? $q['target'] : null)
-                || $q['ship_adjusted'] || $q['composition'] !== ['probe' => ['basic' => 1]])) {
-                throw new \DomainException('Pour l’exercice guidé, choisissez un monde PNJ découvert et envoyez exactement une Sonde de reconnaissance basique.');
+            if ($tutorialSpy) {
+                FirstStepRewardPolicy::assertSpyQuote($mission, $q['target'], $q['composition'], $q['ship_adjusted']);
             }
             if($mission==='transport') { if(!$q['target']->owner) throw new \DomainException('Cette planète n’accepte plus vos transports.');$this->manager->lock($q['target']->owner->player);if(!$this->transports->canReceive($m,$q['target'])) throw new \DomainException('Cette planète n’accepte plus vos transports.'); }
             if($mission==='station' && $q['target']->owner?->id!==$m->id) throw new \DomainException('Cette colonie ne vous appartient plus.');

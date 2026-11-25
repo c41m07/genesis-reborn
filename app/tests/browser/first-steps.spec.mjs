@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect } from './support/isolated-test.mjs';
-import { accelerateQueuedItem, queryIsolatedSql, revealVirginPlanet, runIsolatedSql } from './support/game-fixtures.mjs';
+import { accelerateQueuedItem, planetCoordinates, prepareOwnedColony, queryIsolatedSql, revealNpcPlanet, revealVirginPlanet, runIsolatedSql } from './support/game-fixtures.mjs';
 
 test.use({ keepDailyRewardPrompt: true });
 
@@ -112,7 +112,7 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     await storage.getByRole('link', { name: 'Ouvrir le Dépôt de minerais', exact: true }).click();
     const storageHelp = page.getByRole('complementary', { name: 'Conseil Premiers pas', exact: true });
     await expect(storageHelp).toContainText(/10\s000 unités de métal de capacité totale, dont 1\s000 protégées/);
-    await expect(storageHelp).toContainText(/110\s000 unités au total, dont 11\s000 protégées/);
+    await expect(storageHelp).toContainText(/110\s250 unités au total, dont 11\s025 protégées/);
     await expect(storageHelp).toContainText('Mine à ciel ouvert niveau 5');
     await storageHelp.screenshot({ path: info.outputPath('premiers-pas-depot-mobile.png'), animations: 'disabled' });
     await page.goto('/premiers-pas');
@@ -1002,4 +1002,129 @@ test('Premiers pas : la progression historique reste stable en changeant de colo
     await expect(page).toHaveURL(/planetes\/\d+$/);
     await page.goto('/premiers-pas');
     await expect(progress).toHaveAttribute('value','0');
+});
+
+test('Premiers pas : remboursement plein conserve sa destination native et son droit', async ({ page, browser, baseURL }) => {
+    test.setTimeout(120000);
+    const email = await register(page);
+    const project = process.env.BROWSER_ROUTER;
+    const origin = Number(new URL(page.url()).pathname.split('/').at(-1));
+    const [player, member] = queryIsolatedSql(project, `SELECT p.id, planet.owner_id FROM planet JOIN player_universe pu ON pu.id=planet.owner_id JOIN player p ON pu.player_id=p.id WHERE planet.id=${origin}`).split('\t').map(Number);
+    const { id: second } = revealVirginPlanet(project, email);
+    runIsolatedSql(project, `UPDATE planet SET owner_id=${member}, acquired_at=UTC_TIMESTAMP(), name='Colonie de remboursement' WHERE id=${second}`);
+    runIsolatedSql(project, `INSERT INTO first_step_reward (player_id, source_membership_id, step_key, metal, nano) VALUES (${player}, ${member}, 'metal_mine', 96, 52)`);
+    // Charger l’état réel de la seconde colonie avant d’aménager les stocks de la fixture.
+    await page.goto('/planetes/' + second);
+    await page.goto('/planetes/' + origin);
+    const stock = id => Number(queryIsolatedSql(project, `SELECT current_stock FROM planet_resource WHERE planet_id=${id} AND resource_type='metal'`));
+    const setStock = (id, amount) => runIsolatedSql(project, `UPDATE planet_resource SET current_stock=${amount} WHERE planet_id=${id} AND resource_type='metal'`);
+    runIsolatedSql(project, `INSERT INTO planet_resource (planet_id,resource_type,current_stock,production_rate,last_updated_at) VALUES (${second},'metal',10000,0,UTC_TIMESTAMP()),(${second},'nano',0,0,UTC_TIMESTAMP()) ON DUPLICATE KEY UPDATE current_stock=VALUES(current_stock),production_rate=0,last_updated_at=VALUES(last_updated_at)`);
+    // Placer l’horloge de production des deux colonies au-delà du délai du scénario.
+    // Cela isole le versement exact des fractions de métal produites entre deux requêtes.
+    runIsolatedSql(project, `UPDATE planet_resource SET last_updated_at=UTC_TIMESTAMP() + INTERVAL 3 MINUTE WHERE planet_id IN (${origin},${second})`);
+    expect(stock(second)).toBe(10000);
+    const originStock = stock(origin);
+    const claimed = () => queryIsolatedSql(project, `SELECT COUNT(*) FROM first_step_reward WHERE source_membership_id=${member} AND claimed_at IS NOT NULL`);
+    const native = await browser.newContext({ baseURL, storageState: await page.context().storageState(), javaScriptEnabled: false });
+    try {
+        const fallback = await native.newPage();
+        await fallback.goto('/premiers-pas');
+        const reward = fallback.getByRole('region', { name: 'Remboursements disponibles' });
+        await reward.getByLabel('Colonie bénéficiaire').selectOption(String(second));
+        await reward.getByRole('button', { name: 'Choisir cette colonie' }).click();
+        const button = reward.getByRole('button', { name: 'Récupérer : Mine à ciel ouvert' });
+        await button.click();
+        await expect(fallback).toHaveURL(url => url.searchParams.get('reward_planet') === String(second) && url.hash === '#training-reward-title');
+        await expect(fallback.getByRole('alert')).toContainText('le lot reste en attente et rien n’a été perdu');
+        await expect(reward.getByLabel('Colonie bénéficiaire')).toHaveValue(String(second));
+        await expect(button).toHaveAccessibleDescription(/Destination : Colonie de remboursement/);
+        await expect(fallback.getByRole('link', { name: 'Retour à la vue générale', exact: true })).toHaveAttribute('href', '/planetes/' + origin);
+        expect(claimed()).toBe('0');
+        expect(stock(origin)).toBe(originStock);
+        expect(stock(second)).toBe(10000);
+        setStock(second, 0);
+        await button.click();
+        await expect(fallback.getByRole('status').filter({ hasText: 'Remboursement ajouté aux stocks de Colonie de remboursement' })).toBeVisible();
+        expect(claimed()).toBe('1');
+        expect(stock(origin)).toBe(originStock);
+        expect(stock(second)).toBe(96);
+    } finally {
+        await native.close();
+    }
+});
+
+test('Premiers pas : le devis et le départ n’acceptent que la sonde basique et un PNJ compatible', async ({ page }) => {
+    test.setTimeout(120000);
+    const email = await register(page);
+    const project = process.env.BROWSER_ROUTER;
+    const origin = Number(new URL(page.url()).pathname.split('/').at(-1));
+    const member = Number(queryIsolatedSql(project, 'SELECT owner_id FROM planet WHERE id=' + origin));
+    prepareOwnedColony(project, email);
+    const nativeNpc = revealNpcPlanet(project, email);
+    const { id: forgotten, coordinates: forgottenCoordinates } = revealVirginPlanet(project, email);
+    // Un empire oublié est classé dans les PNJ du parcours ordinaire, mais pas un PNJ natif.
+    runIsolatedSql(project, `INSERT INTO player_universe (universe_id, former_player_id, forgotten_at, joined_at) SELECT universe_id, player_id, UTC_TIMESTAMP(), UTC_TIMESTAMP() FROM player_universe WHERE id=${member}`);
+    const extinctMember = Number(queryIsolatedSql(project, `SELECT MAX(id) FROM player_universe WHERE former_player_id = (SELECT player_id FROM player_universe WHERE id=${member}) AND player_id IS NULL`));
+    expect(extinctMember).toBeGreaterThan(0);
+    runIsolatedSql(project, `UPDATE planet SET owner_id=${extinctMember}, acquired_at=UTC_TIMESTAMP(), name='Avant-poste oublié' WHERE id=${forgotten}`);
+    runIsolatedSql(project, `INSERT INTO fleet (player_universe_id,home_planet_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token) SELECT ${member},${origin},'idle','idle',1,'{}',0,0,0,0,'' WHERE NOT EXISTS (SELECT 1 FROM fleet WHERE home_planet_id=${origin} AND player_universe_id=${member} AND status='idle')`);
+    const idle = Number(queryIsolatedSql(project, `SELECT id FROM fleet WHERE home_planet_id=${origin} AND player_universe_id=${member} AND status='idle'`));
+    expect(idle).toBeGreaterThan(0);
+    runIsolatedSql(project, `INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) VALUES (${idle},'probe','basic',2),(${idle},'probe','intermediate',1),(${idle},'fighter','basic',1) ON DUPLICATE KEY UPDATE quantity=VALUES(quantity)`);
+
+    await page.goto('/premiers-pas');
+    await page.getByRole('link', { name: 'Préparer un espionnage PNJ', exact: true }).click();
+    const form = page.locator('.fleet-form form');
+    await expect(form).toHaveCount(1);
+    await expect(form.getByLabel('Sonde de reconnaissance basique', { exact: true })).toHaveValue('1');
+    await expect(form.locator('input[name^="ships["]')).toHaveCount(1);
+    await form.getByRole('button', { name: /Choisir la destination/ }).click();
+    await expect(form.getByLabel('Mission', { exact: true }).locator('option')).toHaveCount(1);
+    await expect(form.locator('select[name="npc_destination"] option[value="' + nativeNpc.id + '"]')).toHaveCount(1);
+    await expect(form.locator('select[name="npc_destination"] option[value="' + forgotten + '"]')).toHaveCount(0);
+    await form.getByLabel('Destination personnalisée', { exact: true }).check();
+    const nativeCoordinates = planetCoordinates(project, nativeNpc.id);
+    const browserSearch = form.getByRole('combobox', { name: 'Nom ou coordonnées du monde PNJ' });
+    await browserSearch.fill(nativeCoordinates);
+    await expect(form.getByRole('option', { name: new RegExp(nativeCoordinates + '.*PNJ') })).toBeVisible();
+    await browserSearch.fill('Avant-poste oublié');
+    await expect(form.getByRole('listbox')).toBeHidden();
+
+    const attempt = (body, path = '/flottes/estimer') => form.evaluate(async (element, { path, body }) => {
+        const fields = new FormData(element);
+        for (const [key, value] of Object.entries(body)) {
+            if (value === null) fields.delete(key); else fields.set(key, value);
+        }
+        const response = await fetch(path, { method: 'POST', body: fields });
+        return { status: response.status, text: await response.text(), url: response.url, redirected: response.redirected };
+    }, { path, body });
+    const forbiddenTarget = { coordinates: forgottenCoordinates, ratio: '0.1' };
+    const forbiddenQuantity = { coordinates: nativeCoordinates, ratio: '0.1', 'ships[probe][basic]': '2' };
+    const guidedRefusal = 'Pour l’exercice guidé, choisissez un monde PNJ découvert et envoyez exactement une Sonde de reconnaissance basique.';
+    for (const invalid of [forbiddenTarget, forbiddenQuantity]) {
+        const quote = await attempt(invalid);
+        expect(quote.status).toBe(422);
+        expect(JSON.parse(quote.text)).toEqual({ error: guidedRefusal });
+        const departure = await attempt(invalid, '/flottes/envoyer');
+        expect(departure.redirected).toBe(true);
+        expect(new URL(departure.url).pathname).toBe('/flottes/preparer');
+        expect(departure.text).toContain(guidedRefusal);
+    }
+    expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM fleet WHERE player_universe_id=${member} AND mission='spy'`)).toBe('0');
+    const ordinary = await attempt({ ...forbiddenQuantity, tutorial_spy: null });
+    expect(ordinary.status).toBe(200);
+    expect(JSON.parse(ordinary.text).composition.probe.basic).toBe(2);
+
+    await form.getByRole('radio', { name: 'PNJ', exact: true }).check();
+    await form.locator('select[name="npc_destination"]').selectOption(String(nativeNpc.id));
+    await form.locator('[name="ratio"]').selectOption('0.1');
+    await form.getByRole('button', { name: /Vérifier la mission/ }).click();
+    const composition = form.getByRole('table', { name: 'Composition', exact: true });
+    await expect(composition.getByRole('row').filter({ hasText: 'Sonde de reconnaissance basique' }).getByRole('cell', { name: 'Basique', exact: true })).toBeVisible();
+
+    await form.getByRole('button', { name: 'Estimer le trajet' }).click();
+    await expect(form.locator('.flight-estimate')).toContainText('Carburant aller-retour');
+    await form.getByRole('button', { name: /Envoyer la flotte/ }).click();
+    await expect(page).toHaveURL(/\/flottes$/);
+    expect(queryIsolatedSql(project, `SELECT COUNT(*) FROM fleet f JOIN fleet_ship s ON s.fleet_id=f.id WHERE f.player_universe_id=${member} AND f.mission='spy' AND f.destination_id=${nativeNpc.id} AND f.first_steps_spy=1 AND s.slug='probe' AND s.tier='basic' AND s.quantity=1`)).toBe('1');
 });

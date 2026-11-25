@@ -77,11 +77,11 @@ final class CatalogueDetailsTest extends KernelTestCase
         $universe=$this->planet->solarSystem->galaxy->universe;
         $plant=$this->catalog->getTierForUniverse($universe,'buildings','power_plant','superior');
         $rows=array_column($insights->benefits($plant,'buildings',1,$this->planet,[],[]),null,'label');
-        self::assertEqualsWithDelta(2430,$rows['Production de électricité']['after']-$rows['Production de électricité']['before'],1e-8);
+        self::assertEqualsWithDelta(2454.3,$rows['Production de électricité']['after']-$rows['Production de électricité']['before'],1e-8);
         $reactor=$this->catalog->getTierForUniverse($universe,'buildings','mine_antimatter','superior');
         $rows=array_column($insights->benefits($reactor,'buildings',1,$this->planet,[],[]),null,'label');
-        self::assertEqualsWithDelta(202.5,$rows['Production de antimatière']['after']-$rows['Production de antimatière']['before'],1e-8);
-        self::assertEqualsWithDelta(810,$rows['Consommation d’hydrogène']['after']-$rows['Consommation d’hydrogène']['before'],1e-8);
+        self::assertEqualsWithDelta(204.525,$rows['Production de antimatière']['after']-$rows['Production de antimatière']['before'],1e-8);
+        self::assertEqualsWithDelta(818.1,$rows['Consommation d’hydrogène']['after']-$rows['Consommation d’hydrogène']['before'],1e-8);
         self::assertEqualsWithDelta(202.5,$rows['Consommation électrique']['after']-$rows['Consommation électrique']['before'],1e-8);
     }
 
@@ -95,9 +95,12 @@ final class CatalogueDetailsTest extends KernelTestCase
             $definition=$this->catalog->getTierForUniverse($universe,'buildings','mine_metal',$tier);
             $rows=array_column($insights->benefits($definition,'buildings',$levels['mine_metal'][$tier]+3,$this->planet,$levels,[]),null,'label');
             $output=$rows['Production de métal'];$use=$rows['Consommation électrique'];
+            $growth = ['basic'=>1.0025, 'intermediate'=>1.005, 'superior'=>1.01][$tier];
+            $target = $levels['mine_metal'][$tier] + 3;
+            $production *= $target * $growth ** $target - ($target - 1) * $growth ** ($target - 1);
             self::assertEqualsWithDelta($production,$output['after']-$output['before'],1e-8,$tier);
             self::assertEqualsWithDelta($consumption,$use['after']-$use['before'],1e-8,$tier);
-            self::assertSame('+'.$production.' / h',trim($twig->render('ui/catalogue_benefit_value.html.twig',['benefit'=>$output])));
+            self::assertSame('+'.number_format($production, 2, ',', ' ').' / h',trim($twig->render('ui/catalogue_benefit_value.html.twig',['benefit'=>$output])));
             self::assertSame('−'.$consumption.' / h',trim($twig->render('ui/catalogue_benefit_value.html.twig',['benefit'=>$use])));
         }
         self::assertSame(['mine_metal'=>['basic'=>10,'intermediate'=>4,'superior'=>2]],$levels);
@@ -233,7 +236,7 @@ final class CatalogueDetailsTest extends KernelTestCase
     {
         $section=$this->describe('buildings','storage_metal','intermediate',1)['sections'][0];
         $rows=array_column($section['rows'],null,'label');
-        self::assertEqualsWithDelta(12500,$rows['Protection supplémentaire']['value'],.000001);
+        self::assertEqualsWithDelta(12562.5,$rows['Protection supplémentaire']['value'],.000001);
         $probe=$this->describe('ships','probe');$all=implode(' ',array_merge(...array_column($probe['sections'],'paragraphs')));
         self::assertStringContainsString('Toutes les sondes envoyées en espionnage sont consommées',$all);
         self::assertStringContainsString('sans escorte',$all);
