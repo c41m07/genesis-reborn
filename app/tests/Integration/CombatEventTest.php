@@ -313,11 +313,30 @@ final class CombatEventTest extends KernelTestCase
         $service->resolve($event->id, $firstToken);
         self::assertSame(1, $event->currentRound, 'Un ancien jeton ne rejoue pas le round déjà persisté.');
 
+        // Recharger depuis MariaDB pour exercer la même représentation qu’après un redémarrage du worker.
+        $this->em->refresh($event);
+        self::assertSame(1, $event->combatSnapshot['round_checkpoint']['completed_round']);
+        $firstRound = $event->combatSnapshot['round_history'][0];
         $clock->sleep(60);
         $service->resolve($event->id, $secondToken);
         self::assertSame(2, $event->currentRound);
         self::assertSame('pending', $event->status);
+        self::assertSame(2, $event->combatSnapshot['round_checkpoint']['completed_round']);
+        self::assertSame([1, 2], array_column($event->combatSnapshot['round_history'], 'number'));
+        self::assertSame($firstRound, $event->combatSnapshot['round_history'][0]);
         self::assertSame(0, $this->em->getRepository(CombatLog::class)->count(['combatEvent' => $event]));
+
+        $finalToken = $event->dispatchToken;
+        $clock->sleep(480);
+        $service->resolve($event->id, $finalToken);
+        self::assertSame('resolved', $event->status);
+        self::assertArrayNotHasKey('round_checkpoint', $event->combatSnapshot);
+        $log = $this->em->getRepository(CombatLog::class)->findOneBy(['combatEvent' => $event]);
+        self::assertNotNull($log);
+        self::assertSame(range(1, 10), array_column($log->rounds, 'number'));
+        self::assertSame($firstRound, $log->rounds[0]);
+        $service->resolve($event->id, $finalToken);
+        self::assertSame(1, $this->em->getRepository(CombatLog::class)->count(['combatEvent' => $event]));
     }
 
     public function testCombatClosesAsSoonAsTheDefenderCampIsEmptyAndRejectsLateAttackers(): void

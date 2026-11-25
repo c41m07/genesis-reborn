@@ -432,7 +432,9 @@ final class CombatEventService
                 $role = $participant->role;
                 $camp = $role === 'attacker' ? ($campByMembership[$membershipId] ?? 'attacker-' . $membershipId) : 'defenders';
                 if($occupationContext!==null) $camp=$this->occupationCamp($participant->playerUniverse,$occupationContext,$camp);
-                $arrivalRound = $participant->arrivalRound ?? 1;
+                // Une arrivée traitée en retard ne modifie jamais un round déjà validé.
+                $arrivalRound = max($event->currentRound + 1, $participant->arrivalRound ?? 1);
+                $participant->arrivalRound = $arrivalRound;
                 $combatParticipants[] = ['id' => (string) $fleet->id, 'role' => $role, 'camp' => $camp, 'arrival_round' => $arrivalRound, 'units' => $units];
                 $snapshot[] = [
                     'participant_id' => $participant->id,
@@ -489,19 +491,32 @@ final class CombatEventService
             $modifiers = $state['modifiers'] ?? ($this->catalog->all('combat_modifiers')['modifiers'] ?? []);
             $event->combatSnapshot = ['participants' => $snapshot, 'combat_participants' => $combatParticipants, 'defenses' => $defenseSnapshots, 'modifiers' => $modifiers];
             if($occupationContext!==null) { $event->combatSnapshot['occupation']=$occupationContext;$event->combatSnapshot['npc_snapshot_initialized']=true; }
-            $result = $this->simulator->simulate(
-                $combatParticipants, $defenseSnapshots, $modifiers, $maxRounds, $event->seed, $targetRound,
+            $checkpoint = $state['round_checkpoint'] ?? null;
+            $roundHistory = $state['round_history'] ?? [];
+            if ($checkpoint !== null && (($checkpoint['completed_round'] ?? null) !== $event->currentRound
+                || count($roundHistory) !== $event->currentRound)) {
+                throw new \LogicException('Le point de reprise ne correspond pas à l’historique du combat.');
+            }
+
+            $result = $this->simulator->advance(
+                $combatParticipants,
+                $defenseSnapshots,
+                $modifiers,
+                $maxRounds,
+                $event->seed,
+                $targetRound,
                 (float) ($rules['shield_recharge_percent_per_round'] ?? 5),
                 (bool) ($rules['restore_survivor_shields_after_combat'] ?? true),
-                $occupationContext!==null,
+                $occupationContext !== null,
+                $checkpoint
             );
-            $roundHistory = $state['round_history'] ?? [];
-            foreach ($result['rounds'] as $round) {
-                if ($round['number'] > $event->currentRound) {
-                    $roundHistory[] = $round;
-                }
-            }
+            // Les combats commencés avant ce format rejouent une seule fois depuis leur graine.
+            // Sinon seuls les nouveaux rounds sont produits. Les deux données avancent dans la même transaction.
+            $roundHistory = $checkpoint === null ? $result['rounds'] : [...$roundHistory, ...$result['rounds']];
             $event->combatSnapshot['round_history'] = $roundHistory;
+            if (isset($result['checkpoint'])) {
+                $event->combatSnapshot['round_checkpoint'] = $result['checkpoint'];
+            }
 
             $damageByMembership = [];
             $membershipByFleet = [];
@@ -594,7 +609,7 @@ final class CombatEventService
             $log = new CombatLog();
             $log->combatEvent = $event;
             $log->outcome = $result['outcome'];
-            $log->rounds = $result['rounds'];
+            $log->rounds = $roundHistory;
             $log->snapshot = [
                 'participants' => $snapshot,
                 'defenses' => $defenseSnapshots,

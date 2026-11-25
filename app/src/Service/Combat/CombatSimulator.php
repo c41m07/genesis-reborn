@@ -8,6 +8,8 @@ use Random\Randomizer;
 final class CombatSimulator
 {
     public const MAX_UNITS = 5000;
+
+    private const CHECKPOINT_VERSION = 1;
     /** Puissance figée au début du tour, selon la durabilité restante. */
     private function powerFactor(array $unit):float
     {
@@ -21,6 +23,43 @@ final class CombatSimulator
      */
     public function simulate(array $participants, array $stationaryDefenses, array $modifiers, int $maxRounds, int $seed, ?int $roundLimit = null, float $shieldRechargePercent = 5.0, bool $restoreSurvivorShields = true, bool $independentCamps = false): array
     {
+        return $this->run($participants, $stationaryDefenses, $modifiers, $maxRounds, $seed, $roundLimit, $shieldRechargePercent, $restoreSurvivorShields, $independentCamps, false, null);
+    }
+
+    /**
+     * Le point de reprise vient exclusivement de l’événement enregistré par le worker.
+     * Le résultat contient les nouveaux rounds seulement et le nombre total de rounds joués.
+     *
+     * @param array{version: int, completed_round: int, random: array, durability: array<string, array{float, float}>}|null $checkpoint
+     */
+    public function advance(
+        array $participants,
+        array $stationaryDefenses,
+        array $modifiers,
+        int $maxRounds,
+        int $seed,
+        int $roundLimit,
+        float $shieldRechargePercent,
+        bool $restoreSurvivorShields,
+        bool $independentCamps,
+        ?array $checkpoint = null,
+    ): array {
+        return $this->run($participants, $stationaryDefenses, $modifiers, $maxRounds, $seed, $roundLimit, $shieldRechargePercent, $restoreSurvivorShields, $independentCamps, true, $checkpoint);
+    }
+
+    private function run(
+        array $participants,
+        array $stationaryDefenses,
+        array $modifiers,
+        int $maxRounds,
+        int $seed,
+        ?int $roundLimit,
+        float $shieldRechargePercent,
+        bool $restoreSurvivorShields,
+        bool $independentCamps,
+        bool $saveCheckpoint,
+        ?array $checkpoint,
+    ): array {
         if ($maxRounds < 1 || $maxRounds > 100) {
             throw new \DomainException('Nombre de rounds invalide.');
         }
@@ -33,12 +72,14 @@ final class CombatSimulator
         $roundLimit = max(1, min($maxRounds, $roundLimit ?? $maxRounds));
         $units = $this->snapshot($participants, $stationaryDefenses, $maxRounds);
         $this->validateModifiers($modifiers);
-        $random = new Randomizer(new Mt19937($seed));
+        $engine = new Mt19937($seed);
+        $completedRound = $checkpoint === null ? 0 : $this->restoreCheckpoint($checkpoint, $units, $engine, $roundLimit);
+        $random = new Randomizer($engine);
         $rounds = [];
         $outcome = 'draw';
         $winnerCamp=null;
 
-        for ($roundNumber = 1; $roundNumber <= $roundLimit; ++$roundNumber) {
+        for ($roundNumber = $completedRound + 1; $roundNumber <= $roundLimit; ++$roundNumber) {
             $order = [];
             foreach ($units as $key => $unit) {
                 if ($unit['arrival_round'] <= $roundNumber && $unit['hp'] > 0) {
@@ -161,7 +202,7 @@ final class CombatSimulator
         $result = [
             'seed' => $seed,
             'outcome' => $outcome,
-            'rounds_played' => count($rounds),
+            'rounds_played' => $completedRound + count($rounds),
             'rounds' => $rounds,
             'survivors' => array_map(static fn (array $unit): array => [
                 'owner' => $unit['owner'],
@@ -175,7 +216,55 @@ final class CombatSimulator
             'losses' => $this->losses($units),
         ];
         if($independentCamps) $result['winner_camp']=$winnerCamp;
+        if ($saveCheckpoint && $outcome === 'ongoing') {
+            $result['checkpoint'] = $this->makeCheckpoint($engine, $result['rounds_played'], $units);
+        }
         return $result;
+    }
+
+    private function makeCheckpoint(Mt19937 $engine, int $completedRound, array $units): array
+    {
+        $durability = [];
+        foreach ($units as $key => $unit) {
+            // Le catalogue et l’instantané des forces contiennent déjà l’état neuf des unités.
+            if ($unit['hp'] !== $unit['initial_hp'] || $unit['shield'] !== $unit['max_shield']) {
+                $durability[$key] = [$unit['hp'], $unit['shield']];
+            }
+        }
+
+        return [
+            'version' => self::CHECKPOINT_VERSION,
+            'completed_round' => $completedRound,
+            'random' => $engine->__serialize(),
+            'durability' => $durability,
+        ];
+    }
+
+    private function restoreCheckpoint(array $checkpoint, array &$units, Mt19937 $engine, int $roundLimit): int
+    {
+        $completedRound = $checkpoint['completed_round'] ?? null;
+        if (($checkpoint['version'] ?? null) !== self::CHECKPOINT_VERSION
+            || !is_int($completedRound) || $completedRound < 1 || $completedRound >= $roundLimit
+            || !is_array($checkpoint['random'] ?? null) || !is_array($checkpoint['durability'] ?? null)) {
+            throw new \LogicException('Point de reprise du combat incompatible.');
+        }
+
+        foreach ($checkpoint['durability'] as $key => $values) {
+            if (!isset($units[$key]) || $units[$key]['arrival_round'] > $completedRound
+                || !is_array($values) || !array_is_list($values) || count($values) !== 2
+                || (!is_int($values[0]) && !is_float($values[0])) || (!is_int($values[1]) && !is_float($values[1]))
+                || !is_finite((float) $values[0]) || !is_finite((float) $values[1])
+                || $values[0] < 0 || $values[0] > $units[$key]['initial_hp']
+                || $values[1] < 0 || $values[1] > $units[$key]['max_shield']) {
+                throw new \LogicException('Durabilité du point de reprise du combat incompatible.');
+            }
+            [$units[$key]['hp'], $units[$key]['shield']] = [(float) $values[0], (float) $values[1]];
+        }
+
+        // Restaurer le générateur, pas seulement la graine : le prochain tir doit suivre le flux déjà consommé.
+        $engine->__unserialize($checkpoint['random']);
+
+        return $completedRound;
     }
 
     public function hitChance(array $attacker, array $target, int $precisionModifier = 0, float $counterMultiplier = 1.0): float
