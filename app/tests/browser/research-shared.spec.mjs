@@ -31,7 +31,14 @@ test('Une recherche ajoutée depuis une autre colonie rejoint la même file et l
     const { one, two, membership, project } = await colonies(page);
     const queue = page.locator('[data-queue-type="research"]');
     const summary = queue.locator(':scope > summary');
+    const resources = page.getByRole('button', { name: /afficher ou masquer les détails et les files de la colonie/ });
     const openQueue = async () => {
+        if (page.viewportSize().width <= 740) {
+            await expect(resources).toBeVisible();
+            if (await resources.getAttribute('aria-expanded') === 'false') await resources.press('Enter');
+            await expect(resources).toHaveAttribute('aria-expanded', 'true');
+        }
+        await expect(queue).toBeVisible();
         if (!await queue.evaluate(element => element.open)) await summary.press('Enter');
     };
     await page.goto(`/planetes/${one}?section=technologies`);
@@ -69,9 +76,19 @@ test('Une recherche ajoutée depuis une autre colonie rejoint la même file et l
     await expect(card.getByRole('button', { name: /Rechercher le niveau 3/ })).toBeVisible();
     for (const width of [320, 390, 768, 1440]) {
         await page.setViewportSize({ width, height: 900 });
+        // Mesurer la file développée, et non une page qui tient parce que la file est masquée.
+        await openQueue();
+        await expect(queue.locator('.queue-detail-item').nth(1).locator('small')).toBeVisible();
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     }
     await page.setViewportSize({ width: 390, height: 900 });
+    // Revenir d’un grand écran ne garantit pas que le volet Ressources soit ouvert.
+    await expect(resources).toBeVisible();
+    if (await resources.getAttribute('aria-expanded') === 'true') await resources.press('Enter');
+    await expect(resources).toHaveAttribute('aria-expanded', 'false');
+    await expect(queue).toBeHidden();
+    await openQueue();
+    await expect(queue.locator('.queue-detail-item').nth(1).locator('small')).toBeVisible();
     await queue.screenshot({ path: info.outputPath('common-research-390.png'), animations: 'disabled' });
     // Après les redimensionnements et la capture, repartir du panneau courant, pas d’un ancien nœud.
     await openQueue();
@@ -136,6 +153,10 @@ test('Les anciennes recherches parallèles restent actives et les commandes pay�
     await expect(queue.locator('.queue-detail-item').filter({ hasText: 'En cours' })).toHaveCount(2);
     await expect(queue.locator('.queue-detail-item').filter({ hasText: 'En attente' })).toHaveCount(2);
     await page.setViewportSize({ width: 390, height: 900 });
+    const resources = page.getByRole('button', { name: /afficher ou masquer les détails et les files de la colonie/ });
+    await expect(queue).toBeHidden();
+    await resources.press('Enter');
+    await expect(queue.locator('.queue-detail-item').filter({ hasText: 'En cours' }).first()).toBeVisible();
     await queue.screenshot({ path: info.outputPath('legacy-research-390.png'), animations: 'disabled' });
     runIsolatedSql(project, `UPDATE queue_item SET started_at=DATE_SUB(UTC_TIMESTAMP(),INTERVAL duration_seconds+2 SECOND) WHERE player_universe_id=${membership} AND started_at IS NOT NULL`);
     await page.goto(`/planetes/${one}?section=technologies`);
