@@ -53,8 +53,9 @@ final class UniverseMetricsService
             'SELECT COALESCE(SUM(t.level), 0) FROM player_technology t JOIN player_universe pu ON pu.id=t.player_universe_id WHERE pu.universe_id=?',
             [$universe->id],
         );
+        $colonies = $this->colonyProgression($universe);
         $queues = $this->connection->fetchAllAssociative(
-            'SELECT q.queued_at, q.started_at, q.duration_seconds FROM queue_item q JOIN player_universe pu ON pu.id=q.player_universe_id WHERE pu.universe_id=?',
+            'SELECT q.queue_type, q.queued_at, q.started_at, q.duration_seconds FROM queue_item q JOIN player_universe pu ON pu.id=q.player_universe_id WHERE pu.universe_id=?',
             [$universe->id],
         );
         $pendingAges = [];
@@ -62,7 +63,13 @@ final class UniverseMetricsService
         $remaining = [];
         $overdue = 0;
         $invalidQueues = 0;
+        $loadByType = array_fill_keys(['building', 'research', 'shipyard'], ['active' => 0, 'pending' => 0]);
         foreach ($queues as $queue) {
+            // La catégorie correspond à la file réelle : vaisseaux et défenses partagent le chantier.
+            if (isset($loadByType[$queue['queue_type']])) {
+                $state = $queue['started_at'] === null ? 'pending' : 'active';
+                ++$loadByType[$queue['queue_type']][$state];
+            }
             $queued = $this->timestamp($queue['queued_at']);
             $started = $queue['started_at'] === null ? null : $this->timestamp($queue['started_at']);
             if ($queued > $now->getTimestamp() || ($started !== null && ($started < $queued || $started > $now->getTimestamp())) || (int) $queue['duration_seconds'] < 1) {
@@ -86,11 +93,84 @@ final class UniverseMetricsService
         return [
             'observedAt' => $now,
             'closed' => $universe->status === 'closed',
-            'progression' => ['members' => count($members), 'age' => $this->distribution($ages), 'invalidDates' => $invalidDates, 'buildingLevels' => $buildingLevels, 'researchLevels' => $researchLevels],
-            'queues' => ['total' => count($queues), 'pending' => $this->distribution($pendingAges), 'startWait' => $this->distribution($startWaits), 'remaining' => $this->distribution($remaining), 'overdue' => $overdue, 'invalidDates' => $invalidQueues],
+            'progression' => ['members' => count($members), 'colonies' => $colonies, 'age' => $this->distribution($ages), 'invalidDates' => $invalidDates, 'buildingLevels' => $buildingLevels, 'researchLevels' => $researchLevels],
+            'queues' => ['total' => count($queues), 'loadByType' => $loadByType, 'pending' => $this->distribution($pendingAges), 'startWait' => $this->distribution($startWaits), 'remaining' => $this->distribution($remaining), 'overdue' => $overdue, 'invalidDates' => $invalidQueues],
+            'pirates' => $this->pirateMilestones($universe, $now),
             'recovery' => ['protected' => $protected, 'membersWithRecordedProtection' => $recoveryActivations, 'outcomes' => array_map('intval', $outcomes)],
             'resources' => $this->resourceMetrics($universe, $page, $now),
         ];
+    }
+
+    /** @return array{playerControlled: int, withTwoOrMore: int} */
+    private function colonyProgression(Universe $universe): array
+    {
+        // La possession courante ne dit ni quand le joueur a atteint son premier jalon ni comment.
+        $row = $this->connection->fetchAssociative(
+            'SELECT COUNT(*) AS player_controlled, COALESCE(SUM(CASE WHEN holdings.planet_count >= 2 THEN 1 ELSE 0 END), 0) AS with_two_or_more
+             FROM (SELECT COUNT(p.id) AS planet_count FROM player_universe pu
+             LEFT JOIN planet p ON p.owner_id = pu.id
+             WHERE pu.universe_id = ? AND pu.player_id IS NOT NULL AND pu.forgotten_at IS NULL
+             GROUP BY pu.id) holdings',
+            [$universe->id],
+        );
+
+        return ['playerControlled' => (int) $row['player_controlled'], 'withTwoOrMore' => (int) $row['with_two_or_more']];
+    }
+
+    /** @return array{recons: int, reports: int, attacks: int, wins: int, losses: int, draws: int, awaitingOutcome: int} */
+    private function pirateMilestones(Universe $universe, \DateTimeImmutable $now): array
+    {
+        $utc = $now->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+        $counts = ['recons' => 0, 'reports' => 0, 'attacks' => 0, 'wins' => 0, 'losses' => 0, 'draws' => 0, 'awaitingOutcome' => 0];
+        // Une ligne par dossier conservé : la clé unique de l'escorte empêche les doublons.
+        // Ne lire ni la composition pirate ni les rapports privés complets pour ce relevé admin.
+        $afterId = 0;
+        do {
+            $rows = $this->connection->fetchAllAssociative(
+                "SELECT r.id, CASE WHEN r.reported_at <= ? AND r.due_at <= ? THEN 1 ELSE 0 END AS has_report,
+                        CASE WHEN a.departed_at <= ? THEN 1 ELSE 0 END AS has_attack,
+                        JSON_UNQUOTE(JSON_EXTRACT(a.timeline, '$.resolved')) AS resolved_at,
+                        JSON_UNQUOTE(JSON_EXTRACT(a.report, '$.outcome')) AS outcome
+                 FROM pirate_reconnaissance r
+                 JOIN player_universe pu ON pu.id = r.membership_id
+                 LEFT JOIN pirate_attack_campaign a ON a.reconnaissance_id = r.id
+                 WHERE pu.universe_id = ? AND pu.forgotten_at IS NULL AND pu.player_id = r.owner_id AND r.departed_at <= ? AND r.id > ?
+                     ORDER BY r.id LIMIT 500",
+                [$utc, $utc, $utc, $universe->id, $utc, $afterId],
+            );
+            foreach ($rows as $row) {
+                $afterId = (int) $row['id'];
+                ++$counts['recons'];
+                if (!(bool) $row['has_report']) {
+                    continue;
+                }
+                ++$counts['reports'];
+                if (!(bool) $row['has_attack']) {
+                    continue;
+                }
+                ++$counts['attacks'];
+
+                // Une échéance dépassée ne vaut pas un verdict, ni une victoire un convoi livré.
+                $resolved = is_string($row['resolved_at'])
+                    ? \DateTimeImmutable::createFromFormat(DATE_ATOM, $row['resolved_at'])
+                    : false;
+                $key = $resolved !== false && $resolved <= $now ? match ($row['outcome']) {
+                    'attacker_wins' => 'wins',
+                    'defender_wins' => 'losses',
+                    'draw' => 'draws',
+                    default => 'awaitingOutcome',
+                } : 'awaitingOutcome';
+                ++$counts[$key];
+            }
+        } while (count($rows) === 500);
+
+        return $counts;
+    }
+
+    /** Lecture commune aux mesures et à l’Observatoire ; ne matérialise aucun stock. */
+    public function resources(Universe $universe, int $page = 1): array
+    {
+        return $this->resourceMetrics($universe, $page, $this->clock->now());
     }
 
     private function resourceMetrics(Universe $universe, int $page, \DateTimeImmutable $now): array
@@ -104,7 +184,7 @@ final class UniverseMetricsService
         );
         $rows = [];
         foreach ($this->catalog->rules()['resources'] as $slug => $label) {
-            $rows[$slug] = ['label' => $label, 'empty' => 0, 'negativeRate' => 0, 'rateObserved' => 0, 'reducedProductivity' => 0, 'productivityObserved' => 0, 'stockPercentages' => []];
+            $rows[$slug] = ['label' => $label, 'empty' => 0, 'negativeRate' => 0, 'rateObserved' => 0, 'reducedProductivity' => 0, 'productivityObserved' => 0, 'stockPercentages' => [], 'netRate' => 0.0];
         }
         $observed = 0;
         $unavailable = 0;
@@ -140,6 +220,7 @@ final class UniverseMetricsService
                 $row['empty'] += $value['stock'] <= 0 ? 1 : 0;
                 if ($value['rate'] !== null) {
                     ++$row['rateObserved'];
+                    $row['netRate'] += $value['rate'];
                     $row['negativeRate'] += $value['rate'] < 0 ? 1 : 0;
                 }
                 if ($value['productivity'] !== null) {

@@ -1,0 +1,99 @@
+.observatory {
+    display: grid;
+    gap: 1rem;
+}
+.observatory-banner, .observatory-filters, .observatory-legend, .observatory-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .75rem;
+}
+.observatory-banner {
+    justify-content: space-between;
+}
+.observatory-filters details {
+    position: relative;
+}
+.observatory-universes {
+    position: absolute;
+    z-index: 2;
+    min-width: 100%;
+    width: max-content;
+    max-width: min(20rem, 78vw);
+    max-height: min(20rem, 50vh);
+    overflow: auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: .5rem;
+    padding: .35rem;
+}
+.observatory-universes a, .observatory-navigation a {
+    display: flex;
+    align-items: center;
+    min-block-size: 44px;
+    padding: .35rem .65rem;
+}
+.observatory summary {
+    cursor: pointer;
+    padding: .65rem .35rem;
+    min-block-size: 44px;
+}
+.observatory-layout {
+    display: grid;
+    grid-template-columns: minmax(11rem, 15rem) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+}
+.observatory-navigation {
+    display: grid;
+    gap: .3rem;
+}
+.observatory [aria-current] {
+    border: 1px solid var(--line);
+    border-radius: .45rem;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 11%, var(--panel));
+}
+.observatory-content {
+    display: grid;
+    min-width: 0;
+    gap: 1rem;
+}
+.observatory-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+    gap: .75rem;
+}
+.observatory-kpis h2 { font-size: 1rem; }
+.observatory-kpis strong { font-size: clamp(1.2rem, 2.3vw, 1.85rem); }
+.observatory-table {
+    max-width: 100%;
+    overflow-x: auto;
+}
+.observatory-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.observatory-table td, .observatory-table th {
+    text-align: start;
+    padding: .6rem;
+    border-bottom: 1px solid var(--line);
+}
+.observatory-table meter {
+    inline-size: clamp(3rem, 10vw, 8rem);
+}
+.observatory-pagination { margin-top: 1rem; }
+.observatory-chart { width: 100%; height: auto; color: var(--accent); }
+.observatory-grid-line { fill: none; stroke: var(--line); }
+.observatory-axis { fill: var(--text); font-size: 12px; }
+.observatory-series { fill: none; stroke: currentColor; stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+.observatory-series--joined { stroke: var(--gold); stroke-dasharray: 6 4; }
+.observatory-series--active { stroke: var(--text); stroke-dasharray: 2 4; }
+.observatory-legend span::before { content: '━ '; color: var(--accent); }
+.observatory-legend span:nth-child(2)::before { content: '╌ '; color: var(--gold); }
+.observatory-legend span:nth-child(3)::before { content: '┄ '; color: var(--text); }
+@media (max-width: 760px) {
+    .observatory-layout { grid-template-columns: minmax(0, 1fr); }
+    .observatory-navigation { display: flex; flex-wrap: wrap; }
+    .observatory-banner { align-items: flex-start; }
+}
