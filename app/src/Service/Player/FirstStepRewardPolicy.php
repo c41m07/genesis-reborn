@@ -6,6 +6,7 @@ namespace App\Service\Player;
 
 use App\Entity\Planet;
 use App\Entity\QueueItem;
+use App\Entity\SolarSystem;
 
 final class FirstStepRewardPolicy
 {
@@ -41,6 +42,15 @@ final class FirstStepRewardPolicy
         }
 
         return $refund;
+    }
+
+    /** @param array<string, array<string, int>> $composition */
+    public static function assertSpyQuote(string $mission, Planet|SolarSystem $target, array $composition, bool $adjusted): void
+    {
+        if ($mission !== 'spy' || !$target instanceof Planet || !self::isNativeNpc($target)
+            || $adjusted || $composition !== ['probe' => ['basic' => 1]]) {
+            throw new \DomainException('Pour l’exercice guidé, choisissez un monde PNJ découvert et envoyez exactement une Sonde de reconnaissance basique.');
+        }
     }
 
     public static function isNativeNpc(?Planet $planet): bool

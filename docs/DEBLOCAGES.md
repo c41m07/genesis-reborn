@@ -55,7 +55,9 @@ Les cinq stockages suivent la même progression sur la colonie.
 
 ## Recherches — 19
 
-Toutes les conditions appartiennent au rang demandé.
+Aux conditions du tableau s’ajoute, pour les 19 familles, la recherche de la même famille au rang précédent, niveau 5. Cette exigence ouvre le T2 après le T1 et le T3 après le T2. Elle sert de référence au prix des matériaux. Les autres recherches et le laboratoire restent des conditions d’accès.
+
+Les conditions du tableau appartiennent au rang demandé.
 
 | Famille | Laboratoire | Recherches nécessaires |
 |---|---|---|

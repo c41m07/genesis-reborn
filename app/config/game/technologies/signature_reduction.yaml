@@ -60,6 +60,11 @@
           "slug": "nanomaterial_synthesis",
           "tier": "intermediate",
           "level": 3
+        },
+        {
+          "slug": "signature_reduction",
+          "tier": "basic",
+          "level": 5
         }
       ]
     },
@@ -81,6 +86,11 @@
           "slug": "nanomaterial_synthesis",
           "tier": "superior",
           "level": 3
+        },
+        {
+          "slug": "signature_reduction",
+          "tier": "intermediate",
+          "level": 5
         }
       ]
     }

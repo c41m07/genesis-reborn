@@ -749,3 +749,74 @@ adresse POST. L'adaptateur SMTP direct peut alors réutiliser le modèle de
 confirmation sans envoyer de bienvenue ; aucun alias, fournisseur, secret,
 paramètre réel ou route nouvelle. Le défaut reste fermé. Voir la
 [preuve SMTP exclusivement interne](FICHE_PILOTE_ACTIVATION_LOCALE.md#pilote-distinct--récupération-admin).
+
+### Origine admissible d’une remise de récupération
+
+Une récupération capable de remettre un lien ne traite que le dernier
+reçu initial indéterminé et résolu du même compte, portant la version exacte
+de sa génération active. Un reçu produit par une récupération ne peut pas
+devenir une nouvelle origine, quelle que soit sa propre issue. La sélection
+de formulaire est indicative ; la réservation, la revendication et la remise
+revérifient cette preuve sous le verrou du compte.
+
+Un reçu ancien sans version reste dans l’historique. Il n’est ni associé
+rétroactivement à une autre génération ni converti en tentative connue.
+Le journal historique d’intention non émetteur reste inchangé. Aucune règle
+ne rend une remise indéterminée réessayable par le seul passage du temps.
+Aucun changement de transport, de drapeau ou de procédure d’exploitation.
+
+## Branchement volontaire de l’émission publique
+
+Le conteneur assemble, uniquement si la voie versionnée est choisie,
+`VerificationEmissionProviderFactory` → `VerificationEmissionProvider` →
+`SymfonyVerificationEmissionTransport::forSingleSmtp`. Le magasin, le lecteur
+mixte et le sélecteur inscription/renvoi restent les mêmes. La voie classique
+reste la valeur par défaut ; ses inscriptions et renvois ignorent ces paramètres.
+La reprise d’activation par un administrateur reste un lot distinct non raccordé.
+
+Le contrat opérateur ne fournit ni coffre ni secret par défaut. Préparer et
+sauvegarder les données avant migration autorisée, puis valider le schéma sur
+une copie. Renseigner dans la configuration privée de l’instance :
+
+- `EMAIL_VERIFICATION_MIXED_READER_ENABLED=1` avant l’écrivain ;
+- `EMAIL_VERIFICATION_ACTIVE_KEY_ID` : identifiant immuable, 1 à 32 caractères
+  parmi lettres, chiffres, trait d’union et souligné ;
+- `EMAIL_VERIFICATION_KEYS_JSON` : objet JSON associant chaque identifiant
+  à exactement 32 octets aléatoires dédiés, encodés en base64 standard.
+  Stocker ce trousseau stable dans le mécanisme confidentiel de l’instance,
+  jamais dans Git, un journal, un ticket ou un historique de commandes.
+  Ne jamais réutiliser une clé Symfony, Mercure ou SMTP, ou remplacer la
+  valeur sous un identifiant déjà employé ;
+- `EMAIL_VERIFICATION_SMTP_DSN` : DSN dédié d’un seul SMTP, TLS avec certificat
+  vérifié ; `smtps://` ou `smtp://` avec `require_tls=true` et TLS automatique.
+  Pas de mécanisme de repli, de bus ni d’utilisation implicite de `MAILER_DSN`.
+  Vérifier que le relais autorise `MAILER_FROM` et que `DEFAULT_URI` désigne
+  l’URL publique attendue.
+
+Sur un environnement simulé avec les mêmes paramètres, puis avant d’ouvrir les
+inscriptions avec l’écrivain activé, exécuter
+`APP_ENV=prod php bin/console app:email-verification:check-config`. Tester la
+construction avec `EMAIL_VERIFICATION_VERSIONED_WRITER_ENABLED=1` dans cet
+environnement de précontrôle ; en mode classique la commande indique
+qu’elle ne valide aucun transport versionné. Une valeur absente/invalide
+ou un lecteur non activé donnent un code d’échec et un diagnostic fixe qui
+ne contient ni paramètres, ni clés, ni adresse, ni URL. Le défaut de
+configuration ne bloque pas les pages ; une demande versionnée mal
+configurée ne produit ni lien ni remise et ne repasse pas en mode classique.
+La commande vérifie le contrat de configuration et l’assemblage Symfony,
+pas la base, le certificat distant, le réseau, l’expéditeur ni la réception.
+Ces vérifications et l’activation réelle restent sous contrôle de l’exploitant.
+
+Le lien valide garde son identité et sa première échéance pendant les
+renvois autorisés. Deux renvois ne créent pas deux confirmations possibles.
+Un résultat indéterminé ne déclenche pas de relance automatique. Un lien
+classique actif n’est jamais remplacé par le mode versionné ; le lecteur
+mixte continue de le lire. Pour une rotation, ajouter un nouvel identifiant,
+le rendre actif, garder ensuite l’ancienne clé tant que ses liens actifs
+doivent pouvoir être réémis. En cas de compromission, une révocation
+explicite des générations concernées est nécessaire, en plus du retrait de
+clé. Avant retour arrière : couper et drainer l’écrivain, conserver le
+lecteur mixte pour les liens émis, ne pas rediriger ces comptes vers
+l’ancien émetteur pendant leur fenêtre active, pas de retrait de schéma
+sans procédure autorisée. Aucune activation ou configuration d’instance
+réelle dans ce lot.

@@ -34,7 +34,12 @@ final class RequirementChecker
     }
     public function forTier(array $definition,string $tier,int $level=1):array
     {
-        return $this->merge($definition['unlock_requirements']??[],$definition['tier_unlock_requirements'][$tier]??[]);
+        return self::unlockRequirements($definition, $tier);
+    }
+
+    public static function unlockRequirements(array $definition, string $tier): array
+    {
+        return self::merge($definition['unlock_requirements']??[],$definition['tier_unlock_requirements'][$tier]??[]);
     }
     private function level(array $levels,string $slug,string $tier):int
     {
@@ -42,7 +47,7 @@ final class RequirementChecker
         if(is_numeric($value))return $tier==='basic'?(int)$value:0;
         return (int)($value[$tier]??0);
     }
-    private function merge(array $left,array $right):array
+    private static function merge(array $left,array $right):array
     {
         $result=[];
         foreach(array_unique([...array_keys($left),...array_keys($right)]) as $group){

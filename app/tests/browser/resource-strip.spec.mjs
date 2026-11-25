@@ -49,7 +49,7 @@ test('Stock protégé et productivité réelle, pénuries et reprise sans rechar
     await expect(events.locator('details')).not.toHaveAttribute('open', '');
 
     await expect(metal.locator('.resource-productivity')).toHaveText('100,0 %');
-    await expect(metal.locator('.storage-meter')).toHaveAttribute('aria-label', /11\s000 protégés du pillage/);
+    await expect(metal.locator('.storage-meter')).toHaveAttribute('aria-label', /11\s025 protégés du pillage/);
     await expect(page.locator('.storage-meter-protected')).toHaveCount(5);
     await expect.poll(() => metal.locator('.storage-meter').evaluate(el => el.offsetHeight)).toBe(7);
     const ratio = await metal.locator('.storage-meter-protected').evaluate(el => el.getBoundingClientRect().width / el.parentElement.getBoundingClientRect().width);

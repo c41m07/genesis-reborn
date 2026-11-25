@@ -752,7 +752,7 @@ final class QueueService
                 };
                 $definition = $this->catalog->getTierForUniverse($membership->universe, $group, $command->itemSlug, $command->tier);
                 // Ne recalculer les coûts que pour les anciennes commandes qui ne les ont pas enregistrés.
-                $paid = $command->paidCosts ?? $this->catalog->costs($definition, $command->itemLevel ?? 1, $command->quantity, $group);
+                $paid = $command->paidCosts ?? $this->catalog->costs($definition, $command->itemLevel ?? 1, $command->quantity, $group, $this->catalog->forUniverse($membership->universe)['catalog']);
                 if (!isset($rooms[$command->planet->id])) {
                     foreach ($this->resources->snapshot($command->planet) as $slug => $resource) {
                         $rooms[$command->planet->id][$slug] = max(0.0, $resource['capacity'] - $resource['stock']);
@@ -857,7 +857,8 @@ final class QueueService
             $this->catalog->getTierForUniverse($item->playerUniverse->universe, $group, $item->itemSlug, $item->tier),
             $item->itemLevel ?? 1,
             $item->quantity,
-            $group
+            $group,
+            $this->catalog->forUniverse($item->playerUniverse->universe)['catalog']
         );
         $this->resources->refund($item->planet, $paid, $this->catalog->rules()['cancellation_refund_ratio']);
         $this->manager->remove($item);

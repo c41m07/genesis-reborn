@@ -50,6 +50,11 @@
           "slug": "weapons_engineering",
           "tier": "intermediate",
           "level": 2
+        },
+        {
+          "slug": "weapon_calibration",
+          "tier": "basic",
+          "level": 5
         }
       ]
     },
@@ -66,6 +71,11 @@
           "slug": "weapons_engineering",
           "tier": "superior",
           "level": 2
+        },
+        {
+          "slug": "weapon_calibration",
+          "tier": "intermediate",
+          "level": 5
         }
       ]
     }

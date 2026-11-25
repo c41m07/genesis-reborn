@@ -45,6 +45,11 @@
           "slug": "naval_engineering",
           "tier": "intermediate",
           "level": 2
+        },
+        {
+          "slug": "tactical_intelligence",
+          "tier": "basic",
+          "level": 5
         }
       ]
     },
@@ -61,6 +66,11 @@
           "slug": "naval_engineering",
           "tier": "superior",
           "level": 2
+        },
+        {
+          "slug": "tactical_intelligence",
+          "tier": "intermediate",
+          "level": 5
         }
       ]
     }
