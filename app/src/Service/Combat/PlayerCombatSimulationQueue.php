@@ -14,6 +14,9 @@ use Symfony\Component\Uid\Uuid;
 /** Coordonne les essais privés différés ; aucun résultat ne constitue un rapport de combat du jeu. */
 final class PlayerCombatSimulationQueue
 {
+    // Borner le temps d'une livraison même si chaque essai atteint le budget du moteur.
+    public const TRIALS_PER_DELIVERY = 4;
+
     public function __construct(
         private readonly GameManager $manager,
         private readonly GameRepository $repo,
@@ -87,42 +90,58 @@ final class PlayerCombatSimulationQueue
 
     public function run(PlayerCombatSimulationDue $message): void
     {
+        // Chaque essai est validé séparément en base. Regrouper les livraisons évite de
+        // refaire le trajet relais → RabbitMQ → worker pour chacun des dix essais.
+        do {
+            $again = $this->runNextTrial($message);
+        } while ($again);
+    }
+
+    private function runNextTrial(PlayerCombatSimulationDue $message): bool
+    {
         $job = $this->repo->find(PlayerCombatSimulationJob::class, $message->id);
         if (!$job instanceof PlayerCombatSimulationJob || !$this->canRun($job, $message)) {
-            return;
+            return false;
         }
+        $index = count($job->trials);
         $scenario = $job->scenario;
         // Le calcul ne tient ni le verrou du joueur, ni une transaction SQL ouverte.
-        // Deux livraisons pourraient calculer le même essai, mais une seule peut l’ajouter.
         try {
-            $trial = $this->simulation->runTrial($scenario['prepared'], $scenario['seed'], count($job->trials));
+            $trial = $this->simulation->runTrial($scenario['prepared'], $scenario['seed'], $index);
         } catch (CombatCapacityExceeded) {
-            // Rejouer un calcul hors capacité à l’identique ne le rendrait pas disponible.
             $this->markFailed($message, 'capacity');
 
-            return;
+            return false;
         }
         $trial = $this->view->prepareRows(['trials' => [$trial]], $scenario['rows'])['trials'][0];
-        // Le petit parcours conserve le détail par unité, y compris s’il passe par la file.
         if ($scenario['prepared']['grouped_survivors'] || ($trial['grouped_survivors'] ?? false)) {
             $trial['survivors'] = $this->summarizeSurvivors($trial['survivors']);
             $trial['grouped_survivors'] = true;
         }
         unset($trial['losses']);
 
-        $this->manager->transaction(function () use ($message, $trial): void {
+        return $this->manager->transaction(function () use ($message, $trial, $index): bool {
             $job = $this->repo->combatSimulationJobForUpdate($message->id);
-            if ($job === null || !$this->canRun($job, $message)) {
-                return;
+            // Une livraison répétée peut recalculer un essai ; seul l'indice suivant peut être ajouté.
+            if ($job === null || !$this->canRun($job, $message) || count($job->trials) !== $index) {
+                return false;
             }
             $job->trials[] = $trial;
-            if (count($job->trials) === PlayerCombatSimulation::TRIALS) {
+            $completed = $index + 1;
+            if ($completed === PlayerCombatSimulation::TRIALS) {
                 $job->status = 'done';
 
-                return;
+                return false;
             }
-            $job->dispatchToken = Uuid::v4()->toRfc4122();
-            $this->schedule($job, PlayerCombatSimulationDue::KIND, $job->dispatchToken, $this->now());
+            if ($completed % self::TRIALS_PER_DELIVERY === 0) {
+                $job->dispatchToken = Uuid::v4()->toRfc4122();
+                $this->schedule($job, PlayerCombatSimulationDue::KIND, $job->dispatchToken, $this->now());
+
+                return false;
+            }
+
+            // En cas de reprise du message, les essais déjà validés ne sont pas rejoués.
+            return true;
         });
     }
 

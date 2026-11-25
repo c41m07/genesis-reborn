@@ -230,6 +230,7 @@ des effectifs exacts par type et rang et des plages de structure et bouclier des
 les petits scénarios conservent le détail habituel.
 
 Chaque essai reprend le même catalogue figé à la demande et utilise la graine correspondant à son
-rang dans la série. Le bilan n’est présenté qu’après dix essais. Le jeton du prochain essai et le bilan
-du précédent sont écrits de façon atomique. Les messages obsolètes ou rediffusés n’ajoutent pas d’essai.
+rang dans la série. Le bilan n’est présenté qu’après dix essais. Le worker traite jusqu’à quatre essais par livraison et
+enregistre chaque résultat séparément. En fin de lot, le résultat, le jeton et l’envoi suivant
+sont écrits ensemble. Une rediffusion reprend à l’indice suivant sans réajouter un essai validé.
 Le consommateur de simulations ne consomme ni les échéances des flottes ni les constructions.

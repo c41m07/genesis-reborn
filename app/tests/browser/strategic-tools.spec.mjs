@@ -316,10 +316,11 @@ test('Simulateur volumineux : résultat privé au retour, sans tronquer les effe
  await expect(page).toHaveURL(/\/simulateur\?job=[^#]+#simulation-result$/);
  const resultUrl = page.url();
  await page.goto('/simulateur');
+ await page.goto(resultUrl);
  try {
-  // Dix essais transitent chacun par le relais puis la file dédiée, en plus du calcul.
+  // La file traite plusieurs essais par livraison. Recharger réellement le document, pas seulement son ancre.
   await expect.poll(async () => {
-   await page.goto(resultUrl);
+   await page.reload({ waitUntil: 'domcontentloaded' });
    const panel = page.locator('#simulation-result');
    if (await page.locator('.simulation-trial').count() === 10) return '10 résultats';
    const content = await panel.textContent({ timeout: 3000 }).catch(() => 'Aucun panneau de résultat');

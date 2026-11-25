@@ -184,8 +184,12 @@ final class StrategicToolsTest extends WebTestCase
             'seed' => '4294967294',
             'assumptions' => '1',
             'forces' => [
-                'attacker' => ['ships' => ['probe' => ['basic' => 500]]],
-                'defender' => ['ships' => ['probe' => ['basic' => 1]], 'arrival' => 2],
+                'attacker' => ['ships' => ['probe' => ['basic' => 6000]]],
+                'defender' => [
+                    'ships' => ['probe' => ['basic' => 1]],
+                    'defenses' => ['ground_turret_anti_light' => ['basic' => 1]],
+                    'arrival' => 2,
+                ],
             ],
         ];
         $this->client->request('POST', '/simulateur', $payload);
@@ -210,7 +214,7 @@ final class StrategicToolsTest extends WebTestCase
         $events->addListener(WorkerRunningEvent::class, static function (WorkerRunningEvent $event): void {
             $event->getWorker()->stop();
         });
-        for ($step = 0; $step < 10; ++$step) {
+        for ($step = 0; $step < 3; ++$step) {
             $relay->run();
             $available = $transport->get();
             self::assertCount(1, $available);
@@ -219,13 +223,14 @@ final class StrategicToolsTest extends WebTestCase
             self::assertFalse($envelope->getMessage()->expire);
             $worker = new Worker(['combat_simulation' => $transport], $container->get('messenger.bus.default'), $events);
             $worker->run(['sleep' => 0]);
+            self::assertSame(min(10, ($step + 1) * 4), (int) $db->fetchOne('SELECT JSON_LENGTH(trials) FROM player_combat_simulation_job'));
             if ($step === 0) {
                 // Une republication du relais peut rejouer le message après son acquittement.
                 $transport->send($envelope);
                 $worker = new Worker(['combat_simulation' => $transport], $container->get('messenger.bus.default'), $events);
                 $worker->run(['sleep' => 0]);
                 $trialCount = $db->fetchOne('SELECT JSON_LENGTH(trials) FROM player_combat_simulation_job');
-                self::assertSame(1, (int) $trialCount);
+                self::assertSame(4, (int) $trialCount);
             }
         }
         $this->client->request('GET', $url);
