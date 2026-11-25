@@ -58,7 +58,7 @@ final class BalanceMechanicsTest extends TestCase
             ['naval_engineering' => 5],
         );
 
-        self::assertSame(159, $plan['duration']);
+        self::assertSame(161, $plan['duration']);
         self::assertSame(['metal'=>1388,'nano'=>752,'antimatter'=>0,'hydrogen'=>0,'electricity'=>300],$plan['costs']);
     }
 
@@ -149,9 +149,9 @@ final class BalanceMechanicsTest extends TestCase
     {
         $catalog=$this->catalog();$checker=new \App\Service\Requirement\RequirementChecker($catalog);$definition=$catalog->get('technologies','vector_propulsion');$rankedTech=['engineering_foundations'=>['basic'=>4,'intermediate'=>10],'naval_engineering'=>['basic'=>5]];$rankedBuildings=['lab'=>['basic'=>4,'intermediate'=>10]];
         self::assertNotEmpty($checker->check($checker->forTier($definition,'intermediate'),$rankedBuildings,$rankedTech));
-        $rankedTech['naval_engineering']['intermediate']=3;self::assertSame([],$checker->check($checker->forTier($definition,'intermediate'),$rankedBuildings,$rankedTech));
+        $rankedTech['naval_engineering']['intermediate']=3;$rankedTech['vector_propulsion']['basic']=5;self::assertSame([],$checker->check($checker->forTier($definition,'intermediate'),$rankedBuildings,$rankedTech));
         self::assertNotEmpty($checker->check($checker->forTier($definition,'superior'),$rankedBuildings,$rankedTech));
-        self::assertSame([],$checker->check($checker->forTier($definition,'superior'),['lab'=>['superior'=>4]],['naval_engineering'=>['superior'=>3]]));
+        self::assertSame([],$checker->check($checker->forTier($definition,'superior'),['lab'=>['superior'=>4]],['naval_engineering'=>['superior'=>3],'vector_propulsion'=>['intermediate'=>5]]));
     }
 
     public function testOnlyTheFirstTwoStorageRanksHaveALevelCap(): void
@@ -183,7 +183,7 @@ final class BalanceMechanicsTest extends TestCase
         $research = $universe['catalog']['technologies']['colonial_expansion'];
         $plan = (new OperationCalculator($catalog))->calculate($research, 'technologies', 1, 1, ['lab' => 1], $universe);
 
-        self::assertSame(28419, $plan['duration']);
+        self::assertSame(28475, $plan['duration']);
     }
 
     public function testResearchNamesAreDistinctAndEveryCombatShipHasOneSpecialistTurret(): void

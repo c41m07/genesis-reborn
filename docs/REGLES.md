@@ -17,6 +17,20 @@ sans pondération M/N/A/H : leur redistribution peut donc changer les points au
 recalcul, ainsi que les protections qui en dépendent. Les seuils et règles de
 protection ne sont pas modifiés. [Profils détaillés et limites des arrondis](COUTS.md).
 
+## Progression économique par rang
+
+Les 19 recherches exigent, pour ouvrir le T2, le niveau 5 du T1 de la même famille, et pour le T3, le niveau 5 du T2. Les autres conditions de déblocage et le laboratoire local s’appliquent également. Un accès déjà acquis reste acquis.
+
+Le T1 utilise les quantités de son profil. Aux rangs avancés, le budget initial vaut 110 % de la valeur du passage au niveau exigé le plus cher. Pour les recherches, seules les recherches du même identifiant de famille comptent. Pour les bâtiments, tous les bâtiments et recherches requis comptent. Chaque référence est le devis en matériaux du seul niveau demandé, avant remise, aux prix de l’univers. La valeur vaut hydrogène + 2 × métal + 4 × nano + 8 × antimatière. Le budget suit les proportions du profil cible. Au niveau N, le devis repart du budget initial non arrondi et arrondit chaque quantité au supérieur.
+
+Les matériaux des recherches progressent de 35 % par niveau. Les durées progressent de 35 % aux niveaux 2–5, 25 % aux niveaux 6–10, 18 % aux niveaux 11–15 et 12 % ensuite. Chaque rang conserve sa durée de départ. La taxe est de 100 unités d’électricité par minute effective entamée.
+
+Pour les quatre extracteurs, la centrale, les cinq dépôts, le laboratoire, le chantier et le bunker, la hausse des matériaux est de 10 % aux niveaux 2–10, puis 9 %, 8 %, 7 %, 6 %, 5 %, 4 %, 3 % et 2 % par tranches de dix niveaux. Dès le niveau 91, elle vaut 1 %. La durée de construction suit sa courbe propre.
+
+Pour chaque rang, la contribution de L niveaux vaut sa base par niveau × L × (1 + taux)^L. Les taux T1/T2/T3 valent 0,25 %, 0,5 % et 1 %. La production industrielle additionne les contributions, avec les facteurs de production 1 / 1,5 / 2,25. Les consommations électriques dépendent des niveaux installés et l’hydrogène du réacteur dépend de l’antimatière produite. La capacité additionne les contributions des dépôts (poids 1 / 1,25 / 1,5625) aux 10 000 places initiales de la colonie.
+
+Pour le laboratoire, le chantier et le bunker, les poids sont 1 / 1,25 / 1,5625. On divise la somme des contributions par celle obtenue aux trois maxima. Pour cette proportion p, l’effet vaut plafond × ln(1 + 2p) / ln(3). Le laboratoire et le chantier atteignent 70 % à 25/25/25 pour les recherches locales et la construction de vaisseaux respectivement. Le bunker atteint +25 % de structure des défenses à 10/10/10, en composition avec le blindage.
+
 ## Unités économiques — décision des 15 et 16 novembre 2026
 
 Les deux familles de vaisseaux civils sont détaillées dans
@@ -70,7 +84,7 @@ cours bloque l’opération entière jusqu’à sa résolution. Le dernier admin
 actif doit désigner un successeur avant de supprimer son compte.
 
 ## Colonie
-Métal, électricité, antimatière, hydrogène et nano par planète. La simulation intègre les stocks par segments entre épuisement et capacité. Les usines adaptent leur rendement à l’électricité disponible avec un plancher de 10 % ; l’antimatière exige aussi de l’hydrogène. Coûts et durées sont autoritaires côté serveur. Les coûts des trois rangs suivent des profils par catégorie avec budgets de valeur constants. Les technologies sont débloquées par joueur et par univers. Chaque nouvelle commande de recherche exige aussi un laboratoire du même rang au niveau 1 ou plus sur la colonie de lancement. La file de recherche est commune au joueur dans l’univers.
+Métal, électricité, antimatière, hydrogène et nano par planète. La simulation intègre les stocks par segments entre épuisement et capacité. Les usines adaptent leur rendement à l’électricité disponible avec un plancher de 10 % ; l’antimatière exige aussi de l’hydrogène. Coûts et durées sont autoritaires côté serveur. Les coûts des trois rangs suivent des profils par catégorie avec budgets de rang calculés selon la progression économique. Les technologies sont débloquées par joueur et par univers. Chaque nouvelle commande de recherche exige aussi un laboratoire du même rang au niveau 1 ou plus sur la colonie de lancement. La file de recherche est commune au joueur dans l’univers.
 
 ### Prérequis par rang — grille actualisée le 18 novembre 2026
 
@@ -276,9 +290,9 @@ Les rangs multiplient ces capacités par 1 / 1,25 / 1,5625 avec arrondi supérie
 
 ## Production des bâtiments — cadence A, 5 novembre 2026
 
-En position 5, dans un univers ×1 et à plein rendement, les productions Basiques par niveau sont de 360 métal/h, 180 nano/h, 720 hydrogène/h, 90 antimatière/h et 1 080 électricité/h pour la centrale. Le métal, le nano et l’hydrogène consomment chacun 180 électricité/h par niveau Basique. Le piège consomme directement 90 électricité/h et 360 hydrogène/h. En comptant l’électricité nécessaire à la production des 4 H par AM, une unité d’antimatière coûte 2 électricité à plein rendement, comme 8 H, 4 M ou 2 N. Les rangs s’additionnent et gardent les facteurs de production et consommation **1 / 1,5 / 2,25**. Les bonus de position et la production passive restent appliqués séparément. Les prix du niveau 1 Basique sont de 384 M + 208 N pour les trois producteurs directs, 288 M + 156 N pour le piège et 1 152 M + 624 N pour la centrale. Les durées du niveau 1 Basique sont respectivement 1 min, 2 min et 2 min ; les courbes de niveaux et les réductions sont conservées. Les budgets du réacteur et de la centrale sont déclinés sur les autres rangs avec les facteurs de coût existants, sans changer les parts de ressources. Le [bilan historique du 9 novembre](EQUILIBRAGE.md#référence-historique--production-du-9-novembre-2026) précise les 84,16 jours de construction cumulés jusqu’au niveau 80 et les limites de cette mesure.
+En position 5, dans un univers ×1 et à plein rendement, les bases de production du rang Basique, avant bonus composé, sont de 360 métal/h, 180 nano/h, 720 hydrogène/h, 90 antimatière/h et 1 080 électricité/h pour la centrale. Le métal, le nano et l’hydrogène consomment chacun 180 électricité/h par niveau Basique. Le piège consomme directement 90 électricité/h par niveau Basique et 4 hydrogène par unité d’antimatière effectivement produite. Les rangs s’additionnent et gardent les facteurs de production et consommation **1 / 1,5 / 2,25**. Les bonus de position et la production passive restent appliqués séparément. Les prix du niveau 1 Basique sont de 384 M + 208 N pour les trois producteurs directs, 288 M + 156 N pour le piège et 1 152 M + 624 N pour la centrale. Les durées du niveau 1 Basique sont respectivement 1 min, 2 min et 2 min ; les courbes de niveaux et les réductions sont conservées. Le prix des rangs avancés du réacteur et de la centrale dépend de leurs prérequis. Le [bilan historique du 9 novembre](EQUILIBRAGE.md#référence-historique--production-du-9-novembre-2026) précise les 84,16 jours de construction cumulés jusqu’au niveau 80 et les limites de cette mesure.
 
-Les coûts des seuls producteurs croissent par niveau de ×1,12 jusqu’à 20, ×1,09 jusqu’à 40, ×1,035 jusqu’à 80, ×1,015 jusqu’à 120, puis ×1,01. Les premiers prix, profils de ressources par rang et arrondis par ressource restent utilisés. Les durées et les effets des laboratoires, chantiers, bunkers et stockages ne reçoivent pas le nouveau facteur de production ; leur calcul reste séparé.
+Avant le rééquilibrage du 25 novembre, les coûts des seuls producteurs croissaient par niveau de ×1,12 jusqu’à 20, ×1,09 jusqu’à 40, ×1,035 jusqu’à 80, ×1,015 jusqu’à 120, puis ×1,01. Les premiers prix, profils de ressources par rang et arrondis par ressource restent utilisés. Les durées et les effets des laboratoires, chantiers, bunkers et stockages ne reçoivent pas le nouveau facteur de production ; leur calcul reste séparé.
 
 Une usine dont la production ne peut plus être stockée suspend ses consommations inutiles. Les raffineries et centrales continuent de fournir les besoins immédiats des autres usines lorsque leurs propres stocks sont pleins. Les pénuries et remplissages sont calculés pendant toute la période écoulée ; les petites erreurs numériques ne doivent pas interrompre ce calcul. Les débits nets affichés excluent les excédents impossibles à stocker.
 

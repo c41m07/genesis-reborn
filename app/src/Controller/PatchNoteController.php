@@ -3,9 +3,10 @@
 declare (strict_types=1);
 namespace App\Controller;
 
-use App\Entity\{AdminAuditLog, PatchNote};
+use App\Entity\{AdminAuditLog, PatchNote, Player};
 use App\Repository\PatchNoteRepository;
 use App\Service\Admin\PatchNoteEditor;
+use App\Service\Player\PatchNoteReadState;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
@@ -16,14 +17,12 @@ final class PatchNoteController extends AbstractController
 {
     #[Route('/patchnotes', name: 'app_patchnotes', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
-    public function index(PatchNoteRepository $notes, EntityManagerInterface $em): Response
+    public function index(PatchNoteRepository $notes, PatchNoteReadState $readState): Response
     {
         $patchNotes = $notes->published();
         $player = $this->getUser();
-        if ($player instanceof \App\Entity\Player && $patchNotes !== []) {
-            // L’ouverture de cette page enregistre la note affichée en tête comme lue.
-            $player->preferences['last_patch_note_read_id'] = $patchNotes[0]->id;
-            $em->flush();
+        if ($player instanceof Player && $patchNotes !== []) {
+            $readState->markRead($player, $patchNotes[0]);
         }
         return $this->render('patchnotes/index.html.twig', ['patchNotes' => $patchNotes]);
     }

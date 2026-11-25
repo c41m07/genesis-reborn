@@ -34,6 +34,81 @@ final class PatchNoteControllerTest extends WebTestCase
         self::assertResponseIsSuccessful(); self::assertSelectorTextContains('body', 'Publié'); self::assertSelectorTextNotContains('body', 'Brouillon');
     }
 
+    public function testScheduledPatchnotesUsePublicationOrderForTheMenuBadge(): void
+    {
+        $player = $this->player();
+        $scheduled = $this->publishedNote('Publication programmée', '2099-01-01 12:00:00');
+        $sameDateLowId = $this->publishedNote('Première à heure égale', '2099-01-01 12:00:00');
+        $sameDateHighId = $this->publishedNote('Dernière à heure égale', '2099-01-01 12:00:00');
+        $alreadyPublished = $this->publishedNote('Première publication visible', '2020-01-01 12:00:00');
+        self::assertLessThan($alreadyPublished, $scheduled);
+        self::assertLessThan($sameDateHighId, $sameDateLowId);
+        // Un compte historique a vu B avant le déploiement : son ancien ID seul reste reconnu.
+        $player->preferences['last_patch_note_read_id'] = $alreadyPublished;
+        $this->em->flush();
+        $this->client->loginUser($player);
+
+        $crawler = $this->client->request('GET', '/univers');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(1, 'a.patchnote-shortcut[href="/patchnotes"]');
+        self::assertSelectorCount(0, 'a.patchnote-shortcut .patchnote-unread-dot');
+        $this->client->click($crawler->filter('a.patchnote-shortcut')->link());
+        self::assertSelectorTextContains('.patchnote-card:first-child h2', 'Première publication visible');
+        self::assertSelectorTextNotContains('main', 'Publication programmée');
+
+        // Rendre A visible avec un instant postérieur à B, sans attendre une publication réelle.
+        $db = self::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        $db->update('patch_note', ['published_at' => '2020-01-02 12:00:00'], ['id' => $scheduled]);
+        $crawler = $this->client->request('GET', '/univers');
+        self::assertSelectorCount(1, 'a.patchnote-shortcut .patchnote-unread-dot');
+        $this->client->click($crawler->filter('a.patchnote-shortcut')->link());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.patchnote-card:first-child h2', 'Publication programmée');
+        self::assertSelectorCount(0, 'a.patchnote-shortcut .patchnote-unread-dot');
+        $this->client->request('GET', '/univers');
+        self::assertSelectorCount(0, 'a.patchnote-shortcut .patchnote-unread-dot');
+
+        // À la même seconde, un plus grand ID se place devant A ; un plus petit que le curseur
+        // ne doit ensuite ni rallumer le badge ni remonter la note en tête.
+        $db = self::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        $db->update('patch_note', ['published_at' => '2020-01-02 12:00:00'], ['id' => $sameDateHighId]);
+        $crawler = $this->client->request('GET', '/univers');
+        self::assertSelectorCount(1, 'a.patchnote-shortcut .patchnote-unread-dot');
+        $this->client->click($crawler->filter('a.patchnote-shortcut')->link());
+        self::assertSelectorTextContains('.patchnote-card:first-child h2', 'Dernière à heure égale');
+        $db = self::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        $db->update('patch_note', ['published_at' => '2020-01-02 12:00:00'], ['id' => $sameDateLowId]);
+        $this->client->request('GET', '/univers');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(0, 'a.patchnote-shortcut .patchnote-unread-dot');
+
+        // La note déjà lue peut être retirée temporairement. Lire la suivante ne doit pas
+        // effacer son curseur, ni la faire réapparaître comme non lue si sa date est inchangée.
+        $db = self::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        $db->update('patch_note', ['status' => 'draft'], ['id' => $sameDateHighId]);
+        $this->client->request('GET', '/patchnotes');
+        self::assertSelectorTextContains('.patchnote-card:first-child h2', 'Première à heure égale');
+        $db = self::getContainer()->get(EntityManagerInterface::class)->getConnection();
+        $db->update('patch_note', ['status' => 'published'], ['id' => $sameDateHighId]);
+        $this->client->request('GET', '/univers');
+        self::assertSelectorCount(0, 'a.patchnote-shortcut .patchnote-unread-dot');
+    }
+
+    private function publishedNote(string $title, string $date): int
+    {
+        $note = new PatchNote();
+        $note->title = $title;
+        $note->version = 'Recette';
+        $note->summary = 'Résumé';
+        $note->content = 'Détail';
+        $note->status = 'published';
+        $note->publishedAt = new \DateTimeImmutable($date, new \DateTimeZone('UTC'));
+        $this->em->persist($note);
+        $this->em->flush();
+
+        return $note->id;
+    }
+
     public function testOnlyAdminsCanManagePatchnotes(): void
     {
         $this->client->loginUser($this->player());
@@ -129,6 +204,49 @@ final class PatchNoteControllerTest extends WebTestCase
         }
         $this->client->request('GET', '/admin/patchnotes/999999');
         self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testAdminBadgeMatchesUtcPublicationWithoutChangingStoredStatusOrFilters(): void
+    {
+        $admin = $this->player(['ROLE_ADMIN']);
+        $player = $this->player();
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $notes = [
+            ['Titre test en préparation', 'Alpha-draft', 'draft', null, 'Brouillon'],
+            ['Titre test à paraître', 'Alpha-future', 'published', $now->modify('+1 hour'), 'Planifié'],
+            ['Titre test visible', 'Alpha-visible', 'published', $now->modify('-1 hour'), 'Publié'],
+        ];
+        foreach ($notes as [$title, $version, $storedStatus, $publication]) {
+            $note = new PatchNote();
+            $note->title = $title;
+            $note->version = $version;
+            $note->summary = 'Résumé de la vérification.';
+            $note->content = 'Contenu de la vérification.';
+            $note->status = $storedStatus;
+            $note->publishedAt = $publication;
+            $this->em->persist($note);
+        }
+        $this->em->flush();
+        $connection = $this->em->getConnection();
+
+        $adminBadges = static fn ($list): array => $list->filter('.admin-patchnote-list article .badge')
+            ->each(static fn ($badge): string => $badge->text());
+        $expected = array_map(static fn (array $note): string => $note[1] . ' · ' . $note[4], $notes);
+        $this->client->loginUser($admin);
+        $list = $this->client->request('GET', '/admin/patchnotes');
+        self::assertResponseIsSuccessful();
+        self::assertEqualsCanonicalizing($expected, $adminBadges($list));
+        $filtered = $this->client->request('GET', '/admin/patchnotes', ['status' => 'published']);
+        self::assertResponseIsSuccessful();
+        self::assertEqualsCanonicalizing(array_slice($expected, 1), $adminBadges($filtered));
+        self::assertSame('published', $connection->fetchOne('SELECT status FROM patch_note WHERE version = ?', ['Alpha-future']));
+
+        $this->client->loginUser($player);
+        $this->client->request('GET', '/patchnotes');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'Titre test visible');
+        self::assertSelectorTextNotContains('body', 'Titre test à paraître');
+        self::assertSelectorTextNotContains('body', 'Titre test en préparation');
     }
 
     private function player(array $roles = []): Player

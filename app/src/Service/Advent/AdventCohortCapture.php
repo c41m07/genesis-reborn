@@ -24,6 +24,12 @@ final readonly class AdventCohortCapture
         private ClockInterface $clock,
     ) {}
 
+    /** L’interface et l’exécution utilisent la même borne, incluse à la seconde près. */
+    public static function isLate(\DateTimeImmutable $startsAt, \DateTimeImmutable $observedAt): bool
+    {
+        return $observedAt->getTimestamp() - $startsAt->getTimestamp() > self::ON_TIME_WINDOW_SECONDS;
+    }
+
     /** @return array{state:string, observed_at:string, profiles:int, unknown:int, milliseconds:int} */
     public function capture(int $edition, bool $acceptLate = false): array
     {
@@ -51,7 +57,7 @@ final readonly class AdventCohortCapture
                 throw new \DomainException('Le relevé doit commencer pendant l’édition.');
             }
             $startsAt = new \DateTimeImmutable($header['starts_at'], new \DateTimeZone('UTC'));
-            $late = $observed->getTimestamp() - $startsAt->getTimestamp() > self::ON_TIME_WINDOW_SECONDS;
+            $late = self::isLate($startsAt, $observed);
             if ($late && !$acceptLate) {
                 throw new \DomainException('Relevé de départ manqué. N’acceptez une observation tardive qu’en sachant qu’elle ne reconstruit pas l’ouverture.');
             }

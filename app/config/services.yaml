@@ -11,6 +11,9 @@ parameters:
     env(ADMIN_ACTIVATION_RECOVERY_ENABLED): '0'
     env(EMAIL_VERIFICATION_MIXED_READER_ENABLED): '0'
     env(EMAIL_VERIFICATION_VERSIONED_WRITER_ENABLED): '0'
+    env(EMAIL_VERIFICATION_ACTIVE_KEY_ID): ''
+    env(EMAIL_VERIFICATION_KEYS_JSON): ''
+    env(EMAIL_VERIFICATION_SMTP_DSN): ''
     env(LEGAL_PUBLISHER_NAME): ''
     env(MAILER_FROM): 'no-reply@genesis-reborn.local'
     env(EMPIRE_INACTIVITY_WARNINGS_ENABLED): '0'
@@ -49,6 +52,7 @@ services:
     App\Service\Player\EmailVerificationEmissionSelector:
         arguments:
             $provider: null
+            $configuredProvider: '@App\Service\Player\VerificationEmissionProviderFactory'
 
     Psr\Clock\ClockInterface: '@clock'
 
