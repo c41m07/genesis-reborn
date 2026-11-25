@@ -200,8 +200,17 @@ test('Fidélité catalogues : même composition en Full HD et actions lisibles s
                 const queues = rail.locator('.catalog-queue-ribbon');
                 await expect(queues.locator('[data-queue-type]')).toHaveCount(3);
                 await expect(queues.locator('[data-queue-type]').first()).toHaveAttribute('data-queue-type', firstQueue);
+                if (width === 390) {
+                    await expect(queues).toBeHidden();
+                    await page.getByRole('button', { name: /afficher ou masquer les détails et les files de la colonie/ }).press('Enter');
+                    await expect(queues).toBeVisible();
+                }
                 const widthDelta = (await rail.boundingBox()).width - (await queues.boundingBox()).width;
                 expect(Math.abs(widthDelta)).toBeLessThanOrEqual(1);
+                if (width === 390) {
+                    await page.locator('.resource-toggle').press('Enter');
+                    await expect(queues).toBeHidden();
+                }
                 await expect(rail.locator('[data-catalog-disclosure="incoming"] > summary')).toBeVisible();
                 if (section === 'buildings') {
                     const banner = page.locator('.core-catalogue-header-art');
@@ -249,4 +258,113 @@ test('Fidélité catalogues : même composition en Full HD et actions lisibles s
     await expect(next).toHaveAttribute('href', /#item-colonial_expansion-intermediate$/);
     await next.press('Enter');
     await expect(page.locator('#building-tab-colonial_expansion-intermediate')).toHaveAttribute('aria-selected', 'true');
+});
+
+
+test('Sur mobile, les ressources et la file partagent un volet sans modifier les commandes', async ({ page, browser }, info) => {
+    const user = await enter(page);
+    const url = user.path + '?section=ships';
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.goto(url);
+    const strip = page.locator('.resource-strip--collapsible');
+    const details = page.locator('#resource-details .resource-name').first();
+    const queue = page.locator('#colony-catalog-queues');
+    const followups = page.locator('.catalog-flight-followups');
+    const toggle = page.locator('.resource-toggle');
+    await expect(strip).toBeVisible();
+    await expect(queue).toBeVisible();
+    await expect(details).toBeVisible();
+    await expect(toggle).toBeHidden();
+    // Une vraie commande, faite uniquement sur la colonie de fixture, puis aucun lancement mobile.
+    await page.locator('#item-fighter-basic').getByRole('button', { name: 'Construire : Chasseur de patrouille × 1', exact: true }).click();
+    const shipyard = queue.locator('[data-queue-type="shipyard"]');
+    await expect(shipyard).toHaveAttribute('data-queue-occupied', 'true');
+
+    // La largeur limite replie la file, mais un pixel au-dessus garde la vue de bureau.
+    await page.setViewportSize({ width: 741, height: 844 });
+    await expect(queue).toBeVisible();
+    await expect(toggle).toBeHidden();
+    await page.setViewportSize({ width: 740, height: 844 });
+    await expect(toggle).toBeVisible();
+    await expect(queue).toBeHidden();
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.reload();
+    await expect(queue).toBeHidden();
+    await expect(details).toBeHidden();
+    await expect(followups).toBeVisible();
+    await expect(page.locator('.resource-summary')).toBeVisible();
+    await expect(toggle).toHaveAccessibleName(/afficher ou masquer les détails et les files de la colonie/);
+    await expect(toggle).toHaveAttribute('aria-controls', 'resource-details colony-catalog-queues');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    const cards = page.locator('.colony-catalog');
+    const compactAt = await cards.evaluate(element => element.getBoundingClientRect().top + scrollY);
+    await page.screenshot({ path: info.outputPath('files-mobile-repliees.png') });
+
+    await toggle.press('Enter');
+    await expect(toggle).toBeFocused();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(details).toBeVisible();
+    await expect(queue).toBeVisible();
+    const expandedAt = await cards.evaluate(element => element.getBoundingClientRect().top + scrollY);
+    expect(expandedAt - compactAt).toBeGreaterThan(100);
+    await shipyard.locator(':scope > summary').press('Enter');
+    await expect(shipyard.getByRole('link', { name: /Préparer l’annulation/ })).toBeVisible();
+    await expect(shipyard.locator('.queue-capacity')).toHaveText('1/10 commandes');
+
+    // Pendant une vraie réponse partielle, la région du bouton tenu au clavier n’est pas remplacée.
+    await toggle.focus();
+    const focusedQueue = await queue.elementHandle();
+    const refresh = page.waitForResponse(response =>
+        response.request().method() === 'GET' && new URL(response.url()).pathname === user.path
+        && response.request().headers()['x-genesis-live'] === '1'
+    );
+    await page.evaluate(() => window.dispatchEvent(new Event('genesis:refresh')));
+    expect((await refresh).ok()).toBe(true);
+    await expect.poll(() => focusedQueue.evaluate(el => el.isConnected)).toBe(false);
+    await expect(toggle).toBeFocused();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+
+    // Le serveur remplace les deux fragments comme lors d'une fin de commande.
+    const oldStrip = await strip.elementHandle();
+    const oldQueue = await queue.elementHandle();
+    await page.evaluate(() => { document.activeElement.blur(); window.dispatchEvent(new Event('genesis:refresh')); });
+    await expect.poll(() => oldStrip.evaluate(el => el.isConnected)).toBe(false);
+    await expect.poll(() => oldQueue.evaluate(el => el.isConnected)).toBe(false);
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(details).toBeVisible();
+    await expect(shipyard.getByRole('link', { name: /Préparer l’annulation/ })).toBeVisible();
+    await page.evaluate(() => scrollTo(0, 0));
+    await page.screenshot({ path: info.outputPath('files-mobile-deployees.png') });
+
+    await toggle.press('Space');
+    await expect(toggle).toBeFocused();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(queue).toBeHidden();
+    await expect(details).toBeHidden();
+    await expect(followups).toBeVisible();
+
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await expect(queue).toBeVisible();
+    await expect(details).toBeVisible();
+    await expect(toggle).toBeHidden();
+
+    const noScript = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 }, storageState: await page.context().storageState() });
+    try {
+        const native = await noScript.newPage();
+        await native.goto(new URL(url, page.url()).href);
+        await expect(native.locator('.resource-toggle')).toBeHidden();
+        await expect(native.locator('#resource-details .resource-name').first()).toBeVisible();
+        const nativeQueue = native.locator('#colony-catalog-queues [data-queue-type="shipyard"]');
+        await nativeQueue.locator(':scope > summary').click();
+        await expect(nativeQueue.getByRole('link', { name: /Préparer l’annulation/ })).toBeVisible();
+    } finally {
+        await noScript.close();
+    }
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(user.path);
+    await expect(toggle).toHaveAttribute('aria-controls', 'resource-details');
+    await expect(page.locator('.dashboard-activity [data-live-region=queues]')).toBeVisible();
+    await expect(queue).toHaveCount(0);
 });

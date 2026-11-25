@@ -2,7 +2,7 @@
 {% set vacation=chrome.vacation|default(null) %}
 {% set catalogue = section in ['buildings','technologies','ships','defenses'] %}
 {% set orderLimit = constant('App\\Service\\Queue\\QueueService::MAX_ORDERS') %}
-<div class="scene-operations{{ catalogue ? ' catalog-queue-ribbon' : '' }}" data-live-region="queues" aria-label="Files d’attente de {{ planet.name }}">
+<div class="scene-operations{{ catalogue ? ' catalog-queue-ribbon' : '' }}" data-live-region="queues"{% if catalogue %} id="colony-catalog-queues"{% endif %} aria-label="Files d’attente de {{ planet.name }}">
 {% if not catalogue %}<div class="section-heading"><h2>{{ section == 'overview' ? 'Activité de ' ~ planet.name : 'Activité de la colonie' }}</h2><span class="scene-live"><i class="connection-dot"></i> {{ section == 'overview' ? 'COLONIE ACTIVE · ' : '' }}EN DIRECT</span></div>{% endif %}
 {% if vacation %}<p role="status">Mode vacances : production et files suspendues jusqu’au <time datetime="{{ vacation.scheduledEndAt|date('c') }}">{{ vacation.scheduledEndAt|date('d/m/Y à H:i',preferences.timezone) }}</time>. <a href="{{ path('app_vacation') }}#vacances">Gérer mes vacances</a></p>{% endif %}
 {% set queueLabels = {building:'Bâtiment', research:'Recherche commune', shipyard:'Vaisseaux & défenses'} %}

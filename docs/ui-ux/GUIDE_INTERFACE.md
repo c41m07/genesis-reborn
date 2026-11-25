@@ -142,6 +142,8 @@ La référence visuelle commune est le filtre de catalogue : pastilles arrondies
 
 ### Ajustements des en-têtes et rapports
 
+Sur téléphone, dans les catalogues Bâtiments, Recherche, Chantier et Défenses, la flèche Ressources ouvre ou replie ensemble les détails de stock et les Files de la colonie. Le résumé des stocks et le suivi des vols restent accessibles. Sans JavaScript, ressources et files restent visibles ; le bureau conserve sa disposition.
+
 Les surtitres `eyebrow` sont retirés des pages. Les métadonnées utiles (dates, versions, identifiants et coordonnées) restent présentes sous une présentation ordinaire. La galaxie interactive n’affiche plus les paragraphes `gv2-access-help`. Les filtres du centre de rapports conservent leur présentation antérieure en onglets soulignés ; ils constituent une exception au style commun en pastilles.
 
 ### Guildes et relations — composition B validée pour L1A

@@ -32,6 +32,12 @@ test('Une recherche ajoutée depuis une autre colonie rejoint la même file et l
     const queue = page.locator('[data-queue-type="research"]');
     const summary = queue.locator(':scope > summary');
     const openQueue = async () => {
+        const resources = page.locator('.resource-toggle');
+        if (page.viewportSize().width <= 740) {
+            await expect(resources).toBeVisible();
+            if (await resources.getAttribute('aria-expanded') === 'false') await resources.press('Enter');
+        }
+        await expect(queue).toBeVisible();
         if (!await queue.evaluate(element => element.open)) await summary.press('Enter');
     };
     await page.goto(`/planetes/${one}?section=technologies`);
@@ -136,6 +142,10 @@ test('Les anciennes recherches parallèles restent actives et les commandes pay�
     await expect(queue.locator('.queue-detail-item').filter({ hasText: 'En cours' })).toHaveCount(2);
     await expect(queue.locator('.queue-detail-item').filter({ hasText: 'En attente' })).toHaveCount(2);
     await page.setViewportSize({ width: 390, height: 900 });
+    const resources = page.getByRole('button', { name: /afficher ou masquer les détails et les files de la colonie/ });
+    await expect(queue).toBeHidden();
+    await resources.press('Enter');
+    await expect(queue.locator('.queue-detail-item').filter({ hasText: 'En cours' }).first()).toBeVisible();
     await queue.screenshot({ path: info.outputPath('legacy-research-390.png'), animations: 'disabled' });
     runIsolatedSql(project, `UPDATE queue_item SET started_at=DATE_SUB(UTC_TIMESTAMP(),INTERVAL duration_seconds+2 SECOND) WHERE player_universe_id=${membership} AND started_at IS NOT NULL`);
     await page.goto(`/planetes/${one}?section=technologies`);

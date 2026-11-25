@@ -6,6 +6,7 @@ export default class extends Controller {
     static targets = ['protection', 'protectionLabel', 'protectionTime', 'toggle', 'compactStock'];
     connect() {
         this.element.classList.add('resource-strip--collapsible');
+        this.toggleTarget.setAttribute('aria-expanded', String(this.element.classList.contains('resource-strip--expanded')));
         this.tickProtection();
         this.protectionTimer = setInterval(() => this.tickProtection(), 1000);
         // Un shell de consultation garde son volet et ses compteurs, mais ne sonde pas une route de jeu.

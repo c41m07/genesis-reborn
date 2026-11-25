@@ -26,7 +26,10 @@ test('Parcours : comparaison, économie, rubriques et aperçus réels', async ({
   await page.setViewportSize({width:390,height:900});
   await expect(page.locator('.catalog-operations-rail')).toHaveCSS('display','grid');
   await expect(page.locator('.catalog-operations-rail')).toHaveCSS('position','sticky');
-  await expect(page.locator('.catalog-queue-ribbon')).toBeVisible();
+  const mobileQueues = page.locator('.catalog-queue-ribbon');
+  await expect(mobileQueues).toBeHidden();
+  await page.getByRole('button', { name: /afficher ou masquer les détails et les files de la colonie/ }).press('Enter');
+  await expect(mobileQueues).toBeVisible();
   await expect(page.locator('.catalog-operations-rail [data-catalog-disclosure]')).toHaveCount(5);
   await page.setViewportSize({width:1440,height:900});
   await expect(page.locator('.catalog-operations-rail')).toBeVisible();
