@@ -96,7 +96,8 @@ test('Une recherche ajoutée depuis une autre colonie rejoint la même file et l
 });
 
 test('Une recherche avancée débloquée dans l’empire demande son laboratoire local', async ({ page }) => {
-    const { one, two, project } = await colonies(page);
+    const { one, two, membership, project } = await colonies(page);
+    runIsolatedSql(project, `INSERT INTO player_technology (player_universe_id,slug,tier,level) VALUES (${membership},'engineering_foundations','basic',5) ON DUPLICATE KEY UPDATE level=5`);
     runIsolatedSql(project, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${one},'lab','intermediate',1)`);
     await page.goto(`/planetes/${two}?section=technologies`);
     await page.locator('#building-tab-engineering_foundations-intermediate').click();
