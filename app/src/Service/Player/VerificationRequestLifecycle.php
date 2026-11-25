@@ -69,11 +69,8 @@ final class VerificationRequestLifecycle implements VerificationRecoveryDelivery
             if ($event === false || $event['generation_version'] === null || !hash_equals($request->requestKeyHash, $event['request_key_hash'])) {
                 return $this->cancelRecovery($request, $now);
             }
-            $original = $db->fetchAssociative(
-                'SELECT state, resolved_at FROM verification_delivery_request WHERE id = ? AND player_id = ? FOR UPDATE',
-                [(int) $event['original_request_id'], $player->id],
-            );
-            if ($original === false || $original['state'] !== 'unknown' || $original['resolved_at'] === null) {
+            $original = VerificationRecoveryOrigin::lock($db, (int) $event['original_request_id'], $player->id);
+            if ($original === null || $original['version'] !== (int) $event['generation_version']) {
                 return $this->cancelRecovery($request, $now);
             }
 
@@ -168,17 +165,14 @@ final class VerificationRequestLifecycle implements VerificationRecoveryDelivery
                 return ['result' => 'unavailable'];
             }
             $now = $this->clock->now();
-            $original = $db->fetchAssociative(
-                'SELECT state, resolved_at FROM verification_delivery_request WHERE id = ? AND player_id = ? FOR UPDATE',
-                [(int) $event['original_request_id'], $player->id],
-            );
+            $original = VerificationRecoveryOrigin::lock($db, (int) $event['original_request_id'], $player->id);
             $row = $db->fetchAssociative(
                 'SELECT version, algorithm, key_id, nonce, expires_at, fingerprint, recipient_fingerprint, state FROM player_verification_generation WHERE player_id = ? FOR UPDATE',
                 [$player->id],
             );
             if ($player->emailVerifiedAt !== null || $player->lockedAt !== null
                 || !hash_equals($request->requestKeyHash, $event['request_key_hash'])
-                || $original === false || $original['state'] !== 'unknown' || $original['resolved_at'] === null
+                || $original === null || $original['version'] !== (int) $event['generation_version']
                 || $row === false || $row['state'] !== 'active' || (int) $row['version'] !== (int) $event['generation_version']
                 || !VerificationRecipientBinding::matches($row['recipient_fingerprint'], $player->email, $row['fingerprint'])
                 || $db->fetchOne('SELECT id FROM player_email_verification_token WHERE player_id = ? AND expires_at > ? LIMIT 1 FOR UPDATE',

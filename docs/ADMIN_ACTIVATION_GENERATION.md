@@ -749,3 +749,18 @@ adresse POST. L'adaptateur SMTP direct peut alors réutiliser le modèle de
 confirmation sans envoyer de bienvenue ; aucun alias, fournisseur, secret,
 paramètre réel ou route nouvelle. Le défaut reste fermé. Voir la
 [preuve SMTP exclusivement interne](FICHE_PILOTE_ACTIVATION_LOCALE.md#pilote-distinct--récupération-admin).
+
+### Origine admissible d’une remise de récupération
+
+Une récupération capable de remettre un lien ne traite que le dernier
+reçu initial indéterminé et résolu du même compte, portant la version exacte
+de sa génération active. Un reçu produit par une récupération ne peut pas
+devenir une nouvelle origine, quelle que soit sa propre issue. La sélection
+de formulaire est indicative ; la réservation, la revendication et la remise
+revérifient cette preuve sous le verrou du compte.
+
+Un reçu ancien sans version reste dans l’historique. Il n’est ni associé
+rétroactivement à une autre génération ni converti en tentative connue.
+Le journal historique d’intention non émetteur reste inchangé. Aucune règle
+ne rend une remise indéterminée réessayable par le seul passage du temps.
+Aucun changement de transport, de drapeau ou de procédure d’exploitation.
