@@ -1,6 +1,6 @@
 <?php
 namespace App\Tests\Controller;
-use App\Entity\{Player,Universe,Planet,PlanetBuilding,Fleet,FleetShip,QueueItem,SolarSystem,Galaxy};
+use App\Entity\{Player,Universe,Planet,PlanetBuilding,Fleet,FleetShip,QueueItem,SolarSystem,Galaxy,PlayerDiscovery};
 use App\Service\Player\RegistrationService;
 use App\Service\Universe\{UniverseImporter,UniverseService};
 use App\Validator\DTO\RegistrationData;
@@ -115,8 +115,15 @@ final class GameplayAccessTest extends WebTestCase
     public function testFleetPreviewIsServerAuthoritativeAndCannotUseForeignOrigin():void
     {
         [$a,$own]=$this->player('Alpha');[$b,$foreign]=$this->player('Beta');$this->client->loginUser($a);
+        $discoveries = $this->em->getRepository(PlayerDiscovery::class);
+        $systems = $this->em->getRepository(SolarSystem::class)->findBy(['galaxy' => $own->solarSystem->galaxy], ['id' => 'ASC']);
+        $unexplored = array_values(array_filter($systems, fn (SolarSystem $system): bool => !$discoveries->count([
+            'playerUniverse' => $a->currentPlayerUniverse, 'solarSystem' => $system,
+        ])));
+        self::assertNotEmpty($unexplored);
+        $destination = $unexplored[0];
         $crawler=$this->client->request('GET','/flottes/preparer');self::assertResponseIsSuccessful();$token=$crawler->filter('input[name="_token"]')->first()->attr('value');
-        $payload=['_token'=>$token,'origin'=>$own->id,'mission'=>'explore','coordinates'=>$own->solarSystem->galaxy->coordinateCode().':'.$own->solarSystem->number(),'ratio'=>'0.5','ships'=>['probe'=>1],'cargo'=>[],'total_fuel'=>0,'seconds'=>0];
+        $payload=['_token'=>$token,'origin'=>$own->id,'mission'=>'explore','coordinates'=>$destination->galaxy->coordinateCode().':'.$destination->number(),'ratio'=>'0.5','ships'=>['probe'=>1],'cargo'=>[],'total_fuel'=>0,'seconds'=>0];
         $this->client->request('POST','/flottes/estimer',$payload);self::assertResponseIsSuccessful();$q=json_decode($this->client->getResponse()->getContent(),true);self::assertGreaterThan(0,$q['total_fuel']);self::assertGreaterThan(0,$q['seconds']);
         $payload['origin']=$foreign->id;$this->client->request('POST','/flottes/estimer',$payload);self::assertResponseStatusCodeSame(422);
         $payload['origin']=$own->id;$payload['ships']=['probe'=>999];$this->client->request('POST','/flottes/estimer',$payload);self::assertResponseIsSuccessful();$adjusted=json_decode($this->client->getResponse()->getContent(),true);self::assertSame(1,$adjusted['composition']['probe']['basic']);self::assertTrue($adjusted['adjusted']);

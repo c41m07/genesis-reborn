@@ -21,6 +21,8 @@ final class DestinationCatalogue
         'spy',
         'station',
     ];
+    public const UNEXPLORED_SYSTEM_UNAVAILABLE = 'Système non exploré indisponible dans cet univers.';
+
     public const GROUPS = [
         'unexplored' => 'Systèmes non explorés',
         'neutral' => 'Planètes neutres',
@@ -227,7 +229,7 @@ final class DestinationCatalogue
         }
         if ($mode === 'custom') {
             if ($mission === 'explore') {
-                return $this->coordinates->system($viewer->universe, $coordinates);
+                return $this->requireUnexploredSystem($viewer, $this->coordinates->system($viewer->universe, $coordinates));
             }
             $planet = $this->coordinates->planet($viewer->universe, $coordinates);
             if (!$this->repo->one(PlayerDiscovery::class, ['playerUniverse' => $viewer, 'solarSystem' => $planet->solarSystem])) {
@@ -244,16 +246,23 @@ final class DestinationCatalogue
         $id = filter_var($selection, FILTER_VALIDATE_INT);
         if ($mission === 'explore') {
             $system = $id !== false && $id > 0 ? $this->repo->find(SolarSystem::class, $id) : null;
-            if (!$system || $system->galaxy->universe->id !== $viewer->universe->id || $this->repo->one(PlayerDiscovery::class, ['playerUniverse' => $viewer, 'solarSystem' => $system])) {
-                throw new \DomainException('Système non exploré indisponible dans cet univers.');
-            }
-            return $system;
+            return $this->requireUnexploredSystem($viewer, $system);
         }
         $planet = $id !== false && $id > 0 ? $this->repo->find(Planet::class, $id) : null;
         if (!$planet instanceof Planet || !$this->allows($viewer, $planet, $mission) || $this->category($viewer, $planet, $mission) !== $mode) {
             throw new \DomainException('Destination indisponible pour ce mode ou cette mission.');
         }
         return $mission === 'explore' ? $planet->solarSystem : $planet;
+    }
+
+    private function requireUnexploredSystem(PlayerUniverse $viewer, ?SolarSystem $system): SolarSystem
+    {
+        if (!$system || $system->galaxy->universe->id !== $viewer->universe->id
+            || $this->repo->one(PlayerDiscovery::class, ['playerUniverse' => $viewer, 'solarSystem' => $system])) {
+            throw new \DomainException(self::UNEXPLORED_SYSTEM_UNAVAILABLE);
+        }
+
+        return $system;
     }
 
     private function assertMission(string $mission): void

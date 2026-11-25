@@ -193,6 +193,37 @@ final class GamePersistenceTest extends KernelTestCase
         // Même horloge que la mission : l'arrivée reste échue quelle que soit la date réelle.
         $fleet->arrivalAt=self::getContainer()->get('clock')->now()->modify('-1 second');$this->em->flush();$service->arrive($fleet->id,$fleet->dispatchToken);
     }
+    public function testExplorationsAlreadyInFlightCompleteEvenAfterTheFirstDiscovery(): void
+    {
+        $clock = new \Symfony\Component\Clock\MockClock('2026-11-02T00:00:00Z');
+        self::getContainer()->set('clock', $clock);
+        $player = $this->player();
+        $origin = $this->join($player);
+        $this->ships($origin, ['probe' => 2]);
+        $membership = $player->currentPlayerUniverse;
+        $discoveries = $this->em->getRepository(\App\Entity\PlayerDiscovery::class);
+        $systems = $this->em->getRepository(\App\Entity\SolarSystem::class)->findBy(['galaxy' => $origin->solarSystem->galaxy], ['id' => 'ASC']);
+        $system = array_values(array_filter($systems, fn ($system) => !$discoveries->count([
+            'playerUniverse' => $membership, 'solarSystem' => $system,
+        ])))[0];
+        $fleets = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
+        foreach (['a', 'b'] as $receipt) {
+            $fleets->send($membership, $origin, 'explore', $system->id, ['probe' => 1], .5, [], str_repeat($receipt, 32));
+        }
+        $traveling = $this->em->getRepository(\App\Entity\Fleet::class)->findBy(['status' => 'traveling'], ['id' => 'ASC']);
+        self::assertCount(2, $traveling);
+        $clock->sleep(max($traveling[0]->travelSeconds, $traveling[1]->travelSeconds) + 1);
+
+        foreach ($traveling as $fleet) {
+            $fleets->arrive($fleet->id, $fleet->dispatchToken);
+            self::assertSame('completed', $fleet->status);
+            self::assertSame(1, $discoveries->count(['playerUniverse' => $membership, 'solarSystem' => $system]));
+        }
+        self::assertSame(1, $this->em->getRepository(\App\Entity\PlayerBoost::class)->count([
+            'playerUniverse' => $membership, 'sourceType' => 'risk_mission',
+        ]));
+    }
+
     public function testSoloProbeReservesFuelAndDiscoversWholeSystemExactlyOnce(): void
     {
         $clock = new \Symfony\Component\Clock\MockClock('2026-11-02T00:00:00Z');self::getContainer()->set('clock',$clock);
