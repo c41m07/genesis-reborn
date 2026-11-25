@@ -12,7 +12,7 @@ final class CostDistributionCandidate
         'basic' => ['metal' => 50, 'nano' => 50, 'antimatter' => 0, 'hydrogen' => 0],
         'intermediate' => ['metal' => 40, 'nano' => 40, 'antimatter' => 20, 'hydrogen' => 0],
     ];
-    public const WEIGHTS = ['metal' => 2, 'nano' => 4, 'antimatter' => 8, 'hydrogen' => 1];
+    public const WEIGHTS = GameCatalog::MATERIAL_WEIGHTS;
     public function __construct(private GameCatalog $catalog)
     {
     }
@@ -47,7 +47,8 @@ final class CostDistributionCandidate
         foreach ($this->catalog->forUniverse($universe)['catalog'] as $group => $definitions) {
             foreach ($definitions as $slug => $definition) {
                 foreach (GameCatalog::TIERS as $tier) {
-                    $current = $this->catalog->costs($this->catalog->withTier($definition, $tier), 1, 1, $group);
+                    // La variante modifie la composition du profil, avant le calcul du budget d’entrée.
+                    $current = $this->catalog->costs($this->catalog->withTier($definition, $tier), 1, 1);
                     $budget = self::value($current);
                     // L'autre rang conserve son profil effectif, sans nouvelle répartition ni arrondi.
                     $selected = in_array($tier, $tiers, true);

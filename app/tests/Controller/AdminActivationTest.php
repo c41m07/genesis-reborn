@@ -177,9 +177,10 @@ final class AdminActivationTest extends WebTestCase
         };
         $generation = (new VerificationGenerationStore($db, $clock, $codec))->prepare($target->id, 'http-fixture', $clock->now()->modify('+1 hour'), $keys);
         $expected = $codec->reproduce($generation, $keys);
-        $initial = $reservations->reserve($target->id, str_repeat('a', 64), 300);
+        $initial = $reservations->reserve($target->id, str_repeat('a', 64), 300, generationVersion: $generation->version);
         $oldId = $initial['request_id'];
         $oldClaim = $lifecycle->claim($oldId, 120);
+        self::assertNotNull($lifecycle->prepareVersionedEmission($oldId, $oldClaim['claim_token'], $keys));
         self::assertSame('completed', $lifecycle->complete($oldId, $oldClaim['claim_token'], 'unknown')['result']);
         $snapshot = $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$oldId]);
         $clock->sleep(300);
@@ -206,6 +207,12 @@ final class AdminActivationTest extends WebTestCase
         self::assertResponseRedirects('/acces-refuse');
 
         $client->loginUser($admin);
+        // Les archives sans version sont toujours consultables, mais ne proposent pas de récupération.
+        $db->update('verification_delivery_request', ['versioned_generation_version' => null], ['id' => $oldId]);
+        $client->request('GET', $page);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('form[action$="/activation"]');
+        $db->update('verification_delivery_request', ['versioned_generation_version' => $generation->version], ['id' => $oldId]);
         $crawler = $client->request('GET', $page);
         $form = $crawler->filter('form[action$="/activation"]');
         self::assertCount(1, $form);

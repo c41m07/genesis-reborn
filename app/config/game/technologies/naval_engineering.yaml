@@ -48,6 +48,11 @@
           "slug": "engineering_foundations",
           "tier": "intermediate",
           "level": 2
+        },
+        {
+          "slug": "naval_engineering",
+          "tier": "basic",
+          "level": 5
         }
       ]
     },
@@ -64,6 +69,11 @@
           "slug": "engineering_foundations",
           "tier": "superior",
           "level": 2
+        },
+        {
+          "slug": "naval_engineering",
+          "tier": "intermediate",
+          "level": 5
         }
       ]
     }

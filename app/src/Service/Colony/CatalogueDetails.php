@@ -87,7 +87,7 @@ final class CatalogueDetails
                 }
             }
             $sections[] = $this->section('Production et entretien', [
-                'Ces débits sont nominaux, pour la position de cette planète et la vitesse de cet univers. Les productions des trois rangs s’additionnent.',
+                'Ces débits sont nominaux, pour la position de cette planète et la vitesse de cet univers. Chaque rang augmente sa propre production de 0,25 %, 0,5 % ou 1 % composés par niveau dès le premier niveau. Les trois productions s’additionnent.',
                 'Les gains de production et les consommations suivent les facteurs ' . $this->number($this->catalog->productionTierFactor('basic')) . ' / ' . $this->number($this->catalog->productionTierFactor('intermediate')) . ' / ' . $this->number($this->catalog->productionTierFactor('superior')) . ' selon le rang. Les prix et les durées suivent leur propre progression.',
                 $resource === 'electricity' ? 'La centrale alimente les usines et recharge le stock électrique. Sa production ne baisse pas lorsque le stock d’électricité est vide.' : 'Quand le stock électrique est épuisé et que la production ne couvre plus les besoins, les usines ralentissent. Leur rendement de secours minimal est de ' . $this->number((float) ($rules['minimum_factory_efficiency'] ?? 0.1) * 100) . ' %.',
                 'La barre de ressources affiche le débit net réel, après consommation, et la productivité des usines actives. Une usine dont le stockage de sortie est plein suspend ses consommations inutiles ; les productions d’hydrogène et d’électricité continuent à alimenter les autres usines si nécessaire.',
@@ -101,7 +101,7 @@ final class CatalogueDetails
             $before = $this->resources->capacity($planet, $resource, $levels);
             $after = $this->resources->capacity($planet, $resource, $next);
             $intro = 'Augmente la capacité de stockage de ' . mb_strtolower($rules['resources'][$resource]) . ' sur cette colonie.';
-            $sections[] = $this->section('Stockage et protection du pillage', ['Les capacités apportées par les trois rangs s’additionnent au stockage initial de la colonie.', $this->number($ratio * 100) . ' % de la capacité totale définit le seuil protégé du pillage. Seules les ressources effectivement présentes peuvent être protégées.', 'La zone verte de la barre de stock représente ce seuil. Les livraisons qui dépassent la capacité de stockage sont perdues.'], [
+            $sections[] = $this->section('Stockage et protection du pillage', ['Les capacités apportées par les trois rangs s’additionnent au stockage initial de la colonie. Chaque rang augmente sa capacité de 0,25 %, 0,5 % ou 1 % composés par niveau.', $this->number($ratio * 100) . ' % de la capacité totale définit le seuil protégé du pillage. Seules les ressources effectivement présentes peuvent être protégées.', 'La zone verte de la barre de stock représente ce seuil. Les livraisons qui dépassent la capacité de stockage sont perdues.'], [
                 ['label' => 'Capacité actuelle', 'value' => $before, 'unit' => 'unités'],
                 ['label' => 'Capacité après amélioration', 'value' => $after, 'unit' => 'unités'],
                 ['label' => 'Seuil protégé actuel', 'value' => $before * $ratio, 'unit' => 'unités'],
@@ -116,8 +116,8 @@ final class CatalogueDetails
                 default => $itemDefinition['description'] ?? '',
             };
             $sections[] = $this->section('Fonctionnement', match ($slug) {
-                'lab' => ['Les trois rangs contribuent ensemble à la réduction du temps de recherche, avec des rendements décroissants.', 'La recherche est partagée entre vos colonies de cet univers, mais le laboratoire utilisé est celui de la colonie où elle est lancée.', 'Les durées des opérations déjà en file restent celles enregistrées à leur lancement.'],
-                'shipyard' => ['Les trois rangs contribuent ensemble à la réduction du temps de construction des vaisseaux, avec des rendements décroissants.', 'Les défenses partagent la file du chantier, mais ne bénéficient pas de cette réduction de durée.', 'Les durées des opérations déjà en file restent celles enregistrées à leur lancement.'],
+                'lab' => ['Les trois rangs contribuent ensemble à la réduction du temps de recherche, avec des rendements décroissants.', 'La recherche est partagée entre vos colonies de cet univers, mais le laboratoire utilisé est celui de la colonie où elle est lancée.', 'Une amélioration locale accélère aussi le travail restant des commandes qui suivent ce bonus.'],
+                'shipyard' => ['Les trois rangs contribuent ensemble à la réduction du temps de construction des vaisseaux, avec des rendements décroissants.', 'Les défenses partagent la file du chantier, mais ne bénéficient pas de cette réduction de durée.', 'Une amélioration locale accélère aussi le travail restant des commandes qui suivent ce bonus.'],
                 'fortress' => ['Les trois rangs contribuent ensemble au bonus de structure des défenses au sol. Ce bonus se combine avec vos recherches de blindage.', 'Le bunker ne tire pas lui-même. Il ne renforce ni la structure des vaisseaux ni les boucliers des défenses.'],
                 default => [],
             });
@@ -191,6 +191,7 @@ final class CatalogueDetails
             $sections[] = $this->section('Application', [$type === 'time_discount' ? 'La réduction est calculée au lancement de chaque nouvelle construction de bâtiment.' : 'La réduction est calculée au lancement de chaque nouvelle construction concernée, sur les ressources facturées. Les montants sont arrondis vers le haut.', 'Les opérations déjà en file conservent leur coût payé et leur durée enregistrée.', ($effect['targets'] ?? '') === 'ships' ? 'Les défenses et les bâtiments ne bénéficient pas de cette réduction.' : 'Les recherches, vaisseaux et défenses ne bénéficient pas de cette réduction.']);
         }
         $sections[] = $this->section('Progression des rangs', [in_array($slug, ['signature_masking', 'intelligence_countermeasures', 'tactical_intelligence'], true) ? 'Les niveaux Basique, Intermédiaire et Supérieur sont pondérés par 1, 1,25 et 1,5625. Leur somme est arrondie pour obtenir le niveau effectif d’espionnage.' : 'Les trois rangs sont développés séparément et contribuent à un bonus commun à rendements décroissants. Le gain du prochain niveau dépend donc aussi des niveaux possédés dans les autres rangs.', 'La recherche est partagée entre toutes vos colonies de cet univers. Un changement de colonie ne remet pas ses niveaux à zéro.']);
+        $sections[] = $this->section('Prix en matériaux', ['Chaque niveau coûte 35 % de plus que le précédent avant arrondi. Aux rangs avancés, le prix de départ vaut 110 % du passage le plus cher exigé dans cette même famille de recherche. Les autres prérequis servent au déblocage.']);
         return ['intro' => $intro, 'scope' => $scope, 'sections' => $sections];
     }
 
@@ -259,7 +260,7 @@ final class CatalogueDetails
             $fortress = $this->catalog->getForUniverse($universe, 'buildings', 'fortress');
             $effect = $fortress['effect'] ?? [];
             if (($effect['targets'] ?? '') === 'ground_defenses' && ($effect['stat'] ?? '') === 'hp') {
-                $effective['hp'] *= 1 + GameCatalog::diminishingBonus($buildings['fortress'] ?? [], (float) ($effect['max_bonus'] ?? 25), (int) ($this->catalog->get('buildings', 'fortress')['max_level'] ?? 25)) / 100;
+                $effective['hp'] *= 1 + GameCatalog::infrastructureBonus($buildings['fortress'] ?? [], (float) ($effect['max_bonus'] ?? 25), (int) ($fortress['max_level'] ?? 25), $this->catalog->rules()['building_level_growth'] ?? []) / 100;
             }
         }
         $performance = [];

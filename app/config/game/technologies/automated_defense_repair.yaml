@@ -47,6 +47,11 @@
           "slug": "structural_armor",
           "tier": "intermediate",
           "level": 2
+        },
+        {
+          "slug": "automated_defense_repair",
+          "tier": "basic",
+          "level": 5
         }
       ]
     },
@@ -63,6 +68,11 @@
           "slug": "structural_armor",
           "tier": "superior",
           "level": 2
+        },
+        {
+          "slug": "automated_defense_repair",
+          "tier": "intermediate",
+          "level": 5
         }
       ]
     }

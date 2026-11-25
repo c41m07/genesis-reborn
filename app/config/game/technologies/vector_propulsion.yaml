@@ -53,6 +53,11 @@
           "slug": "naval_engineering",
           "tier": "intermediate",
           "level": 3
+        },
+        {
+          "slug": "vector_propulsion",
+          "tier": "basic",
+          "level": 5
         }
       ]
     },
@@ -69,6 +74,11 @@
           "slug": "naval_engineering",
           "tier": "superior",
           "level": 3
+        },
+        {
+          "slug": "vector_propulsion",
+          "tier": "intermediate",
+          "level": 5
         }
       ]
     }

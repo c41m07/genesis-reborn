@@ -82,6 +82,154 @@ final class FleetDestinationTest extends WebTestCase
         $discovery=new PlayerDiscovery();$discovery->playerUniverse=$criteria['playerUniverse'];$discovery->solarSystem=$planet->solarSystem;$this->em->persist($discovery);$this->em->flush();
     }
 
+    public function testQuickExplorationUsesTheOnlyAvailableIntermediateProbeFromEitherMap(): void
+    {
+        $probe = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $this->idle, 'slug' => 'probe']);
+        $probe->tier = 'intermediate';
+        $probe->quantity = 2;
+        $this->em->flush();
+        $this->client->request('GET', '/planetes/' . $this->home->id);
+        $target = $this->hidden->solarSystem;
+        $label = static::getContainer()->get(\App\Service\Catalog\GameCatalog::class)
+            ->getTierForUniverse($this->player->currentPlayerUniverse->universe, 'ships', 'probe', 'intermediate')['label'];
+
+        foreach (['/carte-v2', '/carte'] as $url) {
+            $map = $this->client->request('GET', $url, ['galaxy' => $target->galaxy->id, 'system' => $target->id]);
+            self::assertResponseIsSuccessful();
+            $forms = $this->quickMissionForms($map, 'explore', $target->id);
+            self::assertCount(1, $forms);
+            self::assertSame('intermediate', $forms->filter('input[name="ship_tier"]')->attr('value'));
+            self::assertStringContainsString($label . ' · 2 disponibles', $forms->text());
+        }
+        $this->client->submit($forms->form());
+        self::assertResponseRedirects('/carte?galaxy=' . $target->galaxy->id . '&system=' . $target->id);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('body', $label . ' envoyée en exploration.');
+        $sent = $this->em->getRepository(Fleet::class)->findOneBy(['mission' => 'explore', 'status' => 'traveling']);
+        self::assertNotNull($sent);
+        $ship = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $sent, 'slug' => 'probe']);
+        self::assertSame('intermediate', $ship->tier);
+        self::assertSame(1, $ship->quantity);
+        self::assertSame(1, $this->quickMissionInventory($probe->id));
+    }
+
+    public function testQuickEspionageKeepsIndependentRanksAndRejectsAStaleQuantityWithoutDebit(): void
+    {
+        $basic = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $this->idle, 'slug' => 'probe']);
+        $superior = new FleetShip();
+        $superior->fleet = $this->idle;
+        $superior->slug = 'probe';
+        $superior->tier = 'superior';
+        $superior->quantity = 3;
+        $this->em->persist($superior);
+        $this->em->flush();
+        $this->client->request('GET', '/planetes/' . $this->home->id);
+        $target = $this->enemy;
+        $url = '/carte?galaxy=' . $target->solarSystem->galaxy->id . '&system=' . $target->solarSystem->id;
+        $forms = $this->quickMissionForms($this->client->request('GET', $url), 'spy', $target->id);
+        self::assertResponseIsSuccessful();
+        self::assertCount(2, $forms);
+        self::assertSame(['basic', 'superior'], $forms->filter('input[name="ship_tier"]')->extract(['value']));
+        self::assertSame(['10', '3'], $forms->filter('input[name="probe_quantity"]')->extract(['max']));
+        $oldForm = $forms->last()->form(['probe_quantity' => 3]);
+
+        // Une autre action peut consommer une sonde entre l’affichage du formulaire et le départ.
+        // Doctrine détache les entités entre deux requêtes KernelBrowser : utiliser l'identifiant persistant.
+        $this->em->getConnection()->update('fleet_ship', ['quantity' => 2], ['id' => $superior->id]);
+        $before = $this->quickMissionFuel();
+        $this->client->submit($oldForm);
+        self::assertResponseRedirects($url);
+        $updatedMap = $this->client->followRedirect();
+        self::assertSelectorTextContains('body', 'La composition n’est plus disponible exactement.');
+        self::assertSame(0, $this->em->getRepository(Fleet::class)->count(['mission' => 'spy', 'status' => 'traveling']));
+        self::assertSame($before, $this->quickMissionFuel());
+        self::assertSame(2, $this->quickMissionInventory($superior->id));
+        $newForm = $this->quickMissionForms($updatedMap, 'spy', $target->id)->last();
+        self::assertSame('2', $newForm->filter('input[name="probe_quantity"]')->attr('max'));
+        $this->client->submit($newForm->form(['probe_quantity' => 1]));
+        self::assertResponseRedirects($url);
+        $sent = $this->em->getRepository(Fleet::class)->findOneBy(['mission' => 'spy', 'status' => 'traveling']);
+        self::assertNotNull($sent);
+        $ship = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $sent, 'slug' => 'probe']);
+        self::assertSame('superior', $ship->tier);
+        self::assertSame(1, $ship->quantity);
+        self::assertSame(1, $this->quickMissionInventory($superior->id));
+        self::assertSame(10, $this->quickMissionInventory($basic->id));
+    }
+
+    public function testExplorationChecksNewDiscoveryBeforeDispatchInBothFleetModesAndTheMap(): void
+    {
+        $target = $this->hidden->solarSystem;
+        $this->client->request('GET', '/planetes/' . $this->home->id);
+        $url = '/carte?galaxy=' . $target->galaxy->id . '&system=' . $target->id;
+        $map = $this->client->request('GET', $url);
+        $quickForm = $this->quickMissionForms($map, 'explore', $target->id)->form();
+        $prepare = $this->client->request('GET', '/flottes/preparer', ['mission' => 'explore', 'origin' => $this->home->id]);
+        $form = $prepare->filter('form[action="/flottes/envoyer"]');
+        self::assertCount(1, $form);
+        $params = [
+            '_token' => $form->filter('input[name="_token"]')->attr('value'),
+            'origin' => $this->home->id,
+            'mission' => 'explore',
+            'ratio' => '0.5',
+            'ships' => ['probe' => ['basic' => 1]],
+            'coordinates' => $target->galaxy->coordinateCode() . ':' . $target->number(),
+            'unexplored_destination' => $target->id,
+        ];
+        foreach (['custom', 'unexplored'] as $mode) {
+            $this->client->request('POST', '/flottes/estimer', $params + ['destination_mode' => $mode]);
+            self::assertResponseIsSuccessful();
+        }
+
+        $this->em->getConnection()->insert('player_discovery', [
+            'player_universe_id' => $this->player->currentPlayerUniverse->id,
+            'solar_system_id' => $target->id,
+        ]);
+        $before = $this->quickMissionFuel();
+        foreach (['custom', 'unexplored'] as $mode) {
+            $this->client->request('POST', '/flottes/estimer', $params + ['destination_mode' => $mode]);
+            self::assertResponseStatusCodeSame(422);
+            self::assertSame(DestinationCatalogue::UNEXPLORED_SYSTEM_UNAVAILABLE,
+                json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR)['error']);
+            $this->client->request('POST', '/flottes/envoyer', $params + [
+                'destination_mode' => $mode, 'request_key' => bin2hex(random_bytes(16)),
+            ]);
+            self::assertResponseRedirects('/flottes/preparer?mission=explore', 302);
+            $this->client->followRedirect();
+            self::assertSelectorTextContains('body', DestinationCatalogue::UNEXPLORED_SYSTEM_UNAVAILABLE);
+        }
+        $this->client->submit($quickForm);
+        self::assertResponseRedirects($url);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('body', DestinationCatalogue::UNEXPLORED_SYSTEM_UNAVAILABLE);
+        self::assertSame(0, $this->em->getRepository(Fleet::class)->count(['mission' => 'explore', 'status' => 'traveling']));
+        self::assertSame($before, $this->quickMissionFuel());
+        self::assertSame(10, $this->em->getRepository(FleetShip::class)->findOneBy([
+            'fleet' => $this->idle, 'slug' => 'probe', 'tier' => 'basic',
+        ])->quantity);
+    }
+
+    private function quickMissionForms(\Symfony\Component\DomCrawler\Crawler $map, string $mission, int $target): \Symfony\Component\DomCrawler\Crawler
+    {
+        return $map->filter('.map-quick-mission')->reduce(static function ($form) use ($mission, $target): bool {
+            return $form->filter('input[name="mission"]')->attr('value') === $mission
+                && $form->filter('input[name="target"]')->attr('value') === (string) $target;
+        });
+    }
+
+    private function quickMissionFuel(): float
+    {
+        return (float) $this->em->getConnection()->fetchOne(
+            'SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = ?',
+            [$this->home->id, 'hydrogen'],
+        );
+    }
+
+    private function quickMissionInventory(int $shipId): int
+    {
+        return (int) $this->em->getConnection()->fetchOne('SELECT quantity FROM fleet_ship WHERE id = ?', [$shipId]);
+    }
+
     public function testDedicatedPagesExposeOnlyTheirOwnRegionsAndActiveNavigation(): void
     {
         foreach ([
