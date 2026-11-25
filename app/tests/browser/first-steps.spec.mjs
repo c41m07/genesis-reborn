@@ -1017,8 +1017,11 @@ test('Premiers pas : remboursement plein conserve sa destination native et son d
     await page.goto('/planetes/' + second);
     await page.goto('/planetes/' + origin);
     const stock = id => Number(queryIsolatedSql(project, `SELECT current_stock FROM planet_resource WHERE planet_id=${id} AND resource_type='metal'`));
-    const setStock = (id, amount) => runIsolatedSql(project, `UPDATE planet_resource SET current_stock=${amount}, last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${id} AND resource_type='metal'`);
+    const setStock = (id, amount) => runIsolatedSql(project, `UPDATE planet_resource SET current_stock=${amount} WHERE planet_id=${id} AND resource_type='metal'`);
     runIsolatedSql(project, `INSERT INTO planet_resource (planet_id,resource_type,current_stock,production_rate,last_updated_at) VALUES (${second},'metal',10000,0,UTC_TIMESTAMP()),(${second},'nano',0,0,UTC_TIMESTAMP()) ON DUPLICATE KEY UPDATE current_stock=VALUES(current_stock),production_rate=0,last_updated_at=VALUES(last_updated_at)`);
+    // Placer l’horloge de production des deux colonies au-delà du délai du scénario.
+    // Cela isole le versement exact des fractions de métal produites entre deux requêtes.
+    runIsolatedSql(project, `UPDATE planet_resource SET last_updated_at=UTC_TIMESTAMP() + INTERVAL 3 MINUTE WHERE planet_id IN (${origin},${second})`);
     expect(stock(second)).toBe(10000);
     const originStock = stock(origin);
     const claimed = () => queryIsolatedSql(project, `SELECT COUNT(*) FROM first_step_reward WHERE source_membership_id=${member} AND claimed_at IS NOT NULL`);
