@@ -1,12 +1,17 @@
-<details class="account-section admin-design-danger">
-    <summary>Supprimer {{ challengeRemoval ? 'ce défi' : 'cet événement' }}</summary>
+{% set draftRemoval = draftRemoval|default(false) %}
+<details class="account-section admin-design-danger"{% if draftRemoval %} id="event-removal-{{ removalId }}"{% endif %}>
+    <summary>{{ draftRemoval ? 'Retirer le brouillon' : (challengeRemoval ? 'Supprimer ce défi' : 'Supprimer cet événement') }}</summary>
     <p class="admin-design-badge admin-design-badge--danger">Confirmation requise</p>
-    <p>Un élément jamais démarré est supprimé définitivement. Sinon, il est retiré des listes courantes et arrêté s’il est encore en cours ; ses effets déjà acquis, contributions et récompenses restent dans l’historique.</p>
+    {% if draftRemoval %}
+        <p>Un brouillon jamais démarré est supprimé définitivement. Le motif est conservé dans le journal d’audit.</p>
+    {% else %}
+        <p>Un élément jamais démarré est supprimé définitivement. Sinon, il est retiré des listes courantes et arrêté s’il est encore en cours ; ses effets déjà acquis, contributions et récompenses restent dans l’historique.</p>
+    {% endif %}
     <form method="post" action="{{ path(challengeRemoval ? 'app_admin_challenge_remove' : 'app_admin_game_event_remove',{id:removalId}) }}" class="admin-intervention-form event-removal-form">
         <input type="hidden" name="_token" value="{{ csrf_token((challengeRemoval ? 'admin_challenge_remove_' : 'game_event_remove_')~removalId) }}">
-        <label for="remove-reason-{{ removalId }}">Motif de suppression</label>
+        <label for="remove-reason-{{ removalId }}">{{ draftRemoval ? 'Motif du retrait' : 'Motif de suppression' }}</label>
         <textarea id="remove-reason-{{ removalId }}" name="reason" maxlength="1000" required></textarea>
-        <label for="remove-confirmed-{{ removalId }}"><input id="remove-confirmed-{{ removalId }}" type="checkbox" name="confirmed" value="1" required> Je confirme la suppression ou le retrait de cet élément.</label>
-        <button type="submit" class="danger">Supprimer {{ challengeRemoval ? 'le défi' : 'l’événement' }}</button>
+        <label for="remove-confirmed-{{ removalId }}"><input id="remove-confirmed-{{ removalId }}" type="checkbox" name="confirmed" value="1" required> {{ draftRemoval ? 'Je confirme le retrait de ce brouillon.' : 'Je confirme la suppression ou le retrait de cet élément.' }}</label>
+        <button type="submit" class="danger">{{ draftRemoval ? 'Confirmer le retrait' : (challengeRemoval ? 'Supprimer le défi' : 'Supprimer l’événement') }}</button>
     </form>
 </details>
