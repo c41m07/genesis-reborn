@@ -5,7 +5,7 @@ namespace App\Service\Balance;
 use App\Entity\{Galaxy, Planet, PlayerUniverse, SolarSystem, Universe};
 use App\Service\Catalog\GameCatalog;
 use App\Service\Colony\{CatalogueProductionContext, EconomicUnitCapacity, ResourceService};
-use App\Service\Combat\{CombatSimulator, CombatUnitFactory};
+use App\Service\Combat\{CombatCapacityExceeded, CombatSimulator, CombatUnitFactory};
 use App\Service\Fleet\MovementCalculator;
 use App\Service\Queue\OperationCalculator;
 /** Expériences militaires sur un état annoncé, sans mission réelle, butin ni modification d'un compte. */
@@ -260,13 +260,14 @@ final class MilitaryEconomyStudy
     public function volumeLimit(Universe $universe, array $checkpoint): array
     {
         try {
-            $this->combatScenario($universe, $checkpoint, 5000, 'basic', 'basic', [7]);
-            return ['requested_units' => 5060, 'status' => 'accepted'];
-        } catch (\DomainException $exception) {
-            if ($exception->getMessage() !== 'Combat trop volumineux.') {
-                throw $exception;
-            }
-            // Conserver le refus réel dans le bilan ; aucune hausse silencieuse du plafond technique.
+            $probe = $this->combatScenario($universe, $checkpoint, 5000, 'basic', 'basic', [7]);
+            return [
+                'requested_units' => 5060,
+                'status' => 'accepted',
+                'resolved_units' => $probe['results'][0]['resolved_units'],
+            ];
+        } catch (CombatCapacityExceeded $exception) {
+            // N’annoncer un refus que si le moteur courant l’a effectivement renvoyé.
             return ['requested_units' => 5060, 'status' => 'refused', 'reason' => $exception->getMessage()];
         }
     }
@@ -389,6 +390,19 @@ final class MilitaryEconomyStudy
             $civilTargets = $civilShots = $shots = 0;
             $targets = ['hydrogen_collector' => 0, 'solar_satellite' => 0];
             foreach ($result['rounds'] as $round) {
+                if (isset($round['groups'])) {
+                    // Le moteur compact compte chaque tir reçu comme effectué, sans inventer de détail unitaire.
+                    foreach ($round['groups'] as $unit) {
+                        $shots += $unit['shots'];
+                        $slug = $unit['slug'];
+                        if (array_key_exists($slug, $targets)) {
+                            $targets[$slug] += $unit['targeted'];
+                            $civilTargets += $unit['targeted'];
+                            $civilShots += $unit['shots'];
+                        }
+                    }
+                    continue;
+                }
                 foreach ($round['shots'] as $shot) {
                     $shots++;
                     foreach (array_keys($targets) as $slug) {
@@ -413,6 +427,10 @@ final class MilitaryEconomyStudy
                 'civil_shots' => $civilShots,
                 'civil_targets_by_family' => $targets,
                 'losses' => $losses,
+                'resolved_units' => array_sum($result['losses']) + array_sum(array_map(
+                    static fn (array $survivor): int => $survivor['quantity'] ?? 1,
+                    $result['survivors'],
+                )),
             ];
             unset($result);
         }

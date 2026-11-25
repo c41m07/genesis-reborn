@@ -64,6 +64,6 @@ else
 fi
 
 compose up -d --wait app database rabbitmq mercure
-compose up -d --wait worker relay notifier
+compose up -d --wait worker simulation-worker relay notifier
 
 PLAYWRIGHT_RESET_DB=1 PLAYWRIGHT_WORKERS=1 PLAYWRIGHT_BASE_URL="http://$BROWSER_HOST" app/node_modules/.bin/playwright test --config app/playwright.config.mjs "$@" --workers=1

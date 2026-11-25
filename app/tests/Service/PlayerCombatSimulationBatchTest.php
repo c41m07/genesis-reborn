@@ -67,15 +67,36 @@ final class PlayerCombatSimulationBatchTest extends TestCase
         self::assertSame(70,$batch['win_percent']);self::assertSame(10,array_sum($batch['outcomes']));
     }
 
-    public function testExistingUnitAndWorkLimitsArePreservedForEachCombat(): void
+    public function testRequestBudgetSelectsBackgroundWithoutTruncatingEitherFleet(): void
     {
         $this->owner->universe->gameSettings=['catalog_overrides'=>['ships'=>['fighter'=>['base_attack'=>0,'shots_min'=>2,'shots_max'=>2]]]];
         $forces=['attacker'=>['ships'=>['fighter'=>['basic'=>250]]],'defender'=>['ships'=>['fighter'=>['basic'=>250]]]];
         $batch=$this->simulation->runBatch($this->owner,$forces,42);
         self::assertCount(10,$batch['trials']);self::assertCount(500,$batch['trials'][0]['survivors']);
         $this->owner->universe->gameSettings['catalog_overrides']['ships']['fighter']['shots_max']=3;
-        $this->expectException(\DomainException::class);$this->expectExceptionMessage('Scénario trop volumineux');
-        $this->simulation->runBatch($this->owner,$forces,42);
+        $this->assertFalse($this->simulation->prepare($this->owner, $forces, 42)['inline']);
+        $this->assertSame($this->simulation->run($this->owner, $forces, 42)['outcome'],
+            $this->simulation->runTrial($this->simulation->prepare($this->owner, $forces, 42), 42, 0)['outcome']);
+    }
+
+    public function testTwoMillionShipFleetsPlusSeparateDefensesAreSnapshotted(): void
+    {
+        $forces = [
+            'attacker' => ['ships' => ['fighter' => ['basic' => 600_000, 'intermediate' => 400_000]]],
+            'defender' => [
+                'arrival' => 3,
+                'ships' => ['fighter' => ['basic' => 1_000_000]],
+                'defenses' => ['ground_turret_anti_light' => ['basic' => 500_000]],
+            ],
+        ];
+
+        $prepared = $this->simulation->prepare($this->owner, $forces, 42);
+        self::assertFalse($prepared['inline']);
+        self::assertTrue($prepared['grouped_survivors']);
+        self::assertSame(1_000_000, array_sum(array_column($prepared['participants'][0]['units'], 'quantity')));
+        self::assertSame(1_000_000, array_sum(array_column($prepared['participants'][1]['units'], 'quantity')));
+        self::assertSame(500_000, $prepared['defenses'][0]['quantity']);
+        self::assertSame(3, $prepared['participants'][1]['arrival_round']);
     }
 
     public function testOnlyBlankApprovedUnknownInputsBecomeZeroForTheCalculation(): void
@@ -116,7 +137,8 @@ final class PlayerCombatSimulationBatchTest extends TestCase
         $valid=['attacker'=>['ships'=>['fighter'=>['basic'=>1]]]];
         return ['negative seed'=>[$valid,-1],'overflow seed'=>[$valid,0x100000000],
             'forgotten owner'=>[$valid,42,true],'empty forces'=>[[],42],
-            'too many units'=>[['attacker'=>['ships'=>['fighter'=>['basic'=>501]]]],42],
+            'too many units'=>[['attacker'=>['ships'=>['fighter'=>['basic'=>600_000, 'intermediate'=>400_001]]]],42],
+            'unsupported third fleet'=>[['support'=>[], 'attacker'=>['ships'=>['fighter'=>['basic'=>1]]]],42],
             'malformed forces'=>[['attacker'=>['ships'=>'bad']],42],
             'invalid arrival'=>[['attacker'=>['ships'=>['fighter'=>['basic'=>1]],'arrival'=>11]],42]];
     }

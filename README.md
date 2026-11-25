@@ -63,7 +63,8 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 - Messagerie : panneaux de contacts et de conversation conservés, bulles reçues bleues et envoyées dorées, zone de rédaction en bas de la conversation sur ordinateur et mobile. La recherche reste sur sa page dédiée, avec retour vers la conversation sélectionnée. Ctrl + Entrée envoie dans les canaux privé, guilde et Global ; Entrée conserve les sauts de ligne. Markdown sécurisé pour les nouveaux messages seulement, historique conservé en texte ; soumissions répétées protégées côté serveur. CommonMark est une dépendance Composer. [Guide et migration préparée](docs/MESSAGERIE_MARKDOWN.md).
 
 - Profils et guildes : profils de joueurs consultables uniquement par les membres du même univers, avec pseudo, guilde/tag et scores/rangs quotidiens déjà publics ; liens depuis classement, messagerie et membres de guilde. Pages de guildes avec description, logo et bannière, modifiables uniquement par le commandant. Voir [le guide et la préparation de migration](docs/PROFILS_JOUEURS_GUILDES.md). GD (JPEG/PNG/WebP) est intégré aux images Docker ; les médias privés utilisent le volume de production `guild_media`, distinct de la sauvegarde SQL.
-- Outils stratégiques : simulateur de dix combats reproductibles pour une même configuration, avec estimation des victoires de l’attaquant, décompte de toutes les issues et bilans par camp/unité/rang (engagés, pertes rouges négatives, survivants), avec rounds et structures en détails repliables, sans pertes moyennes ni garantie de probabilité réelle ; 20 compositions personnelles par empire/univers, présentées en lignes, avec les trois rangs réunis par vaisseau sur mobile et une revue des disponibilités avant chargement ; recherche avancée paginée dans les messages et rapports. Voir [le suivi et les limites](docs/CADRAGE_OUTILS_STRATEGIQUES.md).
+- Combats réels : le worker mémorise l’état après un round validé et reprend au suivant, avec les renforts éligibles. Les grands combats résolvent les tirs individuellement, mais conservent les compteurs du rapport par flotte, type et rang, plutôt qu’un objet par tir. Les rapports historiques restent lisibles. [Cadence et règles des combats](docs/REGLES.md#combat).
+- Outils stratégiques : simulateur de dix combats reproductibles pour une même configuration, avec estimation des victoires de l’attaquant, décompte de toutes les issues et bilans par camp/unité/rang (engagés, pertes rouges négatives, survivants), avec rounds et structures en détails repliables, sans pertes moyennes ni garantie de probabilité réelle ; 20 compositions personnelles par empire/univers, présentées en lignes, avec les trois rangs réunis par vaisseau sur mobile et une revue des disponibilités avant chargement ; recherche avancée paginée dans les messages et rapports. Voir [le suivi et les limites](docs/CADRAGE_OUTILS_STRATEGIQUES.md). Les gros scénarios restent en 1 contre 1 et s’exécutent sur un consommateur séparé. Les dix essais restent privés et accessibles par leur lien jusqu’à 24 heures, ou jusqu’au lancement d’un nouveau calcul différé. La limite s’applique à chaque flotte ; les défenses sont comptées séparément.
 
 - **Premiers pas** : aide sur les fiches ciblées et panneau non modal accessible par la flèche du bord droit sur les écrans de jeu, tant que le guide est actif et inachevé dans l’empire. Chaque geste pointe sur le vrai bouton dans une carte ou un bloc complet du jeu. « Voir en grand » agrandit cette carte dans le panneau, sans bloquer le reste du jeu. Les visuels ne se chargent que si vous demandez l’étape illustrée ou rouvrez volontairement le panneau ; une légende séparée indique ce qui valide l’étape. Le guide complet reste accessible depuis Préférences. Le parcours va de la mine à la première nouvelle colonie, sans blocage. Le Dépôt distingue la capacité du stock et sa part protégée ; une planète doit réellement être acquise pour terminer la colonisation. Le pilote rembourse sur demande 25 % des coûts payés (plafonnés) de deux commandes basiques de niveau 1 lancées depuis le guide ; il remplace également une sonde basique réellement perdue lors d’un vrai espionnage guidé sur PNJ, détecté ou non. L’exercice préalable reste distinct de la campagne pirate et utilise uniquement des unités fictives. La prochaine étape est dépliée par défaut dans le même panneau, sans télécharger les illustrations. Affichez-les à la demande. Si vous fermez le panneau, il reste fermé sur les pages suivantes et au rechargement dans cet onglet ; la flèche le rouvre. Fermez-la ou désactivez-la puis réactivez-la dans **Préférences** sans perdre vos étapes ni les remboursements. Sur le guide complet : quatre cartes sur ordinateur, deux sur tablette et une sur mobile ; les remboursements disponibles restent à retirer quand vous le choisissez. Un remboursement refusé faute de place conserve la colonie bénéficiaire pour réessayer. L’espionnage guidé ne propose qu’une sonde basique et les mondes PNJ découverts compatibles ; l’espionnage ordinaire reste disponible dans Flottes.
 - **Calendrier de l’Avent** : programmation par univers dans l’administration. Le bouton de Noël apparaît en haut du jeu pendant la période choisie. Les portes du 1er au 24 décembre sont rattrapables jusqu’à la fermeture et les cadeaux réservés restent dans l’inventaire. [Règles et pilote local](docs/CALENDRIER_AVENT.md). La page d’administration indique l’état et l’heure réelle du relevé d’ouverture ; elle rappelle la reprise manuelle seulement si l’édition reste ouverte.
@@ -298,6 +299,21 @@ d'occupation. Les règles à développer
 et les lots sont consignés dans les [décisions](docs/DECISIONS.md#empires-oubliés-vacances-et-occupation-jce--décisions-du-7-novembre-2026)
 et la [feuille de route](docs/FEUILLE_DE_ROUTE.md#empires-oubliés--chantier-validé-le-7-novembre-2026).
 
+### Exécution des grands combats
+
+Les images Docker de développement et de production compilent le moteur C++20
+avec zlib au moment de la construction et ne gardent pas le compilateur dans
+l’image finale. En local, reconstruire l’image avec `make build` puis appliquer
+les migrations sur la base de test avant de lancer un grand combat. Le moteur
+historique reste en place pour les petits combats et pour les anciens rapports.
+
+Les fragments du point de reprise sont stockés dans MariaDB, dans la même
+transaction que le round et le prochain message. Ils sont retirés quand le
+rapport final est écrit. Le JSON de l’événement ne contient que leurs références
+et les compteurs du rapport. Un paquet RabbitMQ n’embarque ni les états d’unités
+ni les fragments. Ne pas revenir à une version antérieure du moteur en cours
+de combat pendant qu’il reste des points de reprise compacts en attente.
+
 ## Technologies et versions
 
 Les contraintes déclarées, les versions verrouillées et les observations d’exécution sont distinctes.
@@ -390,7 +406,7 @@ Après l’initialisation : `make start`. Utiliser `make status`, `make logs`, `
 Après modification d’un service consommé par les processus persistants locaux, les redémarrer :
 
 ```bash
-docker compose --env-file .env.local restart worker relay notifier
+docker compose --env-file .env.local restart worker simulation-worker relay notifier
 ```
 
 Compiler avant les tests navigateur : la compilation remplace les fichiers de `app/public/build/`. Les dépendances et résultats générés (`app/vendor/`, `app/node_modules/`, `app/var/`, `app/public/build/`, `app/test-results/`, `app/playwright-report/`, `output/` et les rapports de couverture) sont ignorés par Git. Les captures conservées comme documentation restent dans `docs/ui-ux/captures/`.

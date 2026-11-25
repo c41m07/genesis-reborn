@@ -40,6 +40,18 @@ final class CombatReportPresenterTest extends TestCase
             ]],
         ];
         $view = (new CombatReportPresenter())->present($snapshot, $rounds, 7);
+        $compactRounds = [
+            ['number' => 1, 'groups' => [
+                '10:fighter:intermediate' => ['shots' => 2, 'hits' => 1, 'lost' => 1],
+                '30:fighter' => ['shots' => 1, 'hits' => 1, 'lost' => 1],
+            ]],
+            ['number' => 2, 'groups' => [
+                '20:frigate' => ['shots' => 1, 'hits' => 1, 'lost' => 0],
+                '30:fighter' => ['shots' => 0, 'hits' => 0, 'lost' => 1],
+            ]],
+        ];
+        self::assertSame($view, (new CombatReportPresenter())->present($snapshot, $compactRounds, 7));
+        self::assertSame($view, (new CombatReportPresenter())->present($snapshot, [$rounds[0], $compactRounds[1]], 7));
         $first = $view['round_details'][0];
         self::assertCount(1, $first['own']);
         self::assertSame([2, 1, 1, 2, 1, 1, 50.0], array_map(static fn (string $key) => $first['own'][0][$key], ['start', 'round_lost', 'end', 'shots', 'hits', 'misses', 'accuracy']));
@@ -85,6 +97,39 @@ final class CombatReportPresenterTest extends TestCase
         self::assertSame([], $view['round_details']);
         self::assertSame(2, $view['rows'][0]['lost']);
         self::assertSame(['initial' => 2, 'lost' => 2, 'remaining' => 0], $view['totals']['own']);
+    }
+
+    public function testLargeReportKeepsTheFullCountsWithoutMaterializingEveryUnit(): void
+    {
+        $snapshot = [
+            'participants' => [],
+            'defenses' => [['id' => 9, 'slug' => 'turret', 'quantity' => 500_000]],
+            'losses' => ['1:fighter' => 20_000, 'planet:9:turret' => 200],
+        ];
+        for ($fleetId = 1; $fleetId <= 10; ++$fleetId) {
+            $attacks = $fleetId <= 5;
+            $snapshot['participants'][] = [
+                'fleet_id' => $fleetId,
+                'player_universe_id' => $attacks ? 7 : 8,
+                'role' => $attacks ? 'attacker' : 'defender',
+                'camp' => $attacks ? 'attackers' : 'defenders',
+                'units' => [['slug' => 'fighter', 'quantity' => 1_000_000]],
+                'arrival_round' => match ($fleetId) { 5 => 2, 10 => 3, default => 1 },
+            ];
+        }
+        $rounds = [['number' => 1, 'groups' => [
+            '1:fighter' => ['shots' => 1_000_000, 'hits' => 400_000, 'lost' => 20_000],
+            'planet:9:turret' => ['shots' => 500_000, 'hits' => 300_000, 'lost' => 200],
+        ]]];
+
+        $view = (new CombatReportPresenter())->present($snapshot, $rounds, 7);
+
+        self::assertSame(5_000_000, $view['totals']['own']['initial']);
+        self::assertSame(5_500_000, $view['totals']['enemy']['initial']);
+        self::assertSame(1_500_000, $view['round_details'][0]['shots_count']);
+        self::assertSame(20_200, $view['round_details'][0]['lost_count']);
+        self::assertCount(4, $view['round_details'][0]['own']);
+        self::assertCount(5, $view['round_details'][0]['enemy']);
     }
 
     public function testEmptyHistoricalReportKeepsEmptyCampsAndNoRoundSummary(): void

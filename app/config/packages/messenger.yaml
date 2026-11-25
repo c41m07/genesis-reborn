@@ -8,6 +8,15 @@ framework:
                     max_retries: 5
                     delay: 1000
                     multiplier: 2
+            combat_simulation:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    exchange: {name: genesis_v2_combat_simulation}
+                    queues: {genesis_v2_combat_simulation: ~}
+                retry_strategy:
+                    max_retries: 2
+                    delay: 1000
+                    multiplier: 2
             failed:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
                 options:
@@ -22,6 +31,7 @@ framework:
             'App\Message\PirateConvoyDue': async
             'App\Message\PirateSurvivorsDue': async
             'App\Message\CombatEventDue': async
+            'App\Message\PlayerCombatSimulationDue': combat_simulation
             'App\Message\GuildProjectRewardsDue': async
             'App\Message\OccupationDue': async
             'App\Message\EmpireReconstructionDue': async
@@ -31,4 +41,5 @@ when@test:
         messenger:
             transports:
                 async: 'in-memory://'
+                combat_simulation: 'in-memory://'
                 failed: 'in-memory://'

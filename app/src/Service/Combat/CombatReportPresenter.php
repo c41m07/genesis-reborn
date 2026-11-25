@@ -60,14 +60,24 @@ final class CombatReportPresenter
                 if ($alive <= 0) continue;
                 $rows[$key] = $group + ['start' => $alive, 'round_lost' => 0, 'shots' => 0, 'hits' => 0];
             }
+            // Le grand combat conserve les mêmes compteurs de rapport sans enregistrer un objet par tir.
+            foreach ($round['groups'] ?? [] as $key => $stats) {
+                if (!isset($rows[$key])) {
+                    continue;
+                }
+                $rows[$key]['shots'] = (int) $stats['shots'];
+                $rows[$key]['hits'] = (int) $stats['hits'];
+                $rows[$key]['round_lost'] = (int) $stats['lost'];
+                $destroyed[$key] = ($destroyed[$key] ?? 0) + $rows[$key]['round_lost'];
+            }
             foreach ($round['shots'] ?? [] as $shot) {
-                $source = $units[$shot['attacker'] ?? ''] ?? null;
+                $source = $this->groupForShotUnit($units, (string) ($shot['attacker'] ?? ''));
                 if ($source !== null && isset($rows[$source])) {
                     ++$rows[$source]['shots'];
                     $rows[$source]['hits'] += !empty($shot['hit']) ? 1 : 0;
                 }
                 $target = (string) ($shot['target'] ?? '');
-                $targetGroup = $units[$target] ?? null;
+                $targetGroup = $this->groupForShotUnit($units, $target);
                 if (!empty($shot['destroyed']) && $targetGroup !== null && !isset($deadUnits[$target])) {
                     $deadUnits[$target] = true;
                     $destroyed[$targetGroup] = ($destroyed[$targetGroup] ?? 0) + 1;
@@ -135,8 +145,24 @@ final class CombatReportPresenter
         $slug = (string) $unit['slug'];
         $key = $owner.':'.$slug.$suffix;
         $groups[$key] = ['unit' => (string) ($unit['label'] ?? $slug), 'slug' => $slug, 'tier' => $tier, 'label' => $label, 'role' => $role, 'side' => $side, 'round' => $round, 'initial' => (int) $unit['quantity'], 'lost' => (int) ($snapshot['losses'][$key] ?? 0)];
-        for ($index = 1; $index <= (int) $unit['quantity']; ++$index) {
-            $units[$owner.':'.$role.':'.$slug.$suffix.':'.$index] = $key;
+        // L'identifiant historique se termine par le rang de l'unité dans son groupe.
+        // On indexe le préfixe une seule fois, y compris pour un rapport qui compte des millions d'unités.
+        $units[$owner.':'.$role.':'.$slug.$suffix] = ['key' => $key, 'quantity' => (int) $unit['quantity']];
+    }
+
+    private function groupForShotUnit(array $units, string $id): ?string
+    {
+        $separator = strrpos($id, ':');
+        if ($separator === false) {
+            return null;
         }
+        $group = $units[substr($id, 0, $separator)] ?? null;
+        $index = substr($id, $separator + 1);
+        if ($group === null || !ctype_digit($index) || $index !== (string) (int) $index
+            || (int) $index < 1 || (int) $index > $group['quantity']) {
+            return null;
+        }
+
+        return $group['key'];
     }
 }

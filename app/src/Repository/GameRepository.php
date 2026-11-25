@@ -90,6 +90,21 @@ final class GameRepository
         return $this->em->find($class, $id);
     }
 
+    /** À utiliser dans une transaction : une expiration concurrente peut avoir supprimé la ligne. */
+    public function combatSimulationJobForUpdate(int $id): ?\App\Entity\PlayerCombatSimulationJob
+    {
+        $query = $this->em->createQueryBuilder()
+            ->select('job')
+            ->from(\App\Entity\PlayerCombatSimulationJob::class, 'job')
+            ->where('job.id = :id')
+            ->setParameter('id', $id)
+            ->getQuery();
+        $query->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true);
+        $query->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
+
+        return $query->getOneOrNullResult();
+    }
+
     public function one(string $class, array $criteria): ?object
     {
         return $this->em->getRepository($class)->findOneBy($criteria);
@@ -1136,6 +1151,8 @@ final class GameRepository
             'guild_project',
             'reconstruction',
             \App\Message\AdventCaptureDue::KIND,
+            \App\Message\PlayerCombatSimulationDue::KIND,
+            \App\Message\PlayerCombatSimulationDue::EXPIRY,
             \App\Message\PirateReconnaissanceDue::KIND,
             \App\Message\PirateAttackDue::KIND,
             \App\Message\PirateConvoyDue::KIND,
@@ -1143,9 +1160,9 @@ final class GameRepository
         ]);
         if (!$notifications) {
             // La programmation annuelle peut précéder Noël de plusieurs mois.
-            // L’outbox conserve le relevé jusqu’à son échéance, sans délai AMQP de longue durée.
-            $query->andWhere('o.kind != :capture OR o.dueAt <= :now')
-                ->setParameter('capture', \App\Message\AdventCaptureDue::KIND)
+            // L’outbox conserve les échéances longues jusqu’à leur heure, sans délai AMQP de longue durée.
+            $query->andWhere('o.kind NOT IN (:holdUntilDue) OR o.dueAt <= :now')
+                ->setParameter('holdUntilDue', [\App\Message\AdventCaptureDue::KIND, \App\Message\PlayerCombatSimulationDue::EXPIRY])
                 ->setParameter('now', $now->setTimezone(new \DateTimeZone('UTC')));
         }
 

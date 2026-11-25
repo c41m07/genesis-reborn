@@ -272,4 +272,52 @@ final class CombatSimulatorTest extends TestCase
         foreach($tiers as $i=>$attackerTier)foreach($tiers as $j=>$targetTier)self::assertSame((float)$expected[$i][$j],$simulator->hitChance($base+['tier'=>$attackerTier],$base+['tier'=>$targetTier]));
     }
 
+    public function testCombatResumesWithoutReplayingRoundsWhenReinforcementsJoin(): void
+    {
+        $participants = [];
+        $lateReinforcement = [];
+        foreach (['attacker', 'defender'] as $role) {
+            for ($index = 1; $index <= 5; ++$index) {
+                $ship = $this->unit($role === 'attacker' ? 'fighter' : 'cruiser', 1000, 12);
+                $ship['quantity'] = 3;
+                $ship['shield'] = 24;
+                $ship['signature'] = 40 + $index * 9;
+                $ship['extra_shot_chances'] = [0.3];
+                $entry = [
+                    'id' => $index === 5 ? '00-' . $role : $role . '-' . $index,
+                    'role' => $role,
+                    'camp' => $role,
+                    'arrival_round' => $index === 5 ? 3 : 1,
+                    'units' => [$ship],
+                ];
+                if ($index === 5) {
+                    $lateReinforcement[] = $entry;
+                } else {
+                    $participants[] = $entry;
+                }
+            }
+        }
+        $defense = $this->unit('turret', 1500, 22) + ['id' => 'turret', 'camp' => 'defender'];
+        $defense['quantity'] = 4;
+        $seed = 175;
+        $maxRounds = 6;
+        $simulator = new CombatSimulator();
+
+        // Le renfort absent du premier instantané s'insère avant les unités existantes au tri.
+        $first = $simulator->advance($participants, [$defense], [], $maxRounds, $seed, 2, 5.0, true, false);
+        self::assertSame([1, 2], array_column($first['rounds'], 'number'));
+        self::assertSame(2, $first['checkpoint']['completed_round']);
+        self::assertNotEmpty($first['checkpoint']['durability']);
+        $persisted = json_decode(json_encode($first['checkpoint'], JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
+
+        $all = [...$participants, ...$lateReinforcement];
+        $next = $simulator->advance($all, [$defense], [], $maxRounds, $seed, 3, 5.0, true, false, $persisted);
+        self::assertSame([3], array_column($next['rounds'], 'number'));
+        $rest = $simulator->advance($all, [$defense], [], $maxRounds, $seed, $maxRounds, 5.0, true, false, $next['checkpoint']);
+        self::assertSame([4, 5, 6], array_column($rest['rounds'], 'number'));
+        self::assertArrayNotHasKey('checkpoint', $rest);
+        $rest['rounds'] = [...$first['rounds'], ...$next['rounds'], ...$rest['rounds']];
+        self::assertSame($simulator->simulate($all, [$defense], [], $maxRounds, $seed), $rest);
+    }
+
 }

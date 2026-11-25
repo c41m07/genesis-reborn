@@ -85,7 +85,7 @@
                         <label class="simulation-board-assumptions"><input type="checkbox" name="assumptions" value="1" required>
                             <span>Je confirme les hypothèses saisies. Un renseignement inconnu laissé vide compte pour zéro dans cet essai uniquement. Le résultat ne prédit pas un combat réel.</span>
                         </label>
-                        <p class="simulation-board-note">Au plus {{ max_units }} unités, avec un budget de calcul limité. Les pertes sont fictives.</p>
+                        <p class="simulation-board-note">Une flotte par camp, jusqu’à {{ fleet_limit|quantity(0) }} vaisseaux chacune dans cet univers. Les défenses fixes sont comptées à part. Les gros calculs passent en arrière-plan, avec un bilan exact groupé par type et rang. Les pertes sont fictives.</p>
                     </div>
                 {% endif %}
                 <div class="simulation-wizard-actions">
@@ -105,10 +105,28 @@
     </form>
 {% set unit_labels=choices.ships|merge(choices.defenses) %}{% set tier_labels={basic:'Basique',intermediate:'Intermédiaire',superior:'Supérieur'} %}
  {% set outcome_labels={attacker_wins:'Victoire de l’attaquant',defender_wins:'Défaite de l’attaquant',draw:'Égalité',ongoing:'Combat non terminé'} %}
+{% if simulation_job and not result %}
+<section class="panel" id="simulation-result" tabindex="-1" aria-labelledby="simulation-result-title">
+    <header class="simulation-result-heading">
+        <p class="simulation-board-eyebrow">Opérations · simulation privée</p>
+        <h2 id="simulation-result-title">{{ simulation_job.status != 'pending' ? 'Calcul interrompu' : 'Calcul en arrière-plan' }}</h2>
+    </header>
+    {% if simulation_job.status != 'pending' %}
+        {% if simulation_job.status == 'capacity' %}
+            <p role="alert">Ce scénario a dépassé la capacité de calcul disponible. Aucun effectif n’a été tronqué. Réduisez les forces pour réessayer.</p>
+        {% else %}
+            <p role="alert">La série n’a pas pu terminer. Aucun résultat incomplet n’a été présenté. Vous pouvez relancer la simulation.</p>
+        {% endif %}
+    {% else %}
+        <p role="status">{{ simulation_job.completed }} / 10 combats terminés. Vous pouvez quitter cette page et revenir avec ce lien pendant 24 heures au plus.</p>
+        <p><a href="{{ path('app_combat_simulation', {job: simulation_job.key}) }}#simulation-result">Actualiser le calcul</a></p>
+    {% endif %}
+</section>
+{% endif %}
 {% if result %}
 <section class="panel" id="simulation-result" tabindex="-1" aria-labelledby="simulation-result-title">
 <header class="simulation-result-heading">
-    <p class="simulation-board-eyebrow">Opérations · résultats non persistants</p>
+    <p class="simulation-board-eyebrow">Opérations · résultats privés{{ simulation_job ? " · disponibles jusqu’à 24 heures" : "" }}</p>
     <h2 id="simulation-result-title">Estimation sur {{ result.count }} combats</h2>
     <p>Configuration conservée à l’écran après le calcul.</p>
 </header>

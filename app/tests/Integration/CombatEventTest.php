@@ -7,6 +7,8 @@ use App\Entity\CombatParticipant;
 use App\Entity\Notification;
 use App\Entity\Fleet;
 use App\Entity\FleetShip;
+use App\Entity\Guild;
+use App\Entity\GuildMember;
 use App\Entity\Planet;
 use App\Entity\PlanetDefense;
 use App\Entity\PlanetBuilding;
@@ -14,6 +16,11 @@ use App\Entity\PlanetNpcShip;
 use App\Entity\PlanetResource;
 use App\Entity\PlayerTechnology;
 use App\Manager\GameManager;
+use App\Message\CombatEventDue;
+use App\Message\FleetArrived;
+use App\MessageHandler\CombatEventDueHandler;
+use App\MessageHandler\FleetArrivedHandler;
+use App\Service\Combat\CombatReportPresenter;
 use App\Entity\Player;
 use App\Entity\Universe;
 use App\Service\Combat\CombatEventService;
@@ -313,11 +320,149 @@ final class CombatEventTest extends KernelTestCase
         $service->resolve($event->id, $firstToken);
         self::assertSame(1, $event->currentRound, 'Un ancien jeton ne rejoue pas le round déjà persisté.');
 
+        // Recharger depuis MariaDB pour exercer la même représentation qu’après un redémarrage du worker.
+        $this->em->refresh($event);
+        self::assertSame(1, $event->combatSnapshot['round_checkpoint']['completed_round']);
+        $firstRound = $event->combatSnapshot['round_history'][0];
         $clock->sleep(60);
         $service->resolve($event->id, $secondToken);
         self::assertSame(2, $event->currentRound);
         self::assertSame('pending', $event->status);
+        self::assertSame(2, $event->combatSnapshot['round_checkpoint']['completed_round']);
+        self::assertSame([1, 2], array_column($event->combatSnapshot['round_history'], 'number'));
+        self::assertSame($firstRound, $event->combatSnapshot['round_history'][0]);
         self::assertSame(0, $this->em->getRepository(CombatLog::class)->count(['combatEvent' => $event]));
+
+        $finalToken = $event->dispatchToken;
+        $clock->sleep(480);
+        $service->resolve($event->id, $finalToken);
+        self::assertSame('resolved', $event->status);
+        self::assertArrayNotHasKey('round_checkpoint', $event->combatSnapshot);
+        $log = $this->em->getRepository(CombatLog::class)->findOneBy(['combatEvent' => $event]);
+        self::assertNotNull($log);
+        self::assertSame(range(1, 10), array_column($log->rounds, 'number'));
+        self::assertSame($firstRound, $log->rounds[0]);
+        $service->resolve($event->id, $finalToken);
+        self::assertSame(1, $this->em->getRepository(CombatLog::class)->count(['combatEvent' => $event]));
+    }
+
+    public function testTenMillionShipBattlePersistsReinforcementsDefenseAndOneFinalReport(): void
+    {
+        $clock = $this->clock();
+        $defender = $this->player('ScaleDefender');
+        $target = $this->join($defender);
+        $attackPlayers = [];
+        $defensePlayers = [$defender];
+        for ($index = 0; $index < 5; ++$index) {
+            $attackPlayers[$index] = $this->player('ScaleAttack' . $index);
+            $this->join($attackPlayers[$index]);
+            if ($index > 0) {
+                $defensePlayers[$index] = $this->player('ScaleDefense' . $index);
+                $this->join($defensePlayers[$index]);
+            }
+        }
+        // Les cinq propriétaires attaquants combattent dans le même camp, comme une guilde en renfort.
+        $guild = new Guild();
+        $guild->universe = $attackPlayers[0]->currentPlayerUniverse->universe;
+        $guild->leader = $attackPlayers[0]->currentPlayerUniverse;
+        $guild->name = 'Attaque en escadre';
+        $this->em->persist($guild);
+        foreach ($attackPlayers as $commander) {
+            $membership = new GuildMember();
+            $membership->guild = $guild;
+            $membership->playerUniverse = $commander->currentPlayerUniverse;
+            $this->em->persist($membership);
+        }
+        $this->em->flush();
+        $attacks = [];
+        $defenses = [];
+        for ($index = 0; $index < 5; ++$index) {
+            $attacker = $attackPlayers[$index];
+            $attackerPlanet = $this->em->getRepository(Planet::class)->findOneBy(['owner' => $attacker->currentPlayerUniverse]);
+            $attacks[$index] = $this->attackFleet($attacker, $attackerPlanet, $target, 'scale-' . $index);
+            // Le dernier attaquant arrive après le premier tick ; le dernier défenseur après le deuxième.
+            $attacks[$index]->arrivalAt = $clock->now()->modify($index === 4 ? '+70 seconds' : '+0 seconds');
+            $this->em->flush();
+            $reinforcingDefender = $defensePlayers[$index];
+            $defenderPlanet = $this->em->getRepository(Planet::class)->findOneBy(['owner' => $reinforcingDefender->currentPlayerUniverse]);
+            $defenses[$index] = $this->defenseFleet($reinforcingDefender, $defenderPlanet, $target, 'scale-' . $index, $clock->now()->modify($index === 4 ? '+130 seconds' : '+0 seconds'));
+            foreach ([$attacks[$index], $defenses[$index]] as $fleet) {
+                $group = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $fleet]);
+                $group->quantity = 1_000_000;
+            }
+            $this->em->flush();
+        }
+        $turret = new PlanetDefense();
+        $turret->planet = $target;
+        $turret->slug = 'ground_turret_anti_light';
+        $turret->quantity = 500_000;
+        $this->em->persist($turret);
+        $this->em->flush();
+
+        $arrival = self::getContainer()->get(FleetArrivedHandler::class);
+        $tick = self::getContainer()->get(CombatEventDueHandler::class);
+        for ($index = 0; $index < 4; ++$index) {
+            $fleet = $defenses[$index];
+            $arrival(new FleetArrived($fleet->id, $fleet->dispatchToken));
+            self::assertSame('defending', $fleet->status);
+        }
+        for ($index = 0; $index < 4; ++$index) {
+            $fleet = $attacks[$index];
+            $arrival(new FleetArrived($fleet->id, $fleet->dispatchToken));
+            self::assertSame('attacking', $fleet->status);
+        }
+        $event = $this->em->getRepository(CombatEvent::class)->findOneBy(['planet' => $target, 'status' => 'pending']);
+        self::assertNotNull($event);
+        $event->seed = 174;
+        $this->em->flush();
+        $first = new CombatEventDue($event->id, $event->dispatchToken);
+        $clock->sleep(60);
+        $tick($first);
+        $this->em->refresh($event);
+        self::assertSame(1, $event->currentRound);
+        self::assertGreaterThan(0, $event->combatSnapshot['round_checkpoint']['payload_parts']);
+        self::assertArrayNotHasKey('payload', $event->combatSnapshot['round_checkpoint']);
+        self::assertArrayHasKey('groups', $event->combatSnapshot['round_history'][0]);
+        $roundOne = $event->combatSnapshot['round_history'][0];
+
+        $clock->sleep(10);
+        $fleet = $attacks[4];
+        $arrival(new FleetArrived($fleet->id, $fleet->dispatchToken));
+        self::assertSame('attacking', $fleet->status);
+        $clock->sleep(50);
+        $tick(new CombatEventDue($event->id, $event->dispatchToken));
+        $this->em->refresh($event);
+        self::assertSame(2, $event->currentRound);
+        self::assertSame($roundOne, $event->combatSnapshot['round_history'][0]);
+
+        $clock->sleep(10);
+        $fleet = $defenses[4];
+        $arrival(new FleetArrived($fleet->id, $fleet->dispatchToken));
+        self::assertSame('defending', $fleet->status);
+        $clock->sleep(470);
+        $last = new CombatEventDue($event->id, $event->dispatchToken);
+        $tick($last);
+        $tick($first);
+        $tick($last);
+        $this->em->refresh($event);
+        self::assertSame('resolved', $event->status);
+        self::assertSame(1, $this->em->getRepository(CombatLog::class)->count(['combatEvent' => $event]));
+        $log = $this->em->getRepository(CombatLog::class)->findOneBy(['combatEvent' => $event]);
+        self::assertCount(10, $log->snapshot['participants']);
+        self::assertCount(10, array_unique(array_column($log->snapshot['participants'], 'player_universe_id')));
+        self::assertSame(500_000, $log->snapshot['defenses'][0]['quantity']);
+        $roundByFleet = array_column($log->snapshot['participants'], 'arrival_round', 'fleet_id');
+        self::assertSame(2, $roundByFleet[$attacks[4]->id]);
+        self::assertSame(3, $roundByFleet[$defenses[4]->id]);
+        $view = self::getContainer()->get(CombatReportPresenter::class)->present($log->snapshot, $log->rounds, $attackPlayers[0]->currentPlayerUniverse->id);
+        self::assertSame(5_000_000, $view['totals']['own']['initial']);
+        self::assertSame(5_500_000, $view['totals']['enemy']['initial']);
+        self::assertGreaterThan(0, $view['totals']['own']['lost'] + $view['totals']['enemy']['lost']);
+        self::assertGreaterThan(0, $view['round_details'][0]['shots_count']);
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne(
+            'SELECT COUNT(*) FROM combat_round_checkpoint_part WHERE combat_event_id = ?',
+            [$event->id],
+        ));
     }
 
     public function testCombatClosesAsSoonAsTheDefenderCampIsEmptyAndRejectsLateAttackers(): void
