@@ -49,7 +49,7 @@ final class SocialMessageSubmissionTest extends WebTestCase
             $diplomacy = self::getContainer()->get(DiplomacyService::class);
             $diplomacy->create($this->sender->currentPlayerUniverse, 'Submission Guild', 'SUB');
             $guild = self::getContainer()->get(RelationResolver::class)->guild($this->sender->currentPlayerUniverse);
-            $diplomacy->join($this->em()->find(\App\Entity\PlayerUniverse::class, $this->peerId), $guild->id);
+            \App\Tests\Support\GuildRecruitmentFixture::enrol($diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $this->em()->find(\App\Entity\PlayerUniverse::class, $this->peerId), $guild->id);
         }
         $this->client->loginUser($this->sender);
         $url = $channel === 'private' ? '/messages?with='.$this->peerId : '/messages?channel='.$channel;

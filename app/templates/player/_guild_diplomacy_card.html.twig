@@ -13,7 +13,7 @@
             <form method="post">
                 <input type="hidden" name="_token" value="{{ csrf_token('diplomacy') }}">
                 <input type="hidden" name="target" value="{{ g.id }}">
-                <button class="secondary guild-discovery-join" name="action" value="join">Rejoindre · recrutement ouvert</button>
+                <button class="secondary guild-discovery-join" name="action" value="join">Demander à rejoindre</button>
             </form>
         </div>
     {% else %}

@@ -1,0 +1,25 @@
+{% if recruitmentInbox.applications or recruitmentInbox.invitations %}
+<section id="guild-recruitment" class="panel" aria-labelledby="guild-recruitment-title">
+    <h2 id="guild-recruitment-title">{{ recruitmentInbox.applications ? 'Candidatures en attente' : 'Invitations de guilde' }}</h2>
+    <ul>
+    {% for entry in recruitmentInbox.applications %}
+        <li>
+            <a href="{{ path('app_player_public_profile', {id:entry.candidate.id}) }}">{{ entry.candidate.displayName }}</a>
+            <div class="guild-result-actions">
+                {% include 'player/_guild_recruitment_action.html.twig' with {entry:entry, answer:'accept', label:'Accepter la candidature'} only %}
+                {% include 'player/_guild_recruitment_action.html.twig' with {entry:entry, answer:'decline', label:'Refuser la candidature'} only %}
+            </div>
+        </li>
+    {% endfor %}
+    {% for entry in recruitmentInbox.invitations %}
+        <li>
+            <a href="{{ path('app_guild_public_profile', {id:entry.guild.id}) }}">{{ entry.guild.name }}</a>
+            <div class="guild-result-actions">
+                {% include 'player/_guild_recruitment_action.html.twig' with {entry:entry, answer:'accept', label:'Accepter l’invitation'} only %}
+                {% include 'player/_guild_recruitment_action.html.twig' with {entry:entry, answer:'decline', label:'Refuser l’invitation'} only %}
+            </div>
+        </li>
+    {% endfor %}
+    </ul>
+</section>
+{% endif %}

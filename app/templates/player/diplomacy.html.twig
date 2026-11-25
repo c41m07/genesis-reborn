@@ -46,12 +46,14 @@
 <section class="panel guild-hub-hero" aria-label="Centre de guilde"><span class="guild-hub-emblem" aria-hidden="true">{{ ui.icon('diplomacy') }}</span><div><h2>{{ own ? own.name : 'Un empire se construit ensemble' }}</h2><p>Vos relations personnelles restent disponibles dans cet univers.</p></div>{% if own %}<a class="primary" href="{{ path('app_messages',{channel:'guild'}) }}">Ouvrir le canal de guilde</a>{% endif %}</section>
 <p class="panel">Les guildes sont désactivées dans cet univers. Les relations entre commandants restent accessibles sur la page <a href="{{ path('app_personal_relations') }}">Relations entre commandants</a>.</p>
 {% elseif tab=='guilds' %}
+    {% include 'player/_guild_recruitment_inbox.html.twig' %}
     {% include 'player/_guild_hub.html.twig' %}
 {% elseif tab=='create' %}
     {% include 'player/_guild_create.html.twig' %}
 {% elseif tab=='management' and own %}
     {% include 'player/_guild_settings.html.twig' %}
 {% elseif tab=='join' and not own %}
+    {% include 'player/_guild_recruitment_inbox.html.twig' %}
     {% include 'player/_guild_join.html.twig' %}
 {% elseif tab=='members' and own and ownRow %}
     {% include 'player/_guild_members.html.twig' %}

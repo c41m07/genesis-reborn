@@ -151,7 +151,7 @@ final class StrategicToolsTest extends WebTestCase
     {
         $owner=$this->owner->currentPlayerUniverse;$other=$this->other->currentPlayerUniverse;
         $diplomacy=static::getContainer()->get(\App\Service\Player\DiplomacyService::class);$diplomacy->create($owner,'Chercheurs','CHERC');
-        $guild=static::getContainer()->get(\App\Service\Player\RelationResolver::class)->guild($owner);$diplomacy->join($other,$guild->id);
+        $guild=static::getContainer()->get(\App\Service\Player\RelationResolver::class)->guild($owner);\App\Tests\Support\GuildRecruitmentFixture::enrol($diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $other,$guild->id);
         $message=new SocialMessage();$message->sender=$owner;$message->guild=$guild;$message->content='Journal collectif';$message->createdAt=new \DateTimeImmutable();$this->em->persist($message);$this->em->flush();
         $search=static::getContainer()->get(MessageSearch::class);$prefs=$other->player->preferences;
         self::assertSame(1,$search->page($other,new SearchCriteria(['q'=>'Journal']),'guild',0,1)['count']);self::assertSame($prefs,$other->player->preferences);

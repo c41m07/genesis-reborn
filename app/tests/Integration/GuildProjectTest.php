@@ -53,7 +53,7 @@ final class GuildProjectTest extends KernelTestCase
         $a->player->roles=['ROLE_ADMIN'];$this->em->flush();
         $this->diplomacy->create($a,'Bâtisseurs', 'BAT');
         $guild=self::getContainer()->get(RelationResolver::class)->guild($a);
-        $this->diplomacy->join($b,$guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($this->diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $b,$guild->id);
         $definition=self::getContainer()->get(GuildProjectDefinitionService::class)->save($a->player,0,$this->draft($a->universe->id),0);
         $project=$this->projects->start($a,$definition->id,$definition->version);
         return [$a,$b,$definition,$project];

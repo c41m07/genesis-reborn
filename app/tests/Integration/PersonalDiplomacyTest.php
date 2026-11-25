@@ -194,7 +194,7 @@ final class PersonalDiplomacyTest extends KernelTestCase
         [$actor, $target] = $this->pair('omega-1');
         $this->diplomacy->create($actor, 'Même guilde', 'MEME');
         $guild = $this->relations->guild($actor);
-        $this->diplomacy->join($target, $guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($this->diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $target, $guild->id);
         $this->diplomacy->alliance($actor, $target->id, 'rival');
         self::assertTrue($this->relations->allied($actor, $target));
         self::assertFalse($this->relations->enemy($actor, $target));
