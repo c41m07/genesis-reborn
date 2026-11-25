@@ -19,10 +19,10 @@ final class CombatUnitFactory
     {
         $definition=$this->catalog->getTierForUniverse($universe,'defenses',$slug,$tier);
         $definition=$this->technologies->applyToDefenses([$definition],$levels,$universe)[0];
-        $fortress=$this->catalog->getForUniverse($universe,'buildings','fortress')['effect']??[];
+        $base = $this->catalog->getForUniverse($universe, 'buildings', 'fortress');
+        $fortress = $base['effect'] ?? [];
         if(($fortress['targets']??null)==='ground_defenses' && ($fortress['stat']??null)==='hp') {
-            $base=$this->catalog->get('buildings','fortress');
-            $bonus=GameCatalog::diminishingBonus($fortressLevels,(float)($fortress['max_bonus']??25),(int)($base['max_level']??25));
+            $bonus=GameCatalog::infrastructureBonus($fortressLevels,(float)($fortress['max_bonus']??25),(int)($base['max_level']??25), $this->catalog->rules()['building_level_growth'] ?? []);
             $definition['hp']*=1+$bonus/100;
         }
         return $definition;

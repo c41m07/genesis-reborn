@@ -107,6 +107,9 @@ final class RankProgressionRequirementsTest extends TestCase
                     $expected=[];
                     foreach($rules as $kind=>$parents)foreach($parents as $parent=>$level)
                         $expected[$kind][]=['slug'=>$parent,'tier'=>$tier,'level'=>$level];
+                    if ($group === 'technologies' && $index > 0) {
+                        $expected['technologies'][] = ['slug' => $slug, 'tier' => GameCatalog::TIERS[$index - 1], 'level' => 5];
+                    }
                     if ($group === 'buildings') {
                         $previousRankLevel = match ($slug) {
                             'shipyard' => 20,

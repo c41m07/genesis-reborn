@@ -59,6 +59,11 @@
           "slug": "weapons_engineering",
           "tier": "intermediate",
           "level": 3
+        },
+        {
+          "slug": "shield_harmonics",
+          "tier": "basic",
+          "level": 5
         }
       ]
     },
@@ -80,6 +85,11 @@
           "slug": "weapons_engineering",
           "tier": "superior",
           "level": 3
+        },
+        {
+          "slug": "shield_harmonics",
+          "tier": "intermediate",
+          "level": 5
         }
       ]
     }

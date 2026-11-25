@@ -2255,3 +2255,11 @@ Le plafond passe de 30 à **10 commandes à l’ajout** sur les files existantes
 ## Programmation du calendrier de l’Avent par univers — 24 novembre 2026
 
 L’administration programme chaque période de visibilité avec un début inclus et une fin exclue en heure de Paris. Le bouton cadeau de la barre supérieure et l’accès direct suivent la même période. Les portes conservent les dates du 1er au 24 décembre et peuvent être rattrapées pendant la visibilité. Une nouvelle saison demande une publication explicite. L’inventaire assure le retrait des cadeaux déjà réservés après la fermeture.
+
+## 25 novembre 2026 — recherches, bâtiments économiques et infrastructures
+
+Les 38 recherches avancées du catalogue ne demandaient aucun niveau de leur propre famille. Décision confirmée pendant le lot : ajouter à chacune le rang immédiatement précédent au niveau 5. Les déblocages mémorisés et les autres conditions restent applicables. Les prix utilisent le prérequis individuel admissible le plus cher et les contributions de chaque bâtiment se composent par rang. Les taux, plafonds, périmètres et durées applicables figurent dans les [règles](REGLES.md#progression-économique-par-rang).
+
+La file conserve les paiements et les échéances enregistrés. Les commandes qui suivent les gains de vitesse conservent la formule correspondant à leur devis. La première synchronisation des stocks emploie les taux courants sur la période écoulée, selon le fonctionnement existant. Les calculs de classement utilisent les prix courants.
+
+Aucun plafond de jeu ajouté aux dépôts T3. À vitesse ×1 sans réduction, le devis du dépôt de métal T3 au niveau 324 dépasse les 2 147 483 647 secondes représentables par la file SQL. La capacité T3 dépasse au niveau 1 741 les 2⁵³ unités au-delà desquelles un stock en double précision ne distingue plus toutes les unités successives. Étendre ces représentations demanderait un chantier distinct.

@@ -1,5 +1,10 @@
 # Roadmap Genesis Reborn
 
+## Recherches et bâtiments par rang — 25 novembre 2026
+
+Lot proposé à la relecture vers `dev`. Les 19 recherches avancent après le niveau 5 du rang précédent. Les devis dépendent des prérequis, les productions et capacités se composent par rang. Les limites numériques des dépôts et le traitement des commandes antérieures figurent dans les [décisions](DECISIONS.md). La fusion et la publication restent à décider. [PR de rééquilibrage](https://github.com/c41m07/genesis-reborn/pull/166).
+
+
 ## Kit T1 et récompense quotidienne (expérimentation)
 
 Le kit T1 de la première planète des nouveaux comptes et le bouton quotidien

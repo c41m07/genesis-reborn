@@ -34,12 +34,18 @@ test('Les cadres verts isolent un niveau avec trois améliorations en file', asy
         return Number.parseFloat(text.replace(/\s/g, '').replace(',', '.'));
     };
     const bonusGain = (cap, maxLevel) => cap * (Math.log(1 + 2 * 5 / (maxLevel * 3.8125)) - Math.log(1 + 2 * 4 / (maxLevel * 3.8125))) / Math.log(3);
+    const basicGain = 5 * 1.0025 ** 5 - 4 * 1.0025 ** 4;
+    const infrastructureGain = (cap, max) => {
+        const total = max * (1.0025 ** max + 1.25 * 1.005 ** max + 1.5625 * 1.01 ** max);
+        const effect = level => cap * Math.log1p(2 * level * 1.0025 ** level / total) / Math.log(3);
+        return effect(5) - effect(4);
+    };
     const examples = [
-        ['lab', 'Réduction du temps de recherche', bonusGain(70, 25)],
-        ['shipyard', 'Réduction du temps de construction des vaisseaux', bonusGain(70, 25)],
-        ['fortress', 'Structure supplémentaire des défenses', bonusGain(25, 10)],
-        ['storage_nano', 'Stockage de nano', 100000],
-        ['mine_nano', 'Production de nano', 180 * (1.2 - 0.4 * (position - 1) / 8)],
+        ['lab', 'Réduction du temps de recherche', infrastructureGain(70, 25)],
+        ['shipyard', 'Réduction du temps de construction des vaisseaux', infrastructureGain(70, 25)],
+        ['fortress', 'Structure supplémentaire des défenses', infrastructureGain(25, 10)],
+        ['storage_nano', 'Stockage de nano', 100000 * basicGain],
+        ['mine_nano', 'Production de nano', 180 * basicGain * (1.2 - 0.4 * (position - 1) / 8)],
     ];
     for (const [slug, label, expected] of examples) {
         sql(`DELETE FROM queue_item WHERE planet_id=${planet} AND queue_type='building'`);
