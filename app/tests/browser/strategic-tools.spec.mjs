@@ -316,10 +316,21 @@ test('Simulateur volumineux : résultat privé au retour, sans tronquer les effe
  await expect(page).toHaveURL(/\/simulateur\?job=[^#]+#simulation-result$/);
  const resultUrl = page.url();
  await page.goto('/simulateur');
- await expect.poll(async () => {
-  await page.goto(resultUrl);
-  return await page.locator('.simulation-trial').count();
- }, { timeout: 35000, intervals: [1000, 2000, 3000] }).toBe(10);
+ try {
+  // Dix essais transitent chacun par le relais puis la file dédiée, en plus du calcul.
+  await expect.poll(async () => {
+   await page.goto(resultUrl);
+   const panel = page.locator('#simulation-result');
+   if (await page.locator('.simulation-trial').count() === 10) return '10 résultats';
+   const content = await panel.textContent({ timeout: 3000 }).catch(() => 'Aucun panneau de résultat');
+   return content.replace(/\s+/g, ' ').trim();
+  }, { timeout: 60000, intervals: [1000, 2000, 3000] }).toBe('10 résultats');
+ } catch (error) {
+  // Ne journaliser que l’état du calcul de la fixture, jamais le scénario, le jeton ou les identifiants.
+  const state = queryIsolatedSql(router, "SELECT CONCAT(status, ':', JSON_LENGTH(trials)) FROM player_combat_simulation_job");
+  const pending = queryIsolatedSql(router, "SELECT COUNT(*) FROM outbox_message WHERE kind = 'combat_sim_trial'");
+  throw new Error('Simulation asynchrone : état / essais en base = '+state+', messages à relayer = '+pending+'. '+error.message);
+ }
  await expect(attackers).toHaveValue('6000');
  await expect(page.locator('#sim-defender-defenses-ground_turret_anti_light-basic')).toHaveValue('1');
  await expect(page.locator('#simulation-result')).toContainText('Structure restante par groupe de survivants');
