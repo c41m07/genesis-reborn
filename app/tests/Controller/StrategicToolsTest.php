@@ -8,6 +8,11 @@ use App\Service\Fleet\FleetCompositionService;
 use App\Service\Combat\{PlayerCombatSimulation,CombatSimulator,CombatUnitFactory};
 use App\Service\Search\{MessageSearch,SearchCriteria};
 use App\Service\Catalog\GameCatalog;
+use App\Message\PlayerCombatSimulationDue;
+use App\Service\Notification\OutboxRelay;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\Messenger\Event\WorkerRunningEvent;
+use Symfony\Component\Messenger\Worker;
 use App\Validator\DTO\RegistrationData;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -118,7 +123,7 @@ final class StrategicToolsTest extends WebTestCase
     public function testSimulationRejectsOversizedAndMalformedForces(): void
     {
         $service=static::getContainer()->get(PlayerCombatSimulation::class);
-        foreach([['attacker'=>['ships'=>'bad']],['attacker'=>['ships'=>['fighter'=>['basic'=>501]]]],['attacker'=>['ships'=>['fighter'=>['unknown'=>1]]]],['attacker'=>['ships'=>['fighter'=>['basic'=>'1.5']]]]] as $forces) {
+        foreach([['attacker'=>['ships'=>'bad']],['attacker'=>['ships'=>['fighter'=>['basic'=>1000001]]]],['attacker'=>['ships'=>['fighter'=>['unknown'=>1]]]],['attacker'=>['ships'=>['fighter'=>['basic'=>'1.5']]]]] as $forces) {
             try {$service->run($this->owner->currentPlayerUniverse,$forces,42);self::fail('Entrée invalide acceptée.');} catch(\DomainException $e) {self::assertNotEmpty($e->getMessage());}
         }
     }
@@ -164,6 +169,96 @@ final class StrategicToolsTest extends WebTestCase
         self::assertSelectorTextContains('#simulation-result','7 victoires donnent 70 %, sans garantir cette probabilité réelle');
         self::assertSame($before,$this->em->getConnection()->fetchAllAssociative('SELECT * FROM planet_resource ORDER BY id'));
         $payload['_token']='forged';$this->client->request('POST','/simulateur',$payload);self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testLargeSimulationCompletesThroughOutboxAndPrivateWorker(): void
+    {
+        $this->client->loginUser($this->owner);
+        $form = $this->client->request('GET', '/simulateur');
+        self::assertResponseIsSuccessful();
+        $token = $form->filter('.simulation-form input[name="_token"]')->attr('value');
+        $db = $this->em->getConnection();
+        $resources = $db->fetchAllAssociative('SELECT * FROM planet_resource ORDER BY id');
+        $payload = [
+            '_token' => $token,
+            'seed' => '4294967294',
+            'assumptions' => '1',
+            'forces' => [
+                'attacker' => ['ships' => ['probe' => ['basic' => 6000]]],
+                'defender' => [
+                    'ships' => ['probe' => ['basic' => 1]],
+                    'defenses' => ['ground_turret_anti_light' => ['basic' => 1]],
+                    'arrival' => 2,
+                ],
+            ],
+        ];
+        $this->client->request('POST', '/simulateur', $payload);
+        self::assertResponseStatusCodeSame(303);
+        $url = explode('#', $this->client->getResponse()->headers->get('Location'), 2)[0];
+        self::assertStringStartsWith('/simulateur?job=', $url);
+        self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'combat_sim_trial'"));
+
+        $this->client->request('POST', '/simulateur', $payload);
+        self::assertResponseStatusCodeSame(303);
+        self::assertSame($url, explode('#', $this->client->getResponse()->headers->get('Location'), 2)[0]);
+        self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'combat_sim_trial'"));
+
+        $this->client->request('GET', $url);
+        self::assertSelectorTextContains('#simulation-result', '0 / 10 combats terminés');
+        self::assertStringContainsString('no-store', $this->client->getResponse()->headers->get('Cache-Control'));
+
+        $container = static::getContainer();
+        $transport = $container->get('messenger.transport.combat_simulation');
+        $relay = $container->get(OutboxRelay::class);
+        $events = new EventDispatcher();
+        $events->addListener(WorkerRunningEvent::class, static function (WorkerRunningEvent $event): void {
+            $event->getWorker()->stop();
+        });
+        for ($step = 0; $step < 3; ++$step) {
+            $relay->run();
+            $available = $transport->get();
+            self::assertCount(1, $available);
+            $envelope = array_values($available)[0];
+            self::assertInstanceOf(PlayerCombatSimulationDue::class, $envelope->getMessage());
+            self::assertFalse($envelope->getMessage()->expire);
+            $worker = new Worker(['combat_simulation' => $transport], $container->get('messenger.bus.default'), $events);
+            $worker->run(['sleep' => 0]);
+            self::assertSame(min(10, ($step + 1) * 4), (int) $db->fetchOne('SELECT JSON_LENGTH(trials) FROM player_combat_simulation_job'));
+            if ($step === 0) {
+                // Une republication du relais peut rejouer le message après son acquittement.
+                $transport->send($envelope);
+                $worker = new Worker(['combat_simulation' => $transport], $container->get('messenger.bus.default'), $events);
+                $worker->run(['sleep' => 0]);
+                $trialCount = $db->fetchOne('SELECT JSON_LENGTH(trials) FROM player_combat_simulation_job');
+                self::assertSame(4, (int) $trialCount);
+            }
+        }
+        $this->client->request('GET', $url);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorCount(10, '.simulation-trial');
+        self::assertSelectorExists('[data-simulation-seed="4294967295"]');
+        self::assertSelectorExists('[data-simulation-seed="0"]');
+        self::assertSelectorTextContains('#simulation-result', 'Structure restante par groupe de survivants');
+        self::assertSame($resources, $db->fetchAllAssociative('SELECT * FROM planet_resource ORDER BY id'));
+        foreach (['fleet', 'combat_event', 'combat_log', 'queue_item'] as $table) {
+            self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM '.$table));
+        }
+
+        foreach ([$this->other, $this->foreign] as $player) {
+            $this->client->loginUser($player);
+            $this->client->request('GET', $url);
+            self::assertResponseStatusCodeSame(404);
+        }
+        $this->client->loginUser($this->owner);
+        $db->executeStatement("UPDATE player_combat_simulation_job SET expires_at = '2020-01-01 00:00:00'");
+        $db->executeStatement("UPDATE outbox_message SET due_at = '2020-01-01 00:00:00' WHERE kind = 'combat_sim_expiration'");
+        $this->em->clear();
+        $this->client->request('GET', $url);
+        self::assertResponseStatusCodeSame(404);
+        $relay->run();
+        $worker = new Worker(['combat_simulation' => $transport], $container->get('messenger.bus.default'), $events);
+        $worker->run(['sleep' => 0]);
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM player_combat_simulation_job'));
     }
 
     public function testIntelProvenanceDistinguishesUnknownAndModifiedValues(): void

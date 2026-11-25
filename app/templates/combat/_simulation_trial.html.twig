@@ -30,8 +30,14 @@
 <p class="muted">Total des deux camps, par round.</p>
 {% for round in trial.rounds %}<h3>Round {{ round.number }}</h3><p>{{ round.shots }} tirs · {{ round.hits }} impacts · {{ round.destroyed }} destructions</p>{% endfor %}
 </details>
-<details><summary>Structure détaillée des survivants</summary>
+<details><summary>{{ trial.grouped_survivors|default(false) ? "Structure restante par groupe de survivants" : "Structure détaillée des survivants" }}</summary>
     <ul>{% for unit in trial.survivors %}
-        <li>{{ unit.camp == 'attacker' ? 'Attaque' : 'Défense' }} · {{ unit_labels[unit.slug].label|default(unit.slug) }} · {{ tier_labels[unit.tier] }} · structure restante {{ unit.hp|quantity(0) }}</li>
+        <li>{{ unit.camp == 'attacker' ? 'Attaque' : 'Défense' }} · {{ unit_labels[unit.slug].label|default(unit.slug) }} · {{ tier_labels[unit.tier] }}
+            {% if trial.grouped_survivors|default(false) %}
+                · {{ unit.quantity|quantity(0) }} survivants
+                {% if unit.hp_min is not null and unit.hp_max is not null %}· structure restante : {{ unit.hp_min|quantity(0) }}{% if unit.hp_min != unit.hp_max %} à {{ unit.hp_max|quantity(0) }}{% endif %}{% endif %}
+                {% if unit.shield_min is not null and unit.shield_max is not null %}· bouclier : {{ unit.shield_min|quantity(0) }}{% if unit.shield_min != unit.shield_max %} à {{ unit.shield_max|quantity(0) }}{% endif %}{% endif %}
+            {% else %}· structure restante {{ unit.hp|quantity(0) }}{% endif %}
+        </li>
     {% else %}<li>Aucun survivant dans ce combat.</li>{% endfor %}</ul>
 </details>

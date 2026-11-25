@@ -42,6 +42,7 @@ final class CombatEventService
         private GameCatalog $catalog,
         private ResourceService $resources,
         private CombatSimulator $simulator,
+        private CombatRoundCheckpointStore $roundCheckpoints,
         private TechnologyEffectCalculator $technologyEffects,
         private CombatUnitFactory $unitFactory,
         private RelationResolver $relations,
@@ -432,7 +433,9 @@ final class CombatEventService
                 $role = $participant->role;
                 $camp = $role === 'attacker' ? ($campByMembership[$membershipId] ?? 'attacker-' . $membershipId) : 'defenders';
                 if($occupationContext!==null) $camp=$this->occupationCamp($participant->playerUniverse,$occupationContext,$camp);
-                $arrivalRound = $participant->arrivalRound ?? 1;
+                // Une arrivée traitée en retard ne modifie jamais un round déjà validé.
+                $arrivalRound = max($event->currentRound + 1, $participant->arrivalRound ?? 1);
+                $participant->arrivalRound = $arrivalRound;
                 $combatParticipants[] = ['id' => (string) $fleet->id, 'role' => $role, 'camp' => $camp, 'arrival_round' => $arrivalRound, 'units' => $units];
                 $snapshot[] = [
                     'participant_id' => $participant->id,
@@ -489,36 +492,80 @@ final class CombatEventService
             $modifiers = $state['modifiers'] ?? ($this->catalog->all('combat_modifiers')['modifiers'] ?? []);
             $event->combatSnapshot = ['participants' => $snapshot, 'combat_participants' => $combatParticipants, 'defenses' => $defenseSnapshots, 'modifiers' => $modifiers];
             if($occupationContext!==null) { $event->combatSnapshot['occupation']=$occupationContext;$event->combatSnapshot['npc_snapshot_initialized']=true; }
-            $result = $this->simulator->simulate(
-                $combatParticipants, $defenseSnapshots, $modifiers, $maxRounds, $event->seed, $targetRound,
-                (float) ($rules['shield_recharge_percent_per_round'] ?? 5),
-                (bool) ($rules['restore_survivor_shields_after_combat'] ?? true),
-                $occupationContext!==null,
-            );
+            $checkpointMetadata = $state['round_checkpoint'] ?? null;
+            $checkpoint = $this->roundCheckpoints->load($event->id, $checkpointMetadata);
             $roundHistory = $state['round_history'] ?? [];
-            foreach ($result['rounds'] as $round) {
-                if ($round['number'] > $event->currentRound) {
-                    $roundHistory[] = $round;
+            if ($checkpoint !== null && (($checkpoint['completed_round'] ?? null) !== $event->currentRound
+                || count($roundHistory) !== $event->currentRound)) {
+                throw new \LogicException('Le point de reprise ne correspond pas à l’historique du combat.');
+            }
+
+            // Le compteur de dégâts est propre au joueur, même s'il dirige plusieurs flottes.
+            $scoreOwnerByFleet = [];
+            foreach ($participants as $participant) {
+                $scoreOwnerByFleet[$participant->fleet->id] = (string) $participant->playerUniverse->id;
+            }
+            $scoredParticipants = $combatParticipants;
+            foreach ($scoredParticipants as &$participantProfile) {
+                if (isset($scoreOwnerByFleet[$participantProfile['id']])) {
+                    $participantProfile['score_owner'] = $scoreOwnerByFleet[$participantProfile['id']];
                 }
             }
+            unset($participantProfile);
+
+            $result = $this->simulator->advance(
+                $scoredParticipants,
+                $defenseSnapshots,
+                $modifiers,
+                $maxRounds,
+                $event->seed,
+                $targetRound,
+                (float) ($rules['shield_recharge_percent_per_round'] ?? 5),
+                (bool) ($rules['restore_survivor_shields_after_combat'] ?? true),
+                $occupationContext !== null,
+                $checkpoint
+            );
+            // Les combats commencés avant ce format rejouent une seule fois depuis leur graine.
+            // Sinon seuls les nouveaux rounds sont produits. Les deux données avancent dans la même transaction.
+            $roundHistory = $checkpoint === null ? $result['rounds'] : [...$roundHistory, ...$result['rounds']];
             $event->combatSnapshot['round_history'] = $roundHistory;
+            if (isset($result['checkpoint'])) {
+                $event->combatSnapshot['round_checkpoint'] = $this->roundCheckpoints->save($event->id, $result['checkpoint']);
+            } elseif (isset($checkpointMetadata['payload_parts'])) {
+                // Le rapport final n’a plus besoin de l’état individuel des unités.
+                $this->roundCheckpoints->delete($event->id);
+            }
 
             $damageByMembership = [];
             $membershipByFleet = [];
+            $memberships = [];
             foreach ($participants as $participant) {
                 $membershipByFleet[$participant->fleet->id] = $participant->playerUniverse;
+                $memberships[$participant->playerUniverse->id] = $participant->playerUniverse;
             }
             foreach ($result['rounds'] as $round) {
                 if ($round['number'] <= $event->currentRound) {
                     continue;
                 }
-                foreach ($round['shots'] as $shot) {
-                    $fleetId = (int) explode(':', (string) $shot['attacker'], 2)[0];
-                    $membership = $membershipByFleet[$fleetId] ?? null;
-                    if ($membership) {
-                        $damageByMembership[$round['number']][$membership->id] ??= ['membership' => $membership, 'damage' => 0.0];
-                        $damageByMembership[$round['number']][$membership->id]['damage'] += (float) $shot['damage'];
+                // Le moteur compact additionne dans l'ordre des tirs, même si deux flottes appartiennent au même joueur.
+                if (isset($round['damage_by_score_owner'])) {
+                    foreach ($round['damage_by_score_owner'] as $membershipId => $damage) {
+                        $this->accumulateDamage($damageByMembership, $memberships, $round['number'], (int) $membershipId, (float) $damage);
                     }
+                    continue;
+                }
+
+                // Le format historique détaille et attribue chaque tir.
+                if (isset($round['damage_by_owner'])) {
+                    foreach ($round['damage_by_owner'] as $owner => $damage) {
+                        $this->accumulateDamage($damageByMembership, $membershipByFleet, $round['number'], (int) $owner, (float) $damage);
+                    }
+                    continue;
+                }
+
+                foreach ($round['shots'] ?? [] as $shot) {
+                    $fleetId = (int) explode(':', (string) $shot['attacker'], 2)[0];
+                    $this->accumulateDamage($damageByMembership, $membershipByFleet, $round['number'], $fleetId, (float) $shot['damage']);
                 }
             }
             foreach ($damageByMembership as $roundNumber => $scores) {
@@ -594,7 +641,7 @@ final class CombatEventService
             $log = new CombatLog();
             $log->combatEvent = $event;
             $log->outcome = $result['outcome'];
-            $log->rounds = $result['rounds'];
+            $log->rounds = $roundHistory;
             $log->snapshot = [
                 'participants' => $snapshot,
                 'defenses' => $defenseSnapshots,
@@ -624,6 +671,16 @@ final class CombatEventService
 
 
     /** Répartit le butin de façon déterministe dans les soutes encore libres des attaquants survivants. */
+    private function accumulateDamage(array &$byMembership, array $memberships, int $round, int $fleetId, float $damage): void
+    {
+        $membership = $memberships[$fleetId] ?? null;
+        if ($membership === null) {
+            return;
+        }
+        $byMembership[$round][$membership->id] ??= ['membership' => $membership, 'damage' => 0.0];
+        $byMembership[$round][$membership->id]['damage'] += $damage;
+    }
+
     private function collectLoot(array $participants, string $outcome, CombatEvent $event): array
     {
         $rules = $this->catalog->rules();
@@ -1162,4 +1219,3 @@ final class CombatEventService
         };
     }
 }
-

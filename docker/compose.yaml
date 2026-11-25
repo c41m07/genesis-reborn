@@ -33,7 +33,8 @@ services:
   worker:
     <<: *app
     user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
-    command: [php, bin/console, messenger:consume, async, --time-limit=3600, --memory-limit=192M, --no-interaction]
+    # Le checkpoint compact peut dépasser la limite PHP par défaut pendant son rechargement.
+    command: [php, -d, memory_limit=384M, bin/console, messenger:consume, async, --time-limit=3600, --memory-limit=192M, --no-interaction]
     restart: unless-stopped
     depends_on:
       database: {condition: service_healthy}
@@ -45,6 +46,17 @@ services:
       timeout: 5s
       start_period: 10s
       retries: 6
+  simulation-worker:
+    <<: *app
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    command: [php, bin/console, messenger:consume, combat_simulation, --time-limit=3600, --memory-limit=192M, --no-interaction]
+    restart: unless-stopped
+    cpus: "1.0"
+    mem_limit: 768m
+    depends_on:
+      database: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+    networks: [backend]
   relay:
     <<: *app
     user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"

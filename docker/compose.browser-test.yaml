@@ -21,6 +21,9 @@ services:
   worker:
     environment: *empire-test-env
     tmpfs: ["/app/var:mode=1777"]
+  simulation-worker:
+    environment: *empire-test-env
+    tmpfs: ["/app/var:mode=1777"]
   relay:
     environment: *empire-test-env
     tmpfs: ["/app/var:mode=1777"]

@@ -56,7 +56,7 @@ final class PiratePendingBattle
             // Pas de liste d'unités, d'HP ou de logs par round dans le checkpoint : seuls les totaux à appliquer.
             $slug = $unit['slug'];
             $tier = $unit['tier'];
-            $survivors[$slug][$tier] = ($survivors[$slug][$tier] ?? 0) + 1;
+            $survivors[$slug][$tier] = ($survivors[$slug][$tier] ?? 0) + ($unit['quantity'] ?? 1);
         }
 
         return self::record($attempt, $arrivedAt, $nominalArrivalAt, [
