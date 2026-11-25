@@ -496,7 +496,20 @@ final class ColonyController extends AbstractController
             $idleFleet = $this->repo->one(Fleet::class, ['homePlanet' => $mapOrigin, 'playerUniverse' => $m, 'status' => 'idle']);
             if ($idleFleet) {
                 foreach ($this->repo->all(FleetShip::class, ['fleet' => $idleFleet]) as $ship) {
-                    $mapStock[$ship->slug] = $ship->quantity;
+                    $mapStock[$ship->slug][$ship->tier] = $ship->quantity;
+                }
+            }
+        }
+        $mapMissionShips = [];
+        foreach (['probe', 'colony_ship'] as $slug) {
+            foreach (GameCatalog::TIERS as $tier) {
+                $quantity = $mapStock[$slug][$tier] ?? 0;
+                if ($quantity > 0) {
+                    $mapMissionShips[$slug][] = [
+                        'tier' => $tier,
+                        'label' => $catalog->getTierForUniverse($m->universe, 'ships', $slug, $tier)['label'],
+                        'quantity' => $quantity,
+                    ];
                 }
             }
         }
@@ -608,7 +621,7 @@ final class ColonyController extends AbstractController
         return [
             'membership' => $m,
             'map_origin' => $mapOrigin,
-            'map_stock' => $mapStock,
+            'map_mission_ships' => $mapMissionShips,
             'map_fleet_limit' => $mapFleetLimit,
             'systems' => $systems,
             'selected_system' => $selectedSystem,
@@ -623,10 +636,10 @@ final class ColonyController extends AbstractController
             'map_conquerable' => $mapConquerable,
             'map_reinforceable' => $mapReinforceable,
             'map_contestable' => $mapContestable,
-            'map_can_colonize' => $hasColonySlot && ($mapStock['colony_ship'] ?? 0) > 0,
-            'map_can_spy' => ($mapStock['probe'] ?? 0) > 0,
-            'map_can_explore' => ($mapStock['probe'] ?? 0) > 0,
-            'map_can_conquer' => (bool) ($catalog->forUniverse($m->universe)['features']['planet_conquest'] ?? false) && $hasColonySlot && ($mapStock['colony_ship'] ?? 0) > 0,
+            'map_can_colonize' => $hasColonySlot && !empty($mapMissionShips['colony_ship']),
+            'map_can_spy' => !empty($mapMissionShips['probe']),
+            'map_can_explore' => !empty($mapMissionShips['probe']),
+            'map_can_conquer' => (bool) ($catalog->forUniverse($m->universe)['features']['planet_conquest'] ?? false) && $hasColonySlot && !empty($mapMissionShips['colony_ship']),
         ];
     }
 }

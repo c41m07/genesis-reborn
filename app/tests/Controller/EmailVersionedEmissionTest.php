@@ -96,6 +96,48 @@ final class EmailVersionedEmissionTest extends WebTestCase
         return $client->followRedirect()->filter('.flash.success')->text();
     }
 
+    public function testTwoAllowedResendsKeepTheFirstLinkAndOnlyOneConfirmation(): void
+    {
+        $links = [];
+        $transport = $this->createMock(VerificationEmissionTransport::class);
+        $transport->expects(self::exactly(3))->method('confirmation')
+            ->willReturnCallback(static function (#[\SensitiveParameter] string $address, #[\SensitiveParameter] string $link) use (&$links): VerificationRecoveryOutcome {
+                $links[] = $link;
+                return VerificationRecoveryOutcome::TransportAccepted;
+            });
+        $transport->expects(self::once())->method('welcome');
+        [$client, , $db, $clock] = $this->fixture(true, $transport);
+        $this->register($client);
+        self::assertResponseRedirects('/connexion');
+        $initial = $db->fetchAssociative('SELECT version, expires_at FROM player_verification_generation');
+        self::assertIsArray($initial);
+        $clock->sleep(300);
+        $firstText = $this->resend($client, 'writer-portal@example.test');
+        self::assertSame($firstText, $this->resend($client, 'writer-portal@example.test')); // Encore sous refroidissement.
+        self::assertCount(2, $links);
+        $clock->sleep(300);
+        self::assertSame($firstText, $this->resend($client, 'writer-portal@example.test'));
+        self::assertCount(3, $links);
+        // En cas de divergence, ne jamais imprimer les liens dans la sortie du test.
+        self::assertTrue(hash_equals($links[0], $links[1]) && hash_equals($links[0], $links[2]));
+        self::assertSame($initial, $db->fetchAssociative('SELECT version, expires_at FROM player_verification_generation'));
+        self::assertSame(3, (int) $db->fetchOne("SELECT COUNT(*) FROM verification_delivery_request WHERE state = 'transport_accepted'"));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM player_email_verification_token'));
+
+        $confirmation = $client->request('GET', '/inscription/confirmer/'.$links[1]);
+        self::assertNull($db->fetchOne('SELECT email_verified_at FROM player'));
+        $client->submit($confirmation->selectButton('Confirmer mon adresse')->form());
+        self::assertResponseRedirects('/connexion');
+        $verified = $db->fetchOne('SELECT email_verified_at FROM player');
+        self::assertNotNull($verified);
+        $replay = $client->request('GET', '/inscription/confirmer/'.$links[2]);
+        $client->submit($replay->selectButton('Confirmer mon adresse')->form());
+        self::assertResponseStatusCodeSame(400);
+        self::assertSame($verified, $db->fetchOne('SELECT email_verified_at FROM player'));
+        self::assertSame('consumed', $db->fetchOne('SELECT state FROM player_verification_generation'));
+        self::assertSame(3, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_delivery_request'));
+    }
+
     public function testVersionedSignupAndResendUseSameLinkAndAddressChangeInvalidatesIt(): void
     {
         $links = [];

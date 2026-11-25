@@ -63,7 +63,7 @@ final class CatalogueQueuedBenefitsTest extends TestCase
         foreach (['lab'=>'Réduction du temps de recherche', 'shipyard'=>'Réduction du temps de construction des vaisseaux', 'fortress'=>'Structure supplémentaire des défenses'] as $slug => $label) {
             $definition = $this->catalog->withTier($this->catalog->get('buildings', $slug), 'basic');
             $rows = array_column($this->insights->benefits($definition, 'buildings', 4, $this->planet, [$slug=>['basic'=>1]], [], $this->context), null, 'label');
-            $expected = $slug==='fortress' ? [3.325929489262224, 4.33466996041087] : [3.8898329580604964, 5.135404612491324];
+            $expected = $slug==='fortress' ? [3.154773645400453, 4.125541652632911] : [3.346400765282132, 4.4346028120822325];
             self::assertEqualsWithDelta($expected[0], $rows[$label]['before'], 1e-10);
             self::assertEqualsWithDelta($expected[1], $rows[$label]['after'], 1e-10);
         }
@@ -104,7 +104,8 @@ final class CatalogueQueuedBenefitsTest extends TestCase
             $slug = 'storage_'.$resource;
             $definition = $this->catalog->withTier($this->catalog->get('buildings', $slug), $tier);
             $rows = $this->insights->benefits($definition, 'buildings', 4, $this->planet, [$slug=>[$tier=>1]], [], $this->context);
-            self::assertEqualsWithDelta($expected, $rows[0]['after']-$rows[0]['before'], 1e-7);
+            $growth = ['basic'=>1.0025, 'intermediate'=>1.005, 'superior'=>1.01][$tier];
+            self::assertEqualsWithDelta($expected * (4 * $growth ** 4 - 3 * $growth ** 3), $rows[0]['after']-$rows[0]['before'], 1e-7);
         }
     }
 }

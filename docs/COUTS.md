@@ -2,8 +2,7 @@
 
 La répartition de valeur **B48/52, I34/36/30, S28/31/31/10**
 (métal / nano / antimatière / hydrogène) s’applique aux bâtiments, recherches,
-vaisseaux et défenses, y compris les deux familles civiles. Les budgets réels
-des 156 profils de base sont conservés exactement. Les 52 profils Basiques sont reconduits à l’identique.
+vaisseaux et défenses, y compris les deux familles civiles. Les 156 profils fixent les compositions. Pour un bâtiment ou une recherche avancée, le budget du premier niveau dépend désormais des prérequis. [Calcul des devis](REGLES.md#progression-économique-par-rang). Les 52 profils Basiques sont reconduits à l’identique.
 
 Les [études de progression](EQUILIBRAGE.md) donnent des ordres de grandeur
 pour des stratégies et des grilles datées.
@@ -26,7 +25,7 @@ Il s’agit de parts de **valeur économique** : métal ×2, nano ×4, antimati�
 
 La grille couvre **52 fiches et 156 profils** : 13 bâtiments, 19 recherches, 16 vaisseaux (dont les deux unités économiques) et 4 défenses. Les profils réels sont lus et conservés en JSON malgré leur extension `.yaml`. Les budgets déclaratifs ne remplacent pas leurs coûts arrondis effectifs.
 
-La décision du 9 novembre 2026 révise volontairement les budgets du réacteur et de la centrale : 1 200 / 1 500 / 1 875 et 4 800 / 6 000 / 7 500. La conservation des budgets de la redistribution du 5 novembre reste une référence historique ; les nouveaux budgets et leurs parts de ressources font désormais foi pour ces deux familles. Voir [EQUILIBRAGE](EQUILIBRAGE.md#production-des-batiments).
+La décision du 9 novembre 2026 révise volontairement les budgets du réacteur et de la centrale : 1 200 / 1 500 / 1 875 et 4 800 / 6 000 / 7 500. La conservation des budgets de la redistribution du 5 novembre reste une référence historique ; ces montants décrivent les profils avant le calcul des prix d’entrée par prérequis. Voir [EQUILIBRAGE](EQUILIBRAGE.md#production-des-batiments).
 
 ## Coûts de base appliqués
 

@@ -45,6 +45,11 @@
           "slug": "tactical_intelligence",
           "tier": "intermediate",
           "level": 2
+        },
+        {
+          "slug": "intelligence_countermeasures",
+          "tier": "basic",
+          "level": 5
         }
       ]
     },
@@ -61,6 +66,11 @@
           "slug": "tactical_intelligence",
           "tier": "superior",
           "level": 2
+        },
+        {
+          "slug": "intelligence_countermeasures",
+          "tier": "intermediate",
+          "level": 5
         }
       ]
     }

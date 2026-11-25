@@ -206,16 +206,26 @@ final class FirstStepsTest extends KernelTestCase
         self::assertSame(['ship' => true], $this->guide->completed($membership));
 
         $fleetService = self::getContainer()->get(FleetService::class);
-        $known = $this->launchProbe($fleetService, $membership, $planet, $planet->solarSystem, '7');
+        $systems = $this->entityManager->getRepository(SolarSystem::class)->findBy(['galaxy' => $planet->solarSystem->galaxy], ['id' => 'ASC']);
+        $unexplored = array_values(array_filter($systems, static fn (SolarSystem $system): bool => !$discovery->count([
+            'playerUniverse' => $membership, 'solarSystem' => $system,
+        ])));
+        self::assertGreaterThanOrEqual(3, count($unexplored));
+        $discoveredDuringTravel = array_shift($unexplored);
+        $unknown = $unexplored;
+        $known = $this->launchProbe($fleetService, $membership, $planet, $discoveredDuringTravel, '7');
+        // Une découverte préexistante à l’arrivée ne fournit pas la preuve de cette mission.
+        $priorDiscovery = new PlayerDiscovery();
+        $priorDiscovery->playerUniverse = $membership;
+        $priorDiscovery->solarSystem = $discoveredDuringTravel;
+        $this->entityManager->persist($priorDiscovery);
+        $this->entityManager->flush();
         $this->clock->sleep($known->travelSeconds + 1);
         $fleetService->arrive($known->id, $known->dispatchToken);
         self::assertSame('completed', $known->status);
         self::assertSame(['ship' => true], $this->guide->completed($membership));
         self::assertSame(1, $discovery->count(['playerUniverse' => $membership, 'solarSystem' => $planet->solarSystem]));
-
-        $systems = $this->entityManager->getRepository(SolarSystem::class)->findBy(['galaxy' => $planet->solarSystem->galaxy], ['id' => 'ASC']);
-        $unknown = array_values(array_filter($systems, static fn (SolarSystem $system): bool => $system !== $planet->solarSystem));
-        self::assertGreaterThanOrEqual(2, count($unknown));
+        self::assertSame(1, $discovery->count(['playerUniverse' => $membership, 'solarSystem' => $discoveredDuringTravel]));
         $first = $this->launchProbe($fleetService, $membership, $planet, $unknown[0], '8');
         $firstToken = $first->dispatchToken;
         $arrival = $first->arrivalAt->format('Y-m-d H:i:s');
@@ -486,14 +496,14 @@ final class FirstStepsTest extends KernelTestCase
         $this->queues->complete($technology->id, $technology->dispatchToken);
         self::assertCount(2, $rewards->available($membership));
 
-        $resourceRows = $this->entityManager->getRepository(PlanetResource::class);
-        $metal = $resourceRows->findOneBy(['planet' => $planet, 'resourceType' => 'metal']);
-        $nano = $resourceRows->findOneBy(['planet' => $planet, 'resourceType' => 'nano']);
-        $metal->currentStock = 10000;
-        $nano->currentStock = 8000;
-        $metal->lastUpdatedAt = $nano->lastUpdatedAt = $this->clock->now();
-        $this->entityManager->flush();
         $resources = self::getContainer()->get(ResourceService::class);
+        // Synchroniser toutes les ressources au même instant avant de fixer les stocks du scénario.
+        // Le gain observé ensuite doit provenir exclusivement de la récompense réclamée.
+        $rows = $resources->materialize($planet);
+        $metal = $rows['metal'];
+        $metal->currentStock = 10000;
+        $rows['nano']->currentStock = 8000;
+        $this->entityManager->flush();
         $stocks = $resources->snapshot($planet);
         self::assertSame('full', $rewards->claim($membership, $planet, FirstStep::MetalMine));
         self::assertSame($stocks['nano']['stock'], $resources->snapshot($planet)['nano']['stock'], 'Ne pas verser les nanos seuls.');

@@ -28,7 +28,7 @@ final class AcceptedResourceCostsTest extends TestCase
             self::assertCount($size, $catalog->all($group));
             foreach ($fixture['profiles'][$group] as $slug => $entry) {
                 foreach (GameCatalog::TIERS as $tier) {
-                    $costs = $catalog->costs($catalog->withTier($catalog->get($group, $slug), $tier), 1, 1, $group);
+                    $costs = $catalog->costs($catalog->withTier($catalog->get($group, $slug), $tier));
                     $budget = CostDistributionCandidate::value($entry[$tier]);
                     self::assertSame($budget, CostDistributionCandidate::value($costs), "{$group}/{$slug}/{$tier}");
                     if ($tier === 'basic') {
@@ -53,6 +53,12 @@ final class AcceptedResourceCostsTest extends TestCase
     {
         $fixture = $this->fixture();
         $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
+        // Comparaison des deux répartitions de novembre, avec les courbes de cette étude.
+        $property = new \ReflectionProperty(GameCatalog::class, 'data');
+        $data = $property->getValue($catalog);
+        $data['rules']['progression_curves'] = \App\Tests\Support\ProducerBalanceReference::fixture()['historical_rules']['progression_curves'];
+        unset($data['rules']['rank_entry_material_percent']);
+        $property->setValue($catalog, $data);
         $calculator = new OperationCalculator($catalog);
         $current = new Universe();
         $current->slug = 'accepted-prices';

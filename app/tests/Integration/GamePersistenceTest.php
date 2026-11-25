@@ -202,6 +202,37 @@ final class GamePersistenceTest extends KernelTestCase
         // Même horloge que la mission : l'arrivée reste échue quelle que soit la date réelle.
         $fleet->arrivalAt=self::getContainer()->get('clock')->now()->modify('-1 second');$this->em->flush();$service->arrive($fleet->id,$fleet->dispatchToken);
     }
+    public function testExplorationsAlreadyInFlightCompleteEvenAfterTheFirstDiscovery(): void
+    {
+        $clock = new \Symfony\Component\Clock\MockClock('2026-11-02T00:00:00Z');
+        self::getContainer()->set('clock', $clock);
+        $player = $this->player();
+        $origin = $this->join($player);
+        $this->ships($origin, ['probe' => 2]);
+        $membership = $player->currentPlayerUniverse;
+        $discoveries = $this->em->getRepository(\App\Entity\PlayerDiscovery::class);
+        $systems = $this->em->getRepository(\App\Entity\SolarSystem::class)->findBy(['galaxy' => $origin->solarSystem->galaxy], ['id' => 'ASC']);
+        $system = array_values(array_filter($systems, fn ($system) => !$discoveries->count([
+            'playerUniverse' => $membership, 'solarSystem' => $system,
+        ])))[0];
+        $fleets = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
+        foreach (['a', 'b'] as $receipt) {
+            $fleets->send($membership, $origin, 'explore', $system->id, ['probe' => 1], .5, [], str_repeat($receipt, 32));
+        }
+        $traveling = $this->em->getRepository(\App\Entity\Fleet::class)->findBy(['status' => 'traveling'], ['id' => 'ASC']);
+        self::assertCount(2, $traveling);
+        $clock->sleep(max($traveling[0]->travelSeconds, $traveling[1]->travelSeconds) + 1);
+
+        foreach ($traveling as $fleet) {
+            $fleets->arrive($fleet->id, $fleet->dispatchToken);
+            self::assertSame('completed', $fleet->status);
+            self::assertSame(1, $discoveries->count(['playerUniverse' => $membership, 'solarSystem' => $system]));
+        }
+        self::assertSame(1, $this->em->getRepository(\App\Entity\PlayerBoost::class)->count([
+            'playerUniverse' => $membership, 'sourceType' => 'risk_mission',
+        ]));
+    }
+
     public function testSoloProbeReservesFuelAndDiscoversWholeSystemExactlyOnce(): void
     {
         $clock = new \Symfony\Component\Clock\MockClock('2026-11-02T00:00:00Z');self::getContainer()->set('clock',$clock);
@@ -345,7 +376,7 @@ final class GamePersistenceTest extends KernelTestCase
         $metal=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'metal']);$metal->currentStock=10000;$rate=$metal->productionRate;$this->em->flush();
         $clock->sleep(3600);$q->synchronize($p->currentPlayerUniverse);
         self::assertEqualsWithDelta(10000+$rate*(3600-$duration),$r->snapshot($planet)['metal']['stock'],.000001);
-        self::assertSame(110000.0,$r->snapshot($planet)['metal']['capacity']);
+        self::assertSame(110250.0,$r->snapshot($planet)['metal']['capacity']);
     }
     public function testResearchLevelsAndCancellationAreSharedAcrossColonies(): void
     {
@@ -1131,7 +1162,7 @@ final class GamePersistenceTest extends KernelTestCase
         $antimatter=$this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'antimatter']);$antimatter->currentStock=1000;
         $this->em->flush();$service=self::getContainer()->get(ResourceService::class);
         $snapshot=$service->snapshot($planet);
-        self::assertEqualsWithDelta(36000,$snapshot['metal']['protectedCapacity'],.000001);
+        self::assertEqualsWithDelta(36275.625,$snapshot['metal']['protectedCapacity'],.000001);
         self::assertSame(100.0,$snapshot['metal']['productivity']);
         self::assertSame(100.0,$snapshot['antimatter']['productivity']);
         self::assertNull($snapshot['electricity']['productivity']);
@@ -1664,13 +1695,13 @@ final class GamePersistenceTest extends KernelTestCase
         $queues->add($membership,$one,'technologies','colonial_expansion',1,str_repeat('a',32));
         $queues->add($membership,$two,'technologies','engineering_foundations',1,str_repeat('b',32));
         [$colony,$following]=$this->em->getRepository(QueueItem::class)->findBy(['playerUniverse'=>$membership],['id'=>'ASC']);
-        self::assertSame(28046,$colony->durationSeconds);self::assertSame(46800,$colony->paidCosts['electricity']);
+        self::assertSame(28154,$colony->durationSeconds);self::assertSame(47000,$colony->paidCosts['electricity']);
         self::assertNull($following->startedAt);$finish=$colony->finishAt();$paid=$colony->paidCosts;
         $clock->sleep($colony->durationSeconds-1);$queues->synchronize($membership);
         self::assertNull($following->startedAt);
         $clock->sleep(2);$queues->synchronize($membership);
         self::assertEquals($finish,$following->startedAt);
-        self::assertSame($paid,$colony->paidCosts);self::assertSame(28046,$colony->durationSeconds);
+        self::assertSame($paid,$colony->paidCosts);self::assertSame(28154,$colony->durationSeconds);
         self::assertSame(1,$this->em->getRepository(PlayerTechnology::class)->findOneBy(['playerUniverse'=>$membership,'slug'=>'colonial_expansion'])->level);
     }
 
@@ -1727,8 +1758,8 @@ final class GamePersistenceTest extends KernelTestCase
             [28800, 'buildings', 'lab'],
             [29040, 'buildings', 'lab'],
             [29040, 'technologies', 'engineering_foundations'],
-            [29633, 'technologies', 'engineering_foundations'],
-            [30422, 'technologies', 'naval_engineering'],
+            [29634, 'technologies', 'engineering_foundations'],
+            [30426, 'technologies', 'naval_engineering'],
             [57600, 'buildings', 'shipyard'],
             [59353, 'buildings', 'storage_electricity'],
             [86400, 'buildings', 'shipyard'],
@@ -1803,11 +1834,11 @@ final class GamePersistenceTest extends KernelTestCase
         $this->em->refresh($active);
         $this->em->refresh($waiting);
         self::assertEquals($activeFinish, $active->finishAt());
-        self::assertSame(280457, $active->durationSeconds);
-        self::assertSame(467500, $active->paidCosts['electricity']);
+        self::assertSame(281535, $active->durationSeconds);
+        self::assertSame(469300, $active->paidCosts['electricity']);
         self::assertNull($waiting->startedAt);
-        self::assertSame(378616, $waitingDuration);
-        self::assertSame(631100, $waitingPaid['electricity']);
+        self::assertSame(380073, $waitingDuration);
+        self::assertSame(633500, $waitingPaid['electricity']);
 
         $clock->sleep($active->durationSeconds + 1);
         $queues->synchronize($membership);

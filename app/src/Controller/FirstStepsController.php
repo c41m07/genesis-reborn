@@ -119,7 +119,11 @@ final class FirstStepsController extends AbstractController
             $this->addFlash('error', $error->getMessage());
         }
 
-        return $this->redirectToRoute('app_first_steps', status: Response::HTTP_SEE_OTHER);
+        $returnToReward = ($state ?? null) === 'full'
+            ? ['reward_planet' => $planet->id, '_fragment' => 'training-reward-title']
+            : [];
+
+        return $this->redirectToRoute('app_first_steps', $returnToReward, Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/premiers-pas/exercice-pirate', name: 'app_first_steps_exercise', methods: ['GET', 'POST'])]
