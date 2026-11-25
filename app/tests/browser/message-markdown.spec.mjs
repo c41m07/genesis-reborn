@@ -150,8 +150,18 @@ for (const channel of ['private', 'guild', 'global']) {
                             expect((await new AxeBuilder({ page }).include('main').analyze()).violations).toEqual([]);
                             await page.keyboard.press('Enter');
                             await expect(help).not.toHaveAttribute('open', '');
-                            await page.evaluate(() => { document.activeElement?.blur();window.scrollTo({ top: 0, behavior: 'instant' }); });
-                            await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+                            // Cadrer la capture après le repli natif : une relance de mise en page peut déplacer la page.
+                            await page.evaluate(() => document.activeElement?.blur());
+                            await expect.poll(() => page.evaluate(async () => {
+                                const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
+                                await nextFrame();
+                                await nextFrame();
+                                if (window.scrollY !== 0) window.scrollTo({ top: 0, behavior: 'instant' });
+                                await nextFrame();
+                                const first = window.scrollY;
+                                await nextFrame();
+                                return [first, window.scrollY];
+                            }), { message: `Cadrage de la capture messagerie : ${theme}, ${width} px` }).toEqual([0, 0]);
                             await page.screenshot({ path: testInfo.outputPath(`messages-${theme}-${width}.png`), fullPage: true, animations: 'disabled' });
                         }
                     }
