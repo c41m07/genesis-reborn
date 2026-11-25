@@ -2,7 +2,7 @@
 
 namespace App\Tests\Controller;
 
-use App\Entity\{GameEvent, GuildProjectDefinition, Player, Universe};
+use App\Entity\{GameEvent, GuildProjectDefinition, PatchNote, Player, Universe};
 use App\Service\Universe\UniverseImporter;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -54,6 +54,61 @@ final class AdminDedicatedPagesTest extends WebTestCase
         $client->request('GET', $routes[2]);
         self::assertResponseRedirects('http://genesis-reborn.localhost/connexion');
         $client->loginUser($admin);
+        // L'espace partagé reste administrateur et annonce un manque de données plutôt que zéro milliseconde.
+        $client->request('GET', $base.'/observatoire?tab=performance&device=mobile');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'Performance');
+        self::assertSelectorTextContains('#performance-diagnostic', 'Non disponible');
+        self::assertSelectorTextContains('main', 'RabbitMQ, workers et Mercure');
+        $releaseNow = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $currentHour = $releaseNow->setTime((int) $releaseNow->format('H'), 0);
+        $publishedAt = $currentHour->modify('-2 hours +30 minutes');
+        foreach (['published' => 'MAJ-TEMOIN', 'draft' => 'MAJ-BROUILLON'] as $status => $version) {
+            $note = new PatchNote();
+            $note->status = $status;
+            $note->title = 'Comparaison de recette';
+            $note->version = $version;
+            $note->publishedAt = $publishedAt;
+            $em->persist($note);
+        }
+        $em->flush();
+        // Seules les tranches complètes des deux côtés comptent ; le pic de l'heure mixte est exclu.
+        $db = $em->getConnection();
+        foreach ([-3 => 3000, -2 => 9000, -1 => 2000] as $offset => $ceiling) {
+            $db->insert('performance_bucket', [
+                'hour_utc' => $currentHour->modify($offset.' hours')->format('Y-m-d H:i:s'),
+                'scope' => 'app_colony', 'device' => 'mobile', 'metric' => 'lcp',
+                'ceiling_ms' => $ceiling, 'observations' => 110,
+            ]);
+        }
+        $crawler = $client->request('GET', $base.'/observatoire?tab=performance&device=mobile&page_key=app_colony');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('#observatory-release', 'MAJ-TEMOIN');
+        self::assertSelectorTextNotContains('#observatory-release', 'MAJ-BROUILLON');
+        self::assertSelectorExists('.observatory-release-marker');
+        self::assertSelectorTextContains('main', 'L’heure de publication est exclue');
+        self::assertSelectorTextContains('main', '-33,3 %');
+        $form = $crawler->selectButton('Confirmer la nouvelle période')->form();
+        $client->submit($form);
+        self::assertResponseRedirects($base.'/observatoire?tab=performance', 303);
+        $client->followRedirect();
+        self::assertSelectorTextContains('#observatory-release', 'Nouvelle période prévue');
+        $client->submit($client->getCrawler()->selectButton('Confirmer la nouvelle période')->form());
+        self::assertResponseRedirects($base.'/observatoire?tab=performance', 303);
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM performance_period'));
+        self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM admin_audit_log WHERE action = 'observatory_period_started'"));
+        self::assertSame(330, (int) $db->fetchOne('SELECT SUM(observations) FROM performance_bucket'));
+        // Avancer la limite dans la fixture évite d’attendre une heure ; la lecture réelle ne perd aucune ligne.
+        $db->insert('performance_period', ['starts_at' => $currentHour->format('Y-m-d H:i:s')]);
+        $client->request('GET', $base.'/observatoire?tab=performance&device=mobile');
+        self::assertSelectorTextContains('#performance-sample-count strong', '0');
+        $client->request('GET', $base.'/observatoire?tab=performance&release=-1');
+        self::assertSelectorTextContains('main', 'Avant / après le début de la période');
+        $client->request('GET', $base.'/observatoire?tab=performance&device=mobile&measure_period=-1');
+        self::assertSelectorTextContains('#performance-sample-count strong', '330');
+        $client->request('POST', $base.'/observatoire/periode', ['_token' => 'invalide']);
+        self::assertResponseRedirects('/acces-refuse');
+
         foreach ($routes as $route) {
             $crawler = $client->request('GET', $route);
             self::assertResponseIsSuccessful($route);
@@ -133,5 +188,9 @@ final class AdminDedicatedPagesTest extends WebTestCase
             $client->request('GET', $route);
             self::assertResponseRedirects('/acces-refuse', 302, $route);
         }
+        $client->request('POST', $base.'/observatoire/periode', ['_token' => 'invalide']);
+        self::assertResponseRedirects('/acces-refuse');
+        self::assertSame(2, (int) $db->fetchOne('SELECT COUNT(*) FROM performance_period'));
+
     }
 }

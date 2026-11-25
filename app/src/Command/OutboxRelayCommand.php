@@ -6,6 +6,7 @@ use App\Service\Boost\BoostEventService;
 use App\Service\Notification\{OutboxPublicationFailed, OutboxRelay};
 use App\Service\Player\DailyLeaderboard;
 use App\Service\ProcessHeartbeat;
+use App\Service\Performance\InfrastructurePerformance;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -22,6 +23,7 @@ final class OutboxRelayCommand extends Command
         private BoostEventService $boostEvents,
         private DailyLeaderboard $leaderboard,
         private ManagerRegistry $doctrine,
+        private InfrastructurePerformance $performance,
     ) {
         parent::__construct();
     }
@@ -48,6 +50,8 @@ final class OutboxRelayCommand extends Command
                 $boostOk = $this->runCycle('boost', $this->boostEvents->tick(...), $output);
                 $leaderboardOk = $this->runCycle('classement', $this->leaderboard->tick(...), $output);
                 $cyclesOk = $boostOk && $leaderboardOk;
+                // Le relais des événements est le seul processus à entretenir les agrégats.
+                $this->performance->pruneIfDue();
             }
 
             $relayOk = true;
