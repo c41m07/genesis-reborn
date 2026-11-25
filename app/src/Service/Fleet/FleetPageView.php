@@ -2,6 +2,7 @@
 
 namespace App\Service\Fleet;
 
+use App\Service\Player\FirstStepRewardPolicy;
 use App\Entity\{Fleet, FleetShip, Planet, PlayerUniverse, SolarSystem};
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
@@ -21,7 +22,7 @@ final class FleetPageView
     }
 
     /**
-     * @param array{mission:string,system:int,planet:int,composition:int,origin:int,confirmation:string,adjust:bool,page:int,colony:int,focus:int} $parameters
+     * @param array{mission:string,system:int,planet:int,composition:int,origin:int,confirmation:string,adjust:bool,page:int,colony:int,focus:int,tutorial_spy?:bool} $parameters
      * @return array<string, mixed> Données privées de la destination, ou composition_review si une nouvelle confirmation est nécessaire.
      */
     public function prepare(PlayerUniverse $member, int $selectedId, string $page, array $parameters): array
@@ -42,7 +43,9 @@ final class FleetPageView
                 $selectedPlanet = $candidate;
             }
         }
+        $tutorialSpy = $page === 'prepare' && $parameters['mission'] === 'spy' && ($parameters['tutorial_spy'] ?? false);
         $data = [
+            'tutorial_spy' => $tutorialSpy,
             'membership' => $member, 'fleet_page' => $page, 'fleet_planet' => $selectedPlanet,
             'fleet_colony_scope' => $page !== 'missions', 'idle' => [], 'holds' => [], 'held_fleets' => [], 'held_details' => [],
             'active_fleets' => [], 'fleet_details' => [], 'combat_events' => [], 'orbit_requests' => [],
@@ -64,10 +67,11 @@ final class FleetPageView
                 throw new \DomainException('Système inaccessible.');
             }
             $target = $parameters['planet'] ? $this->repo->find(Planet::class, $parameters['planet']) : null;
-            if ($parameters['planet'] && (!$target || !$this->destinations->canPrefill($member, $target, $mission))) {
+            if ($parameters['planet'] && (!$target || !$this->destinations->canPrefill($member, $target, $mission)
+                || ($tutorialSpy && !FirstStepRewardPolicy::isNativeNpc($target)))) {
                 throw new \DomainException('Destination inaccessible.');
             }
-            $choices = $this->destinations->choices($member, $mission);
+            $choices = $this->destinations->choices($member, $mission, tutorialSpy: $tutorialSpy);
             $coordinates = '';
             $mode = $choices['modes'][0];
             if ($mission === 'explore' && $parameters['system']) {
@@ -78,7 +82,7 @@ final class FleetPageView
                 $category = $this->destinations->category($member, $target, $mission);
                 $mode = $this->destinations->allows($member, $target, $mission) && in_array($category, $choices['modes'], true) ? $category : 'custom';
             }
-            if ($parameters['composition']) {
+            if (!$tutorialSpy && $parameters['composition']) {
                 $saved = $this->compositions->owned($member, $parameters['composition']);
                 $source = $this->repo->find(Planet::class, $parameters['origin']);
                 if (!$source) {
@@ -101,7 +105,8 @@ final class FleetPageView
             $data['holds'] = $this->repo->all(Fleet::class, ['playerUniverse' => $member, 'homePlanet' => $selectedPlanet, 'status' => 'idle']);
             $shipsByFleet = [];
             foreach ($data['holds'] ? $this->repo->all(FleetShip::class, ['fleet' => $data['holds']]) : [] as $ship) {
-                if ($ship->quantity > 0 && ($config['catalog']['ships'][$ship->slug]['mobile'] ?? true)) {
+                if ($ship->quantity > 0 && ($config['catalog']['ships'][$ship->slug]['mobile'] ?? true)
+                    && (!$tutorialSpy || ($ship->slug === 'probe' && $ship->tier === 'basic'))) {
                     $shipsByFleet[$ship->fleet->id][] = $ship;
                 }
             }

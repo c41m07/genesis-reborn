@@ -324,12 +324,13 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         }
     }
 
-    private function unknown(EntityManagerInterface $em, Player $player, MockClock $clock): VerificationDeliveryRequest
+    private function unknown(EntityManagerInterface $em, Player $player, MockClock $clock, ?int $version = null): VerificationDeliveryRequest
     {
         $original = new VerificationDeliveryRequest();
         $original->player = $player;
         $original->requestKeyHash = hash('sha256', 'original');
         $original->state = 'unknown';
+        $original->versionedGenerationVersion = $version;
         $original->requestedAt = $clock->now()->modify('-10 minutes');
         $original->cooldownUntil = $clock->now()->modify('-5 minutes');
         $original->resolvedAt = $clock->now()->modify('-5 minutes');
@@ -342,9 +343,9 @@ final class VerificationGenerationStoreTest extends KernelTestCase
     {
         [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
         $this->up($db);
-        $original = $this->unknown($em, $player, $clock);
-        $old = $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]);
         $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $original = $this->unknown($em, $player, $clock, $generation->version);
+        $old = $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]);
         $fingerprint = $generation->fingerprint;
         $link = $codec->reproduce($generation, $keys);
         $results = $this->race($player->id, 'reserve-recovery', 'reserve-recovery', $original->id);
@@ -373,8 +374,8 @@ final class VerificationGenerationStoreTest extends KernelTestCase
     {
         [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
         $this->up($db);
-        $original = $this->unknown($em, $player, $clock);
-        $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $original = $this->unknown($em, $player, $clock, $generation->version);
         $service = new \App\Service\Player\VerificationRecoveryOrchestrator($db, $clock, $codec);
         $db->executeStatement("CREATE TRIGGER fixture_deny_recovery BEFORE INSERT ON verification_delivery_request FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'synthetic receipt insert failure'");
         try {
@@ -401,8 +402,8 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         $other->password = bin2hex(random_bytes(16));
         $em->persist($other);
         $em->flush();
-        $original = $this->unknown($em, $player, $clock);
         $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $original = $this->unknown($em, $player, $clock, $generation->version);
         $service = new \App\Service\Player\VerificationRecoveryOrchestrator($db, $clock, $codec);
         $key = str_repeat('f', 64);
         self::assertSame('ineligible', $service->reserve($other->id, $original->id, $key, 300, $keys)['result']);
@@ -425,12 +426,57 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_delivery_request'));
     }
 
+    public function testRecoveryDoesNotAdoptAnUnversionedOrPreviousGenerationReceipt(): void
+    {
+        [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
+        $this->up($db);
+        $active = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $original = $this->unknown($em, $player, $clock);
+        $recovery = new \App\Service\Player\VerificationRecoveryOrchestrator($db, $clock, $codec);
+        self::assertNull($recovery->candidateForForm($player->id));
+        $snapshot = $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]);
+        self::assertSame('ineligible', $recovery->reserve($player->id, $original->id, str_repeat('a', 64), 300, $keys)['result']);
+        self::assertSame($snapshot, $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]));
+
+        // L’ancienne décision reste indéterminée après une nouvelle génération légitime.
+        $db->update('verification_delivery_request', ['versioned_generation_version' => $active->version], ['id' => $original->id]);
+        $clock->sleep(3600);
+        $replacement = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        self::assertSame($active->version + 1, $replacement->version);
+        $snapshot = $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]);
+        self::assertNull($recovery->candidateForForm($player->id));
+        self::assertSame('generation_unavailable', $recovery->reserve($player->id, $original->id, str_repeat('b', 64), 300, $keys)['result']);
+        self::assertSame($snapshot, $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_recovery_event'));
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_delivery_request'));
+    }
+
+    public function testRecoveryWithUnknownOutcomeIsNotANewOrigin(): void
+    {
+        [$db, $player, $clock, , $original, $generation, $id, $lifecycle, $codec, $keys] = $this->recoveryFixture();
+        $claim = $lifecycle->claimRecovery($id, 120);
+        $capture = $this->createMock(\App\Service\Player\VerificationRecoveryTransport::class);
+        $capture->expects(self::once())->method('handoff')->willReturn(\App\Service\Player\VerificationRecoveryOutcome::Unknown);
+        self::assertSame('unknown', (new \App\Service\Player\VerificationRecoveryDeliveryAdapter())->deliver($id, $claim['claim_token'], $lifecycle, $keys, $capture));
+        $clock->sleep(300);
+        $recovery = new \App\Service\Player\VerificationRecoveryOrchestrator($db, $clock, $codec);
+        self::assertNull($recovery->candidateForForm($player->id));
+        // Même si un ancien reçu fils est daté et versionné, sa filiation suffit à refuser.
+        $db->update('verification_delivery_request', ['versioned_generation_version' => $generation->version], ['id' => $id]);
+        self::assertNull($recovery->candidateForForm($player->id));
+        $snapshot = $db->fetchAllAssociative('SELECT * FROM verification_delivery_request ORDER BY id');
+        self::assertSame('ineligible', $recovery->reserve($player->id, $id, str_repeat('b', 64), 300, $keys)['result']);
+        self::assertSame('blocked', $recovery->reserve($player->id, $original->id, str_repeat('b', 64), 300, $keys)['result']);
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM verification_recovery_event'));
+        self::assertSame($snapshot, $db->fetchAllAssociative('SELECT * FROM verification_delivery_request ORDER BY id'));
+    }
+
     private function recoveryFixture(int $lifetime = 3600): array
     {
         [$em, $db, $player, $clock, $store, $codec, $keys] = $this->fixture();
         $this->up($db);
-        $original = $this->unknown($em, $player, $clock);
         $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+'.$lifetime.' seconds'), $keys);
+        $original = $this->unknown($em, $player, $clock, $generation->version);
         $reservation = (new \App\Service\Player\VerificationRecoveryOrchestrator($db, $clock, $codec))
             ->reserve($player->id, $original->id, str_repeat('e', 64), 300, $keys);
         self::assertSame('reserved', $reservation['result']);
@@ -480,6 +526,7 @@ final class VerificationGenerationStoreTest extends KernelTestCase
             'wrong_version' => $db->update('verification_recovery_event', ['generation_version' => 2], ['recovery_request_id' => $id]),
             'broken_binding' => $db->update('verification_recovery_event', ['request_key_hash' => str_repeat('b', 64)], ['recovery_request_id' => $id]),
             'initial_not_unknown' => $db->update('verification_delivery_request', ['state' => 'cancelled'], ['id' => $original->id]),
+            'initial_version_changed' => $db->update('verification_delivery_request', ['versioned_generation_version' => 2], ['id' => $original->id]),
             'legacy_active' => $db->insert('player_email_verification_token', ['player_id' => $player->id, 'token_hash' => str_repeat('b', 64), 'expires_at' => '2030-01-01 00:30:00']),
         };
         $snapshot = $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]);
@@ -491,7 +538,7 @@ final class VerificationGenerationStoreTest extends KernelTestCase
 
     public static function staleRecoveryCases(): iterable
     {
-        foreach (['suspended', 'expired', 'revoked', 'wrong_version', 'broken_binding', 'initial_not_unknown', 'legacy_active'] as $case) {
+        foreach (['suspended', 'expired', 'revoked', 'wrong_version', 'broken_binding', 'initial_not_unknown', 'initial_version_changed', 'legacy_active'] as $case) {
             yield $case => [$case];
         }
     }
@@ -536,6 +583,23 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         self::assertSame('not_dispatched', $db->fetchOne('SELECT delivery_outcome FROM verification_recovery_event WHERE recovery_request_id = ?', [$id]));
         self::assertNull($db->fetchOne('SELECT handoff_at FROM verification_recovery_event WHERE recovery_request_id = ?', [$id]));
         self::assertSame('unknown', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$original->id]));
+    }
+
+    public function testRecoveryNeverHandsOffWhenOriginalVersionChangesAfterClaim(): void
+    {
+        [$db, , , , $original, $generation, $id, $lifecycle, , $keys] = $this->recoveryFixture();
+        $claim = $lifecycle->claimRecovery($id, 120);
+        self::assertSame('claimed', $claim['result']);
+        $db->update('verification_delivery_request', ['versioned_generation_version' => $generation->version + 1], ['id' => $original->id]);
+        $snapshot = $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]);
+        $transport = $this->createMock(\App\Service\Player\VerificationRecoveryTransport::class);
+        $transport->expects(self::never())->method('handoff');
+
+        self::assertSame('not_dispatched', (new \App\Service\Player\VerificationRecoveryDeliveryAdapter())->deliver($id, $claim['claim_token'], $lifecycle, $keys, $transport));
+        self::assertSame('cancelled', $db->fetchOne('SELECT state FROM verification_delivery_request WHERE id = ?', [$id]));
+        self::assertNull($db->fetchOne('SELECT handoff_at FROM verification_recovery_event WHERE recovery_request_id = ?', [$id]));
+        self::assertSame('not_dispatched', $db->fetchOne('SELECT delivery_outcome FROM verification_recovery_event WHERE recovery_request_id = ?', [$id]));
+        self::assertSame($snapshot, $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$original->id]));
     }
 
     public function testHandoffCommitsOnceEvenIfGenerationIsRevokedDuringTransport(): void
@@ -610,11 +674,12 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
         $expected = $codec->reproduce($generation, $keys);
         self::assertNotNull($expected);
-        $original = $reservations->reserve($player->id, str_repeat('a', 64), 300);
+        $original = $reservations->reserve($player->id, str_repeat('a', 64), 300, generationVersion: $generation->version);
         self::assertSame('reserved', $original['result']);
         $originalId = $original['request_id'];
         $oldClaim = $lifecycle->claim($originalId, 120);
         self::assertSame('claimed', $oldClaim['result']);
+        self::assertNotNull($lifecycle->prepareVersionedEmission($originalId, $oldClaim['claim_token'], $keys));
         self::assertSame('completed', $lifecycle->complete($originalId, $oldClaim['claim_token'], 'unknown')['result']);
         $snapshot = $db->fetchAssociative('SELECT * FROM verification_delivery_request WHERE id = ?', [$originalId]);
 
@@ -728,8 +793,8 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         [$em, $db, $player, $clock, $store, , $keys] = $this->fixture();
         $this->up($db);
         $admin = $this->syntheticAdmin($em, $clock);
-        $original = $this->unknown($em, $player, $clock);
-        $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $original = $this->unknown($em, $player, $clock, $generation->version);
         $response = $this->raceAdminWhileHoldingAccount($db, $admin->id, $admin->id, $player->id, $original->id,
             static fn (): int => $db->update('player', ['roles' => '[]'], ['id' => $admin->id]));
         self::assertSame(['result' => 'denied'], $response);
@@ -743,8 +808,8 @@ final class VerificationGenerationStoreTest extends KernelTestCase
         [$em, $db, $player, $clock, $store, , $keys] = $this->fixture();
         $this->up($db);
         $admin = $this->syntheticAdmin($em, $clock);
-        $original = $this->unknown($em, $player, $clock);
-        $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $generation = $store->prepare($player->id, 'fixture', $clock->now()->modify('+1 hour'), $keys);
+        $original = $this->unknown($em, $player, $clock, $generation->version);
         $response = $this->raceAdminWhileHoldingAccount($db, $player->id, $admin->id, $player->id, $original->id,
             static fn (): int => $db->insert('verification_delivery_request', [
                 'player_id' => $player->id, 'request_key_hash' => str_repeat('a', 64), 'state' => 'unknown',

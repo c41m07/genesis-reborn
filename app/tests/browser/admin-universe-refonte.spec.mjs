@@ -128,12 +128,44 @@ test('Univers B : filtres paginés, création et calendrier sans JavaScript', as
     await calendar.getByRole('button').click();
     await expect(calendar.locator('.admin-draft-notice')).toContainText('postérieure');
     await expect(calendar.getByLabel('Ouverture (UTC)', { exact: true })).toHaveValue('2030-05-12T09:30');
-    await calendar.getByLabel('Fermeture planifiée (UTC)').fill('2030-05-14T18:00');
-    await calendar.getByRole('button').click();
+    const endDate = calendar.getByLabel('Fermeture planifiée (UTC)');
+    const manageUrl = new URL(native.url());
+    const action = '/admin/universes/' + id + '/schedule';
+    async function saveCalendar(value) {
+        await endDate.fill(value);
+        await expect(endDate).toHaveValue(value);
+        // L’URL de gestion ne change pas. Observer la soumission native et
+        // le nouveau document avant de vérifier la transaction en base.
+        const [post, document] = await Promise.all([
+            native.waitForResponse((response) => {
+                const request = response.request();
+                return request.method() === 'POST' && new URL(response.url()).pathname === action;
+            }),
+            native.waitForResponse((response) => {
+                const request = response.request();
+                const submitted = request.redirectedFrom();
+                return request.isNavigationRequest() && request.method() === 'GET'
+                    && response.url() === manageUrl.href
+                    && submitted?.method() === 'POST' && new URL(submitted.url()).pathname === action;
+            }),
+            calendar.getByRole('button', { name: 'Enregistrer le calendrier' }).click(),
+        ]);
+        expect(post.status()).toBe(302);
+        const fields = new URLSearchParams(post.request().postData() ?? '');
+        expect(fields.get('ends_at')).toBe(value);
+        expect(document.status()).toBe(200);
+        await native.waitForLoadState('load');
+        await expect(native.locator('#admin-main .flash.success')).toHaveText('Calendrier de l’univers enregistré.');
+        await expect(calendar.locator('.admin-draft-notice')).toHaveCount(0);
+        await expect(endDate).toHaveValue(value);
+    }
+
+    await saveCalendar('2030-05-14T18:00');
     expect(queryIsolatedSql(project, `SELECT starts_at FROM universe WHERE id=${id}`)).toBe('2030-05-12 09:30:00');
-    await calendar.getByLabel('Fermeture planifiée (UTC)').fill('');
-    await calendar.getByRole('button').click();
+    expect(queryIsolatedSql(project, `SELECT ends_at FROM universe WHERE id=${id}`)).toBe('2030-05-14 18:00:00');
+    await saveCalendar('');
     expect(queryIsolatedSql(project, `SELECT ends_at IS NULL FROM universe WHERE id=${id}`)).toBe('1');
+    expect(queryIsolatedSql(project, `SELECT starts_at FROM universe WHERE id=${id}`)).toBe('2030-05-12 09:30:00');
     const rules = native.locator('.admin-settings-form');
     // Playwright exclut les éléments noscript de sa recherche de texte habituelle.
     expect(await rules.locator('noscript').textContent()).toContain('Sans JavaScript, le profil ne remplit pas les champs');

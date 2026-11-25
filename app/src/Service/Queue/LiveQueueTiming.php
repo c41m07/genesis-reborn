@@ -12,7 +12,10 @@ final class LiveQueueTiming
 {
     public static function fullDuration(array $timing, array $levels): int
     {
-        $discount = GameCatalog::diminishingBonus($levels, $timing['cap'], $timing['max']);
+        // Les commandes antérieures conservent leur courbe lors d’un gain de vitesse.
+        $discount = isset($timing['building_growth'])
+            ? GameCatalog::infrastructureBonus($levels, $timing['cap'], $timing['max'], $timing['building_growth'])
+            : GameCatalog::diminishingBonus($levels, $timing['cap'], $timing['max']);
 
         return max(1, (int) ceil($timing['base'] * ((100 - $discount) / 100)));
     }

@@ -18,6 +18,7 @@ export default class extends Controller {
         this.searchAbort?.abort();
     }
 
+    get guidedSpy() { return this.element.elements.tutorial_spy?.value === '1'; }
     get mode() { return this.element.querySelector('[name="destination_mode"]:checked')?.value || 'custom'; }
     get selectedField() { return this.mode === 'custom' ? this.coordinatesTarget : this.choiceTargets.find(field => field.name === this.mode + '_destination'); }
 
@@ -52,10 +53,12 @@ export default class extends Controller {
             panel.querySelectorAll('input,select').forEach(field => { field.disabled = !visible; field.required = visible && field.name !== ''; });
         }
         const exploring = this.mission === 'explore';
-        this.searchLabelTarget.textContent = exploring ? 'Rechercher un système par coordonnées' : 'Pseudonyme du commandant';
-        this.searchHelpTarget.textContent = exploring
-            ? 'Deux caractères minimum. Seules les coordonnées des systèmes non explorés sont proposées.'
-            : 'Deux caractères minimum. Seules les planètes découvertes et compatibles avec la mission sont proposées.';
+        this.searchLabelTarget.textContent = this.guidedSpy ? 'Nom ou coordonnées du monde PNJ' : (exploring ? 'Rechercher un système par coordonnées' : 'Pseudonyme du commandant');
+        this.searchHelpTarget.textContent = this.guidedSpy
+            ? 'Deux caractères minimum. Seuls les mondes PNJ découverts sont proposés.'
+            : (exploring
+                ? 'Deux caractères minimum. Seules les coordonnées des systèmes non explorés sont proposées.'
+                : 'Deux caractères minimum. Seules les planètes découvertes et compatibles avec la mission sont proposées.');
         this.resultsTarget.setAttribute('aria-label', exploring ? 'Systèmes non explorés proposés' : 'Planètes découvertes proposées');
         const field = this.selectedField;
         this.choicesStatusTarget.textContent = this.mode !== 'custom' && field && field.options.length <= 1
@@ -73,6 +76,7 @@ export default class extends Controller {
         try {
             const url = new URL(this.urlValue, location.origin);
             url.searchParams.set('mission', mission);
+            if (this.guidedSpy) url.searchParams.set('tutorial_spy', '1');
             const response = await fetch(url, { signal: this.choicesAbort.signal, headers: { Accept: 'application/json' } });
             if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) throw new Error();
             const data = await response.json();
@@ -132,6 +136,7 @@ export default class extends Controller {
         try {
             const url = new URL(this.urlValue, location.origin);
             url.searchParams.set('mission', mission);
+            if (this.guidedSpy) url.searchParams.set('tutorial_spy', '1');
             url.searchParams.set('q', query);
             const response = await fetch(url, { signal: this.searchAbort.signal, headers: { Accept: 'application/json' } });
             if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) throw new Error();
