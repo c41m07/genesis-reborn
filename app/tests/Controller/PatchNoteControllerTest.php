@@ -206,6 +206,49 @@ final class PatchNoteControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
+    public function testAdminBadgeMatchesUtcPublicationWithoutChangingStoredStatusOrFilters(): void
+    {
+        $admin = $this->player(['ROLE_ADMIN']);
+        $player = $this->player();
+        $now = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $notes = [
+            ['Titre test en préparation', 'Alpha-draft', 'draft', null, 'Brouillon'],
+            ['Titre test à paraître', 'Alpha-future', 'published', $now->modify('+1 hour'), 'Planifié'],
+            ['Titre test visible', 'Alpha-visible', 'published', $now->modify('-1 hour'), 'Publié'],
+        ];
+        foreach ($notes as [$title, $version, $storedStatus, $publication]) {
+            $note = new PatchNote();
+            $note->title = $title;
+            $note->version = $version;
+            $note->summary = 'Résumé de la vérification.';
+            $note->content = 'Contenu de la vérification.';
+            $note->status = $storedStatus;
+            $note->publishedAt = $publication;
+            $this->em->persist($note);
+        }
+        $this->em->flush();
+        $connection = $this->em->getConnection();
+
+        $adminBadges = static fn ($list): array => $list->filter('.admin-patchnote-list article .badge')
+            ->each(static fn ($badge): string => $badge->text());
+        $expected = array_map(static fn (array $note): string => $note[1] . ' · ' . $note[4], $notes);
+        $this->client->loginUser($admin);
+        $list = $this->client->request('GET', '/admin/patchnotes');
+        self::assertResponseIsSuccessful();
+        self::assertEqualsCanonicalizing($expected, $adminBadges($list));
+        $filtered = $this->client->request('GET', '/admin/patchnotes', ['status' => 'published']);
+        self::assertResponseIsSuccessful();
+        self::assertEqualsCanonicalizing(array_slice($expected, 1), $adminBadges($filtered));
+        self::assertSame('published', $connection->fetchOne('SELECT status FROM patch_note WHERE version = ?', ['Alpha-future']));
+
+        $this->client->loginUser($player);
+        $this->client->request('GET', '/patchnotes');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'Titre test visible');
+        self::assertSelectorTextNotContains('body', 'Titre test à paraître');
+        self::assertSelectorTextNotContains('body', 'Titre test en préparation');
+    }
+
     private function player(array $roles = []): Player
     {
         $player = new Player(); $player->email=uniqid('patch-', true).'@example.test'; $player->username=uniqid('Patch'); $player->password='test'; $player->roles=$roles;
