@@ -31,6 +31,10 @@ fenêtres de jeu changent le résultat. Aucun système saisonnier n’est livré
 par ce lot. Les effets compétitifs, le cumul J7 et les échanges restent à
 mesurer avant de fixer les montants.
 
+## Rejeu du 25 novembre 2026
+
+Avec les nouveaux prix et productions, le scénario de première colonisation ci-dessous atteint la position 6 en 33 h 11 min 59 s lorsque chaque action est lancée dès que possible. À trois sessions de 30 minutes par jour, le laboratoire de niveau 2 permet de lancer Protocoles de colonisation à 32 h, pour 28 154 secondes et 47 000 électricité. L’arrivée a lieu à 48 h 06 min 15 s. Les résultats du 19 novembre qui suivent décrivent l’ancienne grille.
+
 ## Première colonisation — 19 novembre 2026
 
 Rejouer les parcours hors base avec `make -s console CMD=app:balance:simulate-colonization`.

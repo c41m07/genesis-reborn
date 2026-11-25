@@ -98,15 +98,15 @@ final class ResourceBalanceTest extends KernelTestCase
         foreach(['mine_metal','mine_antimatter'] as $slug) {$building=new PlanetBuilding();$building->planet=$planet;$building->slug=$slug;$building->level=1;$this->em->persist($building);}
         foreach($rows as $row) $row->currentStock=in_array($row->resourceType,['electricity','hydrogen'],true)?5000:0;
         $this->em->flush();$active=$resources->snapshot($planet,true);
-        self::assertEqualsWithDelta(370,$active['metal']['potentialGross']*3600,1e-7);
-        self::assertEqualsWithDelta(370,$active['metal']['gross']*3600,1e-7);
-        self::assertEqualsWithDelta(90,$active['antimatter']['potentialGross']*3600,1e-7);
+        self::assertEqualsWithDelta(370.9,$active['metal']['potentialGross']*3600,1e-7);
+        self::assertEqualsWithDelta(370.9,$active['metal']['gross']*3600,1e-7);
+        self::assertEqualsWithDelta(90.225,$active['antimatter']['potentialGross']*3600,1e-7);
         self::assertEqualsWithDelta(90,$active['antimatter']['productionInputs']['electricity']['gross']*3600,1e-7);
-        self::assertEqualsWithDelta(360,$active['antimatter']['productionInputs']['hydrogen']['gross']*3600,1e-7);
+        self::assertEqualsWithDelta(360.9,$active['antimatter']['productionInputs']['hydrogen']['gross']*3600,1e-7);
         foreach($active['antimatter']['productionInputs'] as $input) self::assertSame($input['gross'],$input['actual']);
         self::assertNotNull($active['metal']['estimateSeconds']);
         self::assertEqualsWithDelta(270,$active['electricity']['consumptionPotential']*3600,1e-7);
-        self::assertEqualsWithDelta(360,$active['hydrogen']['consumptionPotential']*3600,1e-7);
+        self::assertEqualsWithDelta(360.9,$active['hydrogen']['consumptionPotential']*3600,1e-7);
         self::assertArrayHasKey('mine_antimatter',$active['hydrogen']['consumerSources']);
         self::assertArrayHasKey('mine_metal',$active['electricity']['consumerSources']);
         foreach(['metal','antimatter'] as $slug) $rows[$slug]->currentStock=10000;
@@ -120,7 +120,7 @@ final class ResourceBalanceTest extends KernelTestCase
         self::assertSame(0.0,$full['electricity']['consumerSources']['mine_metal']['actual']);
         foreach($rows as $row) $row->currentStock=0;
         $this->em->flush();$shortage=$resources->snapshot($planet,true);
-        self::assertEqualsWithDelta(46,$shortage['metal']['rate']*3600,1e-7);
+        self::assertEqualsWithDelta(46.09,$shortage['metal']['rate']*3600,1e-7);
         self::assertSame(0.0,$shortage['antimatter']['gross']);
         self::assertSame($active['metal']['potentialGross'],$shortage['metal']['potentialGross']);
         self::assertSame($active['antimatter']['productionInputs']['hydrogen']['gross'],$shortage['antimatter']['productionInputs']['hydrogen']['gross']);
@@ -134,8 +134,9 @@ final class ResourceBalanceTest extends KernelTestCase
         $resources = self::getContainer()->get(ResourceService::class);
 
         foreach (['basic' => 180, 'intermediate' => 270, 'superior' => 405] as $tier => $rate) {
+            $growth = ['basic' => 1.0025, 'intermediate' => 1.005, 'superior' => 1.01][$tier];
             $levels = ['mine_nano' => [$tier => 1]];
-            self::assertEqualsWithDelta($rate + 10, $resources->rate($planet, 'nano', 0, $levels) * 3600, 1e-7);
+            self::assertEqualsWithDelta($rate * $growth + 10, $resources->rate($planet, 'nano', 0, $levels) * 3600, 1e-7);
             self::assertEqualsWithDelta($rate, $resources->factoryConsumption($planet, 'mine_nano', $levels)['electricity'] * 3600, 1e-7);
         }
     }
@@ -146,15 +147,16 @@ final class ResourceBalanceTest extends KernelTestCase
         $resources = self::getContainer()->get(ResourceService::class);
 
         foreach (['basic' => 90, 'intermediate' => 135, 'superior' => 202.5] as $tier => $hourlyAntimatter) {
+            $growth = ['basic' => 1.0025, 'intermediate' => 1.005, 'superior' => 1.01][$tier];
             $levels = ['mine_antimatter' => [$tier => 1], 'mine_hydrogen' => [$tier => 1]];
             $antimatterProduction = $resources->rate($planet, 'antimatter', 0, $levels);
             $hydrogenProduction = $resources->rate($planet, 'hydrogen', 0, $levels);
             $reactorConsumption = $resources->factoryConsumption($planet, 'mine_antimatter', $levels);
             $refineryConsumption = $resources->factoryConsumption($planet, 'mine_hydrogen', $levels);
 
-            self::assertEqualsWithDelta($hourlyAntimatter, $antimatterProduction * 3600, 1e-7, $tier);
+            self::assertEqualsWithDelta($hourlyAntimatter * $growth, $antimatterProduction * 3600, 1e-7, $tier);
             self::assertEqualsWithDelta($hourlyAntimatter, $reactorConsumption['electricity'] * 3600, 1e-7, $tier);
-            self::assertEqualsWithDelta(4 * $hourlyAntimatter, $reactorConsumption['hydrogen'] * 3600, 1e-7, $tier);
+            self::assertEqualsWithDelta(4 * $hourlyAntimatter * $growth, $reactorConsumption['hydrogen'] * 3600, 1e-7, $tier);
 
             // L’électricité de la raffinerie est imputée à l’hydrogène utilisé par le piège.
             $electricityPerHydrogen = $refineryConsumption['electricity'] / $hydrogenProduction;
@@ -205,8 +207,12 @@ final class ResourceBalanceTest extends KernelTestCase
     public function testStorageBuildingBonusesKeepTheirExistingTierFactors(): void
     {
         $planet=$this->planet();$resources=self::getContainer()->get(ResourceService::class);
-        self::assertSame(491250.0,$resources->capacity($planet,'metal',['storage_metal'=>['basic'=>2,'intermediate'=>1,'superior'=>1]]));
+        self::assertEqualsWithDelta(494438.75,$resources->capacity($planet,'metal',['storage_metal'=>['basic'=>2,'intermediate'=>1,'superior'=>1]]),1e-7);
         self::assertSame(10000.0,$resources->capacity($planet,'nano',[]));
+        self::assertEqualsWithDelta(1314875.861428, $resources->capacity($planet, 'metal', ['storage_metal' => ['basic'=>5, 'intermediate'=>5, 'superior'=>1]]), 1e-5);
+        $levels = ['mine_metal' => ['basic'=>50, 'intermediate'=>25, 'superior'=>1]];
+        $industrial = $resources->rate($planet, 'metal', 0, $levels) - $resources->rate($planet, 'metal', 0, []);
+        self::assertEqualsWithDelta(36504.330989, $industrial * 3600, 1e-5);
     }
 
     public function testPositionUniverseAndEventMultipliersStillApplyToNewPassiveRates(): void

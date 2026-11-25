@@ -35,6 +35,13 @@
           "tier": "intermediate",
           "level": 1
         }
+      ],
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "basic",
+          "level": 5
+        }
       ]
     },
     "superior": {
@@ -43,6 +50,13 @@
           "slug": "lab",
           "tier": "superior",
           "level": 1
+        }
+      ],
+      "technologies": [
+        {
+          "slug": "engineering_foundations",
+          "tier": "intermediate",
+          "level": 5
         }
       ]
     }

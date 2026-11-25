@@ -49,7 +49,7 @@ test('La fiche du laboratoire indique le bonus cumulé acquis quand un rang est 
   await open();
   await expect(panel).toContainText('Niveau maximum atteint');
   await expect(panel.getByRole('table', { name: 'Effet cumulé des rangs' }).getByRole('columnheader')).toHaveText(['Effet', 'Actuellement']);
-  await expect(bonus.getByRole('cell')).toHaveText('26,87 %');
+  await expect(bonus.getByRole('cell')).toHaveText('24,75 %');
   await expect(panel.getByRole('heading', { name: /Gain du niveau/ })).toHaveCount(0);
   await expect(panel.getByRole('region', { name: 'Coût et durée' })).toHaveCount(0);
   await close();
@@ -70,14 +70,14 @@ test('La fiche du laboratoire indique le bonus cumulé acquis quand un rang est 
   await open();
   await expect(panel.getByRole('heading', { name: 'Gain du niveau 25' })).toBeVisible();
   const comparison = panel.getByRole('row').filter({ hasText: 'Réduction du temps de recherche' });
-  await expect(comparison.getByRole('cell')).toHaveText(['25,99 %', '26,87 %']);
+  await expect(comparison.getByRole('cell')).toHaveText(['23,88 %', '24,75 %']);
   await close();
 
   sql("INSERT INTO queue_item (planet_id,player_universe_id,queue_type,item_slug,tier,item_level,quantity,duration_seconds,started_at,queued_at,dispatch_token) SELECT id,owner_id,'building','lab','basic',25,1,86400,UTC_TIMESTAMP(),UTC_TIMESTAMP(),UUID() FROM planet WHERE id="+planet);
   await open();
   await expect(panel).toContainText('Maximum en file');
   await expect(panel).not.toContainText('Niveau maximum atteint');
-  await expect(bonus.getByRole('cell')).toHaveText('25,99 %');
+  await expect(bonus.getByRole('cell')).toHaveText('23,88 %');
   await expect(panel.getByRole('heading', { name: /Gain du niveau/ })).toHaveCount(0);
   await close();
 });
