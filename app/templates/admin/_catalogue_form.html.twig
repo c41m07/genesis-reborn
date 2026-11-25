@@ -19,6 +19,9 @@
     {% set costFields = item.fields|filter(field => field.path starts with 'cost_profiles.') %}
     {% if costFields %}
         <h3>Coûts par rang</h3>
+        {% if group in ['buildings', 'technologies'] %}
+            <p>En Intermédiaire et Supérieur, ces quantités fixent la répartition entre matériaux. Le budget de départ dépend du niveau des prérequis. L’aperçu donne le prix du devis.</p>
+        {% endif %}
         <div class="admin-catalogue-costs">
             {% for tier, label in tierLabels %}
                 {% set tierFields = costFields|filter(field => field.path starts with 'cost_profiles.' ~ tier ~ '.') %}

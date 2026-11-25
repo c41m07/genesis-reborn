@@ -57,6 +57,11 @@
           "slug": "target_acquisition",
           "tier": "intermediate",
           "level": 4
+        },
+        {
+          "slug": "rapid_fire_cycle",
+          "tier": "basic",
+          "level": 5
         }
       ]
     },
@@ -78,6 +83,11 @@
           "slug": "target_acquisition",
           "tier": "superior",
           "level": 4
+        },
+        {
+          "slug": "rapid_fire_cycle",
+          "tier": "intermediate",
+          "level": 5
         }
       ]
     }

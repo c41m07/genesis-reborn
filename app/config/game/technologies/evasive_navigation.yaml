@@ -60,6 +60,11 @@
           "slug": "target_acquisition",
           "tier": "intermediate",
           "level": 3
+        },
+        {
+          "slug": "evasive_navigation",
+          "tier": "basic",
+          "level": 5
         }
       ]
     },
@@ -81,6 +86,11 @@
           "slug": "target_acquisition",
           "tier": "superior",
           "level": 3
+        },
+        {
+          "slug": "evasive_navigation",
+          "tier": "intermediate",
+          "level": 5
         }
       ]
     }
