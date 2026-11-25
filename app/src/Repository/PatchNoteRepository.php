@@ -19,6 +19,12 @@ final class PatchNoteRepository
         return $this->publishedInReadingOrder()->getQuery()->getResult();
     }
 
+    /** @return list<PatchNote> */
+    public function recentPublished(): array
+    {
+        return $this->publishedInReadingOrder()->setMaxResults(30)->getQuery()->getResult();
+    }
+
     public function latestPublished(): ?PatchNote
     {
         return $this->publishedInReadingOrder()->setMaxResults(1)->getQuery()->getOneOrNullResult();

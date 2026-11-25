@@ -16,6 +16,7 @@ final class UniverseObservatory
         'economy' => 'Économie',
         'combat' => 'Combats',
         'progress' => 'Progression',
+        'performance' => 'Performance',
     ];
 
     public function __construct(
@@ -26,36 +27,69 @@ final class UniverseObservatory
     }
 
     /** Prépare uniquement le sujet affiché. Le jour en cours est toujours partiel. */
-    public function read(Universe $universe, string $tab, int $days): array
+    public function read(Universe $universe, string $tab, int $days, ?\DateTimeImmutable $periodStart = null, ?\DateTimeImmutable $periodEnd = null): array
     {
         $now = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
-        $today = $now->setTime(0, 0);
+        $today = ($periodEnd === null ? $now : $periodEnd->modify('-1 second'))->setTime(0, 0);
         $from = $today->modify('-'.($days - 1).' days');
-        $range = [$from->format('Y-m-d H:i:s'), $now->format('Y-m-d H:i:s')];
+        $from = $periodStart === null ? $from : max($from, $periodStart);
+        $until = $periodEnd ?? $now->modify('+1 second');
+        $range = [$from->format('Y-m-d H:i:s'), $until->format('Y-m-d H:i:s')];
 
         return match ($tab) {
-            'audience' => $this->audience((int) $universe->id, $range, $from, $today),
+            'audience' => $this->audience((int) $universe->id, $range, $from, $today, $periodEnd),
             'combat' => $this->combat($universe, $range),
             'progress' => $this->progress((int) $universe->id, $range),
             default => [],
         };
     }
 
-    private function audience(int $universeId, array $range, \DateTimeImmutable $from, \DateTimeImmutable $today): array
+    /** @return array<string,int> */
+    public function comparisonCounts(Universe $universe, string $tab, \DateTimeImmutable $from, \DateTimeImmutable $until): array
+    {
+        $range = [$from->format('Y-m-d H:i:s'), $until->format('Y-m-d H:i:s')];
+        $universeId = (int) $universe->id;
+
+        return match ($tab) {
+            'audience' => [
+                'Confirmations (site)' => (int) $this->connection->fetchOne(
+                    'SELECT COUNT(*) FROM player WHERE email_verified_at >= ? AND email_verified_at < ?', $range,
+                ),
+                'Entrées (univers)' => (int) $this->connection->fetchOne(
+                    'SELECT COUNT(*) FROM player_universe WHERE universe_id = ? AND (player_id IS NOT NULL OR former_player_id IS NOT NULL)
+                       AND joined_at >= ? AND joined_at < ?', [$universeId, ...$range],
+                ),
+            ],
+            'combat' => [
+                'Combats résolus' => (int) $this->connection->fetchOne(
+                    'SELECT COUNT(*) FROM combat_log l JOIN combat_event e ON e.id = l.combat_event_id
+                     JOIN planet p ON p.id = e.planet_id JOIN solar_system s ON s.id = p.solar_system_id
+                     JOIN galaxy g ON g.id = s.galaxy_id WHERE g.universe_id = ? AND l.resolved_at >= ? AND l.resolved_at < ?',
+                    [$universeId, ...$range],
+                ),
+            ],
+            'progress' => ['Jalons validés' => array_sum(array_column($this->progress($universeId, $range), 'total'))],
+            default => [],
+        };
+    }
+
+    private function audience(int $universeId, array $range, \DateTimeImmutable $from, \DateTimeImmutable $today, ?\DateTimeImmutable $periodEnd): array
     {
         // Le compte peut être confirmé avant d’entrer dans un univers : cette série est globale.
         $confirmed = $this->connection->fetchAllKeyValue(
             'SELECT DATE(email_verified_at), COUNT(*) FROM player
-             WHERE email_verified_at BETWEEN ? AND ? GROUP BY DATE(email_verified_at)',
+             WHERE email_verified_at >= ? AND email_verified_at < ? GROUP BY DATE(email_verified_at)',
             $range,
         );
         $joined = $this->connection->fetchAllKeyValue(
             'SELECT DATE(joined_at), COUNT(*) FROM player_universe
              WHERE universe_id = ? AND (player_id IS NOT NULL OR former_player_id IS NOT NULL)
-               AND joined_at BETWEEN ? AND ? GROUP BY DATE(joined_at)',
+               AND joined_at >= ? AND joined_at < ? GROUP BY DATE(joined_at)',
             [$universeId, ...$range],
         );
-        $activeFrom = max($from, $today->modify('-6 days'))->format('Y-m-d');
+        // L’activité journalière ne permet pas de couper un jour en deux ni de reconstituer l’historique perdu.
+        $activityFloor = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'))->setTime(0, 0)->modify('-6 days');
+        $activeFrom = max($from, $activityFloor)->format('Y-m-d');
         $active = [];
         $first = null;
         // Le service d’activité ne garantit que 7 jours par participation. Ne pas prolonger la courbe par des zéros.
@@ -74,22 +108,30 @@ final class UniverseObservatory
             }
         }
         $series = [];
-        for ($date = $from; $date <= $today; $date = $date->modify('+1 day')) {
+        $partialLastDay = $periodEnd !== null && $periodEnd->format('H:i:s') !== '00:00:00';
+        for ($date = $from->setTime(0, 0); $date <= $today; $date = $date->modify('+1 day')) {
             $key = $date->format('Y-m-d');
             $series[] = [
                 'date' => $key,
                 'confirmed' => (int) ($confirmed[$key] ?? 0),
                 'joined' => (int) ($joined[$key] ?? 0),
-                'active' => $first !== null && $key >= max($first, $activeFrom) ? ($active[$key] ?? 0) : null,
+                'active' => $first !== null && $key >= max($first, $activeFrom)
+                    && $date >= $from && (!$partialLastDay || $date < $today)
+                    ? ($active[$key] ?? 0) : null,
             ];
         }
 
         return [
             'rows' => $series,
-            'chart' => $this->chart($series, ['confirmed', 'joined', 'active']),
+            'chart' => $this->chart($series, ['confirmed', 'joined', 'active']) + [
+                'from' => $from,
+                'until' => new \DateTimeImmutable($range[1], new \DateTimeZone('UTC')),
+                'step' => 86400,
+                'rows' => array_map(static fn (array $row): array => ['at' => strtotime($row['date'].' UTC')], $series),
+            ],
             'confirmations' => (int) array_sum($confirmed),
             'entries' => (int) array_sum($joined),
-            'activeToday' => $series[array_key_last($series)]['active'],
+            'activeToday' => $today->format('Y-m-d') === $this->clock->now()->format('Y-m-d') ? ($series[array_key_last($series)]['active'] ?? null) : null,
         ];
     }
 
@@ -99,7 +141,7 @@ final class UniverseObservatory
         return $this->connection->fetchAllAssociative(
             'SELECT f.step_key AS step, COUNT(*) AS total
              FROM first_step_completion f JOIN player_universe u ON u.id = f.player_universe_id
-             WHERE u.universe_id = ? AND f.completed_at BETWEEN ? AND ?
+             WHERE u.universe_id = ? AND f.completed_at >= ? AND f.completed_at < ?
              GROUP BY f.step_key ORDER BY total DESC, f.step_key',
             [$universeId, ...$range],
         );
@@ -111,7 +153,7 @@ final class UniverseObservatory
         $defenses = $this->unitCatalog('defenses');
         $base = ' FROM combat_log l JOIN combat_event e ON e.id = l.combat_event_id
              JOIN planet p ON p.id = e.planet_id JOIN solar_system s ON s.id = p.solar_system_id
-             JOIN galaxy g ON g.id = s.galaxy_id WHERE g.universe_id = ? AND l.resolved_at BETWEEN ? AND ?';
+             JOIN galaxy g ON g.id = s.galaxy_id WHERE g.universe_id = ? AND l.resolved_at >= ? AND l.resolved_at < ?';
         $params = [$universe->id, ...$range];
         $outcomes = $this->connection->fetchAllKeyValue('SELECT l.outcome, COUNT(*)'.$base.' GROUP BY l.outcome', $params);
         $cursor = 0;

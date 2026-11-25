@@ -6,6 +6,7 @@ use App\Entity\{AdminAuditLog, GameEvent, MessageReport, PlayerReport, Player, U
 use App\Service\Admin\AdminMissionMonitoring;
 use App\Service\Admin\AdminCaseService;
 use App\Service\Player\PlayerActivityService;
+use App\Service\Performance\PerformancePeriods;
 use App\Repository\GameRepository;
 use App\Repository\AdminReadRepository;
 use App\Service\Admin\AdminService;
@@ -194,6 +195,8 @@ final class AdminController extends AbstractController
         GameRepository $repo,
         UniverseObservatory $observatory,
         UniverseMetricsService $metrics,
+        \App\Service\Performance\PerformanceReport $performance,
+        PerformancePeriods $periods,
     ): Response {
         $universe = $repo->find(Universe::class, $id);
         if (!$universe instanceof Universe) {
@@ -207,19 +210,78 @@ final class AdminController extends AbstractController
         if (!in_array($days, [7, 30, 90], true)) {
             $days = 30;
         }
-        // Les stocks sont projetés seulement dans la rubrique qui les présente.
+        $periodId = $request->query->getInt('measure_period');
+        $selection = $periods->selection($periodId);
+        $releaseId = $request->query->getInt('release');
+        $comparePeriod = $releaseId === -1 && $selection['start'] !== null;
+        $releases = $periods->releases($releaseId ?: null);
+        $comparisonAt = $comparePeriod ? $selection['start'] : $releases['selected']?->publishedAt;
+        if ($tab === 'performance') {
+            $report = $performance->read(
+                $request->query->getInt('hours', 168),
+                $request->query->getString('device', 'all'),
+                $request->query->getString('page_key', ''),
+                $selection['start'],
+                $selection['end'],
+            );
+            $report['trend']['markers'] = $periods->markers($report['trend'], $releases['notes']);
+            $report['comparison'] = $comparisonAt === null ? null
+                : $periods->compare($comparisonAt, $report['page']['key'], $report['device']);
+        } else {
+            $report = $observatory->read($universe, $tab, $days, $selection['start'], $selection['end']);
+            if ($tab === 'audience') {
+                $report['chart']['markers'] = $periods->markers($report['chart'], $releases['notes'], 10, 740);
+            }
+            if ($tab !== 'economy' && $comparisonAt !== null) {
+                $comparison = $periods->windows($comparisonAt, 90);
+                if ($comparison['hours'] > 0) {
+                    foreach ($comparison['range'] as $side => [$from, $until]) {
+                        $comparison[$side] = $observatory->comparisonCounts($universe, $tab, $from, $until);
+                    }
+                }
+                $report['releaseComparison'] = $comparison;
+            }
+
+        }
+
+        // Les stocks sont des valeurs actuelles, jamais remis à zéro avec les compteurs.
         $response = $this->render('admin/universe_observatory.html.twig', [
             'universe' => $universe,
             'universes' => $repo->all(Universe::class, [], ['name' => 'ASC']),
             'tab' => $tab,
             'tabs' => UniverseObservatory::TABS,
             'days' => $days,
-            'report' => $observatory->read($universe, $tab, $days),
+            'report' => $report,
+            'selection' => $selection,
+            'periodId' => $periodId,
+            'releases' => $releases,
+            'comparePeriod' => $comparePeriod,
             'resources' => $tab === 'economy' ? $metrics->resources($universe, $request->query->getInt('page', 1)) : null,
         ]);
         $response->headers->set('Cache-Control', 'private, no-store');
 
         return $response;
+    }
+
+    #[Route('/universes/{id}/observatoire/periode', name: '_observatory_start_period', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function startObservatoryPeriod(int $id, Request $request, GameRepository $repo, PerformancePeriods $periods): Response
+    {
+        if (!$repo->find(Universe::class, $id) instanceof Universe) {
+            throw $this->createNotFoundException('Univers introuvable.');
+        }
+        $actor = $this->getUser();
+        if (!$actor instanceof Player || !$this->isCsrfTokenValid('observatory_period_'.$id, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $periods->start($actor);
+        $this->addFlash('success', 'La nouvelle période commencera à la prochaine heure pleine. L’historique est conservé.');
+        $tab = $request->request->getString('tab');
+
+        return $this->redirectToRoute('app_admin_universe_observatory', [
+            'id' => $id,
+            'tab' => isset(UniverseObservatory::TABS[$tab]) ? $tab : 'performance',
+        ], Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/universes/nouveau', name: '_universe_new', methods: ['GET'])]

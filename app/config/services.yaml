@@ -7,6 +7,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    env(APP_PERFORMANCE_SAMPLE_PERCENT): '0'
     env(ADMIN_ACTIVATION_ENABLED): '0'
     env(ADMIN_ACTIVATION_RECOVERY_ENABLED): '0'
     env(EMAIL_VERIFICATION_MIXED_READER_ENABLED): '0'

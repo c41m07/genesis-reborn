@@ -1,11 +1,16 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}Observatoire · {{ universe.name }} · Genesis Reborn{% endblock %}
 {% block body %}
-{% set filters = {id: universe.id, tab: tab, days: days} %}
+{% set filters = {id: universe.id, tab: tab, days: days, measure_period: periodId, release: comparePeriod ? -1 : (releases.selected.id ?? 0)} %}
 <div class="observatory">
   <div class="page-heading admin-design-banner observatory-banner">
-    <div><p class="eyebrow">Administration · Univers</p><h1>Observatoire</h1><p>{{ universe.name }} · Lecture seule · Jours UTC, aujourd’hui incomplet</p></div>
+    <div><p class="eyebrow">Administration · Univers</p><h1>{{ tab == 'performance' ? 'Performance' : 'Observatoire' }}</h1><p>{{ tab == 'performance' ? 'Site entier · Chargements et traitements' : universe.name ~ ' · Jours UTC, aujourd’hui incomplet' }}</p></div>
     <div class="observatory-filters">
+      {% if tab == 'performance' %}
+        {% set perfFilters = filters|merge({hours: report.hours, device: report.device, page_key: report.page.key}) %}
+        <nav class="ui-tabs" aria-label="Appareil"><ul>{% for value, label in {all:'Tous', mobile:'Mobile', desktop:'Ordinateur'} %}<li><a href="{{ path('app_admin_universe_observatory', perfFilters|merge({device: value})) }}"{% if report.device == value %} aria-current="true"{% endif %}>{{ label }}</a></li>{% endfor %}</ul></nav>
+        <nav class="ui-tabs" aria-label="Période"><ul>{% for value, label in report.windows %}<li><a href="{{ path('app_admin_universe_observatory', perfFilters|merge({hours: value})) }}"{% if report.hours == value %} aria-current="true"{% endif %}>{{ label }}</a></li>{% endfor %}</ul></nav>
+      {% else %}
       <details>
         <summary>Univers : {{ universe.name }}</summary>
         <div class="observatory-universes">
@@ -17,6 +22,7 @@
       <nav class="ui-tabs" aria-label="Période"><ul>
         {% for period in [7, 30, 90] %}<li><a href="{{ path('app_admin_universe_observatory', filters|merge({days: period})) }}"{% if days == period %} aria-current="true"{% endif %}>{{ period }} j</a></li>{% endfor %}
       </ul></nav>
+      {% endif %}
     </div>
   </div>
 
@@ -30,7 +36,10 @@
     </nav>
 
     <div class="observatory-content">
-      {% if tab == 'audience' %}
+      {% include 'admin/_observatory_release.html.twig' with {filters: tab == 'performance' ? perfFilters : filters} %}
+      {% if tab == 'performance' %}
+        {% include 'admin/_observatory_performance.html.twig' with {report: report, filters: perfFilters, comparePeriod: comparePeriod} only %}
+      {% elseif tab == 'audience' %}
         <div class="observatory-kpis">
           <section class="panel"><h2>Pages vues publiques</h2><p>Pas encore mesurées</p></section>
           <section class="panel"><h2>Confirmations</h2><strong>{{ report.confirmations }}</strong><p>Site entier</p></section>
@@ -48,8 +57,10 @@
               <text x="11" y="233">{{ (report.rows|first).date|date('d/m', 'UTC') }}</text>
               <text x="750" y="233" text-anchor="end">{{ (report.rows|last).date|date('d/m', 'UTC') }}</text>
             </g>
+            {% for marker in report.chart.markers %}<line x1="{{ marker.x }}" x2="{{ marker.x }}" y1="30" y2="210" class="observatory-release-marker"><title>{{ marker.note.version }} · {{ marker.note.publishedAt|date('d/m à H:i', 'Europe/Paris') }}</title></line>{% endfor %}
             {% for series, line in report.chart.paths %}<path d="{{ line }}" class="observatory-series observatory-series--{{ series }}"/>{% endfor %}
           </svg>
+          {% if report.chart.markers is not empty %}<p>Repères de publication : {% for marker in report.chart.markers %}{{ marker.note.version }} · {{ marker.note.publishedAt|date('d/m à H:i', 'Europe/Paris') }}{% if not loop.last %} ; {% endif %}{% endfor %} (heure de Paris).</p>{% endif %}
           <p class="observatory-legend"><span>Confirmations (site)</span><span>Entrées (univers)</span><span>Activité (univers)</span></p>
           <details>
             <summary>Données du graphique</summary>
