@@ -60,22 +60,46 @@ final class GameEventService
     {
         $event = $this->repo->find(GameEvent::class, $id);
         if (!$event instanceof GameEvent) throw new \DomainException('Événement introuvable.');
-        if (!empty($event->parameters['guided_key'])) {
-            if (!$confirmed) throw new \DomainException('Confirmez explicitement l’annulation de cet événement.');
-            if (!in_array('ROLE_ADMIN',$actor->getRoles(),true) || $actor->lockedAt) throw new \DomainException('Droits administrateur requis.');
-            $reason=trim($reason);
-            if ($reason==='' || mb_strlen($reason)>1000) throw new \DomainException('Motif d’annulation obligatoire, limité à 1 000 caractères.');
-            $this->manager->transaction(function () use ($actor,$event,$reason): void {
-                $universes=$event->universe ? [$event->universe] : $this->repo->all(\App\Entity\Universe::class,[],['id'=>'ASC']);
-                foreach ($universes as $universe) $this->manager->lock($universe);
-                $this->manager->lock($event);
-                if ($event->status==='cancelled') return;
-                if ($event->endsAt<=$this->clock->now()) throw new \DomainException('L’événement est déjà terminé.');
-                if ($event->type==='production_bonus' && in_array($event->status,['planned','active'],true) && $event->startsAt<$this->clock->now()) {
-                    $event->parameters['production_history']=[['from'=>$event->startsAt->format(DATE_ATOM),'until'=>$this->clock->now()->format(DATE_ATOM),
-                        'percentage'=>(float)$event->parameters['percentage'],'universe_id'=>$event->universe?->id]];
+        $guided = !empty($event->parameters['guided_key']);
+        if ($guided || $event->type === 'production_bonus') {
+            if ($guided && !$confirmed) {
+                throw new \DomainException('Confirmez explicitement l’annulation de cet événement.');
+            }
+            if (!in_array('ROLE_ADMIN', $actor->getRoles(), true) || $actor->lockedAt) {
+                throw new \DomainException('Droits administrateur requis.');
+            }
+            $reason = trim($reason);
+            if ($guided && ($reason === '' || mb_strlen($reason) > 1000)) {
+                throw new \DomainException('Motif d’annulation obligatoire, limité à 1 000 caractères.');
+            }
+            $this->manager->transaction(function () use ($actor, $event, $reason, $guided): void {
+                $universes = $event->universe ? [$event->universe] : $this->repo->all(\App\Entity\Universe::class, [], ['id' => 'ASC']);
+                foreach ($universes as $universe) {
+                    $this->manager->lock($universe);
                 }
-                $event->status='cancelled';$this->audit($actor,'game_event_cancelled',$event,['reason'=>$reason]);
+                $this->manager->lockCurrent($event);
+                if ($event->status === 'cancelled') {
+                    return;
+                }
+                $now = $this->clock->now();
+                if ($guided && $event->endsAt <= $now) {
+                    throw new \DomainException('L’événement est déjà terminé.');
+                }
+                if ($event->type === 'production_bonus' && in_array($event->status, ['planned', 'active'], true)) {
+                    // Le recalcul des colonies peut survenir plus tard. Figer seulement la fenêtre acquise,
+                    // avant de quitter l’état actif, sans la prolonger en cas d’annulation tardive ou répétée.
+                    $until = min($now, $event->endsAt);
+                    if ($event->startsAt < $until) {
+                        $event->parameters['production_history'] = [[
+                            'from' => $event->startsAt->format(DATE_ATOM),
+                            'until' => $until->format(DATE_ATOM),
+                            'percentage' => (float) $event->parameters['percentage'],
+                            'universe_id' => $event->universe?->id,
+                        ]];
+                    }
+                }
+                $event->status = 'cancelled';
+                $this->audit($actor, 'game_event_cancelled', $event, $guided ? ['reason' => $reason] : []);
             });
             return;
         }
@@ -136,7 +160,11 @@ final class GameEventService
 
     private function history(GameEvent $event): array
     {
-        if (empty($event->parameters['guided_key'])) return [];
+        // Annuler et Retirer partagent la même fenêtre acquise, qu’elle soit guidée ou avancée.
+        // Un bonus encore actif est compté par sa définition, pas une seconde fois par son historique.
+        if ($event->status !== 'cancelled') {
+            return [];
+        }
         $segments=[];
         foreach ($event->parameters['production_history'] ?? [] as $row) {
             try {
