@@ -33,6 +33,11 @@ async function resetGameDatabase() {
   await stage('restore_reference', () => run('database', ['sh', '-ec',
     'mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" < /tmp/genesis-browser-reference.sql',
   ]));
+  // Les comptes de la référence réutilisent les mêmes identifiants entre scénarios.
+  // Réinitialiser uniquement le pool du projet de test, sans modifier les limites en jeu.
+  await stage('reset_rate_limiters', () => docker([...compose, 'exec', '-T',
+    '--user', `${process.getuid()}:${process.getgid()}`, 'app',
+    'php', 'bin/console', 'cache:pool:clear', 'cache.rate_limiter', '--quiet']));
   await stage('start_consumers', () => docker([...compose, 'up', '-d', '--wait', '--wait-timeout', '45', 'worker', 'simulation-worker', 'relay', 'notifier']));
   return timings;
 }

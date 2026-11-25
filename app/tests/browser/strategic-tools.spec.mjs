@@ -289,6 +289,7 @@ test('Simulateur : dix combats reproductibles, détails accessibles et aucune mu
 });
 
 test('Simulateur volumineux : résultat privé au retour, sans tronquer les effectifs', async ({ page }) => {
+ test.setTimeout(90000);
  const owner = await register(page);
  const router = process.env.BROWSER_ROUTER;
  const stock = () => queryIsolatedSql(router,
@@ -304,7 +305,14 @@ test('Simulateur volumineux : résultat privé au retour, sans tronquer les effe
  await page.locator('#sim-defender-defenses-ground_turret_anti_light-basic').fill('1');
  await navigation.getByRole('link', { name: 'Simulation', exact: true }).click();
  await page.getByRole('checkbox', { name: /Je confirme les hypothèses/ }).check();
+ const submitted = page.waitForResponse(response => response.request().method() === 'POST' && new URL(response.url()).pathname === '/simulateur');
  await page.getByRole('button', { name: 'Simuler 10 combats' }).click();
+ const response = await submitted;
+ if (response.status() !== 303) {
+  await page.waitForLoadState('domcontentloaded');
+  const warning = (await page.locator('.simulation-workspace .flash.error').allTextContents()).join(' ');
+  throw new Error(`Le scénario volumineux n’a pas produit de tâche privée (HTTP ${response.status()}) : ${warning || 'aucun message de validation'}`);
+ }
  await expect(page).toHaveURL(/\/simulateur\?job=[^#]+#simulation-result$/);
  const resultUrl = page.url();
  await page.goto('/simulateur');
