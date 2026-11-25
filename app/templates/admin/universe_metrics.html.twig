@@ -8,7 +8,7 @@
 <div class="admin-balance-actions"><a class="secondary" href="{{ path('app_admin_universes') }}#admin-universe-{{ universe.id }}">Retour aux univers</a> <a class="secondary" href="{{ path('app_admin_universe_metrics', {id: universe.id, page: metrics.resources.page}) }}">Actualiser le relevé</a></div>
 <p>Observation en lecture seule. Ces mesures n’appliquent aucun changement d’équilibrage. Elles représentent les données encore conservées, pas un historique complet.</p>
 {% if metrics.closed %}<p role="status"><strong>Univers fermé.</strong> Les stocks conservés sont affichés sans simuler une production après fermeture. Les files restantes ne constituent pas un incident d’exploitation.</p>{% endif %}
-<nav class="admin-page-navigation" aria-label="Mesures de l’univers"><a href="#metrics-progression">Progression</a> <a href="#metrics-wait">Attentes</a> <a href="#metrics-resources">Ressources</a> <a href="#metrics-recovery">Après les pertes</a></nav>
+<nav class="admin-page-navigation" aria-label="Mesures de l’univers"><a href="#metrics-progression">Progression</a> <a href="#metrics-wait">Attentes</a> <a href="#metrics-pirates">Campagne pirate</a> <a href="#metrics-resources">Ressources</a> <a href="#metrics-recovery">Après les pertes</a></nav>
 
 <div class="admin-observation-comparison">
 <section class="panel" id="metrics-progression" aria-labelledby="progression-title">
@@ -20,6 +20,14 @@
   <dt>Somme des niveaux actuels de recherches</dt><dd>{{ metrics.progression.researchLevels }}</dd>
 </dl>
 <p>L’ancienneté est un temps calendaire, pas un temps de jeu actif ni le délai pour atteindre ces niveaux. Les niveaux de tous les rangs sont additionnés ; ce total n’est pas un score comparable entre univers.</p>
+<h3 id="metrics-colony-holdings">Participations possédant au moins deux planètes</h3>
+{% set colonies = metrics.progression.colonies %}
+{% if colonies.playerControlled %}
+  {% set colonyPercent = (100 * colonies.withTwoOrMore / colonies.playerControlled)|round(1) %}
+  <meter min="0" max="{{ colonies.playerControlled }}" value="{{ colonies.withTwoOrMore }}" aria-labelledby="metrics-colony-holdings" aria-valuetext="{{ colonies.withTwoOrMore }} sur {{ colonies.playerControlled }} : {{ colonyPercent|number_format(1, ',', ' ') }} %"></meter>
+  <p>{{ colonies.withTwoOrMore }} sur {{ colonies.playerControlled }} ({{ colonyPercent|number_format(1, ',', ' ') }} %)</p>
+{% else %}<p>Aucune participation pilotée par un joueur dans cet univers.</p>{% endif %}
+<p>Possession actuelle. Les empires oubliés ou sans joueur sont exclus. Une planète acquise par conquête compte aussi.</p>
 <p><strong>Temps pour atteindre un jalon : non disponible.</strong> Les dates des déblocages et des constructions terminées ne sont pas conservées sous une forme permettant ce calcul.</p>
 {% if metrics.progression.invalidDates %}<p role="status">{{ metrics.progression.invalidDates }} date(s) d’entrée future(s) exclue(s) du calcul d’ancienneté.</p>{% endif %}
 </section>
@@ -35,10 +43,38 @@
   <dt>Plus grand temps restant d’une commande active</dt><dd>{{ measure.duration(metrics.queues.remaining.max) }}</dd>
   <dt>Commandes actives dont l’échéance est atteinte</dt><dd>{{ metrics.queues.overdue }}</dd>
 </dl>
+<h3 id="metrics-queue-load">Charge par catégorie</h3>
+{% set queueLabels = {'building': 'Bâtiments', 'research': 'Recherches', 'shipyard': 'Chantier spatial et défenses'} %}
+<dl aria-labelledby="metrics-queue-load">
+{% for category, load in metrics.queues.loadByType %}
+  <dt>{{ queueLabels[category] }}</dt><dd>{{ load.active }} en cours · {{ load.pending }} en attente</dd>
+{% endfor %}
+</dl>
+<p>Les bâtiments et le chantier sont suivis par planète ; la recherche est commune aux colonies d’une même participation.</p>
 <p>Les commandes terminées ou annulées disparaissent de ces mesures. Une échéance atteinte indique un traitement à vérifier ; elle ne prouve pas une panne. Les files parallèles ne sont pas additionnées en un temps d’attente global.</p>
 {% if metrics.queues.invalidDates %}<p role="status">{{ metrics.queues.invalidDates }} commande(s) avec dates ou durée incohérentes exclue(s) des calculs temporels.</p>{% endif %}
 </section>
 </div>
+
+<section class="panel" id="metrics-pirates" aria-labelledby="metrics-pirates-title">
+<h2 id="metrics-pirates-title">Jalons de la campagne pirate</h2>
+<p>Comptage par dossier conservé des participations pilotées par un joueur, dans cet univers. Ce n’est pas un taux de réussite par joueur ni un historique de toutes les tentatives.</p>
+{% if metrics.pirates.recons %}
+  <ol>
+    <li>Reconnaissances parties : {{ metrics.pirates.recons }}</li>
+    <li>Rapports de reconnaissance reçus : {{ metrics.pirates.reports }}</li>
+    <li>Escortes parties après le rapport : {{ metrics.pirates.attacks }}</li>
+  </ol>
+  <h3>Verdicts des escortes parties</h3>
+  <dl>
+    <dt>Victoires</dt><dd>{{ metrics.pirates.wins }}</dd>
+    <dt>Défaites</dt><dd>{{ metrics.pirates.losses }}</dd>
+    <dt>Égalités</dt><dd>{{ metrics.pirates.draws }}</dd>
+    <dt>Sans verdict confirmé</dt><dd>{{ metrics.pirates.awaitingOutcome }}</dd>
+  </dl>
+  <p>Une échéance passée ne vaut pas une défaite, et une victoire ne confirme pas la livraison du convoi.</p>
+{% else %}<p>Aucune reconnaissance partie sur les dossiers conservés de cet univers.</p>{% endif %}
+</section>
 
 <section class="panel" id="metrics-resources" aria-labelledby="resources-title">
 <h2 id="resources-title">Ressources et productivité</h2>
