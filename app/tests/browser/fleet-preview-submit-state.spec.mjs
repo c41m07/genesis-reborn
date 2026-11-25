@@ -1,4 +1,5 @@
 import { test, expect } from './support/isolated-test.mjs';
+import { planetCoordinates } from './support/game-fixtures.mjs';
 import { execFileSync } from 'node:child_process';
 
 async function enter(page) {
@@ -18,7 +19,8 @@ async function enter(page) {
   await page.getByRole('button', { name: /Connexion/ }).click();
   await page.locator('article.universe-card').first().getByRole('button').click();
   await expect(page).toHaveURL(new RegExp('planetes/[0-9]+$'));
-  return email;
+  const planet = Number(new URL(page.url()).pathname.split('/').pop());
+  return { email, planet };
 }
 
 function sql(project, query) {
@@ -27,7 +29,7 @@ function sql(project, query) {
 
 test('La prévisualisation valide autorise l’envoi, les erreurs backend et réseau le bloquent', async ({ page }, info) => {
   test.setTimeout(90000);
-  const email = await enter(page);
+  const { email, planet } = await enter(page);
   const project = process.env.BROWSER_ROUTER;
   expect(project).toMatch(/^genesis-browser-test-[0-9]+-[0-9]+$/);
 
@@ -39,16 +41,38 @@ test('La prévisualisation valide autorise l’envoi, les erreurs backend et ré
   sql(project, addProbe);
 
   await page.goto('/flottes/preparer');
+  const [galaxy, originNumber] = planetCoordinates(project, planet).split(':');
+  const knownSystem = [galaxy, originNumber].join(':');
+  // Le catalogue réel filtre les systèmes déjà découverts, dont celui de la colonie de départ.
+  const destinations = await page.evaluate(async () => {
+    const response = await fetch('/flottes/destinations?mission=explore', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Catalogue des destinations indisponible : ' + response.status);
+    return (await response.json()).groups.unexplored.map(system => system.coordinates);
+  });
+  expect(destinations).not.toContain(knownSystem);
+  const nearbyDestinations = destinations
+    .filter(coordinates => coordinates.split(':')[0] === galaxy)
+    .sort((a, b) => Math.abs(Number(a.split(':')[1]) - Number(originNumber)) - Math.abs(Number(b.split(':')[1]) - Number(originNumber)) || a.localeCompare(b));
+  expect(nearbyDestinations.length, 'La fixture doit proposer un système non exploré dans la galaxie de départ').toBeGreaterThan(0);
+
   const form = page.locator('.fleet-form form').first();
   const estimate = form.locator('[data-fleet-preview-target="result"]');
   await expect(estimate).toHaveAttribute('aria-live', 'polite');
   await form.locator('[name="ships[fighter]"]').fill('1');
   await form.locator('[name="ships[probe]"]').fill('1');
   await form.getByRole('button', { name: /Choisir la destination/ }).click();
-  await form.getByLabel('Destination personnalisée', { exact: true }).check();await form.locator('[name="coordinates"]').fill('Alpha:2');
+  await form.getByLabel('Destination personnalisée', { exact: true }).check();
+  const coordinates = form.locator('[name="coordinates"]');
+  await coordinates.fill(knownSystem);
   await form.locator('[name="ratio"]').selectOption('0.1');
   await form.getByRole('button', { name: /Vérifier la mission/ }).click();
   const send = form.getByRole('button', { name: /Envoyer la flotte/ });
+  await expect(estimate).toContainText('Système non exploré indisponible dans cet univers.');
+  await expect(send).toBeDisabled();
+
+  await form.getByRole('button', { name: /Modifier la destination/ }).click();
+  await coordinates.fill(nearbyDestinations[0]);
+  await form.getByRole('button', { name: /Vérifier la mission/ }).click();
   await expect(estimate).toContainText('Carburant aller-retour', { timeout: 10000 });
   let releaseEstimate;
   const estimateGate = new Promise(resolve => { releaseEstimate = resolve; });
