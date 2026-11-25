@@ -112,7 +112,7 @@ test('Premiers pas : conseil facultatif et progression après la fin réelle de 
     await storage.getByRole('link', { name: 'Ouvrir le Dépôt de minerais', exact: true }).click();
     const storageHelp = page.getByRole('complementary', { name: 'Conseil Premiers pas', exact: true });
     await expect(storageHelp).toContainText(/10\s000 unités de métal de capacité totale, dont 1\s000 protégées/);
-    await expect(storageHelp).toContainText(/110\s000 unités au total, dont 11\s000 protégées/);
+    await expect(storageHelp).toContainText(/110\s250 unités au total, dont 11\s025 protégées/);
     await expect(storageHelp).toContainText('Mine à ciel ouvert niveau 5');
     await storageHelp.screenshot({ path: info.outputPath('premiers-pas-depot-mobile.png'), animations: 'disabled' });
     await page.goto('/premiers-pas');
