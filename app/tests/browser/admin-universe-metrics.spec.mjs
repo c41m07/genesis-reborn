@@ -155,6 +155,13 @@ test('Mesures par univers : accès admin, lecture seule, données manquantes et 
   await native.goto(url);
   await native.getByRole('link', { name: 'Ouvrir l’Observatoire' }).click();
   await expect(native.getByRole('heading', { name: 'Observatoire', exact: true })).toBeVisible();
+  await expect(native.getByRole('heading', { name: 'Économie · ressources actuelles' })).toBeVisible();
+  // Le scénario a ajouté 25 colonies sans stock. Seule la page contenant la colonie initiale doit avoir cinq lignes.
+  if (freePlanets.every((id) => id < colony)) {
+    await expect(native.getByText('Aucune colonie exploitable sur cette page.')).toBeVisible();
+    await native.getByRole('navigation', { name: 'Pages des mesures économiques' }).getByRole('link', { name: 'Suivante' }).click();
+    await expect(native).toHaveURL(/page=2/);
+  }
   await expect(native.locator('.observatory-table tbody tr')).toHaveCount(5);
   await native.getByRole('link', { name: '90 j', exact: true }).click();
   await native.getByRole('navigation', { name: 'Rubriques de l’Observatoire' }).getByRole('link', { name: 'Audience' }).click();
