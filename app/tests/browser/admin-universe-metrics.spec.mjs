@@ -32,6 +32,8 @@ test('Mesures par univers : accès admin, lecture seule, données manquantes et 
   const url = `/admin/universes/${universe}/mesures`;
   await page.goto(url);
   await expect(page).toHaveURL(/acces-refuse/);
+  await page.goto(url.replace('/mesures', '/observatoire'));
+  await expect(page).toHaveURL(/acces-refuse/);
   const anonymous = await browser.newContext();
   const anonymousPage = await anonymous.newPage();
   await anonymousPage.goto(url);
@@ -150,6 +152,26 @@ test('Mesures par univers : accès admin, lecture seule, données manquantes et 
   await expect(native.locator('#metrics-pirates')).toContainText('Aucune reconnaissance partie');
   await expect(native.locator('#metrics-wait dd', { hasText: '0 en cours · 0 en attente' })).toHaveCount(3);
   await nativeContext.close();
+  // Tester la navigation réelle de la maquette B et la conservation des filtres sans JavaScript.
+  await native.goto(url);
+  await native.getByRole('link', { name: 'Ouvrir l’Observatoire' }).click();
+  await expect(native.getByRole('heading', { name: 'Observatoire', exact: true })).toBeVisible();
+  await expect(native.locator('.observatory-table tbody tr')).toHaveCount(5);
+  await native.getByRole('link', { name: '90 j', exact: true }).click();
+  await native.getByRole('navigation', { name: 'Rubriques de l’Observatoire' }).getByRole('link', { name: 'Audience' }).click();
+  await expect(native).toHaveURL(/days=90/);
+  await expect(native.getByRole('heading', { name: 'Audience · évolution quotidienne' })).toBeVisible();
+  await native.getByText('Données du graphique', { exact: true }).click();
+  await expect(native.locator('.observatory-table tbody tr')).toHaveCount(90);
+  await expect(native.locator('.observatory-table tbody tr').first()).toContainText('Non disponible');
+  await native.getByRole('navigation', { name: 'Rubriques de l’Observatoire' }).getByRole('link', { name: 'Progression' }).click();
+  await expect(native.getByRole('heading', { name: 'Progression · Premiers pas' })).toBeVisible();
+  await native.getByRole('navigation', { name: 'Rubriques de l’Observatoire' }).getByRole('link', { name: 'Combats' }).click();
+  await expect(native.getByRole('heading', { name: 'Combats · bilan des vaisseaux par rang' })).toBeVisible();
+  await expect(native.getByRole('heading', { name: 'Combats · bilan des défenses par rang' })).toBeVisible();
+  await expect(native.getByRole('columnheader', { name: 'Reconstruites après combat' })).toBeVisible();
+  await expect(native.locator('.observatory-table tbody tr').first()).toContainText('Non disponible');
+
   const missing = await page.goto('/admin/universes/2147483647/mesures');
   expect(missing.status()).toBe(404);
 });

@@ -167,6 +167,12 @@ final class UniverseMetricsService
         return $counts;
     }
 
+    /** Lecture commune aux mesures et à l’Observatoire ; ne matérialise aucun stock. */
+    public function resources(Universe $universe, int $page = 1): array
+    {
+        return $this->resourceMetrics($universe, $page, $this->clock->now());
+    }
+
     private function resourceMetrics(Universe $universe, int $page, \DateTimeImmutable $now): array
     {
         $total = (int) $this->connection->fetchOne('SELECT COUNT(*) FROM planet p JOIN player_universe pu ON pu.id=p.owner_id WHERE pu.universe_id=?', [$universe->id]);
@@ -178,7 +184,7 @@ final class UniverseMetricsService
         );
         $rows = [];
         foreach ($this->catalog->rules()['resources'] as $slug => $label) {
-            $rows[$slug] = ['label' => $label, 'empty' => 0, 'negativeRate' => 0, 'rateObserved' => 0, 'reducedProductivity' => 0, 'productivityObserved' => 0, 'stockPercentages' => []];
+            $rows[$slug] = ['label' => $label, 'empty' => 0, 'negativeRate' => 0, 'rateObserved' => 0, 'reducedProductivity' => 0, 'productivityObserved' => 0, 'stockPercentages' => [], 'netRate' => 0.0];
         }
         $observed = 0;
         $unavailable = 0;
@@ -214,6 +220,7 @@ final class UniverseMetricsService
                 $row['empty'] += $value['stock'] <= 0 ? 1 : 0;
                 if ($value['rate'] !== null) {
                     ++$row['rateObserved'];
+                    $row['netRate'] += $value['rate'];
                     $row['negativeRate'] += $value['rate'] < 0 ? 1 : 0;
                 }
                 if ($value['productivity'] !== null) {

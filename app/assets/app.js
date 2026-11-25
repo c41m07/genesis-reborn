@@ -78,6 +78,7 @@ import './styles/admin-case-workspace.css';
 import './styles/admin-surveillance-workspace.css';
 import './styles/admin-universe-workspace.css';
 import './styles/admin-balance-workspace.css';
+import './styles/admin-universe-observatory.css';
 import './styles/admin-boxes-workspace.css';
 import './styles/admin-events-workspace.css';
 import './styles/admin-projects-workspace.css';

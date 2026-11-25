@@ -12,6 +12,7 @@ use App\Service\Admin\AdminService;
 use App\Service\Admin\AdminOperationsService;
 use App\Service\Admin\AdminNotificationService;
 use App\Service\Admin\UniverseMetricsService;
+use App\Service\Admin\UniverseObservatory;
 use App\Service\Admin\CatalogBalanceService;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Universe\UniverseLifecycleService;
@@ -186,6 +187,41 @@ final class AdminController extends AbstractController
         }
         return $this->render('admin/universe_metrics.html.twig', ['universe' => $universe, 'metrics' => $metrics->snapshot($universe, $request->query->getInt('page', 1))]);
     }
+    #[Route('/universes/{id}/observatoire', name: '_universe_observatory', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function observatory(
+        int $id,
+        Request $request,
+        GameRepository $repo,
+        UniverseObservatory $observatory,
+        UniverseMetricsService $metrics,
+    ): Response {
+        $universe = $repo->find(Universe::class, $id);
+        if (!$universe instanceof Universe) {
+            throw $this->createNotFoundException('Univers introuvable.');
+        }
+        $tab = $request->query->getString('tab', 'economy');
+        if (!isset(UniverseObservatory::TABS[$tab])) {
+            throw $this->createNotFoundException('Rubrique introuvable.');
+        }
+        $days = $request->query->getInt('days', 30);
+        if (!in_array($days, [7, 30, 90], true)) {
+            $days = 30;
+        }
+        // Les stocks sont projetés seulement dans la rubrique qui les présente.
+        $response = $this->render('admin/universe_observatory.html.twig', [
+            'universe' => $universe,
+            'universes' => $repo->all(Universe::class, [], ['name' => 'ASC']),
+            'tab' => $tab,
+            'tabs' => UniverseObservatory::TABS,
+            'days' => $days,
+            'report' => $observatory->read($universe, $tab, $days),
+            'resources' => $tab === 'economy' ? $metrics->resources($universe, $request->query->getInt('page', 1)) : null,
+        ]);
+        $response->headers->set('Cache-Control', 'private, no-store');
+
+        return $response;
+    }
+
     #[Route('/universes/nouveau', name: '_universe_new', methods: ['GET'])]
     public function newUniverse(Request $request): Response
     {
