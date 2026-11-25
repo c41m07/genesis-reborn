@@ -151,7 +151,6 @@ test('Mesures par univers : accès admin, lecture seule, données manquantes et 
   await expect(native.locator('#metrics-progression')).toContainText('Aucune participation pilotée');
   await expect(native.locator('#metrics-pirates')).toContainText('Aucune reconnaissance partie');
   await expect(native.locator('#metrics-wait dd', { hasText: '0 en cours · 0 en attente' })).toHaveCount(3);
-  await nativeContext.close();
   // Tester la navigation réelle de la maquette B et la conservation des filtres sans JavaScript.
   await native.goto(url);
   await native.getByRole('link', { name: 'Ouvrir l’Observatoire' }).click();
@@ -171,6 +170,8 @@ test('Mesures par univers : accès admin, lecture seule, données manquantes et 
   await expect(native.getByRole('heading', { name: 'Combats · bilan des défenses par rang' })).toBeVisible();
   await expect(native.getByRole('columnheader', { name: 'Reconstruites après combat' })).toBeVisible();
   await expect(native.locator('.observatory-table tbody tr').first()).toContainText('Non disponible');
+
+  await nativeContext.close();
 
   const missing = await page.goto('/admin/universes/2147483647/mesures');
   expect(missing.status()).toBe(404);
