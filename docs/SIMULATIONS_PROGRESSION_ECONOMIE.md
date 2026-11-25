@@ -254,10 +254,12 @@ Sur 200 graines de premier ciblage, dix récolteurs et dix satellites reçoivent
 Le temps moteur augmente avec la masse : environ 1,162 s pour cinq combats avec 2 000 civils
 contre 0,037 s sans civils sur cette machine. Le supplément de mémoire allouée mesuré est 0
 au niveau des pages PHP déjà réservées ; cela ne signifie pas une mémoire utilisée nulle.
-**5 060 unités demandées sont refusées par le plafond natif de 5 000 unités**.
-L’interface du simulateur limite en outre ses saisies à 500 unités. Il s’agit d’une limite
-technique actuelle, pas d’une limite de possession de récolteurs. Le comportement des batailles
-persistées dépassant ce seuil reste un point à traiter séparément ; le plafond n’est pas relevé.
+Lors de cette mesure historique, **5 060 unités étaient refusées** par le plafond
+technique de 5 000 unités et le simulateur était limité à 500. Ce n’étaient pas
+des limites de possession. Le moteur compact dépasse désormais ce plafond :
+le test de volume vérifie que les 5 060 unités fournies sont toutes comptées,
+sans modifier les valeurs ni les règles étudiées. Les chronos ci-dessus ne
+mesurent pas ce nouveau moteur.
 
 ## Reconstruction et socle au sol
 
