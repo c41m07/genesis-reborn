@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\{AdventWindow, Universe};
+use App\Entity\{AdventEdition, AdventWindow, Universe};
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 
@@ -47,11 +47,20 @@ final readonly class AdventWindowRepository
     }
 
     /** @return list<AdventWindow> */
-    public function scheduled(): array
+    public function scheduled(\DateTimeImmutable $now): array
     {
-        return $this->em->createQuery('SELECT w, u FROM '.AdventWindow::class.' w JOIN w.universe u
+        return $this->em->createQuery('SELECT w, u, e FROM '.AdventWindow::class.' w JOIN w.universe u JOIN w.edition e
             WHERE w.visibleUntil > :now ORDER BY w.visibleFrom, u.name')
-            ->setParameter('now', $this->utcNow())->getResult();
+            ->setParameter('now', $now->setTimezone(new \DateTimeZone('UTC')))->getResult();
+    }
+
+    /** @return list<AdventEdition> Dernières saisons réellement closes, pas les fenêtres locales. */
+    public function recentlyClosedEditions(\DateTimeImmutable $now): array
+    {
+        return $this->em->createQuery('SELECT e FROM '.AdventEdition::class.' e
+            WHERE e.closesAt <= :now ORDER BY e.closesAt DESC, e.id DESC')
+            ->setParameter('now', $now->setTimezone(new \DateTimeZone('UTC')))
+            ->setMaxResults(10)->getResult();
     }
 
     private function utcNow(): \DateTimeImmutable
