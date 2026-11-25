@@ -11,7 +11,7 @@ dc=(docker compose --env-file .env.prod -f compose.prod.yaml)
 "${dc[@]}" pull
 "${dc[@]}" up -d --wait database rabbitmq mercure
 # Éviter des consommateurs anciens pendant les migrations (courte maintenance).
-"${dc[@]}" stop app worker relay notifier
+"${dc[@]}" stop app worker simulation-worker relay notifier
 "${dc[@]}" run --rm --no-deps --user www-data app php bin/console doctrine:migrations:migrate --no-interaction
 "${dc[@]}" up -d --wait --wait-timeout 180
 printf '%s\n' "$image" > deployed-image.txt

@@ -8,6 +8,7 @@ use App\Repository\GameRepository;
 use App\Integration\Mercure\PublisherInterface;
 use App\Message\{AdventCaptureDue, QueueItemFinished, FleetArrived, CombatEventDue, UniverseClosureDue, OccupationDue, EmpireReconstructionDue, GuildProjectRewardsDue};
 use Symfony\Component\Messenger\{Exception\TransportException, MessageBusInterface, Stamp\DelayStamp};
+use App\Message\PlayerCombatSimulationDue;
 use App\Message\{PirateAttackDue, PirateConvoyDue, PirateReconnaissanceDue, PirateSurvivorsDue};
 use Psr\Clock\ClockInterface;
 
@@ -49,6 +50,8 @@ final class OutboxRelay
                         PirateSurvivorsDue::KIND => new PirateSurvivorsDue($outboxMessage->targetId, $outboxMessage->token),
                         'fleet' => new FleetArrived($outboxMessage->targetId, $outboxMessage->token),
                         'combat' => new CombatEventDue($outboxMessage->targetId, $outboxMessage->token),
+                        PlayerCombatSimulationDue::KIND => new PlayerCombatSimulationDue($outboxMessage->targetId, $outboxMessage->token),
+                        PlayerCombatSimulationDue::EXPIRY => new PlayerCombatSimulationDue($outboxMessage->targetId, $outboxMessage->token, true),
                         'reconstruction' => new EmpireReconstructionDue($outboxMessage->targetId, $outboxMessage->token),
                         'guild_project' => new GuildProjectRewardsDue($outboxMessage->targetId, $outboxMessage->token),
                         'occupation' => new OccupationDue($outboxMessage->targetId, $outboxMessage->token),

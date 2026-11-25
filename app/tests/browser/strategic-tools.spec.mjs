@@ -288,6 +288,37 @@ test('Simulateur : dix combats reproductibles, détails accessibles et aucune mu
  expect(errors).toEqual([]);
 });
 
+test('Simulateur volumineux : résultat privé au retour, sans tronquer les effectifs', async ({ page }) => {
+ const owner = await register(page);
+ const router = process.env.BROWSER_ROUTER;
+ const stock = () => queryIsolatedSql(router,
+  `SELECT GROUP_CONCAT(CONCAT(resource_type,':',current_stock) ORDER BY resource_type) FROM planet_resource WHERE planet_id=${owner.planet}`);
+ const before = stock();
+ await page.goto('/simulateur');
+ const attackers = page.locator('#sim-attacker-ships-probe-basic');
+ await expect(attackers).toHaveAttribute('max', '1000000');
+ await attackers.fill('6000');
+ await page.locator('#sim-defender-ships-probe-basic').fill('1');
+ const navigation = page.getByRole('navigation', { name: 'Étapes du simulateur' });
+ await navigation.getByRole('link', { name: 'Défenses', exact: true }).click();
+ await page.locator('#sim-defender-defenses-ground_turret_anti_light-basic').fill('1');
+ await navigation.getByRole('link', { name: 'Simulation', exact: true }).click();
+ await page.getByRole('checkbox', { name: /Je confirme les hypothèses/ }).check();
+ await page.getByRole('button', { name: 'Simuler 10 combats' }).click();
+ await expect(page).toHaveURL(/\/simulateur\?job=[^#]+#simulation-result$/);
+ const resultUrl = page.url();
+ await page.goto('/simulateur');
+ await expect.poll(async () => {
+  await page.goto(resultUrl);
+  return await page.locator('.simulation-trial').count();
+ }, { timeout: 35000, intervals: [1000, 2000, 3000] }).toBe(10);
+ await expect(attackers).toHaveValue('6000');
+ await expect(page.locator('#sim-defender-defenses-ground_turret_anti_light-basic')).toHaveValue('1');
+ await expect(page.locator('#simulation-result')).toContainText('Structure restante par groupe de survivants');
+ expect(stock()).toBe(before);
+ expect(Number(queryIsolatedSql(router, 'SELECT COUNT(*) FROM combat_log'))).toBe(0);
+});
+
 test('Recherche : contenu littéral, pagination, rapports et non-lus préservés',async({page,browser,baseURL})=>{
  test.setTimeout(180000);const owner=await register(page);const otherContext=await browser.newContext({baseURL});const other=await otherContext.newPage();
  try{const peer=await register(other),p=process.env.BROWSER_ROUTER;

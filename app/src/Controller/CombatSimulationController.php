@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Repository\GameRepository;
 use App\Service\Combat\CombatSimulationView;
 use App\Service\Combat\PlayerCombatSimulation;
+use App\Service\Combat\PlayerCombatSimulationQueue;
 use App\Service\Universe\UniverseContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -22,6 +23,7 @@ final class CombatSimulationController extends AbstractController
         PlayerCombatSimulation $simulation,
         GameRepository $repo,
         CombatSimulationView $simulationView,
+        PlayerCombatSimulationQueue $simulationQueue,
         #[Autowire(service: 'limiter.combat_simulation')] RateLimiterFactory $limiter,
     ): Response {
         $owner = $context->membership();
@@ -31,7 +33,7 @@ final class CombatSimulationController extends AbstractController
         $planetIds = array_map(static fn ($planet) => $planet->id, $planets);
         $activePlanet = in_array($activePlanet, $planetIds, true) ? $activePlanet : ($planetIds[0] ?? null);
         $forces = [];
-        $result = $error = $intel = null;
+        $result = $error = $intel = $simulationJob = null;
         $seed = '42';
         $ownSource = 0;
         $status = 200;
@@ -86,11 +88,46 @@ final class CombatSimulationController extends AbstractController
                             throw new \DomainException('Graine invalide.');
                         }
                         $calculation = $simulation->withConfirmedUnknownAssumptions($forces, $intel, $choices);
-                        $result = $simulationView->prepare($simulation->runBatch($owner, $calculation, $number), $calculation, $choices);
+                        $prepared = $simulation->prepare($owner, $calculation, $number);
+                        if (!$prepared['inline']) {
+                            $job = $simulationQueue->enqueue(
+                                $owner,
+                                $prepared,
+                                $simulationView->initialRows($prepared['forces'], $choices),
+                                $number,
+                                $intel['id'] ?? 0,
+                                in_array($ownSource, $planetIds, true) ? $ownSource : 0,
+                            );
+                            $response = $this->redirectToRoute('app_combat_simulation', ['job' => $job->publicKey, '_fragment' => 'simulation-result'], Response::HTTP_SEE_OTHER);
+                            $response->headers->set('Cache-Control', 'private, no-store');
+
+                            return $response;
+                        }
+                        $result = $simulationView->prepare($simulation->runPreparedInline($prepared, $number), $prepared['forces'], $choices);
                         $step = 'simulation';
                         break;
                     default:
                         throw new \DomainException('Action de simulation inconnue.');
+                }
+            } elseif ($request->query->has('job')) {
+                $job = $simulationQueue->visible($owner, $request->query->getString('job'));
+                if ($job === null) {
+                    throw $this->createNotFoundException('Simulation inaccessible ou expirée.');
+                }
+                $step = 'simulation';
+                $forces = $job->scenario['prepared']['forces'];
+                $seed = (string) $job->scenario['seed'];
+                $ownSource = $job->scenario['own_source'];
+                if ($job->scenario['report'] > 0) {
+                    try {
+                        $intel = $simulation->intel($owner, $job->scenario['report']);
+                    } catch (\DomainException) {
+                        // Le rapport source peut avoir disparu ; les hypothèses déjà confirmées restent lisibles.
+                    }
+                }
+                $simulationJob = ['key' => $job->publicKey, 'status' => $job->status, 'completed' => count($job->trials)];
+                if ($job->status === 'done') {
+                    $result = $simulation->batch($job->trials);
                 }
             } else {
                 // Les liens historiques depuis un rapport gardent leur URL et le même contrôle propriétaire.
@@ -125,7 +162,9 @@ final class CombatSimulationController extends AbstractController
             'active_planet' => $activePlanet,
             'own_source' => $ownSource,
             'step' => $step,
-            'max_units' => PlayerCombatSimulation::MAX_UNITS,
+            'fleet_limit' => $simulation->fleetLimit($owner),
+            'defense_limit' => PlayerCombatSimulation::MAX_DEFENSE_QUANTITY,
+            'simulation_job' => $simulationJob,
         ], new Response(status: $status));
         $response->headers->set('Cache-Control', 'private, no-store');
 

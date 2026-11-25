@@ -1,6 +1,6 @@
 # Fonctionnement du worker et du notifier
 
-Genesis Reborn utilise une chaîne asynchrone pour exécuter les échéances du jeu sans navigateur ouvert, puis informer les joueurs connectés. Elle repose sur trois processus PHP distincts : `relay`, `worker` et `notifier`, avec MariaDB comme stockage métier, RabbitMQ comme transport de tâches et Mercure comme serveur de diffusion SSE.
+Genesis Reborn utilise une chaîne asynchrone pour exécuter les échéances du jeu sans navigateur ouvert, puis informer les joueurs connectés. Le circuit des échéances repose sur trois processus PHP distincts : `relay`, `worker` et `notifier`, avec MariaDB comme stockage métier, RabbitMQ comme transport de tâches et Mercure comme serveur de diffusion SSE.
 
 Ce guide s’adresse à un développeur confirmé. La description initiale a été
 établie sur `dev` au commit `186008a`, le 11 novembre 2026. Les sept contrats
@@ -137,7 +137,14 @@ Après le lot, `EntityManager::clear()` détache les entités. Il ne constitue n
 
 ## Exécution par worker et cohérence métier
 
-Le worker consomme uniquement `async`. Les gestionnaires sont de petits adaptateurs marqués `#[AsMessageHandler]` ; ils délèguent les contrôles et mutations aux services métier.
+Le worker du jeu consomme uniquement `async`. Le consommateur `simulation-worker`
+lit la file indépendante `combat_simulation`, sous une limite Compose d’un CPU
+et de 768 Mio ; il écrit un heartbeat séparé pour ne pas masquer un arrêt du worker
+du jeu. La table créée par la migration 20261125174500 doit être disponible avant
+le démarrage des services au moment d’un déploiement.
+En cas de calcul interrompu, vérifier `simulation-worker`, le relais et le routage
+de `PlayerCombatSimulationDue`. Les essais ne mutent pas le jeu et les résultats
+privés expirent après 24 heures. Les gestionnaires sont de petits adaptateurs marqués `#[AsMessageHandler]` ; ils délèguent les contrôles et mutations aux services métier.
 
 L’identifiant cible ne suffit pas à autoriser une exécution. Les services vérifient aussi l’état courant et le jeton de génération. Par exemple, `QueueService::complete()` recherche la commande, verrouille le contexte métier, vérifie la tête de file, le démarrage et `hash_equals(dispatchToken, token)`, puis réconcilie les travaux réellement arrivés à échéance. Une commande déjà supprimée ou un ancien jeton entraîne un retour sans nouvelle application.
 
@@ -280,7 +287,7 @@ La sélection du lot précède le verrou de chaque ligne ; il n’y a ni réserv
 | `database_data`, `rabbitmq_data` | Volumes persistants de la base et du broker |
 | `mercure_data`, `mercure_config` | Volumes du hub ; leur présence ne prouve pas un rattrapage applicatif exhaustif |
 
-En local, les services partagent le code monté depuis `app/` et utilisent l’UID/GID configuré. En production, ils utilisent la même image applicative immuable et les processus PHP tournent sous `www-data`. `worker` et `relay` attendent une base et un RabbitMQ sains. `notifier` attend une base saine et Mercure démarré (`service_started`), sans attendre que le healthcheck du hub réussisse.
+En local, les services partagent le code monté depuis `app/` et utilisent l’UID/GID configuré. En production, ils utilisent la même image applicative immuable et les processus PHP tournent sous `www-data`. `worker`, `simulation-worker` et `relay` attendent une base et un RabbitMQ sains. `notifier` attend une base saine et Mercure démarré (`service_started`), sans attendre que le healthcheck du hub réussisse.
 
 Après un changement de code chargé par ces processus persistants locaux, le README prescrit leur redémarrage. Une modification d’image, de variables injectées ou de montages exige une recréation adaptée : `restart` ne recharge pas une nouvelle définition de conteneur. Voir [DEPLOIEMENT.md](DEPLOIEMENT.md) pour la procédure serveur.
 
@@ -300,14 +307,14 @@ make console CMD='messenger:stats async failed'
 Pour des journaux bornés, sans suivre indéfiniment toute la stack :
 
 ```bash
-docker compose --env-file .env.local logs --tail=100 relay worker notifier mercure
+docker compose --env-file .env.local logs --tail=100 relay worker simulation-worker notifier mercure
 ```
 
 En production autorisée, préciser les fichiers du déploiement :
 
 ```bash
 docker compose --env-file .env.prod -f compose.prod.yaml ps
-docker compose --env-file .env.prod -f compose.prod.yaml logs --tail=100 relay worker notifier mercure
+docker compose --env-file .env.prod -f compose.prod.yaml logs --tail=100 relay worker simulation-worker notifier mercure
 ```
 
 Les healthchecks recherchent `var/run/{worker,relay,notifier}.heartbeat` et une date de modification de moins de 45 secondes. Ils sont évalués toutes les 10 secondes, avec timeout de 5 secondes, période de démarrage de 10 secondes et 6 échecs consécutifs avant l’état unhealthy. Le worker écrit son heartbeat sur `WorkerRunningEvent` ; les relais l’écrivent après une passe réussie. Un heartbeat récent indique une activité récente, pas la réussite de toutes les tâches. Un état unhealthy ne provoque pas à lui seul un redémarrage avec la politique Compose utilisée ; la sortie du processus déclenche le mécanisme de reprise.

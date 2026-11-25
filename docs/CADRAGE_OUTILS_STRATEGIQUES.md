@@ -13,7 +13,7 @@ le bilan du 13 novembre et les mesures du moteur ci-dessous restent historiques.
 - Graines successives à partir de celle saisie, avec retour à zéro après 4 294 967 295. Elles sont distinctes dans la série et la même saisie reproduit les dix résultats.
 - Victoires de l’attaquant divisées par dix : 7 donnent 70 %. Défaites, égalités, combats non terminés et toute autre issue du moteur restent décomptés séparément ; le dénominateur reste dix. Ce petit échantillon ne garantit aucune probabilité réelle.
 - Dix détails repliables, avec pertes, survivants et résumés des rounds. Aucune moyenne des pertes. Les tirs sont résumés après chaque essai pour conserver les informations affichées sans cumuler dix journaux complets.
-- Bornes conservées pour chaque combat : 500 unités et budget de travail de 5 000 000. La limitation existante devient six séries par minute par compte. Un scénario invalide est refusé, sans réduction ni résultat partiel présenté comme dix combats.
+- Bornes conservées pour chaque combat : 500 unités pour le calcul en ligne et budget de travail de 5 000 000. La limitation existante devient six séries par minute par compte. Un scénario invalide est refusé, sans réduction ni résultat partiel présenté comme dix combats.
 
 Mesures locales PHP 8.4, processus de test plafonné à 256 Mio, deux camps
 symétriques de chasseurs : PV 1 000 000 000, bouclier 0, dégâts 1, deux tirs
@@ -150,7 +150,7 @@ soit celles du rapport autorisé, soit des hypothèses manuelles.
 
 ### Bornes techniques et mesures locales
 
-Limites de l’interface joueur : **500 unités au total**, budget
+Limites de l’interface joueur : **500 unités pour le calcul en ligne au total**, budget
 `unités × tirs pondérés × rounds ≤ 5 000 000`, **6 calculs/minute par compte**.
 Les tirs pondérés additionnent maximums des armes principales et secondaires,
 avec une majoration conservative pour les chances de tirs supplémentaires.
@@ -217,3 +217,19 @@ La fusion reste soumise à sa réussite et à l’accord explicite du propriéta
 ## Navigation dédiée — 16 novembre 2026
 
 Les compositions disposent désormais d’une liste `/flottes/compositions`, d’une création `/creer`, d’une modification `/{id}/modifier` et du chargement existant `/{id}/charger`. Le chargement confirmé ouvre `/flottes/preparer`, sans envoyer de flotte. La limite de 20 et les protections de propriété, univers, version et idempotence sont conservées. Voir le [suivi de navigation](NAVIGATION_PAGES_DEDIEES.md).
+
+### Calculs volumineux, sans changement du scénario 1 contre 1
+
+Le simulateur conserve les deux camps, la graine de départ et dix essais, sans mutation de
+flotte, de ressources ni rapport de combat réel. La limite de flotte est celle de chaque
+univers, par camp. Les défenses sont en plus, sans troncature. Le plafond du chemin HTTP reste interne :
+un calcul dépassant ce budget est mis en file après validation des hypothèses. Le retour au bilan
+utilise un lien privé du même écran, valable 24 heures. Il n’y a qu’un calcul différé actif par
+compte, tous univers confondus. Pour les gros volumes, le détail individuel est remplacé par
+des effectifs exacts par type et rang et des plages de structure et bouclier des survivants ;
+les petits scénarios conservent le détail habituel.
+
+Chaque essai reprend le même catalogue figé à la demande et utilise la graine correspondant à son
+rang dans la série. Le bilan n’est présenté qu’après dix essais. Le jeton du prochain essai et le bilan
+du précédent sont écrits de façon atomique. Les messages obsolètes ou rediffusés n’ajoutent pas d’essai.
+Le consommateur de simulations ne consomme ni les échéances des flottes ni les constructions.

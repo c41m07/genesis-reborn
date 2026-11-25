@@ -7,9 +7,17 @@ use Random\Randomizer;
 /** Combat déterministe sur un instantané validé par les services métier. */
 final class CombatSimulator
 {
+    // Seuil du détail historique, également utilisé par l'exercice pirate.
+    // Les combats complets sont orientés vers le calcul compact au-delà.
     public const MAX_UNITS = 5000;
 
     private const CHECKPOINT_VERSION = 1;
+    private const MAX_DETAILED_SHOTS = 50000;
+
+    public function __construct(private readonly ?CompactCombatEngine $compact = null)
+    {
+    }
+
     /** Puissance figée au début du tour, selon la durabilité restante. */
     private function powerFactor(array $unit):float
     {
@@ -23,6 +31,12 @@ final class CombatSimulator
      */
     public function simulate(array $participants, array $stationaryDefenses, array $modifiers, int $maxRounds, int $seed, ?int $roundLimit = null, float $shieldRechargePercent = 5.0, bool $restoreSurvivorShields = true, bool $independentCamps = false): array
     {
+        if ($this->needsCompactEngine($participants, $stationaryDefenses, $maxRounds)) {
+            $compact = $this->compact ?? new CompactCombatEngine();
+            return $compact->simulate($participants, $stationaryDefenses, $modifiers, $maxRounds, $seed, $roundLimit,
+                $shieldRechargePercent, $restoreSurvivorShields, $independentCamps);
+        }
+
         return $this->run($participants, $stationaryDefenses, $modifiers, $maxRounds, $seed, $roundLimit, $shieldRechargePercent, $restoreSurvivorShields, $independentCamps, false, null);
     }
 
@@ -30,7 +44,7 @@ final class CombatSimulator
      * Le point de reprise vient exclusivement de l’événement enregistré par le worker.
      * Le résultat contient les nouveaux rounds seulement et le nombre total de rounds joués.
      *
-     * @param array{version: int, completed_round: int, random: array, durability: array<string, array{float, float}>}|null $checkpoint
+     * @param array{version: int, completed_round: int, random?: array, durability?: array<string, array{float, float}>, payload?: string}|null $checkpoint
      */
     public function advance(
         array $participants,
@@ -44,7 +58,48 @@ final class CombatSimulator
         bool $independentCamps,
         ?array $checkpoint = null,
     ): array {
+        // Ne jamais redescendre sur le format v1. Si des renforts font
+        // dépasser le seuil, importer la durabilité et le flux aléatoire v1.
+        if (($checkpoint['version'] ?? null) === CompactCombatEngine::CHECKPOINT_VERSION
+            || $this->needsCompactEngine($participants, $stationaryDefenses, $maxRounds)) {
+            $compact = $this->compact ?? new CompactCombatEngine();
+            return $compact->advance($participants, $stationaryDefenses, $modifiers, $maxRounds, $seed, $roundLimit,
+                $shieldRechargePercent, $restoreSurvivorShields, $independentCamps, $checkpoint);
+        }
+
         return $this->run($participants, $stationaryDefenses, $modifiers, $maxRounds, $seed, $roundLimit, $shieldRechargePercent, $restoreSurvivorShields, $independentCamps, true, $checkpoint);
+    }
+
+    private function needsCompactEngine(array $participants, array $defenses, int $rounds): bool
+    {
+        // Même un nombre modeste d'unités peut produire un journal énorme
+        // avec plusieurs canons; estimer le plafond sur toute la bataille.
+        $unitCount = 0;
+        $shotCount = 0;
+        foreach ([...array_column($participants, 'units'), $defenses] as $groups) {
+            if (!is_array($groups)) {
+                continue;
+            }
+            foreach ($groups as $group) {
+                $count = $group['quantity'] ?? null;
+                if (!is_int($count) || $count <= 0) {
+                    continue; // Le moteur retenu garde la validation du catalogue.
+                }
+                $unitCount += $count;
+                if ($unitCount > self::MAX_UNITS) {
+                    return true;
+                }
+                $primary = max(0, min(100, (int) ($group['shots_max'] ?? 0)));
+                $secondary = max(0, min(100, (int) ($group['secondary_shots_max'] ?? $group['secondary_shots_min'] ?? 0)));
+                $extras = $group['extra_shot_chances'] ?? [];
+                $shotCount += $count * ($primary + $secondary) * (1 + (is_array($extras) ? count($extras) : 0));
+                if ($shotCount * max(1, min(100, $rounds)) > self::MAX_DETAILED_SHOTS) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private function run(

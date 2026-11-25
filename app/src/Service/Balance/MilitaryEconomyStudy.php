@@ -389,6 +389,19 @@ final class MilitaryEconomyStudy
             $civilTargets = $civilShots = $shots = 0;
             $targets = ['hydrogen_collector' => 0, 'solar_satellite' => 0];
             foreach ($result['rounds'] as $round) {
+                if (isset($round['groups'])) {
+                    // Le moteur compact compte chaque tir reçu comme effectué, sans inventer de détail unitaire.
+                    foreach ($round['groups'] as $unit) {
+                        $shots += $unit['shots'];
+                        $slug = $unit['slug'];
+                        if (array_key_exists($slug, $targets)) {
+                            $targets[$slug] += $unit['targeted'];
+                            $civilTargets += $unit['targeted'];
+                            $civilShots += $unit['shots'];
+                        }
+                    }
+                    continue;
+                }
                 foreach ($round['shots'] as $shot) {
                     $shots++;
                     foreach (array_keys($targets) as $slug) {
