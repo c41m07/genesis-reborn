@@ -1,5 +1,7 @@
 # Grille de coûts commune — métal, nano, antimatière et hydrogène
 
+> **Référence historique.** Les coûts par défaut actifs sont décrits dans [le catalogue RP](CATALOGUE_COUTS_RP.md). Pour revenir aux profils exacts de cette grille, utiliser [la sauvegarde](SAUVEGARDE_CATALOGUE_COUTS_AVANT_RP.md).
+
 La répartition de valeur **B48/52, I34/36/30, S28/31/31/10**
 (métal / nano / antimatière / hydrogène) s’applique aux bâtiments, recherches,
 vaisseaux et défenses, y compris les deux familles civiles. Les 156 profils fixent les compositions. Pour un bâtiment ou une recherche avancée, le budget du premier niveau dépend désormais des prérequis. [Calcul des devis](REGLES.md#progression-économique-par-rang). Les 52 profils Basiques sont reconduits à l’identique.

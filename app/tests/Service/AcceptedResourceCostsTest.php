@@ -14,10 +14,32 @@ final class AcceptedResourceCostsTest extends TestCase
         return json_decode(file_get_contents(dirname(__DIR__) . '/Fixtures/resource-costs-2026-11-19.json'), true, 512, JSON_THROW_ON_ERROR);
     }
 
+    /** Rejoue la décision de novembre avec les prix figés avant les recettes RP. */
+    private function historicalCatalog(): GameCatalog
+    {
+        $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
+        $document = file_get_contents(dirname(__DIR__, 3) . '/docs/SAUVEGARDE_CATALOGUE_COUTS_AVANT_RP.md');
+        $fence = str_repeat(chr(96), 3);
+        $sections = explode($fence, $document);
+        self::assertCount(3, $sections);
+        self::assertStringStartsWith("json\n", $sections[1]);
+        $profiles = json_decode(substr($sections[1], 4), true, 512, JSON_THROW_ON_ERROR);
+        $property = new \ReflectionProperty(GameCatalog::class, 'data');
+        $data = $property->getValue($catalog);
+        foreach ($profiles as $group => $entries) {
+            foreach ($entries as $slug => $ranks) {
+                $data[$group][$slug]['cost_profiles'] = $ranks;
+            }
+        }
+        $property->setValue($catalog, $data);
+
+        return $catalog;
+    }
+
     public function testAll156AcceptedProfilesKeepTheirOwnPreviousBudgets(): void
     {
         $fixture = $this->fixture();
-        $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
+        $catalog = $this->historicalCatalog();
         $count = 0;
         $shares = [
             'basic' => ['metal' => 48, 'nano' => 52, 'antimatter' => 0, 'hydrogen' => 0],
@@ -52,7 +74,7 @@ final class AcceptedResourceCostsTest extends TestCase
     public function testCurveBoundariesAndBatchesPreserveQuotesWithinRounding(): void
     {
         $fixture = $this->fixture();
-        $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
+        $catalog = $this->historicalCatalog();
         // Comparaison des deux répartitions de novembre, avec les courbes de cette étude.
         $property = new \ReflectionProperty(GameCatalog::class, 'data');
         $data = $property->getValue($catalog);

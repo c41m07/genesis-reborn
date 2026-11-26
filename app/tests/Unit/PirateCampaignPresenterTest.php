@@ -55,13 +55,13 @@ final class PirateCampaignPresenterTest extends TestCase
 
         $reported = $presenter->forProgress($player, $recon, null, $this->at(36));
         self::assertSame([1, 1], array_column($reported['formation'], 'quantity'));
-        self::assertSame(['20 074,5', '10 874', '0', '0'], array_column($reported['quote'], 'amount'));
+        self::assertSame(['17 071,5', '6 539,5', '1 482,5', '11 484'], array_column($reported['quote'], 'amount'));
         $html = $this->render($reported);
         self::assertStringContainsString('Flotte pirate révélée', $html);
         self::assertStringContainsString('Un destroyer menace particulièrement un croiseur', $html);
         self::assertStringContainsString('50 % du coût catalogue', $html);
         self::assertStringContainsString('Ce montant n’a pas été versé', $html);
-        self::assertStringContainsString('+20 074,5', $html);
+        self::assertStringContainsString('+17 071,5', $html);
         self::assertStringContainsString('des vaisseaux en réserve', $html);
         self::assertStringContainsString('de l’électricité', $html);
         self::assertStringContainsString('Ce n’est pas une condition pour combattre', $html);
