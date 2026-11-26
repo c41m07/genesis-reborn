@@ -2,7 +2,7 @@
 
 ## Ordre des champs de ressources
 
-- Le bandeau, la saisie du fret, les dons (Hall et projets collectifs) et les réglages administratifs correspondants présentent les ressources dans l’ordre de `ResourceService::DISPLAY_ORDER` : métal, nano, hydrogène, antimatière, électricité. L’ordre du DOM sert aussi à la navigation au clavier et n’est pas modifié en CSS.
+- Le bandeau, la saisie du fret, les dons (Hall et projets collectifs) et les réglages administratifs correspondants présentent les ressources dans l’ordre de `ResourceService::DISPLAY_ORDER` : métal, nano, hydrogène, antimatière, électricité. L’ordre du DOM sert aussi à la navigation au clavier et n’est pas modifié en CSS. Les prix, les détails unitaires et les ressources manquantes des quatre catalogues reprennent ce même ordre, y compris après recalcul de la quantité.
 - Un groupe n’affiche que les ressources que le parcours accepte ou propose déjà. Le Hall ne finance pas ses dons avec l’électricité, et un projet n’affiche pas de champ pour une ressource dont le besoin est couvert. Ce tri ne change ni les quantités ni les validations.
 
 ## Refus et actions de reprise

@@ -77,7 +77,7 @@
                     <h3>{{ group in ['ships','defenses'] ? 'Construire une unité de ce rang' : (group == 'buildings' ? 'Améliorer au niveau '~card.target : 'Rechercher le niveau '~card.target) }}</h3>
                     <p>Durée : <strong>{{ duration_label(card.duration) }}</strong>{% if group in ['ships','defenses'] %} par unité{% endif %}.</p>
                     <ul class="catalog-info-costs" aria-label="Coût avec vos réductions actuelles">
-                        {% for resource,cost in card.costs %}{% if cost>0 %}<li>{{ resources[resource].label|default(resource) }} <strong>{{ cost|quantity }}</strong></li>{% endif %}{% endfor %}
+                        {% for resource in constant('App\\Service\\Colony\\ResourceService::DISPLAY_ORDER') %}{% set cost = card.costs[resource]|default(0) %}{% if cost > 0 %}<li data-resource="{{ resource }}">{{ resources[resource].label|default(resource) }} <strong>{{ cost|quantity }}</strong></li>{% endif %}{% endfor %}
                     </ul>
                     <p class="catalog-info-note">Coût et durée calculés avec vos bonus actuels et les réglages de cet univers. Le temps d’attente des opérations déjà en file s’ajoute à cette durée.</p>
                 </section>

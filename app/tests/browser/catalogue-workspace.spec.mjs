@@ -71,6 +71,15 @@ test('L7B : quatre cartes, vraies lignes et cinq coûts lisibles sur quatre form
                 return cells.length > 5 || new Set(ys).size > 1 || cells.some(cell => cell.scrollWidth > cell.clientWidth + 1) ? [strip.closest('.building-rank').id] : [];
             }));
             expect(priceErrors).toEqual([]);
+            const barOrder = await page.locator('.resource-summary [data-compact-resource]')
+                .evaluateAll(cells => cells.map(cell => cell.dataset.compactResource));
+            expect(barOrder).toEqual(['metal', 'nano', 'hydrogen', 'antimatter', 'electricity']);
+            const cardOrders = await cards.locator('.building-costs')
+                .evaluateAll(strips => strips.map(strip => [...strip.children].map(cell => cell.dataset.resource)));
+            expect(cardOrders.length).toBeGreaterThan(0);
+            for (const order of cardOrders) {
+                expect(order).toEqual(barOrder.filter(resource => order.includes(resource)));
+            }
             if (width !== 320) await capture(page, info, group + '-lignes', width);
             if (width === 390 && group === 'buildings') {
                 expect((await new AxeBuilder({ page }).include('.catalog-workspace').analyze()).violations).toEqual([]);
@@ -160,6 +169,8 @@ test('L7B : manques multiples, devis de lot et suivi dépliable conservés aprè
     await expect(action).toBeDisabled();
     await expect(action).toContainText('Il manque :');
     await expect(action.locator('.catalog-missing-resource')).toHaveCount(5);
+    expect(await action.locator('.catalog-missing-resource').evaluateAll(cells => cells.map(cell => cell.dataset.resource)))
+        .toEqual(['metal', 'nano', 'hydrogen', 'antimatter', 'electricity']);
     await expect(action).toContainText('Antimatière :');
     await expect(action).toContainText('Hydrogène :');
     for (const width of [1440, 390, 320]) {
@@ -174,7 +185,15 @@ test('L7B : manques multiples, devis de lot et suivi dépliable conservés aprè
     await page.locator('[data-catalog-disclosure=incoming]>summary').click();
     await expect(page.locator('.incoming-empty-message')).toBeVisible();
     await page.goto(`${user.path}?section=ships`);
-    const unavailable = page.locator('#item-fighter-basic');
+    // Le bombardier demande les cinq ressources : le devis JS doit garder l’ordre du rendu initial.
+    const unavailable = page.locator('#item-bomber-basic');
+    const fullOrder = ['metal', 'nano', 'hydrogen', 'antimatter', 'electricity'];
+    expect(await unavailable.locator('.building-costs > [data-resource]').evaluateAll(cells => cells.map(cell => cell.dataset.resource)))
+        .toEqual(fullOrder);
+    await unavailable.locator('.core-unit-details summary').click();
+    expect(await unavailable.locator('.core-unit-price li').evaluateAll(cells => cells.map(cell => cell.dataset.resource)))
+        .toEqual(fullOrder);
+    await unavailable.locator('.core-unit-details summary').click();
     await expect(unavailable.getByRole('button', { name: /Max :/ })).toBeDisabled();
     const unavailableResponse = page.waitForResponse(response => response.url().includes('/construction-maximum'));
     const unavailableQuantity = unavailable.getByLabel('Quantité', { exact: true });
@@ -182,7 +201,9 @@ test('L7B : manques multiples, devis de lot et suivi dépliable conservés aprè
     await unavailableQuantity.press('Tab');
     const quote = await (await unavailableResponse).json();
     expect(quote.maximum).toBe(0);
-    expect(Object.keys(quote.missingResources).length).toBeGreaterThan(1);
+    expect(Object.keys(quote.missingResources).length).toBe(5);
+    await expect.poll(() => unavailable.locator('.catalog-missing-resource')
+        .evaluateAll(cells => cells.map(cell => cell.dataset.resource))).toEqual(fullOrder);
     for (const resource of Object.values(quote.missingResources)) {
         await expect(unavailable.locator('.catalog-build-action')).toContainText(new RegExp(resource.label + ' :'));
         expect(resource.amount).toBeGreaterThan(0);
