@@ -216,6 +216,8 @@ final class AdminController extends AbstractController
         $comparePeriod = $releaseId === -1 && $selection['start'] !== null;
         $releases = $periods->releases($releaseId ?: null);
         $comparisonAt = $comparePeriod ? $selection['start'] : $releases['selected']?->publishedAt;
+        // L’onglet Progression itère directement sur ses jalons. La comparaison reste à part.
+        $releaseComparison = null;
         if ($tab === 'performance') {
             $report = $performance->read(
                 $request->query->getInt('hours', 168),
@@ -239,7 +241,7 @@ final class AdminController extends AbstractController
                         $comparison[$side] = $observatory->comparisonCounts($universe, $tab, $from, $until);
                     }
                 }
-                $report['releaseComparison'] = $comparison;
+                $releaseComparison = $comparison;
             }
 
         }
@@ -256,6 +258,7 @@ final class AdminController extends AbstractController
             'periodId' => $periodId,
             'releases' => $releases,
             'comparePeriod' => $comparePeriod,
+            'releaseComparison' => $releaseComparison,
             'resources' => $tab === 'economy' ? $metrics->resources($universe, $request->query->getInt('page', 1)) : null,
         ]);
         $response->headers->set('Cache-Control', 'private, no-store');
