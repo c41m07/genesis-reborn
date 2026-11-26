@@ -1,4 +1,5 @@
 {% import 'ui/macros.html.twig' as ui %}
+{% set resourceOrder = constant('App\\Service\\Colony\\ResourceService::DISPLAY_ORDER') %}
 {% set vacation = chrome.vacation|default(null) %}
 {# Variantes mesurées sur les cartes les plus demandées à l’ouverture des catalogues. #}
 {% set cardVariants = {
@@ -117,7 +118,7 @@
                     {% set costsOverview %}
                     <p class="catalog-cost-heading"{% if not leveled %} data-construction-quantity-target="costHeading"{% endif %}>{{ leveled ? 'Coût du niveau '~card.target : 'Coût du lot × 1' }}</p>
                     <div class="costs building-costs" aria-label="{{ leveled ? 'Coût du prochain niveau' : 'Coût du lot' }}">
-                        {% for resource, cost in card.costs %}{% if cost > 0 %}
+                        {% for resource in resourceOrder %}{% set cost = card.costs[resource]|default(0) %}{% if cost > 0 %}
                             <span data-resource="{{ resource }}" data-resource-label="{{ resources[resource].label }}"{% if not leveled %} data-construction-quantity-target="cost"{% endif %} class="{{ cost > resources[resource].stock ? 'insufficient' : '' }}" title="{{ resources[resource].label }} : {{ cost|number_format(0, ',', ' ') }}{{ cost > resources[resource].stock ? ' · Manque '~(cost-resources[resource].stock)|round(0,'ceil')|number_format(0, ',', ' ')~' '~resources[resource].label : '' }}" aria-label="{{ resources[resource].label }} : {{ cost|number_format(0, ',', ' ') }}{{ cost > resources[resource].stock ? ' · Manque '~(cost-resources[resource].stock)|round(0,'ceil')|number_format(0, ',', ' ')~' '~resources[resource].label : '' }}">{{ ui.icon(resource) }}<span><strong data-cost-amount>{{ cost|compact_number }}</strong><small><span class="cost-label-full">{{ resources[resource].label }}</span><abbr class="cost-label-short" title="{{ resources[resource].label }}">{{ {metal:'Métal',nano:'Nano',hydrogen:'Hydro.',antimatter:'Antim.',electricity:'Élec.'}[resource]|default(resources[resource].label) }}</abbr></small></span></span>
                         {% endif %}{% endfor %}
                     </div>
@@ -187,7 +188,7 @@
                                 </div>
                             {% endif %}
                             <div class="catalog-payment">
-                                <button class="{{ not blocked ? 'primary' : 'secondary' }} full catalog-build-action{{ missingResources and not queueFull ? ' has-missing-resources' : '' }}"{% if blocked %} disabled{% endif %}{% if not leveled %} data-construction-quantity-target="submit" data-order-name="{{ d.label }}" data-queue-occupied="{{ currentQueue ? 'true' : 'false' }}"{% endif %}><span class="catalog-action-label"{% if not leveled %} data-construction-quantity-target="label"{% endif %}>{% if queueFull %}File pleine{% elseif missingResources %}Il manque :{% for missing in missingResources %}<span class="catalog-missing-resource">{{ missing.label }} : {{ missing.amount|number_format(0, ',', ' ') }}</span>{% endfor %}{% elseif card.capacity_full|default(false) %}Aucune place disponible{% else %}{{ actionLabel }}{% endif %}</span><span{% if blocked %} hidden{% endif %}{% if not leveled %} data-construction-quantity-target="arrow"{% endif %}>{{ ui.icon('arrow') }}</span></button>
+                                <button class="{{ not blocked ? 'primary' : 'secondary' }} full catalog-build-action{{ missingResources and not queueFull ? ' has-missing-resources' : '' }}"{% if blocked %} disabled{% endif %}{% if not leveled %} data-construction-quantity-target="submit" data-order-name="{{ d.label }}" data-queue-occupied="{{ currentQueue ? 'true' : 'false' }}"{% endif %}><span class="catalog-action-label"{% if not leveled %} data-construction-quantity-target="label"{% endif %}>{% if queueFull %}File pleine{% elseif missingResources %}Il manque :{% for resource in resourceOrder|filter(key => missingResources[key] is defined) %}{% set missing = missingResources[resource] %}<span class="catalog-missing-resource" data-resource="{{ resource }}">{{ missing.label }} : {{ missing.amount|number_format(0, ',', ' ') }}</span>{% endfor %}{% elseif card.capacity_full|default(false) %}Aucune place disponible{% else %}{{ actionLabel }}{% endif %}</span><span{% if blocked %} hidden{% endif %}{% if not leveled %} data-construction-quantity-target="arrow"{% endif %}>{{ ui.icon('arrow') }}</span></button>
                                 {% if wait or not leveled %}
                                     <div class="catalog-wait"{% if not wait %} hidden{% endif %} data-construction-quantity-target="wait">
                                         <span data-construction-quantity-target="waitText" data-resource-eta-target="timer"

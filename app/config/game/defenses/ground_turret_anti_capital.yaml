@@ -27,15 +27,15 @@
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 22400,
-      "nano": 9600,
-      "antimatter": 5600,
+      "metal": 28000,
+      "nano": 12000,
+      "antimatter": 7000,
       "hydrogen": 0
     },
     "superior": {
-      "metal": 16000,
-      "nano": 9600,
-      "antimatter": 7200,
+      "metal": 25000,
+      "nano": 15000,
+      "antimatter": 11250,
       "hydrogen": 0
     }
   },

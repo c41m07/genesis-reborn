@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class RoleBasedCatalogCostTest extends TestCase
 {
-    public function testAllProfilesRetainTheirBudgetAndKeepTheElectricityRule(): void
+    public function testAllProfilesFollowTheirBudgetDecisionAndKeepTheElectricityRule(): void
     {
         $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
         $backup = file_get_contents(dirname(__DIR__, 3) . '/docs/SAUVEGARDE_CATALOGUE_COUTS_AVANT_RP.md');
@@ -30,16 +30,30 @@ final class RoleBasedCatalogCostTest extends TestCase
         }
         $oldConfiguration = $catalog->forUniverse($previous);
         $newConfiguration = $catalog->forUniverse($actual);
+        $defenseBudgets = [
+            'ground_turret_anti_light' => [5000, 6250, 7812],
+            'ground_turret_anti_escort' => [18000, 22500, 28126],
+            'ground_turret_anti_heavy' => [47000, 58750, 73438],
+            'ground_turret_anti_capital' => [128000, 160000, 200000],
+        ];
         $count = 0;
         foreach ($newConfiguration['catalog'] as $group => $entries) {
             self::assertSame(array_keys($entries), array_keys($before[$group]));
             foreach ($entries as $slug => $definition) {
-                foreach (GameCatalog::TIERS as $tier) {
+                foreach (GameCatalog::TIERS as $rank => $tier) {
                     $oldDefinition = $catalog->getTierForUniverse($previous, $group, $slug, $tier);
                     $newDefinition = $catalog->getTierForUniverse($actual, $group, $slug, $tier);
                     $oldBudget = CostDistributionCandidate::value($catalog->costs($oldDefinition));
                     $newBudget = CostDistributionCandidate::value($catalog->costs($newDefinition));
-                    self::assertSame($oldBudget, $newBudget, "$group/$slug/$tier");
+                    $expectedBudget = $group === 'defenses' ? $defenseBudgets[$slug][$rank] : $oldBudget;
+                    self::assertSame($expectedBudget, $newBudget, "$group/$slug/$tier");
+                    if ($group === 'defenses') {
+                        // Sans hydrogène, la valeur est paire : un point d'écart est parfois inévitable.
+                        if ($rank > 0) {
+                            self::assertEqualsWithDelta($defenseBudgets[$slug][$rank - 1] * 1.25, $newBudget, 1.0);
+                        }
+                        self::assertSame(0, $catalog->costs($newDefinition)['hydrogen']);
+                    }
                     $orders = in_array($group, ['ships', 'defenses'], true) ? [[1, 1], [1, 100]] : [[1, 1], [5, 1]];
                     foreach ($orders as [$level, $quantity]) {
                         $old = $calculator->calculate($oldDefinition, $group, $level, $quantity, [], $oldConfiguration);
@@ -50,7 +64,11 @@ final class RoleBasedCatalogCostTest extends TestCase
                         $valueAfter = CostDistributionCandidate::value($new['costs']);
                         // L’arrondi d’un prérequis avancé se propage au rang d’entrée et à sa courbe.
                         $roundingTolerance = max(14, (int) ceil($valueBefore / 1000));
-                        self::assertLessThanOrEqual($roundingTolerance, abs($valueBefore - $valueAfter), "$group/$slug/$tier/$level/$quantity");
+                        if ($group === 'defenses') {
+                            self::assertSame($expectedBudget * $quantity, $valueAfter, "$group/$slug/$tier/$quantity");
+                        } else {
+                            self::assertLessThanOrEqual($roundingTolerance, abs($valueBefore - $valueAfter), "$group/$slug/$tier/$level/$quantity");
+                        }
                     }
                     ++$count;
                 }

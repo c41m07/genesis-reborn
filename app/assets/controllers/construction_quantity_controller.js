@@ -51,12 +51,16 @@ export default class extends Controller {
             this.submitTarget.disabled = maximum === 0;
             this.submitTarget.classList.toggle('primary', maximum > 0);
             this.submitTarget.classList.toggle('secondary', maximum === 0);
-            const missing = Object.values(data.missingResources ?? {});
+            // Le devis garde l’ordre des cellules de la carte, lui-même calé sur celui du bandeau.
+            const missing = this.costTargets.map(cell => cell.dataset.resource)
+                .filter(resource => data.missingResources?.[resource]);
             this.submitTarget.classList.toggle('has-missing-resources', missing.length > 0);
             this.labelTarget.replaceChildren(document.createTextNode(maximum === 0 ? (missing.length ? 'Il manque :' : data.unavailableLabel) : this.orderLabel(data.quantity)));
-            for (const resource of missing) {
+            for (const key of missing) {
+                const resource = data.missingResources[key];
                 const line = document.createElement('span');
                 line.className = 'catalog-missing-resource';
+                line.dataset.resource = key;
                 line.textContent = `${resource.label} : ${exactNumber(resource.amount)}`;
                 this.labelTarget.append(line);
             }
