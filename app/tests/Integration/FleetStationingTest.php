@@ -101,7 +101,7 @@ final class FleetStationingTest extends WebTestCase
         $this->em->flush();$this->arrive($fleet);$before=$fleet->cargo;$reserve=$fleet->reservedFuel;
         for($i=0;$i<3;$i++) self::getContainer()->get(FleetService::class)->arrive($fleet->id,$token);
         self::assertSame('station_waiting',$fleet->status);self::assertSame($before,$fleet->cargo);self::assertSame($reserve,$fleet->reservedFuel);
-        $rows=self::getContainer()->get(\App\Service\Fleet\FleetVisibility::class)->forMap($this->player->currentPlayerUniverse,$this->target->solarSystem->galaxy);
+        $rows=self::getContainer()->get(\App\Service\Fleet\FleetVisibility::class)->forMap($this->player->currentPlayerUniverse,$this->target->solarSystem->galaxy)['flights'];
         self::assertCount(1,$rows);self::assertSame($fleet->id,$rows[0]['id']);self::assertSame('Stationnement en attente',$rows[0]['statusLabel']);
         self::assertNull($rows[0]['arrivalAt']);self::assertNotNull($rows[0]['ships']);
         $notices=$this->em->getRepository(\App\Entity\Notification::class)->findBy(['recipient'=>$this->player->currentPlayerUniverse]);

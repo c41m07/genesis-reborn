@@ -42,14 +42,14 @@ export default class extends Controller {
             if (this.panelValue) url.searchParams.set('campaign', '1');
             const response = await fetch(url, { signal: this.abort.signal, headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' });
             if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) {
-                if (response.redirected || [401, 403, 404].includes(response.status)) this.clearCampaignTraffic();
+                if (response.redirected || [401, 403, 404].includes(response.status)) this.clearPrivateTraffic();
                 this.unavailable();
                 return;
             }
             const data = await response.json();
             if (!this.active) return;
             if (data.membership !== this.membershipValue) {
-                this.clearCampaignTraffic();
+                this.clearPrivateTraffic();
                 this.removeUnavailableDetails();
                 return;
             }
@@ -97,11 +97,11 @@ export default class extends Controller {
         window.dispatchEvent(new Event('genesis:overview-incoming-changed'));
     }
 
-    clearCampaignTraffic() {
+    clearPrivateTraffic() {
         this.syncCampaignRows();
         this.lastHtml = null;
         if (document.querySelector('[data-surveillance-galaxy]')) {
-            window.dispatchEvent(new Event('genesis:campaign-traffic-unavailable'));
+            window.dispatchEvent(new Event('genesis:private-map-traffic-unavailable'));
         }
     }
 

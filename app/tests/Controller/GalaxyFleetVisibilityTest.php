@@ -1,7 +1,7 @@
 <?php
 namespace App\Tests\Controller;
 
-use App\Entity\{AllianceContract,Fleet,FleetShip,Planet,PlanetDefense,Player,Universe};
+use App\Entity\{AllianceContract,Fleet,FleetShip,Guild,GuildMember,Planet,PlanetDefense,Player,Universe};
 use App\Service\Player\{LeaderboardService,RegistrationService};
 use App\Service\Universe\{UniverseImporter,UniverseService};
 use App\Validator\DTO\RegistrationData;
@@ -112,6 +112,98 @@ final class GalaxyFleetVisibilityTest extends WebTestCase
             self::assertNotContains($returning->id,array_column($map['flights'],'id'));
             self::assertStringNotContainsString('data-flight-id="'.$outbound->id.'"',$this->client->getResponse()->getContent());
         }
+    }
+
+    public function testGuildTrafficIsMapOnlyAndRevokedAfterLeavingGuild(): void
+    {
+        [$owner, $home] = $this->player('GuildFleetOwner');
+        [$viewer, $viewerHome] = $this->player('GuildFleetViewer');
+        [$ally] = $this->player('GuildFleetAlly');
+        [$target, $destination] = $this->player('GuildFleetTarget');
+
+        $guild = new Guild();
+        $guild->universe = $owner->currentPlayerUniverse->universe;
+        $guild->leader = $owner->currentPlayerUniverse;
+        $guild->name = 'Veilleurs du Nexus';
+        $this->em->persist($guild);
+        $this->joinGuild($owner, $guild);
+        $membership = $this->joinGuild($viewer, $guild);
+        $contract = new AllianceContract();
+        $contract->playerA = $owner->currentPlayerUniverse;
+        $contract->playerB = $ally->currentPlayerUniverse;
+        $contract->proposer = $owner->currentPlayerUniverse;
+        $contract->status = 'accepted';
+        $this->em->persist($contract);
+        $this->em->flush();
+
+        foreach ([$viewer, $ally] as $observer) {
+            $this->reveal($observer, $home);
+            $this->reveal($observer, $destination);
+        }
+        $known = [];
+        foreach (['explore', 'spy', 'colonize', 'transport', 'attack', 'conquer', 'defend', 'orbit', 'station'] as $mission) {
+            $known[$mission] = $this->fleet($owner, $home, $destination, $mission);
+        }
+        $return = $this->fleet($owner, $home, $destination, 'spy', 'returning');
+        $hiddenTarget = $this->hiddenOrigin($viewer, $target, $destination);
+        $unknown = $this->fleet($owner, $home, $hiddenTarget, 'spy');
+        $known['spy']->cargo = ['hydrogen' => 987654321];
+        $this->ship($known['spy'], 'probe', 'intermediate', 29);
+
+        $map = $this->map($viewer, $home);
+        self::assertTrue($map['guildFilterAvailable']);
+        foreach ([...array_values($known), $return] as $fleet) {
+            $row = $this->row($map, $fleet);
+            self::assertTrue($row['guildFlight']);
+            self::assertSame($owner->username, $row['ownerName']);
+            self::assertSame($home->name, $row['originName']);
+            self::assertSame($destination->name, $row['destinationName']);
+            self::assertSame($fleet->arrivalAt->format(DATE_ATOM), $row['arrivalAt']);
+            foreach (['ships', 'cargo', 'composition', 'shipCount', 'fleetPoints'] as $privateKey) {
+                self::assertArrayNotHasKey($privateKey, $row);
+            }
+        }
+        self::assertNotContains($unknown->id, array_column($map['flights'], 'id'));
+        self::assertSelectorTextContains('[data-guild-flight][data-flight-id="'.$return->id.'"]', $destination->name.' → '.$home->name);
+        self::assertSelectorTextContains('[data-guild-flight][data-flight-id="'.$known['spy']->id.'"]', 'Espionnage');
+        self::assertStringNotContainsString('987654321', $this->client->getResponse()->getContent());
+
+        $galaxyId = $home->solarSystem->galaxy->id;
+        $live = $this->surveillance($viewer, $galaxyId);
+        self::assertTrue($this->row($live, $known['spy'])['guildFlight']);
+        self::assertStringContainsString('data-guild-flight', $live['fleetLog']);
+        self::assertStringNotContainsString('data-guild-flight', $live['html']);
+        $withoutMap = $this->surveillance($viewer);
+        self::assertArrayNotHasKey('flights', $withoutMap);
+        self::assertArrayNotHasKey('guildFilterAvailable', $withoutMap);
+        foreach (['/flottes', '/planetes/'.$viewerHome->id] as $path) {
+            $this->client->request('GET', $path);
+            self::assertResponseIsSuccessful();
+            self::assertSelectorNotExists('[data-guild-flight]');
+        }
+
+        $alliedMap = $this->map($ally, $home);
+        self::assertFalse($alliedMap['guildFilterAvailable']);
+        self::assertNotContains($known['spy']->id, array_column($alliedMap['flights'], 'id'));
+        self::assertArrayNotHasKey('guildFlight', $this->row($alliedMap, $known['transport']));
+        self::assertNotContains($known['spy']->id, array_column($this->map($target, $home)['flights'], 'id'));
+
+        $this->em->remove($this->em->getReference(GuildMember::class, $membership->id));
+        $this->em->flush();
+        $live = $this->surveillance($viewer, $galaxyId);
+        self::assertFalse($live['guildFilterAvailable']);
+        self::assertNotContains($known['spy']->id, array_column($live['flights'], 'id'));
+        self::assertStringNotContainsString('data-guild-flight', $live['fleetLog']);
+    }
+
+    private function joinGuild(Player $player, Guild $guild): GuildMember
+    {
+        $membership = new GuildMember();
+        $membership->guild = $guild;
+        $membership->playerUniverse = $player->currentPlayerUniverse;
+        $this->em->persist($membership);
+
+        return $membership;
     }
 
     public function testForeignFleetHasOnlyCountsAndPointsUsingUniverseRanksWithoutDefenses(): void
