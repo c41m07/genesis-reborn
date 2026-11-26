@@ -2312,3 +2312,7 @@ Vaisseaux : chiffrer séparément la coque (M), le blindage ou la précision (N)
 ### Progression du prix des défenses, 26 novembre 2026
 
 Le rang Intermédiaire vaut 125 % du Basique et le rang Supérieur 125 % de l’Intermédiaire, en H × 1 + M × 2 + N × 4 + A × 8, hors électricité. Le Basique et les matériaux de chaque recette RP restent inchangés ; arrondir à la valeur réalisable la plus proche. Les prix et les statistiques des vaisseaux ne changent pas. Voir [les recettes RP](CATALOGUE_COUTS_RP.md#défenses).
+
+## Bourse de ressources et convoi des marchands — 26 novembre 2026
+
+Kévin valide la maquette A, la station A:0:0 et le voyage protégé de 30 minutes par trajet. L’étalon initial est 8 H = 4 M = 2 N = 1 AM, avec des frais d’essai de 2 %. Le carburant ne dépend pas de la position de départ à flotte égale ; le rappel n’est possible qu’avant l’échange. La réserve initiale est administrée par univers. Le convoi marchand du vendredi 9 h Europe/Paris apporte jusqu’à 50 % de ce que la station a vendu aux joueurs, dans la place disponible sous la cible, sans toucher au cours. [Architecture et cas limites](BOURSE_DE_RESSOURCES.md).

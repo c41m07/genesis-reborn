@@ -1193,6 +1193,7 @@ final class GameRepository
             \App\Message\PirateAttackDue::KIND,
             \App\Message\PirateConvoyDue::KIND,
             \App\Message\PirateSurvivorsDue::KIND,
+            \App\Message\MarketConvoyDue::KIND,
         ]);
         if (!$notifications) {
             // La programmation annuelle peut précéder Noël de plusieurs mois.

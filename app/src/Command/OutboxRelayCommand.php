@@ -5,6 +5,7 @@ namespace App\Command;
 use App\Service\Boost\BoostEventService;
 use App\Service\Notification\{OutboxPublicationFailed, OutboxRelay};
 use App\Service\Player\DailyLeaderboard;
+use App\Service\Market\WeeklyMerchantDelivery;
 use App\Service\ProcessHeartbeat;
 use App\Service\Performance\InfrastructurePerformance;
 use Doctrine\ORM\EntityManagerInterface;
@@ -24,6 +25,7 @@ final class OutboxRelayCommand extends Command
         private DailyLeaderboard $leaderboard,
         private ManagerRegistry $doctrine,
         private InfrastructurePerformance $performance,
+        private WeeklyMerchantDelivery $merchants,
     ) {
         parent::__construct();
     }
@@ -49,7 +51,8 @@ final class OutboxRelayCommand extends Command
                 // Garder l’ordre boost → classement → publication, sans lier leur disponibilité.
                 $boostOk = $this->runCycle('boost', $this->boostEvents->tick(...), $output);
                 $leaderboardOk = $this->runCycle('classement', $this->leaderboard->tick(...), $output);
-                $cyclesOk = $boostOk && $leaderboardOk;
+                $marketOk = $this->runCycle('marchands de la Bourse', $this->merchants->tick(...), $output);
+                $cyclesOk = $boostOk && $leaderboardOk && $marketOk;
                 // Le relais des événements est le seul processus à entretenir les agrégats.
                 $this->performance->pruneIfDue();
             }
