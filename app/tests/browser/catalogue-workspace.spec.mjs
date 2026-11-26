@@ -152,6 +152,8 @@ test('L7B : manques multiples, devis de lot et suivi dépliable conservés aprè
 
     // La recette de colonisation supérieure demande toujours quatre matériaux et l’électricité.
     runIsolatedSql(user.project, `UPDATE player_technology SET level=5 WHERE player_universe_id=${user.member} AND slug='colonial_expansion' AND tier='superior'`);
+    // Un changement de fragment ne recharge pas la page après la préparation SQL.
+    await page.reload();
     await page.goto(`${user.path}?section=technologies#item-colonial_expansion-superior`);
     const research = page.locator('#item-colonial_expansion-superior');
     const action = research.locator('.catalog-build-action');
