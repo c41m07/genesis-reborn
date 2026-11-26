@@ -139,7 +139,9 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
         await expect(panel('superior').locator('.catalog-card-art img')).toHaveCSS('object-fit', 'cover');
         const positions = await family.getByRole('tab').evaluateAll(tabs => tabs.map(tab => Math.round(tab.getBoundingClientRect().top)));
         expect(new Set(positions).size).toBe(1);
-        await expect(tab('intermediate')).toHaveAccessibleName('Intermédiaire');
+        const visibleRank = await tab('intermediate').locator('.building-rank-name > span:visible').innerText();
+        const visibleLevel = await tab('intermediate').locator('.building-rank-level').innerText();
+        await expect(tab('intermediate')).toHaveAccessibleName(visibleRank + ' ' + visibleLevel);
         await expect(tab('intermediate')).toHaveAccessibleDescription(/Intermédiaire/);
         const overflow = await family.getByRole('tab').evaluateAll(tabs => tabs.filter(tab => tab.scrollWidth > tab.clientWidth).map(tab => ({ label: tab.innerText, available: tab.clientWidth, content: tab.scrollWidth })));
         expect(overflow, `Onglets à ${width} px`).toEqual([]);
@@ -292,7 +294,7 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
         await expect(family.locator('.card-stock-badge, .tier-label')).toHaveCount(0);
         await expect(panel('basic').locator('.catalogue-level-badge')).toHaveText(group === 'technologies' ? 'Niv. 5' : group === 'ships' ? '125,00 k en réserve' : '1,25 M installés');
         await expect(tab('basic').locator('.building-rank-level')).toHaveText(group === 'technologies' ? 'Niv. 5' : group === 'ships' ? '125 k' : '1,25 M');
-        await expect(tab('basic').locator('.building-rank-level')).toHaveAttribute('aria-hidden', 'true');
+        await expect(tab('basic')).toHaveAccessibleName(group === 'technologies' ? /^Bas(?:ique|\.) Niv\. 5$/ : group === 'ships' ? /^Bas(?:ique|\.) 125 k$/ : /^Bas(?:ique|\.) 1,25 M$/);
         await expect(tab('superior').locator('.building-rank-level')).toHaveText(group === 'technologies' ? 'Niv. 0' : '0');
         if (group !== 'technologies') {
             await expect(tab('basic')).toHaveAccessibleDescription(group === 'ships' ? /125 000 unités possédées/ : /1 250 000 unités installées/);
