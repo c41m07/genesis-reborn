@@ -104,6 +104,16 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     await nativePage.screenshot({ path: info.outputPath('P22-reconnaissance-en-cours-1920x1080.png'), scale: 'css', animations: 'disabled' });
     await expect(nativePage.getByText('Flotte pirate révélée', { exact: true })).toHaveCount(0);
     await expect(nativePage.locator('.pirate-campaign-intel--embedded')).toHaveCount(0);
+    const reportId = Number(queryIsolatedSql(project, 'SELECT id FROM pirate_reconnaissance WHERE membership_id=' + member));
+    const spyReport = '/rapports/espionnage-pirate/' + reportId;
+    const simulator = '/simulateur?pirate_report=' + reportId;
+    const reportPage = await nativeContext.newPage();
+    try {
+      expect((await reportPage.goto(base + spyReport)).status()).toBe(404);
+      expect((await reportPage.goto(base + simulator)).status()).toBe(422);
+    } finally {
+      await reportPage.close();
+    }
     // Le vrai départ a figé le reçu d'hydrogène. Avancer les deux horodatages du même écart
     // conserve la durée native, tandis que le worker reste couvert par sa recette métier.
     const shift = Number(queryIsolatedSql(project, 'SELECT GREATEST(TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), due_at), 0) + 2 FROM pirate_reconnaissance WHERE membership_id=' + member + ' AND reported_at IS NULL'));
@@ -117,8 +127,35 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     await expect(nativeDossier.getByRole('region', { name: 'Gain potentiel', exact: true })).toContainText('Ce montant n’a pas été versé.');
     await expect(nativePage.getByRole('button', { name: 'Vérifier le devis d’attaque', exact: true })).toHaveCount(0);
     await nativePage.screenshot({ path: info.outputPath('P05-sans-escorte-1920x1080.png'), scale: 'css', animations: 'disabled' });
+    await expect(nativePage.getByRole('link', { name: 'Ouvrir le rapport d’espionnage' })).toHaveAttribute('href', spyReport);
+    const intelPage = await nativeContext.newPage();
+    try {
+      const reportResponse = await intelPage.goto(base + spyReport);
+      expect(reportResponse.status()).toBe(200);
+      expect(reportResponse.headers()['cache-control']).toContain('no-store');
+      await expect(intelPage.getByRole('heading', { name: 'Renseignement de combat complet' })).toBeVisible();
+      await expect(intelPage.getByText(/Aucune défense planétaire, aucune forteresse/)).toBeVisible();
+      await intelPage.setViewportSize({ width: 390, height: 844 });
+      await expect.poll(() => intelPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+      await intelPage.getByRole('link', { name: 'Reprendre ces renseignements dans le simulateur' }).click();
+      await expect(intelPage).toHaveURL(new RegExp('/simulateur\\?pirate_report=' + reportId + '$'));
+      await expect(intelPage.getByText(/Camp pirate verrouillé/)).toBeVisible();
+      await expect(intelPage.locator('[name^="forces[defender]"]')).toHaveCount(0);
+      await intelPage.locator('#sim-attacker-ships-fighter-basic').fill('1');
+      await intelPage.locator('[name="assumptions"]').check();
+      await intelPage.getByRole('button', { name: 'Simuler 10 combats' }).click();
+      await expect(intelPage.getByRole('heading', { name: 'Estimation sur 10 combats' })).toBeVisible();
+      expect(queryIsolatedSql(project, 'SELECT COUNT(*) FROM pirate_attack_campaign WHERE reconnaissance_id=' + reportId)).toBe('0');
+    } finally {
+      await intelPage.close();
+    }
 
-    setFighterQuantity(1);
+
+    // La limite du dossier doit rester distincte du stock affiché.
+    setFighterQuantity(5);
+    runIsolatedSql(project, "INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'fighter','intermediate',2 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle' ON DUPLICATE KEY UPDATE quantity=2");
+    runIsolatedSql(project, "INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'solar_satellite','basic',1 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle' ON DUPLICATE KEY UPDATE quantity=1");
+    runIsolatedSql(project, `UPDATE universe SET game_settings=JSON_MERGE_PATCH(game_settings,'{"limits":{"max_fleet_size":3}}') WHERE id=${universe}`);
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto(campaignPath);
     const dossier = page.locator('.pirate-campaign-dossier');
@@ -131,6 +168,24 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     await expect(journal.getByText('Gain potentiel')).toHaveCount(0);
     await expect(page.locator('#pirate-intelligence-title')).toHaveCount(1);
     await expect(assault).toBeEnabled();
+    const escortTable = dossier.getByRole('table', { name: 'Choisir l’escorte', exact: true });
+    await expect(escortTable.getByRole('columnheader')).toHaveText(['Élément', 'Basique', 'Intermédiaire', 'Supérieur']);
+    await expect(escortTable.getByText(/Satellite/)).toHaveCount(0);
+    const fighter = escortTable.getByRole('row', { name: /^Chasseur de patrouille/ });
+    const [basic, intermediate, superior] = await fighter.getByRole('spinbutton').all();
+    await expect(fighter.getByRole('button')).toHaveCount(3);
+    const [basicMax, intermediateMax, superiorMax] = await fighter.getByRole('button').all();
+    await expect(fighter.locator('[data-fleet-stock-value]')).toHaveText(['(5)', '(2)', '(0)']);
+    await expect(basic).toHaveAttribute('max', '3');
+    await expect(superior).toBeDisabled();
+    await expect(superior).not.toHaveAttribute('name');
+    await expect(superiorMax).toBeDisabled();
+    await intermediateMax.click();
+    await expect(intermediate).toHaveValue('2');
+    await expect(basic).toHaveAttribute('max', '1');
+    await basicMax.focus();
+    await page.keyboard.press('Enter');
+    await expect(basic).toHaveValue('1');
     expect((await dossier.getByRole('region', { name: 'Gain potentiel', exact: true }).boundingBox()).y).toBeGreaterThan((await assault.boundingBox()).y);
     await expect(page.getByRole('link', { name: 'Voir les renseignements', exact: true })).toHaveCount(0);
     const desktopDossier = await dossier.boundingBox();
@@ -157,10 +212,21 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     }
     expect((await new AxeBuilder({ page }).include('.pirate-campaign').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()).violations).toEqual([]);
 
+    // Les maxima choisis dans les deux rangs arrivent ensemble au devis, sans départ.
+    await assault.click();
+    await expect(dossier.getByRole('heading', { name: 'Confirmer l’attaque', exact: true })).toBeVisible();
+    await expect(dossier.getByRole('list', { name: 'Escorte choisie' }).getByRole('listitem')).toHaveText([
+      'Chasseur de patrouille : 1',
+      'Chasseur multirôle : 2',
+    ]);
+    expect(queryIsolatedSql(project, 'SELECT COUNT(*) FROM pirate_attack_campaign a JOIN pirate_reconnaissance r ON r.id=a.reconnaissance_id WHERE r.membership_id=' + member)).toBe('0');
+
     // L’aperçu natif n’envoie rien : la confirmation conserve son agencement existant.
     await nativePage.reload();
     const nativeAssault = nativeDossier.getByRole('button', { name: 'Vérifier le devis d’attaque', exact: true });
-    await nativeDossier.getByRole('spinbutton').fill('1');
+    const nativeEscort = nativeDossier.getByRole('table', { name: 'Choisir l’escorte', exact: true });
+    await expect(nativeEscort.getByRole('button', { name: /^Max/ })).toHaveCount(0);
+    await nativeEscort.getByRole('spinbutton', { name: /Chasseur de patrouille.*Basique/ }).fill('1');
     await nativeAssault.click();
     await expect(nativePage.getByRole('heading', { name: 'Confirmer l’attaque', exact: true })).toBeVisible();
     await expect(nativePage.getByRole('link', { name: 'Voir les renseignements', exact: true })).toHaveAttribute('href', '#pirate-intelligence-title');

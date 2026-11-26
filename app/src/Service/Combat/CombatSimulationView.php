@@ -37,7 +37,10 @@ final class CombatSimulationView
                         if ($quantity < 1) {
                             continue;
                         }
-                        $definition = $this->catalog->withTier($choices[$category][$slug], $tier);
+                        // Une famille peut avoir quitté le catalogue depuis le relevé pirate.
+                        $definition = isset($choices[$category][$slug])
+                            ? $this->catalog->withTier($choices[$category][$slug], $tier)
+                            : ['label' => $slug];
                         $initialRows[] = [
                             'camp' => $camp,
                             'slug' => $slug,

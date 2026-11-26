@@ -28,6 +28,7 @@
           data-action="invalid->simulation-wizard#showInvalid:capture input->simulation-wizard#edited">
         <input type="hidden" name="_token" value="{{ csrf_token('combat_simulation') }}">
         <input type="hidden" name="report" value="{{ intel.id|default(0) }}">
+        {% if pirate_intel %}<input type="hidden" name="pirate_report" value="{{ pirate_intel.id }}">{% endif %}
         <input type="hidden" name="own_source" value="{{ own_source }}">
         <input type="hidden" name="wizard_step" value="{{ step }}" data-simulation-wizard-target="current">
         {# Entrée dans un champ numérique ne doit ni remplacer des données ni lancer un calcul.
@@ -48,14 +49,29 @@
                         <section class="simulation-wizard-camp panel" aria-labelledby="simulation-{{ key }}-{{ camp }}">
                             <p class="simulation-board-eyebrow">{{ title }}</p>
                             <h3 id="simulation-{{ key }}-{{ camp }}">{{ item.title }} · {{ title }}</h3>
-                            {% if key == 'defenses' and camp == 'attacker' %}
+                            {% if camp == 'defender' and pirate_intel %}
+                                {% if key == 'ships' %}
+                                    <p>Vaisseaux figés par le rapport. Ce camp entre au round 1.</p>
+                                    <ul>
+                                        {% for ship in pirate_intel.formation %}
+                                            <li>{{ ship.quantity|quantity(0) }} × {{ ship.label }} · {{ {basic:'Basique', intermediate:'Intermédiaire', superior:'Supérieur'}[ship.tier] }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% elseif key == 'defenses' %}
+                                    <p>Aucune défense planétaire ni forteresse pour cette rencontre.</p>
+                                {% else %}
+                                    <p>Aucune recherche indépendante. Les caractéristiques du rapport restent appliquées.</p>
+                                {% endif %}
+                            {% elseif key == 'defenses' and camp == 'attacker' %}
                                 <div class="simulation-wizard-not-applicable">
                                     <strong>Non applicable</strong>
                                     <p>Les défenses fixes et la forteresse n’interviennent que du côté de la colonie défendue.</p>
                                 </div>
                             {% else %}
                                 {% include 'combat/_wizard_table.html.twig' with {group: key, definitions: choices[key], heading: item.title} %}
-                                {% if key == 'ships' %}
+                                {% if key == 'ships' and pirate_intel %}
+                                    <p>L’escorte entre au round 1, sans renfort.</p>
+                                {% elseif key == 'ships' %}
                                     <div class="simulation-wizard-arrival">
                                         <label for="arrival-{{ camp }}">Arrivée des vaisseaux au round</label>
                                         <input id="arrival-{{ camp }}" name="forces[{{ camp }}][arrival]" type="number" min="1" max="10" value="{{ forces[camp].arrival|default(1) }}" required>
@@ -74,7 +90,7 @@
                         <h3 id="simulation-recap-title">Récapitulatif des deux camps</h3>
                         <div class="simulation-wizard-camps">
                             <div><strong>Attaquant</strong><p>{{ own_source ? 'Vaisseaux et recherches repris de votre empire, avec vos ajustements.' : 'Vaisseaux et recherches saisis manuellement.' }} Les défenses fixes ne s’appliquent pas.</p></div>
-                            <div><strong>Défenseur</strong><p>{% if intel %}{{ espionageTitle(intel.targetName) }} ; les données non révélées et vos ajustements restent des hypothèses.{% else %}Vaisseaux, défenses et recherches saisis manuellement.{% endif %}</p></div>
+                            <div><strong>Défenseur</strong><p>{% if pirate_intel %}Camp pirate figé par le rapport · {{ pirate_intel.rounds }} rounds au maximum · Recharge des boucliers : {{ pirate_intel.recharge }} % par round.{% elseif intel %}{{ espionageTitle(intel.targetName) }} ; les données non révélées et vos ajustements restent des hypothèses.{% else %}Vaisseaux, défenses et recherches saisis manuellement.{% endif %}</p></div>
                         </div>
                     </section>
                     <div class="simulation-board-options simulation-wizard-options">

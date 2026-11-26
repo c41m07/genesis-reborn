@@ -732,8 +732,16 @@ signalée comme imminente tant que la flotte est encore à l’aller.
 Une flotte rappelée ou passée en combat n’est plus une attaque entrante en trajet ;
 les affichages existants du combat et des retours sont conservés.
 
-Le propriétaire suit ses missions complètes. Les sondes sont privées à leur
-propriétaire à l’aller comme au retour ; leur détection à l’arrivée est inchangée.
+Le propriétaire suit ses missions complètes. Les sondes restent privées hors de la
+carte de leur propriétaire et des membres actuels de la même guilde ; leur
+détection à l’arrivée est inchangée. Sur la carte interactive, le filtre
+« Afficher les flottes de guilde » couvre toutes les missions ordinaires, à
+l’aller, au retour ou sur place, si les deux systèmes sont déjà découverts.
+Un point de repli non découvert reste masqué. Le suivi de guilde est limité au
+commandant, à la mission, à son trajet et à son échéance ; ni composition,
+ni effectifs, ni fret. Les anciens accès du destinataire et des autres alliés
+ne changent pas. Les trajets rattachés aux dossiers privés de la campagne pirate
+ne sont pas partagés, pas plus que les renseignements du rapport de sonde.
 Les mouvements non offensifs sont visibles au propriétaire, au destinataire
 et aux alliés du propriétaire dans les limites de découverte. Le destinataire
 voit sa propre cible, mais une origine inconnue reste masquée. Pour les alliés

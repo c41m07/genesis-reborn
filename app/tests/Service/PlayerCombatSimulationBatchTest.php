@@ -6,6 +6,7 @@ use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Combat\{CombatSimulator,CombatUnitFactory,PlayerCombatSimulation,TechnologyEffectCalculator};
 use App\Service\Fleet\EspionageReportReader;
+use App\Service\PirateCampaign\{PirateBattleScenario, PirateEncounterSnapshot};
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -97,6 +98,38 @@ final class PlayerCombatSimulationBatchTest extends TestCase
         self::assertSame(1_000_000, array_sum(array_column($prepared['participants'][1]['units'], 'quantity')));
         self::assertSame(500_000, $prepared['defenses'][0]['quantity']);
         self::assertSame(3, $prepared['participants'][1]['arrival_round']);
+    }
+
+    public function testPiratePreviewUsesFrozenRulesAndProfilesEvenAfterBalanceChanges(): void
+    {
+        $catalog = new GameCatalog(dirname(__DIR__, 2).'/config/game');
+        $units = new CombatUnitFactory($catalog, new TechnologyEffectCalculator($catalog));
+        $encounter = PirateEncounterSnapshot::freeze(['fighter' => ['basic' => 3]], ['metal' => 100]);
+        $pirates = $units->ships($this->owner->universe, $encounter->composition(), []);
+        $pirates[0]['hp'] = 456;
+        $modifiers = ['fighter' => ['fighter' => 0.3]];
+        $battle = PirateBattleScenario::freeze($encounter, $pirates, $modifiers, 3, 21.0);
+        $this->owner->universe->gameSettings = ['catalog_overrides' => ['ships' => ['fighter' => ['hp' => 77]]]];
+        $scenario = $this->simulation->prepare($this->owner, [
+            'attacker' => ['ships' => ['fighter' => ['basic' => 2]], 'arrival' => 3],
+            'defender' => ['ships' => ['fighter' => ['basic' => 17]], 'arrival' => 3, 'defenses' => ['ground_turret_anti_light' => ['basic' => 15]]],
+        ], 42, $battle);
+
+        self::assertSame(77, $scenario['participants'][0]['units'][0]['hp']);
+        self::assertSame($battle->snapshot()['units'], $scenario['participants'][1]['units']);
+        self::assertSame(456, $scenario['participants'][1]['units'][0]['hp']);
+        self::assertSame([1, 1], array_column($scenario['participants'], 'arrival_round'));
+        self::assertSame($encounter->composition(), $scenario['forces']['defender']['ships']);
+        self::assertSame($modifiers, $scenario['modifiers']);
+        self::assertSame(3, $scenario['rounds']);
+        self::assertSame(21.0, $scenario['recharge']);
+        self::assertSame([], $scenario['defenses']);
+
+        $simulator = new CombatSimulator();
+        $native = $battle->resolve($simulator, PirateBattleScenario::freezeUnits($scenario['participants'][0]['units']), 42);
+        $trial = $this->simulation->runTrial($scenario, 42, 0);
+        self::assertSame($native['outcome'], $trial['outcome']);
+        self::assertSame($native['rounds_played'], $trial['rounds_played']);
     }
 
     public function testOnlyBlankApprovedUnknownInputsBecomeZeroForTheCalculation(): void

@@ -14,14 +14,22 @@
     </dl>
 {% endif %}
 {% if briefing.losses is not null %}
-    <section class="pirate-campaign-losses" aria-labelledby="pirate-losses-title">
-        <h3 id="pirate-losses-title">Vaisseaux perdus par votre escorte</h3>
+    <section class="pirate-campaign-losses report-summary" aria-labelledby="pirate-losses-title">
+        <h3 id="pirate-losses-title">Rapport de combat · {{ briefing.status }}</h3>
+        {% if briefing.combat_rounds|default(null) is not null %}
+            <p class="muted">Rounds joués : {{ briefing.combat_rounds }}.</p>
+        {% endif %}
         {% if briefing.losses %}
-            <ul>
-                {% for ship in briefing.losses %}
-                    <li>{{ ship.label }} ({{ ship.tier }}) : {{ ship.quantity }}</li>
-                {% endfor %}
-            </ul>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Vaisseaux perdus">
+                <table class="data-table">
+                    <thead><tr><th scope="col">Vaisseau</th><th scope="col">Rang</th><th scope="col">Pertes</th></tr></thead>
+                    <tbody>
+                    {% for ship in briefing.losses %}
+                        <tr><th scope="row">{{ ship.label }}</th><td>{{ ship.tier }}</td><td class="report-loss">−{{ ship.quantity|quantity(0) }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             <p>Ces pertes sont définitives.</p>
         {% else %}
             <p>Aucun vaisseau perdu.</p>
