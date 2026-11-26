@@ -3,6 +3,7 @@
 {% set preferred = d.economic_unit is defined ? (positive|first) : (positive|filter(item => item.label == (card.filter_category == 'transport' ? 'Capacité de soute' : 'Attaque'))|first) %}
 {% set benefit = preferred ?: (positive|first) %}
 {% if benefit %}
+    {% set benefit = benefit.summary|default(benefit) %}
     <div class="core-catalogue-gain core-unit-gain" data-catalogue-main-gain>
         <span>{{ benefit.label }}{% if benefit.label == 'Attaque' %} par tir{% endif %}</span>
         <strong>{% include 'ui/catalogue_benefit_value.html.twig' with {benefit:benefit} only %}</strong>
