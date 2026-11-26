@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration;
 
-use App\Entity\{Galaxy, OutboxMessage, Planet, PlanetBuilding, PlanetResource, Player, PlayerUniverse, PlayerTechnology, QueueItem, SolarSystem, Universe};
+use App\Entity\{ExpenseCollection, Galaxy, OutboxMessage, Planet, PlanetBuilding, PlanetResource, Player, PlayerUniverse, PlayerTechnology, QueueExpense, QueueItem, SolarSystem, Universe};
+use App\Repository\AdminExpenseReadRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Colony\{ColonyView, ResourceService};
 use App\Service\Player\VacationEconomyService;
@@ -81,6 +82,112 @@ final class LiveQueueBonusTest extends KernelTestCase
         }
         $this->em->flush();
         $this->queues = self::getContainer()->get(QueueService::class);
+    }
+
+    public function testExpenseSurvivesCompletionAndAsyncReplay(): void
+    {
+        $order = $this->order($this->local, 'buildings', 'mine_metal', 'a');
+        $id = $order->id;
+        $expected = array_filter($order->paidCosts);
+        $this->clock->sleep($order->durationSeconds);
+        $this->queues->complete($id, $order->dispatchToken);
+        $this->queues->complete($id, $order->dispatchToken);
+        $this->em->clear();
+
+        self::assertNull($this->em->find(QueueItem::class, $id));
+        $expense = $this->em->find(QueueExpense::class, $id);
+        self::assertSame('buildings', $expense->category);
+        self::assertSame($expected, $expense->paid);
+        self::assertNull($expense->refundedAt);
+        self::assertSame(1, $this->em->getRepository(QueueExpense::class)->count());
+    }
+
+    public function testExpenseRefundReflectsRealStorageCapacity(): void
+    {
+        $order = $this->order($this->local, 'buildings', 'mine_metal', 'a');
+        $id = $order->id;
+        $recorded = array_filter($order->paidCosts);
+        $metal = $this->em->getRepository(PlanetResource::class)->findOneBy(['planet' => $this->local, 'resourceType' => 'metal']);
+        $capacity = self::getContainer()->get(ResourceService::class)->capacity($this->local, 'metal', []);
+        $metal->currentStock = $capacity - 3;
+        $metal->lastUpdatedAt = $this->clock->now();
+        $this->em->flush();
+
+        $this->queues->cancel($this->membership, $id, str_repeat('b', 32));
+        $this->queues->cancel($this->membership, $id, str_repeat('b', 32));
+        $this->em->clear();
+        $expense = $this->em->find(QueueExpense::class, $id);
+        self::assertSame($recorded, $expense->paid);
+        self::assertNotNull($expense->refundedAt);
+        self::assertGreaterThan($expense->refunded['metal'], $recorded['metal'] * .25);
+        self::assertEqualsWithDelta(3, $expense->refunded['metal'], .0001);
+        self::assertSame(1, $this->em->getRepository(QueueExpense::class)->count());
+    }
+
+    public function testExpenseTotalsSeparatePaymentAndRefundPeriodsAndUniverses(): void
+    {
+        $since = $this->clock->now();
+        $collection = new ExpenseCollection();
+        $collection->source = 'catalogue';
+        $collection->availableSince = $since->modify('-1 day');
+        $this->em->persist($collection);
+
+        // Une même personne, deux participations distinctes : aucun agrégat partagé.
+        $universe = new Universe();
+        $universe->name = 'Ailleurs';
+        $universe->slug = 'other-expense-universe';
+        $otherMembership = new PlayerUniverse();
+        $otherMembership->player = $this->membership->player;
+        $otherMembership->universe = $universe;
+        $otherMembership->joinedAt = $since;
+        $this->em->persist($universe);
+        $this->em->persist($otherMembership);
+
+        foreach ([
+            [1, $this->membership, 'buildings', ['metal' => 10, 'nano' => 3, 'electricity' => 50]],
+            [2, $this->membership, 'defenses', ['hydrogen' => 7, 'antimatter' => 2]],
+            [3, $otherMembership, 'buildings', ['metal' => 500]],
+        ] as [$id, $membership, $category, $paid]) {
+            $expense = new QueueExpense();
+            $expense->queueItemId = $id;
+            $expense->playerUniverse = $membership;
+            $expense->planetId = $this->local->id;
+            $expense->category = $category;
+            $expense->itemSlug = 'fixture';
+            $expense->tier = 'basic';
+            $expense->itemLevel = null;
+            $expense->quantity = 1;
+            $expense->paid = $paid;
+            $expense->paidAt = $since;
+            if ($id === 1) {
+                $expense->refunded = ['metal' => 1.125];
+                $expense->refundedAt = $since->modify('+1 hour');
+            }
+            $this->em->persist($expense);
+        }
+        $this->em->flush();
+
+        $repository = new AdminExpenseReadRepository($this->em->getConnection());
+        $oneHourLater = $since->modify('+1 hour');
+        $membershipId = $this->membership->id;
+        $universeId = $this->membership->universe->id;
+        $first = $repository->catalogueForMembership($universeId, $membershipId, $since, $oneHourLater);
+        $second = $repository->catalogueForMembership($universeId, $membershipId, $oneHourLater, $since->modify('+2 hours'));
+        $outside = $repository->catalogueForMembership($universeId, $otherMembership->id, $since, $oneHourLater);
+        $other = $repository->catalogueForMembership($universe->id, $otherMembership->id, $since, $oneHourLater);
+
+        self::assertEquals($since->modify('-1 day'), $repository->catalogueAvailableSince());
+        self::assertSame(10.0, $first['buildings']['paid']['metal']);
+        self::assertSame(50.0, $first['buildings']['net']['electricity']);
+        self::assertSame(0.0, $first['buildings']['refunded']['metal']);
+        self::assertSame(32.0, $first['buildings']['material_net']);
+        self::assertSame(23.0, $first['defenses']['material_net']);
+        self::assertSame(0.0, $first['ships']['material_net']);
+        self::assertSame(0.0, $second['buildings']['paid']['metal']);
+        self::assertSame(-1.125, $second['buildings']['net']['metal']);
+        self::assertSame(-2.25, $second['buildings']['material_net']);
+        self::assertSame(0.0, $outside['buildings']['paid']['metal']);
+        self::assertSame(500.0, $other['buildings']['paid']['metal']);
     }
 
     public function testEarnedResearchChangesBothColoniesAndAnOldMessageCannotCompleteTheJob(): void

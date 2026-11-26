@@ -59,6 +59,7 @@ final class CombatEventService
         private OccupationService $occupations,
         private \App\Service\Player\EmpireReconstructionScheduler $reconstruction,
         private \App\Service\Queue\QueueService $queues,
+        private \App\Service\Fleet\FleetFuelExpenseRecorder $fuelExpenses,
     ) {}
 
     public function canAttack(PlayerUniverse $attacker, Planet $target): bool
@@ -990,7 +991,7 @@ final class CombatEventService
         if ($fleet->orbitFuel <= 0) {
             return;
         }
-        $fleet->cargo['hydrogen'] = max(0, ($fleet->cargo['hydrogen'] ?? 0) - $fleet->orbitFuel);
+        $this->fuelExpenses->burnLocked($fleet, $fleet->orbitFuel, 'combat_orbit');
         $fleet->reservedFuel = max(0, $fleet->reservedFuel - $fleet->orbitFuel);
         $fleet->orbitFuel = 0;
     }
@@ -1105,7 +1106,7 @@ final class CombatEventService
         $duration=max(1,$fleet->orbitDurationSeconds);
         $elapsed=$fleet->departureAt===null?0:max(0,$this->clock->now()->getTimestamp()-$fleet->departureAt->getTimestamp());
         $spent=$fleet->orbitFuel*min(1,$elapsed/$duration);
-        $fleet->cargo['hydrogen']=max(0,($fleet->cargo['hydrogen']??0)-$spent);$fleet->reservedFuel=max(0,$fleet->reservedFuel-$fleet->orbitFuel);$fleet->orbitFuel=0;
+        $this->fuelExpenses->burnLocked($fleet, $spent, 'occupation_release');$fleet->reservedFuel=max(0,$fleet->reservedFuel-$fleet->orbitFuel);$fleet->orbitFuel=0;
     }
     private function registerGarrison(CombatEvent $event, PlayerUniverse $defender): void
     {

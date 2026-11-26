@@ -302,13 +302,17 @@ final class ResourceService
         }
         foreach ($costs as $slug=>$amount) $rows[$slug]->currentStock-=$amount;
     }
-    public function refund(Planet $planet,array $paid,float $ratio): void
+    /** @return array<string, float> Montants effectivement crédités, plafonnés à la capacité. */
+    public function refund(Planet $planet,array $paid,float $ratio): array
     {
         $rows=$this->materialize($planet);$levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);
+        $credited = [];
         foreach($paid as $slug=>$amount) {
             if(!isset($rows[$slug]) || $amount<0 || !is_finite((float)$amount)) throw new \DomainException('Coût payé invalide.');
-            $rows[$slug]->currentStock+=min(max(0.0,$this->capacity($planet,$slug,$levels)-$rows[$slug]->currentStock),$amount*$ratio);
+            $credited[$slug]=min(max(0.0,$this->capacity($planet,$slug,$levels)-$rows[$slug]->currentStock),$amount*$ratio);
+            $rows[$slug]->currentStock+=$credited[$slug];
         }
+        return $credited;
     }
     /**
      * Dépose les ressources dans la capacité existante. Pour un dépôt indivisible, overflow

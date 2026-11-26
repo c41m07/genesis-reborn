@@ -36,7 +36,7 @@
   {% if releases.notes is empty and not comparePeriod %}
     <p>Aucune note publiée à comparer.</p>
   {% elseif tab == 'economy' %}
-    <p>Les stocks restent à leur valeur réelle. Aucun historique des flux de ressources n’est encore disponible pour cette comparaison.</p>
+    <p>Les stocks restent à leur valeur réelle. Le panneau Dépenses du joueur suit la période sélectionnée ; il ne reconstitue pas les flux antérieurs à la collecte.</p>
   {% elseif releaseComparison is not null %}
     {% set comparison = releaseComparison %}
     {% if comparison.hours > 0 %}

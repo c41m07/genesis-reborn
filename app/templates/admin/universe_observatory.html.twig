@@ -2,6 +2,7 @@
 {% block title %}Observatoire · {{ universe.name }} · Genesis Reborn{% endblock %}
 {% block body %}
 {% set filters = {id: universe.id, tab: tab, days: days, measure_period: periodId, release: comparePeriod ? -1 : (releases.selected.id ?? 0)} %}
+{% set economyFilters = tab == 'economy' ? filters|merge({expense_member: expenses.selected.id ?? 0, expense_query: expenses.query}) : filters %}
 <div class="observatory">
   <div class="page-heading admin-design-banner observatory-banner">
     <div><p class="eyebrow">Administration · Univers</p><h1>{{ tab == 'performance' ? 'Performance' : 'Observatoire' }}</h1><p>{{ tab == 'performance' ? 'Site entier · Chargements et traitements' : universe.name ~ ' · Jours UTC, aujourd’hui incomplet' }}</p></div>
@@ -20,7 +21,7 @@
         </div>
       </details>
       <nav class="ui-tabs" aria-label="Période"><ul>
-        {% for period in [7, 30, 90] %}<li><a href="{{ path('app_admin_universe_observatory', filters|merge({days: period})) }}"{% if days == period %} aria-current="true"{% endif %}>{{ period }} j</a></li>{% endfor %}
+        {% for period in [7, 30, 90] %}<li><a href="{{ path('app_admin_universe_observatory', economyFilters|merge({days: period})) }}"{% if days == period %} aria-current="true"{% endif %}>{{ period }} j</a></li>{% endfor %}
       </ul></nav>
       {% endif %}
     </div>
@@ -36,7 +37,8 @@
     </nav>
 
     <div class="observatory-content">
-      {% include 'admin/_observatory_release.html.twig' with {filters: tab == 'performance' ? perfFilters : filters} %}
+      {% if tab == 'economy' %}{% include 'admin/_observatory_expenses.html.twig' with {expenses: expenses, filters: economyFilters, universe: universe} only %}{% endif %}
+      {% include 'admin/_observatory_release.html.twig' with {filters: tab == 'performance' ? perfFilters : economyFilters} %}
       {% if tab == 'performance' %}
         {% include 'admin/_observatory_performance.html.twig' with {report: report, filters: perfFilters, comparePeriod: comparePeriod} only %}
       {% elseif tab == 'audience' %}
@@ -90,9 +92,9 @@
             <p>Aucune colonie exploitable sur cette page.</p>
           {% endif %}
           <nav class="observatory-pagination" aria-label="Pages des mesures économiques">
-            {% if resources.page > 1 %}<a href="{{ path('app_admin_universe_observatory', filters|merge({page: resources.page - 1})) }}">Précédente</a>{% endif %}
+            {% if resources.page > 1 %}<a href="{{ path('app_admin_universe_observatory', economyFilters|merge({page: resources.page - 1})) }}">Précédente</a>{% endif %}
             <span>Page {{ resources.page }} sur {{ resources.pages }}</span>
-            {% if resources.page < resources.pages %}<a href="{{ path('app_admin_universe_observatory', filters|merge({page: resources.page + 1})) }}">Suivante</a>{% endif %}
+            {% if resources.page < resources.pages %}<a href="{{ path('app_admin_universe_observatory', economyFilters|merge({page: resources.page + 1})) }}">Suivante</a>{% endif %}
           </nav>
         </section>
         <section class="panel"><h2>Historique des ressources</h2><p>Pas encore mesuré : entrées et sorties par source, réserves passées et blocages par manque de ressources. La production nette actuelle inclut l’électricité comme les autres ressources, mais ne reconstitue pas les flux séparés.</p></section>

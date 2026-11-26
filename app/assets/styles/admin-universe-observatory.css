@@ -146,3 +146,48 @@
 #observatory-release select {
     max-inline-size: min(100%, 26rem);
 }
+
+.observatory-expense-coverage {
+    border-inline-start: 2px solid var(--accent);
+    padding-inline-start: .75rem;
+    margin-block: 1rem;
+}
+.observatory-expense-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.observatory-expense-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1rem;
+}
+.observatory-expense-bars {
+    display: grid;
+    gap: .55rem;
+    list-style: none;
+    padding: 0;
+}
+.observatory-expense-bars li div {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .25rem .75rem;
+}
+.observatory-expense-bars meter {
+    inline-size: 100%;
+    block-size: .65rem;
+    accent-color: var(--accent);
+}
+.observatory-expense-net {
+    color: var(--accent);
+    font-weight: 700;
+}
+@media (max-width: 900px) {
+    .observatory-expense-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+@media (max-width: 480px) {
+    .observatory-expense-kpis {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
