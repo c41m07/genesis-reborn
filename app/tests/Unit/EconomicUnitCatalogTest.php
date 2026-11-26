@@ -15,8 +15,8 @@ final class EconomicUnitCatalogTest extends TestCase
         $universe = new Universe();$universe->slug = 'civil-x1';$universe->name = 'Unités civiles';
         $calculator = new OperationCalculator($catalog);
         $prices = [
-            'hydrogen_collector' => ['basic' => [384,208,0,0], 'intermediate' => [350,325,0,0], 'superior' => [376,437,0,0]],
-            'solar_satellite' => ['basic' => [384,208,0,0], 'intermediate' => [200,400,0,0], 'superior' => [188,531,0,0]],
+            'hydrogen_collector' => ['basic' => [384,208,0,0], 'intermediate' => [300,325,0,100], 'superior' => [325,419,0,174]],
+            'solar_satellite' => ['basic' => [384,208,0,0], 'intermediate' => [0,500,0,0], 'superior' => [0,625,0,0]],
         ];
         foreach (['hydrogen_collector'=>[100,20,20,30,900,'mine_hydrogen','vector_propulsion',1],
             'solar_satellite'=>[40,0,0,40,450,'power_plant','engineering_foundations',2]] as $slug=>$reference) {

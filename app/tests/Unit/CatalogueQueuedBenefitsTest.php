@@ -63,7 +63,7 @@ final class CatalogueQueuedBenefitsTest extends TestCase
         foreach (['lab'=>'Réduction du temps de recherche', 'shipyard'=>'Réduction du temps de construction des vaisseaux', 'fortress'=>'Structure supplémentaire des défenses'] as $slug => $label) {
             $definition = $this->catalog->withTier($this->catalog->get('buildings', $slug), 'basic');
             $rows = array_column($this->insights->benefits($definition, 'buildings', 4, $this->planet, [$slug=>['basic'=>1]], [], $this->context), null, 'label');
-            $expected = $slug==='fortress' ? [3.154773645400453, 4.125541652632911] : [3.346400765282132, 4.4346028120822325];
+            $expected = $slug==='fortress' ? [3.154773645400453, 4.125541652632911] : [4.278612407039298, 5.669956452590854];
             self::assertEqualsWithDelta($expected[0], $rows[$label]['before'], 1e-10);
             self::assertEqualsWithDelta($expected[1], $rows[$label]['after'], 1e-10);
         }

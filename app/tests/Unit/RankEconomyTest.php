@@ -51,7 +51,7 @@ final class RankEconomyTest extends TestCase
         $catalog = new GameCatalog(dirname(__DIR__, 2).'/config/game');
         foreach ([
             ['mine_metal','intermediate',[13621,3072,1736,0]],
-            ['storage_metal','superior',[310458,38808,0,0]],
+            ['storage_metal','superior',[388073,0,0,0]],
         ] as [$slug, $tier, $expected]) {
             $building = $catalog->withTier($catalog->get('buildings', $slug), $tier);
             self::assertSame($expected, array_values($catalog->costs($building, 1, 1, 'buildings')));

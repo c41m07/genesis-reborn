@@ -20,10 +20,10 @@ final class PirateConvoyTest extends TestCase
         $omega->slug = 'omega-1';
         $composition = ['probe' => ['basic' => 3, 'intermediate' => 2, 'superior' => 1]];
         $snapshot = PirateConvoyQuote::captureCatalogue($catalogue, $omega, $composition);
-        self::assertEquals(['metal' => 1028, 'nano' => 1256, 'antimatter' => 0, 'hydrogen' => 0], $snapshot->buildCosts());
+        self::assertEquals(['metal' => 1096, 'nano' => 1143, 'antimatter' => 0, 'hydrogen' => 316], $snapshot->buildCosts());
         self::assertSame(
-            ['metal' => ['whole' => 514, 'extra_half' => false], 'nano' => ['whole' => 628, 'extra_half' => false],
-                'antimatter' => ['whole' => 0, 'extra_half' => false], 'hydrogen' => ['whole' => 0, 'extra_half' => false]],
+            ['metal' => ['whole' => 548, 'extra_half' => false], 'nano' => ['whole' => 571, 'extra_half' => true],
+                'antimatter' => ['whole' => 0, 'extra_half' => false], 'hydrogen' => ['whole' => 158, 'extra_half' => false]],
             PirateConvoyQuote::halfOfFrozenCatalogue($snapshot)->exactParts(),
         );
     }

@@ -10,6 +10,7 @@
 {% import _self as editor %}
 {% if item.inactive_fields %}<details><summary>Paramètres historiques non modifiables</summary><ul>{% for explanation in item.inactive_fields %}<li>{{ explanation }}</li>{% endfor %}</ul></details>{% endif %}
 {% set tierLabels = {'basic': 'Basique', 'intermediate': 'Intermédiaire', 'superior': 'Supérieur'} %}
+{% set resourceOrder = constant('App\\Service\\Colony\\ResourceService::DISPLAY_ORDER') %}
 {% set resourceLabels = {'metal': 'Métal', 'nano': 'Nano', 'antimatter': 'Antimatière', 'hydrogen': 'Hydrogène', 'electricity': 'Électricité'} %}
 <form class="admin-catalogue-editor" method="post" action="{{ path('app_admin_catalogue_save', {id: universe.id, group: group, slug: item.slug}) }}">
     <input type="hidden" name="_token" value="{{ csrf_token('admin_catalogue_' ~ universe.id ~ '_' ~ group ~ '_' ~ item.slug) }}">
@@ -28,9 +29,11 @@
                 {% if tierFields %}
                     <fieldset>
                         <legend>{{ label }}</legend>
-                        {% for field in tierFields %}
-                            {% set resource = field.path|split('.')|last %}
-                            {{ editor.field(field, group, item.slug, resourceLabels[resource]|default(field.label)) }}
+                        {% for resource in resourceOrder %}
+                            {% set field = tierFields['cost_profiles.' ~ tier ~ '.' ~ resource]|default(null) %}
+                            {% if field %}
+                                {{ editor.field(field, group, item.slug, resourceLabels[resource]) }}
+                            {% endif %}
                         {% endfor %}
                     </fieldset>
                 {% endif %}
@@ -77,8 +80,8 @@
                     <thead><tr><th scope="col">Élément</th><th scope="col">Actuel</th><th scope="col">Proposé</th></tr></thead>
                     <tbody>
                         <tr><th scope="row">Durée</th><td>{{ item.preview.before.duration }} s</td><td>{{ item.preview.after.duration }} s</td></tr>
-                        {% for resource, label in resourceLabels %}
-                            <tr><th scope="row">{{ label }}</th><td>{{ item.preview.before.costs[resource]|default(0) }}</td><td>{{ item.preview.after.costs[resource]|default(0) }}</td></tr>
+                        {% for resource in resourceOrder %}
+                            <tr><th scope="row">{{ resourceLabels[resource] }}</th><td>{{ item.preview.before.costs[resource]|default(0) }}</td><td>{{ item.preview.after.costs[resource]|default(0) }}</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>

@@ -157,32 +157,18 @@ body[data-theme=light] .pirate-campaign {
     gap: .6rem;
     margin-block: .7rem;
 }
-.pirate-campaign-command label {
-    display: block;
-}
-.pirate-campaign-command select,
-.pirate-campaign-command button {
+.pirate-campaign-command form > button {
     max-width: 100%;
     min-height: 44px;
     white-space: normal;
 }
-.pirate-campaign-command fieldset {
-    display: flex;
-    flex: 0 1 100%;
-    flex-wrap: wrap;
-    gap: .6rem;
-    min-width: 0;
-    margin: 0;
-    padding: .7rem;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-}
-.pirate-campaign-command fieldset div {
-    flex: 1 1 12rem;
-    min-width: 0;
-}
-.pirate-campaign-command fieldset input {
+.pirate-escort-form .quantity-status {
     width: 100%;
+    margin: 0;
+}
+/* Le statut existe avant son annonce, sans laisser de ligne vide dans le formulaire. */
+.pirate-escort-form .quantity-status:empty {
+    position: absolute;
 }
 .pirate-campaign-refresh {
     padding-top: .35rem;

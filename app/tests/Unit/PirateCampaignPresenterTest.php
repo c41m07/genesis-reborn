@@ -55,13 +55,13 @@ final class PirateCampaignPresenterTest extends TestCase
 
         $reported = $presenter->forProgress($player, $recon, null, $this->at(36));
         self::assertSame([1, 1], array_column($reported['formation'], 'quantity'));
-        self::assertSame(['25 280,5', '5 988,5', '0', '9 130'], array_column($reported['quote'], 'amount'));
+        self::assertSame(['17 071,5', '6 539,5', '1 482,5', '11 484'], array_column($reported['quote'], 'amount'));
         $html = $this->render($reported);
         self::assertStringContainsString('Flotte pirate révélée', $html);
         self::assertStringContainsString('Un destroyer menace particulièrement un croiseur', $html);
         self::assertStringContainsString('50 % du coût catalogue', $html);
         self::assertStringContainsString('Ce montant n’a pas été versé', $html);
-        self::assertStringContainsString('+25 280,5', $html);
+        self::assertStringContainsString('+17 071,5', $html);
         self::assertStringContainsString('des vaisseaux en réserve', $html);
         self::assertStringContainsString('de l’électricité', $html);
         self::assertStringContainsString('Ce n’est pas une condition pour combattre', $html);
@@ -232,6 +232,8 @@ final class PirateCampaignPresenterTest extends TestCase
     {
         $twig = new Environment(new FilesystemLoader(dirname(__DIR__, 2).'/templates'), ['strict_variables' => true]);
 
+        $twig->addExtension(new \App\Twig\QuantityExtension());
+        $twig->addFunction(new \Twig\TwigFunction('path', static fn (string $route, array $parameters): string => '/rapports/espionnage-pirate/'.$parameters['id']));
         $twig->addFunction(new \Twig\TwigFunction('asset', static fn (string $path): string => '/'.$path));
         $twig->addFunction(new \Twig\TwigFunction('duration_label', static fn (int $seconds): string => $seconds.' s'));
         $partials = 'player/pirate_campaign/';

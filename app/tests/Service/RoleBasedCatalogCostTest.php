@@ -59,18 +59,65 @@ final class RoleBasedCatalogCostTest extends TestCase
         self::assertSame(156, $count);
     }
 
+    public function testQuotesDoNotInventDefaultMetalOrNanoAndKeepTheElectricityTax(): void
+    {
+        $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
+        $universe = new Universe();
+        $universe->slug = 'role-based-quotes';
+        $universe->name = 'Devis RP';
+        $config = $catalog->forUniverse($universe);
+        $calculator = new OperationCalculator($catalog);
+        $recipes = [
+            ['buildings', 'storage_metal', 'basic', ['metal']],
+            ['buildings', 'storage_metal', 'superior', ['metal']],
+            ['technologies', 'structural_armor', 'basic', ['metal', 'electricity']],
+            ['technologies', 'structural_armor', 'intermediate', ['metal', 'nano', 'electricity']],
+            ['technologies', 'weapons_engineering', 'superior', ['metal', 'nano', 'antimatter', 'electricity']],
+            ['technologies', 'target_acquisition', 'superior', ['nano', 'electricity']],
+            ['technologies', 'signature_reduction', 'superior', ['nano', 'hydrogen', 'electricity']],
+            ['technologies', 'shield_harmonics', 'intermediate', ['nano', 'antimatter', 'electricity']],
+            ['technologies', 'vector_propulsion', 'basic', ['metal', 'nano', 'hydrogen', 'electricity']],
+            ['ships', 'solar_satellite', 'intermediate', ['nano', 'electricity']],
+            ['ships', 'capital', 'superior', ['metal', 'nano', 'antimatter', 'hydrogen', 'electricity']],
+        ];
+
+        foreach ($recipes as [$group, $slug, $tier, $expected]) {
+            $definition = $catalog->getTierForUniverse($universe, $group, $slug, $tier);
+            $quote = $calculator->calculate($definition, $group, 1, 1, [], $config);
+            $materials = array_keys(array_filter($quote['costs'], static fn (int $units) => $units > 0));
+            self::assertEqualsCanonicalizing($expected, $materials, "$group/$slug/$tier");
+            if ($group !== 'buildings') {
+                self::assertSame(100 * (int) ceil($quote['duration'] / 60), $quote['costs']['electricity']);
+            }
+        }
+    }
+
     public function testRepresentativeRecipesUseMaterialsCorrespondingToTheirRole(): void
     {
         $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
         foreach (GameCatalog::TIERS as $tier) {
             $armor = $catalog->costs($catalog->withTier($catalog->get('technologies', 'structural_armor'), $tier));
             self::assertGreaterThan(0, $armor['metal']);
-            self::assertSame(0, $armor['nano']);
+            if ($tier === 'basic') {
+                self::assertSame(0, $armor['nano']);
+            } else {
+                self::assertGreaterThan(0, $armor['nano']);
+            }
             self::assertSame(0, $armor['hydrogen']);
             self::assertSame(0, $armor['antimatter']);
             $bomber = $catalog->costs($catalog->withTier($catalog->get('ships', 'bomber'), $tier));
             self::assertGreaterThan(0, $bomber['hydrogen']);
-            self::assertSame(0, $bomber['antimatter']);
+            self::assertGreaterThan(0, $bomber['antimatter']);
+            $cargo = $catalog->costs($catalog->withTier($catalog->get('ships', 'transport'), $tier));
+            self::assertGreaterThan(0, $cargo['hydrogen']);
+            self::assertSame(0, $cargo['antimatter']);
+            $collector = $catalog->costs($catalog->withTier($catalog->get('ships', 'hydrogen_collector'), $tier));
+            if ($tier === 'basic') {
+                self::assertSame(0, $collector['hydrogen']);
+            } else {
+                self::assertGreaterThan(0, $collector['hydrogen']);
+            }
+            self::assertSame(0, $collector['antimatter']);
         }
         $trap = $catalog->costs($catalog->withTier($catalog->get('buildings', 'mine_antimatter'), 'basic'));
         self::assertGreaterThan(0, $trap['hydrogen']);

@@ -23,7 +23,7 @@ final class OperationCalculator
         $curveGroup=match($group){'buildings'=>'building_duration','technologies'=>'research_duration',default=>null};
         $segments=$curveGroup?($this->catalog->rules()['progression_curves'][$curveGroup]??[]):[];
         $levelFactor=$segments!==[]?GameCatalog::growthMultiplier($level,$segments):((float)($d['build_time_scaling']??$d['research_time_scaling']??1)**($level-1));
-        $timeCap=(float)($this->catalog->rules()['time_reduction_max_percent']??70);
+        $timeCap = $this->catalog->operationTimeReductionCap($group);
         $timeReduction=match($group){
             'buildings'=>$this->discountProduct($universe,'engineering_foundations',$technologies['engineering_foundations']??[],'time_discount',$timeCap),
             'technologies'=>$this->rankedBuildingBonus($universe['catalog']['buildings']['lab']??$this->catalog->get('buildings','lab'),$buildings['lab']??[],$timeCap),
@@ -32,7 +32,7 @@ final class OperationCalculator
         };
         $mult=(float)($universe['multipliers'][match($group){'buildings'=>'building_time','technologies'=>'research_time',default=>'ship_build_time'}]??1);
         // Soustraire les pourcentages avant la division évite le faux dépassement
-        // d'une seconde (et d'une minute électrique) à la réduction exacte de 70 %.
+        // d'une seconde à une réduction exacte, par exemple 89,5 %.
         $nominalDuration = $base * $levelFactor * $quantity * $mult * $tierFactor;
         $rawDuration = $nominalDuration * ((100-$timeReduction)/100);
         // La file persiste la durée dans un INT signé. Refuser avant tout débit.

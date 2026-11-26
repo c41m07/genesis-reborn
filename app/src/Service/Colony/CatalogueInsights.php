@@ -84,7 +84,7 @@ final class CatalogueInsights
             if (in_array($slug, ['lab', 'shipyard'], true)) {
                 $maxLevel = max(1, (int) ($definition['max_level'] ?? 25));
                 $afterRanks = $next[$slug];
-                $cap = (float) ($this->catalog->rules()['time_reduction_max_percent'] ?? 70);
+                $cap = $this->catalog->operationTimeReductionCap($slug === 'lab' ? 'technologies' : 'ships');
                 $before = GameCatalog::infrastructureBonus($levels[$slug] ?? [], $cap, $maxLevel, $this->catalog->rules()['building_level_growth'] ?? []);
                 $after = GameCatalog::infrastructureBonus($afterRanks, $cap, $maxLevel, $this->catalog->rules()['building_level_growth'] ?? []);
                 return [[
@@ -118,11 +118,25 @@ final class CatalogueInsights
             $definition = $this->technologyEffects->applyToShips([$definition], $technologies, $planet->solarSystem->galaxy->universe)[0];
         }
         if ($group === 'ships') {
+            $attackPerShot = $definition['base_attack'] ?? 0;
+            // Le résumé projette les seuls tirs principaux, avec l'attaque déjà bonifiée.
+            // Il n'anticipe ni la précision, ni les tirs secondaires ou supplémentaires.
+            $averageAttack = $attackPerShot * (($definition['shots_min'] ?? 0) + ($definition['shots_max'] ?? 0)) / 2;
             $shipBenefits = [
                 ['label' => 'Vitesse dans le système', 'value' => $definition['speed_system'] ?? 0, 'unit' => ''],
                 ['label' => 'Vitesse entre systèmes', 'value' => $definition['speed_galaxy'] ?? 0, 'unit' => ''],
                 ['label' => 'Tirs principaux par round', 'text' => (float) ($definition['base_attack'] ?? 0) > 0 ? ($definition['shots_min'] ?? 0) . '–' . ($definition['shots_max'] ?? 0) : 'Aucun'],
-                ['label' => 'Attaque', 'value' => $definition['base_attack'] ?? 0, 'unit' => ''],
+                [
+                    'label' => 'Attaque',
+                    'value' => $attackPerShot,
+                    'unit' => '',
+                    'summary' => [
+                        'label' => 'Attaque moyenne',
+                        'value' => $averageAttack,
+                        'unit' => 'par round',
+                        'decimals' => (float) $averageAttack === floor($averageAttack) ? 0 : 2,
+                    ],
+                ],
                 ['label' => 'Structure', 'value' => $definition['hp'], 'unit' => ''],
                 ['label' => 'Bouclier maximal', 'value' => $definition['shield'] ?? 0, 'unit' => ''],
                 ['label' => 'Précision de tir', 'value' => $definition['precision'] ?? 0, 'unit' => '%'],
@@ -277,7 +291,7 @@ final class CatalogueInsights
             return $result;
         }
         if (in_array($type, ['time_discount', 'cost_discount'], true)) {
-            $cap = $type === 'time_discount' ? (float) ($this->catalog->rules()['time_reduction_max_percent'] ?? 70) : (float) ($this->catalog->rules()['cost_reduction_max_percent'] ?? 40);
+            $cap = $type === 'time_discount' ? $this->catalog->operationTimeReductionCap('buildings') : (float) ($this->catalog->rules()['cost_reduction_max_percent'] ?? 40);
             $before = GameCatalog::diminishingBonus($ranks, $cap, $maxLevel);
             $after = GameCatalog::diminishingBonus($afterRanks, $cap, $maxLevel);
             $label = match ([$type, $effect['targets'] ?? '']) {

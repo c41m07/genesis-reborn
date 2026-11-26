@@ -35,9 +35,10 @@ final class FleetSurveillanceController extends AbstractController
         if($request->query->has('galaxy')) {
             $galaxy=$repo->find(Galaxy::class,$request->query->getInt('galaxy'));
             if(!$galaxy || $galaxy->universe->id!==$member->universe->id) throw $this->createNotFoundException('Galaxie inaccessible dans cet univers.');
-            $flights=$visibility->forMap($member,$galaxy);
+            $map = $visibility->forMap($member, $galaxy);
+            $flights = $map['flights'];
             $traffic = $campaign->forGalaxy($member, $galaxy);
-            $payload+=['galaxy'=>$galaxy->id,'flights'=>$flights,'campaignTraffic'=>$traffic,
+            $payload+=['galaxy'=>$galaxy->id,'flights'=>$flights,'guildFilterAvailable'=>$map['guildFilterAvailable'],'campaignTraffic'=>$traffic,
                 'fleetLog'=>$this->renderView('universe/_fleet_log.html.twig', [
                     'galaxy_v2_flights' => $flights, 'galaxy_campaign_traffic' => $traffic,
                 ])];

@@ -18,7 +18,7 @@ final class CombatReportReader
     public function findVisible(PlayerUniverse $membership, int $id): ?CombatLog
     {
         $log = $this->repo->find(CombatLog::class, $id);
-        if (!$log) {
+        if (!$log || $this->repo->isReportRemoved($membership, 'combat', $id)) {
             return null;
         }
         if ($log->combatEvent->planet->owner?->id === $membership->id) {

@@ -1,5 +1,20 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Laboratoire et chantier — plafond de durée du 26 novembre 2026
+
+Kévin fixe à 89,5 % la réduction maximale à 25/25/25 du laboratoire pour les
+recherches et du chantier pour les vaisseaux de la colonie concernée. Les poids
+de rang, les rendements décroissants, les prérequis et les bases de durée restent
+identiques. Le plafond de durée des bâtiments (70 %) et le bunker restent distincts.
+Sur un devis de 10 h sans bonus, le maximum donne 1 h 03 min et 6 300 E, contre
+3 h et 18 000 E avec l’ancien plafond. La taxe reste fixée par minute effective ;
+les prix des autres ressources et les paiements des commandes déjà acceptées ne changent pas.
+
+Les nouveaux devis et commandes utilisent le plafond dédié. Les files déjà
+acceptées gardent leur instantané ; les gains de vitesse ultérieurs continuent de
+s’appliquer dans les limites de cet instantané, au travail restant. Un changement
+de colonie active ne change pas le laboratoire d’origine d’une recherche.
+
 ## Géographie de la galaxie — décision explicite du 18 novembre 2026
 
 L’utilisateur choisit la **spirale réelle comme géographie des distances pour tous
@@ -2268,3 +2283,7 @@ Aucun plafond de jeu ajouté aux dépôts T3. À vitesse ×1 sans réduction, le
 ### Recettes de coûts RP sur dev · 26 novembre 2026
 
 Kévin valide l’essai de la grille M/H/A/E/N pour l’ensemble des bâtiments, recherches, vaisseaux et défenses. Les matériaux suivent le rôle de chaque fiche. Les profils gardent leur valeur pondérée ; la durée, la taxe électrique, les règles de points, les prérequis et le moteur de combat ne changent pas. Les surcharges d’univers restent prioritaires et les commandes déjà payées restent fondées sur leur coût sauvegardé. Les [profils avant RP](SAUVEGARDE_CATALOGUE_COUTS_AVANT_RP.md) et la [description des recettes](CATALOGUE_COUTS_RP.md) permettent de vérifier ou annuler ce lot seul. Cet essai sur dev ne décide pas d’une mise en production.
+
+Précision Kévin du 26 novembre : un devis peut utiliser un à quatre matériaux, sans métal ni nano imposé ; la taxe électrique inchangée peut porter le total à cinq ressources. Une recherche qui fabrique un prototype en paie les matières (par exemple les Propulseurs vectoriels), contrairement à un essai de consommables ou de couches utilisant un banc déjà construit. Préserver le budget, les prérequis et la progression ; ne pas multiplier artificiellement les combinaisons.
+
+Vaisseaux : chiffrer séparément la coque (M), le blindage ou la précision (N), le réacteur (H) et les armes (A), puis choisir les parts fiche par fiche. Intégrer les particularités : soute du cargo, torpilles du bombardier, revêtement du furtif et absence d’armes sur les unités civiles. Couvrir la valeur exacte de chaque rang, les contre-compositions et les attentes réellement simulées. Garder les premiers kits chasseur, sonde, satellite et colonisateur ; premier récolteur sans achat de gaz ; pour cet essai sur dev, le cargo dès le Basique et les récolteurs avancés gardent un coût de réacteur en H, à surveiller en pénurie ; ne pas modifier les caractéristiques, la taxe E ni le carburant de vol.

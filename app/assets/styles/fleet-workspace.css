@@ -1,22 +1,24 @@
 /* L2A A : les composants partagés conservent leur présentation hors de cet espace. */
-body.authenticated .fleet-redesign {
+body.authenticated :is(.fleet-redesign, .pirate-escort-form) {
     --fleet-control-border: #526d87;
     --fleet-action-text: #090f1b;
     --fleet-error: #ffa3a3;
 }
 
-body.authenticated[data-theme="light"] .fleet-redesign {
+body.authenticated[data-theme="light"] :is(.fleet-redesign, .pirate-escort-form) {
     --muted: #526170;
     --fleet-control-border: #6a7b88;
     --fleet-action-text: #fff;
     --fleet-error: #9a2929;
 }
 
-body.authenticated .fleet-redesign :is(input, select, .secondary) {
+body.authenticated .fleet-redesign :is(input, select, .secondary),
+body.authenticated .pirate-escort-form .fleet-composition-control > :is(input, button) {
     border-color: var(--fleet-control-border);
 }
 
-body.authenticated .fleet-redesign .secondary {
+body.authenticated .fleet-redesign .secondary,
+body.authenticated .pirate-escort-form .fleet-composition-control > button {
     background: transparent;
     color: var(--text);
 }
@@ -149,49 +151,49 @@ body.authenticated .fleet-redesign .fleet-wizard-panel h3 {
     outline-offset: 4px;
 }
 
-body.authenticated .fleet-redesign .fleet-composition-table {
+body.authenticated :is(.fleet-redesign, .pirate-campaign) .fleet-composition-table {
     width: 100%;
     table-layout: fixed;
 }
 
-.fleet-redesign .fleet-composition-table th:first-child {
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-table th:first-child {
     width: 35%;
     text-align: start;
 }
 
-.fleet-redesign .fleet-composition-table th,
-.fleet-redesign .fleet-composition-table td {
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-table th,
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-table td {
     text-align: center;
     vertical-align: middle;
 }
 
-.fleet-redesign .fleet-composition-table tbody th {
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-table tbody th {
     overflow-wrap: anywhere;
     line-height: 1.25;
 }
 
-.fleet-redesign .fleet-composition-table td {
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-table td {
     padding: 5px 7px 7px;
 }
 
-.fleet-redesign .fleet-composition-stock,
-.fleet-redesign .fleet-composition-restriction {
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-stock,
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-restriction {
     display: block;
     color: var(--muted);
     font-size: 12px;
 }
 
-.fleet-redesign .fleet-composition-stock {
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-stock {
     margin-bottom: 3px;
     font-variant-numeric: tabular-nums;
     overflow-wrap: anywhere;
 }
 
-.fleet-redesign .fleet-composition-restriction {
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-restriction {
     margin-top: 4px;
 }
 
-.fleet-redesign .fleet-composition-control {
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-control {
     display: flex;
     width: 100%;
     max-width: 138px;
@@ -199,15 +201,15 @@ body.authenticated .fleet-redesign .fleet-composition-table {
     margin-inline: auto;
 }
 
-body.authenticated .fleet-redesign .fleet-composition-control > input,
-body.authenticated .fleet-redesign .fleet-composition-control > button {
+body.authenticated :is(.fleet-redesign, .pirate-campaign) .fleet-composition-control > input,
+body.authenticated :is(.fleet-redesign, .pirate-campaign) .fleet-composition-control > button {
     box-sizing: border-box;
     height: 100%;
     min-height: 0;
     margin: 0;
 }
 
-body.authenticated .fleet-redesign .fleet-composition-control > input {
+body.authenticated :is(.fleet-redesign, .pirate-campaign) .fleet-composition-control > input {
     flex: 1;
     min-width: 0;
     padding-inline: 4px;
@@ -216,12 +218,12 @@ body.authenticated .fleet-redesign .fleet-composition-control > input {
     appearance: textfield;
 }
 
-.fleet-redesign .fleet-composition-control > input::-webkit-inner-spin-button,
-.fleet-redesign .fleet-composition-control > input::-webkit-outer-spin-button {
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-control > input::-webkit-inner-spin-button,
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-control > input::-webkit-outer-spin-button {
     appearance: none;
 }
 
-body.authenticated .fleet-redesign .fleet-composition-control > .fleet-composition-maximum {
+body.authenticated :is(.fleet-redesign, .pirate-campaign) .fleet-composition-control > .fleet-composition-maximum {
     flex: 0 0 24px;
     min-width: 24px;
     padding: 0;
@@ -231,7 +233,7 @@ body.authenticated .fleet-redesign .fleet-composition-control > .fleet-compositi
 }
 
 /* Même état pour la quantité et Max ; la valeur désactivée reste lisible. */
-body.authenticated .fleet-redesign .fleet-composition-control > :is(input, button):disabled {
+body.authenticated :is(.fleet-redesign, .pirate-campaign) .fleet-composition-control > :is(input, button):disabled {
     background: color-mix(in srgb, var(--muted) 19%, var(--panel));
     color: var(--muted);
     border-color: var(--line);
@@ -239,7 +241,7 @@ body.authenticated .fleet-redesign .fleet-composition-control > :is(input, butto
     cursor: not-allowed;
 }
 
-.fleet-redesign .fleet-composition-control > :focus-visible {
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-control > :focus-visible {
     position: relative;
     z-index: 1;
     outline: 2px solid var(--accent);
@@ -426,21 +428,21 @@ body.authenticated .fleet-redesign .space-navigation-menu .space-navigation {
         font-size: 11px;
     }
 
-    .fleet-redesign .fleet-composition-table th:first-child {
+    :is(.fleet-redesign, .pirate-campaign) .fleet-composition-table th:first-child {
         width: 30%;
     }
 
-    .fleet-redesign .fleet-composition-table thead th {
+    :is(.fleet-redesign, .pirate-campaign) .fleet-composition-table thead th {
         padding-inline: 2px;
         font-size: 10px;
     }
 
-    .fleet-redesign .fleet-composition-table tbody th {
+    :is(.fleet-redesign, .pirate-campaign) .fleet-composition-table tbody th {
         padding-inline: 4px;
         font-size: 11px;
     }
 
-    .fleet-redesign .fleet-composition-table td {
+    :is(.fleet-redesign, .pirate-campaign) .fleet-composition-table td {
         padding-inline: 3px;
     }
 
@@ -496,19 +498,19 @@ body.authenticated .fleet-redesign .core-fleet-side .fleet-mission-summary-card 
 .core-fleet-recap-quote .core-fleet-quote { padding-top:10px; margin-top:10px; border-top:1px solid var(--line); }
 .fleet-redesign .core-fleet-quote .core-fleet-quote-title { margin:0 0 8px; font-size:14px; }
 .fleet-wizard-ready .fleet-review-grid { grid-template-columns:minmax(0,1fr); }
-.fleet-redesign .fleet-composition-table {
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-table {
     border-collapse:separate;
     border-spacing:0;
     border:1px solid var(--line);
     border-radius:5px;
 }
-.fleet-redesign .fleet-composition-table :is(th,td) { border-inline-end:1px solid var(--line); }
-.fleet-redesign .fleet-composition-table :is(th,td):last-child { border-inline-end:0; }
-.fleet-redesign .fleet-composition-table thead { background:color-mix(in srgb,var(--accent) 11%,var(--panel)); }
-.fleet-redesign .fleet-composition-table tbody tr:nth-child(even) { background:color-mix(in srgb,var(--accent) 4%,var(--panel)); }
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-table :is(th,td) { border-inline-end:1px solid var(--line); }
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-table :is(th,td):last-child { border-inline-end:0; }
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-table thead { background:color-mix(in srgb,var(--accent) 11%,var(--panel)); }
+:is(.fleet-redesign, .pirate-campaign) .fleet-composition-table tbody tr:nth-child(even) { background:color-mix(in srgb,var(--accent) 4%,var(--panel)); }
 .fleet-composition-name { display:inline-flex; align-items:center; gap:6px; min-width:0; }
 .fleet-composition-name .icon { width:15px; height:15px; flex:none; color:var(--accent); }
-body.authenticated .fleet-redesign .fleet-composition-control > .fleet-composition-maximum {
+body.authenticated :is(.fleet-redesign, .pirate-campaign) .fleet-composition-control > .fleet-composition-maximum {
     flex-basis:clamp(27px,4vw,42px);
     font-size:clamp(.6rem,1vw,.75rem);
     padding-inline:2px;

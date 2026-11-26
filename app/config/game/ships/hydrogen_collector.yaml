@@ -110,16 +110,16 @@
       "hydrogen": 0
     },
     "intermediate": {
-      "metal": 350,
+      "metal": 300,
       "nano": 325,
       "antimatter": 0,
-      "hydrogen": 0
+      "hydrogen": 100
     },
     "superior": {
-      "metal": 376,
-      "nano": 437,
+      "metal": 325,
+      "nano": 419,
       "antimatter": 0,
-      "hydrogen": 0
+      "hydrogen": 174
     }
   },
   "description": "Unité civile mobile produisant de l’hydrogène sur votre colonie, dans les places de sa raffinerie du même rang. Déplacement par Stationnement entre vos colonies, sans fret ni production en vol. Sans armement et destructible en combat.",

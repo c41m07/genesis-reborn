@@ -30,15 +30,15 @@ final class PirateCampaignCatalogueTest extends TestCase
         self::assertSame(['balise_17', 'escorte_interceptee', 'derniere_liaison'], array_slice($keys, 0, 3));
         self::assertSame($keys, array_values(array_unique($keys)));
         $expected = [
-            'balise_17' => [['fighter' => ['basic' => 1]], 1440, 780, 0],
-            'escorte_interceptee' => [['fighter' => ['basic' => 2], 'interceptor' => ['basic' => 1]], 3799, 2571, 1470],
-            'derniere_liaison' => [['bomber' => ['basic' => 1], 'heavy_fighter' => ['basic' => 1]], 9278, 2806, 6522],
+            'balise_17' => [['fighter' => ['basic' => 1]], 1440, 780, 0, 0],
+            'escorte_interceptee' => [['fighter' => ['basic' => 2], 'interceptor' => ['basic' => 1]], 4424, 2075, 0, 2204],
+            'derniere_liaison' => [['bomber' => ['basic' => 1], 'heavy_fighter' => ['basic' => 1]], 7086, 2518, 484, 8186],
         ];
-        foreach ($expected as $key => [$ships, $metal, $nano, $hydrogen]) {
+        foreach ($expected as $key => [$ships, $metal, $nano, $antimatter, $hydrogen]) {
             $prepared = $this->campaign->prepareForServer($key, $universe);
             self::assertSame($key, $prepared->definitionKey());
             self::assertSame($ships, $prepared->encounterForServer()->composition());
-            self::assertEquals(['metal' => $metal, 'nano' => $nano, 'antimatter' => 0, 'hydrogen' => $hydrogen], $prepared->encounterForServer()->buildCosts());
+            self::assertEquals(['metal' => $metal, 'nano' => $nano, 'antimatter' => $antimatter, 'hydrogen' => $hydrogen], $prepared->encounterForServer()->buildCosts());
             $battle = $prepared->battleForServer()->snapshot();
             self::assertSame($this->catalogue->rules()['max_combat_rounds'], $battle['rounds']);
             self::assertSame((float) $this->catalogue->rules()['shield_recharge_percent_per_round'], $battle['recharge']);
@@ -111,8 +111,11 @@ final class PirateCampaignCatalogueTest extends TestCase
         $finale = $this->campaign->prepareForServer('la_nuit_se_brise', $u)->encounterForServer();
         self::assertSame(2, $finale->composition()['capital']['basic']);
         self::assertSame(
-            ['metal' => ['whole' => 173826, 'extra_half' => false], 'nano' => ['whole' => 51303, 'extra_half' => true]],
-            array_intersect_key(PirateConvoyQuote::halfOfFrozenCatalogue($finale)->exactParts(), array_fill_keys(['metal', 'nano'], true)),
+            [
+                'metal' => ['whole' => 120026, 'extra_half' => false], 'nano' => ['whole' => 42941, 'extra_half' => false],
+                'antimatter' => ['whole' => 16423, 'extra_half' => true], 'hydrogen' => ['whole' => 75424, 'extra_half' => false],
+            ],
+            PirateConvoyQuote::halfOfFrozenCatalogue($finale)->exactParts(),
         );
     }
 

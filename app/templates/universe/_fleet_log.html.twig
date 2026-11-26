@@ -1,13 +1,26 @@
 {% set campaignTraffic = galaxy_campaign_traffic|default([]) %}
-{% if galaxy_v2_flights is empty and campaignTraffic is empty %}<p class="gv2-empty-log">Aucune flotte en mission actuellement.</p>{% endif %}
-                    {% for flight in galaxy_v2_flights %}<article class="gv2-flight-entry" data-flight-id="{{ flight.id }}">
-                        <strong>{{ flight.missionLabel }}</strong><span>{{ flight.statusLabel }}</span>
-                        <small>{{ flight.relationLabel }} · {{ flight.ownerName }}</small>
-                        <small>{{ flight.originName }} → {{ flight.destinationName }}</small>
-                        <small>{{ flight.shipCount|quantity(0) }} vaisseau{{ flight.shipCount == 1 ? '' : 'x' }} · {{ flight.fleetPoints|quantity(0) }} point{{ flight.fleetPoints == 1 ? '' : 's' }}</small>
-                        {% if flight.ownedByCurrentPlayer and flight.ships %}<small>{{ flight.ships }}</small>{% endif %}
-                        {% if flight.arrivalAt %}<time datetime="{{ flight.arrivalAt }}" data-galaxy-v2-countdown="{{ flight.arrivalAt }}">Calcul du temps…</time>{% endif %}
-                    </article>{% endfor %}
+<p class="gv2-empty-log" data-galaxy-v2-target="emptyFlightLog"{% if galaxy_v2_flights is not empty or campaignTraffic is not empty %} hidden{% endif %}>Aucune flotte en mission visible.</p>
+{% for flight in galaxy_v2_flights %}
+    {% set guildFlight = flight.guildFlight|default(false) %}
+    <article class="gv2-flight-entry" data-flight-id="{{ flight.id }}"{% if guildFlight %} data-guild-flight{% endif %}>
+        <strong>{{ flight.missionLabel }}</strong><span>{{ flight.statusLabel }}</span>
+        <small>{{ flight.relationLabel }} · {{ flight.ownerName }}</small>
+        {% if guildFlight and flight.recallRoute %}
+            <small>{% if flight.recallRoute.hidden is defined %}Trajet de rappel non découvert{% else %}Point de rappel → {{ flight.recallRoute.returnName }}{% endif %}</small>
+        {% elseif guildFlight and flight.status == 'returning' and not flight.forwardRoute %}
+            <small>{{ flight.destinationName }} → {{ flight.originName }}</small>
+        {% else %}
+            <small>{{ flight.originName }} → {{ flight.destinationName }}</small>
+        {% endif %}
+        {% if not guildFlight %}
+            <small>{{ flight.shipCount|quantity(0) }} vaisseau{{ flight.shipCount == 1 ? '' : 'x' }} · {{ flight.fleetPoints|quantity(0) }} point{{ flight.fleetPoints == 1 ? '' : 's' }}</small>
+            {% if flight.ownedByCurrentPlayer and flight.ships %}<small>{{ flight.ships }}</small>{% endif %}
+        {% endif %}
+        {% if flight.arrivalAt %}
+            <time datetime="{{ flight.arrivalAt }}" data-galaxy-v2-countdown="{{ flight.arrivalAt }}">{{ flight.arrivalAt|date('d/m/Y à H:i:s', preferences.timezone|default(app.user.preferences.timezone|default('Europe/Paris'))) }}</time>
+        {% endif %}
+    </article>
+{% endfor %}
 {% for movement in campaignTraffic %}
     <article class="gv2-flight-entry" data-campaign-kind="{{ movement.kind }}">
         <strong><span aria-hidden="true">{{ movement.kind == 'pirates' ? 'P' : '◇' }}</span> {{ movement.label }}</strong>

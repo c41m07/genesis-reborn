@@ -94,21 +94,21 @@
   "cost_profiles": {
     "basic": {
       "metal": 4270,
-      "nano": 3965,
-      "antimatter": 0,
-      "hydrogen": 0
+      "nano": 2989,
+      "antimatter": 183,
+      "hydrogen": 2440
     },
     "intermediate": {
-      "metal": 4575,
-      "nano": 5339,
-      "antimatter": 0,
-      "hydrogen": 0
+      "metal": 4881,
+      "nano": 3661,
+      "antimatter": 381,
+      "hydrogen": 3052
     },
     "superior": {
-      "metal": 4767,
-      "nano": 7149,
-      "antimatter": 0,
-      "hydrogen": 0
+      "metal": 5529,
+      "nano": 4576,
+      "antimatter": 667,
+      "hydrogen": 3432
     }
   },
   "tier_labels": {
