@@ -83,6 +83,8 @@ final class ProducerBalanceTest extends TestCase
         self::assertSame(89.5, $rules['infrastructure_time_reduction_max_percent']);
         unset($rules['new_account_first_planet_stock'], $rules['daily_reward_experiment'], $rules['infrastructure_time_reduction_max_percent']);
         $old=$fixture['historical_rules'];
+        // Le seuil débutant a été relevé ; la durée et le ratio PvP doivent rester identiques.
+        $old['new_player_protection']['score_limit'] = 7_500;
         foreach(['antimatter_hydrogen_per_unit','initial_stock','colony_initial_stock','base_production','base_storage_capacity'] as $field)unset($rules[$field],$old[$field]);
         self::assertSame($old,$rules);
     }

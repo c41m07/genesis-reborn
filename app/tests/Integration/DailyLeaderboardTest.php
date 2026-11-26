@@ -115,11 +115,38 @@ final class DailyLeaderboardTest extends KernelTestCase
         self::assertFalse($this->row($frozen, $a)['protection']['active']);
         self::assertCount(1, $frozen['players']);
         $live = self::getContainer()->get(LeaderboardService::class)->forUniverse($a);
-        self::assertGreaterThan(5000, $live[0]['total_points']);
+        self::assertGreaterThan(7500, $live[0]['total_points']);
         $this->clock->sleep(2);
         $next = $service->forUniverse($a);
         self::assertCount(2, $next['players']);
         self::assertNull($this->row($next, $b)['rank_changes']['points']);
+    }
+
+    public function testAFormulaChangeRebuildsAndComparesAnExistingSnapshot(): void
+    {
+        $player = $this->join('Weighted');
+        $this->ship($player, 1);
+        $this->guild($player, 'Weighted guild');
+        $service = self::getContainer()->get(DailyLeaderboard::class);
+        $service->forUniverse($player);
+
+        $snapshot = $this->em->getRepository(LeaderboardSnapshot::class)->findOneBy(['universe' => $player->universe]);
+        $before = $snapshot->updatedAt;
+        $snapshot->scoreVersion = 0;
+        $snapshot->players[0]['fleet_points'] = 22;
+        $snapshot->players[0]['total_points'] -= 8;
+        $snapshot->guilds[0]['total_points'] -= 8;
+        $this->em->flush();
+
+        self::assertSame(1, $service->tick());
+        $snapshot = $service->forUniverse($player);
+        self::assertSame(30, $this->row($snapshot, $player)['fleet_points']);
+        self::assertSame(8, $this->row($snapshot, $player)['score_changes']['fleet']);
+        self::assertSame(8, $this->row($snapshot, $player)['score_changes']['points']);
+        self::assertSame(0, $this->row($snapshot, $player)['rank_changes']['points']);
+        self::assertSame(8, $snapshot['guilds'][0]['points_change']);
+        self::assertEquals($before, $snapshot['comparison_at']);
+        self::assertSame(0, $service->tick());
     }
 
     public function testSnapshotSurvivesEntityManagerRestartAndUniversesAreIndependent(): void

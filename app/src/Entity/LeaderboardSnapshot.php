@@ -16,6 +16,8 @@ class LeaderboardSnapshot
     public \DateTimeImmutable $updatedAt;
     #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $comparisonAt = null;
+    #[ORM\Column(options: ['default' => 0])]
+    public int $scoreVersion = 0;
     #[ORM\Column(type: 'json')]
     public array $players = [];
     #[ORM\Column(type: 'json')]

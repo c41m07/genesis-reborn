@@ -26,7 +26,20 @@ final class DailyLeaderboard
     public function tick(): int
     {
         $now = $this->clock->now();
-        $universes = $this->em->createQueryBuilder()->select('u')->from(Universe::class, 'u')->leftJoin(LeaderboardSnapshot::class, 's', 'WITH', 's.universe = u')->where('u.status = :active')->andWhere('(u.startsAt IS NULL OR u.startsAt <= :now)')->andWhere('(u.endsAt IS NULL OR u.endsAt > :now)')->andWhere('(s.id IS NULL OR s.updatedAt < :midnight)')->andWhere('EXISTS (SELECT m.id FROM App\Entity\PlayerUniverse m WHERE m.universe = u AND m.player IS NOT NULL AND m.forgottenAt IS NULL)')->setParameter('active', 'active')->setParameter('now', $now)->setParameter('midnight', self::midnight($now)->setTimezone(new \DateTimeZone('UTC')))->getQuery()->getResult();
+        // Une ancienne formule est recalculée une fois, même si minuit n’est pas encore passé.
+        $universes = $this->em->createQueryBuilder()
+            ->select('u')->from(Universe::class, 'u')
+            ->leftJoin(LeaderboardSnapshot::class, 's', 'WITH', 's.universe = u')
+            ->where('u.status = :active')
+            ->andWhere('(u.startsAt IS NULL OR u.startsAt <= :now)')
+            ->andWhere('(u.endsAt IS NULL OR u.endsAt > :now)')
+            ->andWhere('(s.id IS NULL OR s.updatedAt < :midnight OR s.scoreVersion != :scoreVersion)')
+            ->andWhere('EXISTS (SELECT m.id FROM App\Entity\PlayerUniverse m WHERE m.universe = u AND m.player IS NOT NULL AND m.forgottenAt IS NULL)')
+            ->setParameter('active', 'active')
+            ->setParameter('now', $now)
+            ->setParameter('midnight', self::midnight($now)->setTimezone(new \DateTimeZone('UTC')))
+            ->setParameter('scoreVersion', LeaderboardService::SCORE_VERSION)
+            ->getQuery()->getResult();
         foreach ($universes as $universe) {
             $this->refresh($universe);
         }
@@ -109,7 +122,7 @@ final class DailyLeaderboard
     {
         $midnight = self::midnight($this->clock->now());
         $snapshot = $this->repo->one(LeaderboardSnapshot::class, ['universe' => $universe]);
-        if ($snapshot !== null && $snapshot->updatedAt >= $midnight) {
+        if ($this->isCurrent($snapshot, $midnight)) {
             return $snapshot;
         }
         // Rattraper les constructions terminées, même si le consommateur vient de redémarrer.
@@ -126,9 +139,10 @@ final class DailyLeaderboard
                 $this->manager->lock($snapshot);
             }
             $now = $this->clock->now();
-            if ($snapshot !== null && $snapshot->updatedAt >= self::midnight($now)) {
+            if ($this->isCurrent($snapshot, self::midnight($now))) {
                 return $snapshot;
             }
+            // En Alpha, le premier recalcul pondéré se compare aussi au dernier relevé brut.
             $previousPlayers = $snapshot === null ? [] : array_column($snapshot->players, null, 'membership_id');
             $previousGuilds = $snapshot === null ? [] : array_column($snapshot->guilds, null, 'guild_id');
             $viewer = null;
@@ -169,12 +183,20 @@ final class DailyLeaderboard
             $snapshot ??= new LeaderboardSnapshot();
             $snapshot->universe = $universe;
             $snapshot->comparisonAt = isset($snapshot->updatedAt) ? $snapshot->updatedAt : null;
+            $snapshot->scoreVersion = LeaderboardService::SCORE_VERSION;
             $snapshot->updatedAt = $now->setTimezone(new \DateTimeZone('UTC'));
             $snapshot->players = $players;
             $snapshot->guilds = $guilds;
             $this->manager->save($snapshot);
             return $snapshot;
         });
+    }
+
+    private function isCurrent(?LeaderboardSnapshot $snapshot, \DateTimeImmutable $midnight): bool
+    {
+        return $snapshot !== null
+            && $snapshot->scoreVersion === LeaderboardService::SCORE_VERSION
+            && $snapshot->updatedAt >= $midnight;
     }
 
     private static function midnight(\DateTimeImmutable $at): \DateTimeImmutable

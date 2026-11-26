@@ -86,7 +86,7 @@
   "restore_survivor_shields_after_combat": true,
   "new_player_protection": {
     "duration_seconds": 604800,
-    "score_limit": 5000,
+    "score_limit": 7500,
     "attacker_score_ratio": 5
   },
   "recovery_protection": {

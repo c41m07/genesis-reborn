@@ -7,6 +7,10 @@ use App\Service\Catalog\GameCatalog;
 
 final class LeaderboardService
 {
+    public const SCORE_VERSION = 1;
+    // Deux unités équivalent hydrogène par métal : 100 métal donnent toujours un point.
+    private const MATERIALS_PER_POINT = 200;
+
     public function __construct(private GameRepository $repo, private GameCatalog $catalog, private PlayerProtection $protection) {}
 
     public function forUniverse(PlayerUniverse $context): array
@@ -67,9 +71,9 @@ final class LeaderboardService
         foreach ($rows as $row) {
             if(!$row['membership']->isPlayerControlled()) continue;
             $row['fleet_units'] = $row['ship_units'] + $row['defense_units'];
-            $row['building_points'] = intdiv($row['building_resources'], 100);
-            $row['research_points'] = intdiv($row['research_resources'], 100);
-            $row['fleet_points'] = intdiv($row['fleet_resources'], 100);
+            $row['building_points'] = intdiv($row['building_resources'], self::MATERIALS_PER_POINT);
+            $row['research_points'] = intdiv($row['research_resources'], self::MATERIALS_PER_POINT);
+            $row['fleet_points'] = intdiv($row['fleet_resources'], self::MATERIALS_PER_POINT);
             $row['total_points'] = $row['building_points'] + $row['research_points'] + $row['fleet_points'];
             $row['protection'] = $this->protection->status($row['membership'], $row['total_points']);
             $result[] = $row;
@@ -141,7 +145,7 @@ final class LeaderboardService
         foreach ($ships as $ship) {
             if ($ship->quantity > 0) $resources += $this->unitCost($fleet->playerUniverse->universe, 'ships', $ship->slug, $ship->quantity, $ship->tier);
         }
-        return intdiv($resources, 100);
+        return intdiv($resources, self::MATERIALS_PER_POINT);
     }
 
     private function cumulativeCost(\App\Entity\Universe $universe,string $group,string $slug,int $level,string $tier='basic'):int
@@ -150,7 +154,7 @@ final class LeaderboardService
         $definition = $this->catalog->withTier($definitions[$group][$slug], $tier);
         $total = 0;
         for ($currentLevel = 1; $currentLevel <= $level; ++$currentLevel) {
-            $total += array_sum($this->catalog->costs($definition, $currentLevel, 1, $group, $definitions));
+            $total += self::materialValue($this->catalog->costs($definition, $currentLevel, 1, $group, $definitions));
         }
 
         return $total;
@@ -158,6 +162,17 @@ final class LeaderboardService
 
     private function unitCost(\App\Entity\Universe $universe,string $group,string $slug,int $quantity,string $tier='basic'):int
     {
-        return array_sum($this->catalog->costs($this->catalog->getTierForUniverse($universe,$group,$slug,$tier),1,$quantity));
+        return self::materialValue($this->catalog->costs($this->catalog->getTierForUniverse($universe,$group,$slug,$tier),1,$quantity));
+    }
+
+    /** Le même panier sert au classement et à l’évaluation du droit d’attaque. */
+    private static function materialValue(array $costs): int
+    {
+        $total = 0;
+        foreach (GameCatalog::MATERIAL_WEIGHTS as $resource => $weight) {
+            $total += ($costs[$resource] ?? 0) * $weight;
+        }
+
+        return $total;
     }
 }

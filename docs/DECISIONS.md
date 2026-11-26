@@ -1368,6 +1368,10 @@ Les évolutions comparent les deux derniers calculs persistés : points actuels 
 Le relais existant déclenche les calculs même sans visite. Les lectures rattrapent une échéance manquée ; après interruption, le calcul utilise l’état disponible à la reprise et indique son heure réelle, sans inventer les états des jours manqués. Les constructions et recherches déjà terminées sont réconciliées avant le calcul. Les instantanés et leurs dernières évolutions sont conservés en base, avec uniquement des identifiants et valeurs de classement, sans copie des identités.
 
 
+### Classement pondéré et protections, 26 novembre 2026
+
+Kévin valide sur dev les points pondérés par catégorie : (H + 2 M + 4 N + 8 A) / 200, hors électricité, à partir des biens encore détenus et des coûts courants. Le 5:1 et la protection débutant utilisent la même formule en temps réel. Débutant : moins de 7 jours et moins de 7 500 points. En Alpha, le premier recalcul compare les deux formules et affiche les écarts normalement. Vacances, inactivité et protection après pertes inchangées.
+
 ## Ressources initiales et production passive — décision du 10 novembre 2026
 
 Les valeurs suivantes s’appliquent après activation du nouvel équilibrage. La production horaire de référence est celle d’une position 5, dans un univers ×1, sans bâtiment ni événement.
