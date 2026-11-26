@@ -171,6 +171,9 @@ test('Catalogue B : comparaison des rangs, thèmes et formulaires natifs des qua
           await expect.poll(() => row.evaluate(element => getComputedStyle(element).display)).toBe(width <= 760 ? 'block' : 'table-row');
         } else {
           const grid = page.locator('.admin-catalogue-costs');
+          for (const tier of await grid.locator('fieldset').all()) {
+            await expect(tier.locator('label')).toHaveText(['Métal', 'Nano', 'Hydrogène', 'Antimatière']);
+          }
           await expect.poll(() => grid.evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(width >= 1440 ? 3 : 1);
         }
         const accessibility = await new AxeBuilder({ page }).include('#admin-main').analyze();

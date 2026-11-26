@@ -8,7 +8,7 @@ use Psr\Clock\ClockInterface;
 use App\Service\Player\VacationCalendar;
 final class ResourceService
 {
-    /** Même ordre d’affichage dans le bandeau et le formulaire de fret, sans incidence sur les calculs. */
+    /** Ordre du bandeau et des champs de ressources, sans incidence sur les calculs. */
     public const DISPLAY_ORDER = ['metal', 'nano', 'hydrogen', 'antimatter', 'electricity'];
 
 

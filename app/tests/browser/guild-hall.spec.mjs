@@ -54,6 +54,14 @@ test('Pilote Hall : don natif, confirmation du commandant et présentation depui
     try {
         const screen = await native.newPage();
         await screen.goto('/guildes/hall');
+        const resourceFields = screen.locator('.hall-resource-fields input');
+        expect(await resourceFields.evaluateAll(inputs => inputs.map(input => input.id)))
+            .toEqual(['hall-metal', 'hall-nano', 'hall-hydrogen', 'hall-antimatter']);
+        await screen.getByLabel('Colonie qui finance le don').focus();
+        for (const field of await resourceFields.all()) {
+            await screen.keyboard.press('Tab');
+            await expect(field).toBeFocused();
+        }
         const progress = screen.getByRole('progressbar', { name: 'Progression de la construction' });
         const quorum = screen.getByRole('progressbar', { name: 'Donateurs qualifiés' });
         await expect(progress).toHaveAttribute('value', '0');
