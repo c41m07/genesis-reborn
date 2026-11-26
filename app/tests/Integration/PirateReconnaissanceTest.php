@@ -180,7 +180,7 @@ final class PirateReconnaissanceTest extends KernelTestCase
         $this->em->flush();
         self::assertNull($this->service->statusFor($sameAccountElsewhere, 'test-signal'));
         $visibility = self::getContainer()->get(FleetVisibility::class);
-        self::assertSame([], $visibility->forMap($ally, $system->galaxy));
+        self::assertSame([], $visibility->forMap($ally, $system->galaxy)['flights']);
         self::assertSame([], $visibility->incoming($ally));
         self::assertFalse($this->service->launch($member, $home, $system, $site, 'test-signal', $encounter, !$detected));
 
