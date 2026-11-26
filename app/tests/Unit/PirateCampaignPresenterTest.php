@@ -232,6 +232,8 @@ final class PirateCampaignPresenterTest extends TestCase
     {
         $twig = new Environment(new FilesystemLoader(dirname(__DIR__, 2).'/templates'), ['strict_variables' => true]);
 
+        $twig->addExtension(new \App\Twig\QuantityExtension());
+        $twig->addFunction(new \Twig\TwigFunction('path', static fn (string $route, array $parameters): string => '/rapports/espionnage-pirate/'.$parameters['id']));
         $twig->addFunction(new \Twig\TwigFunction('asset', static fn (string $path): string => '/'.$path));
         $twig->addFunction(new \Twig\TwigFunction('duration_label', static fn (int $seconds): string => $seconds.' s'));
         $partials = 'player/pirate_campaign/';

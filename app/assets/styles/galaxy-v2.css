@@ -173,3 +173,23 @@ body.reduced-motion .galaxy-v2 *,body.reduced-motion .galaxy-v2 *::before,body.r
 
 .gv2-system-return{min-height:44px}
 .gv2-system-return:focus-visible{outline:2px solid var(--gv2-cyan);outline-offset:2px}
+
+.gv2-guild-flight-filter {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+}
+.gv2-flight-entry[data-guild-flight] small { overflow-wrap: anywhere; }
+.gv2-guild-flight-filter[hidden], .gv2-flight-entry[hidden], .gv2-empty-log[hidden] { display: none; }
+.gv2-guild-flight-filter:focus-within { outline: 2px solid var(--accent); outline-offset: -2px; }
+.gv2-guild-flight-filter input[type=checkbox] {
+    inline-size: 16px;
+    block-size: 16px;
+    flex: none;
+    margin: 0;
+    accent-color: var(--accent);
+}

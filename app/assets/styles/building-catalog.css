@@ -8,7 +8,29 @@
 .building-rank-tab.is-locked{color:var(--muted);background:color-mix(in srgb,var(--muted) 10%,var(--bg))}
 .building-rank-tab.is-locked[aria-selected="true"]{border-bottom-color:#f08b8b}
 .building-rank-tab:focus-visible{outline-offset:-3px}
-.building-rank-up{color:var(--green);font-size:20px;line-height:1;font-weight:800}
+.building-rank-name{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.building-rank-level{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+    min-width:18px;
+    padding:2px 4px;
+    border:1px solid color-mix(in srgb,var(--accent) 28%,var(--line));
+    border-radius:999px;
+    color:var(--text);
+    background:color-mix(in srgb,var(--accent) 8%,var(--panel));
+    font-size:10px;
+    font-weight:700;
+    line-height:1.2;
+    font-variant-numeric:tabular-nums;
+}
+.building-rank-level.is-empty,.building-rank-tab.is-locked .building-rank-level{
+    border-color:var(--line);
+    background:var(--panel);
+    color:var(--muted);
+}
+.building-rank-up{flex:none;color:var(--green);font-size:20px;line-height:1;font-weight:800}
 .building-rank{display:flex;flex-direction:column;flex:1;scroll-margin-top:200px}
 /* Préserver la disposition malgré le repli des anciens onglets du catalogue. */
 :is(#panel-buildings,#panel-technologies,#panel-ships,#panel-defenses) .building-rank[role="tabpanel"]{display:flex;margin:0}
@@ -44,7 +66,7 @@ body[data-theme="light"] .building-rank-up{color:#21633e}
 @container(max-width:310px){.building-rank-tab{gap:3px;padding-inline:2px;letter-spacing:-.3px}.building-card .card-body{padding-inline:12px}}
 
 .building-card .catalog-card-art{aspect-ratio:16/9}
-.building-rank-short{display:none}
+.building-rank-short,.building-rank-narrow{display:none}
 .building-card .card-body>form>label{display:block;margin-bottom:6px}
 .building-card .card-body>form>input[type="number"]{width:100%;margin-bottom:10px}
 @container(max-width:340px){:is(.card--ships,.card--defenses) .building-rank-full{display:none}:is(.card--ships,.card--defenses) .building-rank-short{display:inline}}

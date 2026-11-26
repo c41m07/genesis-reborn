@@ -1,5 +1,10 @@
 # Design system — Genesis Reborn
 
+## Ordre des champs de ressources
+
+- Le bandeau, la saisie du fret, les dons (Hall et projets collectifs) et les réglages administratifs correspondants présentent les ressources dans l’ordre de `ResourceService::DISPLAY_ORDER` : métal, nano, hydrogène, antimatière, électricité. L’ordre du DOM sert aussi à la navigation au clavier et n’est pas modifié en CSS.
+- Un groupe n’affiche que les ressources que le parcours accepte ou propose déjà. Le Hall ne finance pas ses dons avec l’électricité, et un projet n’affiche pas de champ pour une ressource dont le besoin est couvert. Ce tri ne change ni les quantités ni les validations.
+
 ## Refus et actions de reprise
 
 - Une explication de refus doit distinguer l’absence de session, un rôle insuffisant et une action refusée alors que le rôle est présent. Ne pas diagnostiquer une perte de droits à partir d’un refus de formulaire.
@@ -332,7 +337,9 @@ de la Vue générale ; [recette et captures](../REFONTE_VISUELLE_INTERFACES.md).
 
 ## Catalogues du cœur de jeu
 
-- Dans les quatre catalogues, le seul indicateur visuel à côté du rang est la flèche verte quand la commande est disponible. Le niveau ou la quantité et les prérequis se consultent dans la carte du rang choisi. « Prérequis manquants » ouvre une liste de liens en superposition. Le rang verrouillé garde son libellé et son illustration passe du noir et blanc à la couleur au survol ou au focus.
+- Dans les quatre catalogues, un badge à côté du rang montre le niveau actuel (bâtiments et recherches) ou le nombre d’unités en réserve ou installées (vaisseaux et défenses). Le zéro est visible mais discret si le rang est affiché. La flèche verte reste visible quand la commande est disponible.
+- Les grandes valeurs suivent la notation compacte du jeu ; la description accessible de l’onglet conserve la valeur exacte, même pour un rang verrouillé. Les libellés peuvent s’abréger lorsqu’ils manquent de place, sans changer le nom accessible du rang. Le badge n’ajoute aucun arrêt au clavier. La carte du rang choisi garde son compteur détaillé et ses prérequis.
+- « Prérequis manquants » ouvre une liste de liens en superposition. Le rang verrouillé garde son libellé et son illustration passe du noir et blanc à la couleur au survol ou au focus.
 - Bâtiments et Recherche gardent le même ordre de lecture : intitulé et rang, coût et temps du niveau visé, effet principal, puis action. Le détail reste replié par défaut. Le mode condensé garde l’effet principal et la même action native.
 - L’effet, son avant/après et les valeurs acquises viennent de la projection du catalogue. Une production nominale de la colonie ne décrit pas le débit net après consommations. Un maximum déjà en file n’est pas présenté comme acquis ; les commandes et la durée déjà engagées restent dans les files.
 - Deux bandeaux courts identifient le pont d’ingénierie et le laboratoire colonial. Leur illustration est décorative, avec un fond thématique qui découple la lisibilité du texte de l’image. Le cyan indique la sélection ; l’or marque la commande principale disponible, en complément de son libellé.
@@ -356,3 +363,13 @@ de la Vue générale ; [recette et captures](../REFONTE_VISUELLE_INTERFACES.md).
 - Une étape montre la même catégorie pour les deux camps, côte à côte sur ordinateur, puis empilés sur téléphone. Chaque tableau affiche toutes ses lignes et défile avec la page. Les ancres et tous les champs sont rendus côté serveur ; JavaScript ne fait que guider l’affichage et placer le focus. Un champ invalide ramène à son étape. Le résultat reste sur la même page.
 - Les sources sont deux actions explicites : la copie de la colonie reprend seulement les vaisseaux disponibles et les recherches du membre ; le rapport reste limité à l’instantané de l’émetteur. Appliquer une source conserve l’autre camp et ne produit ni mission ni calcul.
 - La date et le lien restent associés au rapport ; un renseignement non révélé n’est pas affiché comme zéro. Un champ laissé inconnu compte pour zéro pour le calcul seulement après confirmation. Les défenses fixes et la forteresse appartiennent uniquement au défenseur.
+
+## Suppression depuis les archives de rapports
+
+La suppression est proposée dans l’onglet Archives personnelles uniquement, dans
+le même formulaire que la restauration. Par ligne et par sélection, les actions
+ont des libellés distincts. La confirmation native précise le caractère définitif
+du retrait des archives. Le formulaire reste utilisable sans JavaScript ; la note
+d’aide précise l’effet. Les commandes se replient sous le rapport sur mobile.
+Seule la visibilité personnelle change : la fiche du rapport, les marqueurs
+administratifs et la visibilité des autres joueurs ne sont pas modifiés en base.

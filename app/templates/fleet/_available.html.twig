@@ -27,6 +27,7 @@
     {% else %}
         {% include 'fleet/_ship_selection_table.html.twig' with {
             ships: row.ships, catalog: catalog, fleetId: f.id, fleetLimit: fleet_limit,
+            headingId: 'fleet-step-title-' ~ f.id ~ '-1',
             loaded: loaded_origin == f.homePlanet.id, loadedComposition: loaded_composition
         } only %}
         <p class="fleet-wizard-note">Pour coloniser, un vaisseau de colonisation est requis. Les défenses stationnaires ne peuvent pas rejoindre une flotte.</p>

@@ -61,10 +61,11 @@
                         </select>
                         <fieldset class="hall-resource-fields">
                             <legend>Ressources à donner</legend>
-                            {% for resource, field in resource_fields %}
+                            {% for resource in constant('App\\Service\\Colony\\ResourceService::DISPLAY_ORDER')|filter(slug => resource_fields[slug] is defined) %}
+                                {% set field = resource_fields[resource] %}
                                 <div>
-                                <label for="hall-{{ resource }}">{{ field.label }}</label>
-                                <input id="hall-{{ resource }}" name="resources[{{ resource }}]" type="number" inputmode="numeric" min="0" step="1" placeholder="0" max="{{ field.maximum }}">
+                                    <label for="hall-{{ resource }}">{{ field.label }}</label>
+                                    <input id="hall-{{ resource }}" name="resources[{{ resource }}]" type="number" inputmode="numeric" min="0" step="1" placeholder="0" max="{{ field.maximum }}">
                                 </div>
                             {% endfor %}
                         </fieldset>

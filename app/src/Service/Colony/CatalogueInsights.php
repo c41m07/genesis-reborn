@@ -84,7 +84,7 @@ final class CatalogueInsights
             if (in_array($slug, ['lab', 'shipyard'], true)) {
                 $maxLevel = max(1, (int) ($definition['max_level'] ?? 25));
                 $afterRanks = $next[$slug];
-                $cap = (float) ($this->catalog->rules()['time_reduction_max_percent'] ?? 70);
+                $cap = $this->catalog->operationTimeReductionCap($slug === 'lab' ? 'technologies' : 'ships');
                 $before = GameCatalog::infrastructureBonus($levels[$slug] ?? [], $cap, $maxLevel, $this->catalog->rules()['building_level_growth'] ?? []);
                 $after = GameCatalog::infrastructureBonus($afterRanks, $cap, $maxLevel, $this->catalog->rules()['building_level_growth'] ?? []);
                 return [[
@@ -291,7 +291,7 @@ final class CatalogueInsights
             return $result;
         }
         if (in_array($type, ['time_discount', 'cost_discount'], true)) {
-            $cap = $type === 'time_discount' ? (float) ($this->catalog->rules()['time_reduction_max_percent'] ?? 70) : (float) ($this->catalog->rules()['cost_reduction_max_percent'] ?? 40);
+            $cap = $type === 'time_discount' ? $this->catalog->operationTimeReductionCap('buildings') : (float) ($this->catalog->rules()['cost_reduction_max_percent'] ?? 40);
             $before = GameCatalog::diminishingBonus($ranks, $cap, $maxLevel);
             $after = GameCatalog::diminishingBonus($afterRanks, $cap, $maxLevel);
             $label = match ([$type, $effect['targets'] ?? '']) {

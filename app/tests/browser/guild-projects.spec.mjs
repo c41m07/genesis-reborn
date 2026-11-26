@@ -26,6 +26,11 @@ test('Les modèles de projets conservent la saisie et les paliers fonctionnent s
   await page.goto('/admin/projets-guilde/nouveau');
   await expect(page.getByRole('heading', { name: 'Créer un modèle de projet', exact: true })).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+  const resourceOrder = ['metal', 'nano', 'hydrogen', 'antimatter', 'electricity'];
+  expect(await page.locator('.admin-project-stage .admin-project-resources input').evaluateAll(inputs => inputs.map(input => input.name)))
+    .toEqual(resourceOrder.map(slug => `stages[0][costs][${slug}]`));
+  expect(await page.locator('input[name^="minimums["]').evaluateAll(inputs => inputs.map(input => input.name)))
+    .toEqual(resourceOrder.map(slug => `minimums[${slug}]`));
   await page.getByLabel('Nom du projet', { exact: true }).fill(name);
   const universeId = await page.getByRole('combobox', { name: 'Univers', exact: true }).locator('option').filter({ hasText: 'Omega' }).getAttribute('value');
   await page.getByRole('combobox', { name: 'Univers', exact: true }).selectOption(universeId);
@@ -200,7 +205,8 @@ test('Projets sans JavaScript : lancement, don et historique restent accessibles
     await page.getByLabel('Tag de la guilde', { exact: true }).fill(id.slice(0, 5).toUpperCase());
     await page.getByRole('button', { name: 'Fonder une guilde' }).click();
     const name = 'Natif-' + id;
-    runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO guild_project_definition (universe_id,name,description,stages,minimums,enabled,created_at,updated_at) SELECT id,'${name}','Projet natif','[{"name":"Structure","costs":{"metal":10}}]','{"metal":2}',1,UTC_TIMESTAMP(),UTC_TIMESTAMP() FROM universe WHERE slug='omega-1'`);
+    // Les anciens modèles peuvent avoir enregistré les ressources dans un ordre différent.
+    runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO guild_project_definition (universe_id,name,description,stages,minimums,enabled,created_at,updated_at) SELECT id,'${name}','Projet natif','[{"name":"Structure","costs":{"antimatter":1,"metal":10,"nano":2}}]','{"metal":2}',1,UTC_TIMESTAMP(),UTC_TIMESTAMP() FROM universe WHERE slug='omega-1'`);
     await page.goto('/guildes/projets');
     await page.getByRole('navigation', { name: 'Navigation des projets collectifs', exact: true }).getByRole('link', { name: 'Projets disponibles', exact: true }).click();
     await page.getByRole('button', { name: 'Lancer ' + name, exact: true }).click();
@@ -209,12 +215,14 @@ test('Projets sans JavaScript : lancement, don et historique restent accessibles
     await expect(page.locator('.guild-stage-progress + .project-personal-recap')).toContainText('Métal : 0 / 2');
     await expect(recap).toContainText('Atteignez tous les minimums');
     await expect(page.locator('#project-donation')).toContainText('Débit uniquement sur la colonie sélectionnée.');
+    expect(await page.locator('#project-donation input[type="number"]').evaluateAll(inputs => inputs.map(input => input.name)))
+      .toEqual(['resources[metal]', 'resources[nano]', 'resources[antimatter]']);
     await page.getByLabel('Don Métal', { exact: true }).fill('2');
     await page.getByRole('button', { name: 'Donner ces ressources', exact: true }).press('Enter');
     await expect(page.locator('.flash.success')).toContainText('Don enregistré');
     await expect(recap).toContainText('Métal : 2 / 2');
     await expect(recap).toContainText('Minimums atteints');
-    await expect(page.locator('.guild-stage-progress progress')).toHaveAttribute('value', '2');
+    await expect(page.locator('.guild-stage-progress').getByRole('progressbar', { name: 'Métal', exact: true })).toHaveAttribute('value', '2');
     await expect(page.getByLabel('Don Métal', { exact: true })).toHaveAttribute('max', '8');
     const auditContext = await browser.newContext({ baseURL, storageState: await context.storageState() });
     try {
@@ -247,6 +255,8 @@ test('Projets sans JavaScript : lancement, don et historique restent accessibles
       }
     } finally { await auditContext.close(); }
     await page.getByLabel('Don Métal', { exact: true }).fill('8');
+    await page.getByLabel('Don Nano', { exact: true }).fill('2');
+    await page.getByLabel('Don Antimatière', { exact: true }).fill('1');
     await page.getByRole('button', { name: 'Donner ces ressources', exact: true }).click();
     await expect(page.locator('.flash.success')).toContainText('Le projet est terminé');
     await page.getByRole('navigation', { name: 'Navigation des projets collectifs', exact: true }).getByRole('link', { name: 'Historique', exact: true }).click();

@@ -69,7 +69,13 @@ final class ReportArchiveService
                     };
                 }
             }
-            $sql .= ($archived ? ' AND EXISTS' : ' AND NOT EXISTS') . " (SELECT 1 FROM report_archive a WHERE a.player_universe_id=:member AND a.kind='" . $kind . "' AND a.report_id=r.id AND a.archived_at IS NOT NULL)";
+            // Le retrait conserve sa date d’archivage et exclut le rapport des deux listes.
+            $archiveState = $archived
+                ? 'a.archived_at IS NOT NULL AND a.removed_at IS NULL'
+                : '(a.archived_at IS NOT NULL OR a.removed_at IS NOT NULL)';
+            $sql .= ($archived ? ' AND EXISTS' : ' AND NOT EXISTS')."
+                (SELECT 1 FROM report_archive a WHERE a.player_universe_id=:member AND a.kind='".$kind."'
+                 AND a.report_id=r.id AND ".$archiveState.')';
         }
         unset($sql);
         // Compter et paginer après les droits et les filtres, y compris dans l’onglet Tous.
@@ -115,11 +121,22 @@ final class ReportArchiveService
 
     public function change(PlayerUniverse $member, array $keys, bool $archive): void
     {
+        $this->apply($member, $keys, $archive ? 'archive' : 'restore');
+    }
+
+    public function removeFromArchives(PlayerUniverse $member, array $keys): void
+    {
+        $this->apply($member, $keys, 'remove');
+    }
+
+    private function apply(PlayerUniverse $member, array $keys, string $operation): void
+    {
         $keys = array_values(array_unique($keys, SORT_REGULAR));
         if (!$keys || count($keys) > 50) {
             throw new \DomainException('Sélectionnez entre 1 et 50 rapports.');
         }
-        $this->manager->transaction(function () use ($member, $keys, $archive): void {
+        $this->manager->transaction(function () use ($member, $keys, $operation): void {
+            // Sérialiser archivage, restauration et retrait en verrouillant le même empire.
             $this->manager->lock($member);
             $reports = [];
             foreach ($keys as $key) {
@@ -143,11 +160,22 @@ final class ReportArchiveService
                 if (!$allowed) {
                     throw new \DomainException('Un rapport sélectionné est inaccessible. Aucun changement appliqué.');
                 }
-                $reports[] = [$kind, $id];
-            }
-            foreach ($reports as [$kind, $id]) {
                 $state = $this->repo->one(ReportArchive::class, ['playerUniverse' => $member, 'kind' => $kind, 'reportId' => $id]);
-                if (!$state && !$archive) {
+                if ($state?->removedAt !== null || ($operation === 'remove' && $state?->archivedAt === null)) {
+                    throw new \DomainException('Un rapport sélectionné n’est pas disponible dans vos archives. Aucun changement appliqué.');
+                }
+                $reports[] = [$kind, $id, $state];
+            }
+            // Valider toute la sélection avant de toucher aux marqueurs personnels ou de les créer.
+            foreach ($reports as [$kind, $id, $state]) {
+                if ($operation === 'remove') {
+                    $state->removedAt = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
+                    continue;
+                }
+                if ($operation === 'restore') {
+                    if ($state) {
+                        $state->archivedAt = null;
+                    }
                     continue;
                 }
                 if (!$state) {
@@ -157,11 +185,8 @@ final class ReportArchiveService
                     $state->reportId = $id;
                     $this->manager->save($state);
                 }
-                if ($archive && $state->archivedAt === null) {
+                if ($state->archivedAt === null) {
                     $state->archivedAt = $this->clock->now();
-                }
-                if (!$archive) {
-                    $state->archivedAt = null;
                 }
             }
         });

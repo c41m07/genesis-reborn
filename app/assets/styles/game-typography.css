@@ -36,9 +36,9 @@ body.authenticated .boost-operation .secondary{font-size:12px;white-space:normal
     body.authenticated .mobile-bottom-nav>:is(a,button){font-size:10px}
 }
 
-/* Les noms abrégés évitent de réduire la police des rangs dans les cartes étroites. */
+/* Dans les cartes étroites, seul le libellé visible forme le nom du rang ; la description garde le rang complet. */
 @container(max-width:340px){
-    body.authenticated .building-rank-full{display:inline;position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+    body.authenticated .building-rank-full{display:none}
     body.authenticated .building-rank-short{display:inline}
 }
 .resource-box-form{display:grid;gap:10px;margin-top:16px}

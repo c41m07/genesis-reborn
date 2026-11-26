@@ -15,7 +15,11 @@ ultérieure du 16 novembre adopte la [nouvelle répartition](COUTS.md), sans cha
 les durées ni les coefficients de ce lot historique. Le 19 novembre,
 la base de l’Expansion coloniale passe à 8 h pour tous ses rangs.
 
-Les trois rangs multiplient la durée une seule fois : ×1, ×1,25 et ×1,5625. Les multiplicateurs d’univers et rendements décroissants existants restent appliqués à la commande. Le plafond de réduction est de 70 %, le minimum d’une seconde et l’arrondi au supérieur restent en place.
+Les trois rangs multiplient la durée une seule fois : ×1, ×1,25 et ×1,5625. Les multiplicateurs d’univers et rendements décroissants existants restent appliqués à la commande. Le minimum d’une seconde et l’arrondi au supérieur restent en place. Le plafond
+historique de 70 % reste celui des constructions de bâtiments. Depuis la décision
+du 26 novembre, le laboratoire et le chantier plafonnent chacun à 89,5 % à 25/25/25
+pour la recherche locale et les constructions de vaisseaux. Les exemples
+historiques à 70 % ci-dessous ne sont pas des devis actuels.
 
 ## Bâtiments — durées conservées
 
@@ -82,7 +86,10 @@ La durée croît à chaque niveau : ×1,35 de 2 à 5 ; ×1,25 de 6 à 10 ; ×1,1
 | Chasseur furtif | 15 min | 15 min | 1 500 | 1 500 |
 | Cargo de ligne | 1 h | 30 min | 6 000 | 3 000 |
 
-Exemple Capital : Basique 24 h, Intermédiaire 30 h, Supérieur 37 h 30 ; avec une réduction effective de 70 %, le Basique dure exactement 7 h 12. La soustraction des pourcentages avant division corrige une imprécision numérique qui ajoutait une seconde à ce dernier cas.
+Exemple Capital : Basique 24 h, Intermédiaire 30 h, Supérieur 37 h 30 hors réduction.
+À 89,5 %, le Basique dure exactement 2 h 31 min 12 s. Historiquement, à 70 %,
+il durait 7 h 12 min. La réduction s’applique avant l’arrondi à la seconde
+supérieure.
 
 ## Nouvelles unités économiques — lot 3
 
@@ -111,13 +118,13 @@ La taxe reste `100 × plafond(durée effective enregistrée en secondes / 60)` p
 
 Exemple Sonde Supérieure sans réduction : une unité prend 188 s et 400 E ; deux unités en une commande prennent 375 s et 700 E. Les devis, maxima et paiements utilisent le même calculateur.
 
-Le Capital Basique passe de 432 000 E à 144 000 E sans réduction, soit −288 000 E (−66,67 %). À réduction maximale, ses 7 h 12 coûtent 43 200 E ; le faux dépassement numérique précédent aurait affiché 43 300 E. Les baisses ne sont pas uniformes : l’anti-capital passe de 2 100 à 6 000 E (+185,71 %), la Télémétrie de 1 000 à 6 000 E. Les tableaux exposent aussi les hausses.
+Le Capital Basique passe de 432 000 E à 144 000 E sans réduction, soit −288 000 E (−66,67 %). À l’ancien maximum de 70 %, ses 7 h 12 coûtaient 43 200 E ; au nouveau maximum de 89,5 %, ses 2 h 31 min 12 s coûtent 15 200 E. Les baisses ne sont pas uniformes : l’anti-capital passe de 2 100 à 6 000 E (+185,71 %), la Télémétrie de 1 000 à 6 000 E. Les tableaux exposent aussi les hausses.
 
 ## Occupation de la file commune par la colonisation
 
 Depuis le 19 novembre, la durée de base est de 28 800 s pour la famille Expansion
 coloniale. Les facteurs de rang, la croissance par niveau et la réduction du
-laboratoire local restent en vigueur. Le tableau compare les devis Basiques en univers ×1.
+laboratoire local restent en vigueur. Le tableau compare les devis historiques Basiques en univers ×1, avec le plafond de laboratoire qui s’appliquait en novembre avant son relèvement.
 
 | Niveau | Brut avant → après | Laboratoire Basique 2 avant → après | Taxe avec laboratoire avant → après |
 | --- | ---: | ---: | ---: |

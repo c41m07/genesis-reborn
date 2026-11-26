@@ -52,7 +52,7 @@
             {% set hasTraffic = galaxy_v2_flights is not empty or galaxy_campaign_traffic is not empty %}
             <details class="gv2-flight-log {{ hasTraffic?'':'is-empty' }}" {{ hasTraffic?'open':'' }}>
                 <summary><span class="gv2-live-dot" aria-hidden="true"></span>Journal de flotte<span class="visually-hidden" data-galaxy-v2-empty-label {% if hasTraffic %}hidden{% endif %}> · aucune mission</span></summary>
-                <div data-galaxy-v2-target="fleetLog">
+                <div id="gv2-fleet-log" data-galaxy-v2-target="fleetLog">
                     {% include 'universe/_fleet_log.html.twig' %}
                 </div>
             </details>
@@ -101,6 +101,10 @@
         <section class="gv2-map-settings is-collapsed" aria-label="Affichage de la carte" data-galaxy-v2-target="mapSettings">
             <button type="button" class="gv2-filter-toggle" data-galaxy-v2-target="filterToggle" data-action="click->galaxy-v2#toggleMapFilters" aria-expanded="false" aria-controls="gv2-filter-content">Filtres · <span data-galaxy-v2-target="mapModeLabel">Exploration</span></button>
             <div id="gv2-filter-content">
+            <label class="gv2-guild-flight-filter" data-galaxy-v2-target="guildFlightFilter" hidden>
+                <input type="checkbox" data-action="change->galaxy-v2#toggleGuildFlights" aria-controls="gv2-fleet-log" checked>
+                <span>Afficher les flottes de guilde</span>
+            </label>
             <div class="gv2-map-modes" role="group" aria-label="Mode de carte">
                 <button type="button" data-map-mode="exploration" data-galaxy-v2-target="mapMode" data-action="click->galaxy-v2#changeMapMode" aria-pressed="true">Exploration</button>
                 <button type="button" data-map-mode="npc" data-galaxy-v2-target="mapMode" data-action="click->galaxy-v2#changeMapMode" aria-pressed="false">PNJ</button>

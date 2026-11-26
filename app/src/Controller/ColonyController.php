@@ -515,6 +515,7 @@ final class ColonyController extends AbstractController
         }
         $galaxyV2Json = '';
         $flights = [];
+        $guildFlightFilterAvailable = false;
         $campaignTraffic = [];
         $mapOccupations = [];
         $mapConquerable = [];
@@ -594,7 +595,9 @@ final class ColonyController extends AbstractController
                     'profileUrl' => $this->generateUrl('app_guild_public_profile', ['id' => $row['hall']['guildId']]),
                 ]] : []);
             }
-            $flights = $this->visibility->forMap($m, $selectedGalaxy);
+            $traffic = $this->visibility->forMap($m, $selectedGalaxy);
+            $flights = $traffic['flights'];
+            $guildFlightFilterAvailable = $traffic['guildFilterAvailable'];
             $campaignTraffic = $this->campaignTraffic->forGalaxy($m, $selectedGalaxy);
             $galaxyV2Json = json_encode([
                 'geometry' => ['name' => GalaxyGeometry::SPIRAL, 'extent' => GalaxyGeometry::EXTENT, 'unitsToAu' => GalaxyGeometry::UNITS_TO_AU],
@@ -611,6 +614,7 @@ final class ColonyController extends AbstractController
                     'position' => $mapOrigin->position,
                 ] : null,
                 'flights' => $flights,
+                'guildFilterAvailable' => $guildFlightFilterAvailable,
                 'campaignTraffic' => $campaignTraffic,
                 'serverNow' => $clock->now()->format(\DateTimeInterface::ATOM),
                 'galaxy' => $selectedGalaxy?->coordinateCode(),

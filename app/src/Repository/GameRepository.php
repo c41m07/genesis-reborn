@@ -630,9 +630,9 @@ final class GameRepository
 
     /**
      * @param list<int> $fleetIds
-     * @return array<int, int> Identifiant du rapport par flotte entrante.
+     * @return array<int, array{id: int, removed: bool}> État personnel du rapport par flotte entrante.
      */
-    public function incomingTransportReportIds(PlayerUniverse $recipient, array $fleetIds): array
+    public function incomingTransportReportStates(PlayerUniverse $recipient, array $fleetIds): array
     {
         if ($fleetIds === []) {
             return [];
@@ -641,9 +641,16 @@ final class GameRepository
         // Le propriétaire actuel de la colonie peut voir l'arrivée sans être le
         // destinataire enregistré du fret. Ne charger ni le contenu ni les autres rapports.
         $rows = $this->em->createQueryBuilder()
-            ->select('IDENTITY(report.fleet) AS fleetId', 'report.id AS reportId')
+            ->select('IDENTITY(report.fleet) AS fleetId', 'report.id AS reportId', 'personalArchive.id AS removalId')
             ->from(\App\Entity\TransportReport::class, 'report')
             ->join('report.sender', 'sender')
+            ->leftJoin(
+                \App\Entity\ReportArchive::class,
+                'personalArchive',
+                'WITH',
+                "personalArchive.playerUniverse = :recipient AND personalArchive.kind = 'economy'
+                 AND personalArchive.reportId = report.id AND personalArchive.removedAt IS NOT NULL",
+            )
             ->where('IDENTITY(report.fleet) IN (:fleets)')
             ->andWhere('report.recipient = :recipient')
             ->andWhere('sender.universe = :universe')
@@ -652,11 +659,11 @@ final class GameRepository
             ->setParameter('universe', $recipient->universe)
             ->getQuery()->getArrayResult();
 
-        $ids = [];
+        $states = [];
         foreach ($rows as $row) {
-            $ids[(int) $row['fleetId']] = (int) $row['reportId'];
+            $states[(int) $row['fleetId']] = ['id' => (int) $row['reportId'], 'removed' => $row['removalId'] !== null];
         }
-        return $ids;
+        return $states;
     }
 
     /**
@@ -703,9 +710,25 @@ final class GameRepository
         return $details;
     }
 
+    public function isReportRemoved(PlayerUniverse $membership, string $kind, int $id): bool
+    {
+        return (bool) $this->em->getConnection()->fetchOne(
+            'SELECT 1 FROM report_archive
+             WHERE player_universe_id = :member AND kind = :kind AND report_id = :report AND removed_at IS NOT NULL',
+            ['member' => $membership->id, 'kind' => $kind, 'report' => $id],
+        );
+    }
+
     public function espionageReportsFor(PlayerUniverse $membership, int $limit = 50): array
     {
-        return $this->em->createQueryBuilder()->select('r')->from(\App\Entity\EspionageReport::class, 'r')->where('r.sender = :membership')->setParameter('membership', $membership)->orderBy('r.createdAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();
+        return $this->em->createQueryBuilder()
+            ->select('r')->from(\App\Entity\EspionageReport::class, 'r')
+            ->where('r.sender = :membership')
+            ->andWhere(ReportArchiveRepository::notRemovedDql('r.id', 'espionage', ':membership'))
+            ->setParameter('membership', $membership)
+            ->orderBy('r.createdAt', 'DESC')
+            ->setMaxResults(max(1, min(100, $limit)))
+            ->getQuery()->getResult();
     }
 
     /** @return list<array{id: int, createdAt: \DateTimeImmutable, targetName: string}> */
@@ -717,6 +740,7 @@ final class GameRepository
             ->from(\App\Entity\EspionageReport::class, 'r')
             ->join('r.target', 'target')
             ->where('r.sender = :membership')
+            ->andWhere(ReportArchiveRepository::notRemovedDql('r.id', 'espionage', ':membership'))
             ->setParameter('membership', $membership)
             ->orderBy('r.createdAt', 'DESC')
             ->addOrderBy('r.id', 'DESC')
@@ -726,7 +750,17 @@ final class GameRepository
 
     public function combatLogsFor(PlayerUniverse $membership, int $limit = 50): array
     {
-        return $this->em->createQueryBuilder()->select('DISTINCT l')->from(CombatLog::class, 'l')->join('l.combatEvent', 'e')->join('e.planet', 'p')->leftJoin(CombatParticipant::class, 'cp', 'WITH', 'cp.combatEvent = e')->where('cp.playerUniverse = :membership')->orWhere('p.owner = :membership')->setParameter('membership', $membership)->orderBy('l.resolvedAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();
+        return $this->em->createQueryBuilder()
+            ->select('DISTINCT l')->from(CombatLog::class, 'l')
+            ->join('l.combatEvent', 'e')
+            ->join('e.planet', 'p')
+            ->leftJoin(CombatParticipant::class, 'cp', 'WITH', 'cp.combatEvent = e')
+            ->where('(cp.playerUniverse = :membership OR p.owner = :membership)')
+            ->andWhere(ReportArchiveRepository::notRemovedDql('l.id', 'combat', ':membership'))
+            ->setParameter('membership', $membership)
+            ->orderBy('l.resolvedAt', 'DESC')
+            ->setMaxResults(max(1, min(100, $limit)))
+            ->getQuery()->getResult();
     }
 
     /** @return list<PlanetResource> Lecture courante pour un dépôt sous verrou de planète. */
@@ -823,6 +857,7 @@ final class GameRepository
         return $this->em->createQueryBuilder()->select(
             'f',
             'pu',
+            'fleetOwner',
             'home',
             'homeSystem',
             'homeGalaxy',
@@ -831,7 +866,7 @@ final class GameRepository
             'destinationGalaxy',
             'directSystem',
             'directGalaxy'
-        )->from(Fleet::class, 'f')->join('f.playerUniverse', 'pu')->join('f.homePlanet', 'home')->join('home.solarSystem', 'homeSystem')->join('homeSystem.galaxy', 'homeGalaxy')->leftJoin('f.destination', 'destination')->leftJoin('destination.solarSystem', 'destinationSystem')->leftJoin('destinationSystem.galaxy', 'destinationGalaxy')->leftJoin('f.destinationSystem', 'directSystem')->leftJoin('directSystem.galaxy', 'directGalaxy')->where('pu.universe = :universe')->andWhere('f.status IN (:statuses)')->setParameter('universe', $universe)->setParameter('statuses', [
+        )->from(Fleet::class, 'f')->join('f.playerUniverse', 'pu')->leftJoin('pu.player', 'fleetOwner')->join('f.homePlanet', 'home')->join('home.solarSystem', 'homeSystem')->join('homeSystem.galaxy', 'homeGalaxy')->leftJoin('f.destination', 'destination')->leftJoin('destination.solarSystem', 'destinationSystem')->leftJoin('destinationSystem.galaxy', 'destinationGalaxy')->leftJoin('f.destinationSystem', 'directSystem')->leftJoin('directSystem.galaxy', 'directGalaxy')->where('pu.universe = :universe')->andWhere('f.status IN (:statuses)')->setParameter('universe', $universe)->setParameter('statuses', [
             'traveling',
             'returning',
             'attacking',

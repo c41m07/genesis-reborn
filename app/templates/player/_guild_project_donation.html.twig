@@ -4,13 +4,14 @@
     <label for="project-{{ project.id }}-planet">Colonie qui fournit les ressources</label>
     <select id="project-{{ project.id }}-planet" name="planet_id" required>{% for planet in planets %}<option value="{{ planet.id }}">{{ planet.name }}</option>{% endfor %}</select>
     <div class="form-grid">
-        {% for resource,remaining in row.remaining %}{% if remaining>0 %}
-        <div>
-            <label for="project-{{ project.id }}-{{ resource }}">Don {{ resources[resource] }}</label>
-            <input id="project-{{ project.id }}-{{ resource }}" name="resources[{{ resource }}]" type="number" min="0" max="{{ remaining }}" step="1" value="0" aria-describedby="project-{{ project.id }}-{{ resource }}-limit">
-            <p class="project-donation-limit" id="project-{{ project.id }}-{{ resource }}-limit">Maximum : {{ remaining }}</p>
-        </div>
-        {% endif %}{% endfor %}
+        {% for resource in constant('App\\Service\\Colony\\ResourceService::DISPLAY_ORDER')|filter(slug => row.remaining[slug]|default(0) > 0) %}
+            {% set remaining = row.remaining[resource] %}
+            <div>
+                <label for="project-{{ project.id }}-{{ resource }}">Don {{ resources[resource] }}</label>
+                <input id="project-{{ project.id }}-{{ resource }}" name="resources[{{ resource }}]" type="number" min="0" max="{{ remaining }}" step="1" value="0" aria-describedby="project-{{ project.id }}-{{ resource }}-limit">
+                <p class="project-donation-limit" id="project-{{ project.id }}-{{ resource }}-limit">Maximum : {{ remaining }}</p>
+            </div>
+        {% endfor %}
     </div>
     <p>Les dons ne sont pas remboursés.</p><button class="primary">Donner ces ressources</button>
 </form>
