@@ -118,11 +118,25 @@ final class CatalogueInsights
             $definition = $this->technologyEffects->applyToShips([$definition], $technologies, $planet->solarSystem->galaxy->universe)[0];
         }
         if ($group === 'ships') {
+            $attackPerShot = $definition['base_attack'] ?? 0;
+            // Le résumé projette les seuls tirs principaux, avec l'attaque déjà bonifiée.
+            // Il n'anticipe ni la précision, ni les tirs secondaires ou supplémentaires.
+            $averageAttack = $attackPerShot * (($definition['shots_min'] ?? 0) + ($definition['shots_max'] ?? 0)) / 2;
             $shipBenefits = [
                 ['label' => 'Vitesse dans le système', 'value' => $definition['speed_system'] ?? 0, 'unit' => ''],
                 ['label' => 'Vitesse entre systèmes', 'value' => $definition['speed_galaxy'] ?? 0, 'unit' => ''],
                 ['label' => 'Tirs principaux par round', 'text' => (float) ($definition['base_attack'] ?? 0) > 0 ? ($definition['shots_min'] ?? 0) . '–' . ($definition['shots_max'] ?? 0) : 'Aucun'],
-                ['label' => 'Attaque', 'value' => $definition['base_attack'] ?? 0, 'unit' => ''],
+                [
+                    'label' => 'Attaque',
+                    'value' => $attackPerShot,
+                    'unit' => '',
+                    'summary' => [
+                        'label' => 'Attaque moyenne',
+                        'value' => $averageAttack,
+                        'unit' => 'par round',
+                        'decimals' => (float) $averageAttack === floor($averageAttack) ? 0 : 2,
+                    ],
+                ],
                 ['label' => 'Structure', 'value' => $definition['hp'], 'unit' => ''],
                 ['label' => 'Bouclier maximal', 'value' => $definition['shield'] ?? 0, 'unit' => ''],
                 ['label' => 'Précision de tir', 'value' => $definition['precision'] ?? 0, 'unit' => '%'],

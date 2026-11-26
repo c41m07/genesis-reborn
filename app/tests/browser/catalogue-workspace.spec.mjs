@@ -96,7 +96,8 @@ test('L7B : manques multiples, devis de lot et suivi dépliable conservés aprè
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto(`${user.path}?section=ships`);
     const ship = page.locator('#item-fighter-basic');
-    await expect(ship.locator('[data-catalogue-main-gain]')).toContainText('Attaque par tir');
+    await expect(ship.locator('[data-catalogue-main-gain]')).toContainText('Attaque moyenne');
+    await expect(ship.locator('[data-catalogue-main-gain] strong')).toContainText('par round');
     await expect(ship.getByRole('button', { name: 'Construire : Chasseur de patrouille × 1', exact: true })).toBeVisible();
     await expect(ship.locator('.core-unit-price')).toBeHidden();
     const unitMetalPrice = Number((await ship.locator('.building-costs>[data-resource=metal]').getAttribute('title')).split(' : ')[1].replace(/\s/g, ''));
