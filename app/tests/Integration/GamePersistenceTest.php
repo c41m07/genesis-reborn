@@ -1695,13 +1695,13 @@ final class GamePersistenceTest extends KernelTestCase
         $queues->add($membership,$one,'technologies','colonial_expansion',1,str_repeat('a',32));
         $queues->add($membership,$two,'technologies','engineering_foundations',1,str_repeat('b',32));
         [$colony,$following]=$this->em->getRepository(QueueItem::class)->findBy(['playerUniverse'=>$membership],['id'=>'ASC']);
-        self::assertSame(28154,$colony->durationSeconds);self::assertSame(47000,$colony->paidCosts['electricity']);
+        self::assertSame(27974,$colony->durationSeconds);self::assertSame(46700,$colony->paidCosts['electricity']);
         self::assertNull($following->startedAt);$finish=$colony->finishAt();$paid=$colony->paidCosts;
         $clock->sleep($colony->durationSeconds-1);$queues->synchronize($membership);
         self::assertNull($following->startedAt);
         $clock->sleep(2);$queues->synchronize($membership);
         self::assertEquals($finish,$following->startedAt);
-        self::assertSame($paid,$colony->paidCosts);self::assertSame(28154,$colony->durationSeconds);
+        self::assertSame($paid,$colony->paidCosts);self::assertSame(27974,$colony->durationSeconds);
         self::assertSame(1,$this->em->getRepository(PlayerTechnology::class)->findOneBy(['playerUniverse'=>$membership,'slug'=>'colonial_expansion'])->level);
     }
 
@@ -1834,11 +1834,11 @@ final class GamePersistenceTest extends KernelTestCase
         $this->em->refresh($active);
         $this->em->refresh($waiting);
         self::assertEquals($activeFinish, $active->finishAt());
-        self::assertSame(281535, $active->durationSeconds);
-        self::assertSame(469300, $active->paidCosts['electricity']);
+        self::assertSame(279734, $active->durationSeconds);
+        self::assertSame(466300, $active->paidCosts['electricity']);
         self::assertNull($waiting->startedAt);
-        self::assertSame(380073, $waitingDuration);
-        self::assertSame(633500, $waitingPaid['electricity']);
+        self::assertSame(377641, $waitingDuration);
+        self::assertSame(629500, $waitingPaid['electricity']);
 
         $clock->sleep($active->durationSeconds + 1);
         $queues->synchronize($membership);

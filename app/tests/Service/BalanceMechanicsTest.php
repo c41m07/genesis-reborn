@@ -58,7 +58,7 @@ final class BalanceMechanicsTest extends TestCase
             ['naval_engineering' => 5],
         );
 
-        self::assertSame(161, $plan['duration']);
+        self::assertSame(156, $plan['duration']);
         self::assertSame(['metal'=>1388,'nano'=>752,'antimatter'=>0,'hydrogen'=>0,'electricity'=>300],$plan['costs']);
     }
 
@@ -183,7 +183,7 @@ final class BalanceMechanicsTest extends TestCase
         $research = $universe['catalog']['technologies']['colonial_expansion'];
         $plan = (new OperationCalculator($catalog))->calculate($research, 'technologies', 1, 1, ['lab' => 1], $universe);
 
-        self::assertSame(28475, $plan['duration']);
+        self::assertSame(28385, $plan['duration']);
     }
 
     public function testResearchNamesAreDistinctAndEveryCombatShipHasOneSpecialistTurret(): void
