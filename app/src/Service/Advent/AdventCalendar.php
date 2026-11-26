@@ -30,6 +30,13 @@ final class AdventCalendar
         return ['startsAt' => $doors[1], 'closesAt' => $last->modify('+1 day')->setTimezone($utc), 'doors' => $doors];
     }
 
+    public function boxExpiry(int $season): \DateTimeImmutable
+    {
+        // La fenêtre locale peut fermer plus tôt ; la boîte acquise dispose
+        // de tout le 31 décembre, selon le calendrier civil de Paris.
+        return $this->parisDay($season.'-12-31')->modify('+1 day')->setTimezone(new \DateTimeZone('UTC'));
+    }
+
     public function instant(string $value): \DateTimeImmutable
     {
         if (preg_match('/\A20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}\z/', $value)) {
