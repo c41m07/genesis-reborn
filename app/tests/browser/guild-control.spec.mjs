@@ -128,7 +128,8 @@ test('L1C A : rôles, formulaires, traités et confirmations natives de gestion'
           await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
           if (key === 'grades') {
             await expect(page.getByLabel('Nom du grade', { exact: true })).toHaveValue(rankName);
-            await expect(page.locator('.guild-rank-editor input[type="checkbox"]')).toHaveCount(7);
+            await expect(page.locator('.guild-rank-editor input[type="checkbox"]')).toHaveCount(8);
+            await expect(page.getByRole('checkbox', { name: 'Gérer les candidatures et inviter des commandants' })).toBeVisible();
             await expect(page.getByRole('navigation', { name: 'Grades de la guilde' }).locator('a').first()).toHaveText('Créer un grade');
             const selectedRank = page.locator('.guild-rank-navigation [aria-current="page"]');
             await expect(selectedRank).toHaveText(rankName + ' · priorité 10');
