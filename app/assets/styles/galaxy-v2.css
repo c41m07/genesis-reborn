@@ -193,3 +193,5 @@ body.reduced-motion .galaxy-v2 *,body.reduced-motion .galaxy-v2 *::before,body.r
     margin: 0;
     accent-color: var(--accent);
 }
+
+.gv2-flight-entry[data-campaign-kind] .operation-progress { grid-column: 1 / -1; }

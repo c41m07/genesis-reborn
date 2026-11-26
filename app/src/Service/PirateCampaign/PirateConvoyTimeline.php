@@ -154,9 +154,9 @@ final class PirateConvoyTimeline
     }
 
     /**
-     * Une vue de trajet ne reçoit ni le jeton, ni le point civil, ni le montant.
+     * Ne fournir que l'identifiant d'ancre ; l'appelant doit encore vérifier qu'elle est connue.
      *
-     * @return array{destination: int, due: \DateTimeImmutable}|null
+     * @return array{destination: int, origin_system: int, departed: \DateTimeImmutable, due: \DateTimeImmutable}|null
      */
     public function travelFor(int $membership, int $universe, \DateTimeImmutable $at): ?array
     {
@@ -166,7 +166,8 @@ final class PirateConvoyTimeline
             return null;
         }
 
-        return ['destination' => $this->destination, 'due' => $this->dueAt];
+        return ['destination' => $this->destination, 'origin_system' => $this->position[0],
+            'departed' => $this->departedAt, 'due' => $this->dueAt];
     }
 
     /** Tentative/participation/victoire et montant sont portés séparément par le droit SQL. */
