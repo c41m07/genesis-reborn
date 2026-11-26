@@ -38,22 +38,28 @@
                 {% set affordable = true %}
                 {% for resource, cost in card.costs %}{% if cost > resources[resource].stock %}{% set affordable = false %}{% endif %}{% endfor %}
                 {% set count = leveled ? card.level : card.quantity %}
-                {% set stockStatus = leveled ? 'Niveau '~card.level : card.quantity|number_format(0, ',', ' ')~' unités possédées' %}
+                {% set stockUnit = group == 'defenses' ? (count > 1 ? 'unités installées' : 'unité installée') : (count > 1 ? 'unités possédées' : 'unité possédée') %}
+                {% set stockStatus = leveled ? 'Niveau '~card.level : count|number_format(0, ',', ' ')~' '~stockUnit %}
+                {% set compactCount = count|compact_number|replace({',00 ': ' '}) %}
                 {% set missingLocalLaboratory = card.missing_research_laboratory|default(null) %}
                 {% set upgradeable = not missingLocalLaboratory and not vacation and not locked and not card.maximum and affordable and not queueFull and not card.capacity_full|default(false) %}
                 {% set tabId = 'building-tab-'~slug~'-'~card.tier %}
-                {# La description accessible précise le stock et la raison d’une commande indisponible. #}
-                <a id="{{ tabId }}" href="#item-{{ slug }}-{{ card.tier }}" class="building-rank-tab {{ locked ? 'is-locked' : '' }}" data-building-catalog-target="tab" data-tier="{{ card.tier }}" data-locked="{{ locked ? 'true' : 'false' }}" data-action="building-catalog#select keydown->building-catalog#navigate" aria-describedby="{{ tabId }}-status" {% if locked and not show_locked_items %}hidden{% endif %}>
-                    <span id="{{ tabId }}-name"><span class="building-rank-full">{{ card.definition._tier_label }}</span><span class="building-rank-short">{{ {basic:'Basique',intermediate:'Interm.',superior:'Sup.'}[card.tier] }}</span></span>
+                {# Le badge ne change pas le nom du rang ni son focus. La description conserve la valeur exacte, même si le badge l’abrège. #}
+                <a id="{{ tabId }}" href="#item-{{ slug }}-{{ card.tier }}" class="building-rank-tab {{ locked ? 'is-locked' : '' }}" data-building-catalog-target="tab" data-tier="{{ card.tier }}" data-locked="{{ locked ? 'true' : 'false' }}" data-action="building-catalog#select keydown->building-catalog#navigate" aria-label="{{ card.definition._tier_label }}" aria-describedby="{{ tabId }}-status"{% if count >= 10000 %} title="{{ stockStatus }}"{% endif %} {% if locked and not show_locked_items %}hidden{% endif %}>
+                    <span class="building-rank-name">
+                        <span class="building-rank-full">{{ card.definition._tier_label }}</span>
+                        <span class="building-rank-short">{{ {basic:'Basique',intermediate:'Interm.',superior:'Sup.'}[card.tier] }}</span>
+                        <span class="building-rank-narrow">{{ {basic:'Bas.',intermediate:'Int.',superior:'Sup.'}[card.tier] }}</span>
+                    </span>
+                    <span class="building-rank-level{{ count == 0 ? ' is-empty' : '' }}" aria-hidden="true">{{ leveled ? 'Niv. '~compactCount : compactCount }}</span>
                     {% if upgradeable %}
                         <span class="building-rank-up" aria-hidden="true">{{ ui.icon('arrow') }}</span>
                     {% endif %}
                     <span id="{{ tabId }}-status" hidden>
-                        {{ card.definition._tier_label }} ·
+                        {{ card.definition._tier_label }} · {{ stockStatus }} ·
                         {% if locked %}
-                            {% if count > 0 %}{{ stockStatus }} · {% endif %}Rang verrouillé, consulter les prérequis
+                            Rang verrouillé, consulter les prérequis
                         {% else %}
-                            {{ stockStatus }} ·
                             {% if card.maximum %}{{ card.level < card.max_level ? 'Niveau maximum en file' : 'Niveau maximum atteint' }}
                             {% elseif missingLocalLaboratory %}{{ missingLocalLaboratory }} de niveau 1 requis sur cette colonie
                             {% elseif upgradeable %}{{ {buildings:'Amélioration disponible', technologies:'Recherche disponible'}[group]|default('Construction d’une unité disponible') }}
