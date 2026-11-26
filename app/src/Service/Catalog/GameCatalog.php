@@ -70,6 +70,18 @@ final class GameCatalog
         return $level * ($growth[$tier] ?? 1.0) ** $level;
     }
 
+    public function operationTimeReductionCap(string $group): float
+    {
+        $buildingCap = (float) ($this->data['rules']['time_reduction_max_percent'] ?? 70);
+
+        return match ($group) {
+            'buildings' => $buildingCap,
+            // Les références historiques sans clé dédiée utilisaient le plafond commun.
+            'technologies', 'ships' => (float) ($this->data['rules']['infrastructure_time_reduction_max_percent'] ?? $buildingCap),
+            default => 0.0,
+        };
+    }
+
     public static function infrastructureBonus(array|int $levels, float $cap, int $maxLevel, array $growth): float
     {
         if (is_int($levels)) {

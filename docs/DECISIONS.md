@@ -1,5 +1,20 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Laboratoire et chantier — plafond de durée du 26 novembre 2026
+
+Kévin fixe à 89,5 % la réduction maximale à 25/25/25 du laboratoire pour les
+recherches et du chantier pour les vaisseaux de la colonie concernée. Les poids
+de rang, les rendements décroissants, les prérequis et les bases de durée restent
+identiques. Le plafond de durée des bâtiments (70 %) et le bunker restent distincts.
+Sur un devis de 10 h sans bonus, le maximum donne 1 h 03 min et 6 300 E, contre
+3 h et 18 000 E avec l’ancien plafond. La taxe reste fixée par minute effective ;
+les prix des autres ressources et les paiements des commandes déjà acceptées ne changent pas.
+
+Les nouveaux devis et commandes utilisent le plafond dédié. Les files déjà
+acceptées gardent leur instantané ; les gains de vitesse ultérieurs continuent de
+s’appliquer dans les limites de cet instantané, au travail restant. Un changement
+de colonie active ne change pas le laboratoire d’origine d’une recherche.
+
 ## Géographie de la galaxie — décision explicite du 18 novembre 2026
 
 L’utilisateur choisit la **spirale réelle comme géographie des distances pour tous

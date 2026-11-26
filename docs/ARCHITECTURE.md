@@ -65,8 +65,15 @@ Voir la [grille et la bascule](DEBLOCAGES.md) et le [suivi](PROGRESSION_CARBURAN
 
 `OperationCalculator` reste le calculateur commun des devis, maxima et paiements.
 La réduction est soustraite en pourcentage avant division, pour conserver
-l’arrondi supérieur sans créer une seconde artificielle au plafond de 70 %.
-Les durées et coûts des QueueItem acceptés restent la référence de leur résolution.
+l’arrondi supérieur sans créer une seconde artificielle au plafond. Le catalogue
+partage le plafond dédié du laboratoire et du chantier entre devis, fiches et
+nouvelles commandes, séparé du plafond de durée des bâtiments. La valeur active
+est `infrastructure_time_reduction_max_percent` dans `config/game/rules.yaml` ;
+les anciens paramètres mono-rang du catalogue ne pilotent pas ce calcul.
+Les coûts payés et les paramètres de progression des QueueItem sont figés à
+l’achat. Un nouveau niveau peut accélérer le travail restant selon la courbe et
+le plafond enregistrés ; une commande plus ancienne sans instantané garde sa
+durée enregistrée.
 
 `FleetNavigation.freeze` ajoute les coefficients de carburant réellement utilisés
 au départ dans `fuel_profiles`, par slug et rang, sans changer la version de route.

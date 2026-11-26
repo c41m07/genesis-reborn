@@ -41,8 +41,8 @@ test('Les cadres verts isolent un niveau avec trois améliorations en file', asy
         return effect(5) - effect(4);
     };
     const examples = [
-        ['lab', 'Réduction du temps de recherche', infrastructureGain(70, 25)],
-        ['shipyard', 'Réduction du temps de construction des vaisseaux', infrastructureGain(70, 25)],
+        ['lab', 'Réduction du temps de recherche', infrastructureGain(89.5, 25)],
+        ['shipyard', 'Réduction du temps de construction des vaisseaux', infrastructureGain(89.5, 25)],
         ['fortress', 'Structure supplémentaire des défenses', infrastructureGain(25, 10)],
         ['storage_nano', 'Stockage de nano', 100000 * basicGain],
         ['mine_nano', 'Production de nano', 180 * basicGain * (1.2 - 0.4 * (position - 1) / 8)],

@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Tests\Integration;
 
 use App\Entity\{Galaxy, OutboxMessage, Planet, PlanetBuilding, PlanetResource, Player, PlayerUniverse, PlayerTechnology, QueueItem, SolarSystem, Universe};
+use App\Service\Catalog\GameCatalog;
 use App\Service\Colony\{ColonyView, ResourceService};
 use App\Service\Player\VacationEconomyService;
 use App\Service\Queue\{LiveQueueTiming, QueueService};
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\MockClock;
 
@@ -127,6 +129,102 @@ final class LiveQueueBonusTest extends KernelTestCase
         self::assertSame(LiveQueueTiming::fullDuration($next->liveTiming, ['basic' => 1]), $next->durationSeconds);
     }
 
+    public function testTenHourQuotesAndOrdersUseTheInfrastructureOnTheColonyOfOrigin(): void
+    {
+        $this->useTenHourExamples();
+        $this->infrastructureLevels($this->local, 'lab', [25, 25, 25]);
+        $this->infrastructureLevels($this->remote, 'lab', [20, 20, 20]);
+        $this->infrastructureLevels($this->local, 'shipyard', [20, 20, 20]);
+        $this->infrastructureLevels($this->remote, 'shipyard', [25, 25, 25]);
+
+        $researchQuote = $this->quote($this->local, 'technologies', 'engineering_foundations');
+        $research = $this->order($this->local, 'technologies', 'engineering_foundations', 'a');
+        self::assertSame(3780, $researchQuote['duration']);
+        self::assertSame($researchQuote['duration'], $research->durationSeconds);
+        self::assertSame(6300, $researchQuote['costs']['electricity']);
+        self::assertSame($researchQuote['costs'], $research->paidCosts);
+        self::assertEquals($this->clock->now()->modify('+63 minutes'), $research->finishAt());
+
+        // Le niveau 2 attend la recherche du même empire, mais le labo de sa propre colonie s'applique.
+        $waitingQuote = $this->quote($this->remote, 'technologies', 'engineering_foundations');
+        $waiting = $this->order($this->remote, 'technologies', 'engineering_foundations', 'b');
+        self::assertSame(11567, $waitingQuote['duration']);
+        self::assertSame($waitingQuote['duration'], $waiting->durationSeconds);
+        self::assertSame($waitingQuote['costs'], $waiting->paidCosts);
+        self::assertNull($waiting->startedAt);
+
+        foreach ([[$this->local, 8568, 'c'], [$this->remote, 3780, 'd']] as [$planet, $expected, $request]) {
+            $shipQuote = $this->quote($planet, 'ships', 'fighter');
+            $ship = $this->order($planet, 'ships', 'fighter', $request);
+            self::assertSame($expected, $shipQuote['duration']);
+            self::assertSame($expected, $ship->durationSeconds);
+            self::assertSame($shipQuote['costs'], $ship->paidCosts);
+            self::assertSame($this->clock->now()->getTimestamp() + $expected, $ship->finishAt()->getTimestamp());
+        }
+
+        $this->clock->sleep(3780);
+        $this->queues->complete($research->id, $research->dispatchToken);
+        self::assertEquals($this->clock->now(), $waiting->startedAt);
+        self::assertSame(11567, $waiting->durationSeconds);
+        self::assertSame($waitingQuote['costs'], $waiting->paidCosts);
+    }
+
+    public static function localOperationGroups(): iterable
+    {
+        yield 'recherche et laboratoire' => ['technologies', 'engineering_foundations', 'lab', 14580];
+        yield 'vaisseau et chantier' => ['ships', 'fighter', 'shipyard', 10800];
+    }
+
+    #[DataProvider('localOperationGroups')]
+    public function testExistingActiveAndWaitingOrdersKeepTheCapRecordedAtPurchase(
+        string $group,
+        string $operation,
+        string $infrastructure,
+        int $waitingDurationAtMax,
+    ): void {
+        $this->useTenHourExamples();
+        $this->infrastructureLevels($this->local, $infrastructure, [25, 25, 24]);
+        $active = $this->order($this->local, $group, $operation, 'a');
+        $waiting = $this->order($this->local, $group, $operation, 'b');
+
+        // Reconstituer les paramètres persistés d’un achat antérieur au changement de plafond.
+        $levels = ['basic' => 25, 'intermediate' => 25, 'superior' => 24];
+        foreach ([$active, $waiting] as $item) {
+            $item->liveTiming['cap'] = 70.0;
+            $item->durationSeconds = LiveQueueTiming::fullDuration($item->liveTiming, $levels);
+            $item->liveTiming['full'] = $item->durationSeconds;
+            $item->paidCosts['electricity'] = 100 * (int) ceil($item->durationSeconds / 60);
+        }
+        $this->em->flush();
+
+        $oldActiveCosts = $active->paidCosts;
+        $oldWaitingCosts = $waiting->paidCosts;
+        $originalEnd = $active->finishAt();
+        self::assertSame(11141, $active->durationSeconds);
+        self::assertSame(18600, $oldActiveCosts['electricity']);
+        self::assertNull($waiting->startedAt);
+        $this->queues->synchronize($this->membership);
+        self::assertEquals($originalEnd, $active->finishAt());
+
+        $upgrade = $this->earnedAt($this->local, 'building', $infrastructure, 40, 25, 'superior');
+        $this->clock->sleep(40);
+        $this->queues->complete($upgrade->id, $upgrade->dispatchToken);
+        // Le nouveau niveau accélère l’ancienne commande, mais vers 70 % et non vers 89,5 %.
+        self::assertSame(10800, $active->liveTiming['full']);
+        self::assertEqualsWithDelta(1 - 40 / 11141, $active->liveTiming['work'], 1e-12);
+        self::assertSame($oldActiveCosts, $active->paidCosts);
+        self::assertSame(70.0, $waiting->liveTiming['cap']);
+        $queueName = $group === 'technologies' ? 'research' : 'shipyard';
+        $projection = self::getContainer()->get(ColonyView::class)->data($this->membership, $this->local, section: $group)['queues'][$queueName];
+        self::assertSame($waitingDurationAtMax, $projection[1]['duration']);
+
+        $this->clock->sleep($active->durationSeconds - 40);
+        $this->queues->complete($active->id, $active->dispatchToken);
+        self::assertEquals($this->clock->now(), $waiting->startedAt);
+        self::assertSame($waitingDurationAtMax, $waiting->durationSeconds);
+        self::assertSame($oldWaitingCosts, $waiting->paidCosts);
+    }
+
     public function testLocalLabRatesAreProjectedFromTheResearchOrigin(): void
     {
         foreach ([$this->local, $this->remote] as $planet) {
@@ -210,11 +308,39 @@ final class LiveQueueBonusTest extends KernelTestCase
         self::assertEqualsWithDelta($work, LiveQueueTiming::remainingWork($head->liveTiming, $this->clock->now()->getTimestamp()), 0.000001);
     }
 
-    private function building(Planet $planet, string $slug, int $level): void
+    private function useTenHourExamples(): void
+    {
+        $this->membership->universe->gameSettings['catalog_overrides'] = [
+            'technologies' => ['engineering_foundations' => ['research_time_base' => 36000]],
+            'ships' => ['fighter' => ['build_time_base' => 36000]],
+        ];
+        $this->em->flush();
+    }
+
+    private function infrastructureLevels(Planet $planet, string $slug, array $levels): void
+    {
+        foreach (GameCatalog::TIERS as $index => $tier) {
+            $this->building($planet, $slug, $levels[$index], $tier);
+        }
+    }
+
+    private function quote(Planet $planet, string $group, string $slug): array
+    {
+        $cards = self::getContainer()->get(ColonyView::class)->data($this->membership, $planet, section: $group)['cards'][$group];
+        foreach ($cards as $card) {
+            if ($card['definition']['slug'] === $slug && $card['tier'] === 'basic') {
+                return $card;
+            }
+        }
+        self::fail('Devis du rang Basique absent : '.$slug);
+    }
+
+    private function building(Planet $planet, string $slug, int $level, string $tier = 'basic'): void
     {
         $building = new PlanetBuilding();
         $building->planet = $planet;
         $building->slug = $slug;
+        $building->tier = $tier;
         $building->level = $level;
         $this->em->persist($building);
         $this->em->flush();
@@ -226,13 +352,14 @@ final class LiveQueueBonusTest extends KernelTestCase
         return $this->em->getRepository(QueueItem::class)->findOneBy(['planet' => $planet, 'itemSlug' => $slug], ['id' => 'DESC']);
     }
 
-    private function earnedAt(Planet $planet, string $type, string $slug, int $duration, ?int $level = 1): QueueItem
+    private function earnedAt(Planet $planet, string $type, string $slug, int $duration, ?int $level = 1, string $tier = 'basic'): QueueItem
     {
         $item = new QueueItem();
         $item->planet = $planet;
         $item->playerUniverse = $this->membership;
         $item->queueType = $type;
         $item->itemSlug = $slug;
+        $item->tier = $tier;
         $item->itemLevel = $level;
         $item->durationSeconds = $duration;
         $item->startedAt = $this->clock->now();
