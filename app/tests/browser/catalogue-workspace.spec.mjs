@@ -53,6 +53,11 @@ test('L7B : quatre cartes, vraies lignes et cinq coûts lisibles sur quatre form
         for (const group of ['buildings', 'technologies', 'ships', 'defenses']) {
             await page.goto(`${user.path}?section=${group}`);
             await expect(page.locator('.building-catalog-ready')).toBeVisible();
+            if (group === 'defenses') {
+                const attack = page.locator('#item-ground_turret_anti_light-basic [data-catalogue-main-gain]');
+                await expect(attack).toContainText('Attaque moyenne');
+                await expect(attack.locator('strong')).toContainText('135 par round');
+            }
             const compact = page.getByRole('switch', { name: 'Vue condensée' });
             if (await compact.getAttribute('aria-checked') === 'true') await compact.click();
             const cards = page.locator('.building-card:visible');

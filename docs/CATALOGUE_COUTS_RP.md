@@ -1,6 +1,6 @@
 # Recettes du catalogue RP
 
-Le prix des matériaux suit la fonction de la carte, sans modifier le budget économique, les prérequis ou les caractéristiques des unités. M = métal, H = hydrogène, A = antimatière, E = électricité, N = nano. La taxe E éventuelle est calculée au devis, pas ici. Les répartitions ne sont plus imposées uniformément par rang. Le métal et le nano ne sont pas obligatoires : on finance les pièces réellement produites, le prototype ou les consommables de la fiche. La construction d’un prototype n’est pas traitée comme un simple essai de carburant. Aucune combinaison n’est imposée pour remplir un quota de diversité.
+Le prix des matériaux suit la fonction de la carte, sans modifier les prérequis ou les caractéristiques des unités. Sauf la progression des défenses précisée ci-dessous, les recettes conservent le budget du même rang avant cette redistribution. M = métal, H = hydrogène, A = antimatière, E = électricité, N = nano. La taxe E éventuelle est calculée au devis, pas ici. Les répartitions ne sont plus imposées uniformément par rang. Le métal et le nano ne sont pas obligatoires : on finance les pièces réellement produites, le prototype ou les consommables de la fiche. La construction d’un prototype n’est pas traitée comme un simple essai de carburant. Aucune combinaison n’est imposée pour remplir un quota de diversité.
 
 Tests mécaniques : profils et poids gelés contre la [sauvegarde](SAUVEGARDE_CATALOGUE_COUTS_AVANT_RP.md), tests du moteur et de la progression. Le budget de matériaux est pondéré M×2, H×1, A×8, N×4 ; les arrondis du devis peuvent légèrement varier selon le mélange. Les compositions restent comparées sous des hypothèses de recherche et de budget explicites.
 
@@ -77,6 +77,19 @@ remplace ni ne préremplit le carburant de vol.
 - **Canon laser anti-escorteur** : M : pivot et tourelle ; N : focalisation polyvalente et suivi.
 - **Canon laser anti-lourd** : M : base et dissipateurs ; N : guidage thermique ; A : étages avancés de focalisation.
 - **Canon laser anti-capital** : M : affût massif ; N : optiques ; A : chambre d’essai du faisceau anti-capital.
+
+Décision : la valeur en matériaux monte de 25 % à chaque rang **par rapport
+au précédent**, comme sur les vaisseaux. Le Basique est inchangé et chaque
+rang garde les matériaux de sa recette RP. Sans hydrogène, les autres
+matériaux imposent une valeur paire ; le devis vise la plus proche, avec au
+plus un point d’écart par unité. L’électricité reste liée à la durée.
+
+| Défense | Basique | Intermédiaire | Supérieur |
+| --- | ---: | ---: | ---: |
+| Anti-léger | 5 000 | 6 250 | 7 812 |
+| Anti-escorteur | 18 000 | 22 500 | 28 126 |
+| Anti-lourd | 47 000 | 58 750 | 73 438 |
+| Anti-capital | 128 000 | 160 000 | 200 000 |
 
 ## Comparaison de vaisseaux à budget comparable
 

@@ -175,6 +175,37 @@ final class CatalogueDetailsTest extends KernelTestCase
         self::assertStringNotContainsString('999', $html);
     }
 
+    public function testDefenseSummaryUsesResearchedDamageAndPrimaryShotsOnly(): void
+    {
+        $definition = $this->catalog->withTier($this->catalog->get('defenses', 'ground_turret_anti_light'), 'basic');
+        $definition['shots_max'] = 4;
+        $rankLevels = ['basic' => 25, 'intermediate' => 25, 'superior' => 25];
+        $tech = ['weapons_engineering' => $rankLevels, 'rapid_fire_cycle' => $rankLevels];
+        $insights = self::getContainer()->get(CatalogueInsights::class);
+        $standard = array_column($insights->benefits($definition, 'defenses', 1, $this->planet, [], $tech), null, 'label');
+        // En configuration standard, la recherche d'armement ne s'applique qu'aux vaisseaux.
+        self::assertSame(45, $standard['Attaque']['value']);
+        self::assertEqualsWithDelta(157.5, $standard['Attaque']['summary']['value'], 1e-8);
+
+        // Une définition d'univers qui vise aussi les défenses suit exactement le moteur de combat.
+        $this->planet->solarSystem->galaxy->universe->gameSettings = [
+            'catalog_overrides' => ['technologies' => ['weapons_engineering' => ['effect' => ['targets' => 'all_combat_units']]]],
+        ];
+        $benefits = $insights->benefits($definition, 'defenses', 1, $this->planet, [], $tech);
+        $rows = array_column($benefits, null, 'label');
+        self::assertSame(45, $definition['base_attack']);
+        self::assertEqualsWithDelta(56.25, $rows['Attaque']['value'], 1e-8);
+        self::assertSame('3–4', $rows['Tirs principaux par round']['text']);
+        self::assertEqualsWithDelta(196.875, $rows['Attaque']['summary']['value'], 1e-8);
+        $html = self::getContainer()->get(\Twig\Environment::class)->render('ui/core_construction_benefit.html.twig', [
+            'card' => ['benefits' => $benefits, 'filter_category' => 'light'],
+            'd' => $definition,
+        ]);
+        self::assertStringContainsString('Attaque moyenne', $html);
+        self::assertStringContainsString('196,88 par round', $html);
+        self::assertStringNotContainsString('56,25', $html);
+    }
+
     public function testShipCharacteristicsWithoutResearchKeepBaseValuesAndUnarmedShipsDoNotGainShots():void
     {
         $insights=self::getContainer()->get(CatalogueInsights::class);
