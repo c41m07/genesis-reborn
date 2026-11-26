@@ -160,4 +160,29 @@ final class ResourceBoxTest extends KernelTestCase
         self::assertSame('boost',$connection->fetchOne('SELECT kind FROM player_boost LIMIT 1'));
         self::assertSame([], (new SchemaTool($this->em))->getUpdateSchemaSql($this->em->getMetadataFactory()->getAllMetadata()));
     }
+
+    public function testInventoryGiftMigrationKeepsExistingBoostsQuiet(): void
+    {
+        [$player] = $this->playerAndPlanet();
+        self::getContainer()->get(BoostGrantService::class)->awardEvent($player->currentPlayerUniverse, 'legacy-gift-state');
+        $connection = $this->em->getConnection();
+        require_once dirname(__DIR__, 2).'/migrations/Version20261126232000.php';
+        $schema = new \Doctrine\DBAL\Schema\Schema();
+
+        $down = new \DoctrineMigrations\Version20261126232000($connection, new \Psr\Log\NullLogger());
+        $down->down($schema);
+        foreach ($down->getSql() as $query) {
+            $connection->executeStatement($query->getStatement());
+        }
+
+        $up = new \DoctrineMigrations\Version20261126232000($connection, new \Psr\Log\NullLogger());
+        $up->up($schema);
+        foreach ($up->getSql() as $query) {
+            $connection->executeStatement($query->getStatement());
+        }
+
+        self::assertEquals(0, $connection->fetchOne('SELECT gift_unread FROM player_boost LIMIT 1'));
+        self::assertSame('boost', $connection->fetchOne('SELECT kind FROM player_boost LIMIT 1'));
+        self::assertSame([], (new SchemaTool($this->em))->getUpdateSchemaSql($this->em->getMetadataFactory()->getAllMetadata()));
+    }
 }

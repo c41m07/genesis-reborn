@@ -17,7 +17,7 @@ final class Version20261126232000 extends AbstractMigration
     public function up(Schema $schema): void
     {
         $this->addSql('ALTER TABLE player_boost ADD gift_unread TINYINT DEFAULT 0 NOT NULL,
-            ADD INDEX player_boost_gift_unread_idx (player_universe_id, gift_unread, kind, status, earned_at, id)');
+            ADD INDEX player_boost_gift_unread_idx (player_universe_id, gift_unread, status, earned_at, id)');
     }
 
     public function down(Schema $schema): void

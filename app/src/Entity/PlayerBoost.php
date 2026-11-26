@@ -7,7 +7,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'player_boost')]
 #[ORM\UniqueConstraint(name: 'player_boost_source_unique', columns: ['source_key'])]
 #[ORM\Index(name: 'player_boost_inventory_idx', columns: ['player_universe_id', 'status', 'earned_at', 'id'])]
-#[ORM\Index(name: 'player_boost_gift_unread_idx', columns: ['player_universe_id', 'gift_unread', 'kind', 'status', 'earned_at', 'id'])]
+// Le témoin isole déjà les cadeaux ; l'index reste indépendant des colonnes des anciens formats de boîte.
+#[ORM\Index(name: 'player_boost_gift_unread_idx', columns: ['player_universe_id', 'gift_unread', 'status', 'earned_at', 'id'])]
 #[ORM\Index(name: 'player_boost_daily_risk_idx', columns: ['player_universe_id', 'source_type', 'earned_at'])]
 class PlayerBoost
 {
