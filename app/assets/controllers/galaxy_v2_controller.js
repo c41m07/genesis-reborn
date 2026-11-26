@@ -36,7 +36,7 @@ export default class extends Controller {
         'scene', 'galaxyCanvas', 'systemCanvas', 'planetCanvas', 'location', 'coordinates',
         'searchInput', 'searchResults', 'searchClear', 'searchStatus', 'tooltip', 'systemBack', 'planetBack',
         'systemPanel', 'systemContent', 'planetPanel', 'planetContent', 'minimapWrap',
-        'minimapCanvas', 'fleetLog', 'motionToggle', 'galaxySelect', 'mapHelp',
+        'minimapCanvas', 'fleetLog', 'emptyFlightLog', 'guildFlightFilter', 'motionToggle', 'galaxySelect', 'mapHelp',
         'mapMode', 'mapModeLabel', 'legend', 'filterToggle', 'mapSettings', 'layoutButton',
         'stations', 'hallStation', 'pirateStation', 'stationDetail', 'stationTitle', 'stationText',
     ];
@@ -57,6 +57,8 @@ export default class extends Controller {
             trail: [],
         }));
         this.setCampaignTraffic(this.gameMap.campaignTraffic);
+        this.showGuildFlights = true;
+        this.updateGuildFlightFilter(this.gameMap.guildFilterAvailable);
         this.serverClockOffset = Date.parse(this.gameMap.serverNow || new Date().toISOString()) - Date.now();
         this.selectedSystem = null;
         this.selectedPlanet = null;
@@ -115,8 +117,8 @@ export default class extends Controller {
         this.updateFlightTimers();
         this.fleetRefreshHandler = event => this.refreshVisibleFleets(event.detail);
         window.addEventListener('genesis:visible-fleets', this.fleetRefreshHandler);
-        this.campaignUnavailableHandler = () => this.clearCampaignTraffic();
-        window.addEventListener('genesis:campaign-traffic-unavailable', this.campaignUnavailableHandler);
+        this.privateTrafficUnavailableHandler = () => this.clearPrivateTraffic();
+        window.addEventListener('genesis:private-map-traffic-unavailable', this.privateTrafficUnavailableHandler);
         const initialSystem = this.systemById.get(Number(this.gameMap.selectedSystemId));
         if (initialSystem) this.previewSystem(initialSystem, false);
         this.startLoop();
@@ -128,7 +130,7 @@ export default class extends Controller {
         this.resizeObserver?.disconnect();
         document.removeEventListener('visibilitychange', this.visibilityHandler);
         window.removeEventListener('genesis:visible-fleets', this.fleetRefreshHandler);
-        window.removeEventListener('genesis:campaign-traffic-unavailable', this.campaignUnavailableHandler);
+        window.removeEventListener('genesis:private-map-traffic-unavailable', this.privateTrafficUnavailableHandler);
         this.unbindEvents();
     }
 
@@ -143,7 +145,8 @@ export default class extends Controller {
         }));
         this.setCampaignTraffic(data.campaignTraffic);
         this.fleetLogTarget.innerHTML = data.fleetLog;
-        this.updateCampaignLogState();
+        this.updateGuildFlightFilter(data.guildFilterAvailable);
+        this.applyFleetFilter();
         if (this.flights.length && !this.timerInterval && !document.hidden)
             this.timerInterval = window.setInterval(() => this.updateFlightTimers(), 1000);
         this.updateFlightTimers();
@@ -156,19 +159,44 @@ export default class extends Controller {
             .flatMap(row => row.systems.map(Number)));
     }
 
-    updateCampaignLogState() {
-        const hasTraffic = this.flights.length > 0 || this.campaignTraffic.length > 0;
-        this.element.querySelector('[data-galaxy-v2-empty-label]').hidden = hasTraffic;
-        const log = this.element.querySelector('.gv2-flight-log');
-        if (hasTraffic && this.campaignTraffic.length && log?.classList.contains('is-empty')) log.open = true;
-        log?.classList.toggle('is-empty', !hasTraffic);
+    updateGuildFlightFilter(available) {
+        // Le contrôle reste en dehors du fragment renouvelé : le choix et le focus ne sautent pas au polling.
+        if (!available && this.guildFlightFilterTarget.contains(document.activeElement)) {
+            const fallback = this.filterToggleTarget.getClientRects().length
+                ? this.filterToggleTarget
+                : this.mapModeTargets.find(button => button.getAttribute('aria-pressed') === 'true');
+            fallback?.focus();
+        }
+        this.guildFlightFilterTarget.hidden = !available;
     }
 
-    clearCampaignTraffic() {
-        if (!this.campaignTraffic.length) return;
+    toggleGuildFlights(event) {
+        this.showGuildFlights = event.currentTarget.checked;
+        for (const flight of this.flights) if (flight.guildFlight) flight.trail = [];
+        this.applyFleetFilter();
+        this.drawFrame(0);
+    }
+
+    applyFleetFilter() {
+        for (const row of this.fleetLogTarget.querySelectorAll('[data-guild-flight]')) {
+            row.hidden = !this.showGuildFlights;
+        }
+        const hasTraffic = this.flights.some(flight => !flight.guildFlight || this.showGuildFlights)
+            || this.campaignTraffic.length > 0;
+        this.emptyFlightLogTarget.hidden = hasTraffic;
+        this.element.querySelector('[data-galaxy-v2-empty-label]').hidden = hasTraffic;
+        const log = this.element.querySelector('.gv2-flight-log');
+        if (hasTraffic && (this.campaignTraffic.length || this.showGuildFlights && this.flights.some(flight => flight.guildFlight))
+            && log.classList.contains('is-empty')) log.open = true;
+        log.classList.toggle('is-empty', !hasTraffic);
+    }
+
+    clearPrivateTraffic() {
         this.setCampaignTraffic();
-        for (const row of this.fleetLogTarget.querySelectorAll('[data-campaign-kind]')) row.remove();
-        this.updateCampaignLogState();
+        this.flights = this.flights.filter(flight => !flight.guildFlight);
+        for (const row of this.fleetLogTarget.querySelectorAll('[data-campaign-kind], [data-guild-flight]')) row.remove();
+        this.updateGuildFlightFilter(false);
+        this.applyFleetFilter();
         this.drawFrame(0);
     }
 
@@ -931,6 +959,7 @@ export default class extends Controller {
     drawFlights(ctx) {
         const now = Date.now() + this.serverClockOffset;
         for (const flight of this.flights) {
+            if (flight.guildFlight && !this.showGuildFlights) continue;
             let origin = flight.originSystem;
             let destination = flight.destinationSystem;
             const originInGalaxy = flight.originGalaxy === this.gameMap.galaxy;
@@ -1956,6 +1985,7 @@ export default class extends Controller {
             return visual && { x: visual.sx, y: visual.sy };
         };
         for (const flight of this.flights) {
+            if (flight.guildFlight && !this.showGuildFlights) continue;
             const color = missionColors[flight.mission] || '#00d4ff';
             if (!['traveling', 'returning'].includes(flight.status)) {
                 const planet = system.planets.find(candidate => candidate.id === flight.destinationPlanetId);

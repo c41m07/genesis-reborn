@@ -16,23 +16,70 @@ final class FleetVisibility
         private GameCatalog $catalog,private LeaderboardService $leaderboard,private ClockInterface $clock,
         private TransportService $transports, private OrbitPolicy $orbitPolicy, private OrbitRequestState $orbitRequests) {}
 
-    public function forMap(PlayerUniverse $viewer,?Galaxy $galaxy): array
+    /** @return array{flights:list<array>, guildFilterAvailable:bool} */
+    public function forMap(PlayerUniverse $viewer, ?Galaxy $galaxy): array
     {
-        if(!$galaxy || !$this->canRead($viewer) || $galaxy->universe->id!==$viewer->universe->id) return [];
-        $known=$this->knownSystems($viewer);$level=$this->detection->level($viewer);$now=$this->clock->now();$rows=[];$allies=[];
-        foreach($this->repo->activeFleetsInUniverse($viewer->universe) as $fleet) {
-            $destination=$fleet->destination?->solarSystem??$fleet->destinationSystem;
-            if(!$destination || ($this->origin($fleet)->solarSystem->galaxy->id!==$galaxy->id && $destination->galaxy->id!==$galaxy->id)) continue;
-            $owner=$fleet->playerUniverse->id;
-            $allies[$owner]??=$this->relations->allied($viewer,$fleet->playerUniverse);
-            if(!$this->visible($viewer,$fleet,$known,$level,$now,$allies[$owner])) continue;
-            $row = $this->row($viewer, $fleet, $known);
+        if (!$galaxy || !$this->canRead($viewer) || $galaxy->universe->id !== $viewer->universe->id) {
+            return ['flights' => [], 'guildFilterAvailable' => false];
+        }
+        $known = $this->knownSystems($viewer);
+        $level = $this->detection->level($viewer);
+        $now = $this->clock->now();
+        $fleets = $this->repo->activeFleetsInUniverse($viewer->universe);
+        $guilds = $this->mapGuilds($viewer, $fleets);
+        $viewerGuild = $guilds[$viewer->id] ?? null;
+        $rows = [];
+        $allies = [];
+        foreach ($fleets as $fleet) {
+            $origin = $this->origin($fleet)->solarSystem;
+            $destination = $fleet->destination?->solarSystem ?? $fleet->destinationSystem;
+            if (!$destination || ($origin->galaxy->id !== $galaxy->id && $destination->galaxy->id !== $galaxy->id)) {
+                continue;
+            }
+            $owner = $fleet->playerUniverse;
+            $guildPeer = $viewerGuild !== null && $owner->id !== $viewer->id
+                && ($guilds[$owner->id] ?? null) === $viewerGuild;
+            $guildFlight = $guildPeer && isset($known[$origin->id], $known[$destination->id]);
+            $allies[$owner->id] ??= $guildPeer || $this->relations->allied($viewer, $owner);
+            if (!$this->visible($viewer, $fleet, $known, $level, $now, $allies[$owner->id], $guildFlight)) {
+                continue;
+            }
+
+            // Le contact de guilde n'emprunte pas le chargement des effectifs du radar.
+            $row = $this->row($viewer, $fleet, $known, shareGuildTrack: $guildFlight);
             // Une attaque détectée ne révèle ni son départ ni sa progression précise.
             $row['localLegs'] = $row['departureAt'] && !($row['recallRoute']['hidden'] ?? false)
                 ? $this->localLegs($fleet, $known, $row['ownedByCurrentPlayer']) : [];
             $rows[] = $row;
         }
-        return $rows;
+
+        return ['flights' => $rows, 'guildFilterAvailable' => $viewerGuild !== null];
+    }
+
+    /**
+     * Relire les adhésions actuelles à chaque réponse de carte, en une requête.
+     * Une alliance personnelle ou entre guildes ne donne pas accès aux sondes.
+     * @param list<Fleet> $fleets
+     * @return array<int, int>
+     */
+    private function mapGuilds(PlayerUniverse $viewer, array $fleets): array
+    {
+        if (!$this->catalog->forUniverse($viewer->universe)['features']['guilds_enabled']) {
+            return [];
+        }
+        $memberships = [$viewer->id => $viewer];
+        foreach ($fleets as $fleet) {
+            $owner = $fleet->playerUniverse;
+            if ($owner->isPlayerControlled() && $owner->player->lockedAt === null) {
+                $memberships[$owner->id] = $owner;
+            }
+        }
+        $guilds = [];
+        foreach ($this->repo->guildMemberships(array_values($memberships), $viewer->universe) as $member) {
+            $guilds[$member->playerUniverse->id] = $member->guild->id;
+        }
+
+        return $guilds;
     }
 
     /**
@@ -227,13 +274,14 @@ final class FleetVisibility
         return $known;
     }
 
-    private function visible(PlayerUniverse $viewer,Fleet $fleet,array $known,int $level,\DateTimeImmutable $now,bool $allied): bool
+    private function visible(PlayerUniverse $viewer,Fleet $fleet,array $known,int $level,\DateTimeImmutable $now,bool $allied, bool $guildFlight = false): bool
     {
         $origin=$this->origin($fleet)->solarSystem;$target=$fleet->destination?->solarSystem??$fleet->destinationSystem;
         if(!isset(self::STATUSES[$fleet->status]) || !$target || $fleet->playerUniverse->universe->id!==$viewer->universe->id
             || $origin->galaxy->universe->id!==$viewer->universe->id || $target->galaxy->universe->id!==$viewer->universe->id) return false;
         if($fleet->playerUniverse->id===$viewer->id) return true;
-        if($fleet->mission==='spy') return false;
+        // Même guilde et destinations déjà connues : seule la carte reçoit ces sondes.
+        if($fleet->mission==='spy') return $guildFlight;
         $recipient=$fleet->destination?->owner?->id===$viewer->id;
         if($recipient && $fleet->status==='traveling' && in_array($fleet->mission,['attack','conquer'],true)) return $this->detection->detected($fleet,$now,$level);
         return $recipient || ($allied && isset($known[$origin->id],$known[$target->id]));
@@ -247,11 +295,14 @@ final class FleetVisibility
     }
 
     /** @param list<FleetShip>|null $preparedShips */
-    private function row(PlayerUniverse $m,Fleet $fleet,array $known,?array $preparedShips=null): array
+    private function row(PlayerUniverse $m,Fleet $fleet,array $known,?array $preparedShips=null, bool $shareGuildTrack = false): array
     {
         $originPlanet=$this->origin($fleet);$originSystem=$originPlanet->solarSystem;$destinationSystem=$fleet->destination?->solarSystem??$fleet->destinationSystem;
         $isOwnFleet=$fleet->playerUniverse->id===$m->id;$targetsOwnColony=$fleet->destination?->owner?->id===$m->id;
-        $ships = array_values(array_filter($preparedShips ?? $this->repo->all(FleetShip::class, ['fleet' => $fleet]), static fn (FleetShip $ship): bool => $ship->quantity > 0));
+        $ships = $shareGuildTrack ? [] : array_values(array_filter(
+            $preparedShips ?? $this->repo->all(FleetShip::class, ['fleet' => $fleet]),
+            static fn (FleetShip $ship): bool => $ship->quantity > 0,
+        ));
         $shipsSummary = $isOwnFleet ? implode(' · ', array_map(fn (FleetShip $ship): string => $ship->quantity.' × '.str_replace('_', ' ', $ship->slug).' ('.$this->catalog->tiers()[$ship->tier]['label'].')', $ships)) : null;
         $relationLabel = $isOwnFleet ? 'Votre empire' : ($targetsOwnColony ? 'Flotte entrante' : 'Allié');
         $recallRoute=null;
@@ -266,13 +317,13 @@ final class FleetVisibility
 
         $seeOrigin=$isOwnFleet || isset($known[$originSystem->id]);
         $incomingAttack=!$isOwnFleet && $targetsOwnColony && in_array($fleet->mission,['attack','conquer'],true) && $fleet->status==='traveling';
-        return [
+        $row = [
             'id' => $fleet->id,
             'mission' => $fleet->mission,
             'missionLabel' => self::MISSIONS[$fleet->mission] ?? 'Mission',
             'status' => $fleet->status,
             'statusLabel' => self::STATUSES[$fleet->status],
-            'relationLabel' => $relationLabel,
+            'relationLabel' => $shareGuildTrack ? 'Guilde' : $relationLabel,
             'ownerName' => $fleet->playerUniverse->getDisplayName(),
             'originSystemId' => $seeOrigin?$originSystem->id:null,
             'originGalaxy' => $seeOrigin?$originSystem->galaxy->coordinateCode():null,
@@ -295,6 +346,12 @@ final class FleetVisibility
             'departureAt' => $incomingAttack?null:$fleet->departureAt?->format(\DateTimeInterface::ATOM),
             'arrivalAt' => $fleet->arrivalAt?->format(\DateTimeInterface::ATOM),
             'ownedByCurrentPlayer' => $isOwnFleet,
+        ];
+        if ($shareGuildTrack) {
+            return $row + ['guildFlight' => true];
+        }
+
+        return $row + [
             'shipCount' => array_sum(array_map(static fn (FleetShip $ship): int => $ship->quantity, $ships)),
             'fleetPoints' => $this->leaderboard->fleetPoints($fleet, $ships),
             'ships' => $shipsSummary,

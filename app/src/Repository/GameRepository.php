@@ -823,6 +823,7 @@ final class GameRepository
         return $this->em->createQueryBuilder()->select(
             'f',
             'pu',
+            'fleetOwner',
             'home',
             'homeSystem',
             'homeGalaxy',
@@ -831,7 +832,7 @@ final class GameRepository
             'destinationGalaxy',
             'directSystem',
             'directGalaxy'
-        )->from(Fleet::class, 'f')->join('f.playerUniverse', 'pu')->join('f.homePlanet', 'home')->join('home.solarSystem', 'homeSystem')->join('homeSystem.galaxy', 'homeGalaxy')->leftJoin('f.destination', 'destination')->leftJoin('destination.solarSystem', 'destinationSystem')->leftJoin('destinationSystem.galaxy', 'destinationGalaxy')->leftJoin('f.destinationSystem', 'directSystem')->leftJoin('directSystem.galaxy', 'directGalaxy')->where('pu.universe = :universe')->andWhere('f.status IN (:statuses)')->setParameter('universe', $universe)->setParameter('statuses', [
+        )->from(Fleet::class, 'f')->join('f.playerUniverse', 'pu')->leftJoin('pu.player', 'fleetOwner')->join('f.homePlanet', 'home')->join('home.solarSystem', 'homeSystem')->join('homeSystem.galaxy', 'homeGalaxy')->leftJoin('f.destination', 'destination')->leftJoin('destination.solarSystem', 'destinationSystem')->leftJoin('destinationSystem.galaxy', 'destinationGalaxy')->leftJoin('f.destinationSystem', 'directSystem')->leftJoin('directSystem.galaxy', 'directGalaxy')->where('pu.universe = :universe')->andWhere('f.status IN (:statuses)')->setParameter('universe', $universe)->setParameter('statuses', [
             'traveling',
             'returning',
             'attacking',

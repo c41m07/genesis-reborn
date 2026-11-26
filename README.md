@@ -606,8 +606,12 @@ Dans le simulateur, les tableaux des deux camps affichent toutes les lignes de l
 Carte V2 : un anneau vert épais entoure les systèmes où vous possédez une planète.
 Au survol, le tag de la guilde qui y possède un Hall précède les coordonnées, par exemple `[TT] A:43`. Dans la vue système, une flèche suit le segment local du trajet vers la planète ou la sortie du système lorsque la progression est connue. Le Hall ouvre la présentation de sa guilde et la station pirate repérée ouvre la campagne. La fiche
 planète propose un retour à son système, au clavier et au toucher ; sa croix
-garde le retour galaxie. Les sondes en trajet sont réservées à leur propriétaire.
-Pour une flotte tierce déjà visible, seuls le nombre total de vaisseaux et les
+garde le retour galaxie. Dans les filtres de Galaxie, « Afficher les flottes de guilde »
+montre les missions ordinaires des membres de votre guilde, sondes comprises,
+entre systèmes déjà découverts : commandant, mission, trajet et échéance,
+sans effectifs ni fret. Ce partage ne s’étend ni aux alliés hors guilde, ni à
+Vue générale ou Flottes, ni aux trajets privés de la campagne pirate.
+Pour les autres flottes tierces déjà visibles, seuls le nombre total de vaisseaux et les
 points remplacent sa composition ; les types et rangs restent accessibles au
 propriétaire. Le calcul reprend les coûts de vaisseaux de l’univers, sans défense
 fixe, avec division par 100 après totalisation. Ces restrictions sont appliquées
@@ -726,7 +730,7 @@ quand aucune arrivée étrangère n’est visible. Les attaques gardent leur pr�
 et leur priorité ; une origine non découverte reste masquée.
 La surveillance se met à jour sans rechargement, avec horloge serveur, et conserve
 le focus et la sélection de carte. Sans JavaScript, actualiser la page.
-Les sondes en trajet restent visibles seulement par leur propriétaire.
+Les sondes en trajet restent privées hors de la vue Galaxie de leur propriétaire et de sa guilde, sans modifier leur détection à l’arrivée.
 Les autres mouvements restent réservés au propriétaire, au destinataire et aux
 alliés, dans les limites des découvertes, avec contrôles avant sérialisation.
 
