@@ -492,7 +492,7 @@ body[data-ui-page="catalogues"] .catalog-workspace .catalog-operations-rail {
 .catalog-workspace .building-card .catalog-level { text-align: start; }
 .catalog-workspace .building-card .catalog-queued { text-align: start; }
 .catalog-workspace .building-card .building-rank-tabs > .building-rank-tab {
-    flex: 1 1 0;
+    flex: 1 1 auto;
     padding-block: 4px;
 }
 
@@ -500,8 +500,19 @@ body[data-ui-page="catalogues"] .catalog-workspace .catalog-operations-rail {
     .catalog-workspace .building-rank-tabs .building-rank-full { display: inline; }
     .catalog-workspace .building-rank-tabs .building-rank-short { display: none; }
 }
-.catalog-workspace .catalog-condensed :is(.card--ships, .card--defenses) .building-rank-full { display: none; }
-.catalog-workspace .catalog-condensed :is(.card--ships, .card--defenses) .building-rank-short { display: inline; }
+@container (max-width: 340px) {
+    .catalog-workspace .building-card .building-rank-tabs > .building-rank-tab { padding-inline: 2px; gap: 3px; }
+    .catalog-workspace .building-rank-level { padding-inline: 3px; }
+}
+/* Le mode condensé garde une rangée de 250 px, même sur une carte large. */
+@container (max-width: 310px) {
+    .catalog-workspace .building-card .building-rank-tab :is(.building-rank-full, .building-rank-short) { display: none; }
+    .catalog-workspace .building-rank-narrow { display: inline; }
+}
+.catalog-workspace .catalog-condensed .building-card .building-rank-tab :is(.building-rank-full, .building-rank-short) { display: none; }
+.catalog-workspace .catalog-condensed .building-rank-narrow { display: inline; }
+.catalog-workspace .catalog-condensed .building-card .building-rank-tabs > .building-rank-tab { padding-inline: 2px; gap: 3px; }
+.catalog-workspace .catalog-condensed .building-rank-level { padding-inline: 3px; }
 @media (max-width: 850px) {
     .catalog-workspace .catalog-queue-ribbon { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .catalog-workspace .catalog-queue-ribbon > .catalog-queue-caption {

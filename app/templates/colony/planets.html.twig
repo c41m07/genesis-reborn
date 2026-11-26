@@ -2,6 +2,8 @@
 {% import 'ui/macros.html.twig' as ui %}
 {% block title %}Planètes · Genesis Reborn{% endblock %}
 {% block body %}
+{% set resourceOrder = constant('App\\Service\\Colony\\ResourceService::DISPLAY_ORDER') %}
+{% set resourceLabels = {metal:'Métal',nano:'Nano',hydrogen:'Hydrogène',antimatter:'Antimatière',electricity:'Électricité'} %}
 <div class="colony-redesign player-planets-board" data-page-sections="disabled">
     <div class="page-heading">
         <div><p class="planet-board-eyebrow">Commandement · {{ membership.universe.name }}</p><h1>Planètes</h1><p>Chaque monde, une nouvelle ambition. Gérez vos colonies et leurs opérations.</p></div>
@@ -27,8 +29,8 @@
                 <input type="hidden" name="view" value="table">
                 <label for="comparison-resource">Ressource à comparer</label>
                 <select id="comparison-resource" name="resource" data-action="change->colony-comparison#select">
-                    {% for slug,label in {metal:'Métal',nano:'Nano',hydrogen:'Hydrogène',antimatter:'Antimatière',electricity:'Électricité'} %}
-                        <option value="{{ slug }}" {{ comparison_resource==slug ? 'selected' : '' }}>{{ label }}</option>
+                    {% for slug in resourceOrder %}
+                        <option value="{{ slug }}" {{ comparison_resource==slug ? 'selected' : '' }}>{{ resourceLabels[slug] }}</option>
                     {% endfor %}
                 </select>
                 <button class="primary">Comparer cette ressource</button>
@@ -38,7 +40,7 @@
                 <caption>Stocks / capacités, soldes nets par heure et files de votre empire</caption>
                 <thead><tr>
                     <th scope="col">Colonie</th>
-                    {% for slug in ['metal','nano','hydrogen','antimatter','electricity'] %}
+                    {% for slug in resourceOrder %}
                         {% set resource=(planet_details|first).resources[slug]|default(null) %}
                         {% if resource %}<th scope="col" data-resource="{{ slug }}" class="{{ comparison_resource==slug ? 'is-selected-resource' : '' }}">{{ resource.label }}</th>{% endif %}
                     {% endfor %}
@@ -50,7 +52,7 @@
                     {% for world in planets %}
                         <tr>
                             <th scope="row"><a href="{{ path('app_colony',{id:world.id}) }}">{{ world.name }}</a><span class="colony-comparison-coordinates">{{ world.coordinates() }}</span></th>
-                            {% for slug in ['metal','nano','hydrogen','antimatter','electricity'] %}
+                            {% for slug in resourceOrder %}
                                 {% set resource=planet_details[world.id].resources[slug] %}
                                 <td data-resource="{{ slug }}" class="{{ comparison_resource==slug ? 'is-selected-resource' : '' }}">
                                     <strong>{{ resource.stock|quantity(0) }} / {{ resource.capacity|quantity(0) }}</strong>

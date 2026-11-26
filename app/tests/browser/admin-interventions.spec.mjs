@@ -41,6 +41,8 @@ test('Ressources admin : confirmation, ajout, répétition et refus sans perte',
   await page.goto(`/admin/joueurs/${user.playerId}`);
   const details = page.locator(`#colony-${user.planetId}`);await details.locator('summary').click();
   const form = details.locator('form');
+  expect(await form.locator('.admin-intervention-resources input').evaluateAll(inputs => inputs.map(input => input.name)))
+    .toEqual(['amounts[metal]', 'amounts[nano]', 'amounts[hydrogen]', 'amounts[antimatter]', 'amounts[electricity]']);
   await form.locator('[name="amounts[metal]"]').fill('100');await form.getByLabel('Motif de la correction (obligatoire)').fill('Réparation du ticket 123');
   const before = stock();await form.getByRole('button').click();
   expect(stock()).toBe(before);

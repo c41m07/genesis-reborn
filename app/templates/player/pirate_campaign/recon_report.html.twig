@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+{% block title %}Rapport d’espionnage pirate · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="mission-report report-workspace player-report-detail pirate-recon-report">
+    <a class="inline-link report-back" href="{{ path('app_pirate_campaign', {missionNumber: report.mission}) }}">← Retour au dossier de campagne</a>
+    <header class="report-heading">
+        <p class="report-eyebrow">RENSEIGNEMENTS · CAMPAGNE PIRATE</p>
+        <h1>Rapport d’espionnage pirate</h1>
+        <p>{{ report.targetName }} · Système {{ report.location }} · <time datetime="{{ report.date|date('c') }}">{{ report.date|date('d/m/Y H:i', preferences.timezone) }}</time></p>
+    </header>
+    <section class="panel report-summary" aria-labelledby="pirate-recon-summary">
+        <h2 id="pirate-recon-summary">{{ report.complete ? 'Renseignement de combat complet' : 'Renseignement historique' }}</h2>
+        <p>Une sonde envoyée et perdue. Le relevé a été reçu.</p>
+        {% if report.detected is not null %}
+            <p>{{ report.detected ? 'La sonde a été repérée.' : 'La sonde n’a pas été repérée.' }}</p>
+        {% endif %}
+        {% if report.complete %}
+            <p><a class="secondary" href="{{ path('app_combat_simulation', {pirate_report: report.id}) }}">Reprendre ces renseignements dans le simulateur</a></p>
+        {% else %}
+            <p>La composition a été conservée, mais pas les paramètres d’origine. Ce rapport ne peut pas être importé à l’identique.</p>
+        {% endif %}
+    </section>
+    <section class="panel player-intel-core" aria-labelledby="pirate-recon-details">
+        <h2 id="pirate-recon-details">Renseignements détaillés</h2>
+        {% set ranks = {basic:'Basique', intermediate:'Intermédiaire', superior:'Supérieur'} %}
+        <details class="intel-section" open>
+            <summary><h3>Flotte pirate révélée</h3></summary>
+            <div class="report-intel-grid">
+                {% for ship in report.formation %}
+                    <article class="report-intel-card intel-card">
+                        <h4>{{ ship.label }}</h4><span class="badge">{{ ranks[ship.tier] }}</span>
+                        <p>{{ ship.quantity|quantity(0) }} vaisseau(x)</p>
+                        {% if report.complete %}
+                            <dl class="report-facts">
+                                <div><dt>Coque</dt><dd>{{ ship.hp|quantity }}</dd></div>
+                                <div><dt>Bouclier</dt><dd>{{ ship.shield|quantity }}</dd></div>
+                                <div><dt>Attaque de base</dt><dd>{{ ship.attack|quantity }}</dd></div>
+                            </dl>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            </div>
+        </details>
+        {% if report.complete %}
+            <details class="intel-section" open>
+                <summary><h3>Défenses fixes et recherches</h3></summary>
+                <p>Aucune défense planétaire, aucune forteresse et aucune recherche indépendante chez les pirates. Les caractéristiques des vaisseaux et les modificateurs ont été figés pour cette rencontre.</p>
+            </details>
+            <details class="intel-section" open>
+                <summary><h3>Règles de la rencontre</h3></summary>
+                <p>{{ report.rounds }} rounds au maximum · Recharge des boucliers : {{ report.recharge }} % par round.</p>
+            </details>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

@@ -2,10 +2,14 @@ import { Controller } from '@hotwired/stimulus';
 import { exactNumber } from '../quantity.js';
 
 export default class extends Controller {
-    static targets = ['ship', 'cargo', 'cargoMax', 'status'];
+    static targets = ['ship', 'cargo', 'cargoMax', 'status', 'progressiveMax'];
     static values = { limit: Number };
 
-    connect() { this.updateShipBounds(); }
+    connect() {
+        this.updateShipBounds();
+        // L’escorte autorise la saisie native ; ne montrer Max que lorsqu’il agit.
+        for (const button of this.progressiveMaxTargets) button.hidden = false;
+    }
     field(event) { return this.element.querySelector('#' + CSS.escape(event.currentTarget.dataset.inputId)); }
     shipMaximum(input) {
         const others = this.shipTargets.reduce((sum, field) => sum + (field === input ? 0 : Math.max(0, Number(field.value) || 0)), 0);

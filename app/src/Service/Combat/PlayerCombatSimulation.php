@@ -6,6 +6,7 @@ use App\Entity\{Planet, PlayerTechnology, PlayerUniverse, Fleet, FleetShip};
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Fleet\EspionageReportReader;
+use App\Service\PirateCampaign\PirateBattleScenario;
 
 final class PlayerCombatSimulation
 {
@@ -286,12 +287,18 @@ final class PlayerCombatSimulation
         );
     }
 
+    private function estimatedWeight(array $unit): int
+    {
+        return $unit['quantity'] * (($unit['shots_max'] ?? 1) + ($unit['secondary_shots_max'] ?? 0))
+            * (1 + count($unit['extra_shot_chances'] ?? []));
+    }
+
     /**
      * Fige les statistiques avant l’envoi : une modification de catalogue ou de recherche
      * entre deux essais ne doit pas changer la série. Aucun identifiant réel de flotte n’est requis.
      * @return array{participants: list<array>, defenses: list<array>, modifiers: array, rounds: int, recharge: float, restore_shields: bool, inline: bool, grouped_survivors: bool, forces: array}
      */
-    public function prepare(PlayerUniverse $owner, array $forces, int $seed): array
+    public function prepare(PlayerUniverse $owner, array $forces, int $seed, ?PirateBattleScenario $pirate = null): array
     {
         if (!$owner->isPlayerControlled() || $seed < 0 || $seed > 0xffffffff) {
             throw new \DomainException('Paramètres de simulation invalides.');
@@ -302,7 +309,8 @@ final class PlayerCombatSimulation
         $choices = $this->choices($owner);
         $fleetLimit = $this->fleetLimit($owner);
         $rules = $this->catalog->rules();
-        $rounds = (int) $rules['max_combat_rounds'];
+        $pirateSnapshot = $pirate?->snapshot();
+        $rounds = $pirateSnapshot['rounds'] ?? (int) $rules['max_combat_rounds'];
         $participants = [];
         $defenses = [];
         $normalizedForces = [];
@@ -310,6 +318,22 @@ final class PlayerCombatSimulation
         $weight = 0;
         foreach (['attacker', 'defender'] as $camp) {
             $input = $forces[$camp] ?? [];
+            if ($camp === 'defender' && $pirateSnapshot !== null) {
+                // Le formulaire n'est jamais la source du camp pirate. Même si le catalogue a changé,
+                // conserver les profils, effets, ordre et réglages utilisés par le vrai combat.
+                $ships = $pirateSnapshot['units'];
+                $composition = [];
+                foreach ($ships as $ship) {
+                    $composition[$ship['slug']][$ship['tier']] = $ship['quantity'];
+                }
+                $participants[] = ['id' => 'defender', 'camp' => 'defender', 'role' => 'defender', 'arrival_round' => 1, 'units' => $ships];
+                $normalizedForces['defender'] = ['ships' => $composition, 'research' => [], 'arrival' => 1, 'fortress' => [], 'defenses' => []];
+                foreach ($ships as $unit) {
+                    $total += $unit['quantity'];
+                    $weight += $this->estimatedWeight($unit);
+                }
+                continue;
+            }
             if (!is_array($input) || array_diff_key($input, ['ships' => true, 'research' => true, 'arrival' => true, 'defenses' => true, 'fortress' => true]) !== []) {
                 throw new \DomainException('Forces invalides.');
             }
@@ -329,7 +353,16 @@ final class PlayerCombatSimulation
                 }
             }
             $ships = $this->units->ships($owner->universe, $composition, $research);
-            $arrival = filter_var($input['arrival'] ?? 1, FILTER_VALIDATE_INT);
+            if ($pirate !== null) {
+                if ($ships === []) {
+                    throw new \DomainException('Ajoutez au moins un vaisseau à l’escorte.');
+                }
+                // L'attaque réelle ne connaît ni renfort ni arrivée différée.
+                $pirate->assertNativeUnitLimit($ships);
+                // La tentative PvE fige aussi l’ordre des unités de l’escorte avant le calcul.
+                $ships = PirateBattleScenario::freezeUnits($ships);
+            }
+            $arrival = $pirate !== null ? 1 : filter_var($input['arrival'] ?? 1, FILTER_VALIDATE_INT);
             if ($arrival === false || $arrival < 1 || $arrival > $rounds) {
                 throw new \DomainException('Round d’arrivée invalide.');
             }
@@ -367,7 +400,7 @@ final class PlayerCombatSimulation
             }
             foreach ($all as $unit) {
                 $total += $unit['quantity'];
-                $weight += $unit['quantity'] * (($unit['shots_max'] ?? 1) + ($unit['secondary_shots_max'] ?? 0)) * (1 + count($unit['extra_shot_chances'] ?? []));
+                $weight += $this->estimatedWeight($unit);
             }
         }
         if ($total > 0xffffffff) {
@@ -380,10 +413,10 @@ final class PlayerCombatSimulation
         return [
             'participants' => $participants,
             'defenses' => $defenses,
-            'modifiers' => $this->catalog->all('combat_modifiers')['modifiers'] ?? [],
+            'modifiers' => $pirateSnapshot['modifiers'] ?? $this->catalog->all('combat_modifiers')['modifiers'] ?? [],
             'rounds' => $rounds,
-            'recharge' => (float) ($rules['shield_recharge_percent_per_round'] ?? 5),
-            'restore_shields' => (bool) ($rules['restore_survivor_shields_after_combat'] ?? true),
+            'recharge' => $pirateSnapshot['recharge'] ?? (float) ($rules['shield_recharge_percent_per_round'] ?? 5),
+            'restore_shields' => $pirate !== null || (bool) ($rules['restore_survivor_shields_after_combat'] ?? true),
             'inline' => $total <= self::INLINE_UNITS && $total * $weight * $rounds <= self::INLINE_WORK,
             'grouped_survivors' => $total > self::INLINE_UNITS,
             'forces' => $normalizedForces,
