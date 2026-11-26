@@ -345,7 +345,7 @@ final class ResourceMarketTest extends WebTestCase
         $registration = new RegistrationData();
         $registration->username = $name;
         $registration->email = strtolower($name).'@example.test';
-        $registration->plainPassword = 'Market-test-2026-xx!';
+        $registration->plainPassword = bin2hex(random_bytes(16)).'Aa!';
         $player = self::getContainer()->get(RegistrationService::class)->register($registration);
         if ($admin) {
             $player->roles = ['ROLE_ADMIN'];
