@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use App\Service\Boost\InventoryGiftNotices;
 use App\Service\Notification\JournalService;
 use App\Entity\{Guild,GuildMember,PlayerUniverse};
 use App\Repository\GameRepository;
@@ -15,7 +16,7 @@ use Symfony\Component\Uid\Uuid;
 final class SocialMessageController extends AbstractController
 {
     #[Route('/messages/non-lus', name: 'app_messages_unread', methods: ['GET'])]
-    public function unread(Request $request, UniverseContext $context, SocialMessageService $messages, GameRepository $repo, JournalService $journal, PreferencesService $preferences, GuildRecruitmentView $recruitment): Response
+    public function unread(Request $request, UniverseContext $context, SocialMessageService $messages, GameRepository $repo, JournalService $journal, PreferencesService $preferences, GuildRecruitmentView $recruitment, InventoryGiftNotices $gifts): Response
     {
         $membership = $context->membership();
         $unreadGuild = $messages->unreadGuildCount($membership);
@@ -26,6 +27,7 @@ final class SocialMessageController extends AbstractController
         return $this->json([
             'unread' => $messages->unreadPrivateCount($membership) + $unreadGuild,
             'guildRecruitmentCount' => $recruitment->unread($membership, $guildMember),
+            'inventoryGiftCount' => $gifts->summary($membership)['count'],
             'journalUnread' => $journal->unreadCount($membership) > 0,
             'membership' => $membership->id,
             'conversations' => $this->renderView('player/_message_contacts.html.twig', [

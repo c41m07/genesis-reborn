@@ -1,4 +1,5 @@
 {% macro icon(name, class='') %}<svg class="icon {{ class }}" aria-hidden="true" focusable="false"><use href="{{ asset('art/icons.svg') }}#{{ name }}"/></svg>{% endmacro %}
+{% macro gift_icon(class='') %}<svg class="icon {{ class }}" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 9h17v4h-17zM5.5 13v7h13v-7M12 9v11M12 9C8 9 6.5 8.1 6.5 6.5c0-2.6 4-2.6 5.5 2.5Zm0 0c4 0 5.5-.9 5.5-2.5 0-2.6-4-2.6-5.5 2.5Z"/></svg>{% endmacro %}
 {% macro structure(name, class='') %}<svg class="structure-art {{ class }}" aria-hidden="true" focusable="false"><use href="{{ asset('art/structures.svg') }}#{{ name }}"/></svg>{% endmacro %}
 {% macro progress(start, end, label, totalEnd=null, earned=0) %}
 {% set now='now'|date('U') %}{% set duration=max(1,end|date('U')-start|date('U')) %}{% set percent=max(0,min(100,max(0,now-start|date('U'))/duration*(100-earned)+earned)) %}
