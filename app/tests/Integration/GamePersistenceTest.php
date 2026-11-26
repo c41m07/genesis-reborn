@@ -952,18 +952,21 @@ final class GamePersistenceTest extends KernelTestCase
         $this->em->flush();
 
         $catalog = self::getContainer()->get(GameCatalog::class);
-        $buildingCost = array_sum($catalog->costs($catalog->get('buildings', 'mine_metal'), 1, 1, 'buildings'))
-            + array_sum($catalog->costs($catalog->get('buildings', 'mine_metal'), 2, 1, 'buildings'));
-        $researchCost = array_sum($catalog->costs($catalog->get('technologies', 'weapon_calibration'), 1, 1, 'technologies'));
-        $fleetCost = array_sum($catalog->costs($catalog->get('ships', 'fighter'), 1, 3, 'ships'))
-            + array_sum($catalog->costs($catalog->get('defenses', 'ground_turret_anti_light'), 1, 2, 'defenses'));
+        // Calcul indépendant pour vérifier le barème et l’absence de taxe électrique.
+        $materialValue = static fn (array $costs): int => ($costs['hydrogen'] ?? 0)
+            + 2 * ($costs['metal'] ?? 0) + 4 * ($costs['nano'] ?? 0) + 8 * ($costs['antimatter'] ?? 0);
+        $buildingCost = $materialValue($catalog->costs($catalog->get('buildings', 'mine_metal'), 1, 1, 'buildings'))
+            + $materialValue($catalog->costs($catalog->get('buildings', 'mine_metal'), 2, 1, 'buildings'));
+        $researchCost = $materialValue($catalog->costs($catalog->get('technologies', 'weapon_calibration'), 1, 1, 'technologies'));
+        $fleetCost = $materialValue($catalog->costs($catalog->get('ships', 'fighter'), 1, 3, 'ships'))
+            + $materialValue($catalog->costs($catalog->get('defenses', 'ground_turret_anti_light'), 1, 2, 'defenses'));
         $leaderboard = self::getContainer()->get(LeaderboardService::class);
         $rows = $leaderboard->forUniverse($player->currentPlayerUniverse);
         $own = array_values(array_filter($rows, static fn (array $row): bool => $row['membership']->id === $player->currentPlayerUniverse->id))[0];
 
-        self::assertSame(intdiv($buildingCost, 100), $own['building_points']);
-        self::assertSame(intdiv($researchCost, 100), $own['research_points']);
-        self::assertSame(intdiv($fleetCost, 100), $own['fleet_points']);
+        self::assertSame(intdiv($buildingCost, 200), $own['building_points']);
+        self::assertSame(intdiv($researchCost, 200), $own['research_points']);
+        self::assertSame(intdiv($fleetCost, 200), $own['fleet_points']);
         self::assertSame($own['building_points'] + $own['research_points'] + $own['fleet_points'], $own['total_points']);
         self::assertSame(5, $own['fleet_units']);
         self::assertSame(1, $own['planets']);
@@ -1113,16 +1116,16 @@ final class GamePersistenceTest extends KernelTestCase
         foreach($old as $resource=>$amount)self::assertEqualsWithDelta($before[$resource]+.25*$amount,$stocks[$resource]->currentStock,1e-6);
     }
 
-    public function testRedistributedPricesKeepTheRawResourceScoringRule(): void
+    public function testFleetPointsUseWeightedCurrentCataloguePrices(): void
     {
         $player=$this->player();$this->join($player,'omega-1');
         $fleet=new Fleet();$fleet->playerUniverse=$player->currentPlayerUniverse;
         $ship=new FleetShip();$ship->fleet=$fleet;$ship->slug='fighter';$ship->tier='basic';$ship->quantity=1;
-        // Les points utilisent les quantités de ressources du profil courant, sans pondération M/N/A/H.
+        // Le panneau de flotte utilise la valeur pondérée du catalogue courant.
         $scores=self::getContainer()->get(\App\Service\Player\LeaderboardService::class);
-        self::assertSame(22,$scores->fleetPoints($fleet,[$ship]));
+        self::assertSame(30,$scores->fleetPoints($fleet,[$ship]));
         $ship->quantity=100;
-        self::assertSame(2220,$scores->fleetPoints($fleet,[$ship]));
+        self::assertSame(3000,$scores->fleetPoints($fleet,[$ship]));
     }
 
     public function testCancellationRefundRespectsStorageCapacity():void

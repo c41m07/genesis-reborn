@@ -588,6 +588,58 @@ final class CombatEventTest extends KernelTestCase
         self::assertFalse($combat->canAttack($attacker->currentPlayerUniverse, $target));
     }
 
+    public function testLiveAttackUsesWeightedScoreAtTheFiveToOneBoundary(): void
+    {
+        $clock = $this->clock();
+        $attacker = $this->player('WeightedAttacker');
+        $origin = $this->join($attacker);
+        $defender = $this->player('WeightedDefender');
+        $target = $this->join($defender);
+        $defender->currentPlayerUniverse->joinedAt = $clock->now()->modify('-7 days');
+        foreach ([[$attacker, $origin, 5], [$defender, $target, 1]] as [$player, $planet, $quantity]) {
+            // Isoler les valeurs exactes du panier militaire du kit initial de la colonie.
+            $membership = $player->currentPlayerUniverse;
+            foreach ($this->em->getRepository(\App\Entity\PlanetBuilding::class)->findBy(['planet' => $planet]) as $starterBuilding) {
+                $this->em->remove($starterBuilding);
+            }
+            foreach ($this->em->getRepository(\App\Entity\PlayerTechnology::class)->findBy(['playerUniverse' => $membership]) as $starterTechnology) {
+                $this->em->remove($starterTechnology);
+            }
+            foreach ($this->em->getRepository(Fleet::class)->findBy(['playerUniverse' => $membership]) as $starterFleet) {
+                foreach ($this->em->getRepository(FleetShip::class)->findBy(['fleet' => $starterFleet]) as $starterShip) {
+                    $this->em->remove($starterShip);
+                }
+            }
+            $fleet = new Fleet();
+            $fleet->playerUniverse = $player->currentPlayerUniverse;
+            $fleet->homePlanet = $planet;
+            $this->em->persist($fleet);
+            $ship = new FleetShip();
+            $ship->fleet = $fleet;
+            $ship->slug = 'fighter';
+            $ship->quantity = $quantity;
+            $this->em->persist($ship);
+            if ($quantity === 5) {
+                $attackerShip = $ship;
+            }
+        }
+        $this->em->flush();
+
+        $scores = self::getContainer()->get(\App\Service\Player\LeaderboardService::class);
+        $rows = array_column(array_map(static fn (array $row): array => [
+            'id' => $row['membership']->id,
+            'points' => $row['total_points'],
+        ], $scores->forUniverse($attacker->currentPlayerUniverse)), 'points', 'id');
+        self::assertSame(150, $rows[$attacker->currentPlayerUniverse->id]);
+        self::assertSame(30, $rows[$defender->currentPlayerUniverse->id]);
+
+        $combat = self::getContainer()->get(CombatEventService::class);
+        self::assertTrue($combat->canAttack($attacker->currentPlayerUniverse, $target));
+        ++$attackerShip->quantity;
+        $this->em->flush();
+        self::assertFalse($combat->canAttack($attacker->currentPlayerUniverse, $target));
+    }
+
     public function testInactiveProtectionsAreSuspendedAndAVisitRestoresTheOriginalDeadline(): void
     {
         $clock = $this->clock();

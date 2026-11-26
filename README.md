@@ -25,8 +25,7 @@ Les [recettes RP du catalogue](docs/CATALOGUE_COUTS_RP.md) répartissent les mat
 La recherche Protocoles de colonisation passe à 8 h de base, avant bonus et multiplicateurs.
 La [simulation de première colonisation](docs/EQUILIBRAGE.md#première-colonisation-19-novembre-2026)
 se rejoue avec `make -s console CMD=app:balance:simulate-colonization`.
-Les points suivent toujours les quantités brutes des prix courants : le classement
-et les protections liées aux points peuvent évoluer lors de leur recalcul.
+Les points pondèrent les matériaux aux prix courants, hors électricité. Voir les [règles du classement et des protections](docs/REGLES.md#classements-quotidiens).
 
 Comparer les durées, la taxe électrique et les trajets sans écrire en base :
 `make -s console CMD="app:balance:compare-operations"`. La sortie JSON couvre les

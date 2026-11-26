@@ -7,7 +7,7 @@
 <details class="ranking-board-help">
     <summary class="secondary">Lire le classement</summary>
     <div class="panel">
-        <p>Les points suivent les ressources engagées dans les entités encore possédées. La flotte inclut les vaisseaux et les défenses fixes. Les valeurs ne détaillent pas la composition de vos flottes.</p>
+        <p>Les points suivent les prix catalogue des biens encore possédés. Un point vaut 200 de valeur en matériaux : H × 1, M × 2, N × 4 et A × 8. L’électricité ne compte pas. La flotte inclut les vaisseaux et les défenses fixes. Les valeurs ne détaillent pas la composition de vos flottes.</p>
         <p>Actualisation chaque jour à 00 h, heure de Paris. Prochaine actualisation le <time datetime="{{ daily.next_update|date('c') }}">{{ daily.next_update|date('d/m/Y à H:i', 'Europe/Paris') }}</time>.</p>
         <p>Les nouveaux joueurs et guildes rejoignent le classement au prochain calcul.</p>
         <p>{% if daily.comparison_at %}Évolutions depuis le calcul du {{ daily.comparison_at|date('d/m/Y à H:i', 'Europe/Paris') }}. Les signes + et − indiquent un gain ou une perte.{% else %}Premier calcul. Les évolutions apparaîtront à la prochaine mise à jour.{% endif %}</p>
