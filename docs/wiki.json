@@ -163,7 +163,7 @@
     "title": "Coûts, durées et bonus de recherche",
     "paragraphs": [
       "Le premier niveau Basique conserve les matériaux du catalogue. En Intermédiaire et Supérieur, le budget d’entrée vaut 110 % du prix du seul niveau exigé du prérequis admissible le plus cher, avant remise et hors électricité. Pour une recherche, seules les recherches de sa famille entrent dans la comparaison. Pour un producteur, un dépôt, le laboratoire, le chantier spatial ou le bunker, comparez tous les bâtiments et recherches exigés. Le budget est réparti selon le profil du rang à construire.",
-      "Par défaut, les parts de valeur métal/nano/antimatière/hydrogène sont 48/52/0/0 en Basique, 34/36/30/0 en Intermédiaire et 28/31/31/10 en Supérieur. La pondération vaut 2 pour le métal, 4 pour le nano, 8 pour l’antimatière et 1 pour l’hydrogène. Elle sert à répartir les prix et ne permet pas d’échanger les ressources. Les réglages de l’univers restent prioritaires ; une commande déjà payée conserve son coût et sa durée.",
+      "Le catalogue utilise des recettes propres à la fonction et au rang de chaque fiche, sans répartition commune aux trois rangs. La pondération vaut 2 pour le métal, 4 pour le nano, 8 pour l’antimatière et 1 pour l’hydrogène. Elle sert à répartir les prix et ne permet pas d’échanger les ressources. Les réglages de l’univers restent prioritaires ; une commande déjà payée conserve son coût et sa durée.",
       "Dans les références actuelles, une réduction de durée est plafonnée à 70 % et une réduction de coût à 40 %. Le laboratoire réduit la durée des recherches, le chantier celle des vaisseaux. Les défenses ne reçoivent aucune réduction de durée du chantier ou du bunker."
     ],
     "calculations": [

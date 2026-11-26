@@ -2,8 +2,7 @@
 
 ## Répartition des prix courante
 
-Les 156 profils par défaut utilisent les parts de valeur M/N/A/H suivantes :
-Basique 48/52/0/0, Intermédiaire 34/36/30/0 et Supérieur 28/31/31/10.
+Les 156 profils par défaut utilisent des recettes propres à chaque fiche et à chaque rang, sans parts de valeur imposées par rang. Voir [les raisons des recettes RP](CATALOGUE_COUTS_RP.md) et [les anciens prix](SAUVEGARDE_CATALOGUE_COUTS_AVANT_RP.md).
 La valeur est M×2 + N×4 + A×8 + H ; il ne s’agit pas de quantités brutes ni d’un marché.
 Les quantités sont entières et conservent le budget de base propre à chaque profil,
 y compris ceux des défenses. Les courbes et arrondis après croissance/remises restent

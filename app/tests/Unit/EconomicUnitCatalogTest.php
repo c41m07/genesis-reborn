@@ -14,7 +14,10 @@ final class EconomicUnitCatalogTest extends TestCase
         $catalog = new GameCatalog(dirname(__DIR__, 2).'/config/game');
         $universe = new Universe();$universe->slug = 'civil-x1';$universe->name = 'Unités civiles';
         $calculator = new OperationCalculator($catalog);
-        $prices = ['basic'=>[384,208,0,0], 'intermediate'=>[340,180,75,0], 'superior'=>[350,194,97,248]];
+        $prices = [
+            'hydrogen_collector' => ['basic' => [384,208,0,0], 'intermediate' => [350,325,0,0], 'superior' => [376,437,0,0]],
+            'solar_satellite' => ['basic' => [384,208,0,0], 'intermediate' => [200,400,0,0], 'superior' => [188,531,0,0]],
+        ];
         foreach (['hydrogen_collector'=>[100,20,20,30,900,'mine_hydrogen','vector_propulsion',1],
             'solar_satellite'=>[40,0,0,40,450,'power_plant','engineering_foundations',2]] as $slug=>$reference) {
             [$hp,$shield,$evasion,$signature,$production,$building,$research,$researchLevel] = $reference;
@@ -31,7 +34,7 @@ final class EconomicUnitCatalogTest extends TestCase
                     'technologies'=>[['slug'=>$research,'tier'=>$tier,'level'=>$researchLevel]]], $unit['tier_unlock_requirements'][$tier]);
                 $quote = $calculator->calculate($unit, 'ships', 1, 1, [], $catalog->forUniverse($universe));
                 self::assertSame($seconds, $quote['duration']);
-                self::assertSame(array_combine(['metal','nano','antimatter','hydrogen'], $prices[$tier])+['electricity'=>$electricity], $quote['costs']);
+                self::assertSame(array_combine(['metal','nano','antimatter','hydrogen'], $prices[$slug][$tier])+['electricity'=>$electricity], $quote['costs']);
                 if ($slug === 'hydrogen_collector') {
                     $transport = $catalog->getTierForUniverse($universe, 'ships', 'transport', $tier);
                     self::assertSame($transport['speed_system'], $unit['speed_system']);

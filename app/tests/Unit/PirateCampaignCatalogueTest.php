@@ -30,15 +30,15 @@ final class PirateCampaignCatalogueTest extends TestCase
         self::assertSame(['balise_17', 'escorte_interceptee', 'derniere_liaison'], array_slice($keys, 0, 3));
         self::assertSame($keys, array_values(array_unique($keys)));
         $expected = [
-            'balise_17' => [['fighter' => ['basic' => 1]], 1440, 780],
-            'escorte_interceptee' => [['fighter' => ['basic' => 2], 'interceptor' => ['basic' => 1]], 4644, 2516],
-            'derniere_liaison' => [['bomber' => ['basic' => 1], 'heavy_fighter' => ['basic' => 1]], 8713, 4719],
+            'balise_17' => [['fighter' => ['basic' => 1]], 1440, 780, 0],
+            'escorte_interceptee' => [['fighter' => ['basic' => 2], 'interceptor' => ['basic' => 1]], 3799, 2571, 1470],
+            'derniere_liaison' => [['bomber' => ['basic' => 1], 'heavy_fighter' => ['basic' => 1]], 9278, 2806, 6522],
         ];
-        foreach ($expected as $key => [$ships, $metal, $nano]) {
+        foreach ($expected as $key => [$ships, $metal, $nano, $hydrogen]) {
             $prepared = $this->campaign->prepareForServer($key, $universe);
             self::assertSame($key, $prepared->definitionKey());
             self::assertSame($ships, $prepared->encounterForServer()->composition());
-            self::assertEquals(['metal' => $metal, 'nano' => $nano, 'antimatter' => 0, 'hydrogen' => 0], $prepared->encounterForServer()->buildCosts());
+            self::assertEquals(['metal' => $metal, 'nano' => $nano, 'antimatter' => 0, 'hydrogen' => $hydrogen], $prepared->encounterForServer()->buildCosts());
             $battle = $prepared->battleForServer()->snapshot();
             self::assertSame($this->catalogue->rules()['max_combat_rounds'], $battle['rounds']);
             self::assertSame((float) $this->catalogue->rules()['shield_recharge_percent_per_round'], $battle['recharge']);
@@ -95,8 +95,10 @@ final class PirateCampaignCatalogueTest extends TestCase
             self::assertContains($native['outcome'], ['attacker_wins', 'defender_wins', 'draw']);
 
             $costs = $scout->buildCosts();
-            self::assertGreaterThan($last, $costs['metal'], 'Le benchmark ordonne les propositions par valeur de coque, pas par condition de progression.');
-            $last = $costs['metal'];
+            // Les recettes RP déplacent les matériaux sans changer le budget pondéré du dossier.
+            $hullValue = \App\Service\Balance\CostDistributionCandidate::value($costs);
+            self::assertGreaterThan($last, $hullValue, 'La valeur de coque progresse quel que soit son mélange de matériaux.');
+            $last = $hullValue;
             $half = PirateConvoyQuote::halfOfFrozenCatalogue($scout)->exactParts();
             foreach ($half as $resource => $part) {
                 self::assertSame($costs[$resource], 2 * $part['whole'] + (int) $part['extra_half']);
@@ -109,7 +111,7 @@ final class PirateCampaignCatalogueTest extends TestCase
         $finale = $this->campaign->prepareForServer('la_nuit_se_brise', $u)->encounterForServer();
         self::assertSame(2, $finale->composition()['capital']['basic']);
         self::assertSame(
-            ['metal' => ['whole' => 148470, 'extra_half' => false], 'nano' => ['whole' => 80422, 'extra_half' => false]],
+            ['metal' => ['whole' => 173826, 'extra_half' => false], 'nano' => ['whole' => 51303, 'extra_half' => true]],
             array_intersect_key(PirateConvoyQuote::halfOfFrozenCatalogue($finale)->exactParts(), array_fill_keys(['metal', 'nano'], true)),
         );
     }

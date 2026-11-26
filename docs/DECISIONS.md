@@ -2263,3 +2263,8 @@ Les 38 recherches avancées du catalogue ne demandaient aucun niveau de leur pro
 La file conserve les paiements et les échéances enregistrés. Les commandes qui suivent les gains de vitesse conservent la formule correspondant à leur devis. La première synchronisation des stocks emploie les taux courants sur la période écoulée, selon le fonctionnement existant. Les calculs de classement utilisent les prix courants.
 
 Aucun plafond de jeu ajouté aux dépôts T3. À vitesse ×1 sans réduction, le devis du dépôt de métal T3 au niveau 324 dépasse les 2 147 483 647 secondes représentables par la file SQL. La capacité T3 dépasse au niveau 1 741 les 2⁵³ unités au-delà desquelles un stock en double précision ne distingue plus toutes les unités successives. Étendre ces représentations demanderait un chantier distinct.
+
+
+### Recettes de coûts RP sur dev · 26 novembre 2026
+
+Kévin valide l’essai de la grille M/H/A/E/N pour l’ensemble des bâtiments, recherches, vaisseaux et défenses. Les matériaux suivent le rôle de chaque fiche. Les profils gardent leur valeur pondérée ; la durée, la taxe électrique, les règles de points, les prérequis et le moteur de combat ne changent pas. Les surcharges d’univers restent prioritaires et les commandes déjà payées restent fondées sur leur coût sauvegardé. Les [profils avant RP](SAUVEGARDE_CATALOGUE_COUTS_AVANT_RP.md) et la [description des recettes](CATALOGUE_COUTS_RP.md) permettent de vérifier ou annuler ce lot seul. Cet essai sur dev ne décide pas d’une mise en production.

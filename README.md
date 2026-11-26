@@ -21,8 +21,7 @@ proposé au précédent, sans cumuler les niveaux déjà en file.
 Leur livraison pendant un combat rejoint les renforts locaux avec toute la flotte.
 Le [suivi de mission](docs/PROGRESSION_CARBURANT_UNITES.md) distingue les lots
 préparés, leur intégration, leur activation et les décisions encore ouvertes.
-La [grille de coûts retenue](docs/COUTS.md) est B48/52, I34/36/30 et S28/31/31/10,
-en parts de valeur M/N/A/H. Les recherches avancées exigent le niveau 5 du rang précédent de leur famille. Les prix d’entrée dérivent du passage requis le plus cher, et les matériaux des recherches augmentent de 35 % par niveau. La production industrielle, la capacité des dépôts et les contributions du laboratoire, du chantier et du bunker se composent séparément par rang. [Formules et périmètre](docs/REGLES.md#progression-économique-par-rang).
+Les [recettes RP du catalogue](docs/CATALOGUE_COUTS_RP.md) répartissent les matériaux selon la fonction de la fiche, en conservant le budget pondéré. La [sauvegarde des prix précédents](docs/SAUVEGARDE_CATALOGUE_COUTS_AVANT_RP.md) permet un retour ciblé. La taxe électrique conserve sa règle. Les recherches avancées exigent le niveau 5 du rang précédent de leur famille. Les prix d’entrée dérivent du passage requis le plus cher, et les matériaux des recherches augmentent de 35 % par niveau. La production industrielle, la capacité des dépôts et les contributions du laboratoire, du chantier et du bunker se composent séparément par rang. [Formules et périmètre](docs/REGLES.md#progression-économique-par-rang).
 La recherche Protocoles de colonisation passe à 8 h de base, avant bonus et multiplicateurs.
 La [simulation de première colonisation](docs/EQUILIBRAGE.md#première-colonisation-19-novembre-2026)
 se rejoue avec `make -s console CMD=app:balance:simulate-colonization`.
