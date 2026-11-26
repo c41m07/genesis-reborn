@@ -31,6 +31,18 @@ final class LiveQueueTimingTest extends TestCase
         self::assertSame($start + 59, $item->finishAt()->getTimestamp());
     }
 
+    public function testQueuedBuildingsKeepTheResearchWeightsUsedForTheirQuote(): void
+    {
+        // Avec 25 niveaux Basiques, le Génie civil réduit historiquement la durée de 26,87 %.
+        $timing = ['base' => 10000, 'cap' => 70, 'max' => 25];
+        $levels = ['basic' => 25];
+        self::assertSame(7313, LiveQueueTiming::fullDuration($timing, $levels));
+
+        $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
+        $timing['research_weights'] = $catalog->researchBonusWeights();
+        self::assertSame(7766, LiveQueueTiming::fullDuration($timing, $levels));
+    }
+
     public function testQuoteAndLiveRateAgreeAndDefensesHaveNoPassiveModifier(): void
     {
         $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');

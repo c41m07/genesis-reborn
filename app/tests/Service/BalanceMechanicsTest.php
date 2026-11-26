@@ -36,11 +36,32 @@ final class BalanceMechanicsTest extends TestCase
             $universe,
         )[0];
 
-        self::assertEqualsWithDelta(76.0216757005253, $result['tracking'], 0.000001);
-        self::assertEqualsWithDelta(55.45844459862855, $result['precision'], 0.000001);
-        self::assertEqualsWithDelta(51.13519522280588, $result['shield'], 0.000001);
-        self::assertEqualsWithDelta(24.544893706946823, $result['base_attack'], 0.000001);
-        self::assertEqualsWithDelta(155.4509934773299, $result['speed_system'], 0.000001);
+        self::assertEqualsWithDelta(75.82595236, $result['tracking'], 0.000001);
+        self::assertEqualsWithDelta(55.36924866, $result['precision'], 0.000001);
+        self::assertEqualsWithDelta(50.91772484, $result['shield'], 0.000001);
+        self::assertEqualsWithDelta(24.44050792, $result['base_attack'], 0.000001);
+        self::assertEqualsWithDelta(154.78988352, $result['speed_system'], 0.000001);
+    }
+
+    public function testWeaponDamageAtCompletedResearchTiers(): void
+    {
+        $catalog = $this->catalog();
+        $universe = $this->universe();
+        $fighter = $catalog->getForUniverse($universe, 'ships', 'fighter');
+        $calculator = new TechnologyEffectCalculator($catalog);
+
+        // Dégâts réellement appliqués au chasseur pour chaque palier annoncé au joueur.
+        foreach ([
+            [[0, 0, 0], 0.0],
+            [[25, 0, 0], 7.98],
+            [[25, 25, 0], 16.00],
+            [[25, 25, 25], 25.0],
+        ] as [$levels, $expectedPercent]) {
+            $research = ['weapons_engineering' => array_combine(GameCatalog::TIERS, $levels)];
+            $ship = $calculator->applyToShips([$fighter], $research, $universe)[0];
+            $percent = 100 * ($ship['base_attack'] / $fighter['base_attack'] - 1);
+            self::assertEqualsWithDelta($expectedPercent, $percent, 0.005);
+        }
     }
 
     public function testSelectedShipyardAndFabricationResearchAffectQueuePlan(): void
@@ -59,7 +80,7 @@ final class BalanceMechanicsTest extends TestCase
         );
 
         self::assertSame(156, $plan['duration']);
-        self::assertSame(['metal'=>1388,'nano'=>752,'antimatter'=>0,'hydrogen'=>0,'electricity'=>300],$plan['costs']);
+        self::assertSame(['metal'=>1398,'nano'=>758,'antimatter'=>0,'hydrogen'=>0,'electricity'=>300],$plan['costs']);
     }
 
     public function testTierCostProfilesContainOnlyNonnegativeMaterials(): void
@@ -105,7 +126,7 @@ final class BalanceMechanicsTest extends TestCase
     {
         $catalog=$this->catalog();$universe=$this->universe();$fighter=$catalog->getForUniverse($universe,'ships','fighter');
         $result=(new TechnologyEffectCalculator($catalog))->applyToShips([$fighter],['weapon_calibration'=>['basic'=>10,'intermediate'=>5,'superior'=>5],'rapid_fire_cycle'=>['basic'=>25,'intermediate'=>25,'superior'=>25]],$universe)[0];
-        self::assertEqualsWithDelta(58.06941048336212,$result['precision'],0.000001);
+        self::assertEqualsWithDelta(57.96429821,$result['precision'],0.000001);
         self::assertSame([0.5],$result['extra_shot_chances']);
     }
 
@@ -238,7 +259,7 @@ final class BalanceMechanicsTest extends TestCase
 
         $fighter = $catalog->getForUniverse($this->universe(), 'ships', 'fighter');
         $improved = (new TechnologyEffectCalculator($catalog))->applyToShips([$fighter], ['weapon_calibration' => ['basic' => 1]], $this->universe())[0];
-        self::assertEqualsWithDelta(55.15594535470353, $improved['precision'], .000001);
+        self::assertEqualsWithDelta(55.12511114, $improved['precision'], .000001);
     }
 
 }

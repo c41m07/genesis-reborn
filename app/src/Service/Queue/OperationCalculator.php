@@ -61,6 +61,11 @@ final class OperationCalculator
                 'building_growth' => in_array($group, ['technologies', 'ships'], true) ? ($this->catalog->rules()['building_level_growth'] ?? []) : null, 'checkpoint' => null, 'work' => 1.0, 'full' => $duration]
             : null;
 
+        if ($group === 'buildings' && $timing !== null) {
+            // Une commande payée garde sa courbe lors des prochains gains de Génie civil.
+            $timing['research_weights'] = $this->catalog->researchBonusWeights();
+        }
+
         return ['duration'=>$duration,'costs'=>$costs,'raw_duration'=>$rawDuration,'live_timing' => $timing];
     }
     public function maximum(array $definition, string $group, array $stocks, array $buildings, array $universe, array $technologies = [], int $limit = 2147483647): int
@@ -95,6 +100,6 @@ final class OperationCalculator
         if(!is_array($effect)||($effect['type']??null)!==$type)return 0.0;
         if(is_int($levels)||is_numeric($levels))$levels=['basic'=>(int)$levels];
         $maxLevel=max(1,(int)($definition['max_level']??25));
-        return GameCatalog::diminishingBonus($levels,$globalCap,$maxLevel);
+        return $this->catalog->researchBonus($levels,$globalCap,$maxLevel);
     }
 }

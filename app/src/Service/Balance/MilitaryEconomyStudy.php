@@ -685,7 +685,7 @@ final class MilitaryEconomyStudy
     private function repairPercent(array $technologies): float
     {
         $definition = $this->catalog->get('technologies', 'automated_defense_repair');
-        return GameCatalog::diminishingBonus($technologies['automated_defense_repair'] ?? [], (float) $this->catalog->rules()['defense_rebuild_max_percent'], (int) $definition['max_level']);
+        return $this->catalog->researchBonus($technologies['automated_defense_repair'] ?? [], (float) $this->catalog->rules()['defense_rebuild_max_percent'], (int) $definition['max_level']);
     }
 
     private function defenseReconstruction(Universe $universe, array $checkpoint, bool $researchRepair): array

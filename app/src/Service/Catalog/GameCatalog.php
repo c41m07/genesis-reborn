@@ -8,6 +8,9 @@ final class GameCatalog
 {
     private array $data=[];
     public const TIERS=['basic','intermediate','superior'];
+    // Les anciens catalogues et instantanés de file partageaient ces poids.
+    public const LEGACY_RESEARCH_WEIGHTS = ['basic' => 1, 'intermediate' => 1.25, 'superior' => 1.5625];
+
     public function __construct(#[Autowire('%kernel.project_dir%/config/game')] string $dir)
     {
         foreach (['buildings','technologies','ships','defenses','universes'] as $group) {
@@ -112,19 +115,41 @@ final class GameCatalog
         foreach(self::TIERS as $tier){$cap=(int)($effect['tier_max_levels'][$tier]??0);$total+=min(max(0,(int)($levels[$tier]??0)),$cap)*$perLevel;}
         return max(1,min((int)($effect['max_planets']??$universeLimit),$universeLimit,(int)$total));
     }
-    /** Rendements décroissants partagés par les trois rangs de recherche. */
-    public static function diminishingProgress(array|int $levels,int $maxLevel=25):float
+    /** @return array<string, int|float> Poids du catalogue courant ou de l’étude rejouée. */
+    public function researchBonusWeights(): array
     {
-        if(is_int($levels)||is_numeric($levels))$levels=['basic'=>(int)$levels];
-        $maxLevel=max(1,$maxLevel);$weighted=0.0;$weightTotal=0.0;
-        foreach(self::TIERS as $tier){$weight=self::tierFactor($tier);$weightTotal+=$weight;$weighted+=$weight*min($maxLevel,max(0,(int)($levels[$tier]??0)))/$maxLevel;}
-        $share=$weightTotal>0?$weighted/$weightTotal:0.0;
-        return log(1+2*$share)/log(3);
+        return $this->data['rules']['research_bonus_weights'] ?? self::LEGACY_RESEARCH_WEIGHTS;
     }
-    public static function diminishingBonus(array|int $levels,float $cap,int $maxLevel=25):float
+
+    public function researchBonus(array|int $levels, float $cap, int $maxLevel): float
     {
-        return max(0.0,$cap)*self::diminishingProgress($levels,$maxLevel);
+        return self::diminishingBonus($levels, $cap, $maxLevel, $this->researchBonusWeights());
     }
+
+    /** Les commandes en cours peuvent fournir les poids enregistrés lors de leur achat. */
+    public static function diminishingProgress(array|int $levels, int $maxLevel = 25, array $weights = self::LEGACY_RESEARCH_WEIGHTS): float
+    {
+        if (is_int($levels)) {
+            $levels = ['basic' => $levels];
+        }
+
+        $maxLevel = max(1, $maxLevel);
+        $investment = 0.0;
+        foreach ($weights as $tier => $weight) {
+            $level = min($maxLevel, max(0, (int) ($levels[$tier] ?? 0)));
+            $investment += $weight * $level / $maxLevel;
+        }
+
+        $share = $investment / array_sum($weights);
+
+        return log(1 + 2 * $share) / log(3);
+    }
+
+    public static function diminishingBonus(array|int $levels, float $cap, int $maxLevel = 25, array $weights = self::LEGACY_RESEARCH_WEIGHTS): float
+    {
+        return max(0.0, $cap) * self::diminishingProgress($levels, $maxLevel, $weights);
+    }
+
     /** Multiplicateur de progression par niveau selon les paliers du catalogue. */
     public static function growthMultiplier(int $level,array $segments):float
     {

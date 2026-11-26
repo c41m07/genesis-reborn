@@ -1,5 +1,18 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Bonus de recherche par rang — 26 novembre 2026
+
+Les technologies de réduction de durée ou de coût, de statistiques de combat
+et de flotte, de tir supplémentaire et de réparation des défenses utilisent les
+poids Basique 21, Intermédiaire 30 et Supérieur 49 avant la courbe logarithmique.
+Pour les canons à énergie focalisée, les paliers 25/0/0, 25/25/0 et 25/25/25
+donnent respectivement +7,98 %, +16,00 % et +25 % de dégâts.
+Le plafond propre à chaque famille et les niveaux acquis sont conservés.
+Les niveaux existants produisent le nouvel effet dès le prochain calcul, avec
+une baisse possible pour les empires ayant surtout investi dans les premiers rangs.
+Les commandes déjà acceptées gardent leur prix et leur courbe de durée pour le travail restant.
+La colonisation, les trois recherches de renseignement et les bâtiments gardent leurs règles.
+
 ## Laboratoire et chantier — plafond de durée du 26 novembre 2026
 
 Kévin fixe à 89,5 % la réduction maximale à 25/25/25 du laboratoire pour les

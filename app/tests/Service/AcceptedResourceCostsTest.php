@@ -20,7 +20,7 @@ final class AcceptedResourceCostsTest extends TestCase
         $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
         $document = file_get_contents(dirname(__DIR__, 3) . '/docs/SAUVEGARDE_CATALOGUE_COUTS_AVANT_RP.md');
         $fence = str_repeat(chr(96), 3);
-        $sections = explode($fence, $document);
+        $sections = explode($fence, str_replace("\r\n", "\n", $document));
         self::assertCount(3, $sections);
         self::assertStringStartsWith("json\n", $sections[1]);
         $profiles = json_decode(substr($sections[1], 4), true, 512, JSON_THROW_ON_ERROR);
@@ -79,7 +79,7 @@ final class AcceptedResourceCostsTest extends TestCase
         $property = new \ReflectionProperty(GameCatalog::class, 'data');
         $data = $property->getValue($catalog);
         $data['rules']['progression_curves'] = \App\Tests\Support\ProducerBalanceReference::fixture()['historical_rules']['progression_curves'];
-        unset($data['rules']['rank_entry_material_percent']);
+        unset($data['rules']['rank_entry_material_percent'], $data['rules']['research_bonus_weights']);
         $property->setValue($catalog, $data);
         $calculator = new OperationCalculator($catalog);
         $current = new Universe();

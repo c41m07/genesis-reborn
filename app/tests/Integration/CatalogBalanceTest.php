@@ -39,7 +39,7 @@ final class CatalogBalanceTest extends KernelTestCase
     {
         $service=static::getContainer()->get(CatalogBalanceService::class);$catalog=static::getContainer()->get(GameCatalog::class);$turbo=$this->universe();$omega=$this->universe('omega-1');
         $tech=$this->values($service,$turbo,'technologies','weapon_calibration');$tech['effect.max_bonus']=0.30;$service->save($this->admin,$turbo->id,'technologies','weapon_calibration',$tech,$service->revision($turbo,'technologies','weapon_calibration'),'Essai isolé du catalogue');
-        $ships=[$catalog->getForUniverse($turbo,'ships','fighter')];$boosted=static::getContainer()->get(\App\Service\Combat\TechnologyEffectCalculator::class)->applyToShips($ships,['weapon_calibration'=>1],$turbo);self::assertEqualsWithDelta(55.31189070940707,$boosted[0]['precision'],.000001);
+        $ships=[$catalog->getForUniverse($turbo,'ships','fighter')];$boosted=static::getContainer()->get(\App\Service\Combat\TechnologyEffectCalculator::class)->applyToShips($ships,['weapon_calibration'=>1],$turbo);self::assertEqualsWithDelta(55.25022228,$boosted[0]['precision'],.000001);
         self::assertSame(0.15,$catalog->getForUniverse($omega,'technologies','weapon_calibration')['effect']['max_bonus']);
         $defense=$this->values($service,$turbo,'defenses','ground_turret_anti_light');$defense['hp']=900;$service->save($this->admin,$turbo->id,'defenses','ground_turret_anti_light',$defense,$service->revision($turbo,'defenses','ground_turret_anti_light'),'Essai isolé du catalogue');
         self::assertSame(900.0,$catalog->getForUniverse($turbo,'defenses','ground_turret_anti_light')['hp']);self::assertSame(430,$catalog->getForUniverse($omega,'defenses','ground_turret_anti_light')['hp']);
