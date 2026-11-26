@@ -70,7 +70,7 @@ final readonly class ReportNoticeRepository
             $eligible[] = '(' . self::VISIBLE[$kind] . ' AND NOT EXISTS (
                 SELECT 1 FROM report_archive archive
                 WHERE archive.player_universe_id = n.player_universe_id AND archive.kind = :' . $parameter . '
-                  AND archive.report_id = n.' . $column . ' AND archive.archived_at IS NOT NULL
+                  AND archive.report_id = n.' . $column . ' AND (archive.archived_at IS NOT NULL OR archive.removed_at IS NOT NULL)
             ))';
             $parameters[$parameter] = $listKind;
         }
@@ -102,7 +102,8 @@ final readonly class ReportNoticeRepository
                 continue;
             }
             $parameter = 'ids_'.$kind;
-            $where[] = '(n.'.$column.' IN (:'.$parameter.') AND '.self::VISIBLE[$kind].')';
+            $where[] = '(n.'.$column.' IN (:'.$parameter.') AND '.self::VISIBLE[$kind]
+                .' AND '.ReportArchiveRepository::notRemovedSql('n.'.$column, $listKind, 'n.player_universe_id').')';
             $parameters[$parameter] = $requests[$listKind];
             $types[$parameter] = ArrayParameterType::INTEGER;
             $columnAliases[$column] = $listKind;
@@ -158,7 +159,9 @@ final readonly class ReportNoticeRepository
     private function identityAndAccess(string $kind): string
     {
         $column = self::COLUMNS[$kind] ?? throw new \InvalidArgumentException('Catégorie de rapport inconnue.');
-        return self::ACTIVE.' AND n.'.$column.' = :report AND '.self::VISIBLE[$kind];
+        $listKind = array_search($kind, self::LIST_KINDS, true);
+        return self::ACTIVE.' AND n.'.$column.' = :report AND '.self::VISIBLE[$kind]
+            .' AND '.ReportArchiveRepository::notRemovedSql('n.'.$column, $listKind, 'n.player_universe_id');
     }
 
     /** @return array{member: int, universe: int} */

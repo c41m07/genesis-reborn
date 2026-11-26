@@ -53,7 +53,7 @@ final class ReportArchiveTest extends WebTestCase
     {
         $fleet=new Fleet();$fleet->playerUniverse=$sender->currentPlayerUniverse;$fleet->homePlanet=$this->home($sender);$this->em->persist($fleet);
         $report=new TransportReport();$report->fleet=$fleet;$report->sender=$sender->currentPlayerUniverse;$report->recipient=$recipient->currentPlayerUniverse;
-        $report->createdAt=new \DateTimeImmutable($date);$report->snapshot=['sender'=>$sender->username,'recipient'=>$recipient->username,'destination'=>'Alpha:1:1'];$this->em->persist($report);return $report;
+        $report->createdAt=new \DateTimeImmutable($date);$report->snapshot=['sender'=>$sender->username,'recipient'=>$recipient->username,'origin'=>'Alpha:1:2','destination'=>'Alpha:1:1','sent'=>[]];$this->em->persist($report);return $report;
     }
 
     public function testUnreadCombatKeepsBirthScopeAndCurrentVisibilityIndependentOfArchives(): void
@@ -229,4 +229,129 @@ final class ReportArchiveTest extends WebTestCase
         $this->client->request('POST','/rapports/archives',['_token'=>'forged','operation'=>'archive','selected'=>$this->keys]);self::assertResponseStatusCodeSame(403);
         $this->client->request('GET','/rapports?type=economy');self::assertResponseIsSuccessful();
     }
+
+    public function testRemovalHidesSingleOrSelectedArchivedReportsAndPreservesProofs(): void
+    {
+        [$combat, $spy, $transport] = array_map(static fn (string $key): int => (int) explode(':', $key)[1], $this->keys);
+        $member = $this->player->currentPlayerUniverse;
+        $recipient = $this->recipient->currentPlayerUniverse;
+        $diplomatic = new \App\Entity\DiplomaticReport($member, $recipient, 'orbit', 'requested', 'Alpha:1:1', null, new \DateTimeImmutable('2026-11-12T14:00:00Z'));
+        $this->em->persist($diplomatic);
+        $this->em->persist(new \App\Entity\ReportNotice($member, $this->em->find(CombatLog::class, $combat)));
+        $transportReport = $this->em->find(TransportReport::class, $transport);
+        $fleetId = $transportReport->fleet->id;
+        $this->em->persist(new \App\Entity\ReportNotice($member, $transportReport));
+        $this->em->persist(new \App\Entity\ReportNotice($recipient, $transportReport));
+        $this->em->flush();
+        $diplomaticId = $diplomatic->id;
+        $memberId = $member->id;
+        $recipientId = $recipient->id;
+        $keys = [...$this->keys, 'diplomatic:'.$diplomaticId];
+
+        $crawler = $this->client->request('GET', '/rapports');
+        $token = $crawler->filter('input[name="_token"]')->attr('value');
+        self::assertCount(0, $crawler->filter('button[name="remove"]'));
+        $this->client->request('POST', '/rapports/archives', ['_token' => $token, 'operation' => 'archive', 'selected' => $keys]);
+        self::assertResponseRedirects();
+
+        $this->client->request('GET', '/simulateur?report='.$spy);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('#simulation-intel option[value="'.$spy.'"]');
+
+        $crawler = $this->client->request('GET', '/rapports?view=archives');
+        self::assertCount(4, $crawler->filter('.report-row'));
+        self::assertCount(5, $crawler->filter('button[name="remove"]'));
+        $this->client->submit($crawler->filter('button[name="remove"][value="'.$this->keys[1].'"]')->form());
+        self::assertResponseRedirects();
+
+        $crawler = $this->client->request('GET', '/rapports?view=archives');
+        self::assertCount(3, $crawler->filter('.report-row'));
+        self::assertCount(0, $crawler->filter('a.report-row[href*="/rapports/espionnage/"]'));
+        $token = $crawler->filter('input[name="_token"]')->attr('value');
+        $this->client->request('POST', '/rapports/archives', [
+            '_token' => $token, 'view' => 'archives', 'remove' => 'selection',
+            'selected' => [$this->keys[0], $this->keys[2], 'diplomatic:'.$diplomaticId],
+        ]);
+        self::assertResponseRedirects();
+
+        foreach (['/rapports', '/rapports?view=archives', '/rapports?view=archives&participant=ArchiveOwner'] as $url) {
+            $crawler = $this->client->request('GET', $url);
+            self::assertResponseIsSuccessful();
+            self::assertCount(0, $crawler->filter('.report-row'));
+        }
+        foreach (["/rapports/combat/$combat", "/rapports/espionnage/$spy", "/rapports/transport/$transport", "/rapports/diplomatie/$diplomaticId"] as $url) {
+            $this->client->request('GET', $url);
+            self::assertResponseStatusCodeSame(404);
+        }
+        $this->client->request('GET', '/simulateur?report='.$spy);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'Rapport inaccessible dans cet univers.');
+        self::assertSelectorNotExists('#simulation-intel option[value="'.$spy.'"]');
+
+        // Les identifiants et marqueurs de consultation restent présents en base.
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $connection = $em->getConnection();
+        self::assertSame(4, (int) $connection->fetchOne('SELECT COUNT(*) FROM report_archive WHERE player_universe_id = ? AND archived_at IS NOT NULL AND removed_at IS NOT NULL', [$memberId]));
+        foreach (['combat_log', 'espionage_report', 'transport_report', 'diplomatic_report'] as $table) {
+            self::assertSame(1, (int) $connection->fetchOne('SELECT COUNT(*) FROM '.$table));
+        }
+        $notices = self::getContainer()->get(\App\Repository\ReportNoticeRepository::class);
+        $currentMember = $em->find(\App\Entity\PlayerUniverse::class, $memberId);
+        $currentRecipient = $em->find(\App\Entity\PlayerUniverse::class, $recipientId);
+        self::assertSame([], $notices->unreadKeys($currentMember, $keys));
+        self::assertSame(0, $notices->count($currentMember));
+        self::assertFalse($notices->consult($currentMember, 'transport', $transport, new \DateTimeImmutable()));
+        self::assertSame(1, $notices->count($currentRecipient));
+
+        $this->client->loginUser($this->recipient);
+        $this->client->request('GET', "/rapports/transport/$transport");
+        self::assertResponseIsSuccessful();
+        $this->client->request('GET', "/rapports/combat/$combat");
+        self::assertResponseIsSuccessful();
+
+        $crawler = $this->client->request('GET', '/rapports?type=economy');
+        $recipientToken = $crawler->filter('input[name="_token"]')->attr('value');
+        $this->client->request('POST', '/rapports/archives', ['_token' => $recipientToken, 'operation' => 'archive', 'single' => $this->keys[2]]);
+        self::assertResponseRedirects();
+        $this->client->request('POST', '/rapports/archives', ['_token' => $recipientToken, 'remove' => $this->keys[2]]);
+        self::assertResponseRedirects();
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $repository = self::getContainer()->get(\App\Repository\GameRepository::class);
+        $currentRecipient = $em->find(\App\Entity\PlayerUniverse::class, $recipientId);
+        // Sans perdre l’identité du destinataire qui autorise composition et fret,
+        // la ligne ne propose plus de lien vers le rapport retiré.
+        self::assertSame([$fleetId => ['id' => $transport, 'removed' => true]], $repository->incomingTransportReportStates($currentRecipient, [$fleetId]));
+    }
+
+    public function testRemovalSelectionRejectsActiveForeignAndAlreadyRemovedReports(): void
+    {
+        $foreign = $this->transport($this->foreign, $this->foreign, '2026-11-12T15:00:00Z');
+        $this->em->flush();
+        $foreignId = $foreign->id;
+        $crawler = $this->client->request('GET', '/rapports');
+        $token = $crawler->filter('input[name="_token"]')->attr('value');
+        $this->client->request('POST', '/rapports/archives', ['_token' => $token, 'operation' => 'archive', 'selected' => [$this->keys[0]]]);
+        self::assertResponseRedirects();
+
+        foreach ([$this->keys[1], 'economy:'.$foreignId] as $unavailable) {
+            $this->client->request('POST', '/rapports/archives', [
+                '_token' => $token, 'view' => 'archives', 'remove' => 'selection', 'selected' => [$this->keys[0], $unavailable],
+            ]);
+            self::assertResponseRedirects();
+            $crawler = $this->client->followRedirect();
+            self::assertCount(1, $crawler->filter('.report-row'));
+            self::assertSelectorTextContains('body', 'Aucun changement appliqué.');
+        }
+        $this->client->request('POST', '/rapports/archives', ['_token' => 'forged', 'remove' => $this->keys[0]]);
+        self::assertResponseStatusCodeSame(403);
+        $this->client->request('POST', '/rapports/archives', ['_token' => $token, 'remove' => $this->keys[0]]);
+        self::assertResponseRedirects();
+        $this->client->request('POST', '/rapports/archives', ['_token' => $token, 'operation' => 'restore', 'single' => $this->keys[0]]);
+        self::assertResponseRedirects();
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('body', 'Aucun changement appliqué.');
+        $this->client->request('GET', '/rapports?type=combat');
+        self::assertSelectorNotExists('.report-row');
+    }
+
 }

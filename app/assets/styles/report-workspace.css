@@ -192,7 +192,8 @@ body[data-theme=light] .core-report-state.is-risk { color:#92283a; }
 .player-report-board .report-row :is(.report-copy,.badge,.player-report-location,time) { min-width:0; white-space:normal; overflow-wrap:anywhere; }
 .player-report-board .report-row :is(.player-report-location,time) { color:var(--muted); font-size:.8rem; }
 .player-report-board .report-select { min-width:0; width:100%; }
-.player-report-board .report-archive-action { align-self:center; justify-self:end; }
+.player-report-board .report-archive-actions { display:flex; flex-wrap:wrap; gap:.3rem; align-items:center; justify-content:flex-end; }
+.player-report-board .report-archive-action { min-width:0; }
 @media (max-width:1200px) {
     .player-report-layout { grid-template-columns:minmax(0,1.9fr) minmax(14rem,1fr); }
     .player-report-layout .report-search { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -206,7 +207,7 @@ body[data-theme=light] .core-report-state.is-risk { color:#92283a; }
     .player-report-board .report-archive-entry { grid-template-columns:2.25rem minmax(0,1fr); column-gap:.2rem; }
     .player-report-board .report-row { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
     .player-report-board .report-copy { grid-column:1 / -1; }
-    .player-report-board .report-archive-action { grid-column:2; justify-self:start; margin:.25rem .45rem .55rem; min-height:44px; }
+    .player-report-board .report-archive-actions { grid-column:2; justify-content:flex-start; margin:.25rem .45rem .55rem; }
 }
 
 /* P02/P03/P16 : le détail reste une vraie page ; les ancres ne créent ni faux onglet ni lecture implicite. */
@@ -335,3 +336,13 @@ html[data-theme="light"] .player-report-detail {
 .pirate-recon-report .report-summary .secondary {
     display: inline-flex;
 }
+/* Conserver un libellé explicite : la couleur avertit, sans porter seule le sens de l’action. */
+.reports-workspace { --report-remove-color:#ff8f8f; }
+[data-theme="light"] .reports-workspace { --report-remove-color:#9f2936; }
+.reports-workspace .report-remove-action:not(:disabled) {
+    color:var(--report-remove-color);
+    background:var(--panel);
+    border-color:color-mix(in srgb,var(--report-remove-color) 55%,var(--line));
+}
+.reports-workspace .report-remove-action:not(:disabled):hover { background:color-mix(in srgb,var(--report-remove-color) 10%,var(--panel)); }
+.reports-workspace .report-selection .report-remove-action { min-height:44px; }

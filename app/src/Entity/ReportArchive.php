@@ -17,4 +17,6 @@ class ReportArchive
     public int $reportId;
     #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $archivedAt = null;
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $removedAt = null;
 }
