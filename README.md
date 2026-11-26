@@ -651,8 +651,10 @@ préparée pour ce stock, sans application à la base habituelle.
 Le centre de rapports mélange combats, renseignements et transports du plus récent
 au plus ancien, avant pagination (50 par page). Les filtres et le choix
 Rapports actifs / Archives personnelles restent conservés en navigation.
-L’archivage individuel ou par sélection est personnel et restaurable ; les preuves
-et l’accès autorisé aux rapports restent conservés.
+L’archivage individuel ou par sélection est personnel et restaurable. Depuis
+les archives, la suppression individuelle ou par sélection retire le rapport
+de vos listes, de la consultation directe et du simulateur. Elle n’efface
+ni le rapport en base ni l’accès des autres joueurs autorisés.
 
 La présentation A garde les effectifs par flotte, unité et rang, puis la comparaison
 des camps à chaque round. Le premier round est ouvert ; les suivants sont dépliables.

@@ -11,7 +11,7 @@ export default class extends Controller {
     disconnect() {
         // Le formulaire reste utilisable si le contrôleur est déconnecté ou absent.
         this.allLabelTarget.hidden = true;
-        this.submitTarget.disabled = false;
+        this.submitTargets.forEach(button => { button.disabled = false; });
     }
 
     toggleAll() {
@@ -23,7 +23,7 @@ export default class extends Controller {
         const selected = this.itemTargets.filter(item => item.checked).length;
         this.allTarget.checked = selected > 0 && selected === this.itemTargets.length;
         this.allTarget.indeterminate = selected > 0 && selected < this.itemTargets.length;
-        this.submitTarget.disabled = selected === 0;
+        this.submitTargets.forEach(button => { button.disabled = selected === 0; });
         this.countTarget.textContent = selected ? `${selected} rapport${selected > 1 ? 's' : ''} sélectionné${selected > 1 ? 's' : ''}` : '';
     }
 }

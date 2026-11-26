@@ -101,12 +101,12 @@ final class FleetVisibility
                 $transportIds[] = $fleet->id;
             }
         }
-        $reportIds = $this->repo->incomingTransportReportIds($viewer, $transportIds);
+        $reports = $this->repo->incomingTransportReportStates($viewer, $transportIds);
         $detailIds = [];
         $enemies = [];
         if ($includeDetails) {
             foreach ($visible as $fleet) {
-                if ($this->canShareDeparture($viewer, $fleet, $known, $now, isset($reportIds[$fleet->id]), $enemies)) {
+                if ($this->canShareDeparture($viewer, $fleet, $known, $now, isset($reports[$fleet->id]), $enemies)) {
                     $detailIds[] = $fleet->id;
                 }
             }
@@ -115,8 +115,9 @@ final class FleetVisibility
         $rows = [];
         foreach ($visible as $fleet) {
             $row = $this->row($viewer, $fleet, $known, $shipsByFleet[$fleet->id] ?? []);
-            if (isset($reportIds[$fleet->id])) {
-                $row['transportReportId'] = $reportIds[$fleet->id];
+            // Le retrait du rapport masque le lien, pas la flotte ni son manifeste autorisé.
+            if (isset($reports[$fleet->id]) && !$reports[$fleet->id]['removed']) {
+                $row['transportReportId'] = $reports[$fleet->id]['id'];
             }
             if (isset($departures[$fleet->id])) {
                 $detail = $this->departureDetail($viewer, $fleet->mission, $departures[$fleet->id]);
