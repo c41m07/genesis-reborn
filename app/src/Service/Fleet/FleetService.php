@@ -88,11 +88,13 @@ final class FleetService
             }
         }
         $quote=$this->calculator->quote($this->coords($origin->solarSystem,$origin->position),$this->coords($system,$target instanceof Planet?$target->position:null),$ships,$ratio,$config['multipliers']['travel_time'],$this->catalog->rules()['fuel_ratio_policy'],$windowHours);
-        // Les soutes supplémentaires ne remplacent pas les réservoirs : le
-        // contrôle de la capacité du carburant ci-dessous garde la valeur de base.
-        $extraFreight = $quote['cargo_capacity'] * ($freightFactor - 1.0);
-        $quote['cargo_capacity'] += $extraFreight;
-        $quote['freight_capacity'] += $extraFreight;
+        if ($freightFactor > 1.0) {
+            // L’ajout concerne seulement le fret ; sans bonus, le devis conserve
+            // exactement son contrat d’origine (dont le zéro entier des sondes).
+            $extraFreight = $quote['cargo_capacity'] * ($freightFactor - 1.0);
+            $quote['cargo_capacity'] += $extraFreight;
+            $quote['freight_capacity'] += $extraFreight;
+        }
         $shipsAdjusted=$adjusted;
         $requestedCargo=[];
         foreach($cargo as $resource=>$amount) {
