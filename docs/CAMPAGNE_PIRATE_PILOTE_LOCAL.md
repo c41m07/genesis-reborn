@@ -44,6 +44,19 @@
 - L’aperçu puis la confirmation sont inchangés : le formulaire ne transmet que les choix liés au
   devis, et le serveur les revalide au départ. Afficher ou vérifier le devis ne lance pas d’attaque.
 
+## Suivre le trajet et recevoir le titre final
+
+- Depuis **Flottes** ou **Vue générale**, le joueur voit le temps restant et la progression
+  depuis le départ constaté. La composition reprend les vaisseaux partis ou les survivants
+  réservés. Le convoi affiche le fret de son droit, jamais un nombre de vaisseaux inventé.
+- Dans **Galaxie**, le journal suit l’échéance ; la carte relie deux systèmes seulement
+  lorsqu’ils sont connus du propriétaire. Si elle ne dispose que d’une ancre (notamment la
+  sonde avant son rapport), elle marque cette ancre sans révéler de direction. Ni la guilde
+  ni les autres commandants ne reçoivent ces trajets. L’échéance dépassée ne prouve pas l’arrivée.
+- La victoire de la mission 20, **La nuit se brise**, débloque le titre
+  **Chasseur de Pirate amateur** une fois par compte. Le titre est à équiper dans le profil ;
+  aucun réglage ni titre existant n’est remplacé. Ce lot ne réattribue pas les victoires antérieures.
+
 ## Pour l'exploitation lors d'un déploiement décidé par l'opérateur
 
 1. Lancer le processus habituel de validation et de migrations du dépôt avant l’ouverture.
