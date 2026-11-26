@@ -1,4 +1,5 @@
 {% extends 'base.html.twig' %}
+{% from 'ui/espionage_report_title.html.twig' import title as espionageTitle %}
 {% block title %}Simulateur de combat · Genesis Reborn{% endblock %}
 {% block body %}
 {% set steps = {
@@ -73,7 +74,7 @@
                         <h3 id="simulation-recap-title">Récapitulatif des deux camps</h3>
                         <div class="simulation-wizard-camps">
                             <div><strong>Attaquant</strong><p>{{ own_source ? 'Vaisseaux et recherches repris de votre empire, avec vos ajustements.' : 'Vaisseaux et recherches saisis manuellement.' }} Les défenses fixes ne s’appliquent pas.</p></div>
-                            <div><strong>Défenseur</strong><p>{% if intel %}Rapport n°{{ intel.id }} ; les données non révélées et vos ajustements restent des hypothèses.{% else %}Vaisseaux, défenses et recherches saisis manuellement.{% endif %}</p></div>
+                            <div><strong>Défenseur</strong><p>{% if intel %}{{ espionageTitle(intel.targetName) }} ; les données non révélées et vos ajustements restent des hypothèses.{% else %}Vaisseaux, défenses et recherches saisis manuellement.{% endif %}</p></div>
                         </div>
                     </section>
                     <div class="simulation-board-options simulation-wizard-options">
