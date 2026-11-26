@@ -708,13 +708,14 @@ final class GameRepository
         return $this->em->createQueryBuilder()->select('r')->from(\App\Entity\EspionageReport::class, 'r')->where('r.sender = :membership')->setParameter('membership', $membership)->orderBy('r.createdAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();
     }
 
-    /** @return list<array{id: int, createdAt: \DateTimeImmutable}> */
+    /** @return list<array{id: int, createdAt: \DateTimeImmutable, targetName: string}> */
     public function recentEspionageReportOptions(PlayerUniverse $membership): array
     {
-        // Le sélecteur n’a besoin ni du contenu du rapport ni de l’état actuel de la cible.
+        // Seul le nom affiché dans Rapports est lu, sans charger les données de la sonde.
         return $this->em->createQueryBuilder()
-            ->select('r.id', 'r.createdAt')
+            ->select('r.id', 'r.createdAt', 'target.name AS targetName')
             ->from(\App\Entity\EspionageReport::class, 'r')
+            ->join('r.target', 'target')
             ->where('r.sender = :membership')
             ->setParameter('membership', $membership)
             ->orderBy('r.createdAt', 'DESC')
