@@ -956,10 +956,13 @@ possédée et découverte. Sans solution, l’attente persiste.
 
 L’administration choisit la période de visibilité dans chaque univers. Les portes du 1er au 24 décembre s’ouvrent à minuit à Paris. Chaque compte peut rattraper les jours passés pendant la période et obtenir un lot par porte pour toute la saison. À l’heure de fermeture, la page et les portes ferment. Les lots déjà réservés restent retirables dans l’inventaire. [Détail du calendrier et des réservations](CALENDRIER_AVENT.md).
 
+## Bourse de ressources
+
+La station commerciale A:0:0, ouverte par univers, échange les quatre matériaux sans électricité. Le lot voyage sur les propres cargos du joueur, protégés en mission commerciale. Il est échangé en station après 30 minutes, puis livré après les 30 minutes du retour. Les frais d’essai sont de 2 %. Vendredi à 9 h à Paris, les marchands réapprovisionnent jusqu’à la moitié des ventes réelles hebdomadaires de la station, sans dépasser la cible ni modifier les cours. [Détail du parcours et du stock](BOURSE_DE_RESSOURCES.md).
 
 ## Bonus quotidiens temporaires
 
-Un retrait quotidien par **compte**, tous univers confondus, à minuit heure de Europe/Paris. Une date manquée n’efface pas le cycle des sept cadeaux. Le cadeau reste dans l’inventaire de l’univers actif, sans modifier les stocks d’une colonie. En cas d’inventaire plein, l’objet attend une place. Il expire même en attente sept jours (168 h) après le retrait. L’activation manuelle ouvre une fenêtre de cinq heures ; un seul bonus temporaire peut être actif à la fois. Les boosts instantanés déjà détenus restent utilisables séparément.
+Un retrait quotidien par **compte**, tous univers confondus. Le jour change à minuit, heure de Paris. Une date manquée n’efface pas le cycle des sept cadeaux. Le cadeau reste dans l’inventaire de l’univers actif, sans modifier les stocks d’une colonie. En cas d’inventaire plein, l’objet attend une place. Il expire même en attente sept jours (168 h) après le retrait. L’activation manuelle ouvre une fenêtre de cinq heures ; un seul bonus temporaire peut être actif à la fois. Les boosts instantanés déjà détenus restent utilisables séparément.
 
 | Jour | Cadeau | Effet |
 | --- | --- | --- |
