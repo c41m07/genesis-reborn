@@ -42,7 +42,6 @@
             {% if consolidated or pending %}<a class="secondary" href="#advent-rewards">Cadeaux et réserves</a>{% endif %}
         </div>
     </div>
-    <p class="advent-destination">Les nouveaux lots de matériaux et de vaisseaux rejoignent <a href="{{ path('app_inventory_boxes') }}">Inventaire · Boîtes</a>. Choisissez la colonie au moment de les ouvrir, au plus tard le 31 décembre, heure de Paris. Les anciens lots réservés et les bons restent dans <a href="{{ path('app_inventory_pending') }}">Récompenses en attente</a>.</p>
     {% if consolidated %}
         <section class="panel advent-universe" aria-labelledby="advent-universe-status">
             <h2 id="advent-universe-status">Univers de cette édition</h2>
@@ -72,6 +71,7 @@
         <section class="panel advent-calendar" aria-labelledby="advent-calendar-title">
             <h2 id="advent-calendar-title">Choisir une porte</h2>
             <p>Récupérez les portes ouvertes avant le {{ window.visibleUntil|date('d/m/Y', 'Europe/Paris') }} à {{ window.visibleUntil|date('H:i', 'Europe/Paris') }}, heure de Paris.</p>
+            <p class="advent-destination">Dans <a href="{{ path('app_inventory_boxes') }}">Inventaire · Boîtes</a>, choisissez une colonie et ouvrez vos lots jusqu’au 31 décembre, heure de Paris.</p>
             <ul class="advent-meta" aria-label="Contexte de l’édition">
                 {% if consolidated and binding %}<li class="badge">{{ bracketLabels[binding.bracket] }}</li>{% endif %}
                 <li class="badge">Univers actif : {{ membership.universe.name }}</li>
