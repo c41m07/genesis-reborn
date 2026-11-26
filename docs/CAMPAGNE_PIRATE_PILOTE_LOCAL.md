@@ -18,6 +18,32 @@
   les mêmes valeurs par défaut dans leur propre base. Ne pas confondre le mode Symfony et la cible
   de déploiement.
 
+## Renseignement et simulation
+
+- À partir de la remise effective par le worker, ouvrir **Ouvrir le rapport d’espionnage** dans le
+  dossier. La sonde reste perdue, qu’elle ait été repérée ou non. Le rapport reste privé à la
+  participation active : un autre commandant ou un univers désactivé ne peut pas le consulter.
+- **Reprendre ces renseignements dans le simulateur** charge exclusivement la défense pirate
+  figée pour le combat réel : effectifs par rang, profils, modificateurs, nombre de rounds et
+  recharge des boucliers. Il n’y a ni défense fixe, ni forteresse, ni recherche indépendante
+  côté pirate. Les vaisseaux partent au premier round. Le joueur conserve la saisie de l’escorte ;
+  les essais n’envoient aucun vaisseau et ne prétendent pas prévoir l’issue réelle.
+- Un relevé historique sans scénario figé affiche seulement la composition connue, sans import
+  approximatif. Le rapport est une lecture de la reconnaissance existante, sans nouveau
+  journal d’espionnage de planète, et sans second envoi de sonde. Il s’ouvre depuis le dossier
+  pirate, pas depuis le sélecteur des rapports planétaires du simulateur.
+
+## Choix de l’escorte
+
+- Le dossier d’une reconnaissance terminée reprend le tableau de préparation de Flottes :
+  une ligne par type admissible, trois rangs et le stock réel de la colonie active. Un rang
+  sans unité mobilisable est affiché à zéro et non saisissable ; les types non admis à l’attaque
+  ne sont pas proposés.
+- Les quantités restent saisissables sans JavaScript. Avec JavaScript, Max tient compte du stock
+  et de la limite totale après les unités déjà choisies dans les autres cases.
+- L’aperçu puis la confirmation sont inchangés : le formulaire ne transmet que les choix liés au
+  devis, et le serveur les revalide au départ. Afficher ou vérifier le devis ne lance pas d’attaque.
+
 ## Pour l'exploitation lors d'un déploiement décidé par l'opérateur
 
 1. Lancer le processus habituel de validation et de migrations du dépôt avant l’ouverture.

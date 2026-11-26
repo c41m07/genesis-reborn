@@ -74,6 +74,23 @@ final readonly class PirateCampaignReadRepository
         ], $recons);
     }
 
+    public function deliveredReconnaissance(PlayerUniverse $viewer, int $id, \DateTimeImmutable $at): ?PirateReconnaissance
+    {
+        if ($viewer->id === null || $viewer->player?->id === null) {
+            return null;
+        }
+
+        // Un identifiant ou une heure d'arrivée prévue ne confère pas l'accès au rapport.
+        return $this->scope($this->em->createQueryBuilder()->select('mission', 'system', 'galaxy')
+            ->from(PirateReconnaissance::class, 'mission')
+            ->join('mission.membership', 'seat')->join('mission.system', 'system')->join('system.galaxy', 'galaxy'),
+            $viewer->player->id, $viewer->id, $at)
+            ->andWhere('mission.id = :id AND IDENTITY(mission.owner) = scopeOwner.id AND IDENTITY(galaxy.universe) = realm.id')
+            ->andWhere('mission.reportedAt <= :now AND mission.dueAt <= :now')
+            ->setParameter('id', $id)
+            ->getQuery()->setHint(Query::HINT_REFRESH, true)->getOneOrNullResult();
+    }
+
     private function scope(QueryBuilder $query, int $accountId, int $membershipId, \DateTimeImmutable $at): QueryBuilder
     {
         // La sélection active est relue en base : un contexte d'authentification périmé ne suffit pas.

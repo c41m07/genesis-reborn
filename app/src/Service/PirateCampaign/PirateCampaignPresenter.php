@@ -128,6 +128,8 @@ final readonly class PirateCampaignPresenter
             $quote === null ? null : $this->rewardRows($quote),
         ) + [
             'may_offer_recovery' => $progress['may_offer_recovery'],
+            'recon_report_id' => $formation !== null ? $reconnaissance->id : null,
+            'combat_rounds' => $progress['combat_rounds'],
             // Ce marqueur indique uniquement la composition de la vue, pas la disponibilité d’une attaque.
             'intelligence_received' => $progress['phase'] === PirateCampaignMoment::RenseignementRecu->name,
         ];

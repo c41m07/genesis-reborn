@@ -30,14 +30,14 @@ final class PlayerCombatSimulationQueue
      * @param array $prepared Statistiques calculées avec le catalogue au moment de la demande.
      * @param array $rows Libellés et effectifs d’origine figés pour le bilan.
      */
-    public function enqueue(PlayerUniverse $owner, array $prepared, array $rows, int $seed, int $report = 0, int $ownSource = 0): PlayerCombatSimulationJob
+    public function enqueue(PlayerUniverse $owner, array $prepared, array $rows, int $seed, int $report = 0, int $ownSource = 0, int $pirateReport = 0): PlayerCombatSimulationJob
     {
         $player = $owner->player;
         if ($player === null || !$owner->isPlayerControlled()) {
             throw new \DomainException('Simulation inaccessible.');
         }
 
-        $accepted = $this->manager->transaction(function () use ($player, $owner, $prepared, $rows, $seed, $report, $ownSource): ?PlayerCombatSimulationJob {
+        $accepted = $this->manager->transaction(function () use ($player, $owner, $prepared, $rows, $seed, $report, $ownSource, $pirateReport): ?PlayerCombatSimulationJob {
             // Le verrou du joueur existe avant le premier calcul et couvre toutes ses appartenances.
             // Limiter une demande lourde en cours par compte empêche de remplir la file en changeant d’univers.
             $this->manager->lockCurrent($player);
@@ -47,7 +47,13 @@ final class PlayerCombatSimulationQueue
             }
             $now = $this->now();
             if ($job instanceof PlayerCombatSimulationJob && $job->status === 'pending' && $job->expiresAt > $now) {
-                if ($job->membership->id === $owner->id && $job->scenario['seed'] === $seed && $job->scenario['prepared']['forces'] == $prepared['forces']) {
+                // Deux rapports peuvent avoir les mêmes effectifs, mais des règles ou profils figés différents.
+                $existingPirateReport = $job->scenario['pirate_report'] ?? 0;
+                $sameScenario = $pirateReport > 0
+                    ? $job->scenario['prepared'] == $prepared
+                    : $job->scenario['prepared']['forces'] == $prepared['forces'];
+                if ($job->membership->id === $owner->id && $job->scenario['seed'] === $seed
+                    && $existingPirateReport === $pirateReport && $sameScenario) {
                     return $job;
                 }
 
@@ -61,6 +67,10 @@ final class PlayerCombatSimulationQueue
             $job->dispatchToken = Uuid::v4()->toRfc4122();
             $job->status = 'pending';
             $job->scenario = ['prepared' => $prepared, 'seed' => $seed, 'rows' => $rows, 'report' => $report, 'own_source' => $ownSource];
+            if ($pirateReport > 0) {
+                // Ajouter la référence sans changer le format des jobs historiques.
+                $job->scenario['pirate_report'] = $pirateReport;
+            }
             $job->trials = [];
             $job->expiresAt = $now->modify('+24 hours');
             $this->manager->save($job);

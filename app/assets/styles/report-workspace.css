@@ -327,3 +327,11 @@ html[data-theme="light"] .player-report-detail {
 }
 .player-report-board .player-report-type { min-width:0; display:grid; justify-items:start; gap:.2rem; }
 .player-report-board .player-report-kind { font-size:.82rem; color:var(--text); }
+
+/* Les coordonnées et la date du renseignement doivent rester lisibles sur les deux fonds du shell. */
+.pirate-recon-report .report-heading > p:last-child {
+    color: var(--text);
+}
+.pirate-recon-report .report-summary .secondary {
+    display: inline-flex;
+}

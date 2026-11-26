@@ -18,7 +18,8 @@ final class PirateCampaignProgress
      *
      * @return array{
      *   key: string, phase: string, narrative: array, composition: ?array, return_narrative: ?array,
-     *   tactical_guidance: ?string, dates: array<string,string>, own_losses: ?array<string,array<string,int>>, returning: ?string
+     *   tactical_guidance: ?string, dates: array<string,string>, own_losses: ?array<string,array<string,int>>, returning: ?string,
+     *   combat_rounds: ?int, may_offer_recovery: bool
      * }|null
      */
     public function forViewer(
@@ -36,6 +37,7 @@ final class PirateCampaignProgress
         $phase = PirateCampaignMoment::ReconnaissanceEnRoute;
         $returnNarrative = null;
         $losses = null;
+        $combatRounds = null;
         $returning = null;
         $mayOfferRecovery = false;
         $dates = ['scout_departure' => $scout['departed_at'], 'scout_due' => $scout['due_at']];
@@ -59,6 +61,7 @@ final class PirateCampaignProgress
                 } elseif ($phase !== PirateCampaignMoment::AttaqueEngagee) {
                     $dates['combat_reported'] = $attack->timeline['resolved'];
                     $losses = $this->escortLosses($attack->report['losses'] ?? null);
+                    $combatRounds = $attack->report['rounds_played'] ?? null;
                     if ($attack->returnBlocked && $attack->reservedShips !== [] && isset($attack->timeline['pilot_return'])) {
                         // Le statut privé ne peut pas être confondu avec un retour livré au hangar.
                         $returning = 'blocked';
@@ -107,6 +110,7 @@ final class PirateCampaignProgress
                 : null,
             'dates' => $dates,
             'own_losses' => $losses,
+            'combat_rounds' => $combatRounds,
             'returning' => $returning,
             'may_offer_recovery' => $mayOfferRecovery,
         ];
