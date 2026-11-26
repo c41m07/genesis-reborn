@@ -1,7 +1,7 @@
 <?php
 namespace App\Service\Player;
 
-use App\Entity\{Fleet,FleetShip,Planet,PlanetBuilding,PlanetDefense,PlayerTechnology,PlayerUniverse};
+use App\Entity\{Fleet,FleetShip,MarketTrade,Planet,PlanetBuilding,PlanetDefense,PlayerTechnology,PlayerUniverse};
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 
@@ -55,6 +55,21 @@ final class LeaderboardService
             $row = &$rows[$ship->fleet->playerUniverse->id];
             $row['fleet_resources'] += $this->unitCost($universe, 'ships', $ship->slug, $ship->quantity, $ship->tier);
             $row['ship_units'] += $ship->quantity;
+            unset($row);
+        }
+        // Le couloir protège ces cargos en les séparant des flottes de combat,
+        // sans retirer leur valeur du classement ni de la protection du joueur.
+        foreach ($this->repo->all(MarketTrade::class, [
+            'universe' => $universe, 'status' => ['outbound', 'returning', 'awaiting_colony'],
+        ]) as $trade) {
+            if (!isset($rows[$trade->membershipId])) {
+                continue;
+            }
+            $row = &$rows[$trade->membershipId];
+            foreach ($trade->ships as $rank => $quantity) {
+                $row['fleet_resources'] += $this->unitCost($universe, 'ships', 'transport', $quantity, $rank);
+                $row['ship_units'] += $quantity;
+            }
             unset($row);
         }
         foreach ($this->repo->all(PlanetDefense::class, ['planet' => $planets]) as $defense) {

@@ -37,6 +37,7 @@
             <h2>Calendrier</h2>
             {% include 'admin/_universe_calendar.html.twig' %}
             <p><a class="secondary" href="{{ path('app_admin_resource_boxes', {id: universe.id}) }}">Modèles de boîtes de ressources</a></p>
+            <p><a class="secondary" href="{{ path('app_admin_market', {id: universe.id}) }}">Bourse de ressources</a></p>
         </section>
         <section class="panel admin-universe-configuration">
             <h2>Configuration</h2>

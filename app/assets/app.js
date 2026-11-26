@@ -88,3 +88,5 @@ import './styles/admin-challenges-workspace.css';
 import './styles/admin-patchnotes-workspace.css';
 import './styles/admin-ops-workspace.css';
 import './styles/wiki-workspace.css';
+
+import './styles/market-workspace.css';
