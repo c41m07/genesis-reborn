@@ -222,7 +222,7 @@ test('Projets sans JavaScript : lancement, don et historique restent accessibles
     await expect(page.locator('.flash.success')).toContainText('Don enregistré');
     await expect(recap).toContainText('Métal : 2 / 2');
     await expect(recap).toContainText('Minimums atteints');
-    await expect(page.locator('.guild-stage-progress progress')).toHaveAttribute('value', '2');
+    await expect(page.locator('.guild-stage-progress').getByRole('progressbar', { name: 'Métal', exact: true })).toHaveAttribute('value', '2');
     await expect(page.getByLabel('Don Métal', { exact: true })).toHaveAttribute('max', '8');
     const auditContext = await browser.newContext({ baseURL, storageState: await context.storageState() });
     try {
