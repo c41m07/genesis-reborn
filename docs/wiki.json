@@ -163,8 +163,8 @@
     "title": "Coûts, durées et bonus de recherche",
     "paragraphs": [
       "Le premier niveau Basique conserve les matériaux du catalogue. En Intermédiaire et Supérieur, le budget d’entrée vaut 110 % du prix du seul niveau exigé du prérequis admissible le plus cher, avant remise et hors électricité. Pour une recherche, seules les recherches de sa famille entrent dans la comparaison. Pour un producteur, un dépôt, le laboratoire, le chantier spatial ou le bunker, comparez tous les bâtiments et recherches exigés. Le budget est réparti selon le profil du rang à construire.",
-      "Par défaut, les parts de valeur métal/nano/antimatière/hydrogène sont 48/52/0/0 en Basique, 34/36/30/0 en Intermédiaire et 28/31/31/10 en Supérieur. La pondération vaut 2 pour le métal, 4 pour le nano, 8 pour l’antimatière et 1 pour l’hydrogène. Elle sert à répartir les prix et ne permet pas d’échanger les ressources. Les réglages de l’univers restent prioritaires ; une commande déjà payée conserve son coût et sa durée.",
-      "Dans les références actuelles, une réduction de durée est plafonnée à 70 % et une réduction de coût à 40 %. Le laboratoire réduit la durée des recherches, le chantier celle des vaisseaux. Les défenses ne reçoivent aucune réduction de durée du chantier ou du bunker."
+      "Par défaut, les parts de valeur métal/nano/antimatière/hydrogène sont 48/52/0/0 en Basique, 34/36/30/0 en Intermédiaire et 28/31/31/10 en Supérieur. La pondération vaut 2 pour le métal, 4 pour le nano, 8 pour l’antimatière et 1 pour l’hydrogène. Elle sert à répartir les prix et ne permet pas d’échanger les ressources. Les réglages de l’univers restent prioritaires. Une commande déjà payée conserve son coût et ses paramètres d’achat ; les gains de vitesse peuvent réduire le travail restant.",
+      "Le laboratoire et le chantier plafonnent à 89,5 % à 25/25/25 pour les recherches lancées sur cette colonie et pour ses vaisseaux. La réduction de durée des bâtiments reste plafonnée à 70 % et celle des coûts à 40 %. Les défenses ne reçoivent aucune réduction de durée du chantier ou du bunker."
     ],
     "calculations": [
       {
@@ -185,8 +185,8 @@
         "title": "Comprendre les rendements décroissants",
         "explanation": "Le laboratoire accélère les recherches de la colonie de lancement, le chantier accélère ses vaisseaux et le bunker renforce la structure de ses défenses au sol. Les contributions des rangs s’additionnent. Pour les technologies à rendement décroissant, la même courbe s’applique avec des niveaux pondérés sans bonus composé.",
         "formula": "Infrastructures : A(B,I,S) = B × 1,0025^B + 1,25 × I × 1,005^I + 1,5625 × S × 1,01^S\nTechnologies à rendement décroissant : A(B,I,S) = B + 1,25 × I + 1,5625 × S\nx = A(B,I,S) / A(m,m,m)\nEffet = maximum de l’effet × ln(1 + 2 × x) / ln(3)",
-        "variables": ["B, I et S sont les niveaux des trois rangs. Le maximum m vaut 25 pour le laboratoire et le chantier, et 10 pour le bunker.", "Le maximum de l’effet vaut 70 % pour le laboratoire et le chantier, et 25 % pour le bunker."],
-        "example": "Un laboratoire 10/10/1 réduit la durée de recherche de 23,48 %. Un chantier 20/20/1 réduit la durée de construction des vaisseaux de 40,76 %. Un bunker 8/8/1 ajoute 15,67 % de structure."
+        "variables": ["B, I et S sont les niveaux des trois rangs. Le maximum m vaut 25 pour le laboratoire et le chantier, et 10 pour le bunker.", "Le maximum de l’effet vaut 89,5 % pour le laboratoire et le chantier, et 25 % pour le bunker."],
+        "example": "Un laboratoire 10/10/1 réduit la durée de recherche de 30,02 %. Un chantier 20/20/1 réduit la durée de construction des vaisseaux de 52,12 %. À 25/25/25, une durée nominale de 10 h tombe à 1 h 03 min. Un bunker 8/8/1 ajoute 15,67 % de structure."
       },
       {
         "title": "Calculer votre limite de planètes",

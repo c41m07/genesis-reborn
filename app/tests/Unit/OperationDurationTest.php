@@ -3,7 +3,7 @@ namespace App\Tests\Unit;
 
 use App\Entity\Universe;
 use App\Service\Catalog\GameCatalog;
-use App\Service\Queue\OperationCalculator;
+use App\Service\Queue\{LiveQueueTiming, OperationCalculator};
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -60,12 +60,12 @@ final class OperationDurationTest extends TestCase
         }
     }
 
-    public function testSeventyPercentReductionDoesNotCreateAnExtraSecondOrElectricMinute(): void
+    public function testMaximumInfrastructureReductionDoesNotCreateAnExtraSecondOrElectricMinute(): void
     {
         $catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');$calculator=new OperationCalculator($catalog);
         $universe=new Universe();$universe->slug='duration-x1';$universe->name='Durées';$config=$catalog->forUniverse($universe);
         $maximum=['basic'=>25,'intermediate'=>25,'superior'=>25];
-        foreach (['basic'=>25920,'intermediate'=>32400,'superior'=>40500] as $tier=>$expected) {
+        foreach (['basic'=>9072,'intermediate'=>11340,'superior'=>14175] as $tier=>$expected) {
             $definition=$catalog->getTierForUniverse($universe,'ships','capital',$tier);
             $plan=$calculator->calculate($definition,'ships',1,1,['shipyard'=>$maximum],$config);
             self::assertSame($expected,$plan['duration']);
@@ -75,7 +75,58 @@ final class OperationDurationTest extends TestCase
         }
         $colony=$calculator->calculate($catalog->getTierForUniverse($universe,'technologies','colonial_expansion','basic'),
             'technologies',1,1,['lab'=>$maximum],$config);
-        self::assertSame(8640,$colony['duration']);self::assertSame(14400,$colony['costs']['electricity']);
+        self::assertSame(3024,$colony['duration']);self::assertSame(5100,$colony['costs']['electricity']);
+    }
+
+    public function testBothInfrastructuresUseTheSameCurveAndPreservePrecisionInQuotesAndQueueSnapshots(): void
+    {
+        $catalog = new GameCatalog(dirname(__DIR__, 2).'/config/game');
+        $calculator = new OperationCalculator($catalog);
+        $universe = new Universe();
+        $universe->slug = 'duration-x1';
+        $universe->name = 'Durées';
+        $config = $catalog->forUniverse($universe);
+
+        // Valeurs de référence calculées sur 10 h sans arrondir le pourcentage en amont.
+        $cases = [
+            [[20, 20, 20], 76.20, 8568],
+            [[21, 20, 20], 76.83, 8342],
+            [[20, 21, 20], 77.07, 8256],
+            [[20, 20, 21], 77.51, 8098],
+            [[25, 25, 24], 88.29, 4216],
+            [[25, 25, 25], 89.50, 3780],
+        ];
+        foreach (['technologies' => ['engineering_foundations', 'research_time_base', 'lab'],
+            'ships' => ['fighter', 'build_time_base', 'shipyard']] as $group => [$slug, $baseField, $infrastructure]) {
+            $definition = $catalog->getTierForUniverse($universe, $group, $slug, 'basic');
+            $definition[$baseField] = 36000;
+            $quoteWithoutBonus = $calculator->calculate($definition, $group, 1, 1, [], $config);
+            foreach ($cases as [$rankLevels, $expectedPercent, $expectedSeconds]) {
+                $levels = array_combine(GameCatalog::TIERS, $rankLevels);
+                $buildings = [$infrastructure => $levels];
+                $quote = $calculator->calculate($definition, $group, 1, 1, $buildings, $config);
+                $plan = $calculator->calculateQueuePlan($definition, $group, 1, 1, $buildings, $config, []);
+                self::assertSame(89.5, $plan['live_timing']['cap']);
+                $effectivePercent = 100 * (1 - $plan['raw_duration'] / 36000);
+                self::assertSame($expectedPercent, round($effectivePercent, 2));
+                self::assertSame($expectedSeconds, $quote['duration']);
+                self::assertSame($quote['duration'], $plan['duration']);
+                self::assertSame($quote['duration'], LiveQueueTiming::fullDuration($plan['live_timing'], $levels));
+                self::assertSame($quote['costs'], $plan['costs']);
+                $materials = $quote['costs'];
+                unset($materials['electricity']);
+                self::assertSame(array_diff_key($quoteWithoutBonus['costs'], ['electricity' => true]), $materials);
+                self::assertSame(100 * (int) ceil($expectedSeconds / 60), $quote['costs']['electricity']);
+            }
+        }
+
+        // La technologie qui réduit le temps de construction des bâtiments garde son plafond propre.
+        $definition = $catalog->getTierForUniverse($universe, 'buildings', 'mine_metal', 'basic');
+        $plan = $calculator->calculateQueuePlan($definition, 'buildings', 1, 1, [], $config, [
+            'engineering_foundations' => array_fill_keys(GameCatalog::TIERS, 25),
+        ]);
+        self::assertSame(70.0, $plan['live_timing']['cap']);
+        self::assertSame(18, $plan['duration']);
     }
 
     public function testDefensesKeepTheirDurationDespiteAllBuildingAndResearchBonuses(): void
