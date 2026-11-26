@@ -166,8 +166,9 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
     }];
     // L’édition précède la vraie inscription : la photo d’arrivée est faite
     // par le service natif au choix de l’univers, pas inventée par la fixture.
-    runIsolatedSql(project, "INSERT INTO advent_edition (season, name, starts_at, closes_at, doors, published_at, plan) VALUES (2100, 'Avent des étoiles', UTC_TIMESTAMP() - INTERVAL 1 DAY, UTC_TIMESTAMP() + INTERVAL 30 DAY, '" + JSON.stringify(doors) + "', UTC_TIMESTAMP(), 'consolidated')");
-    const edition = Number(queryIsolatedSql(project, 'SELECT id FROM advent_edition WHERE season=2100'));
+    // L’année synthétique reste dans la plage de publication (2000–2099).
+    runIsolatedSql(project, "INSERT INTO advent_edition (season, name, starts_at, closes_at, doors, published_at, plan) VALUES (2098, 'Avent des étoiles', UTC_TIMESTAMP() - INTERVAL 1 DAY, UTC_TIMESTAMP() + INTERVAL 30 DAY, '" + JSON.stringify(doors) + "', UTC_TIMESTAMP(), 'consolidated')");
+    const edition = Number(queryIsolatedSql(project, 'SELECT id FROM advent_edition WHERE season=2098'));
     activateInOmega(project, edition);
     const marker = crypto.randomUUID().slice(0, 8);
     const email = 'advent-return-' + marker + '@example.test';
@@ -393,8 +394,8 @@ test('Avent : devis J6 et J12 maquetés, calcul et confirmation séparés', asyn
     doors[6].options.beginner = [{ kind: 'ship_voucher', slug: 'transport', tier: 'basic', quantity: 1, budget_metal: 6000 }];
     doors[12].options.beginner = [{ kind: 'research_discount', percent: 50, budget_metal: 7500 }];
     doors[24].options.beginner = [{ kind: 'ship_voucher', slug: 'cruiser', tier: 'basic', quantity: 1, budget_metal: 16000 }];
-    runIsolatedSql(project, "INSERT INTO advent_edition (season,name,starts_at,closes_at,doors,published_at,plan) VALUES (2101,'Avent Devis','" + new Date(now - 86400000).toISOString().slice(0, 19).replace('T', ' ') + "',UTC_TIMESTAMP() + INTERVAL 30 DAY,'" + JSON.stringify(doors) + "',UTC_TIMESTAMP(),'consolidated')");
-    const edition = Number(queryIsolatedSql(project, 'SELECT id FROM advent_edition WHERE season=2101'));
+    runIsolatedSql(project, "INSERT INTO advent_edition (season,name,starts_at,closes_at,doors,published_at,plan) VALUES (2097,'Avent Devis','" + new Date(now - 86400000).toISOString().slice(0, 19).replace('T', ' ') + "',UTC_TIMESTAMP() + INTERVAL 30 DAY,'" + JSON.stringify(doors) + "',UTC_TIMESTAMP(),'consolidated')");
+    const edition = Number(queryIsolatedSql(project, 'SELECT id FROM advent_edition WHERE season=2097'));
     activateInOmega(project, edition);
     await page.goto('/inscription');
     await page.getByLabel('Adresse email').fill(email);

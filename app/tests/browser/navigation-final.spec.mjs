@@ -140,7 +140,7 @@ const commonPages = [{
   space: 'Navigation des flottes',
   active: url.endsWith('/creer') ? '/flottes/compositions' : url,
   audit: url === '/flottes/preparer'
-})), ...[['/boosts', 'Boosts'], ['/inventaire/boites', 'Boîtes de ressources'], ['/inventaire/recompenses', 'Récompenses en attente']].map(([url, title]) => ({
+})), ...[['/boosts', 'Boosts'], ['/inventaire/boites', 'Boîtes'], ['/inventaire/recompenses', 'Récompenses en attente']].map(([url, title]) => ({
   url,
   title,
   entry: '/boosts',
