@@ -76,7 +76,8 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $sequence = new PirateCampaignSequence($catalogue, $progress);
         $gate = new PiratePilotGate('prod');
         $traffic = new PirateCampaignTraffic($gate, $this->clock, new RequestStack(), self::getContainer()->get(GameRepository::class),
-            new PirateCampaignReadRepository($this->em), new PirateConvoyReadRepository($this->em), $catalogue, $sequence, $progress);
+            new PirateCampaignReadRepository($this->em), new PirateConvoyReadRepository($this->em), $catalogue, $sequence, $progress,
+            self::getContainer()->get(\App\Service\Catalog\GameCatalog::class));
 
         $system = $origin->solarSystem;
         $ownGalaxy = $system->galaxy;
@@ -85,7 +86,9 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame([], $scout['presence']);
         self::assertSame([], $scout['incoming']);
         self::assertSame([$system->id], $traffic->forGalaxy($owner, $ownGalaxy)[0]['systems']);
-        self::assertSame(['kind', 'mission', 'label', 'eta', 'overdue', 'systems'], array_keys($scout['outbound'][0]));
+        self::assertSame(1, $scout['outbound'][0]['ships'][0]['quantity']);
+        self::assertNotEmpty($scout['outbound'][0]['departure']);
+        self::assertSame(['kind', 'mission', 'label', 'eta', 'overdue', 'systems', 'departure'], array_keys($traffic->forGalaxy($owner, $ownGalaxy)[0]));
         self::assertSame([], $traffic->forGalaxy($owner, $galaxy));
         self::assertSame([], $traffic->forGalaxy($neighbor, $ownGalaxy));
 
@@ -97,6 +100,8 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $escort = $traffic->forViewer($owner)['outbound'];
         self::assertSame(['escort'], array_column($escort, 'kind'));
         self::assertSame($attack->arrivalAt->format(DATE_ATOM), $escort[0]['eta']);
+        self::assertSame($attack->departedAt->format(DATE_ATOM), $escort[0]['departure']);
+        self::assertSame(2, $escort[0]['ships'][0]['quantity']);
 
         $proof = $attack->reconnaissance->battleProofFor($owner, $this->clock->now());
         $attack->timeline['seed'] = $this->seedWithVictory($attack, $proof['prepared']->battleForServer());
@@ -107,6 +112,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->advanceTo($attack->nextAt);
         $this->service->processDue($attack->id, $attack->dispatchToken);
         self::assertSame('attacker_wins', $attack->report['outcome']);
+        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM profile_cosmetic'));
         $order = $sequence->forViewer($owner, [['reconnaissance' => $attack->reconnaissance, 'attack' => $attack]], $this->clock->now());
         self::assertSame('escorte_interceptee', $order['current_mission']);
 
@@ -116,10 +122,16 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame(1, $after['outbound'][0]['mission']);
         self::assertSame(1, $after['incoming'][0]['mission']);
         self::assertSame($origin->name, $after['incoming'][0]['destination']);
+        self::assertNotEmpty($after['outbound'][0]['ships']);
+        self::assertNotEmpty($after['incoming'][0]['cargo']);
+        self::assertNotEmpty($after['incoming'][0]['departure']);
         $html = self::getContainer()->get(\Twig\Environment::class)->render('ui/campaign_movement_row.html.twig', [
             'movement' => $after['incoming'][0], 'incoming' => true, 'preferences' => ['timezone' => 'UTC'],
         ]);
         self::assertStringContainsString('Trajet civil protégé', $html);
+        self::assertStringContainsString('role="progressbar"', $html);
+        self::assertStringContainsString('Fret du convoi', $html);
+        self::assertStringContainsString('Métal', $html);
         self::assertStringContainsString($after['incoming'][0]['eta'], $html);
         self::assertDoesNotMatchRegularExpression('/<(?:form|a|button)\b/', $html);
         self::assertStringNotContainsString('data-incoming-attack', $html);
@@ -144,6 +156,32 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->em->refresh($owner->player);
         self::assertSame([], $traffic->forViewer($foreignSeat)['incoming']);
         self::assertSame([], $traffic->forViewer($owner)['outbound']);
+    }
+
+    public function testOnlyVictoryOfFinalMissionGrantsAnUnequippedTitleOnce(): void
+    {
+        $mission = PirateCampaignCatalogue::FINAL_MISSION;
+        [$member, $home] = $this->fixture(omega: true, scoutPaid: true, missionKey: $mission);
+        $this->finishRecon();
+        $gate = new PiratePilotGate('dev');
+        self::assertTrue($this->service->launchWithPilotFuel($member, $home, $mission, 0, ['fighter' => ['basic' => 2]], $gate));
+        $attack = $this->campaign();
+        $proof = $attack->reconnaissance->battleProofFor($member, $this->clock->now());
+        $attack->timeline['seed'] = $this->seedWithVictory($attack, $proof['prepared']->battleForServer());
+        $this->em->flush();
+        $db = $this->em->getConnection();
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM profile_cosmetic'));
+        $this->advanceTo($attack->nextAt);
+        $this->service->processDue($attack->id, $attack->dispatchToken);
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM profile_cosmetic'));
+        $this->advanceTo($attack->nextAt);
+        $token = $attack->dispatchToken;
+        $this->service->processDue($attack->id, $token);
+        $this->service->processDue($attack->id, $token);
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM profile_cosmetic'));
+        $cosmetics = self::getContainer()->get(\App\Service\Player\ProfileCosmetics::class);
+        self::assertSame(['slot' => 'title', 'label' => 'Chasseur de Pirate amateur', 'equipped' => false],
+            $cosmetics->owned($member->player)[\App\Service\Player\ProfileCosmetics::PIRATE_HUNTER_TITLE]);
     }
 
     public function testNoPersistentAttackBeforeReport(): void

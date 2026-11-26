@@ -11,6 +11,8 @@ use App\Service\Combat\CombatUnitFactory;
 /** Contenus de la V1. Ni l'ordre éditorial ni la préparation ne débloquent les rencontres. */
 final class PirateCampaignCatalogue
 {
+    public const FINAL_MISSION = 'la_nuit_se_brise';
+
     private const CHAPTER_TITLES = [
         1 => 'Les appels interrompus',
         2 => 'Les routes trompeuses',
@@ -175,7 +177,7 @@ final class PirateCampaignCatalogue
             'intel_tip' => 'Le rapport mêle des capitaux et des destroyers d’escorte. Ne préparez pas uniquement une réponse au navire principal.',
             'ships' => ['capital' => ['basic' => 2], 'frigate' => ['basic' => 2], 'destroyer' => ['basic' => 2]],
         ],
-        'la_nuit_se_brise' => [
+        self::FINAL_MISSION => [
             'chapter' => 5,
             'title' => 'La nuit se brise',
             'signal' => 'Tous les relais sauf un répondent. Les pilotes civils attendent un dernier signal pour rouvrir les communications d’un bout à l’autre du réseau.',
