@@ -264,8 +264,8 @@ final class CatalogueInsights
         }
         if ($type === 'stat_bonus') {
             $cap = (float) ($effect['max_bonus'] ?? 0);
-            $before = GameCatalog::diminishingBonus($ranks, $cap, $maxLevel);
-            $after = GameCatalog::diminishingBonus($afterRanks, $cap, $maxLevel);
+            $before = $this->catalog->researchBonus($ranks, $cap, $maxLevel);
+            $after = $this->catalog->researchBonus($afterRanks, $cap, $maxLevel);
             $formula = $effect['formula'] ?? 'flat';
             $result = [];
             foreach ($effect['stats'] ?? [$effect['stat'] ?? null] as $stat) {
@@ -304,8 +304,8 @@ final class CatalogueInsights
         }
         if (in_array($type, ['time_discount', 'cost_discount'], true)) {
             $cap = $type === 'time_discount' ? $this->catalog->operationTimeReductionCap('buildings') : (float) ($this->catalog->rules()['cost_reduction_max_percent'] ?? 40);
-            $before = GameCatalog::diminishingBonus($ranks, $cap, $maxLevel);
-            $after = GameCatalog::diminishingBonus($afterRanks, $cap, $maxLevel);
+            $before = $this->catalog->researchBonus($ranks, $cap, $maxLevel);
+            $after = $this->catalog->researchBonus($afterRanks, $cap, $maxLevel);
             $label = match ([$type, $effect['targets'] ?? '']) {
                 ['time_discount', 'buildings'] => 'Réduction du temps de construction des bâtiments',
                 ['cost_discount', 'buildings'] => 'Réduction du coût de construction des bâtiments',
@@ -324,8 +324,8 @@ final class CatalogueInsights
             $cap = (float) ($effect['max_bonus'] ?? 0.5);
             return [[
                 'label' => 'Chance de tir principal supplémentaire',
-                'before' => GameCatalog::diminishingBonus($ranks, $cap, $maxLevel) * 100,
-                'after' => GameCatalog::diminishingBonus($afterRanks, $cap, $maxLevel) * 100,
+                'before' => $this->catalog->researchBonus($ranks, $cap, $maxLevel) * 100,
+                'after' => $this->catalog->researchBonus($afterRanks, $cap, $maxLevel) * 100,
                 'unit' => '%',
             ]];
         }
@@ -333,8 +333,8 @@ final class CatalogueInsights
             $cap = (float) ($this->catalog->rules()['defense_rebuild_max_percent'] ?? 40);
             return [[
                 'label' => 'Reconstruction des défenses détruites',
-                'before' => GameCatalog::diminishingBonus($ranks, $cap, $maxLevel),
-                'after' => GameCatalog::diminishingBonus($afterRanks, $cap, $maxLevel),
+                'before' => $this->catalog->researchBonus($ranks, $cap, $maxLevel),
+                'after' => $this->catalog->researchBonus($afterRanks, $cap, $maxLevel),
                 'unit' => '%',
             ]];
         }

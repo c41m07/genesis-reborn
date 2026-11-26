@@ -184,9 +184,9 @@
       {
         "title": "Comprendre les rendements décroissants",
         "explanation": "Le laboratoire accélère les recherches de la colonie de lancement, le chantier accélère ses vaisseaux et le bunker renforce la structure de ses défenses au sol. Les contributions des rangs s’additionnent. Pour les technologies à rendement décroissant, la même courbe s’applique avec des niveaux pondérés sans bonus composé.",
-        "formula": "Infrastructures : A(B,I,S) = B × 1,0025^B + 1,25 × I × 1,005^I + 1,5625 × S × 1,01^S\nTechnologies à rendement décroissant : A(B,I,S) = B + 1,25 × I + 1,5625 × S\nx = A(B,I,S) / A(m,m,m)\nEffet = maximum de l’effet × ln(1 + 2 × x) / ln(3)",
+        "formula": "Infrastructures : A(B,I,S) = B × 1,0025^B + 1,25 × I × 1,005^I + 1,5625 × S × 1,01^S\nTechnologies à rendement décroissant : A(B,I,S) = 21 × B + 30 × I + 49 × S\nx = A(B,I,S) / A(m,m,m)\nEffet = maximum de l’effet × ln(1 + 2 × x) / ln(3)",
         "variables": ["B, I et S sont les niveaux des trois rangs. Le maximum m vaut 25 pour le laboratoire et le chantier, et 10 pour le bunker.", "Le maximum de l’effet vaut 89,5 % pour le laboratoire et le chantier, et 25 % pour le bunker."],
-        "example": "Un laboratoire 10/10/1 réduit la durée de recherche de 30,02 %. Un chantier 20/20/1 réduit la durée de construction des vaisseaux de 52,12 %. À 25/25/25, une durée nominale de 10 h tombe à 1 h 03 min. Un bunker 8/8/1 ajoute 15,67 % de structure."
+        "example": "Les canons à énergie focalisée donnent environ +8 % de dégâts à 25/0/0, +16 % à 25/25/0 et +25 % à 25/25/25. Un laboratoire 10/10/1 réduit la durée de recherche de 30,02 %. Un chantier 20/20/1 réduit la durée de construction des vaisseaux de 52,12 %. À 25/25/25, une durée nominale de 10 h tombe à 1 h 03 min. Un bunker 8/8/1 ajoute 15,67 % de structure."
       },
       {
         "title": "Calculer votre limite de planètes",

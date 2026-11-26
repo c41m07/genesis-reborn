@@ -97,6 +97,7 @@
   "factory_electricity_use_per_level": 0.05,
   "antimatter_hydrogen_per_unit": 4,
   "minimum_factory_efficiency": 0.1,
+  "research_bonus_weights": {"basic": 21, "intermediate": 30, "superior": 49},
   "time_reduction_max_percent": 70,
   "infrastructure_time_reduction_max_percent": 89.5,
   "cost_reduction_max_percent": 40,

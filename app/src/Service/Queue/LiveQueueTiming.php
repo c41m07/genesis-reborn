@@ -15,7 +15,13 @@ final class LiveQueueTiming
         // Les commandes antérieures conservent leur courbe lors d’un gain de vitesse.
         $discount = isset($timing['building_growth'])
             ? GameCatalog::infrastructureBonus($levels, $timing['cap'], $timing['max'], $timing['building_growth'])
-            : GameCatalog::diminishingBonus($levels, $timing['cap'], $timing['max']);
+            : GameCatalog::diminishingBonus(
+                $levels,
+                $timing['cap'],
+                $timing['max'],
+                // Les premiers instantanés utilisaient les poids communs aux rangs.
+                $timing['research_weights'] ?? GameCatalog::LEGACY_RESEARCH_WEIGHTS,
+            );
 
         return max(1, (int) ceil($timing['base'] * ((100 - $discount) / 100)));
     }

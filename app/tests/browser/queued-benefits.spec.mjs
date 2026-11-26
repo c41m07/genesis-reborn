@@ -33,7 +33,8 @@ test('Les cadres verts isolent un niveau avec trois améliorations en file', asy
         const text = await exact.count() ? await exact.getAttribute('title') : await value.innerText();
         return Number.parseFloat(text.replace(/\s/g, '').replace(',', '.'));
     };
-    const bonusGain = (cap, maxLevel) => cap * (Math.log(1 + 2 * 5 / (maxLevel * 3.8125)) - Math.log(1 + 2 * 4 / (maxLevel * 3.8125))) / Math.log(3);
+    // Le Basique représente 21 % de l’investissement total des recherches à bonus.
+    const basicResearchBonus = level => 70 * Math.log1p(2 * 0.21 * level / 25) / Math.log(3);
     const basicGain = 5 * 1.0025 ** 5 - 4 * 1.0025 ** 4;
     const infrastructureGain = (cap, max) => {
         const total = max * (1.0025 ** max + 1.25 * 1.005 ** max + 1.5625 * 1.01 ** max);
@@ -74,7 +75,7 @@ test('Les cadres verts isolent un niveau avec trois améliorations en file', asy
     }
     await page.goto(`${path}?section=technologies`);
     const research = page.locator('#item-engineering_foundations-basic');
-    expect(await readGain(research, 'Réduction du temps de construction des bâtiments')).toBeCloseTo(bonusGain(70, 25), 2);
+    expect(await readGain(research, 'Réduction du temps de construction des bâtiments')).toBeCloseTo(basicResearchBonus(5) - basicResearchBonus(4), 2);
     await expect(research.getByRole('button', { name: 'Rechercher le niveau 5', exact: true })).toBeVisible();
     await expect(research.locator('[data-catalogue-main-gain]')).toContainText('Gain du niveau 5');
 

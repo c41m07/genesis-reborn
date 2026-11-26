@@ -53,7 +53,8 @@ test('Les écrans métier se chargent, restent stables et exposent un arbre acce
   const findings = [];
 
   for (const [label, route] of routes) {
-    const response = await page.goto(route, { waitUntil: 'domcontentloaded' });
+    // L’audit des images porte sur la page chargée, emblème de navigation compris.
+    const response = await page.goto(route, { waitUntil: 'load' });
     const status = response?.status() ?? 0;
     await expect(page.locator('main#main'), label + ': la zone principale est visible').toBeVisible();
     await expect(page.locator('main#main').getByRole('heading', { level: 1 }).first(), label + ': titre principal présent').toBeVisible();

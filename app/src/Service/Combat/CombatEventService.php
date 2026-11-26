@@ -933,7 +933,7 @@ final class CombatEventService
         $automated_defense_repair = $planet->owner ? ($this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $planet->owner])['automated_defense_repair'] ?? []) : [];
         $rules = $this->catalog->rules();
         $repairDefinition=$this->catalog->get('technologies','automated_defense_repair');
-        $rebuildPercent=\App\Service\Catalog\GameCatalog::diminishingBonus($automated_defense_repair,(float)($rules['defense_rebuild_max_percent']??40),(int)($repairDefinition['max_level']??25));
+        $rebuildPercent=$this->catalog->researchBonus($automated_defense_repair,(float)($rules['defense_rebuild_max_percent']??40),(int)($repairDefinition['max_level']??25));
         foreach ($defenseSnapshots as $snapshot) {
             $id = (int) $snapshot['id'];
             $defense = $this->repo->find(PlanetDefense::class, $id);

@@ -115,7 +115,8 @@ test('À la limite, le tableau des docks et des recherches conserve tous les eff
   const propulsion = await read('technologies', 'vector_propulsion', 'Propulseurs vectoriels');
   await expect(propulsion.dialog).toContainText('Maximum en file');
   await expect(propulsion.table.getByRole('rowheader')).toHaveText([/Vitesse dans le système/, /Vitesse entre systèmes/]);
-  await expect(propulsion.table.getByRole('cell')).toHaveText(['9,28 %', '9,28 %']);
+  // Les deux vitesses reflètent les 24 niveaux Basiques acquis, avant la livraison du niveau 25.
+  await expect(propulsion.table.getByRole('cell')).toHaveText(['7,71 %', '7,71 %']);
   const bounds = await propulsion.dialog.boundingBox();
   expect(bounds.x).toBeGreaterThanOrEqual(0);
   expect(bounds.x+bounds.width).toBeLessThanOrEqual(390);
