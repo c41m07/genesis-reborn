@@ -69,6 +69,11 @@ class PirateReconnaissance
         return $this->membership;
     }
 
+    public function reportedMissionKeyFor(PlayerUniverse $viewer, \DateTimeImmutable $at): ?string
+    {
+        return $this->belongsTo($viewer, $at) && $this->hasReportedAt($at) ? $this->missionKey : null;
+    }
+
     /**
      * Preuve d’ancre interne ; le résolveur doit encore vérifier découverte, possession et trajet.
      * Ne pas en sérialiser les coordonnées dans un dossier ou une réponse de commande.

@@ -10,6 +10,9 @@
                     <li><strong>{{ ship.quantity }} ×</strong> {{ ship.label }} <span class="muted">({{ ship.tier }})</span></li>
                 {% endfor %}
             </ul>
+            {% if briefing.recon_report_id|default(null) %}
+                <p><a class="secondary" href="{{ path('app_pirate_recon_report', {id: briefing.recon_report_id}) }}">Ouvrir le rapport d’espionnage</a></p>
+            {% endif %}
             {% if briefing.tactical_guidance %}<p>{{ briefing.tactical_guidance }}</p>{% endif %}
             <p class="muted">Gardez si possible des vaisseaux en réserve. Remplacer des pertes peut demander de l’électricité en plus des matériaux.</p>
         </section>

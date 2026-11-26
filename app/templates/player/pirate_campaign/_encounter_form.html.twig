@@ -7,36 +7,38 @@
     <p>Colonie de départ : <strong>{{ origin }}</strong></p>
     {% if form.kind == 'selection' %}
         <p>Choisissez jusqu’à {{ form.total_limit }} vaisseaux au total. L’aperçu ne déclenche aucun départ.</p>
-        <form method="post" action="{{ path('app_pirate_campaign_attack_preview', {missionNumber: mission}) }}">
+        <form method="post" class="pirate-escort-form" action="{{ path('app_pirate_campaign_attack_preview', {missionNumber: mission}) }}"
+              data-controller="fleet-quantity" data-fleet-quantity-limit-value="{{ form.total_limit }}">
             <input type="hidden" name="_token" value="{{ form.token }}">
-            <fieldset>
-                <legend>Vaisseaux disponibles</legend>
-                {% for row in form.rows %}
-                    <div>
-                        <label for="pirate-escort-{{ row.ordinal }}">{{ row.label }} ({{ row.maximum }} max.)</label>
-                        <input id="pirate-escort-{{ row.ordinal }}" name="escort[{{ row.ordinal }}]" type="number"
-                            min="0" max="{{ row.maximum }}" step="1" value="0" required>
-                    </div>
-                {% endfor %}
-            </fieldset>
+            {% include 'fleet/_ship_selection_table.html.twig' with {
+                ships: form.ships, catalog: form.catalog, fleetId: 'pirate-' ~ mission,
+                fleetLimit: form.total_limit, headingId: 'pirate-command-title', isEscort: true, loaded: false
+            } only %}
+            <p class="quantity-status" role="status" data-fleet-quantity-target="status"></p>
             <button type="submit" class="{{ primary ? 'primary' : 'secondary' }}">Vérifier le devis d’attaque</button>
         </form>
     {% else %}
-        {% if form.notice is defined %}<p>{{ form.notice }}</p>{% endif %}
-        {% if form.selected is defined %}
-            <ul aria-label="Escorte choisie">
-                {% for ship in form.selected %}<li>{{ ship.label }} : {{ ship.quantity }}</li>{% endfor %}
-            </ul>
-        {% endif %}
-        <dl>
-            <dt>Durée du trajet aller</dt><dd>{{ form.quote.seconds }} s</dd>
-            <dt>Hydrogène réservé</dt><dd>{{ form.quote.hydrogen|replace({'.': ','}) }} H₂</dd>
-            {% if form.quote.orbit is defined %}
-                <dt>Dont réserve d’orbite</dt><dd>{{ form.quote.orbit|replace({'.': ','}) }} H₂</dd>
+        <div class="fleet-mission-summary">
+            <h4>Votre mission</h4>
+            {% if form.notice is defined %}<p>{{ form.notice }}</p>{% endif %}
+            {% if form.selected is defined %}
+                <ul aria-label="Escorte choisie">
+                    {% for ship in form.selected %}<li>{{ ship.label }} : {{ ship.quantity|quantity(0) }}</li>{% endfor %}
+                </ul>
             {% endif %}
-            <dt>Pris dans la réserve embarquée</dt><dd>{{ form.quote.hold|replace({'.': ','}) }} H₂</dd>
-            <dt>Pris dans le stock de la colonie</dt><dd>{{ form.quote.planet|replace({'.': ','}) }} H₂</dd>
-        </dl>
+        </div>
+        <div class="flight-estimate core-fleet-quote">
+            <h4 class="core-fleet-quote-title">Estimation du trajet</h4>
+            <dl>
+                <div><dt>Durée du trajet aller</dt><dd>{{ duration_label(form.quote.seconds) }}</dd></div>
+                <div><dt>Hydrogène réservé</dt><dd>{{ form.quote.hydrogen|replace({'.': ','}) }} H₂</dd></div>
+                {% if form.quote.orbit is defined %}
+                    <div><dt>Dont réserve d’orbite</dt><dd>{{ form.quote.orbit|replace({'.': ','}) }} H₂</dd></div>
+                {% endif %}
+                <div><dt>Pris dans la réserve embarquée</dt><dd>{{ form.quote.hold|replace({'.': ','}) }} H₂</dd></div>
+                <div><dt>Pris dans le stock de la colonie</dt><dd>{{ form.quote.planet|replace({'.': ','}) }} H₂</dd></div>
+            </dl>
+        </div>
         <form method="post" action="{{ path(form.action == 'reconnaissance' ? 'app_pirate_campaign_scout' : 'app_pirate_campaign_attack', {missionNumber: mission}) }}">
             <input type="hidden" name="_token" value="{{ form.token }}">
             {% for ordinal, quantity in form.hidden_escort %}

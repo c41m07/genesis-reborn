@@ -1,6 +1,6 @@
 {% from 'ui/espionage_report_title.html.twig' import title as espionageTitle %}
 <details class="simulation-wizard-sources" data-simulation-wizard-target="sources" open>
-    <summary>Sources · {{ own_source ? 'colonie chargée' : 'attaquant manuel' }} · {% if intel %}{{ espionageTitle(intel.targetName) }} · {{ intel.date|date('d/m à H:i', preferences.timezone) }}{% else %}défenseur manuel{% endif %}</summary>
+    <summary>Sources · {{ own_source ? 'colonie chargée' : 'attaquant manuel' }} · {% if pirate_intel %}{{ espionageTitle(pirate_intel.targetName) }}{% elseif intel %}{{ espionageTitle(intel.targetName) }} · {{ intel.date|date('d/m à H:i', preferences.timezone) }}{% else %}défenseur manuel{% endif %}</summary>
     <div class="simulation-wizard-source-grid">
         <section class="panel simulation-wizard-source" aria-labelledby="simulation-source-own-title">
             <h2 id="simulation-source-own-title"><span>Attaquant</span>{% if own_source %}{{ (planets|filter(planet => planet.id == own_source)|first).name }} · valeurs modifiables{% else %}Forces saisies manuellement{% endif %}</h2>
@@ -23,8 +23,11 @@
             {% endif %}
         </section>
         <section class="panel simulation-wizard-source" aria-labelledby="simulation-source-intel-title">
-            <h2 id="simulation-source-intel-title"><span>Défenseur</span>{% if intel %}{{ espionageTitle(intel.targetName) }}{% else %}Renseignements saisis manuellement{% endif %}</h2>
-            {% if intel %}
+            <h2 id="simulation-source-intel-title"><span>Défenseur</span>{% if pirate_intel %}{{ espionageTitle(pirate_intel.targetName) }}{% elseif intel %}{{ espionageTitle(intel.targetName) }}{% else %}Renseignements saisis manuellement{% endif %}</h2>
+            {% if pirate_intel %}
+                <p><time datetime="{{ pirate_intel.date|date('c') }}">{{ pirate_intel.date|date('d/m/Y à H:i', preferences.timezone) }}</time> · <a href="{{ path('app_pirate_recon_report', {id: pirate_intel.id}) }}">Relire le rapport source</a></p>
+                <p>Camp pirate verrouillé : mêmes vaisseaux, caractéristiques et réglages que lors de la préparation de la rencontre.</p>
+            {% elseif intel %}
                 <p><time datetime="{{ intel.date|date('c') }}">{{ intel.date|date('d/m/Y à H:i', preferences.timezone) }}</time> · {{ preferences.timezone }} · <a href="{{ path('app_espionage_report', {id: intel.id}) }}">Relire le rapport source</a></p>
                 <p>Instantané daté. Seules les catégories révélées sont importées.</p>
             {% endif %}
@@ -45,10 +48,10 @@
                             data-controller="confirmation" data-action="confirmation#confirm"
                             data-confirmation-message-value="Remplacer les vaisseaux, défenses et recherches saisis pour le défenseur ? Les données de l’attaquant seront conservées.">Importer</button>
                 </div>
-            {% elseif not intel %}
+            {% elseif not intel and not pirate_intel %}
                 <p>Aucun rapport disponible dans cet univers. Continuez en saisie manuelle.</p>
             {% endif %}
-            {% if intel %}
+            {% if intel or pirate_intel %}
                 <button type="submit" class="secondary" name="wizard_action" value="manual_intel" formnovalidate
                         formaction="{{ path('app_combat_simulation') }}"
                         data-controller="confirmation" data-action="confirmation#confirm"
