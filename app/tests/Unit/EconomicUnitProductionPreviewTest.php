@@ -33,7 +33,7 @@ final class EconomicUnitProductionPreviewTest extends TestCase
         $manager = new GameManager($em);
         $clock = new MockClock('2026-11-16T00:00:00Z');
         $capacity = new EconomicUnitCapacity($repo, $this->catalog);
-        $this->resources = new ResourceService($repo, $manager, $this->catalog, $clock, new GameEventService($repo, $manager, $clock), new VacationCalendar($repo, $clock), $capacity);
+        $this->resources = new ResourceService($repo, $manager, $this->catalog, $clock, new GameEventService($repo, $manager, $clock), new VacationCalendar($repo, $clock), $capacity, new \App\Service\Boost\TimedBoostEffects($repo, $clock));
         $requirements = new RequirementChecker($this->catalog);
         $access = new CatalogAccess($repo, $this->catalog, $requirements);
         $effects = new TechnologyEffectCalculator($this->catalog);

@@ -51,6 +51,14 @@ final class BoostGrantService
         ));
     }
 
+    /** Le contrôleur des quotidiennes détient déjà la transaction et les verrous. */
+    public function awardDailyLocked(PlayerUniverse $membership, int $accountId, string $date, string $effect): bool
+    {
+        TimedBoostEffects::definition($effect);
+
+        return $this->grant($membership, 'daily_reward', 'daily-'.$accountId.'-'.$date, false, timedEffect: $effect);
+    }
+
     public function awardGuildProject(PlayerUniverse $membership,int $definitionId): bool
     {
         if($definitionId<1) throw new \DomainException('Modèle de projet invalide.');
@@ -111,7 +119,7 @@ final class BoostGrantService
         return $ratio;
     }
 
-    private function grant(PlayerUniverse $membership, string $sourceType, string $sourceKey, bool $riskMission, ?array $boxPayload = null): bool
+    private function grant(PlayerUniverse $membership, string $sourceType, string $sourceKey, bool $riskMission, ?array $boxPayload = null, ?string $timedEffect = null): bool
     {
         $this->manager->lock($membership);
 
@@ -124,12 +132,14 @@ final class BoostGrantService
             return false;
         }
 
+        $this->refreshTimedInventoryLocked($membership, $now);
+
         $boost = new PlayerBoost();
         $boost->playerUniverse = $membership;
         $boost->sourceType = $sourceType;
         $boost->sourceKey = $sourceKey;
-        $boost->kind = $boxPayload === null ? 'boost' : 'resource_box';
-        $boost->payload = $boxPayload === null ? null : $this->boxes->validatePayload($boxPayload);
+        $boost->kind = $timedEffect !== null ? TimedBoostEffects::KIND : ($boxPayload === null ? 'boost' : 'resource_box');
+        $boost->payload = $timedEffect !== null ? ['effect' => $timedEffect] : ($boxPayload === null ? null : $this->boxes->validatePayload($boxPayload));
         $boost->earnedAt = $now;
         $boost->status = $this->repo->countBoosts($membership, 'available') < $this->inventoryCapacity()
             ? 'available'
@@ -141,15 +151,55 @@ final class BoostGrantService
         return true;
     }
 
-    /** La participation est déjà verrouillée dans la transaction de consommation. */
-    public function promoteOldestPendingLocked(PlayerUniverse $membership): void
+    public function refreshTimedInventory(PlayerUniverse $membership): void
     {
-        if ($this->repo->countBoosts($membership,'available') >= $this->inventoryCapacity()) return;
-        $pending=$this->repo->oldestBoost($membership,'pending');
-        if ($pending) {
-            $this->manager->lock($pending);
-            if ($pending->status==='pending') $pending->status='available';
+        $this->manager->transaction(function () use ($membership): void {
+            $this->manager->lock($membership);
+            $this->refreshTimedInventoryLocked($membership, $this->clock->now());
+        });
+    }
+
+    private function refreshTimedInventoryLocked(PlayerUniverse $membership, \DateTimeImmutable $now): void
+    {
+        $cutoff = $now->setTimestamp($now->getTimestamp() - TimedBoostEffects::SHELF_SECONDS);
+        $expired = $this->repo->expiredTimedBoosts($membership, $cutoff);
+        if ($expired === []) {
+            return;
         }
+        foreach ($expired as $boost) {
+            // L’expiration ne touche jamais les fenêtres déjà activées : leur
+            // historique reste nécessaire aux rattrapages économiques.
+            $boost->status = 'expired';
+        }
+        $this->manager->flush();
+        $free = $this->inventoryCapacity() - $this->repo->countBoosts($membership, 'available');
+        for ($place = 0; $place < $free; ++$place) {
+            if (!$this->promoteOldestPendingLocked($membership)) {
+                break;
+            }
+            $this->manager->flush();
+        }
+    }
+
+    /** La participation est déjà verrouillée dans la transaction de consommation. */
+    public function promoteOldestPendingLocked(PlayerUniverse $membership): bool
+    {
+        if ($this->repo->countBoosts($membership, 'available') >= $this->inventoryCapacity()) {
+            return false;
+        }
+        while ($pending = $this->repo->oldestBoost($membership, 'pending')) {
+            $this->manager->lock($pending);
+            if ($pending->kind === TimedBoostEffects::KIND && TimedBoostEffects::expiresAt($pending) <= $this->clock->now()) {
+                $pending->status = 'expired';
+                $this->manager->flush();
+                continue;
+            }
+            $pending->status = 'available';
+
+            return true;
+        }
+
+        return false;
     }
 
     private function riskMissionDailyLimitReached(PlayerUniverse $membership, \DateTimeImmutable $now): bool

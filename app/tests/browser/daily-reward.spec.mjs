@@ -1,7 +1,7 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
 
-test('Récompense quotidienne : kit T1, manque de place, retrait clavier et un seul reçu', async ({ page }) => {
+test('Récompense quotidienne : kit T1, retrait au clavier, stockage plein et activation distincte', async ({ page }) => {
     const id = crypto.randomUUID().slice(0, 8);
     const email = 'daily-reward-' + id + '@example.test';
     const password = crypto.randomUUID() + 'Aa1!';
@@ -41,19 +41,16 @@ test('Récompense quotidienne : kit T1, manque de place, retrait clavier et un s
     await button.focus();
     await expect(button).toBeFocused();
     await page.keyboard.press('Enter');
-    await expect(page.getByRole('alert').filter({ hasText: 'Stockage insuffisant' })).toContainText('métal');
-    await expect(button).toBeVisible();
-    expect(receipts()).toBe(0);
-    expect(stock('nano')).toBeLessThan(5225);
-
-    runIsolatedSql(project, "UPDATE planet_resource SET current_stock=5000 WHERE planet_id=" + planetId + " AND resource_type='metal'");
-    await button.click();
     await expect(page.getByRole('status').filter({ hasText: 'Jour 1 récupéré' })).toBeVisible();
     await expect(button).toHaveCount(0);
     expect(receipts()).toBe(1);
-    expect(stock('metal')).toBeGreaterThanOrEqual(5500);
-    expect(stock('nano')).toBeGreaterThanOrEqual(5250);
+    expect(stock('metal')).toBe(10000);
+    expect(stock('nano')).toBe(5000);
     await page.getByRole('link', { name: 'Actualiser la récompense' }).click();
     await expect(page.getByText('Votre compte a déjà récupéré son lot du jour.', { exact: false })).toBeVisible();
     expect(receipts()).toBe(1);
+    await page.goto('/boosts');
+    await page.getByRole('button', { name: 'Activer Moteurs économes' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Bonus actif pendant cinq heures' })).toBeVisible();
+    await expect(page.getByText('est actif jusqu’au', { exact: false })).toContainText('Moteurs économes');
 });

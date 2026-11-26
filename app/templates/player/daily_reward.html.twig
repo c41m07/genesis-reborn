@@ -24,22 +24,10 @@
         <p>Vous devez contrôler une planète dans cet univers pour récupérer le lot.</p>
     {% else %}
         <dl class="daily-reward-resource-lines daily-board-kpis" aria-label="Contenu du lot">
-            <div><dt>{{ ui.icon('metal') }} Métal</dt><dd>{{ status.reward.metal|quantity(0) }}</dd></div>
-            <div><dt>{{ ui.icon('nano') }} Nano</dt><dd>{{ status.reward.nano|quantity(0) }}</dd></div>
+            <div><dt>{{ status.reward.label }}</dt><dd>{{ status.reward.description }}</dd></div>
         </dl>
-        <p id="daily-reward-rules">Le lot doit tenir en entier dans vos stocks. Si vous manquez un jour, le cycle ne repart pas à zéro.</p>
-        <p id="daily-reward-destination">Planète destinataire : <strong>{{ planet.name }}</strong> ({{ planet.coordinates() }}).</p>
-        {% if destinations|length > 1 %}
-        <form class="daily-board-destination" method="get" action="{{ path('app_daily_reward') }}">
-            <div>
-                <label for="daily-destination">Changer de destination</label>
-                <select id="daily-destination" name="colony">
-                    {% for destination in destinations %}<option value="{{ destination.id }}"{% if destination.id == planet.id %} selected{% endif %}>{{ destination.name }} ({{ destination.coordinates() }})</option>{% endfor %}
-                </select>
-            </div>
-            <button type="submit" class="quiet-button">Choisir cette planète</button>
-        </form>
-        {% endif %}
+        <p id="daily-reward-rules">Le bonus dure cinq heures après activation. Utilisez-le dans les sept jours suivant le retrait. Si vous manquez un jour, le cycle ne repart pas à zéro.</p>
+        <p id="daily-reward-destination">Destination : <a href="{{ path('app_boosts') }}">Inventaire de votre empire</a>.</p>
         {% include 'player/_daily_reward_claim_form.html.twig' with {
             planet: planet,
             status: status,

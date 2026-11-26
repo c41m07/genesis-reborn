@@ -2308,3 +2308,8 @@ Vaisseaux : chiffrer séparément la coque (M), le blindage ou la précision (N)
 ### Progression du prix des défenses, 26 novembre 2026
 
 Le rang Intermédiaire vaut 125 % du Basique et le rang Supérieur 125 % de l’Intermédiaire, en H × 1 + M × 2 + N × 4 + A × 8, hors électricité. Le Basique et les matériaux de chaque recette RP restent inchangés ; arrondir à la valeur réalisable la plus proche. Les prix et les statistiques des vaisseaux ne changent pas. Voir [les recettes RP](CATALOGUE_COUTS_RP.md#défenses).
+
+
+## Bonus quotidiens : phase temporaire plutôt que versement en ressources
+
+Les reçus antérieurs restent valides pour poursuivre le cycle, sans remboursement ni réattribution. Le même reçu est enregistré avec l’objet d’inventaire, dans une transaction verrouillée. La participation active à l’instant du retrait reçoit l’objet. Un bonus consommé immédiatement sur le temps restant d’une tâche et un bonus temporaire sont deux objets différents. Voir les [règles](REGLES.md#bonus-quotidiens-temporaires) pour le cycle et les valeurs d’essai. Les valeurs de combat de 10 % sont le réglage d’essai du lot et s’ajustent à la suite d’une décision d’équilibrage.

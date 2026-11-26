@@ -25,18 +25,16 @@
                     {% elseif active %}En cours
                     {% else %}À venir{% endif %}
                 </span>
-                <dl>
-                    <div><dt>{{ ui.icon('metal') }} Métal</dt><dd>{{ reward.metal|quantity(0) }}</dd></div>
-                    <div><dt>{{ ui.icon('nano') }} Nano</dt><dd>{{ reward.nano|quantity(0) }}</dd></div>
-                </dl>
+                <p><strong>{{ reward.label }}</strong></p>
+                <p>{{ reward.description }}</p>
             </li>
         {% endfor %}
     </ol>
 
     <footer class="daily-reward-footer">
         <div>
-            {% if planet %}<p id="daily-reward-dialog-destination">Destination : <strong>{{ planet.name }}</strong> · {{ planet.coordinates() }}</p>{% endif %}
-            <p id="daily-reward-dialog-rules">Un lot par compte et par jour, à l’heure de Paris. Un jour manqué ne remet pas le cycle à zéro.{% if available %} Le lot entier doit tenir dans vos stocks.{% endif %}</p>
+            {% if planet %}<p id="daily-reward-dialog-destination">Destination : <strong>Inventaire de votre empire</strong></p>{% endif %}
+            <p id="daily-reward-dialog-rules">Un lot par compte et par jour, à l’heure de Paris. Un jour manqué ne remet pas le cycle à zéro.{% if available %} Activez le lot sous sept jours ; son effet dure cinq heures.{% endif %}</p>
         </div>
         <div class="daily-reward-actions">
             <button type="button" class="quiet-button" data-action="daily-reward-ui#close">{{ available ? 'Plus tard' : 'Fermer' }}</button>

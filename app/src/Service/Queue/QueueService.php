@@ -14,6 +14,7 @@ use Symfony\Component\Uid\Uuid;
 use App\Service\Player\FirstStepRewardPolicy;
 use App\Service\Player\FirstSteps;
 use App\Service\Player\VacationCalendar;
+use App\Service\Boost\TimedBoostEffects;
 
 /**
  * Gère les commandes payées, de leur ajout jusqu’à leur résolution.
@@ -42,6 +43,7 @@ final class QueueService
         private FirstSteps $firstSteps,
         private AdventQueueCredits $adventCredits,
         private QueueExpenseRecorder $expenses,
+        private TimedBoostEffects $timedBoosts,
     )
     {
     }
@@ -398,10 +400,18 @@ final class QueueService
 
     private function start(QueueItem $item, \DateTimeImmutable $at): void
     {
-        if ($item->startedAt === null && !$item->playerUniverse->isForgotten()) {
+        $fresh = $item->startedAt === null && !$item->playerUniverse->isForgotten();
+        if ($fresh) {
             $this->prepareLiveStart($item, $at);
         }
         $item->startedAt = $at;
+        if ($fresh) {
+            $window = $this->timedBoosts->windows($item->playerUniverse, $at, $at, TimedBoostEffects::QUEUE_SPEED)[0] ?? null;
+            if ($window !== null) {
+                LiveQueueTiming::setThroughput($item, $at->getTimestamp(), TimedBoostEffects::endsAt($window)->getTimestamp(),
+                    TimedBoostEffects::definition(TimedBoostEffects::QUEUE_SPEED)['factor']);
+            }
+        }
         $startedAtField = $item->queueType . 'QueueStartedAt';
         $item->planet->{$startedAtField} = $at;
         $this->schedule($item);
@@ -422,7 +432,7 @@ final class QueueService
     private function prepareLiveStart(QueueItem $item, \DateTimeImmutable $at): void
     {
         // Aucun historique fiable des paramètres d’achat pour les anciennes commandes.
-        if ($item->liveTiming === null || ($group = $this->timedGroup($item)) === null) {
+        if (!isset($item->liveTiming['base']) || ($group = $this->timedGroup($item)) === null) {
             return;
         }
         $levels = $this->speedLevels($item, $group);
@@ -466,7 +476,7 @@ final class QueueService
         }
         $levels = $this->speedLevels($completed, $group);
         foreach ($items as $item) {
-            if ($item->liveTiming === null || $item->startedAt === null || $item->finishAt() <= $at
+            if (!isset($item->liveTiming['base']) || $item->startedAt === null || $item->finishAt() <= $at
                 || $this->timedGroup($item) !== $group
                 || ($group !== 'buildings' && $item->planet->id !== $completed->planet->id)) {
                 continue;
@@ -816,10 +826,29 @@ final class QueueService
         });
     }
 
+    /** Les têtes échues ont été réglées avant d’ouvrir la fenêtre ; le verrou d’empire est toujours détenu. */
+    public function activateTemporaryThroughputLocked(PlayerUniverse $membership, \DateTimeImmutable $at, \DateTimeImmutable $until): void
+    {
+        $factor = TimedBoostEffects::definition(TimedBoostEffects::QUEUE_SPEED)['factor'];
+        foreach ($this->repo->activeQueueItemsFor($membership) as $item) {
+            if ($item->planet->owner?->id === $membership->id && $item->finishAt() > $at) {
+                LiveQueueTiming::setThroughput($item, $at->getTimestamp(), $until->getTimestamp(), $factor);
+                $this->schedule($item);
+            }
+        }
+    }
+
     /** Appelé avec la participation verrouillée par le service de vacances. */
     public function pauseForVacationLocked(PlayerUniverse $membership, \DateTimeImmutable $at, \DateTimeImmutable $until): void
     {
         $this->settleMembershipLocked($membership, $at);
+        // La pause minimale dépasse cinq heures : figer le travail acquis avant
+        // le départ, sans décaler la fin civile du boost avec le chantier.
+        foreach ($this->repo->activeQueueItemsFor($membership) as $item) {
+            if (isset($item->liveTiming['throughput_until'])) {
+                LiveQueueTiming::setThroughput($item, $at->getTimestamp(), null);
+            }
+        }
         $this->shiftVacationHeadsLocked($membership, $until->getTimestamp() - $at->getTimestamp());
     }
 

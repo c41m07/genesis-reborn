@@ -33,7 +33,7 @@ final class MilitaryEconomyStudyTest extends TestCase
         $manager = new GameManager($em);
         $clock = new MockClock('2026-11-16T00:00:00Z');
         $capacity = new EconomicUnitCapacity($repo, $catalog);
-        $resources = new ResourceService($repo, $manager, $catalog, $clock, new GameEventService($repo, $manager, $clock), new VacationCalendar($repo, $clock), $capacity);
+        $resources = new ResourceService($repo, $manager, $catalog, $clock, new GameEventService($repo, $manager, $clock), new VacationCalendar($repo, $clock), $capacity, new \App\Service\Boost\TimedBoostEffects($repo, $clock));
         $operations = new OperationCalculator($catalog);
         $units = new CombatUnitFactory($catalog, new TechnologyEffectCalculator($catalog));
         $movement = new MovementCalculator();

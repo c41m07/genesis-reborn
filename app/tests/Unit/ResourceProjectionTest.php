@@ -27,7 +27,7 @@ final class ResourceProjectionTest extends TestCase
         $repo = new GameRepository($em);
         $manager = new GameManager($em);
         $clock = new MockClock('2026-11-16T00:00:00Z');
-        $this->resources = new ResourceService($repo, $manager, $catalog, $clock, new GameEventService($repo, $manager, $clock), new VacationCalendar($repo, $clock), new EconomicUnitCapacity($repo, $catalog));
+        $this->resources = new ResourceService($repo, $manager, $catalog, $clock, new GameEventService($repo, $manager, $clock), new VacationCalendar($repo, $clock), new EconomicUnitCapacity($repo, $catalog), new \App\Service\Boost\TimedBoostEffects($repo, $clock));
         $universe = new Universe();
         $universe->slug = 'projection-x1';
         $universe->name = 'Projection';

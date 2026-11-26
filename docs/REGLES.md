@@ -955,3 +955,20 @@ possédée et découverte. Sans solution, l’attente persiste.
 ## Calendrier de l’Avent
 
 L’administration choisit la période de visibilité dans chaque univers. Les portes du 1er au 24 décembre s’ouvrent à minuit à Paris. Chaque compte peut rattraper les jours passés pendant la période et obtenir un lot par porte pour toute la saison. À l’heure de fermeture, la page et les portes ferment. Les lots déjà réservés restent retirables dans l’inventaire. [Détail du calendrier et des réservations](CALENDRIER_AVENT.md).
+
+
+## Bonus quotidiens temporaires
+
+Un retrait quotidien par **compte**, tous univers confondus, à minuit heure de Europe/Paris. Une date manquée n’efface pas le cycle des sept cadeaux. Le cadeau reste dans l’inventaire de l’univers actif, sans modifier les stocks d’une colonie. En cas d’inventaire plein, l’objet attend une place. Il expire même en attente sept jours (168 h) après le retrait. L’activation manuelle ouvre une fenêtre de cinq heures ; un seul bonus temporaire peut être actif à la fois. Les boosts instantanés déjà détenus restent utilisables séparément.
+
+| Jour | Cadeau | Effet |
+| --- | --- | --- |
+| 1 | Moteurs économes | −20 % de carburant de trajet au départ : transport, stationnement, exploration et colonisation ; la réserve et le profil de rappel sont figés. |
+| 2 | Soutes modulaires | +20 % de capacité de fret pour transport et stationnement, hors réservoir. Un excédent revenu n’est pas détruit ; il est à décharger avant de redéployer des vaisseaux si la réserve ne tient plus. |
+| 3 | Coffres renforcés | Part d’entrepôt protégée du pillage doublée, de 10 % à 20 % avec le réglage habituel, relevée au début d’un combat. |
+| 4 | Défense renforcée | +10 % de dégâts en défense PvP ; flotte et défenses au sol. |
+| 5 | Offensive renforcée | +10 % de dégâts en attaque PvP. |
+| 6 | Rythme accéléré | Travail des files ×1,25 seulement pendant les cinq heures actives, y compris pour une nouvelle tête de file. |
+| 7 | Production renforcée | Production brute des colonies de l’empire ×1,15 sur le seul intervalle actif ; consommations et plafonds continuent de s’appliquer. |
+
+L’effet combat est figé à l’ouverture du combat et ne s’applique pas aux combats PNJ. Les trajets spécifiques de la Bourse, de la campagne pirate et des convois du Hall ne prennent pas le bonus de vol.

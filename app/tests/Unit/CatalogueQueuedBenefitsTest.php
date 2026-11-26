@@ -30,7 +30,7 @@ final class CatalogueQueuedBenefitsTest extends TestCase
         $repo = new GameRepository($em);$manager = new GameManager($em);
         $clock = new MockClock('2026-11-16T00:00:00Z');
         $capacity = new EconomicUnitCapacity($repo, $this->catalog);
-        $resources = new ResourceService($repo, $manager, $this->catalog, $clock, new GameEventService($repo, $manager, $clock), new VacationCalendar($repo, $clock), $capacity);
+        $resources = new ResourceService($repo, $manager, $this->catalog, $clock, new GameEventService($repo, $manager, $clock), new VacationCalendar($repo, $clock), $capacity, new \App\Service\Boost\TimedBoostEffects($repo, $clock));
         $requirements = new RequirementChecker($this->catalog);
         $access = new CatalogAccess($repo, $this->catalog, $requirements);
         $technologyEffects = new TechnologyEffectCalculator($this->catalog);

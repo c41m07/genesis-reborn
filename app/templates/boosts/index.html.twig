@@ -8,7 +8,7 @@
 {% if inventory_page != 'boosts' %}
 {% include 'boosts/_capacity.html.twig' %}
 {% endif %}
-{% if inventory_page=='boosts' %}{% include 'boosts/_boosts.html.twig' %}
+{% if inventory_page=='boosts' %}{% include 'boosts/_timed_boosts.html.twig' %}{% include 'boosts/_boosts.html.twig' %}
 {% elseif inventory_page=='boxes' %}
 <section id="inventory-boxes" class="inventory-boxes" aria-labelledby="inventory-boxes-title"><h2 id="inventory-boxes-title" class="visually-hidden">Boîtes disponibles</h2>
 {% include 'boosts/_resource_boxes.html.twig' %}{% if resource_boxes is empty %}<p class="panel">Aucune boîte de ressources disponible.</p>{% endif %}</section>

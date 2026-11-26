@@ -36,6 +36,22 @@ final class BoostController extends AbstractController
         return $this->redirectToRoute('app_inventory_boxes');
     }
 
+    #[Route('/boosts/temporaires/{id}/activer', name: 'app_timed_boost_activate', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function activateTimed(int $id, Request $request, UniverseContext $context, \App\Service\Boost\TimedBoostUseService $boosts): Response
+    {
+        if (!$this->isCsrfTokenValid('timed_boost_'.$id, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré.');
+        }
+        try {
+            $changed = $boosts->activate($context->membership(), $id, $request->request->getString('request_key'));
+            $this->addFlash('success', $changed ? 'Bonus actif pendant cinq heures.' : 'Cette activation a déjà été traitée.');
+        } catch (\DomainException $error) {
+            $this->addFlash('error', $error->getMessage());
+        }
+
+        return $this->redirectToRoute('app_boosts', status: Response::HTTP_SEE_OTHER);
+    }
+
     #[Route('/boosts/utiliser/{type}/{id}', name: 'app_boost_use', methods: ['POST'], requirements: ['type' => 'queue|fleet', 'id' => '\\d+'])]
     public function use(
         string $type,

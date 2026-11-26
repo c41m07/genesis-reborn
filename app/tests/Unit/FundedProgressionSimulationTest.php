@@ -31,7 +31,7 @@ final class FundedProgressionSimulationTest extends TestCase
         $manager = new GameManager($em);
         $clock = new MockClock('2026-11-16T00:00:00Z');
         $economicUnits = new EconomicUnitCapacity($repo, $this->catalog);
-        $resources = new ResourceService($repo, $manager, $this->catalog, $clock, new GameEventService($repo, $manager, $clock), new VacationCalendar($repo, $clock), $economicUnits);
+        $resources = new ResourceService($repo, $manager, $this->catalog, $clock, new GameEventService($repo, $manager, $clock), new VacationCalendar($repo, $clock), $economicUnits, new \App\Service\Boost\TimedBoostEffects($repo, $clock));
         $this->simulation = new FundedProgressionSimulation($this->catalog, new OperationCalculator($this->catalog), new RequirementChecker($this->catalog), $resources, $economicUnits, new CombatUnitFactory($this->catalog, new TechnologyEffectCalculator($this->catalog)), new MovementCalculator());
         $this->universe = new Universe();
         $this->universe->slug = 'funded-x1';
