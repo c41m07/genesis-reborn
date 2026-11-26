@@ -2,7 +2,7 @@
 
 namespace App\Tests\Controller;
 
-use App\Entity\{GameEvent, GuildProjectDefinition, PatchNote, Player, Universe};
+use App\Entity\{FirstStepCompletion, GameEvent, GuildProjectDefinition, PatchNote, Player, PlayerUniverse, Universe};
 use App\Service\Universe\UniverseImporter;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -88,6 +88,38 @@ final class AdminDedicatedPagesTest extends WebTestCase
         self::assertSelectorExists('.observatory-release-marker');
         self::assertSelectorTextContains('main', 'L’heure de publication est exclue');
         self::assertSelectorTextContains('main', '-33,3 %');
+        // Le tableau reçoit les jalons seuls, même lorsqu’une comparaison est affichée.
+        $progressUrl = $base.'/observatoire?tab=progress';
+        $client->request('GET', $progressUrl);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('main', 'Aucun jalon attesté sur cette période.');
+        self::assertSelectorTextContains('#observatory-release', 'Jalons validés');
+
+        $membership = new PlayerUniverse();
+        $membership->player = $em->getReference(Player::class, $admin->id);
+        $membership->universe = $em->getReference(Universe::class, $universe->id);
+        $membership->joinedAt = $currentHour->modify('-3 hours');
+        $step = new FirstStepCompletion();
+        $step->playerUniverse = $membership;
+        $step->stepKey = 'metal_mine';
+        $step->completedAt = $currentHour->modify('-1 hour +15 minutes');
+        $em->persist($membership);
+        $em->persist($step);
+        $em->flush();
+
+        $progress = $client->request('GET', $progressUrl);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('main meter[aria-label="Mine de métal"][value="1"]');
+        self::assertSame(['Jalons validés', '0', '1', '1'], $progress
+            ->filter('#observatory-release tbody tr')->first()->children()
+            ->each(static fn ($cell): string => $cell->text()));
+        foreach (['audience', 'combat'] as $tab) {
+            $client->request('GET', $base.'/observatoire?tab='.$tab);
+            self::assertResponseIsSuccessful();
+            self::assertSelectorExists('#observatory-release tbody tr');
+        }
+
+        $crawler = $client->request('GET', $base.'/observatoire?tab=performance&device=mobile&page_key=app_colony');
         $form = $crawler->selectButton('Confirmer la nouvelle période')->form();
         $client->submit($form);
         self::assertResponseRedirects($base.'/observatoire?tab=performance', 303);

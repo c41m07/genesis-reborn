@@ -37,8 +37,8 @@
     <p>Aucune note publiée à comparer.</p>
   {% elseif tab == 'economy' %}
     <p>Les stocks restent à leur valeur réelle. Aucun historique des flux de ressources n’est encore disponible pour cette comparaison.</p>
-  {% elseif tab != 'performance' and report.releaseComparison is defined %}
-    {% set comparison = report.releaseComparison %}
+  {% elseif releaseComparison is not null %}
+    {% set comparison = releaseComparison %}
     {% if comparison.hours > 0 %}
       <p>{{ comparison.hours }} h complètes de chaque côté, jusqu’à 7 jours. {% if comparison.gap %}L’heure de publication n’est pas comptée.{% endif %}</p>
       <div class="observatory-table" tabindex="0" role="region" aria-label="Comparaison avant et après la mise à jour">
