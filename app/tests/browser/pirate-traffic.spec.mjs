@@ -9,6 +9,7 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
     const stroke = CanvasRenderingContext2D.prototype.stroke;
     window.testGalaxyGlyphs = new Set();
     window.testOwnedRing = false;
+    window.testCampaignAnchor = false;
     window.testFirstPlanet = null;
     CanvasRenderingContext2D.prototype.fillText = function (text, x, y, ...rest) {
       if (this.canvas.classList.contains('gv2-canvas--galaxy')) window.testGalaxyGlyphs.add(text);
@@ -19,6 +20,7 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
     };
     CanvasRenderingContext2D.prototype.stroke = function (...args) {
       if (this.canvas.classList.contains('gv2-canvas--galaxy') && this.strokeStyle === '#00e676' && this.lineWidth >= 3) window.testOwnedRing = true;
+      if (this.canvas.classList.contains('gv2-canvas--galaxy') && this.strokeStyle === '#e6bbff' && this.getLineDash().length) window.testCampaignAnchor = true;
       return stroke.apply(this, args);
     };
   });
@@ -60,6 +62,12 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
     await expect(scout).toHaveCount(1);
     await expect(scout).toContainText('Sonde de reconnaissance');
     await expect(scout.locator('time')).toHaveAttribute('datetime', /T/);
+    await expect(scout.getByRole('progressbar')).toBeVisible();
+    await scout.getByText('Composition', { exact: true }).click();
+    await expect(scout.getByText(/1 × .*sonde/i)).toBeVisible();
+    const countdown = scout.locator('[data-progress-target="remaining"]');
+    const previous = await countdown.textContent();
+    await expect(countdown).not.toHaveText(previous);
     await expect(scout.getByRole('button')).toHaveCount(0);
     await expect(scout.getByRole('link', { name: 'Consulter le dossier de campagne' })).toHaveAttribute('href', '/evenements/campagne-pirate/1');
     await expect(flights.locator('[data-active-fleet]')).toHaveCount(0);
@@ -79,7 +87,7 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
   const read = JSON.parse(await shell.getAttribute('data-galaxy-v2-map-value'));
   expect(read.campaignTraffic).toHaveLength(1);
   expect(read.campaignTraffic[0]).toMatchObject({ kind: 'scout', mission: 1, systems: [system] });
-  expect(Object.keys(read.campaignTraffic[0]).sort()).toEqual(['eta', 'kind', 'label', 'mission', 'overdue', 'systems']);
+  expect(Object.keys(read.campaignTraffic[0]).sort()).toEqual(['departure', 'eta', 'kind', 'label', 'mission', 'overdue', 'systems']);
   const payload = await page.evaluate(async id => {
     const response = await fetch('/flottes/surveillance?campaign=1&galaxy=' + id);
     return { data: await response.json(), cache: response.headers.get('cache-control') };
@@ -87,6 +95,8 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
   expect(payload.cache).toMatch(/no-store/);
   expect(payload.data.campaignTraffic).toEqual(read.campaignTraffic);
   await expect(page.locator('.gv2-flight-log [data-campaign-kind="scout"]')).toBeVisible();
+  await expect(page.locator('.gv2-flight-log [data-campaign-kind="scout"]').getByRole('progressbar')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.testCampaignAnchor)).toBe(true);
   await expect(page.locator('.gv2-flight-log [data-campaign-kind="pirates"]')).toHaveCount(0);
 
   const station = page.getByRole('link', { name: 'Station pirate repérée, aucune case planétaire', exact: true });
@@ -108,7 +118,7 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
   const reported = JSON.parse(await shell.getAttribute('data-galaxy-v2-map-value')).campaignTraffic;
   expect(reported).toHaveLength(1);
   expect(reported[0]).toMatchObject({ kind: 'pirates', mission: 1, systems: [system], eta: null });
-  expect(Object.keys(reported[0]).sort()).toEqual(['eta', 'kind', 'label', 'mission', 'overdue', 'systems']);
+  expect(Object.keys(reported[0]).sort()).toEqual(['departure', 'eta', 'kind', 'label', 'mission', 'overdue', 'systems']);
   await expect.poll(() => page.evaluate(() => window.testOwnedRing)).toBe(true);
   expect(await page.evaluate(() => ['P', '◆', '◇'].some(symbol => window.testGalaxyGlyphs.has(symbol)))).toBe(false);
   await expect(station).toHaveCount(0);

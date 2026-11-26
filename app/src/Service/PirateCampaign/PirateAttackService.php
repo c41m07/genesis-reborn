@@ -12,7 +12,7 @@ use App\Service\Catalog\GameCatalog;
 use App\Service\Colony\{ActionGuard, ResourceService};
 use App\Service\Combat\{CombatSimulator, CombatUnitFactory};
 use App\Service\Fleet\{FleetHold, MovementCalculator};
-use App\Service\Player\VacationCalendar;
+use App\Service\Player\{ProfileCosmetics, VacationCalendar};
 use Psr\Clock\ClockInterface;
 use Symfony\Component\Uid\Uuid;
 
@@ -35,6 +35,7 @@ final class PirateAttackService
         private VacationCalendar $vacations,
         private ClockInterface $clock,
         private PirateConvoyDeliveryService $convoys,
+        private ProfileCosmetics $cosmetics,
     ) {
     }
 
@@ -413,7 +414,15 @@ final class PirateAttackService
         // ouvrirait un instantané MariaDB avant le verrou commun et ferait échouer un worker concurrent.
         $membership = $campaign->reconnaissance->membership();
 
-        return $this->manager->transaction(function () use ($campaignId, $membership, $dispatchToken): ?int {
+        $isFinalMission = $campaign->reconnaissance->reportedMissionKeyFor($membership, $this->now()) === PirateCampaignCatalogue::FINAL_MISSION;
+
+        return $this->manager->transaction(function () use ($campaignId, $membership, $dispatchToken, $isFinalMission): ?int {
+            $player = $isFinalMission ? $membership->player : null;
+            // Le cosmétique est un droit du compte. Le verrouiller avant sa participation
+            // respecte l’ordre des changements d’univers et évite une attribution liée à un effacement.
+            if ($player !== null) {
+                $this->manager->lockCurrent($player);
+            }
             $this->manager->lockCurrent($membership);
             $this->manager->lockCurrent($membership->universe);
             $campaign = $this->repository->lockPirateAttack($campaignId, $membership);
@@ -432,9 +441,10 @@ final class PirateAttackService
             $timeline = PirateAttackTimeline::fromCheckpoint($scenario, $proof['reportedAt'], $campaign->timeline);
             $attempt = $campaign->timeline['attempt'];
 
-            if ($timeline->state() === 'scheduled' && self::usesPrivateArrival($campaign)) {
+            $wasScheduled = $timeline->state() === 'scheduled';
+            if ($wasScheduled && self::usesPrivateArrival($campaign)) {
                 $this->processPrivateArrivalOrBattle($campaign, $timeline, $attempt, $scenario, $membership, $now);
-            } elseif ($timeline->state() === 'scheduled') {
+            } elseif ($wasScheduled) {
                 $this->resolveBattle($campaign, $timeline, $attempt, $now);
             } elseif ($timeline->state() === 'returning') {
                 if (isset($campaign->timeline['pilot_attack_fuel'])) {
@@ -442,6 +452,12 @@ final class PirateAttackService
                 } else {
                     $this->settleReturn($campaign, $timeline, $membership, $attempt, $now);
                 }
+            }
+
+            if ($wasScheduled && $player !== null && $player->lockedAt === null
+                && ($campaign->report['outcome'] ?? null) === 'attacker_wins') {
+                // Le rapport, le titre et le retour (ou le convoi) sont validés ensemble.
+                $this->cosmetics->grantLocked($player, [ProfileCosmetics::PIRATE_HUNTER_TITLE], $now);
             }
 
             return null;

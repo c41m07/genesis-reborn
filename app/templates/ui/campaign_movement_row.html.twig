@@ -1,3 +1,4 @@
+{% import 'ui/macros.html.twig' as ui %}
 {# Un trajet de campagne n'est pas une Fleet : ni rappel, ni interception, ni transfert. #}
 <article class="flight-operation campaign-traffic-row" data-campaign-kind="{{ movement.kind }}"{% if incoming|default(false) %} data-campaign-incoming="{{ movement.mission }}"{% endif %}>
     <div class="operation-heading">
@@ -9,6 +10,23 @@
         <p>{{ movement.overdue ? 'Arrivée à confirmer · prévue le' : 'Arrivée prévue le' }}
             <time datetime="{{ movement.eta }}">{{ movement.eta|date('d/m/Y à H:i:s', preferences.timezone|default(app.user.preferences.timezone|default('Europe/Paris'))) }}</time>
         </p>
+    {% endif %}
+    {% if movement.departure and movement.eta %}
+        {{ ui.progress(movement.departure, movement.eta, 'Trajet · ' ~ movement.label) }}
+    {% endif %}
+    {% if movement.ships|default([]) or movement.cargo|default([]) %}
+        <details class="campaign-traffic-details">
+            <summary>{{ movement.cargo|default([]) ? 'Fret du convoi' : 'Composition' }}</summary>
+            <ul>
+                {% for ship in movement.ships|default([]) %}
+                    <li>{{ ship.quantity|quantity(0) }} × {{ ship.label }} · {{ ship.tier }}</li>
+                {% endfor %}
+                {% set names = {metal:'Métal', nano:'Nanos', antimatter:'Antimatière', hydrogen:'Hydrogène'} %}
+                {% for resource, part in movement.cargo|default([]) %}
+                    <li>{{ names[resource] }} : {{ part.whole|quantity(0) }}{{ part.extra_half ? ',5' : '' }}</li>
+                {% endfor %}
+            </ul>
+        </details>
     {% endif %}
     {% if incoming|default(false) %}
         <p class="muted">Trajet civil protégé · aucune action de flotte disponible.</p>
