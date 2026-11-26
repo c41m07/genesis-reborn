@@ -52,7 +52,12 @@ test('L1C A : rôles, formulaires, traités et confirmations natives de gestion'
     const member = await memberContext.newPage();
     await enterUniverse(member, memberName, 'control-member-' + suffix + '@example.test');
     await member.goto('/guildes?q=' + encodeURIComponent(guildName));
-    await member.getByRole('button', { name: 'Rejoindre · recrutement ouvert' }).click();
+    await member.getByRole('button', { name: 'Demander à rejoindre' }).click();
+    await expect(member.getByText('Candidature envoyée. Elle doit être acceptée par la guilde.', { exact: true })).toBeVisible();
+    await page.goto('/guildes');
+    await page.getByRole('button', { name: 'Accepter la candidature', exact: true }).click();
+    await expect(page.getByText('Demande acceptée : l’adhésion est enregistrée.', { exact: true })).toBeVisible();
+    await member.goto('/guildes');
     await page.goto('/guildes/grades?rank=0');
     await page.getByLabel('Nom du grade', { exact: true }).fill(rankName);
     await page.getByLabel('Priorité du grade').fill('10');
@@ -123,7 +128,8 @@ test('L1C A : rôles, formulaires, traités et confirmations natives de gestion'
           await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
           if (key === 'grades') {
             await expect(page.getByLabel('Nom du grade', { exact: true })).toHaveValue(rankName);
-            await expect(page.locator('.guild-rank-editor input[type="checkbox"]')).toHaveCount(7);
+            await expect(page.locator('.guild-rank-editor input[type="checkbox"]')).toHaveCount(8);
+            await expect(page.getByRole('checkbox', { name: 'Gérer les candidatures et inviter des commandants' })).toBeVisible();
             await expect(page.getByRole('navigation', { name: 'Grades de la guilde' }).locator('a').first()).toHaveText('Créer un grade');
             const selectedRank = page.locator('.guild-rank-navigation [aria-current="page"]');
             await expect(selectedRank).toHaveText(rankName + ' · priorité 10');
@@ -252,5 +258,50 @@ test('L1C A : rôles, formulaires, traités et confirmations natives de gestion'
   } finally {
     await memberContext.close();
     await peerContext.close();
+  }
+});
+
+test('Recrutement : présentation, badge des recruteurs et invitation acceptée sur mobile', async ({ page, browser, baseURL }) => {
+  test.setTimeout(120_000);
+  const suffix = crypto.randomUUID().slice(0, 8);
+  const applicantName = 'Candidat-' + suffix;
+  const invitedName = 'Invite-' + suffix;
+  const guildName = 'Recrutement-' + suffix;
+  const project = process.env.BROWSER_ROUTER;
+  const mobile = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 } });
+  const guest = await browser.newContext({ baseURL, viewport: { width: 390, height: 844 } });
+  try {
+    const applicant = await mobile.newPage();
+    const invited = await guest.newPage();
+    await enterUniverse(page, 'Chef-' + suffix, 'recruit-leader-' + suffix + '@example.test');
+    await createGuild(page, guildName, 'R' + suffix.slice(0, 4));
+    await enterUniverse(applicant, applicantName, 'recruit-candidate-' + suffix + '@example.test');
+    await enterUniverse(invited, invitedName, 'recruit-invite-' + suffix + '@example.test');
+    const guildId = Number(queryIsolatedSql(project, `SELECT id FROM guild WHERE name='${guildName}'`));
+    const invitedId = Number(queryIsolatedSql(project, `SELECT pu.id FROM player_universe pu JOIN player p ON p.id=pu.player_id WHERE p.username='${invitedName}'`));
+    const size = () => queryIsolatedSql(project, `SELECT COUNT(*) FROM guild_member WHERE guild_id=${guildId}`);
+
+    await applicant.goto('/guildes/' + guildId);
+    await expect.poll(() => applicant.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    await applicant.getByRole('button', { name: 'Demander à rejoindre', exact: true }).click();
+    await expect(applicant.getByRole('button', { name: 'Retirer ma candidature' })).toBeVisible();
+    expect(size()).toBe('1');
+    await page.goto('/guildes');
+    await expect(page.locator('[data-guild-recruitment-count]')).toHaveText('1');
+    await page.getByRole('button', { name: 'Accepter la candidature', exact: true }).click();
+    await expect(page.locator('#guild-recruitment')).toHaveCount(0);
+    expect(size()).toBe('2');
+
+    await page.goto('/joueurs/' + invitedId);
+    await page.getByRole('button', { name: 'Inviter dans ma guilde', exact: true }).click();
+    await expect(page.getByText('Invitation envoyée. Le commandant doit l’accepter.', { exact: true })).toBeVisible();
+    expect(size()).toBe('2');
+    await invited.goto('/guildes/' + guildId);
+    await invited.getByRole('button', { name: 'Accepter l’invitation', exact: true }).click();
+    await expect(invited.getByRole('heading', { level: 1 })).toHaveText('Ma guilde');
+    expect(size()).toBe('3');
+  } finally {
+    await mobile.close();
+    await guest.close();
   }
 });

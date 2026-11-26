@@ -106,7 +106,7 @@ final class GlobalMessageTest extends WebTestCase
         $diplomacy = static::getContainer()->get(DiplomacyService::class);
         $diplomacy->create($this->sender->currentPlayerUniverse, 'Global test', 'GLB');
         $guild = static::getContainer()->get(RelationResolver::class)->guild($this->sender->currentPlayerUniverse);
-        $diplomacy->join($this->reader->currentPlayerUniverse, $guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $this->reader->currentPlayerUniverse, $guild->id);
         $service = static::getContainer()->get(SocialMessageService::class);
         $service->sendPrivate($this->sender->currentPlayerUniverse, $this->reader->currentPlayerUniverse->id, 'Privé');
         $service->sendGuild($this->sender->currentPlayerUniverse, 'Guilde');

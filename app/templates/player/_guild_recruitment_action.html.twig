@@ -1,0 +1,4 @@
+<form method="post" action="{{ path('app_guild_recruitment_answer', {id:entry.id, answer:answer}) }}">
+    <input type="hidden" name="_token" value="{{ csrf_token('guild_recruitment_' ~ entry.id ~ '_' ~ answer) }}">
+    <button class="{{ answer == 'accept' ? 'primary' : 'secondary' }}">{{ label }}</button>
+</form>

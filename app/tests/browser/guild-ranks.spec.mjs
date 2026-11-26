@@ -53,7 +53,12 @@ test('Le dirigeant crée un grade, le délègue et les droits restent contrôlé
 
     await register(memberPage, memberName, 'member-' + id + '@example.test');
     await memberPage.goto('/diplomatie?tab=diplomacy&q=' + encodeURIComponent(guildName));
-    await memberPage.getByRole('button', { name: 'Rejoindre · recrutement ouvert' }).click();
+    await memberPage.getByRole('button', { name: 'Demander à rejoindre' }).click();
+    await expect(memberPage.getByText('Candidature envoyée. Elle doit être acceptée par la guilde.', { exact: true })).toBeVisible();
+    await page.goto('/guildes');
+    await page.getByRole('button', { name: 'Accepter la candidature', exact: true }).click();
+    await expect(page.getByText('Demande acceptée : l’adhésion est enregistrée.', { exact: true })).toBeVisible();
+    await memberPage.goto('/guildes');
     await page.goto('/diplomatie?tab=members');
     await expect(page.getByRole('row').filter({ hasText: memberName }).getByLabel('Grade de '+memberName, { exact: true })).toBeVisible();
     await page.getByLabel('Grade de ' + memberName, { exact: true }).selectOption({ label: 'Diplomate' });
