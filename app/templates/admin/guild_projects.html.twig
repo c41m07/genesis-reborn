@@ -1,6 +1,7 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}{{ editing ? 'Modifier '~editing.name : 'Créer un modèle de projet' }} · Administration{% endblock %}
 {% block body %}
+{% set resourceOrder = constant('App\\Service\\Colony\\ResourceService::DISPLAY_ORDER')|filter(slug => resources[slug] is defined) %}
 <div class="page-heading"><div><h1 id="project-definition-title">{{ editing ? 'Modifier '~editing.name : 'Créer un modèle de projet' }}</h1><p>Des paliers financés par les membres, avec une récompense unique par joueur et modèle de projet.</p></div></div>
 <p><a class="secondary" href="{{ path('app_admin_guild_projects') }}">Tous les modèles de projets</a></p>
 <section aria-labelledby="project-definition-title">
@@ -31,9 +32,9 @@
                         <label for="stage-{{ loop.index0 }}-name">Nom du palier {{ loop.index }}</label><input id="stage-{{ loop.index0 }}-name" name="stages[{{ loop.index0 }}][name]" required maxlength="80" value="{{ stage.name|default('') }}"{% if focusStage is same as(loop.index0) %} autofocus{% endif %}>
                     </div>
                     <div class="admin-project-resources">
-                        {% for resource, label in resources %}
+                        {% for resource in resourceOrder %}
                             <div class="admin-project-field">
-                                <label for="stage-{{ loop.parent.loop.index0 }}-{{ resource }}">{{ label }} · palier {{ loop.parent.loop.index }}</label><input id="stage-{{ loop.parent.loop.index0 }}-{{ resource }}" type="number" name="stages[{{ loop.parent.loop.index0 }}][costs][{{ resource }}]" min="0" max="1000000000" step="1" value="{{ stage.costs[resource]|default(0) }}">
+                                <label for="stage-{{ loop.parent.loop.index0 }}-{{ resource }}">{{ resources[resource] }} · palier {{ loop.parent.loop.index }}</label><input id="stage-{{ loop.parent.loop.index0 }}-{{ resource }}" type="number" name="stages[{{ loop.parent.loop.index0 }}][costs][{{ resource }}]" min="0" max="1000000000" step="1" value="{{ stage.costs[resource]|default(0) }}">
                             </div>
                         {% endfor %}
                     </div>
@@ -44,9 +45,9 @@
         <fieldset class="panel"><legend>Minimums pour gagner le boost</legend>
             <p>Chaque minimum positif doit être atteint par le joueur sur l’ensemble des paliers. Il doit encore appartenir à la guilde à la fin. Au moins un minimum doit être positif ; zéro n’ajoute pas de condition sur cette ressource.</p>
             <div class="admin-project-resources">
-                {% for resource, label in resources %}
+                {% for resource in resourceOrder %}
                     <div class="admin-project-field">
-                        <label for="minimum-{{ resource }}">Minimum {{ label }}</label><input id="minimum-{{ resource }}" type="number" name="minimums[{{ resource }}]" min="0" max="10000000000" step="1" value="{{ draft.minimums[resource]|default(0) }}">
+                        <label for="minimum-{{ resource }}">Minimum {{ resources[resource] }}</label><input id="minimum-{{ resource }}" type="number" name="minimums[{{ resource }}]" min="0" max="10000000000" step="1" value="{{ draft.minimums[resource]|default(0) }}">
                     </div>
                 {% endfor %}
             </div>

@@ -8,7 +8,8 @@
     <select id="resource-operation-{{ planet.id }}" name="operation"><option value="add">Ajouter</option><option value="remove">Retirer</option></select>
 </div>
 <div class="admin-intervention-resources">
-    {% for slug,stock in stocks[planet.id].resources %}
+    {% for slug in constant('App\\Service\\Colony\\ResourceService::DISPLAY_ORDER')|filter(resource => stocks[planet.id].resources[resource] is defined) %}
+        {% set stock = stocks[planet.id].resources[slug] %}
         <div class="admin-intervention-field">
             <label for="resource-{{ planet.id }}-{{ slug }}">{{ stock.label }}</label>
             <input id="resource-{{ planet.id }}-{{ slug }}" name="amounts[{{ slug }}]" type="number" min="0" step="0.01" value="0" required aria-describedby="resource-stock-{{ planet.id }}-{{ slug }}">
