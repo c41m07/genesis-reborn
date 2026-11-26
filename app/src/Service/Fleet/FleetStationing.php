@@ -17,7 +17,7 @@ final class FleetStationing
         private ActionGuard $guard,private FleetHold $hold,private MovementCalculator $calculator,
         private FleetNavigation $navigation,private FleetDispatch $dispatch,private GameCatalog $catalog,
         private NotificationService $notifications,private VacationCalendar $vacations,private ClockInterface $clock,
-        private FleetFuel $fuel,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment) {}
+        private FleetFuel $fuel,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment, private FleetFuelExpenseRecorder $fuelExpenses) {}
 
     /** Le contrôle du jeton, de l'échéance et les verrous de participation et flotte précèdent cet appel. */
     public function arriveLocked(Fleet $fleet): void
@@ -30,7 +30,8 @@ final class FleetStationing
         }
         $fleet->reservedFuel=min($fleet->reservedFuel,$hydrogen);
         $legFuel=min($legFuel,$fleet->reservedFuel);
-        $fleet->reservedFuel-=$legFuel;$fleet->cargo['hydrogen']-=$legFuel;
+        $fleet->reservedFuel-=$legFuel;
+        $this->fuelExpenses->burnLocked($fleet, $legFuel, 'stationing');
         $target=$fleet->status==='returning'?($fleet->returnPlanet??$fleet->homePlanet):$fleet->destination;
         if(!$target || $target->solarSystem->galaxy->universe->id!==$fleet->playerUniverse->universe->id) {
             throw new \DomainException('Destination de stationnement incohérente.');

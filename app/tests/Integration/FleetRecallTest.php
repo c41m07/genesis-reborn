@@ -83,6 +83,11 @@ final class FleetRecallTest extends WebTestCase
     public function testEveryOutboundMissionCanReturnWithoutCompletingItsGoal(string $mission): void
     {
         $total=$this->totalShips();$f=$this->send($mission);$oldToken=$f->dispatchToken;$originalSeconds=$f->travelSeconds;
+        $connection = $this->em->getConnection();
+        $ledger = fn (): array => $connection->fetchAllAssociative(
+            'SELECT phase, hydrogen FROM fleet_fuel_expense WHERE fleet_id = ? ORDER BY burned_at', [$f->id],
+        );
+        self::assertSame([], $ledger(), 'Le départ réserve du carburant et ne le dépense pas.');
         $this->clock->sleep(max(1,(int)floor($originalSeconds/4)));
         $service=self::getContainer()->get(FleetRecallService::class);$m=$this->player->currentPlayerUniverse;$q=$service->preview($m,$f);
         $cargo=$f->cargo;$stock=$this->em->getConnection()->fetchAllAssociative('SELECT resource_type,current_stock FROM planet_resource WHERE planet_id=? ORDER BY resource_type',[$this->home->id]);
@@ -97,6 +102,14 @@ final class FleetRecallTest extends WebTestCase
         self::getContainer()->get(FleetService::class)->arrive($f->id,$newToken);
         self::assertSame('completed',$f->status);self::assertSame($total,$this->totalShips());
         self::getContainer()->get(FleetService::class)->arrive($f->id,$newToken);self::assertSame($total,$this->totalShips());
+        $expected = array_filter(['player_recall' => $q['spent_now'], 'return' => $q['return_fuel']]);
+        $totalByPhase = array_column($ledger(), 'hydrogen', 'phase');
+        self::assertSame(array_keys($expected), array_keys($totalByPhase));
+        foreach ($expected as $phase => $amount) {
+            self::assertEqualsWithDelta($amount, (float) $totalByPhase[$phase], 1e-6);
+        }
+        self::assertCount(count($expected), $ledger(), 'La nouvelle livraison du même trajet ne brûle rien.');
+
         self::assertSame($this->peer->currentPlayerUniverse->id,$this->target->owner->id);self::assertNull($this->virgin->owner);self::assertNull($this->npc->owner);
         self::assertSame(0,(int)$this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM espionage_report'));
         if ($mission === 'explore') {

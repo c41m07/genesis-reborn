@@ -14,6 +14,7 @@ use App\Service\Admin\AdminOperationsService;
 use App\Service\Admin\AdminNotificationService;
 use App\Service\Admin\UniverseMetricsService;
 use App\Service\Admin\UniverseObservatory;
+use App\Service\Admin\ExpenseObservatory;
 use App\Service\Admin\CatalogBalanceService;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Universe\UniverseLifecycleService;
@@ -197,6 +198,7 @@ final class AdminController extends AbstractController
         UniverseMetricsService $metrics,
         \App\Service\Performance\PerformanceReport $performance,
         PerformancePeriods $periods,
+        ExpenseObservatory $expenses,
     ): Response {
         $universe = $repo->find(Universe::class, $id);
         if (!$universe instanceof Universe) {
@@ -260,6 +262,14 @@ final class AdminController extends AbstractController
             'comparePeriod' => $comparePeriod,
             'releaseComparison' => $releaseComparison,
             'resources' => $tab === 'economy' ? $metrics->resources($universe, $request->query->getInt('page', 1)) : null,
+            'expenses' => $tab === 'economy' ? $expenses->read(
+                $id,
+                $days,
+                $selection['start'],
+                $selection['end'],
+                $request->query->getInt('expense_member'),
+                $request->query->getString('expense_query'),
+            ) : null,
         ]);
         $response->headers->set('Cache-Control', 'private, no-store');
 

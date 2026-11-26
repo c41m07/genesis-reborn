@@ -1,0 +1,80 @@
+{% set categoryLabels = {buildings:'Bâtiments', technologies:'Recherches', ships:'Vaisseaux', defenses:'Défenses', fuel:'Carburant consommé'} %}
+{% set resourceLabels = {metal:'Métal', nano:'Nano', hydrogen:'Hydrogène', antimatter:'Antimatière', electricity:'Électricité'} %}
+{% set metrics = {paid:'Payé', refunded:'Remboursé', net:'Net'} %}
+<section class="panel observatory-expenses" id="observatory-expenses" aria-labelledby="observatory-expenses-title">
+  <div class="panel-header">
+    <div><p class="eyebrow">Économie · Suivi par commandant</p><h2 id="observatory-expenses-title">Dépenses du joueur</h2>
+      <p>Consultez les débits, les remboursements et les dépenses nettes de ce joueur.</p></div>
+  </div>
+  <form method="get" action="{{ path('app_admin_universe_observatory', {id: universe.id}) }}#observatory-expenses" class="observatory-filters">
+    {% for name, value in filters %}{% if name not in ['id', 'expense_member', 'expense_query'] %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endif %}{% endfor %}
+    <label>Rechercher un pseudo <input type="search" name="expense_query" maxlength="64" value="{{ expenses.query }}"></label>
+    <label>Commandant <select name="expense_member">
+      <option value="0">Choisir un commandant</option>
+      {% for option in expenses.options %}
+        <option value="{{ option.id }}"{% if expenses.selected and option.id == expenses.selected.id %} selected{% endif %}>{{ option.username }}{{ option.former ? ' · empire oublié' : '' }}</option>
+      {% endfor %}
+    </select></label>
+    <button type="submit" class="button">Appliquer</button>
+  </form>
+  {% if expenses.options is empty %}<p>Aucun commandant correspondant dans cet univers.</p>{% endif %}
+  {% if expenses.requestedId > 0 and not expenses.selected %}<p>Le commandant sélectionné n’est pas disponible dans cet univers.</p>{% endif %}
+  <p>{{ expenses.from|date('d/m/Y à H:i', 'UTC') }} → {{ expenses.until|date('d/m/Y à H:i', 'UTC') }} UTC · Fin exclue.</p>
+  <div class="observatory-expense-coverage">
+    <strong>{{ expenses.partial ? 'Couverture partielle ou indisponible sur cette période' : 'Couverture complète sur la période' }}</strong>
+    <p>Collecte catalogue : {{ expenses.starts.catalogue ? expenses.starts.catalogue|date('d/m/Y à H:i', 'UTC') ~ ' UTC' : 'non disponible' }} · Carburant : {{ expenses.starts.fuel ? expenses.starts.fuel|date('d/m/Y à H:i', 'UTC') ~ ' UTC' : 'non disponible' }}.</p>
+  </div>
+  {% if expenses.selected and not expenses.valuesAvailable %}
+    <p>Aucun historique collecté sur cette période.</p>
+  {% elseif expenses.valuesAvailable %}
+    <div class="observatory-kpis observatory-expense-kpis">
+      {% for key, label in metrics %}
+        <div class="panel"><span>{{ key == 'net' ? 'Dépenses nettes' : label }}</span><strong>{{ expenses.weighted[key]|quantity(2) }}</strong><p>Valeur matériaux · éq. H</p></div>
+      {% endfor %}
+    </div>
+    <div class="observatory-expense-grid">
+      <section aria-labelledby="observatory-expenses-chart">
+        <h3 id="observatory-expenses-chart">Dépenses nettes par catégorie</h3>
+        <ul class="observatory-expense-bars">
+          {% for category, label in categoryLabels %}
+            {% if expenses.rows[category] is defined %}
+              {% set net = expenses.rows[category].material_net %}
+              <li><div><span>{{ label }}</span><strong>{{ net|quantity(2) }}</strong></div>
+                <meter min="0" max="{{ expenses.maxMagnitude }}" value="{{ net|abs }}" aria-label="{{ label }} : amplitude de la dépense nette"></meter>
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </section>
+      <section aria-labelledby="observatory-expenses-resources">
+        <h3 id="observatory-expenses-resources">Détail par ressource</h3>
+        <div class="observatory-table" tabindex="0" role="region" aria-label="Totaux des dépenses par ressource">
+          <table><thead><tr><th scope="col">Ressource</th>{% for label in metrics %}<th scope="col">{{ label }}</th>{% endfor %}</tr></thead>
+            <tbody>{% for resource, label in resourceLabels %}<tr>
+              <th scope="row">{{ label }}</th>
+              {% for key in metrics|keys %}
+                <td{% if key == 'net' %} class="observatory-expense-net"{% endif %}>{{ expenses.rows.buildings is defined or resource == 'hydrogen' ? expenses.totals[key][resource]|quantity(2) : 'Non mesuré' }}</td>
+              {% endfor %}
+            </tr>{% endfor %}</tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+    <details>
+      <summary>Voir les montants par catégorie et ressource</summary>
+      {% for category, row in expenses.rows %}
+        <h3>{{ categoryLabels[category] }}</h3>
+        <div class="observatory-table" tabindex="0" role="region" aria-label="Dépenses : {{ categoryLabels[category] }}">
+          <table><thead><tr><th scope="col">Ressource</th>{% for label in metrics %}<th scope="col">{{ label }}</th>{% endfor %}</tr></thead>
+            <tbody>{% for resource, label in resourceLabels %}
+              {% if category != 'fuel' or resource == 'hydrogen' %}
+                <tr><th scope="row">{{ label }}</th>{% for key in metrics|keys %}<td>{{ row[key][resource]|quantity(2) }}</td>{% endfor %}</tr>
+              {% endif %}
+            {% endfor %}</tbody>
+          </table>
+        </div>
+      {% endfor %}
+    </details>
+  {% endif %}
+  <p>Valeur matériaux : H × 1 + M × 2 + N × 4 + A × 8. L’électricité est suivie à part. Le fret, les transferts et le carburant réservé mais non consommé ne sont pas des dépenses. Un remboursement peut avoir lieu après la période du paiement.</p>
+</section>
