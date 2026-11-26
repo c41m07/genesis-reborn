@@ -126,11 +126,11 @@ brutes pour un budget économique identique. Aucun seuil de protection n’est c
 dans ce lot.
 
 **Effet vérifié en base isolée :** avec exactement la même flotte, deux comptes témoins
-passent de 4 799 à 8 670 points en direct. Avant minuit de Paris, le classement
+passent de 4 799 à 7 763 points en direct. Avant minuit de Paris, le classement
 affiche encore 4 799 points. Le compte récent perd néanmoins sa protection débutant ;
 sur le compte plus ancien, un attaquant à 33 744 points passe du refus à l’autorisation
-par la règle 5:1. Après minuit, le classement affiche 8 670 et un gain de 3 871 points
-sans nouvel achat ni construction. Le scénario force les valeurs proches des seuils ;
+par la règle 5:1. Après minuit, le classement affiche 7 763 et un gain de 2 964 points
+sans nouvel achat ni construction. Le scénario utilise 60 bombardiers intermédiaires par compte témoin et force les valeurs proches des seuils ;
 ce n’est pas une estimation du nombre de joueurs concernés ni d’un parcours de débutant.
 Avant d’envisager une mise en production, vérifier si cet effet est voulu et distinguer
 les variations dues aux recettes de la progression réelle.

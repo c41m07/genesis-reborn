@@ -145,7 +145,15 @@ test('L7B : manques multiples, devis de lot et suivi dépliable conservés aprè
 
     runIsolatedSql(user.project, `UPDATE planet_resource SET current_stock=0,last_updated_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 HOUR) WHERE planet_id=${user.planet}`);
     await page.goto(`${user.path}?section=technologies#item-engineering_foundations-superior`);
-    const research = page.locator('#item-engineering_foundations-superior');
+    const civilAction = page.locator('#item-engineering_foundations-superior .catalog-build-action');
+    await expect(civilAction).toBeDisabled();
+    await expect(civilAction.locator('.catalog-missing-resource')).toHaveCount(3);
+    await expect(civilAction).not.toContainText(/Antimatière|Hydrogène/);
+
+    // La recette de colonisation supérieure demande toujours quatre matériaux et l’électricité.
+    runIsolatedSql(user.project, `UPDATE player_technology SET level=5 WHERE player_universe_id=${user.member} AND slug='colonial_expansion' AND tier='superior'`);
+    await page.goto(`${user.path}?section=technologies#item-colonial_expansion-superior`);
+    const research = page.locator('#item-colonial_expansion-superior');
     const action = research.locator('.catalog-build-action');
     await expect(action).toBeDisabled();
     await expect(action).toContainText('Il manque :');
