@@ -1,7 +1,7 @@
 <?php
 namespace App\Controller;
 
-use App\Service\Player\{SocialProfileView,DiplomacyAccessPolicy,GuildProfileService,GuildImageStorage};
+use App\Service\Player\{SocialProfileView,DiplomacyAccessPolicy,GuildProfileService,GuildImageStorage,GuildRecruitmentView};
 use App\Service\Universe\UniverseContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request,Response,StreamedResponse};
@@ -11,19 +11,19 @@ use Symfony\Component\Routing\Attribute\Route;
 final class PublicProfileController extends AbstractController
 {
     #[Route('/joueurs/{id}',name:'app_player_public_profile',requirements:['id'=>'\d+'],methods:['GET'])]
-    public function player(int $id,UniverseContext $context,SocialProfileView $profiles): Response
+    public function player(int $id,UniverseContext $context,SocialProfileView $profiles,GuildRecruitmentView $recruitment): Response
     {
         $member=$context->membership();
         try {$profile=$profiles->player($member,$id);} catch(\DomainException) {throw $this->createNotFoundException('Commandant inaccessible.');}
-        return $this->render('player/public_profile.html.twig',['membership'=>$member,'profile'=>$profile],new Response(headers:['Cache-Control'=>'private, no-store']));
+        return $this->render('player/public_profile.html.twig',['membership'=>$member,'profile'=>$profile,'can_invite'=>$recruitment->canInvite($member,$id)],new Response(headers:['Cache-Control'=>'private, no-store']));
     }
 
     #[Route('/guildes/{id}',name:'app_guild_public_profile',requirements:['id'=>'\d+'],methods:['GET'])]
-    public function guild(int $id,UniverseContext $context,SocialProfileView $profiles,DiplomacyAccessPolicy $access): Response
+    public function guild(int $id,UniverseContext $context,SocialProfileView $profiles,DiplomacyAccessPolicy $access,GuildRecruitmentView $recruitment): Response
     {
         $member=$context->membership();
         try {$guild=$profiles->accessibleGuild($member,$id);$profile=$profiles->guild($member,$id);} catch(\DomainException) {throw $this->createNotFoundException('Guilde inaccessible.');}
-        return $this->render('player/public_guild.html.twig',['membership'=>$member,'profile'=>$profile,'can_edit'=>$access->canCommand($member,$guild)],new Response(headers:['Cache-Control'=>'private, no-store']));
+        return $this->render('player/public_guild.html.twig',['membership'=>$member,'profile'=>$profile,'can_edit'=>$access->canCommand($member,$guild),'recruitment'=>$recruitment->onGuildProfile($member,$guild)],new Response(headers:['Cache-Control'=>'private, no-store']));
     }
 
     #[Route('/guildes/{id}/personnaliser',name:'app_guild_profile_edit',requirements:['id'=>'\d+'],methods:['GET','POST'])]

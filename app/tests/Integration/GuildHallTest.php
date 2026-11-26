@@ -56,7 +56,7 @@ final class GuildHallTest extends KernelTestCase
         [$member, $colony] = $this->player('HallMember');
         [$neighbor] = $this->player('HallNeighbor');
         [$otherUniverse] = $this->player('HallVisitor', 'turbo-1');
-        self::getContainer()->get(DiplomacyService::class)->join($member, $guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol(self::getContainer()->get(DiplomacyService::class), self::getContainer()->get(\App\Repository\GameRepository::class), $member, $guild->id);
         $service = GuildHallFixture::enable(self::getContainer());
         $planetCount = $this->em->getRepository(Planet::class)->count();
         $halls = self::getContainer()->get(GuildHallRepository::class);
@@ -112,7 +112,7 @@ final class GuildHallTest extends KernelTestCase
     {
         [$leader, $origin, $guild] = $this->guild('HallFundingRace', 'HFR');
         [$member, $planet] = $this->player('HallDonor');
-        self::getContainer()->get(DiplomacyService::class)->join($member, $guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol(self::getContainer()->get(DiplomacyService::class), self::getContainer()->get(\App\Repository\GameRepository::class), $member, $guild->id);
         $before = $this->stock($origin, 'hydrogen') + $this->stock($planet, 'hydrogen');
         $results = $this->race($leader->universe->id, [
             ['action' => 'contribute', 'member' => $leader->id, 'guild' => $guild->id, 'planet' => $origin->id],
@@ -179,9 +179,9 @@ final class GuildHallTest extends KernelTestCase
         $diplomacy->leave($third);
         self::assertSame(1, $repo->currentRosterSize($guild, 3));
         self::assertSame(3, $repo->qualifiedDonors($hall));
-        $diplomacy->join($member, $guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $member, $guild->id);
         [$newcomer] = $this->player('HallNewcomer');
-        $diplomacy->join($newcomer, $guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $newcomer, $guild->id);
         self::assertSame(3, $repo->currentRosterSize($guild, 3));
         self::assertSame(3, $repo->qualifiedDonors($hall));
         self::assertNull($repo->donor($hall, $newcomer));
@@ -235,7 +235,7 @@ final class GuildHallTest extends KernelTestCase
         $diplomacy = self::getContainer()->get(DiplomacyService::class);
         $diplomacy->leave($member);
         [$replacement, $colony] = $this->player('FreshHallDonor');
-        $diplomacy->join($replacement, $guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $replacement, $guild->id);
         $this->em->getConnection()->executeStatement("UPDATE planet_resource SET current_stock = 20000 WHERE planet_id = ? AND resource_type = 'antimatter'", [$colony->id]);
         $hall = $service->contribute($replacement, $guild->id, $colony->id, $hall->revision, ['antimatter' => 6250]);
         self::assertSame(500000, $hall->strength);
@@ -250,7 +250,7 @@ final class GuildHallTest extends KernelTestCase
         $service = $this->officialService();
         [$leader, $origin, $guild] = $this->guild('HallShareLeader', 'HSL');
         [$member, $colony] = $this->player('HallShareMember');
-        self::getContainer()->get(DiplomacyService::class)->join($member, $guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol(self::getContainer()->get(DiplomacyService::class), self::getContainer()->get(\App\Repository\GameRepository::class), $member, $guild->id);
         $db = $this->em->getConnection();
         $db->executeStatement("UPDATE planet_resource SET current_stock = 100000 WHERE planet_id = ? AND resource_type = 'antimatter'", [$origin->id]);
         $hall = $service->contribute($leader, $guild->id, $origin->id, 0, ['antimatter' => 50000]);
@@ -290,8 +290,8 @@ final class GuildHallTest extends KernelTestCase
         [$member, $secondPlanet] = $this->player('OfficialMember');
         [$third, $thirdPlanet] = $this->player('OfficialThird');
         $diplomacy = self::getContainer()->get(DiplomacyService::class);
-        $diplomacy->join($member, $guild->id);
-        $diplomacy->join($third, $guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $member, $guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $third, $guild->id);
         $db = $this->em->getConnection();
         foreach ([$origin, $secondPlanet, $thirdPlanet] as $planet) {
             // Stocks de recette isolés : ce volume n'est pas un paquet de jeu.
@@ -317,7 +317,7 @@ final class GuildHallTest extends KernelTestCase
         [$stranger, $strangerPlanet, $otherGuild] = $this->guild('HallStranger', 'HST');
         [, $otherWorldPlanet] = $this->player('HallOtherWorld', 'turbo-1');
         $diplomacy = self::getContainer()->get(DiplomacyService::class);
-        $diplomacy->join($member, $guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $member, $guild->id);
         $service = GuildHallFixture::enable(self::getContainer());
         $hall = $service->contribute($leader, $guild->id, $origin->id, 0, ['metal' => $scenario === 'early' ? 1 : 16]);
         if ($scenario === 'taken') {

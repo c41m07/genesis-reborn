@@ -226,7 +226,12 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await expect(memberPage.locator('.guild-card')).toHaveCount(0);
   await memberPage.getByLabel('Rechercher une guilde').fill(guildName);
   await memberPage.getByRole('button', { name: 'Rechercher', exact: true }).click();
-  await memberPage.locator('.guild-card').filter({ has: memberPage.getByRole('heading', { name: guildName, exact: true }) }).getByRole('button', { name: 'Rejoindre · recrutement ouvert' }).click();
+  await memberPage.locator('.guild-card').filter({ has: memberPage.getByRole('heading', { name: guildName, exact: true }) }).getByRole('button', { name: 'Demander à rejoindre' }).click();
+  await expect(memberPage.getByText('Candidature envoyée. Elle doit être acceptée par la guilde.', { exact: true })).toBeVisible();
+  await page.goto('/guildes');
+  await page.getByRole('button', { name: 'Accepter la candidature', exact: true }).click();
+  await expect(page.getByText('Demande acceptée : l’adhésion est enregistrée.', { exact: true })).toBeVisible();
+  await memberPage.goto('/guildes');
   await memberPage.getByRole('navigation',{name:'Navigation de guilde'}).getByRole('link',{name:'Membres',exact:true}).click();
   await expect(memberPage.locator('.guild-members-table')).toContainText(leader);
   await expect(memberPage.locator('.guild-members-table')).toContainText(member);

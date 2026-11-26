@@ -81,7 +81,12 @@ test('Les membres financent deux paliers et le traitement attribue les boosts un
     await page.getByRole('button', { name: 'Fonder une guilde' }).click();
     await register(other, 'ProjMember-' + id, 'proj-member-' + id + '@example.test');
     await other.goto('/diplomatie?tab=diplomacy&q=' + encodeURIComponent(guildName));
-    await other.getByRole('button', { name: 'Rejoindre · recrutement ouvert' }).click();
+    await other.getByRole('button', { name: 'Demander à rejoindre' }).click();
+    await expect(other.getByText('Candidature envoyée. Elle doit être acceptée par la guilde.', { exact: true })).toBeVisible();
+    await page.goto('/guildes');
+    await page.getByRole('button', { name: 'Accepter la candidature', exact: true }).click();
+    await expect(page.getByText('Demande acceptée : l’adhésion est enregistrée.', { exact: true })).toBeVisible();
+    await other.goto('/guildes');
     const project = process.env.BROWSER_ROUTER;
     const stages = [{ name: 'Structure', costs: { metal: 10 } }, { name: 'Énergie', costs: { hydrogen: 4 } }];
     runIsolatedSql(project, `INSERT INTO guild_project_definition (universe_id,name,description,stages,minimums,enabled,created_at,updated_at) SELECT id,'${projectName}','Projet de test','${JSON.stringify(stages)}','{"metal":2,"hydrogen":1}',1,UTC_TIMESTAMP(),UTC_TIMESTAMP() FROM universe WHERE slug='omega-1'`);

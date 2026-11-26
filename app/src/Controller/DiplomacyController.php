@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\GuildRank;
 use App\Service\Universe\UniverseContext;
-use App\Service\Player\{RelationResolver, DiplomacyService, GuildRankService, DiplomacyPageView};
+use App\Service\Player\{RelationResolver, DiplomacyService, GuildRankService, DiplomacyPageView, GuildRecruitmentView};
 use App\Repository\GameRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
@@ -27,6 +27,7 @@ final class DiplomacyController extends AbstractController
         GameRepository $repository,
         GuildRankService $rankService,
         DiplomacyPageView $view,
+        GuildRecruitmentView $recruitment,
     ): Response
     {
         $membership = $context->membership();
@@ -78,7 +79,7 @@ final class DiplomacyController extends AbstractController
                     'rank_assign' => $rankService->assign($membership, $target, $request->request->getInt('rank'), $request->request->getInt('expected_rank')),
                     'create' => $service->create($membership, (string) $request->request->get('name'), $request->request->getString('tag')),
                     'tag' => $service->setTag($membership, $request->request->getString('tag')),
-                    'join' => $service->join($membership, $target),
+                    'join' => $service->applyToGuild($membership, $target),
                     'leave' => $service->leave($membership),
                     'transfer' => $service->transfer($membership, $target),
                     'disband' => $service->disband($membership),
@@ -97,7 +98,7 @@ final class DiplomacyController extends AbstractController
                 if ($action === 'create') {
                     $request->getSession()->remove($creationDraftKey);
                 }
-                $this->addFlash('success', 'Diplomatie mise à jour.');
+                $this->addFlash('success', $action === 'join' ? 'Candidature envoyée. Elle doit être acceptée par la guilde.' : 'Diplomatie mise à jour.');
             } catch (\DomainException $e) {
                 if ($action === 'create') {
                     // Le retour après erreur conserve la saisie dans ce seul empire, sans valider le brouillon.
@@ -147,6 +148,9 @@ final class DiplomacyController extends AbstractController
         if ($data['tab'] === 'create' && !$ownGuild && $data['enabled']) {
             // Le brouillon survit au rechargement ; seule une création réussie l’efface.
             $data['guildCreationDraft'] = $request->getSession()->get($creationDraftKey, []);
+        }
+        if (in_array($data['tab'], ['guilds', 'join'], true)) {
+            $data['recruitmentInbox'] = $recruitment->inbox($membership);
         }
         return $this->render('player/diplomacy.html.twig', $data, new Response(headers: ['Cache-Control' => 'private, no-store']));
     }

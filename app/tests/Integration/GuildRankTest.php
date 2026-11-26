@@ -53,7 +53,7 @@ final class GuildRankTest extends KernelTestCase
         $diplomacy = self::getContainer()->get(\App\Service\Player\DiplomacyService::class);
         $diplomacy->create($leader->currentPlayerUniverse, 'Grades', 'GRD');
         $guild = $this->em->getRepository(\App\Entity\Guild::class)->findOneBy(['leader' => $leader->currentPlayerUniverse]);
-        $diplomacy->join($delegate->currentPlayerUniverse, $guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $delegate->currentPlayerUniverse, $guild->id);
         $member = $this->em->getRepository(\App\Entity\GuildMember::class)->findOneBy(['playerUniverse' => $delegate->currentPlayerUniverse]);
         $ranks = self::getContainer()->get(\App\Service\Player\GuildRankService::class);
         $ranks->save($leader->currentPlayerUniverse, 0, 'Diplomate', 10, ['diplomacy.alliance'], 0);
@@ -182,7 +182,7 @@ final class GuildRankTest extends KernelTestCase
         $ranks->save($leader, $rank->id, 'Officier', 10, ['members.assign_rank', 'diplomacy.alliance'], $rank->version);
         $ranks->save($leader, 0, 'Diplomate junior', 20, ['diplomacy.alliance'], 0);
         $junior = $this->em->getRepository(\App\Entity\GuildRank::class)->findOneBy(['name' => 'Diplomate junior']);
-        $diplomacy->join($outsider, $guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $outsider, $guild->id);
         $target = $this->em->getRepository(\App\Entity\GuildMember::class)->findOneBy(['playerUniverse' => $outsider]);
         $ranks->assign($delegate, $target->id, $junior->id, 0);
         self::assertSame($junior->id, $target->rank->id);
@@ -196,7 +196,7 @@ final class GuildRankTest extends KernelTestCase
         $ranks->save($leader, $rank->id, 'Officier', 10, ['members.assign_rank'], $rank->version);
         $ranks->save($leader, 0, 'Hostilité', 20, ['diplomacy.hostility'], 0);
         $hostile = $this->em->getRepository(\App\Entity\GuildRank::class)->findOneBy(['name' => 'Hostilité']);
-        $diplomacy->join($outsider, $guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $outsider, $guild->id);
         $target = $this->em->getRepository(\App\Entity\GuildMember::class)->findOneBy(['playerUniverse' => $outsider]);
         $this->expectException(\DomainException::class);
         $ranks->assign($delegate, $target->id, $hostile->id, 0);

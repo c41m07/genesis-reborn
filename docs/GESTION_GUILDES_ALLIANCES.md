@@ -299,3 +299,24 @@ Lot 1 publié dans la [PR #75](https://github.com/c41m07/genesis-reborn/pull/75)
 grades, gestion et création ; liens directs, anciennes adresses conservées et
 lectures adaptées à chaque page. Voir le [suivi des lots](NAVIGATION_PAGES_DEDIEES.md) pour les
 choix, vérifications et limites. CI, fusion et déploiement restent distincts.
+
+## Recrutement avec consentement
+
+Une candidature déposée depuis la présentation ou la recherche ne crée
+plus d’adhésion. Sur **Ma guilde**, le commandant et les grades portant
+« Gérer les candidatures et inviter des commandants » voient la liste et
+le compteur de candidatures. Une nouvelle demande les avertit par le
+circuit de notification du jeu ; les membres sans ce droit ne reçoivent
+ni alerte ni compteur de recrutement.
+
+Ces mêmes recruteurs peuvent inviter depuis le profil d’un commandant
+sans guilde du même univers. Le destinataire voit l’invitation dans
+**Guildes** et peut l’accepter ou la refuser. Un recrutement nécessite
+toujours une action du destinataire de la demande. Un joueur sans
+guilde peut retirer sa candidature depuis la présentation.
+
+Le commandant dispose de ce droit par sa fonction. Les anciens grades
+ne reçoivent aucun droit supplémentaire automatiquement. Les adhésions
+existantes ne sont pas modifiées. Une acceptation ou une création de
+guilde clôt les autres demandes du joueur dans cet univers. La migration
+`Version20261126003000` ajoute la table des demandes.

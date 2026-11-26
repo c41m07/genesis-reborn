@@ -99,7 +99,7 @@ final class GuildTagPlayerReportTest extends WebTestCase
     public function testTagPermissionFollowsTransferredCommand(): void
     {
         $service=self::getContainer()->get(DiplomacyService::class);$leader=$this->reporter->currentPlayerUniverse;$successor=$this->target->currentPlayerUniverse;
-        $service->create($leader,'Transfert','ONE');$guild=self::getContainer()->get(RelationResolver::class)->guild($leader);$service->join($successor,$guild->id);
+        $service->create($leader,'Transfert','ONE');$guild=self::getContainer()->get(RelationResolver::class)->guild($leader);\App\Tests\Support\GuildRecruitmentFixture::enrol($service, self::getContainer()->get(\App\Repository\GameRepository::class), $successor,$guild->id);
         $service->transfer($leader,$successor->id);$service->setTag($successor,'TWO');self::assertSame('TWO',$guild->tag);
         $connection=$this->em->getConnection();$id=$guild->id;$this->expectException(\DomainException::class);
         try { $service->setTag($leader,'BAD'); }
@@ -312,7 +312,7 @@ final class GuildTagPlayerReportTest extends WebTestCase
         $service=self::getContainer()->get(DiplomacyService::class);
         $service->create($this->reporter->currentPlayerUniverse,'Guilde navigation','NAV');
         $guild=self::getContainer()->get(RelationResolver::class)->guild($this->reporter->currentPlayerUniverse);
-        $service->join($this->target->currentPlayerUniverse,$guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($service, self::getContainer()->get(\App\Repository\GameRepository::class), $this->target->currentPlayerUniverse,$guild->id);
         self::getContainer()->get(\App\Service\Player\GuildRankService::class)->save($this->reporter->currentPlayerUniverse,0,'Diplomate',10,[],0);
         $connection=$this->em->getConnection();
         $crawler=$this->client->request('GET','/guildes');
@@ -431,7 +431,7 @@ final class GuildTagPlayerReportTest extends WebTestCase
         $viewer=$this->reporter->currentPlayerUniverse;$member=$this->target->currentPlayerUniverse;
         $guilds->create($viewer,'Guilde présence','PRE');
         $guild=self::getContainer()->get(RelationResolver::class)->guild($viewer);
-        $guilds->join($member,$guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($guilds, self::getContainer()->get(\App\Repository\GameRepository::class), $member,$guild->id);
         $activity=self::getContainer()->get(\App\Service\Player\PlayerActivityService::class);
         $presence=self::getContainer()->get(\App\Service\Player\GuildPresence::class);
         $clock=self::getContainer()->get('clock');
@@ -463,7 +463,7 @@ final class GuildTagPlayerReportTest extends WebTestCase
         $reader=$this->reporter->currentPlayerUniverse;
         $service->create($reader,'Trois derniers messages','TROIS');
         $guild=self::getContainer()->get(RelationResolver::class)->guild($reader);
-        $service->join($this->target->currentPlayerUniverse,$guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($service, self::getContainer()->get(\App\Repository\GameRepository::class), $this->target->currentPlayerUniverse,$guild->id);
         for($i=1;$i<=5;$i++) {
             $message=new \App\Entity\SocialMessage();
             $message->sender=$this->target->currentPlayerUniverse;$message->guild=$guild;

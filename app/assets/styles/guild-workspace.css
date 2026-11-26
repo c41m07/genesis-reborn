@@ -352,3 +352,12 @@ body.authenticated .guild-workspace .commander-card > form {
         padding-left: 48px;
     }
 }
+
+/* L’accueil en thème clair doit associer ses textes foncés à des surfaces claires. */
+body.authenticated[data-theme="light"] .guild-workspace--guilds :is(.guild-overview-conversation, .guild-overview-details > .panel) {
+    background: #fff;
+}
+
+body.authenticated[data-theme="light"] .guild-workspace--guilds .space-navigation > a[aria-current="page"] {
+    background: #eaf1f5;
+}

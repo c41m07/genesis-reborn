@@ -71,7 +71,12 @@ test('Proposition B : pages de guilde, cartes, menus mobiles et aperçu sans lec
     const memberPage = await memberContext.newPage();
     await enterUniverse(memberPage, memberName, 'guild-b-member-' + suffix + '@example.test');
     await memberPage.goto('/guildes?q=' + encodeURIComponent(guildName));
-    await memberPage.getByRole('button', { name: 'Rejoindre · recrutement ouvert' }).click();
+    await memberPage.getByRole('button', { name: 'Demander à rejoindre' }).click();
+    await expect(memberPage.getByText('Candidature envoyée. Elle doit être acceptée par la guilde.', { exact: true })).toBeVisible();
+    await page.goto('/guildes');
+    await page.getByRole('button', { name: 'Accepter la candidature', exact: true }).click();
+    await expect(page.getByText('Demande acceptée : l’adhésion est enregistrée.', { exact: true })).toBeVisible();
+    await memberPage.goto('/guildes');
     await memberPage.getByRole('link', { name: 'Ouvrir le canal de guilde' }).click();
     for (const message of ['Premier échange de test', 'Les projets sont disponibles.', 'La discussion continue dans le canal.', 'Bienvenue aux nouveaux commandants !']) {
       await memberPage.getByRole('textbox', { name: 'Message pour le canal de guilde', exact: true }).fill(message);

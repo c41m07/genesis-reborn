@@ -33,7 +33,7 @@ final class PublicProfilesTest extends WebTestCase
         $em->flush();$diplomacy=self::getContainer()->get(DiplomacyService::class);
         $diplomacy->create($this->leader->currentPlayerUniverse,'Public Guild','PUB');
         $guild=$em->getRepository(Guild::class)->findOneBy(['leader'=>$this->leader->currentPlayerUniverse]);$this->guildId=$guild->id;
-        $diplomacy->join($this->member->currentPlayerUniverse,$this->guildId);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $this->member->currentPlayerUniverse,$this->guildId);
         $this->inputs=sys_get_temp_dir().'/genesis-profile-input-'.bin2hex(random_bytes(8));mkdir($this->inputs,0700);
         $this->mediaDirectory=dirname(self::getContainer()->get(GuildImageStorage::class)->path(str_repeat('0',48).'.png'));
         if(!str_contains($this->mediaDirectory,'/var/cache/test/')) throw new \RuntimeException('Stockage de test non isolé.');
