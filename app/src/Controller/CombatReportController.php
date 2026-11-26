@@ -42,10 +42,20 @@ final class CombatReportController extends AbstractController
         $view = $request->request->getString('view') === 'archives' ? 'archives' : '';
         try {
             $operation = $request->request->getString('operation');
-            if (!in_array($operation, ['archive', 'restore'], true)) throw new \DomainException('Action sur les rapports invalide.');
-            $keys = $request->request->has('single') ? [$request->request->getString('single')] : $request->request->all('selected');
-            $archives->change($member, $keys, $operation === 'archive');
-            $this->addFlash('success', $operation === 'archive' ? 'Rapports archivés. Vous pouvez les restaurer depuis les archives.' : 'Rapports restaurés dans votre liste.');
+            $removal = $request->request->getString('remove');
+            if ($removal !== '') {
+                $keys = $removal === 'selection' ? $request->request->all('selected') : [$removal];
+                // Le service exige l’archivage pour chaque clé ; le filtre visible n’est pas une autorisation.
+                $archives->removeFromArchives($member, $keys);
+                $this->addFlash('success', 'Rapports retirés de vos archives personnelles.');
+            } else {
+                if (!in_array($operation, ['archive', 'restore'], true)) {
+                    throw new \DomainException('Action sur les rapports invalide.');
+                }
+                $keys = $request->request->has('single') ? [$request->request->getString('single')] : $request->request->all('selected');
+                $archives->change($member, $keys, $operation === 'archive');
+                $this->addFlash('success', $operation === 'archive' ? 'Rapports archivés. Vous pouvez les restaurer depuis les archives.' : 'Rapports restaurés dans votre liste.');
+            }
         } catch (\DomainException $error) { $this->addFlash('error', $error->getMessage()); }
         try {$criteria=new \App\Service\Search\SearchCriteria($request->request->all(),$member->player->preferences['timezone']??'Europe/Paris');$extra=$criteria->url();} catch(\DomainException) {$extra=[];}
         return $this->redirectToRoute('app_combat_reports', $extra+['type'=>$filter, 'view'=>$view, 'page'=>max(1, $request->request->getInt('page', 1))]);
@@ -77,6 +87,6 @@ final class CombatReportController extends AbstractController
             }
         }
 
-        return $this->render('combat/report.html.twig', ['report' => $log, 'loot_rows' => $lootRows, 'membership' => $membership, 'capture_state' => $occupations->forReport($log)] + $presentation);
+        return $this->render('combat/report.html.twig', ['report' => $log, 'loot_rows' => $lootRows, 'membership' => $membership, 'capture_state' => $occupations->forReport($log)] + $presentation, new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 }

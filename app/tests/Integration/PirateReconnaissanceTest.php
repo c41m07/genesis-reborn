@@ -8,11 +8,12 @@ use App\Entity\{Fleet, FleetShip, Galaxy, Guild, GuildMember, PirateReconnaissan
 use App\Manager\GameManager;
 use App\Message\PirateReconnaissanceDue;
 use App\Repository\{GameRepository, PirateCampaignReadRepository};
+use App\Service\Catalog\GameCatalog;
 use App\Service\Colony\ActionGuard;
 use App\MessageHandler\PirateReconnaissanceDueHandler;
 use App\Service\Fleet\{FleetService, FleetVisibility};
 use App\Service\Notification\OutboxRelay;
-use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignProgress, PirateCampaignSequence, PirateDistressSite, PirateEncounterSnapshot, PiratePilotCampaignOrder, PiratePilotGate, PiratePilotScoutCommand, PiratePilotSignalResolver, PirateReconnaissanceService};
+use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignProgress, PirateCampaignSequence, PirateDistressSite, PirateEncounterSnapshot, PiratePilotCampaignOrder, PiratePilotGate, PiratePilotScoutCommand, PiratePilotSignalResolver, PirateReconnaissanceService, PirateReconReportReader};
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Schema\Schema;
@@ -98,6 +99,52 @@ final class PirateReconnaissanceTest extends KernelTestCase
         self::assertSame($planets, (int) $db->fetchOne('SELECT COUNT(*) FROM planet'));
     }
 
+    public function testReportAndImportOnlyReadTheOwnersDeliveredReconnaissance(): void
+    {
+        [$member, $home, $system, , $ally] = $this->fixture();
+        $member->player->currentPlayerUniverse = $member;
+        $ally->player->currentPlayerUniverse = $ally;
+        $this->em->flush();
+        $catalogue = self::getContainer()->get(PirateCampaignCatalogue::class);
+        $reader = new PirateReconReportReader(new PirateCampaignReadRepository($this->em), new PiratePilotGate('dev'),
+            $catalogue, self::getContainer()->get(GameCatalog::class), $this->clock);
+        $key = $catalogue->keys()[0];
+        $prepared = $catalogue->prepareForServer($key, $member->universe);
+        $site = PirateDistressSite::inExistingSystem($member, $system);
+        self::assertTrue($this->service->launch($member, $home, $system, $site, $key, $prepared, true));
+        $db = $this->em->getConnection();
+        $row = $db->fetchAssociative('SELECT id, dispatch_token, due_at FROM pirate_reconnaissance');
+        $message = new PirateReconnaissanceDue((int) $row['id'], $row['dispatch_token']);
+        $id = $message->missionId;
+        self::assertNull($reader->read($member, $id));
+        $due = new \DateTimeImmutable($row['due_at'], new \DateTimeZone('UTC'));
+        $this->clock->sleep($due->getTimestamp() - $this->clock->now()->getTimestamp());
+        self::assertNull($reader->read($member, $id, forSimulation: true));
+        $handler = self::getContainer()->get(PirateReconnaissanceDueHandler::class);
+        $handler($message);
+        $handler($message);
+
+        $report = $reader->read($member, $id);
+        self::assertTrue($report['complete']);
+        self::assertTrue($report['detected']);
+        self::assertArrayNotHasKey('scenario', $report);
+        self::assertSame([], $report['forces']['defenses']);
+        self::assertSame([], $report['forces']['research']);
+        self::assertSame($prepared->encounterForServer()->composition(), $report['forces']['ships']);
+        self::assertSame($prepared->battleForServer()->snapshot(), $reader->read($member, $id, forSimulation: true)['scenario']->snapshot());
+        self::assertNull($reader->read($ally, $id, forSimulation: true));
+        self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_reconnaissance'));
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM espionage_report'));
+
+        // Compatibilité : l'ancienne composition reste consultable sans inventer un profil de combat.
+        $db->executeStatement('UPDATE pirate_reconnaissance SET prepared_encounter = NULL WHERE id = ?', [$id]);
+        self::assertFalse($reader->read($member, $id)['complete']);
+        self::assertNull($reader->read($member, $id, forSimulation: true));
+
+        $db->executeStatement('UPDATE player SET current_player_universe_id = NULL WHERE id = ?', [$member->player->id]);
+        self::assertNull($reader->read($member, $id));
+    }
+
     public function testScoutCommandLeavesAccountLockOrMissingDiscoveryWithoutAnyOrder(): void
     {
         [$member, $home, , $stock] = $this->fixture(omega: true);
@@ -180,7 +227,7 @@ final class PirateReconnaissanceTest extends KernelTestCase
         $this->em->flush();
         self::assertNull($this->service->statusFor($sameAccountElsewhere, 'test-signal'));
         $visibility = self::getContainer()->get(FleetVisibility::class);
-        self::assertSame([], $visibility->forMap($ally, $system->galaxy));
+        self::assertSame([], $visibility->forMap($ally, $system->galaxy)['flights']);
         self::assertSame([], $visibility->incoming($ally));
         self::assertFalse($this->service->launch($member, $home, $system, $site, 'test-signal', $encounter, !$detected));
 

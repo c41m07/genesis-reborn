@@ -14,6 +14,6 @@ final class EspionageReportController extends AbstractController
     {
         $report = $reader->findVisible($context->membership(), $id);
         if (!$report) throw $this->createNotFoundException();
-        return $this->render('espionage/report.html.twig', ['report' => $report]);
+        return $this->render('espionage/report.html.twig', ['report' => $report], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 }
