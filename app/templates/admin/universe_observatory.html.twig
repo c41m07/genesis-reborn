@@ -1,0 +1,136 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Observatoire · {{ universe.name }} · Genesis Reborn{% endblock %}
+{% block body %}
+{% set filters = {id: universe.id, tab: tab, days: days, measure_period: periodId, release: comparePeriod ? -1 : (releases.selected.id ?? 0)} %}
+{% set economyFilters = tab == 'economy' ? filters|merge({expense_member: expenses.selected.id ?? 0, expense_query: expenses.query}) : filters %}
+<div class="observatory">
+  <div class="page-heading admin-design-banner observatory-banner">
+    <div><p class="eyebrow">Administration · Univers</p><h1>{{ tab == 'performance' ? 'Performance' : 'Observatoire' }}</h1><p>{{ tab == 'performance' ? 'Site entier · Chargements et traitements' : universe.name ~ ' · Jours UTC, aujourd’hui incomplet' }}</p></div>
+    <div class="observatory-filters">
+      {% if tab == 'performance' %}
+        {% set perfFilters = filters|merge({hours: report.hours, device: report.device, page_key: report.page.key}) %}
+        <nav class="ui-tabs" aria-label="Appareil"><ul>{% for value, label in {all:'Tous', mobile:'Mobile', desktop:'Ordinateur'} %}<li><a href="{{ path('app_admin_universe_observatory', perfFilters|merge({device: value})) }}"{% if report.device == value %} aria-current="true"{% endif %}>{{ label }}</a></li>{% endfor %}</ul></nav>
+        <nav class="ui-tabs" aria-label="Période"><ul>{% for value, label in report.windows %}<li><a href="{{ path('app_admin_universe_observatory', perfFilters|merge({hours: value})) }}"{% if report.hours == value %} aria-current="true"{% endif %}>{{ label }}</a></li>{% endfor %}</ul></nav>
+      {% else %}
+      <details>
+        <summary>Univers : {{ universe.name }}</summary>
+        <div class="observatory-universes">
+          {% for choice in universes %}
+            <a href="{{ path('app_admin_universe_observatory', filters|merge({id: choice.id})) }}"{% if choice.id == universe.id %} aria-current="true"{% endif %}>{{ choice.name }}</a>
+          {% endfor %}
+        </div>
+      </details>
+      <nav class="ui-tabs" aria-label="Période"><ul>
+        {% for period in [7, 30, 90] %}<li><a href="{{ path('app_admin_universe_observatory', economyFilters|merge({days: period})) }}"{% if days == period %} aria-current="true"{% endif %}>{{ period }} j</a></li>{% endfor %}
+      </ul></nav>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="observatory-layout">
+    <nav class="panel observatory-navigation" aria-label="Rubriques de l’Observatoire">
+      <p class="eyebrow">Explorer</p>
+      {% for key, label in tabs %}
+        <a href="{{ path('app_admin_universe_observatory', filters|merge({tab: key})) }}"{% if tab == key %} aria-current="page"{% endif %}>{{ label }}</a>
+      {% endfor %}
+      <a href="{{ path('app_admin_universe_metrics', {id: universe.id}) }}">Relevé de l’univers</a>
+    </nav>
+
+    <div class="observatory-content">
+      {% if tab == 'economy' %}{% include 'admin/_observatory_expenses.html.twig' with {expenses: expenses, filters: economyFilters, universe: universe} only %}{% endif %}
+      {% include 'admin/_observatory_release.html.twig' with {filters: tab == 'performance' ? perfFilters : economyFilters} %}
+      {% if tab == 'performance' %}
+        {% include 'admin/_observatory_performance.html.twig' with {report: report, filters: perfFilters, comparePeriod: comparePeriod} only %}
+      {% elseif tab == 'audience' %}
+        <div class="observatory-kpis">
+          <section class="panel"><h2>Pages vues publiques</h2><p>Pas encore mesurées</p></section>
+          <section class="panel"><h2>Confirmations</h2><strong>{{ report.confirmations }}</strong><p>Site entier</p></section>
+          <section class="panel"><h2>Entrées</h2><strong>{{ report.entries }}</strong><p>Cet univers</p></section>
+          <section class="panel"><h2>Activité aujourd’hui</h2><strong>{{ report.activeToday ?? 'Non disponible' }}</strong><p>Participations avec du temps mesuré</p></section>
+        </div>
+        <section class="panel">
+          <h2>Audience · évolution quotidienne</h2>
+          <p>L’activité est estimée et disponible au plus sur les sept derniers jours. Les courbes de confirmation et d’entrée ne représentent pas une conversion des mêmes comptes.</p>
+          <svg class="observatory-chart" viewBox="-34 0 790 242" aria-hidden="true">
+            <path d="M10 30 H750 M10 120 H750 M10 210 H750" class="observatory-grid-line"/>
+            <g class="observatory-axis">
+              <text x="2" y="34" text-anchor="end">{{ report.chart.max }}</text>
+              <text x="2" y="214" text-anchor="end">0</text>
+              <text x="11" y="233">{{ (report.rows|first).date|date('d/m', 'UTC') }}</text>
+              <text x="750" y="233" text-anchor="end">{{ (report.rows|last).date|date('d/m', 'UTC') }}</text>
+            </g>
+            {% for marker in report.chart.markers %}<line x1="{{ marker.x }}" x2="{{ marker.x }}" y1="30" y2="210" class="observatory-release-marker"><title>{{ marker.note.version }} · {{ marker.note.publishedAt|date('d/m à H:i', 'Europe/Paris') }}</title></line>{% endfor %}
+            {% for series, line in report.chart.paths %}<path d="{{ line }}" class="observatory-series observatory-series--{{ series }}"/>{% endfor %}
+          </svg>
+          {% if report.chart.markers is not empty %}<p>Repères de publication : {% for marker in report.chart.markers %}{{ marker.note.version }} · {{ marker.note.publishedAt|date('d/m à H:i', 'Europe/Paris') }}{% if not loop.last %} ; {% endif %}{% endfor %} (heure de Paris).</p>{% endif %}
+          <p class="observatory-legend"><span>Confirmations (site)</span><span>Entrées (univers)</span><span>Activité (univers)</span></p>
+          <details>
+            <summary>Données du graphique</summary>
+            <div class="observatory-table"><table>
+              <thead><tr><th scope="col">Date UTC</th><th scope="col">Confirmations</th><th scope="col">Entrées</th><th scope="col">Participations actives</th></tr></thead>
+              <tbody>{% for row in report.rows %}<tr><th scope="row">{{ row.date }}</th><td>{{ row.confirmed }}</td><td>{{ row.joined }}</td><td>{{ row.active ?? 'Non disponible' }}</td></tr>{% endfor %}</tbody>
+            </table></div>
+          </details>
+        </section>
+      {% elseif tab == 'economy' %}
+        <section class="panel">
+          <h2>Économie · ressources actuelles</h2>
+          <p>{{ resources.observed }} colonies observées sur cette page, sur {{ resources.total }} colonies possédées dans l’univers. Relevé courant, indépendant du filtre de période. Ce n’est pas un échantillon aléatoire.</p>
+          {% if resources.observed > 0 %}
+            <div class="observatory-table"><table>
+              <thead><tr><th scope="col">Ressource</th><th scope="col">Stock médian</th><th scope="col">Production nette cumulée (unités/h)</th><th scope="col">Colonies sans stock</th></tr></thead>
+              <tbody>
+                {% for slug, resource in resources.rows %}<tr>
+                  <th scope="row">{{ resource.label }}</th>
+                  <td>{% if resource.stockPercent is not null %}<meter min="0" max="100" value="{{ min(100, max(0, resource.stockPercent)) }}" aria-label="Stock médian : {{ resource.label }}"></meter> {{ resource.stockPercent|number_format(1, ',', ' ') }} %{% else %}Non disponible{% endif %}</td>
+                  <td>{{ resource.rateObserved ? resource.netRate|number_format(1, ',', ' ') : 'Non disponible' }}</td>
+                  <td>{{ resource.empty }} / {{ resources.observed }}</td>
+                </tr>{% endfor %}
+              </tbody>
+            </table></div>
+          {% else %}
+            <p>Aucune colonie exploitable sur cette page.</p>
+          {% endif %}
+          <nav class="observatory-pagination" aria-label="Pages des mesures économiques">
+            {% if resources.page > 1 %}<a href="{{ path('app_admin_universe_observatory', economyFilters|merge({page: resources.page - 1})) }}">Précédente</a>{% endif %}
+            <span>Page {{ resources.page }} sur {{ resources.pages }}</span>
+            {% if resources.page < resources.pages %}<a href="{{ path('app_admin_universe_observatory', economyFilters|merge({page: resources.page + 1})) }}">Suivante</a>{% endif %}
+          </nav>
+        </section>
+        <section class="panel"><h2>Historique des ressources</h2><p>Pas encore mesuré : entrées et sorties par source, réserves passées et blocages par manque de ressources. La production nette actuelle inclut l’électricité comme les autres ressources, mais ne reconstitue pas les flux séparés.</p></section>
+      {% elseif tab == 'combat' %}
+        {% set outcomes = {'attacker_wins': 'Victoires des attaquants', 'defender_wins': 'Victoires de la défense', 'draw': 'Égalités'} %}
+        <div class="observatory-kpis">
+          {% for outcome, label in outcomes %}<section class="panel"><h2>{{ label }}</h2><strong>{{ report.outcomes[outcome]|default(0) }}</strong><p>Rapports conservés</p></section>{% endfor %}
+          <section class="panel"><h2>Combats avec composition</h2><strong>{{ report.withComposition }}</strong><p>Sans flotte PNJ identifiée</p></section>
+        </div>
+        {% for kind, units in {ships: report.ships, defenses: report.defenses} %}
+          <section class="panel">
+            <h2>{{ kind == 'ships' ? 'Combats · bilan des vaisseaux par rang' : 'Combats · bilan des défenses par rang' }}</h2>
+            <p>Un combat ne compte qu’une fois par type et rang. Les rapports avec flotte PNJ sont exclus de ce bilan.
+              {{ kind == 'ships' ? 'La survie brute ne prouve pas qu’un vaisseau est trop fort.' : 'La reconstruction après le combat est affichée à part et ne compte pas dans la survie.' }}
+            </p>
+            <div class="observatory-table"><table>
+              <thead><tr><th scope="col">Unité</th><th scope="col">Rang</th><th scope="col">Combats</th><th scope="col">Unités engagées</th><th scope="col">Unités perdues</th><th scope="col">Survie</th>{% if kind == 'defenses' %}<th scope="col">Reconstruites après combat</th>{% endif %}</tr></thead>
+              <tbody>{% for unit in units %}<tr><th scope="row">{{ unit.name }}</th><td>{{ unit.tier }}</td><td>{{ unit.battles }}</td><td>{{ unit.fielded }}</td><td>{{ unit.lost }}</td><td>{{ unit.fielded ? ((unit.fielded - unit.lost) / unit.fielded * 100)|number_format(1, ',', ' ') ~ ' %' : 'Non disponible' }}</td>{% if kind == 'defenses' %}<td>{{ unit.rebuilt }}</td>{% endif %}</tr>{% endfor %}</tbody>
+            </table></div>
+          </section>
+        {% endfor %}
+        <p>Comparaison à coût équivalent et dégâts par coût : non disponibles dans ce lot.</p>
+      {% else %}
+        {% set labels = {metal_mine: 'Mine de métal', power_plant: 'Centrale', nano_workshop: 'Atelier nano', metal_storage: 'Stockage', laboratory: 'Laboratoire', research: 'Première recherche', assembly_yard: 'Chantier', ship: 'Première sonde', exploration: 'Exploration', espionage: 'Espionnage', pirate_exercise: 'Exercice pirate', colonization: 'Colonisation'} %}
+        <section class="panel">
+          <h2>Progression · Premiers pas</h2>
+          <p>Jalons attestés pendant la période : ce n’est pas le taux de réussite d’une même cohorte. Les bâtiments déjà existants qui aident l’affichage du guide ne donnent pas une date de construction.</p>
+          {% set highest = report is empty ? 1 : max(1, (report|first).total) %}
+          <div class="observatory-table"><table>
+            <thead><tr><th scope="col">Jalon</th><th scope="col">Validations attestées</th></tr></thead>
+            <tbody>{% for row in report %}<tr><th scope="row">{{ labels[row.step]|default('Jalon ancien') }}</th><td><meter min="0" max="{{ highest }}" value="{{ row.total }}" aria-label="{{ labels[row.step]|default('Jalon ancien') }}"></meter> {{ row.total }}</td></tr>{% else %}<tr><td colspan="2">Aucun jalon attesté sur cette période.</td></tr>{% endfor %}</tbody>
+          </table></div>
+          <p><a href="{{ path('app_admin_universe_metrics', {id: universe.id}) }}#metrics-pirates">Voir le relevé de campagne pirate</a></p>
+        </section>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

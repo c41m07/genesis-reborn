@@ -8,7 +8,7 @@ use App\Repository\GameRepository;
 use App\Service\Balance\{CostDistributionCandidate, FundedProgressionSimulation, MilitaryEconomyStudy, ProgressionEconomyStudy};
 use App\Service\Catalog\GameCatalog;
 use App\Service\Colony\{EconomicUnitCapacity, ResourceService};
-use App\Service\Combat\{CombatSimulator, CombatUnitFactory, TechnologyEffectCalculator};
+use App\Service\Combat\{CombatSimulator, CompactCombatEngine, CombatUnitFactory, TechnologyEffectCalculator};
 use App\Service\Event\GameEventService;
 use App\Service\Fleet\MovementCalculator;
 use App\Service\Player\VacationCalendar;
@@ -39,7 +39,9 @@ final class MilitaryEconomyStudyTest extends TestCase
         $movement = new MovementCalculator();
         $funding = new FundedProgressionSimulation($catalog, $operations, new RequirementChecker($catalog), $resources, $capacity, $units, $movement);
         $progression = new ProgressionEconomyStudy($catalog, new CostDistributionCandidate($catalog), $funding, $operations);
-        $this->study = new MilitaryEconomyStudy($catalog, $operations, $resources, $capacity, $units, new CombatSimulator(), $movement, $funding, $progression);
+        $this->study = new MilitaryEconomyStudy($catalog, $operations, $resources, $capacity, $units, new CombatSimulator(new CompactCombatEngine(
+            getenv('TEST_COMBAT_ENGINE_BINARY') ?: '/usr/local/bin/genesis-combat-engine',
+        )), $movement, $funding, $progression);
         $this->universe = $progression->universe();
         $this->checkpoint = [
             'buildings' => ['mine_hydrogen' => ['basic' => 5], 'power_plant' => ['basic' => 5], 'shipyard' => ['basic' => 5], 'fortress' => ['basic' => 1]],
@@ -83,12 +85,12 @@ final class MilitaryEconomyStudyTest extends TestCase
         }
     }
 
-    public function testTheNativeVolumeRefusalRemainsVisibleInTheStudy(): void
+    public function testTheStudyVolumeProbeResolvesAllUnitsPastTheFormerCeiling(): void
     {
         $result = $this->study->volumeLimit($this->universe, $this->checkpoint);
-        self::assertSame('refused', $result['status']);
+        self::assertSame('accepted', $result['status']);
         self::assertSame(5060, $result['requested_units']);
-        self::assertSame('Combat trop volumineux.', $result['reason']);
+        self::assertSame($result['requested_units'], $result['resolved_units']);
     }
 
     public function testCivilCombatUsesTheRealSeededEngineAndNeverArmsTheCivilUnits(): void

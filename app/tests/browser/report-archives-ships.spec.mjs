@@ -78,6 +78,22 @@ test('Archives personnelles : sélection, restauration, ordre mixte, clavier et 
   await expect(page.locator('.report-row')).toContainText('Transport');
   expect(Number(queryIsolatedSql(project,"SELECT COUNT(*) FROM report_archive WHERE player_universe_id="+user.memberId+" AND archived_at IS NOT NULL"))).toBe(1);
   expect(Number(queryIsolatedSql(project,"SELECT COUNT(*) FROM transport_report WHERE sender_id="+user.memberId))).toBe(1);
+
+  await page.getByRole('link', { name:'Archives personnelles', exact:true }).click();
+  const archivedReport = page.locator('.report-row');
+  const source = await archivedReport.getAttribute('href');
+  await expect(page.getByRole('button', { name:'Supprimer la sélection', exact:true })).toBeDisabled();
+  const remove = page.getByRole('button', { name:/Supprimer le rapport Espionnage/ });
+  await remove.focus();
+  page.once('dialog', dialog => dialog.dismiss());
+  await page.keyboard.press('Enter');
+  await expect(archivedReport).toHaveCount(1);
+  page.once('dialog', dialog => dialog.accept());
+  await remove.click();
+  await expect(page.getByRole('heading', { name:'Aucun rapport archivé dans cette catégorie' })).toBeVisible();
+  expect(Number(queryIsolatedSql(project,"SELECT COUNT(*) FROM report_archive WHERE player_universe_id="+user.memberId+" AND removed_at IS NOT NULL"))).toBe(1);
+  expect(Number(queryIsolatedSql(project,"SELECT COUNT(*) FROM espionage_report WHERE sender_id="+user.memberId))).toBe(1);
+  expect((await page.goto(source)).status()).toBe(404);
 });
 
 test('Administration : attribution de vaisseaux confirmée, auditée et sans double effet', async ({ page, browser }, testInfo) => {

@@ -86,7 +86,7 @@
   "restore_survivor_shields_after_combat": true,
   "new_player_protection": {
     "duration_seconds": 604800,
-    "score_limit": 5000,
+    "score_limit": 7500,
     "attacker_score_ratio": 5
   },
   "recovery_protection": {
@@ -98,6 +98,7 @@
   "antimatter_hydrogen_per_unit": 4,
   "minimum_factory_efficiency": 0.1,
   "time_reduction_max_percent": 70,
+  "infrastructure_time_reduction_max_percent": 89.5,
   "cost_reduction_max_percent": 40,
   "progression_curves": {
     "building_cost": [

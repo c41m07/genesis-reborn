@@ -1,0 +1,65 @@
+<section class="panel" id="observatory-release">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Déploiements</p>
+      <h2>Comparer autour d’une mise à jour</h2>
+      <p>Le repère indique l’heure de publication de la note, pas l’heure technique de déploiement.</p>
+    </div>
+  </div>
+  <form method="get" action="{{ path('app_admin_universe_observatory', {id: universe.id}) }}#observatory-release" class="observatory-filters">
+    {% for name, value in filters %}{% if name not in ['id','release','measure_period'] %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endif %}{% endfor %}
+    <label>Période de suivi
+      <select name="measure_period">
+        <option value="0"{% if periodId == 0 %} selected{% endif %}>Période actuelle</option>
+        {% for start in selection.starts %}
+          <option value="{{ start.timestamp }}"{% if periodId == start.timestamp %} selected{% endif %}>Depuis le {{ start|date('d/m/Y à H:i', 'Europe/Paris') }}</option>
+        {% endfor %}
+        {% if selection.starts is not empty %}<option value="-1"{% if periodId == -1 %} selected{% endif %}>Avant la première période disponible</option>{% endif %}
+      </select>
+    </label>
+    {% if releases.notes is not empty or selection.start is not null %}
+      <label>Repère à comparer
+        <select name="release">
+          {% if selection.start is not null %}<option value="-1"{% if comparePeriod %} selected{% endif %}>Début de la période affichée</option>{% endif %}
+          {% for note in releases.notes %}<option value="{{ note.id }}"{% if not comparePeriod and note.id == releases.selected.id %} selected{% endif %}>{{ note.version }} · {{ note.title }} · {{ note.publishedAt|date('d/m/Y à H:i', 'Europe/Paris') }}</option>{% endfor %}
+        </select>
+      </label>
+    {% endif %}
+    <button type="submit" class="button">Appliquer</button>
+  </form>
+  {% if selection.pending is not null %}
+    <p>Nouvelle période prévue le {{ selection.pending|date('d/m/Y à H:i', 'Europe/Paris') }}, heure de Paris.</p>
+  {% endif %}
+  {% if selection.start is not null %}
+    <p>Période affichée : depuis le {{ selection.start|date('d/m/Y à H:i', 'Europe/Paris') }}{% if selection.end %} jusqu’au {{ selection.end|date('d/m/Y à H:i', 'Europe/Paris') }}{% endif %}.</p>
+  {% endif %}
+  {% if releases.notes is empty and not comparePeriod %}
+    <p>Aucune note publiée à comparer.</p>
+  {% elseif tab == 'economy' %}
+    <p>Les stocks restent à leur valeur réelle. Le panneau Dépenses du joueur suit la période sélectionnée ; il ne reconstitue pas les flux antérieurs à la collecte.</p>
+  {% elseif releaseComparison is not null %}
+    {% set comparison = releaseComparison %}
+    {% if comparison.hours > 0 %}
+      <p>{{ comparison.hours }} h complètes de chaque côté, jusqu’à 7 jours. {% if comparison.gap %}L’heure de publication n’est pas comptée.{% endif %}</p>
+      <div class="observatory-table" tabindex="0" role="region" aria-label="Comparaison avant et après la mise à jour">
+        <table>
+          <thead><tr><th scope="col">Indicateur</th><th scope="col">Avant</th><th scope="col">Après</th><th scope="col">Écart</th></tr></thead>
+          <tbody>{% for label, before in comparison.before %}
+            <tr><th scope="row">{{ label }}</th><td>{{ before }}</td><td>{{ comparison.after[label] }}</td><td>{{ comparison.after[label] - before }}</td></tr>
+          {% endfor %}</tbody>
+        </table>
+      </div>
+    {% else %}
+      <p>Pas encore de fenêtres comparables. Reviens après la première heure complète suivant la mise à jour.</p>
+    {% endif %}
+  {% endif %}
+  <details>
+    <summary>Démarrer une période à zéro</summary>
+    <p>Le suivi repart à la prochaine heure pleine, sur tous les univers et les mesures du site. L’historique reste accessible pendant la durée de conservation habituelle. Rien n’est supprimé ni modifié dans le jeu.</p>
+    <form method="post" action="{{ path('app_admin_observatory_start_period', {id: universe.id}) }}">
+      <input type="hidden" name="_token" value="{{ csrf_token('observatory_period_' ~ universe.id) }}">
+      <input type="hidden" name="tab" value="{{ tab }}">
+      <button type="submit" class="button">Confirmer la nouvelle période</button>
+    </form>
+  </details>
+</section>

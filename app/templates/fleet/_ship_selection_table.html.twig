@@ -1,12 +1,13 @@
 {% import 'ui/macros.html.twig' as ui %}
 {# Toutes les quantités viennent du hangar déjà chargé ; aucun accès au catalogue par cellule. #}
+{% set isEscort = isEscort|default(false) %}
 {% set availableByType = {} %}
 {% for ship in ships %}
     {% set availableByTier = availableByType[ship.slug]|default({}) %}
-    {% set availableByType = availableByType|merge({(ship.slug): availableByTier|merge({(ship.tier): ship.quantity})}) %}
+    {% set availableByType = availableByType|merge({(ship.slug): availableByTier|merge({(ship.tier): ship})}) %}
 {% endfor %}
 {% set ranks = {basic: 'Basique', intermediate: 'Intermédiaire', superior: 'Supérieur'} %}
-<table class="data-table fleet-composition-table" aria-labelledby="fleet-step-title-{{ fleetId }}-1">
+<table class="data-table fleet-composition-table" aria-labelledby="{{ headingId }}">
     <thead>
         <tr>
             <th scope="col">Élément</th>
@@ -21,12 +22,13 @@
             <tr>
                 <th scope="row">
                     <span class="fleet-composition-name">{{ ui.icon('fleet') }} {{ definition.label }}</span>
-                    {% if definition.economic_unit is defined %}
+                    {% if not isEscort and definition.economic_unit is defined %}
                         <span class="fleet-composition-restriction">Stationnement entre vos colonies, sans fret</span>
                     {% endif %}
                 </th>
                 {% for tier, rank in ranks %}
-                    {% set quantity = availableByTier[tier]|default(0) %}
+                    {% set ship = availableByTier[tier]|default(null) %}
+                    {% set quantity = ship.quantity|default(0) %}
                     {% set label = definition.tier_labels[tier]|default(definition.label) %}
                     {% set inputId = 'ship-' ~ fleetId ~ '-' ~ slug ~ '-' ~ tier %}
                     {% set stockId = inputId ~ '-stock' %}
@@ -34,22 +36,28 @@
                        Le format historique reste utilisé quand seul le rang Basique est disponible. #}
                     {% set rankedName = 'ships[' ~ slug ~ '][' ~ tier ~ ']' %}
                     {% set basicAlias = tier == 'basic' ? 'ships[' ~ slug ~ ']' : null %}
-                    {% set inputName = basicAlias and availableByTier|length == 1 ? basicAlias : rankedName %}
+                    {# Une cellule vide ne crée pas de nouveau choix et seul Flottes change les noms
+                       des champs après mise à jour par son devis. #}
+                    {% set inputName = isEscort ? (ship ? 'escort[' ~ ship.ordinal ~ ']' : null) : (basicAlias and availableByTier|length == 1 ? basicAlias : rankedName) %}
                     {% set selected = loaded ? loadedComposition[slug][tier]|default(0) : 0 %}
                     <td>
                         <span class="fleet-composition-stock" id="{{ stockId }}">
                             <span class="visually-hidden">Disponibles : </span><span data-fleet-stock-value>({{ quantity|number_format(0, ',', ' ') }})</span>
                         </span>
                         <div class="fleet-composition-control">
-                            <input id="{{ inputId }}" type="number" min="0" max="{{ min(quantity, fleetLimit) }}" value="{{ quantity > 0 ? selected : 0 }}"
+                            <input id="{{ inputId }}" type="number" min="0" max="{{ min(quantity, fleetLimit) }}" step="1" value="{{ quantity > 0 ? selected : 0 }}"
                                    aria-label="Quantité · {{ label }} · {{ rank }}" aria-describedby="{{ stockId }}"
                                    data-available="{{ quantity }}" data-ship-label="{{ label }}" data-ship-family="{{ definition.label }}" data-ship-type="{{ slug }}" data-ship-tier="{{ tier }}"
-                                   data-fleet-quantity-target="ship" data-fleet-wizard-target="quantity" data-action="input->fleet-quantity#clampShip"
-                                   data-ship-ranked-name="{{ rankedName }}" {% if basicAlias %}data-ship-basic-alias="{{ basicAlias }}"{% endif %}
+                                   data-fleet-quantity-target="ship" data-action="input->fleet-quantity#clampShip"
+                                   {% if not isEscort %}
+                                       data-fleet-wizard-target="quantity" data-ship-ranked-name="{{ rankedName }}"
+                                       {% if basicAlias %}data-ship-basic-alias="{{ basicAlias }}"{% endif %}
+                                   {% elseif quantity > 0 %}required{% endif %}
                                    {# Un rang indisponible n’a pas de clé de formulaire ; le devis peut le réactiver via type/rang. #}
                                    {% if quantity > 0 %}name="{{ inputName }}"{% else %}disabled{% endif %}>
                             <button type="button" class="secondary fleet-composition-maximum" aria-label="Max : sélectionner le maximum de {{ label }} · {{ rank }}"
                                     data-action="fleet-quantity#maximumShip" data-input-id="{{ inputId }}"
+                                    {% if isEscort %}hidden data-fleet-quantity-target="progressiveMax"{% endif %}
                                     {% if quantity == 0 %}disabled{% endif %}><span aria-hidden="true">Max</span></button>
                         </div>
                     </td>

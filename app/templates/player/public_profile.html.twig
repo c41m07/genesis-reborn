@@ -60,6 +60,12 @@
                 </p>
             {% else %}
                 <p>Aucune guilde.</p>
+                {% if can_invite %}
+                    <form method="post" action="{{ path('app_guild_invite', {id:profile.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('guild_invite_' ~ profile.id) }}">
+                        <button class="primary">Inviter dans ma guilde</button>
+                    </form>
+                {% endif %}
             {% endif %}
         </section>
     </div>

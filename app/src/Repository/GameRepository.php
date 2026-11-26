@@ -90,6 +90,21 @@ final class GameRepository
         return $this->em->find($class, $id);
     }
 
+    /** À utiliser dans une transaction : une expiration concurrente peut avoir supprimé la ligne. */
+    public function combatSimulationJobForUpdate(int $id): ?\App\Entity\PlayerCombatSimulationJob
+    {
+        $query = $this->em->createQueryBuilder()
+            ->select('job')
+            ->from(\App\Entity\PlayerCombatSimulationJob::class, 'job')
+            ->where('job.id = :id')
+            ->setParameter('id', $id)
+            ->getQuery();
+        $query->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true);
+        $query->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE);
+
+        return $query->getOneOrNullResult();
+    }
+
     public function one(string $class, array $criteria): ?object
     {
         return $this->em->getRepository($class)->findOneBy($criteria);
@@ -615,9 +630,9 @@ final class GameRepository
 
     /**
      * @param list<int> $fleetIds
-     * @return array<int, int> Identifiant du rapport par flotte entrante.
+     * @return array<int, array{id: int, removed: bool}> État personnel du rapport par flotte entrante.
      */
-    public function incomingTransportReportIds(PlayerUniverse $recipient, array $fleetIds): array
+    public function incomingTransportReportStates(PlayerUniverse $recipient, array $fleetIds): array
     {
         if ($fleetIds === []) {
             return [];
@@ -626,9 +641,16 @@ final class GameRepository
         // Le propriétaire actuel de la colonie peut voir l'arrivée sans être le
         // destinataire enregistré du fret. Ne charger ni le contenu ni les autres rapports.
         $rows = $this->em->createQueryBuilder()
-            ->select('IDENTITY(report.fleet) AS fleetId', 'report.id AS reportId')
+            ->select('IDENTITY(report.fleet) AS fleetId', 'report.id AS reportId', 'personalArchive.id AS removalId')
             ->from(\App\Entity\TransportReport::class, 'report')
             ->join('report.sender', 'sender')
+            ->leftJoin(
+                \App\Entity\ReportArchive::class,
+                'personalArchive',
+                'WITH',
+                "personalArchive.playerUniverse = :recipient AND personalArchive.kind = 'economy'
+                 AND personalArchive.reportId = report.id AND personalArchive.removedAt IS NOT NULL",
+            )
             ->where('IDENTITY(report.fleet) IN (:fleets)')
             ->andWhere('report.recipient = :recipient')
             ->andWhere('sender.universe = :universe')
@@ -637,11 +659,11 @@ final class GameRepository
             ->setParameter('universe', $recipient->universe)
             ->getQuery()->getArrayResult();
 
-        $ids = [];
+        $states = [];
         foreach ($rows as $row) {
-            $ids[(int) $row['fleetId']] = (int) $row['reportId'];
+            $states[(int) $row['fleetId']] = ['id' => (int) $row['reportId'], 'removed' => $row['removalId'] !== null];
         }
-        return $ids;
+        return $states;
     }
 
     /**
@@ -688,19 +710,37 @@ final class GameRepository
         return $details;
     }
 
-    public function espionageReportsFor(PlayerUniverse $membership, int $limit = 50): array
+    public function isReportRemoved(PlayerUniverse $membership, string $kind, int $id): bool
     {
-        return $this->em->createQueryBuilder()->select('r')->from(\App\Entity\EspionageReport::class, 'r')->where('r.sender = :membership')->setParameter('membership', $membership)->orderBy('r.createdAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();
+        return (bool) $this->em->getConnection()->fetchOne(
+            'SELECT 1 FROM report_archive
+             WHERE player_universe_id = :member AND kind = :kind AND report_id = :report AND removed_at IS NOT NULL',
+            ['member' => $membership->id, 'kind' => $kind, 'report' => $id],
+        );
     }
 
-    /** @return list<array{id: int, createdAt: \DateTimeImmutable}> */
+    public function espionageReportsFor(PlayerUniverse $membership, int $limit = 50): array
+    {
+        return $this->em->createQueryBuilder()
+            ->select('r')->from(\App\Entity\EspionageReport::class, 'r')
+            ->where('r.sender = :membership')
+            ->andWhere(ReportArchiveRepository::notRemovedDql('r.id', 'espionage', ':membership'))
+            ->setParameter('membership', $membership)
+            ->orderBy('r.createdAt', 'DESC')
+            ->setMaxResults(max(1, min(100, $limit)))
+            ->getQuery()->getResult();
+    }
+
+    /** @return list<array{id: int, createdAt: \DateTimeImmutable, targetName: string}> */
     public function recentEspionageReportOptions(PlayerUniverse $membership): array
     {
-        // Le sélecteur n’a besoin ni du contenu du rapport ni de l’état actuel de la cible.
+        // Seul le nom affiché dans Rapports est lu, sans charger les données de la sonde.
         return $this->em->createQueryBuilder()
-            ->select('r.id', 'r.createdAt')
+            ->select('r.id', 'r.createdAt', 'target.name AS targetName')
             ->from(\App\Entity\EspionageReport::class, 'r')
+            ->join('r.target', 'target')
             ->where('r.sender = :membership')
+            ->andWhere(ReportArchiveRepository::notRemovedDql('r.id', 'espionage', ':membership'))
             ->setParameter('membership', $membership)
             ->orderBy('r.createdAt', 'DESC')
             ->addOrderBy('r.id', 'DESC')
@@ -710,7 +750,17 @@ final class GameRepository
 
     public function combatLogsFor(PlayerUniverse $membership, int $limit = 50): array
     {
-        return $this->em->createQueryBuilder()->select('DISTINCT l')->from(CombatLog::class, 'l')->join('l.combatEvent', 'e')->join('e.planet', 'p')->leftJoin(CombatParticipant::class, 'cp', 'WITH', 'cp.combatEvent = e')->where('cp.playerUniverse = :membership')->orWhere('p.owner = :membership')->setParameter('membership', $membership)->orderBy('l.resolvedAt', 'DESC')->setMaxResults(max(1, min(100, $limit)))->getQuery()->getResult();
+        return $this->em->createQueryBuilder()
+            ->select('DISTINCT l')->from(CombatLog::class, 'l')
+            ->join('l.combatEvent', 'e')
+            ->join('e.planet', 'p')
+            ->leftJoin(CombatParticipant::class, 'cp', 'WITH', 'cp.combatEvent = e')
+            ->where('(cp.playerUniverse = :membership OR p.owner = :membership)')
+            ->andWhere(ReportArchiveRepository::notRemovedDql('l.id', 'combat', ':membership'))
+            ->setParameter('membership', $membership)
+            ->orderBy('l.resolvedAt', 'DESC')
+            ->setMaxResults(max(1, min(100, $limit)))
+            ->getQuery()->getResult();
     }
 
     /** @return list<PlanetResource> Lecture courante pour un dépôt sous verrou de planète. */
@@ -807,6 +857,7 @@ final class GameRepository
         return $this->em->createQueryBuilder()->select(
             'f',
             'pu',
+            'fleetOwner',
             'home',
             'homeSystem',
             'homeGalaxy',
@@ -815,7 +866,7 @@ final class GameRepository
             'destinationGalaxy',
             'directSystem',
             'directGalaxy'
-        )->from(Fleet::class, 'f')->join('f.playerUniverse', 'pu')->join('f.homePlanet', 'home')->join('home.solarSystem', 'homeSystem')->join('homeSystem.galaxy', 'homeGalaxy')->leftJoin('f.destination', 'destination')->leftJoin('destination.solarSystem', 'destinationSystem')->leftJoin('destinationSystem.galaxy', 'destinationGalaxy')->leftJoin('f.destinationSystem', 'directSystem')->leftJoin('directSystem.galaxy', 'directGalaxy')->where('pu.universe = :universe')->andWhere('f.status IN (:statuses)')->setParameter('universe', $universe)->setParameter('statuses', [
+        )->from(Fleet::class, 'f')->join('f.playerUniverse', 'pu')->leftJoin('pu.player', 'fleetOwner')->join('f.homePlanet', 'home')->join('home.solarSystem', 'homeSystem')->join('homeSystem.galaxy', 'homeGalaxy')->leftJoin('f.destination', 'destination')->leftJoin('destination.solarSystem', 'destinationSystem')->leftJoin('destinationSystem.galaxy', 'destinationGalaxy')->leftJoin('f.destinationSystem', 'directSystem')->leftJoin('directSystem.galaxy', 'directGalaxy')->where('pu.universe = :universe')->andWhere('f.status IN (:statuses)')->setParameter('universe', $universe)->setParameter('statuses', [
             'traveling',
             'returning',
             'attacking',
@@ -1136,6 +1187,8 @@ final class GameRepository
             'guild_project',
             'reconstruction',
             \App\Message\AdventCaptureDue::KIND,
+            \App\Message\PlayerCombatSimulationDue::KIND,
+            \App\Message\PlayerCombatSimulationDue::EXPIRY,
             \App\Message\PirateReconnaissanceDue::KIND,
             \App\Message\PirateAttackDue::KIND,
             \App\Message\PirateConvoyDue::KIND,
@@ -1143,9 +1196,9 @@ final class GameRepository
         ]);
         if (!$notifications) {
             // La programmation annuelle peut précéder Noël de plusieurs mois.
-            // L’outbox conserve le relevé jusqu’à son échéance, sans délai AMQP de longue durée.
-            $query->andWhere('o.kind != :capture OR o.dueAt <= :now')
-                ->setParameter('capture', \App\Message\AdventCaptureDue::KIND)
+            // L’outbox conserve les échéances longues jusqu’à leur heure, sans délai AMQP de longue durée.
+            $query->andWhere('o.kind NOT IN (:holdUntilDue) OR o.dueAt <= :now')
+                ->setParameter('holdUntilDue', [\App\Message\AdventCaptureDue::KIND, \App\Message\PlayerCombatSimulationDue::EXPIRY])
                 ->setParameter('now', $now->setTimezone(new \DateTimeZone('UTC')));
         }
 

@@ -1,17 +1,21 @@
 <?php
 namespace App\Service\Player;
-use App\Entity\{PlayerUniverse,Guild,GuildMember,GuildRelation,AllianceContract};
+use App\Entity\{PlayerUniverse,Guild,GuildMember,GuildRelation,AllianceContract,GuildRecruitment};
 use App\Repository\{GameRepository,GuildHallRepository};
 use App\Manager\GameManager;
 use App\Service\Catalog\GameCatalog;
 use Psr\Clock\ClockInterface;
 use App\Service\Report\DiplomaticReportWriter;
+use App\Service\Notification\NotificationService;
 final class DiplomacyService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private RelationResolver $relations,private GameCatalog $catalog,private ClockInterface $clock,private EmpireActivityService $activity,private DiplomacyAccessPolicy $access,private GuildProjectService $projects,private GuildHallRepository $guildHalls, private DiplomaticReportWriter $diplomaticReports) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private RelationResolver $relations,private GameCatalog $catalog,private ClockInterface $clock,private EmpireActivityService $activity,private DiplomacyAccessPolicy $access,private GuildProjectService $projects,private GuildHallRepository $guildHalls, private DiplomaticReportWriter $diplomaticReports, private NotificationService $notifications) {}
     private function lock(PlayerUniverse $m,bool $guildFeature=false): void
     {
-        $this->manager->lock($m);$this->manager->lock($m->universe);
+        // Verrouiller avec des lectures courantes : une lecture ordinaire avant l’univers
+        // risquerait de figer un instantané antérieur au dernier recrutement validé.
+        $this->manager->lockCurrent($m);
+        $this->manager->lockCurrent($m->universe);
         $this->activity->assertCanControl($m);
         if(!$m->universe->isAccessible($this->clock->now())) throw new \DomainException('Univers inaccessible.');
         if($guildFeature && !$this->catalog->forUniverse($m->universe)['features']['guilds_enabled']) throw new \DomainException('Les guildes sont désactivées dans cet univers.');
@@ -27,6 +31,7 @@ final class DiplomacyService
             if($this->repo->one(Guild::class,['universe'=>$m->universe,'tag'=>$tag])) throw new \DomainException('Ce tag est déjà utilisé dans cet univers.');
             $g=new Guild();$g->tag=$tag;$g->name=$name;$g->universe=$m->universe;$g->leader=$m;$this->manager->save($g);
             $member=new GuildMember();$member->guild=$g;$member->playerUniverse=$m;$this->manager->save($member);
+            $this->closeRecruitmentFor($m);
         });
     }
     public function setTag(PlayerUniverse $m,string $tag): void
@@ -50,17 +55,132 @@ final class DiplomacyService
         return $tag;
     }
 
-    public function join(PlayerUniverse $m,int $guildId): void
+    public function applyToGuild(PlayerUniverse $candidate, int $guildId): void
     {
-        $this->manager->transaction(function()use($m,$guildId){
-            $this->lock($m,true);$g=$this->repo->find(Guild::class,$guildId);
-            if(!$g || $g->archivedAt!==null || $g->universe->id!==$m->universe->id) throw new \DomainException('Guilde inaccessible.');
-            if($this->relations->guild($m)) throw new \DomainException('Quittez votre guilde avant d’en rejoindre une autre.');
-            // Open recruitment is a documented provisional policy.
-            $member=new GuildMember();$member->guild=$g;$member->playerUniverse=$m;$this->manager->save($member);
-            $this->breakHostileContracts($m->universe);
+        $this->manager->transaction(function () use ($candidate, $guildId): void {
+            $this->lock($candidate, true);
+            $guild = $this->recruitingGuild($candidate, $guildId);
+            $this->assertRecruitable($candidate);
+            if (!$this->startRecruitment($guild, $candidate, GuildRecruitment::APPLICATION)) {
+                return;
+            }
+            foreach ($this->repo->all(GuildMember::class, ['guild' => $guild]) as $member) {
+                if ($this->access->allows($member, DiplomacyAccessPolicy::RECRUIT)) {
+                    $this->notifications->enqueue($member->playerUniverse, 'Une nouvelle candidature est en attente dans votre guilde.');
+                }
+            }
         });
     }
+
+    public function inviteToGuild(PlayerUniverse $actor, int $candidateId): void
+    {
+        $this->manager->transaction(function () use ($actor, $candidateId): void {
+            $this->lock($actor, true);
+            $member = $this->repo->one(GuildMember::class, ['playerUniverse' => $actor]);
+            $this->assertRecruiter($member);
+            $candidate = $this->repo->find(PlayerUniverse::class, $candidateId);
+            if (!$candidate || !$this->access->canRelateToPlayer($actor, $candidate)) {
+                throw new \DomainException('Commandant inaccessible.');
+            }
+            $this->assertRecruitable($candidate);
+            if ($this->startRecruitment($member->guild, $candidate, GuildRecruitment::INVITATION)) {
+                $this->notifications->enqueue($candidate, 'Invitation à rejoindre la guilde « '.$member->guild->name.' ».');
+            }
+        });
+    }
+
+    public function answerRecruitment(PlayerUniverse $actor, int $id, string $answer): void
+    {
+        $this->manager->transaction(function () use ($actor, $id, $answer): void {
+            $this->lock($actor, true);
+            $request = $this->repo->find(GuildRecruitment::class, $id);
+            if (!$request || !in_array($answer, ['accept', 'decline', 'withdraw'], true)) {
+                throw new \DomainException('Demande de recrutement inaccessible.');
+            }
+            $guild = $this->recruitingGuild($actor, $request->guild->id);
+            $candidate = $request->candidate;
+            if ($candidate->universe->id !== $actor->universe->id || !$candidate->isPlayerControlled()) {
+                throw new \DomainException('Demande de recrutement inaccessible.');
+            }
+
+            // Le côté qui a pris l’initiative ne peut que retirer sa proposition.
+            $candidateInitiated = $request->kind === GuildRecruitment::APPLICATION;
+            $requiresCandidate = $answer === 'withdraw' ? $candidateInitiated : !$candidateInitiated;
+            if ($requiresCandidate) {
+                if ($candidate->id !== $actor->id) {
+                    throw new \DomainException('Seul le joueur concerné peut effectuer cette action.');
+                }
+            } else {
+                $member = $this->repo->one(GuildMember::class, ['playerUniverse' => $actor]);
+                $this->assertRecruiter($member, $guild);
+            }
+
+            if ($answer !== 'accept') {
+                $this->manager->remove($request);
+                return;
+            }
+            $this->assertRecruitable($candidate);
+            $member = new GuildMember();
+            $member->guild = $guild;
+            $member->playerUniverse = $candidate;
+            $this->manager->save($member);
+            $this->closeRecruitmentFor($candidate);
+            $this->breakHostileContracts($actor->universe);
+            if ($request->kind === GuildRecruitment::APPLICATION) {
+                $this->notifications->enqueue($candidate, 'Votre candidature auprès de « '.$guild->name.' » a été acceptée.');
+            }
+        });
+    }
+
+    private function recruitingGuild(PlayerUniverse $actor, int $id): Guild
+    {
+        $guild = $this->repo->find(Guild::class, $id);
+        if (!$guild || $guild->universe->id !== $actor->universe->id || $guild->archivedAt !== null) {
+            throw new \DomainException('Guilde inaccessible.');
+        }
+        return $guild;
+    }
+
+    private function assertRecruiter(?GuildMember $member, ?Guild $guild = null): void
+    {
+        if (!$this->access->allows($member, DiplomacyAccessPolicy::RECRUIT)
+            || ($guild !== null && $member->guild->id !== $guild->id)) {
+            throw new \DomainException('Votre grade ne permet pas de gérer ce recrutement.');
+        }
+    }
+
+    private function assertRecruitable(PlayerUniverse $candidate): void
+    {
+        if (!$candidate->isPlayerControlled() || $this->repo->one(GuildMember::class, ['playerUniverse' => $candidate])) {
+            throw new \DomainException('Seul un commandant sans guilde peut être recruté.');
+        }
+    }
+
+    // Le verrou partagé de l’univers sérialise dépôts, consentements et création de guilde.
+    private function startRecruitment(Guild $guild, PlayerUniverse $candidate, string $kind): bool
+    {
+        $existing = $this->repo->one(GuildRecruitment::class, ['guild' => $guild, 'candidate' => $candidate]);
+        if ($existing !== null) {
+            if ($existing->kind !== $kind) {
+                throw new \DomainException('Une demande existe déjà. Répondez à cette demande pour poursuivre.');
+            }
+            return false;
+        }
+        $request = new GuildRecruitment();
+        $request->guild = $guild;
+        $request->candidate = $candidate;
+        $request->kind = $kind;
+        $this->manager->save($request);
+        return true;
+    }
+
+    private function closeRecruitmentFor(PlayerUniverse $candidate): void
+    {
+        foreach ($this->repo->all(GuildRecruitment::class, ['candidate' => $candidate]) as $request) {
+            $this->manager->remove($request);
+        }
+    }
+
     public function leave(PlayerUniverse $m): void
     {
         $this->manager->transaction(function()use($m){

@@ -1,5 +1,20 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Laboratoire et chantier — plafond de durée du 26 novembre 2026
+
+Kévin fixe à 89,5 % la réduction maximale à 25/25/25 du laboratoire pour les
+recherches et du chantier pour les vaisseaux de la colonie concernée. Les poids
+de rang, les rendements décroissants, les prérequis et les bases de durée restent
+identiques. Le plafond de durée des bâtiments (70 %) et le bunker restent distincts.
+Sur un devis de 10 h sans bonus, le maximum donne 1 h 03 min et 6 300 E, contre
+3 h et 18 000 E avec l’ancien plafond. La taxe reste fixée par minute effective ;
+les prix des autres ressources et les paiements des commandes déjà acceptées ne changent pas.
+
+Les nouveaux devis et commandes utilisent le plafond dédié. Les files déjà
+acceptées gardent leur instantané ; les gains de vitesse ultérieurs continuent de
+s’appliquer dans les limites de cet instantané, au travail restant. Un changement
+de colonie active ne change pas le laboratoire d’origine d’une recherche.
+
 ## Géographie de la galaxie — décision explicite du 18 novembre 2026
 
 L’utilisateur choisit la **spirale réelle comme géographie des distances pour tous
@@ -1353,6 +1368,10 @@ Les évolutions comparent les deux derniers calculs persistés : points actuels 
 Le relais existant déclenche les calculs même sans visite. Les lectures rattrapent une échéance manquée ; après interruption, le calcul utilise l’état disponible à la reprise et indique son heure réelle, sans inventer les états des jours manqués. Les constructions et recherches déjà terminées sont réconciliées avant le calcul. Les instantanés et leurs dernières évolutions sont conservés en base, avec uniquement des identifiants et valeurs de classement, sans copie des identités.
 
 
+### Classement pondéré et protections, 26 novembre 2026
+
+Kévin valide sur dev les points pondérés par catégorie : (H + 2 M + 4 N + 8 A) / 200, hors électricité, à partir des biens encore détenus et des coûts courants. Le 5:1 et la protection débutant utilisent la même formule en temps réel. Débutant : moins de 7 jours et moins de 7 500 points. En Alpha, le premier recalcul compare les deux formules et affiche les écarts normalement. Vacances, inactivité et protection après pertes inchangées.
+
 ## Ressources initiales et production passive — décision du 10 novembre 2026
 
 Les valeurs suivantes s’appliquent après activation du nouvel équilibrage. La production horaire de référence est celle d’une position 5, dans un univers ×1, sans bâtiment ni événement.
@@ -2263,3 +2282,16 @@ Les 38 recherches avancées du catalogue ne demandaient aucun niveau de leur pro
 La file conserve les paiements et les échéances enregistrés. Les commandes qui suivent les gains de vitesse conservent la formule correspondant à leur devis. La première synchronisation des stocks emploie les taux courants sur la période écoulée, selon le fonctionnement existant. Les calculs de classement utilisent les prix courants.
 
 Aucun plafond de jeu ajouté aux dépôts T3. À vitesse ×1 sans réduction, le devis du dépôt de métal T3 au niveau 324 dépasse les 2 147 483 647 secondes représentables par la file SQL. La capacité T3 dépasse au niveau 1 741 les 2⁵³ unités au-delà desquelles un stock en double précision ne distingue plus toutes les unités successives. Étendre ces représentations demanderait un chantier distinct.
+
+
+### Recettes de coûts RP sur dev · 26 novembre 2026
+
+Kévin valide l’essai de la grille M/H/A/E/N pour l’ensemble des bâtiments, recherches, vaisseaux et défenses. Les matériaux suivent le rôle de chaque fiche. Les profils gardent leur valeur pondérée ; la durée, la taxe électrique, les règles de points, les prérequis et le moteur de combat ne changent pas. Les surcharges d’univers restent prioritaires et les commandes déjà payées restent fondées sur leur coût sauvegardé. Les [profils avant RP](SAUVEGARDE_CATALOGUE_COUTS_AVANT_RP.md) et la [description des recettes](CATALOGUE_COUTS_RP.md) permettent de vérifier ou annuler ce lot seul. Cet essai sur dev ne décide pas d’une mise en production.
+
+Précision Kévin du 26 novembre : un devis peut utiliser un à quatre matériaux, sans métal ni nano imposé ; la taxe électrique inchangée peut porter le total à cinq ressources. Une recherche qui fabrique un prototype en paie les matières (par exemple les Propulseurs vectoriels), contrairement à un essai de consommables ou de couches utilisant un banc déjà construit. Préserver le budget, les prérequis et la progression ; ne pas multiplier artificiellement les combinaisons.
+
+Vaisseaux : chiffrer séparément la coque (M), le blindage ou la précision (N), le réacteur (H) et les armes (A), puis choisir les parts fiche par fiche. Intégrer les particularités : soute du cargo, torpilles du bombardier, revêtement du furtif et absence d’armes sur les unités civiles. Couvrir la valeur exacte de chaque rang, les contre-compositions et les attentes réellement simulées. Garder les premiers kits chasseur, sonde, satellite et colonisateur ; premier récolteur sans achat de gaz ; pour cet essai sur dev, le cargo dès le Basique et les récolteurs avancés gardent un coût de réacteur en H, à surveiller en pénurie ; ne pas modifier les caractéristiques, la taxe E ni le carburant de vol.
+
+### Progression du prix des défenses, 26 novembre 2026
+
+Le rang Intermédiaire vaut 125 % du Basique et le rang Supérieur 125 % de l’Intermédiaire, en H × 1 + M × 2 + N × 4 + A × 8, hors électricité. Le Basique et les matériaux de chaque recette RP restent inchangés ; arrondir à la valeur réalisable la plus proche. Les prix et les statistiques des vaisseaux ne changent pas. Voir [les recettes RP](CATALOGUE_COUTS_RP.md#défenses).

@@ -43,23 +43,29 @@ final readonly class PiratePilotEncounterForms
         }
         $options = $state['options'];
         $universe = $origin->solarSystem->galaxy->universe;
-        $rows = [];
+        $definitions = $this->catalog->forUniverse($universe)['catalog']['ships'];
+        $ships = [];
+        $catalog = [];
         for ($ordinal = 1; $ordinal <= PiratePilotCommandOptions::MAX_OPTIONS; ++$ordinal) {
             $key = $options->escortKey($ordinal);
             if ($key === null) {
                 break;
             }
             [$slug, $tier] = explode(':', $key, 2);
-            $label = $this->catalog->getTierForUniverse($universe, 'ships', $slug, $tier)['label'];
-            $rows[] = [
-                'ordinal' => $ordinal, 'label' => $label,
-                'maximum' => min($options->maxEscortQuantity($ordinal), $options->fleetLimit),
+            // Le tableau partage le rendu de Flottes, mais ne reçoit que les choix
+            // d’escorte autorisés et conserve leur ordinal couvert par le jeton.
+            $ships[] = [
+                'slug' => $slug,
+                'tier' => $tier,
+                'quantity' => $options->maxEscortQuantity($ordinal),
+                'ordinal' => $ordinal,
             ];
+            $catalog[$slug] = $definitions[$slug];
         }
 
         return [
             'kind' => 'selection', 'action' => PiratePilotCommandAction::Attack->value,
-            'rows' => $rows, 'total_limit' => $options->fleetLimit,
+            'ships' => $ships, 'catalog' => $catalog, 'total_limit' => $options->fleetLimit,
             'token' => $this->csrf->getToken($this->previewId($origin, $mission, $state))->getValue(),
         ];
     }

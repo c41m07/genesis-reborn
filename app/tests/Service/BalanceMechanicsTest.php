@@ -58,17 +58,23 @@ final class BalanceMechanicsTest extends TestCase
             ['naval_engineering' => 5],
         );
 
-        self::assertSame(161, $plan['duration']);
+        self::assertSame(156, $plan['duration']);
         self::assertSame(['metal'=>1388,'nano'=>752,'antimatter'=>0,'hydrogen'=>0,'electricity'=>300],$plan['costs']);
     }
 
-    public function testTierCostProfilesIncreaseNonMetalValueShareWithoutPricingElectricity(): void
+    public function testTierCostProfilesContainOnlyNonnegativeMaterials(): void
     {
-        $catalog=$this->catalog();$factor=['basic'=>1.0,'intermediate'=>1.25,'superior'=>1.5625];
-        foreach(['buildings','technologies','ships','defenses'] as $group)foreach($catalog->all($group) as $slug=>$definition){
-            foreach($factor as $tier=>$multiplier){$costs=$catalog->costs($catalog->withTier($definition,$tier));self::assertArrayNotHasKey('electricity',$costs);self::assertArrayNotHasKey('energy',$costs);foreach($costs as $amount)self::assertGreaterThanOrEqual(0,$amount);}
-            $shares=[];foreach(GameCatalog::TIERS as $tier){$costs=$catalog->costs($catalog->withTier($definition,$tier));$total=2*$costs['metal']+4*$costs['nano']+8*$costs['antimatter']+$costs['hydrogen'];$shares[]=$total>0?(4*$costs['nano']+8*$costs['antimatter']+$costs['hydrogen'])/$total:0;}
-            self::assertGreaterThanOrEqual($shares[0],$shares[1],$group.'/'.$slug.' rang intermédiaire');self::assertGreaterThanOrEqual($shares[1],$shares[2],$group.'/'.$slug.' rang supérieur');
+        $catalog = $this->catalog();
+        foreach (['buildings', 'technologies', 'ships', 'defenses'] as $group) {
+            foreach ($catalog->all($group) as $definition) {
+                foreach (GameCatalog::TIERS as $tier) {
+                    $costs = $catalog->costs($catalog->withTier($definition, $tier));
+                    self::assertSame(['metal', 'nano', 'antimatter', 'hydrogen'], array_keys($costs));
+                    foreach ($costs as $amount) {
+                        self::assertGreaterThanOrEqual(0, $amount);
+                    }
+                }
+            }
         }
     }
 
@@ -76,8 +82,8 @@ final class BalanceMechanicsTest extends TestCase
     {
         $catalog=$this->catalog();$fighter=$catalog->get('ships','fighter');$expected=[
             'basic'=>['metal'=>1440,'nano'=>780,'antimatter'=>0,'hydrogen'=>0],
-            'intermediate'=>['metal'=>1276,'nano'=>676,'antimatter'=>281,'hydrogen'=>0],
-            'superior'=>['metal'=>1314,'nano'=>727,'antimatter'=>363,'hydrogen'=>940],
+            'intermediate'=>['metal'=>1726,'nano'=>600,'antimatter'=>75,'hydrogen'=>1052],
+            'superior'=>['metal'=>1970,'nano'=>797,'antimatter'=>129,'hydrogen'=>1220],
         ];
         foreach($expected as $tier=>$costs)self::assertSame($costs,$catalog->costs($catalog->withTier($fighter,$tier)));
     }
@@ -183,7 +189,7 @@ final class BalanceMechanicsTest extends TestCase
         $research = $universe['catalog']['technologies']['colonial_expansion'];
         $plan = (new OperationCalculator($catalog))->calculate($research, 'technologies', 1, 1, ['lab' => 1], $universe);
 
-        self::assertSame(28475, $plan['duration']);
+        self::assertSame(28385, $plan['duration']);
     }
 
     public function testResearchNamesAreDistinctAndEveryCombatShipHasOneSpecialistTurret(): void

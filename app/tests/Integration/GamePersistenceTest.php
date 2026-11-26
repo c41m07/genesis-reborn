@@ -735,7 +735,7 @@ final class GamePersistenceTest extends KernelTestCase
         $relations = self::getContainer()->get(\App\Service\Player\RelationResolver::class);
         $diplomacy->create($leader->currentPlayerUniverse, 'Canal privé', 'PRIV');
         $guild = $relations->guild($leader->currentPlayerUniverse);
-        $diplomacy->join($member->currentPlayerUniverse, $guild->id);
+        \App\Tests\Support\GuildRecruitmentFixture::enrol($diplomacy, self::getContainer()->get(\App\Repository\GameRepository::class), $member->currentPlayerUniverse, $guild->id);
 
         $messages = self::getContainer()->get(\App\Service\Player\SocialMessageService::class);
         $messages->sendGuild($member->currentPlayerUniverse, 'Message réservé aux membres');
@@ -865,7 +865,7 @@ final class GamePersistenceTest extends KernelTestCase
         $a=$this->player('Alpha');$this->join($a,'omega-1');$b=$this->player('Beta');$this->join($b,'omega-1');$c=$this->player('Gamma');$this->join($c,'omega-1');$d=$this->player('Delta');$this->join($d,'omega-1');
         $service=self::getContainer()->get(\App\Service\Player\DiplomacyService::class);$relations=self::getContainer()->get(\App\Service\Player\RelationResolver::class);
         $ma=$a->currentPlayerUniverse;$mb=$b->currentPlayerUniverse;$mc=$c->currentPlayerUniverse;$md=$d->currentPlayerUniverse;
-        $service->create($ma,'Guilde Alpha', 'ALPHA');$service->create($mb,'Guilde Beta', 'BETA');$ga=$relations->guild($ma);$gb=$relations->guild($mb);$service->join($mc,$ga->id);$service->join($md,$gb->id);
+        $service->create($ma,'Guilde Alpha', 'ALPHA');$service->create($mb,'Guilde Beta', 'BETA');$ga=$relations->guild($ma);$gb=$relations->guild($mb);\App\Tests\Support\GuildRecruitmentFixture::enrol($service, self::getContainer()->get(\App\Repository\GameRepository::class), $mc,$ga->id);\App\Tests\Support\GuildRecruitmentFixture::enrol($service, self::getContainer()->get(\App\Repository\GameRepository::class), $md,$gb->id);
         $service->relation($ma,$gb->id,'allies');self::assertFalse($relations->allied($mc,$md));
         $service->relation($mb,$ga->id,'allies');self::assertTrue($relations->allied($mc,$md));
         $service->alliance($ma,$mb->id,'propose');$service->alliance($mb,$ma->id,'accept');
@@ -875,7 +875,7 @@ final class GamePersistenceTest extends KernelTestCase
     {
         $a=$this->player('Alpha');$this->join($a,'omega-1');$b=$this->player('Beta');$this->join($b,'omega-1');
         $service=self::getContainer()->get(\App\Service\Player\DiplomacyService::class);$relations=self::getContainer()->get(\App\Service\Player\RelationResolver::class);
-        $ma=$a->currentPlayerUniverse;$mb=$b->currentPlayerUniverse;$service->create($ma,'Guilde Alpha', 'ALPHA');$g=$relations->guild($ma);$service->join($mb,$g->id);
+        $ma=$a->currentPlayerUniverse;$mb=$b->currentPlayerUniverse;$service->create($ma,'Guilde Alpha', 'ALPHA');$g=$relations->guild($ma);\App\Tests\Support\GuildRecruitmentFixture::enrol($service, self::getContainer()->get(\App\Repository\GameRepository::class), $mb,$g->id);
         $service->transfer($ma,$mb->id);self::assertSame($mb->id,$g->leader->id);$service->leave($ma);self::assertNull($relations->guild($ma));
         $service->disband($mb);self::assertSame(0,$this->em->getRepository(\App\Entity\Guild::class)->count());self::assertSame(0,$this->em->getRepository(\App\Entity\GuildMember::class)->count());
     }
@@ -913,7 +913,7 @@ final class GamePersistenceTest extends KernelTestCase
     {
         $a=$this->player('Alpha');$this->join($a,'omega-1');$b=$this->player('Beta');$this->join($b,'omega-1');$c=$this->player('Gamma');$this->join($c,'omega-1');
         $service=self::getContainer()->get(\App\Service\Player\DiplomacyService::class);$relations=self::getContainer()->get(\App\Service\Player\RelationResolver::class);
-        $service->create($a->currentPlayerUniverse,'Guilde Alpha', 'ALPHA');$service->create($b->currentPlayerUniverse,'Guilde Beta', 'BETA');$service->join($c->currentPlayerUniverse,$relations->guild($a->currentPlayerUniverse)->id);
+        $service->create($a->currentPlayerUniverse,'Guilde Alpha', 'ALPHA');$service->create($b->currentPlayerUniverse,'Guilde Beta', 'BETA');\App\Tests\Support\GuildRecruitmentFixture::enrol($service, self::getContainer()->get(\App\Repository\GameRepository::class), $c->currentPlayerUniverse,$relations->guild($a->currentPlayerUniverse)->id);
         $this->expectException(\DomainException::class);$service->relation($c->currentPlayerUniverse,$relations->guild($b->currentPlayerUniverse)->id,'enemies');
     }
     public function testLeaderboardCountsOwnedAssetsAndRemovesPointsAfterFleetLoss(): void
@@ -952,18 +952,21 @@ final class GamePersistenceTest extends KernelTestCase
         $this->em->flush();
 
         $catalog = self::getContainer()->get(GameCatalog::class);
-        $buildingCost = array_sum($catalog->costs($catalog->get('buildings', 'mine_metal'), 1, 1, 'buildings'))
-            + array_sum($catalog->costs($catalog->get('buildings', 'mine_metal'), 2, 1, 'buildings'));
-        $researchCost = array_sum($catalog->costs($catalog->get('technologies', 'weapon_calibration'), 1, 1, 'technologies'));
-        $fleetCost = array_sum($catalog->costs($catalog->get('ships', 'fighter'), 1, 3, 'ships'))
-            + array_sum($catalog->costs($catalog->get('defenses', 'ground_turret_anti_light'), 1, 2, 'defenses'));
+        // Calcul indépendant pour vérifier le barème et l’absence de taxe électrique.
+        $materialValue = static fn (array $costs): int => ($costs['hydrogen'] ?? 0)
+            + 2 * ($costs['metal'] ?? 0) + 4 * ($costs['nano'] ?? 0) + 8 * ($costs['antimatter'] ?? 0);
+        $buildingCost = $materialValue($catalog->costs($catalog->get('buildings', 'mine_metal'), 1, 1, 'buildings'))
+            + $materialValue($catalog->costs($catalog->get('buildings', 'mine_metal'), 2, 1, 'buildings'));
+        $researchCost = $materialValue($catalog->costs($catalog->get('technologies', 'weapon_calibration'), 1, 1, 'technologies'));
+        $fleetCost = $materialValue($catalog->costs($catalog->get('ships', 'fighter'), 1, 3, 'ships'))
+            + $materialValue($catalog->costs($catalog->get('defenses', 'ground_turret_anti_light'), 1, 2, 'defenses'));
         $leaderboard = self::getContainer()->get(LeaderboardService::class);
         $rows = $leaderboard->forUniverse($player->currentPlayerUniverse);
         $own = array_values(array_filter($rows, static fn (array $row): bool => $row['membership']->id === $player->currentPlayerUniverse->id))[0];
 
-        self::assertSame(intdiv($buildingCost, 100), $own['building_points']);
-        self::assertSame(intdiv($researchCost, 100), $own['research_points']);
-        self::assertSame(intdiv($fleetCost, 100), $own['fleet_points']);
+        self::assertSame(intdiv($buildingCost, 200), $own['building_points']);
+        self::assertSame(intdiv($researchCost, 200), $own['research_points']);
+        self::assertSame(intdiv($fleetCost, 200), $own['fleet_points']);
         self::assertSame($own['building_points'] + $own['research_points'] + $own['fleet_points'], $own['total_points']);
         self::assertSame(5, $own['fleet_units']);
         self::assertSame(1, $own['planets']);
@@ -1113,16 +1116,16 @@ final class GamePersistenceTest extends KernelTestCase
         foreach($old as $resource=>$amount)self::assertEqualsWithDelta($before[$resource]+.25*$amount,$stocks[$resource]->currentStock,1e-6);
     }
 
-    public function testRedistributedPricesKeepTheRawResourceScoringRule(): void
+    public function testFleetPointsUseWeightedCurrentCataloguePrices(): void
     {
         $player=$this->player();$this->join($player,'omega-1');
         $fleet=new Fleet();$fleet->playerUniverse=$player->currentPlayerUniverse;
         $ship=new FleetShip();$ship->fleet=$fleet;$ship->slug='fighter';$ship->tier='basic';$ship->quantity=1;
-        // Les points utilisent les quantités de ressources du profil courant, sans pondération M/N/A/H.
+        // Le panneau de flotte utilise la valeur pondérée du catalogue courant.
         $scores=self::getContainer()->get(\App\Service\Player\LeaderboardService::class);
-        self::assertSame(22,$scores->fleetPoints($fleet,[$ship]));
+        self::assertSame(30,$scores->fleetPoints($fleet,[$ship]));
         $ship->quantity=100;
-        self::assertSame(2220,$scores->fleetPoints($fleet,[$ship]));
+        self::assertSame(3000,$scores->fleetPoints($fleet,[$ship]));
     }
 
     public function testCancellationRefundRespectsStorageCapacity():void
@@ -1695,13 +1698,13 @@ final class GamePersistenceTest extends KernelTestCase
         $queues->add($membership,$one,'technologies','colonial_expansion',1,str_repeat('a',32));
         $queues->add($membership,$two,'technologies','engineering_foundations',1,str_repeat('b',32));
         [$colony,$following]=$this->em->getRepository(QueueItem::class)->findBy(['playerUniverse'=>$membership],['id'=>'ASC']);
-        self::assertSame(28154,$colony->durationSeconds);self::assertSame(47000,$colony->paidCosts['electricity']);
+        self::assertSame(27974,$colony->durationSeconds);self::assertSame(46700,$colony->paidCosts['electricity']);
         self::assertNull($following->startedAt);$finish=$colony->finishAt();$paid=$colony->paidCosts;
         $clock->sleep($colony->durationSeconds-1);$queues->synchronize($membership);
         self::assertNull($following->startedAt);
         $clock->sleep(2);$queues->synchronize($membership);
         self::assertEquals($finish,$following->startedAt);
-        self::assertSame($paid,$colony->paidCosts);self::assertSame(28154,$colony->durationSeconds);
+        self::assertSame($paid,$colony->paidCosts);self::assertSame(27974,$colony->durationSeconds);
         self::assertSame(1,$this->em->getRepository(PlayerTechnology::class)->findOneBy(['playerUniverse'=>$membership,'slug'=>'colonial_expansion'])->level);
     }
 
@@ -1834,11 +1837,11 @@ final class GamePersistenceTest extends KernelTestCase
         $this->em->refresh($active);
         $this->em->refresh($waiting);
         self::assertEquals($activeFinish, $active->finishAt());
-        self::assertSame(281535, $active->durationSeconds);
-        self::assertSame(469300, $active->paidCosts['electricity']);
+        self::assertSame(279734, $active->durationSeconds);
+        self::assertSame(466300, $active->paidCosts['electricity']);
         self::assertNull($waiting->startedAt);
-        self::assertSame(380073, $waitingDuration);
-        self::assertSame(633500, $waitingPaid['electricity']);
+        self::assertSame(377641, $waitingDuration);
+        self::assertSame(629500, $waitingPaid['electricity']);
 
         $clock->sleep($active->durationSeconds + 1);
         $queues->synchronize($membership);

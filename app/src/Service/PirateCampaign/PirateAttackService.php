@@ -640,7 +640,7 @@ final class PirateAttackService
             }
             $slug = $unit['slug'];
             $tier = $unit['tier'];
-            $survivors[$slug][$tier] = ($survivors[$slug][$tier] ?? 0) + 1;
+            $survivors[$slug][$tier] = ($survivors[$slug][$tier] ?? 0) + ($unit['quantity'] ?? 1);
         }
         $this->publishBattle($campaign, $timeline, $result, $survivors);
     }

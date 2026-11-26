@@ -62,7 +62,8 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
   const reportLink = page.locator('a[href*="/rapports/espionnage/"]').first();
   await expect(reportLink).toBeVisible();
 
-  const reportName = (await reportLink.locator('.report-copy strong').textContent()).replace('Renseignements · ', '').trim();
+  const reportTitle = (await reportLink.locator('.report-copy strong').textContent()).trim();
+  const reportName = reportTitle.replace('Renseignements · ', '');
   await reportLink.click();
   await expect(page.getByRole('heading', { name: 'Rapport d’espionnage', exact: true })).toBeVisible();
   await expect(page.locator('.report-heading')).toContainText(reportName);
@@ -73,6 +74,15 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
   await expect(page.getByRole('link', { name: 'Retour aux rapports' })).toBeVisible();
 
   const reportUrl = page.url();
+  await page.getByRole('link', { name: 'Reprendre ces renseignements dans le simulateur' }).click();
+  const source = page.locator('.simulation-wizard-sources summary');
+  await expect(source).toContainText(reportTitle);
+  if (await source.locator('..').getAttribute('open') === null) {
+    await source.click();
+  }
+  await expect(page.locator('#simulation-intel option:checked')).toContainText(reportTitle);
+  await expect(page.locator('#simulation-intel option:checked')).not.toContainText('Rapport n°');
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(reportUrl);
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);

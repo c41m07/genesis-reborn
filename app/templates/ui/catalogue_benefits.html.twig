@@ -3,6 +3,6 @@
 {% if card.maximum %}<p class="catalog-level-complete">Niveau maximum atteint pour ce rang.</p>{% elseif card.benefits %}<details class="card-benefits" aria-label="Bénéfice de {{ d.label }}"><summary>{{ hasUnitPrice ? 'Détails · prix unitaire' : 'Détails' }}</summary><div class="card-benefits-content">{% for benefit in card.benefits %}{% if benefit.text is defined %}{% if benefit.label is defined %}<div><span>{{ benefit.label }}</span><strong>{{ benefit.text }}</strong></div>{% else %}<p>{{ benefit.text }}</p>{% endif %}{% else %}<div class="{{ benefit.consumption|default(false) ? 'card-benefit-consumption' : '' }}"><span>{{ benefit.label }}</span><strong>{% include 'ui/catalogue_benefit_value.html.twig' with {benefit: benefit} only %}</strong></div>{% endif %}{% endfor %}{% if hasUnitPrice %}
     <h4>Prix unitaire</h4>
     <ul class="core-unit-price">
-        {% for resource, cost in card.costs %}{% if cost > 0 %}<li>{{ resources[resource].label }} : <strong>{{ cost|quantity }}</strong></li>{% endif %}{% endfor %}
+        {% for resource in constant('App\\Service\\Colony\\ResourceService::DISPLAY_ORDER') %}{% set cost = card.costs[resource]|default(0) %}{% if cost > 0 %}<li data-resource="{{ resource }}">{{ resources[resource].label }} : <strong>{{ cost|quantity }}</strong></li>{% endif %}{% endfor %}
     </ul>
 {% endif %}</div></details>{% endif %}

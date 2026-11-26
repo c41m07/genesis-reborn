@@ -41,6 +41,7 @@ final class QueueService
         private \App\Service\Combat\LocalGarrison $garrison,
         private FirstSteps $firstSteps,
         private AdventQueueCredits $adventCredits,
+        private QueueExpenseRecorder $expenses,
     )
     {
     }
@@ -168,6 +169,7 @@ final class QueueService
             $item->dispatchToken = Uuid::v4()->toRfc4122();
             $this->manager->save($item);
             $this->manager->flush();
+            $this->expenses->recordPaid($item, $group);
             if ($credit !== null) {
                 $this->adventCredits->completeLocked($credit['claim'], $item, $planet);
             }
@@ -211,6 +213,7 @@ final class QueueService
         $item->dispatchToken = Uuid::v4()->toRfc4122();
         $this->manager->save($item);
         $this->manager->flush();
+        $this->expenses->recordPaid($item, $group);
         $this->start($item, $this->clock->now());
         return $item;
     }
@@ -860,7 +863,8 @@ final class QueueService
             $group,
             $this->catalog->forUniverse($item->playerUniverse->universe)['catalog']
         );
-        $this->resources->refund($item->planet, $paid, $this->catalog->rules()['cancellation_refund_ratio']);
+        $refunded = $this->resources->refund($item->planet, $paid, $this->catalog->rules()['cancellation_refund_ratio']);
+        $this->expenses->recordRefund($item, $refunded, $this->clock->now());
         $this->manager->remove($item);
     }
 

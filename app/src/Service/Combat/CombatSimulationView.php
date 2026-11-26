@@ -19,6 +19,12 @@ final class CombatSimulationView
      */
     public function prepare(array $batch, array $forces, array $choices): array
     {
+        return $this->prepareRows($batch, $this->initialRows($forces, $choices));
+    }
+
+    /** Fige les libellés de ce résultat si le catalogue change pendant un calcul en file. */
+    public function initialRows(array $forces, array $choices): array
+    {
         $initialRows = [];
         foreach (['attacker', 'defender'] as $camp) {
             foreach (['ships', 'defenses'] as $category) {
@@ -31,7 +37,10 @@ final class CombatSimulationView
                         if ($quantity < 1) {
                             continue;
                         }
-                        $definition = $this->catalog->withTier($choices[$category][$slug], $tier);
+                        // Une famille peut avoir quitté le catalogue depuis le relevé pirate.
+                        $definition = isset($choices[$category][$slug])
+                            ? $this->catalog->withTier($choices[$category][$slug], $tier)
+                            : ['label' => $slug];
                         $initialRows[] = [
                             'camp' => $camp,
                             'slug' => $slug,
@@ -45,12 +54,17 @@ final class CombatSimulationView
             }
         }
 
+        return $initialRows;
+    }
+
+    public function prepareRows(array $batch, array $initialRows): array
+    {
         foreach ($batch['trials'] as &$trial) {
             $survivors = [];
-            // Chaque entrée du moteur est un survivant : les points de structure ne sont pas un effectif.
+            // Le moteur compact regroupe les survivants par type ; le format historique en compte un par entrée.
             foreach ($trial['survivors'] as $unit) {
                 $key = $unit['camp'].':'.$unit['slug'].':'.$unit['tier'];
-                $survivors[$key] = ($survivors[$key] ?? 0) + 1;
+                $survivors[$key] = ($survivors[$key] ?? 0) + ($unit['quantity'] ?? 1);
             }
             $report = [];
             foreach (['attacker', 'defender'] as $camp) {

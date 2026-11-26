@@ -29,7 +29,7 @@
             <td>
                 <label class="visually-hidden" for="{{ inputId }}">{{ title }} · {{ definition.label }} · {{ label }}</label>
                 <input id="{{ inputId }}" name="{{ name }}" type="number" min="0"
-                       max="{{ group in ['research', 'fortress'] ? definition.max_level|default(25) : max_units }}"
+                       max="{{ group in ['research', 'fortress'] ? definition.max_level|default(25) : (group == 'defenses' ? defense_limit : fleet_limit) }}"
                        value="{{ value }}" {% if unknown %}placeholder="?"{% else %}required{% endif %}
                        {% if intel and camp == 'defender' or camp == 'attacker' and own_source %}aria-describedby="{{ infoId }}"{% endif %}>
             </td>

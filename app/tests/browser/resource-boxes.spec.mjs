@@ -104,6 +104,11 @@ test('Admin boîtes A : trois formats, thèmes et formulaire natif avec refus se
       await expect(page.locator('h1')).toHaveCount(1);
       await expect(page.locator('.page-contents, .page-editor')).toHaveCount(0);
       await expect(page.locator('.resource-box-settings input[type="number"]')).toHaveCount(20);
+      const fields = ['metal', 'nano', 'hydrogen', 'antimatter', 'electricity'];
+      expect(await page.locator('.admin-box-caps input').evaluateAll(inputs => inputs.map(input => input.name))).toEqual(fields.map(slug => `caps[${slug}]`));
+      for (const template of await page.locator('.admin-box-templates fieldset').all()) {
+        expect(await template.locator('input').evaluateAll(inputs => inputs.map(input => input.name.split('[').at(-1).slice(0, -1)))).toEqual(fields);
+      }
       await expect(page.locator('.resource-box-settings fieldset')).toHaveCount(5);
       expect(await page.locator('.admin-box-templates').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(width === 1440 ? 3 : 1);
       expect(await page.locator('.admin-box-caps').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(width === 1440 ? 5 : width === 768 ? 2 : 1);

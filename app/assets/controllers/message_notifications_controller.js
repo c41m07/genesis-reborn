@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['badge', 'conversations'];
+    static targets = ['badge', 'conversations', 'guildRecruitment'];
     static values = { url: String };
 
     connect() {
@@ -36,6 +36,17 @@ export default class extends Controller {
             const data = await response.json();
             if (request.signal.aborted) return;
             for (const badge of this.badgeTargets) badge.hidden = data.unread === 0;
+            // La notification pousse une actualisation ; le serveur recompte selon le grade actuel.
+            if (data.membership === Number(this.element.dataset.menuNotificationsMembershipValue)) {
+                const count = Number(data.guildRecruitmentCount) || 0;
+                for (const badge of this.guildRecruitmentTargets) {
+                    badge.textContent = count > 0 ? String(count) : '';
+                    badge.hidden = count === 0;
+                }
+                window.dispatchEvent(new CustomEvent('genesis:guild-recruitment-count', {
+                    detail: { membership: data.membership, count },
+                }));
+            }
             window.dispatchEvent(new CustomEvent('genesis:message-count', { detail: { count: data.unread } }));
             window.dispatchEvent(new CustomEvent('genesis:journal-state', {
                 detail: { membership: data.membership, unread: data.journalUnread },

@@ -133,6 +133,7 @@ final class CatalogueDetailsTest extends KernelTestCase
         }
         foreach(['Vitesse dans le système'=>'speed_system','Vitesse entre systèmes'=>'speed_galaxy','Capacité de soute'=>'cargo_capacity','Réservoir d’hydrogène'=>'fuel_capacity'] as $label=>$stat)self::assertEqualsWithDelta($definition[$stat]*1.25,$rows[$label]['value'],1e-8,$label);
         self::assertSame('2–4',$rows['Tirs principaux par round']['text']);
+        self::assertEqualsWithDelta(2628.75, $rows['Attaque']['summary']['value'], 1e-8, 'Le résumé utilise les dégâts par tir après recherches, sans les tirs bonus.');
         self::assertSame('6–6',$rows['Tirs secondaires par round']['text']);
         self::assertSame(50,$rows['Correction de précision secondaire']['value']);
         self::assertSame(701,$definition['base_attack'],'Le catalogue de base ne doit pas être modifié.');
@@ -150,6 +151,59 @@ final class CatalogueDetailsTest extends KernelTestCase
         self::assertStringContainsString('Métal : <strong>987</strong>', $quoted);
         self::assertStringNotContainsString('Nano : <strong>', $quoted);
         self::assertStringContainsString('876,25', $quoted);
+    }
+
+    public function testShipSummaryAveragesPrimaryShotsWithoutChangingThePerShotDetail(): void
+    {
+        $insights = self::getContainer()->get(CatalogueInsights::class);
+        $definition = $this->catalog->withTier($this->catalog->get('ships', 'fighter'), 'basic');
+        $definition['base_attack'] = 100;
+        $definition['shots_min'] = 2;
+        $definition['shots_max'] = 3;
+        $definition['secondary_attack'] = 999;
+        $definition['secondary_shots_min'] = 6;
+        $definition['secondary_shots_max'] = 6;
+        $benefits = $insights->benefits($definition, 'ships', 1, $this->planet, [], []);
+        $rows = array_column($benefits, null, 'label');
+        self::assertSame(100, $rows['Attaque']['value']);
+        self::assertEqualsWithDelta(250, $rows['Attaque']['summary']['value'], 1e-8);
+        $twig = self::getContainer()->get(\Twig\Environment::class);
+        $card = ['benefits' => $benefits, 'filter_category' => 'light'];
+        $html = $twig->render('ui/core_construction_benefit.html.twig', ['card' => $card, 'd' => $definition]);
+        self::assertStringContainsString('Attaque moyenne', $html);
+        self::assertStringContainsString('250 par round', $html);
+        self::assertStringNotContainsString('999', $html);
+    }
+
+    public function testDefenseSummaryUsesResearchedDamageAndPrimaryShotsOnly(): void
+    {
+        $definition = $this->catalog->withTier($this->catalog->get('defenses', 'ground_turret_anti_light'), 'basic');
+        $definition['shots_max'] = 4;
+        $rankLevels = ['basic' => 25, 'intermediate' => 25, 'superior' => 25];
+        $tech = ['weapons_engineering' => $rankLevels, 'rapid_fire_cycle' => $rankLevels];
+        $insights = self::getContainer()->get(CatalogueInsights::class);
+        $standard = array_column($insights->benefits($definition, 'defenses', 1, $this->planet, [], $tech), null, 'label');
+        // En configuration standard, la recherche d'armement ne s'applique qu'aux vaisseaux.
+        self::assertSame(45, $standard['Attaque']['value']);
+        self::assertEqualsWithDelta(157.5, $standard['Attaque']['summary']['value'], 1e-8);
+
+        // Une définition d'univers qui vise aussi les défenses suit exactement le moteur de combat.
+        $this->planet->solarSystem->galaxy->universe->gameSettings = [
+            'catalog_overrides' => ['technologies' => ['weapons_engineering' => ['effect' => ['targets' => 'all_combat_units']]]],
+        ];
+        $benefits = $insights->benefits($definition, 'defenses', 1, $this->planet, [], $tech);
+        $rows = array_column($benefits, null, 'label');
+        self::assertSame(45, $definition['base_attack']);
+        self::assertEqualsWithDelta(56.25, $rows['Attaque']['value'], 1e-8);
+        self::assertSame('3–4', $rows['Tirs principaux par round']['text']);
+        self::assertEqualsWithDelta(196.875, $rows['Attaque']['summary']['value'], 1e-8);
+        $html = self::getContainer()->get(\Twig\Environment::class)->render('ui/core_construction_benefit.html.twig', [
+            'card' => ['benefits' => $benefits, 'filter_category' => 'light'],
+            'd' => $definition,
+        ]);
+        self::assertStringContainsString('Attaque moyenne', $html);
+        self::assertStringContainsString('196,88 par round', $html);
+        self::assertStringNotContainsString('56,25', $html);
     }
 
     public function testShipCharacteristicsWithoutResearchKeepBaseValuesAndUnarmedShipsDoNotGainShots():void

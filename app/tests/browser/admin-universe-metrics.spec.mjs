@@ -32,6 +32,8 @@ test('Mesures par univers : accès admin, lecture seule, données manquantes et 
   const url = `/admin/universes/${universe}/mesures`;
   await page.goto(url);
   await expect(page).toHaveURL(/acces-refuse/);
+  await page.goto(url.replace('/mesures', '/observatoire'));
+  await expect(page).toHaveURL(/acces-refuse/);
   const anonymous = await browser.newContext();
   const anonymousPage = await anonymous.newPage();
   await anonymousPage.goto(url);
@@ -50,6 +52,8 @@ test('Mesures par univers : accès admin, lecture seule, données manquantes et 
   await expect(page.locator('h1')).toHaveCount(1);
   await expect(page.locator('#metrics-progression')).toContainText('Temps pour atteindre un jalon : non disponible.');
   await expect(page.locator('#metrics-resources')).toContainText('1 colonie observée');
+  await expect(page.locator('#metrics-progression')).toContainText('0 sur 1 (0,0 %)');
+  await expect(page.locator('#metrics-pirates')).toContainText('Aucune reconnaissance partie');
   await expect(page.locator('#metrics-recovery')).toContainText('Durée pour reconstituer les forces après une défaite : non disponible.');
   await page.reload();
   await page.keyboard.press('Tab');
@@ -90,10 +94,46 @@ test('Mesures par univers : accès admin, lecture seule, données manquantes et 
   const freePlanets = queryIsolatedSql(project, `SELECT p.id FROM planet p JOIN solar_system s ON s.id=p.solar_system_id JOIN galaxy g ON g.id=s.galaxy_id WHERE g.universe_id=${universe} AND p.owner_id IS NULL ORDER BY p.id LIMIT 25`).split(/\s+/).map(Number);
   expect(freePlanets).toHaveLength(25);
   runIsolatedSql(project, `UPDATE planet SET owner_id=${membership} WHERE id IN (${freePlanets.join(',')})`);
+  // Fixtures sans message associé : le relevé doit uniquement lire ces lignes, sans jouer ni solder de mission.
+  const colony = Number(queryIsolatedSql(project, `SELECT planet_id FROM planet_resource r JOIN planet p ON p.id=r.planet_id WHERE p.owner_id=${membership} ORDER BY planet_id LIMIT 1`));
+  runIsolatedSql(project, `
+    INSERT INTO queue_item (planet_id, player_universe_id, queue_type, item_slug, tier, quantity, duration_seconds, started_at, queued_at, dispatch_token, first_steps_guided)
+    VALUES (${colony}, ${membership}, 'building', 'snapshot-building', 'basic', 1, 3600, UTC_TIMESTAMP(), UTC_TIMESTAMP() - INTERVAL 1 MINUTE, UUID(), 0),
+           (${colony}, ${membership}, 'research', 'snapshot-research', 'basic', 1, 3600, NULL, UTC_TIMESTAMP() - INTERVAL 1 MINUTE, UUID(), 0),
+           (${colony}, ${membership}, 'shipyard', 'snapshot-shipyard', 'basic', 1, 3600, UTC_TIMESTAMP(), UTC_TIMESTAMP() - INTERVAL 1 MINUTE, UUID(), 0)
+  `);
+  runIsolatedSql(project, `
+    INSERT INTO pirate_reconnaissance (membership_id, owner_id, system_id, mission_key, departed_at, due_at, dispatch_token, reported_at, composition, build_costs)
+    SELECT pu.id, pu.player_id, p.solar_system_id, fixture.mission_key,
+           UTC_TIMESTAMP() - INTERVAL 10 MINUTE, UTC_TIMESTAMP() - INTERVAL 8 MINUTE,
+           UUID(), CASE WHEN fixture.mission_key <> 'metrics-scout' THEN UTC_TIMESTAMP() - INTERVAL 8 MINUTE ELSE NULL END,
+           JSON_OBJECT(), JSON_OBJECT()
+    FROM player_universe pu JOIN planet p ON p.id=${colony}
+    CROSS JOIN (SELECT 'metrics-scout' AS mission_key UNION ALL SELECT 'metrics-win' UNION ALL SELECT 'metrics-pending') fixture
+    WHERE pu.id=${membership}
+  `);
+  runIsolatedSql(project, `
+    INSERT INTO pirate_attack_campaign
+      (reconnaissance_id, origin_id, travel_seconds, round_seconds, scenario, timeline, reserved_ships, report, departed_at, arrival_at, return_blocked)
+    SELECT id, ${colony}, 60, 30, JSON_OBJECT(),
+           CASE WHEN mission_key='metrics-win'
+                THEN JSON_OBJECT('resolved', CONCAT(DATE_FORMAT(UTC_TIMESTAMP() - INTERVAL 2 MINUTE, '%Y-%m-%dT%H:%i:%s'), '+00:00')) ELSE JSON_OBJECT() END,
+           JSON_OBJECT(), CASE WHEN mission_key='metrics-win' THEN JSON_OBJECT('outcome', 'attacker_wins') ELSE NULL END,
+           UTC_TIMESTAMP() - INTERVAL 5 MINUTE, UTC_TIMESTAMP() - INTERVAL 4 MINUTE, 0
+    FROM pirate_reconnaissance WHERE membership_id=${membership} AND mission_key IN ('metrics-win', 'metrics-pending')
+  `);
   const nativeContext = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false, viewport: { width: 390, height: 900 } });
   const native = await nativeContext.newPage();
   await native.goto(url);
   await expect(native.locator('#metrics-resources')).toContainText('26 colonies possédées');
+  await expect(native.locator('#metrics-progression')).toContainText('1 sur 1 (100,0 %)');
+  await expect(native.locator('#metrics-wait dd', { hasText: '1 en cours · 0 en attente' })).toHaveCount(2);
+  await expect(native.locator('#metrics-wait dd', { hasText: '0 en cours · 1 en attente' })).toHaveCount(1);
+  const pirates = native.getByRole('region', { name: 'Jalons de la campagne pirate' });
+  await expect(pirates.getByRole('listitem')).toHaveText([
+    'Reconnaissances parties : 3', 'Rapports de reconnaissance reçus : 2', 'Escortes parties après le rapport : 2',
+  ]);
+  await expect(pirates.locator('dd')).toHaveText(['1', '0', '0', '1']);
   await expect(native.locator('#metrics-resources')).toContainText('colonie(s) non exploitable(s)');
   await native.getByRole('link', { name: 'Page suivante', exact: true }).click();
   await expect(native).toHaveURL(/page=2#metrics-resources$/);
@@ -108,7 +148,38 @@ test('Mesures par univers : accès admin, lecture seule, données manquantes et 
   await expect(native.locator('#metrics-resources')).toContainText('Aucune colonie exploitable');
   await expect(native.locator('.admin-resource-observation')).toHaveCount(0);
   await expect(native.locator('#metrics-progression')).toContainText('Non disponible');
+  await expect(native.locator('#metrics-progression')).toContainText('Aucune participation pilotée');
+  await expect(native.locator('#metrics-pirates')).toContainText('Aucune reconnaissance partie');
+  await expect(native.locator('#metrics-wait dd', { hasText: '0 en cours · 0 en attente' })).toHaveCount(3);
+  // Tester la navigation réelle de la maquette B et la conservation des filtres sans JavaScript.
+  await native.goto(url);
+  await native.getByRole('link', { name: 'Ouvrir l’Observatoire' }).click();
+  await expect(native.getByRole('heading', { name: 'Observatoire', exact: true })).toBeVisible();
+  await expect(native.getByRole('heading', { name: 'Économie · ressources actuelles' })).toBeVisible();
+  // Le scénario a ajouté 25 colonies sans stock. Seule la page contenant la colonie initiale doit avoir cinq lignes.
+  if (freePlanets.every((id) => id < colony)) {
+    await expect(native.getByText('Aucune colonie exploitable sur cette page.')).toBeVisible();
+    await native.getByRole('navigation', { name: 'Pages des mesures économiques' }).getByRole('link', { name: 'Suivante' }).click();
+    await expect(native).toHaveURL(/page=2/);
+  }
+  await expect(native.locator('.observatory-table tbody tr')).toHaveCount(5);
+  await native.getByRole('link', { name: '90 j', exact: true }).click();
+  await native.getByRole('navigation', { name: 'Rubriques de l’Observatoire' }).getByRole('link', { name: 'Audience' }).click();
+  await expect(native).toHaveURL(/days=90/);
+  await expect(native.getByRole('heading', { name: 'Audience · évolution quotidienne' })).toBeVisible();
+  await native.getByText('Données du graphique', { exact: true }).click();
+  await expect(native.locator('.observatory-table tbody tr')).toHaveCount(90);
+  await expect(native.locator('.observatory-table tbody tr').first()).toContainText('Non disponible');
+  await native.getByRole('navigation', { name: 'Rubriques de l’Observatoire' }).getByRole('link', { name: 'Progression' }).click();
+  await expect(native.getByRole('heading', { name: 'Progression · Premiers pas' })).toBeVisible();
+  await native.getByRole('navigation', { name: 'Rubriques de l’Observatoire' }).getByRole('link', { name: 'Combats' }).click();
+  await expect(native.getByRole('heading', { name: 'Combats · bilan des vaisseaux par rang' })).toBeVisible();
+  await expect(native.getByRole('heading', { name: 'Combats · bilan des défenses par rang' })).toBeVisible();
+  await expect(native.getByRole('columnheader', { name: 'Reconstruites après combat' })).toBeVisible();
+  await expect(native.locator('.observatory-table tbody tr').first()).toContainText('Non disponible');
+
   await nativeContext.close();
+
   const missing = await page.goto('/admin/universes/2147483647/mesures');
   expect(missing.status()).toBe(404);
 });

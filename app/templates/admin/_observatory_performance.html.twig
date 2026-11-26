@@ -1,0 +1,122 @@
+{% macro timing(value) %}
+  {%- if value is null -%}Non disponible
+  {%- elseif value >= 600000 -%}≥ 10 min
+  {%- elseif value >= 1000 -%}≈ {{ (value / 1000)|number_format(2, ',', ' ') }} s
+  {%- else -%}≈ {{ value }} ms
+  {%- endif -%}
+{% endmacro %}
+{% import _self as performance %}
+{% if not report.enabled %}
+  <p class="panel"><strong>Collecte désactivée.</strong> Les éventuels chiffres ci-dessous proviennent de mesures déjà enregistrées.</p>
+{% endif %}
+<div class="observatory-kpis">
+  <section class="panel" id="performance-sample-count"><h2>Mesures exploitables</h2><strong>{{ report.overview.count }}</strong><p>Chargements avec LCP connu</p></section>
+  <section class="panel"><h2>Affichage médian · LCP</h2><strong>{{ performance.timing(report.overview.median) }}</strong><p>La moitié des affichages est plus rapide</p></section>
+  <section class="panel"><h2>Affichage lent · p95</h2><strong>{{ performance.timing(report.overview.p95) }}</strong><p>Environ 95 % des affichages sont plus rapides</p></section>
+  <section class="panel"><h2>Pages à examiner</h2><strong>{{ report.flagged }}</strong><p>Sur {{ report.rows|length }} pages suivies</p></section>
+</div>
+<div class="observatory-performance-layout">
+  <section class="panel">
+    <h2>Pages à examiner</h2>
+    <p>Sélectionne une page pour afficher son diagnostic. Les valeurs sont estimées à partir de tranches de durée.</p>
+    <div class="observatory-table" tabindex="0" role="region" aria-label="Classement des pages">
+      <table>
+        <thead><tr><th scope="col">Page</th><th scope="col">Médiane</th><th scope="col">p95</th><th scope="col">Mesures LCP</th><th scope="col">État</th></tr></thead>
+        <tbody>{% for row in report.rows %}<tr>
+          <th scope="row"><a href="{{ path('app_admin_universe_observatory', filters|merge({page_key: row.key})) }}#performance-diagnostic"{% if row.key == report.page.key %} aria-current="true"{% endif %}>{{ row.label }}</a></th>
+          <td>{{ performance.timing(row.median) }}</td><td>{{ performance.timing(row.p95) }}</td><td>{{ row.count }}</td>
+          <td>{{ {review:'À examiner', insufficient:'Pas assez de mesures', within_target:'Dans le repère', median_only:'Médiane seule'}[row.status] }}</td>
+        </tr>{% endfor %}</tbody>
+      </table>
+    </div>
+  </section>
+  <section class="panel" id="performance-diagnostic" tabindex="-1">
+    <h2>Diagnostic · {{ report.page.label }}</h2>
+    <p>Mesures du navigateur filtrables par appareil. Les phases PHP, SQL et Twig concernent tous les appareils ; leurs durées peuvent se recouvrir.</p>
+    {% set labels = {
+      ttfb:'Attente du premier octet (TTFB)',
+      http_php:'Application PHP',
+      http_sql:'Exécution SQL (incluse dans PHP)',
+      http_twig:'Rendu Twig (inclus dans PHP)',
+      html_transfer:'Transfert du document HTML',
+      lcp:'Affichage du contenu principal (LCP)'
+    } %}
+    <dl class="observatory-performance-detail">
+      {% for key, label in labels %}
+        <dt>{{ label }}</dt><dd>{{ performance.timing(report.detail[key].median) }} <small>({{ report.detail[key].count }} mesures)</small></dd>
+      {% endfor %}
+    </dl>
+    <p><strong>À faire en premier :</strong> {{ report.page.action }}</p>
+  </section>
+</div>
+<section class="panel">
+  <h2>Évolution des temps · {{ report.page.label }}</h2>
+  <p>LCP par {{ report.hours == 24 ? 'heure' : 'jour' }} UTC. Les périodes trop peu mesurées ne sont pas reliées.</p>
+  {% if report.trend.available or report.trend.markers is not empty %}
+    <svg class="observatory-chart" viewBox="0 0 770 197" aria-hidden="true">
+      <path class="observatory-grid-line" d="M55 25H750 M55 97H750 M55 170H750"/>
+      <text class="observatory-axis" x="49" y="29" text-anchor="end">{{ (report.trend.max / 1000)|number_format(1, ',', ' ') }} s</text>
+      <text class="observatory-axis" x="49" y="173" text-anchor="end">0</text>
+      <text class="observatory-axis" x="55" y="192">{{ (report.trend.rows|first).date }}</text>
+      <text class="observatory-axis" x="750" y="192" text-anchor="end">{{ (report.trend.rows|last).date }}</text>
+      {% for marker in report.trend.markers %}<line x1="{{ marker.x }}" x2="{{ marker.x }}" y1="25" y2="170" class="observatory-release-marker"><title>{{ marker.note.version }} · {{ marker.note.publishedAt|date('d/m à H:i', 'Europe/Paris') }}</title></line>{% endfor %}
+      <path class="observatory-series" d="{{ report.trend.paths.median }}"/>
+      <path class="observatory-series observatory-series--joined" d="{{ report.trend.paths.p95 }}"/>
+    </svg>
+    <p class="observatory-legend"><span>Médiane</span><span>p95</span></p>
+    <details><summary>Données du graphique</summary><div class="observatory-table"><table>
+      <thead><tr><th scope="col">Période UTC</th><th scope="col">Médiane</th><th scope="col">p95</th><th scope="col">Mesures</th></tr></thead>
+      <tbody>{% for row in report.trend.rows %}<tr><th scope="row">{{ row.date }}</th><td>{{ performance.timing(row.median) }}</td><td>{{ performance.timing(row.p95) }}</td><td>{{ row.count }}</td></tr>{% endfor %}</tbody>
+    </table></div></details>
+    {% if report.trend.markers is not empty %}<p>Repères de publication : {% for marker in report.trend.markers %}{{ marker.note.version }} · {{ marker.note.publishedAt|date('d/m à H:i', 'Europe/Paris') }}{% if not loop.last %} ; {% endif %}{% endfor %} (heure de Paris).</p>{% endif %}
+  {% else %}
+    <p>Pas assez de mesures pour tracer l’évolution.</p>
+  {% endif %}
+</section>
+{% if report.comparison is not null %}
+<section class="panel">
+  <h2>Avant / après {{ comparePeriod ? "le début de la période" : "la mise à jour" }} · {{ report.page.label }}</h2>
+  {% set comparison = report.comparison %}
+  {% if comparison.hours > 0 %}
+    <p>{{ comparison.hours }} h complètes de chaque côté, jusqu’à 7 jours. {% if comparison.gap %}L’heure de publication est exclue des deux fenêtres.{% endif %}</p>
+    {% if comparison.chart.points is not empty %}
+      <svg class="observatory-chart" viewBox="0 0 770 197" aria-hidden="true">
+        <path class="observatory-grid-line" d="M55 25H750 M55 97H750 M55 170H750"/>
+        <text class="observatory-axis" x="49" y="29" text-anchor="end">{{ (comparison.chart.max / 1000)|number_format(1, ',', ' ') }} s</text>
+        <text class="observatory-axis" x="49" y="173" text-anchor="end">0</text>
+        <line x1="402" x2="402" y1="25" y2="170" class="observatory-release-marker"/>
+        <text class="observatory-axis" x="225" y="192" text-anchor="middle">Avant</text>
+        <text class="observatory-axis" x="582" y="192" text-anchor="middle">Après</text>
+        {% for line in comparison.chart.paths %}<path class="observatory-series" d="{{ line }}"/>{% endfor %}
+        {% for point in comparison.chart.points %}<circle class="observatory-release-point" cx="{{ point.x }}" cy="{{ point.y }}" r="3"/>{% endfor %}
+      </svg>
+      <p>p95 par tranches de {{ comparison.chart.step }} h maximum. Les tranches avec moins de 100 mesures restent vides.</p>
+    {% else %}
+      <p>Pas assez de mesures par tranche pour tracer la comparaison.</p>
+    {% endif %}
+    <div class="observatory-kpis">
+      {% for side, label in {before:'Avant', after:'Après'} %}
+        <div><h3>{{ label }} · LCP p95</h3><strong>{{ performance.timing(comparison[side].p95) }}</strong><p>{{ comparison[side].count }} mesures · {{ comparison[side].from|date('d/m H:i', 'Europe/Paris') }} → {{ comparison[side].to|date('d/m H:i', 'Europe/Paris') }} (Paris)</p></div>
+      {% endfor %}
+      <div><h3>Écart du p95</h3><strong>{{ comparison.delta is null ? 'Non comparable' : (comparison.delta > 0 ? '+' : '') ~ comparison.delta|number_format(1, ',', ' ') ~ ' %' }}</strong></div>
+    </div>
+  {% else %}
+    <p>Pas assez d’historique ou aucune heure complète après la publication.</p>
+  {% endif %}
+</section>
+{% endif %}
+<section class="panel">
+  <h2>RabbitMQ, workers et Mercure</h2>
+  <p>Services partagés, indépendants des filtres d’appareil. Une publication Mercure ne prouve pas la réception par un joueur.</p>
+  <div class="observatory-table" tabindex="0" role="region" aria-label="Mesures des services">
+    <table>
+      <thead><tr><th scope="col">Étape</th><th scope="col">Médiane</th><th scope="col">p95</th><th scope="col">Mesures</th></tr></thead>
+      <tbody>{% for key, label in {outbox_ready:'Retard du relais après échéance', broker_publish:'Publication vers RabbitMQ', worker_wait:'Attente jusqu’à la prise en charge', worker_execute:'Traitement par le worker', mercure_publish:'Publication vers Mercure'} %}
+        <tr><th scope="row">{{ label }}</th><td>{{ performance.timing(report.services[key].median) }}</td><td>{{ performance.timing(report.services[key].p95) }}</td><td>{{ report.services[key].count }}</td></tr>
+      {% endfor %}</tbody>
+    </table>
+  </div>
+  <p>Échecs observés dans l’échantillon : RabbitMQ {{ report.errors.rabbitmq }}, workers {{ report.errors.worker }}, Mercure {{ report.errors.mercure }}.</p>
+  <p><strong>À vérifier :</strong> {{ report.servicesAction }}</p>
+</section>
+<p>La médiane demande au moins 30 mesures ; le p95 en demande 100. Tu ne vois ni URL individuelle, ni identité de joueur, ni requête SQL.</p>

@@ -186,7 +186,12 @@ test('L1B A : recherche, création conservée, présentation et adhésion native
       await expect(native.getByLabel('Nom de votre nouvelle guilde')).toBeFocused();
       await expect(native.getByLabel('Tag de la guilde', { exact: true })).toHaveValue(tag);
       await native.goto('/guildes?q=Vig');
-      await native.locator('.guild-card').first().getByRole('button', { name: 'Rejoindre · recrutement ouvert', exact: true }).click();
+      await native.locator('.guild-card').first().getByRole('button', { name: 'Demander à rejoindre', exact: true }).click();
+      await expect(native.getByText('Candidature envoyée. Elle doit être acceptée par la guilde.', { exact: true })).toBeVisible();
+      await owner.goto('/guildes');
+      await owner.getByRole('button', { name: 'Accepter la candidature', exact: true }).click();
+      await expect(owner.getByText('Demande acceptée : l’adhésion est enregistrée.', { exact: true })).toBeVisible();
+      await native.goto('/guildes');
       await expect(native.getByRole('heading', { level: 1 })).toHaveText('Ma guilde');
       await native.goto('/guildes/creer');
       await expect(native).toHaveURL(/\/guildes$/);

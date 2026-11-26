@@ -288,6 +288,57 @@ test('Simulateur : dix combats reproductibles, détails accessibles et aucune mu
  expect(errors).toEqual([]);
 });
 
+test('Simulateur volumineux : résultat privé au retour, sans tronquer les effectifs', async ({ page }) => {
+ test.setTimeout(90000);
+ const owner = await register(page);
+ const router = process.env.BROWSER_ROUTER;
+ const stock = () => queryIsolatedSql(router,
+  `SELECT GROUP_CONCAT(CONCAT(resource_type,':',current_stock) ORDER BY resource_type) FROM planet_resource WHERE planet_id=${owner.planet}`);
+ const before = stock();
+ await page.goto('/simulateur');
+ const attackers = page.locator('#sim-attacker-ships-probe-basic');
+ await expect(attackers).toHaveAttribute('max', '1000000');
+ await attackers.fill('6000');
+ await page.locator('#sim-defender-ships-probe-basic').fill('1');
+ const navigation = page.getByRole('navigation', { name: 'Étapes du simulateur' });
+ await navigation.getByRole('link', { name: 'Défenses', exact: true }).click();
+ await page.locator('#sim-defender-defenses-ground_turret_anti_light-basic').fill('1');
+ await navigation.getByRole('link', { name: 'Simulation', exact: true }).click();
+ await page.getByRole('checkbox', { name: /Je confirme les hypothèses/ }).check();
+ const submitted = page.waitForResponse(response => response.request().method() === 'POST' && new URL(response.url()).pathname === '/simulateur');
+ await page.getByRole('button', { name: 'Simuler 10 combats' }).click();
+ const response = await submitted;
+ if (response.status() !== 303) {
+  await page.waitForLoadState('domcontentloaded');
+  const warning = (await page.locator('.simulation-workspace .flash.error').allTextContents()).join(' ');
+  throw new Error(`Le scénario volumineux n’a pas produit de tâche privée (HTTP ${response.status()}) : ${warning || 'aucun message de validation'}`);
+ }
+ await expect(page).toHaveURL(/\/simulateur\?job=[^#]+#simulation-result$/);
+ const resultUrl = page.url();
+ await page.goto('/simulateur');
+ await page.goto(resultUrl);
+ try {
+  // La file traite plusieurs essais par livraison. Recharger réellement le document, pas seulement son ancre.
+  await expect.poll(async () => {
+   await page.reload({ waitUntil: 'domcontentloaded' });
+   const panel = page.locator('#simulation-result');
+   if (await page.locator('.simulation-trial').count() === 10) return '10 résultats';
+   const content = await panel.textContent({ timeout: 3000 }).catch(() => 'Aucun panneau de résultat');
+   return content.replace(/\s+/g, ' ').trim();
+  }, { timeout: 60000, intervals: [1000, 2000, 3000] }).toBe('10 résultats');
+ } catch (error) {
+  // Ne journaliser que l’état du calcul de la fixture, jamais le scénario, le jeton ou les identifiants.
+  const state = queryIsolatedSql(router, "SELECT CONCAT(status, ':', JSON_LENGTH(trials)) FROM player_combat_simulation_job");
+  const pending = queryIsolatedSql(router, "SELECT COUNT(*) FROM outbox_message WHERE kind = 'combat_sim_trial'");
+  throw new Error('Simulation asynchrone : état / essais en base = '+state+', messages à relayer = '+pending+'. '+error.message);
+ }
+ await expect(attackers).toHaveValue('6000');
+ await expect(page.locator('#sim-defender-defenses-ground_turret_anti_light-basic')).toHaveValue('1');
+ await expect(page.locator('#simulation-result')).toContainText('Structure restante par groupe de survivants');
+ expect(stock()).toBe(before);
+ expect(Number(queryIsolatedSql(router, 'SELECT COUNT(*) FROM combat_log'))).toBe(0);
+});
+
 test('Recherche : contenu littéral, pagination, rapports et non-lus préservés',async({page,browser,baseURL})=>{
  test.setTimeout(180000);const owner=await register(page);const otherContext=await browser.newContext({baseURL});const other=await otherContext.newPage();
  try{const peer=await register(other),p=process.env.BROWSER_ROUTER;

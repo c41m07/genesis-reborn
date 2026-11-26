@@ -24,16 +24,16 @@ final class PlayerProtectionTest extends TestCase
         $membership=new PlayerUniverse();
         $membership->player=new \App\Entity\Player();
         $membership->joinedAt=$now->modify('-6 days');
-        self::assertSame(86400,$service->status($membership,4999)['remaining']);
-        self::assertFalse($service->status($membership,5000)['active']);
+        self::assertSame(86400,$service->status($membership,7499)['remaining']);
+        self::assertFalse($service->status($membership,7500)['active']);
         $membership->joinedAt=$now->modify('-7 days');
         self::assertFalse($service->status($membership,0)['active']);
         $membership->recoveryProtectedUntil=$now->modify('+2 hours');
-        self::assertSame(7200,$service->status($membership,5000)['remaining']);
-        self::assertSame('Protection après pertes',$service->status($membership,5000)['reason']);
+        self::assertSame(7200,$service->status($membership,7500)['remaining']);
+        self::assertSame('Protection après pertes',$service->status($membership,7500)['reason']);
         $membership->joinedAt=$now->modify('-1 day');
         self::assertSame(6*86400,$service->status($membership,0)['remaining']);
         $membership->recoveryProtectedUntil=$now;
-        self::assertFalse($service->status($membership,5000)['active']);
+        self::assertFalse($service->status($membership,7500)['active']);
     }
 }

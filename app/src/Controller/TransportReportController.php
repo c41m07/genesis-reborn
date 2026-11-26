@@ -17,8 +17,11 @@ final class TransportReportController extends AbstractController
     {
         $member = $context->membership();
         $report = $repo->find(TransportReport::class, $id);
-        if (!$report || !in_array($member->id, [$report->sender->id, $report->recipient->id], true)) throw $this->createNotFoundException();
-        return $this->render('transport/report.html.twig', ['report' => $report, 'resources' => $catalog->rules()['resources']]);
+        if (!$report || !in_array($member->id, [$report->sender->id, $report->recipient->id], true)
+            || $repo->isReportRemoved($member, 'economy', $id)) {
+            throw $this->createNotFoundException();
+        }
+        return $this->render('transport/report.html.twig', ['report' => $report, 'resources' => $catalog->rules()['resources']], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 
     #[IsGranted('ROLE_ADMIN')]

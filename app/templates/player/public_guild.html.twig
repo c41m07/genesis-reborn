@@ -19,6 +19,25 @@
     <span class="guild-profile-emblem" aria-hidden="true">{{ ui.icon('diplomacy') }}</span>
 {% endif %}
 <div><h2>{% if profile.tag %}[{{ profile.tag }}] {% endif %}{{ profile.name }}</h2><p>Guilde de l’univers {{ membership.universe.name }} · {{ profile.member_count }} membre{{ profile.member_count>1?'s':'' }}</p></div></div>
+{% if recruitment.eligible %}
+    {% set entry = recruitment.pending %}
+    {% if entry and entry.kind == 'invitation' %}
+        <p>Cette guilde vous invite. Vous êtes libre d’accepter ou de refuser.</p>
+        <div class="guild-result-actions">
+            {% include 'player/_guild_recruitment_action.html.twig' with {entry:entry, answer:'accept', label:'Accepter l’invitation'} only %}
+            {% include 'player/_guild_recruitment_action.html.twig' with {entry:entry, answer:'decline', label:'Refuser l’invitation'} only %}
+        </div>
+    {% elseif entry %}
+        <p role="status">Candidature en attente de validation par la guilde.</p>
+        {% include 'player/_guild_recruitment_action.html.twig' with {entry:entry, answer:'withdraw', label:'Retirer ma candidature'} only %}
+    {% else %}
+        <p>Votre candidature devra être acceptée par la guilde.</p>
+        <form method="post" action="{{ path('app_guild_apply', {id:profile.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('guild_apply_' ~ profile.id) }}">
+            <button class="primary">Demander à rejoindre</button>
+        </form>
+    {% endif %}
+{% endif %}
 {% if can_edit %}<a class="secondary" href="{{ path('app_guild_profile_edit',{id:profile.id}) }}">Personnaliser la guilde</a>{% endif %}
 </section>
 <div class="guild-public-content">

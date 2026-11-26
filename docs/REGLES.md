@@ -2,8 +2,7 @@
 
 ## Répartition des prix courante
 
-Les 156 profils par défaut utilisent les parts de valeur M/N/A/H suivantes :
-Basique 48/52/0/0, Intermédiaire 34/36/30/0 et Supérieur 28/31/31/10.
+Les 156 profils par défaut utilisent des recettes propres à chaque fiche et à chaque rang, sans parts de valeur imposées par rang. Voir [les raisons des recettes RP](CATALOGUE_COUTS_RP.md) et [les anciens prix](SAUVEGARDE_CATALOGUE_COUTS_AVANT_RP.md).
 La valeur est M×2 + N×4 + A×8 + H ; il ne s’agit pas de quantités brutes ni d’un marché.
 Les quantités sont entières et conservent le budget de base propre à chaque profil,
 y compris ceux des défenses. Les courbes et arrondis après croissance/remises restent
@@ -29,7 +28,7 @@ Pour les quatre extracteurs, la centrale, les cinq dépôts, le laboratoire, le 
 
 Pour chaque rang, la contribution de L niveaux vaut sa base par niveau × L × (1 + taux)^L. Les taux T1/T2/T3 valent 0,25 %, 0,5 % et 1 %. La production industrielle additionne les contributions, avec les facteurs de production 1 / 1,5 / 2,25. Les consommations électriques dépendent des niveaux installés et l’hydrogène du réacteur dépend de l’antimatière produite. La capacité additionne les contributions des dépôts (poids 1 / 1,25 / 1,5625) aux 10 000 places initiales de la colonie.
 
-Pour le laboratoire, le chantier et le bunker, les poids sont 1 / 1,25 / 1,5625. On divise la somme des contributions par celle obtenue aux trois maxima. Pour cette proportion p, l’effet vaut plafond × ln(1 + 2p) / ln(3). Le laboratoire et le chantier atteignent 70 % à 25/25/25 pour les recherches locales et la construction de vaisseaux respectivement. Le bunker atteint +25 % de structure des défenses à 10/10/10, en composition avec le blindage.
+Pour le laboratoire, le chantier et le bunker, les poids sont 1 / 1,25 / 1,5625. On divise la somme des contributions par celle obtenue aux trois maxima. Pour cette proportion p, l’effet vaut plafond × ln(1 + 2p) / ln(3). Le laboratoire et le chantier atteignent **89,5 % à 25/25/25** pour les recherches lancées sur cette colonie et ses constructions de vaisseaux respectivement. Une durée nominale de 10 h passe à 1 h 03 min. Aucun cumul entre ces deux effets : chaque opération utilise sa propre infrastructure. Le bunker atteint +25 % de structure des défenses à 10/10/10, en composition avec le blindage.
 
 ## Unités économiques — décision des 15 et 16 novembre 2026
 
@@ -163,6 +162,8 @@ les nouveaux replis partent de la position physique atteinte.
 
 ## Combat (PDF 1 p.6–8, PDF 2 p.2–6)
 Cadence confirmée par Kévin le 01/11/2026 : un round réel par minute, jusqu’à 10 rounds; les renforts rejoignent le prochain round non résolu selon leur heure d’arrivée. Le premier round commence à +60 secondes; les suivants à +120, jusqu’au 10e à +600. Une flotte arrivée exactement au début d’un round est traitée avant ce round et peut y participer, notamment à +600 secondes avant le 10e round. Le combat se clôt immédiatement dès qu’un camp est éliminé; toute flotte arrivée après cette clôture repart sans rejoindre le combat. Le moteur persiste et résout les rounds en temps réel selon cette cadence. L’Alpha conserve un round par minute, jusqu’à dix rounds ou clôture anticipée; voir l’audit de combat et les tests récents.
+Le point de reprise conserve l’état des unités et du générateur de tirage après chaque round validé. Il est enregistré avec l’historique et la prochaine échéance dans la même transaction. Les combats en cours sans ce point de reprise reconstruisent leur état une fois depuis leur graine. Les rapports historiques restent au même format. Cette reprise ne change pas le plafond technique actuel du moteur ; elle ne valide pas encore les grandes batailles.
+
 Fenêtre fixe dès premier attaquant, renforts échelonnés par rounds. Alliances directes et guildes définissent les camps ; défense extérieure intégrée au camp défendeur même sans alliance. FFA si attaquants non alliés. Unité individuelle, tirs bornés, cible vivante, destruction avant tir possible. Chance de base = clamp(15,95,precision+tracking+correction de l’arme−evasion−15+écart de rang). Chance finale = clamp(15,95,chance de base × coefficient de contre). La signature pondère le choix de cible ; le même coefficient de contre ou de faiblesse multiplie une fois la chance de toucher et une fois les dégâts d’un impact, sans second cumul réciproque. Un contre ×1,30 fait passer 50 % à 65 % de chance de toucher et augmente les dégâts par impact de 30 %. Voir le rééquilibrage du 02/11/2026 ci-dessous. Bonus technologiques figés au début de résolution. Notifications avec identité masquée selon découvertes ; destinataires limités. Après victoire offensive, les attaquants survivants peuvent piller le stock au-delà de 10 % de la capacité de stockage par ressource; leurs soutes libres se partagent le butin au prorata des stocks pillables, carburant de retour protégé. Au retour, le stockage restant de la planète d’origine plafonne le dépôt et le surplus est perdu.
 
 ## Architecture (PDF 4)
@@ -171,7 +172,7 @@ Controller → service métier → manager → repository. Entités et repositor
 ## Compléments opérationnels appliqués
 Les opérations en retard sont rejouées à leurs dates théoriques avant dépense/lecture de colonie, avec production et plafonds successifs. Les notifications utilisent un relais indépendant des échéances du jeu. Une sonde ou un vaisseau-colonie consommé sans flotte survivante termine la mission à l’arrivée ; un transport revient et livre une seule fois.
 
-Guildes : recrutement ouvert provisoire, adhésion exclusive dans chaque univers, transfert du commandement à un autre membre, départ après transfert, dissolution par le dirigeant. Alliances personnelles et alliances de guildes exigent le consentement réciproque. Une hostilité de guilde invalide les contrats personnels incompatibles.
+Guildes : candidature depuis la recherche ou la présentation, à accepter par le commandant ou un grade autorisé ; invitation d’un commandant sans guilde, à accepter par le destinataire. Adhésion exclusive dans chaque univers, transfert du commandement à un autre membre, départ après transfert, dissolution par le dirigeant. Alliances personnelles et alliances de guildes exigent le consentement réciproque. Une hostilité de guilde invalide les contrats personnels incompatibles.
 
 PNJ : les planètes PNJ découvertes du même univers peuvent être combattues par la mission Attaque, sans capture ni butin de ressources PNJ. Leur capture reste réservée à Conquête JcE, avec vaisseau colonie survivant, place disponible et règles d’occupation existantes (24 heures lorsque ce mécanisme est activé). Les bâtiments et stocks suivent les règles de conservation de la capture. Les planètes vierges restent colonisables ; les joueurs actifs ou simplement inactifs ne sont pas conquérables. Les empires déjà oubliés suivent les règles spécifiques détaillées ci-dessous.
 
@@ -223,7 +224,7 @@ Les 19 recherches ont reçu des libellés français distincts et des slugs dédi
 
 Les courbes, bonus communs entre rangs, profils de mobilité, ciblage furtif, retarget après destruction et matrice de contres sont décrits dans [BALANCING_IMPLEMENTATION_2026-11-02.md](archives/PROGRESSION_2026-11-02.md). Ces choix sont validés pour l’implémentation ; les jalons économiques demeurent des objectifs à mesurer en Alpha.
 
-Pour les bonus et les courbes, ce rééquilibrage remplace les formules historiques de la section précédente : les bonus de recherche ne se composent plus par rang. L’investissement pondéré vaut la somme des niveaux de chaque rang, plafonnés à leur maximum et pondérés par 1 / 1,25 / 1,5625, divisée par le maximum pondéré des trois rangs. La progression commune vaut `ln(1 + 2 × investissement) / ln(3)` ; le bonus vaut cette progression multipliée par le plafond configuré. Les plafonds de réduction de durée et de coût sont respectivement 70 % et 40 %. La cadence accorde une seule chance supplémentaire commune, plafonnée à 50 % par tir de base. Les coûts et durées utilisent les courbes par phase de `config/game/rules.yaml`, sous réserve des décisions plus récentes sur les producteurs. Les statistiques de combat R14 et les compositions de coûts du 5 novembre restent prioritaires sur les anciens exemples chiffrés.
+Pour les bonus et les courbes, ce rééquilibrage remplace les formules historiques de la section précédente : les bonus de recherche ne se composent plus par rang. L’investissement pondéré vaut la somme des niveaux de chaque rang, plafonnés à leur maximum et pondérés par 1 / 1,25 / 1,5625, divisée par le maximum pondéré des trois rangs. La progression commune vaut `ln(1 + 2 × investissement) / ln(3)` ; le bonus vaut cette progression multipliée par le plafond configuré. La réduction de durée des bâtiments par la recherche reste plafonnée à 70 % et la réduction de coût à 40 %. Le plafond relevé à 89,5 % ne concerne que le laboratoire et le chantier (voir la progression économique par rang). La cadence accorde une seule chance supplémentaire commune, plafonnée à 50 % par tir de base. Les coûts et durées utilisent les courbes par phase de `config/game/rules.yaml`, sous réserve des décisions plus récentes sur les producteurs. Les statistiques de combat R14 et les compositions de coûts du 5 novembre restent prioritaires sur les anciens exemples chiffrés.
 
 
 ### Tirs secondaires et contres — 4 novembre 2026
@@ -443,7 +444,7 @@ Les recherches historiquement actives en parallèle terminent leur travail sans 
 
 ## Classements quotidiens — 10 novembre 2026
 
-Tous les classements (points totaux des joueurs, bâtiments, recherche, flotte, nombre de colonies et guildes) sont figés entre deux calculs quotidiens, à 00 h en Europe/Paris, en tenant compte des changements d’heure. Les points affichés dans l’aperçu de colonie et l’API utilisent le même instantané. Le calcul des points reste inchangé ; les scores utilisés pour les protections et combats restent en temps réel.
+Tous les classements (points totaux des joueurs, bâtiments, recherche, flotte, nombre de colonies et guildes) sont figés entre deux calculs quotidiens, à 00 h en Europe/Paris, en tenant compte des changements d’heure. Les points affichés dans l’aperçu de colonie et l’API utilisent le même instantané. Les points sont la valeur des biens actuellement possédés aux prix catalogue courants : (H + 2 M + 4 N + 8 A) / 200, hors électricité, arrondie à l’inférieur séparément pour bâtiments, recherches et militaire (vaisseaux et défenses). En Alpha, le premier calcul pondéré se compare au dernier classement disponible, même établi avec l’ancienne formule. Les scores utilisés pour les protections et combats restent en temps réel : ratio d’attaque 5:1 inchangé ; protection débutant tant que les 7 jours ne sont pas écoulés et que le score reste inférieur à 7 500.
 
 Les évolutions comparent les deux derniers calculs persistés : points actuels moins points précédents ; rang précédent moins rang actuel (une place gagnée est positive). Dans le tableau joueur, gains et pertes sont signés et entre parenthèses sur la même ligne que la valeur ; une valeur inchangée s’affiche « (=) ». Sans référence précédente, l’évolution s’affiche « (—) ». La présentation des guildes et de l’aperçu conserve ses marqueurs existants. Les nouveaux inscrits et guildes entrent au prochain calcul. Les noms, relations diplomatiques et protections restent actuels ; les joueurs supprimés ou devenus empires oubliés et les guildes archivées ne sont plus affichés, sans renuméroter les rangs avant l’échéance suivante.
 
@@ -730,8 +731,16 @@ signalée comme imminente tant que la flotte est encore à l’aller.
 Une flotte rappelée ou passée en combat n’est plus une attaque entrante en trajet ;
 les affichages existants du combat et des retours sont conservés.
 
-Le propriétaire suit ses missions complètes. Les sondes sont privées à leur
-propriétaire à l’aller comme au retour ; leur détection à l’arrivée est inchangée.
+Le propriétaire suit ses missions complètes. Les sondes restent privées hors de la
+carte de leur propriétaire et des membres actuels de la même guilde ; leur
+détection à l’arrivée est inchangée. Sur la carte interactive, le filtre
+« Afficher les flottes de guilde » couvre toutes les missions ordinaires, à
+l’aller, au retour ou sur place, si les deux systèmes sont déjà découverts.
+Un point de repli non découvert reste masqué. Le suivi de guilde est limité au
+commandant, à la mission, à son trajet et à son échéance ; ni composition,
+ni effectifs, ni fret. Les anciens accès du destinataire et des autres alliés
+ne changent pas. Les trajets rattachés aux dossiers privés de la campagne pirate
+ne sont pas partagés, pas plus que les renseignements du rapport de sonde.
 Les mouvements non offensifs sont visibles au propriétaire, au destinataire
 et aux alliés du propriétaire dans les limites de découverte. Le destinataire
 voit sa propre cible, mais une origine inconnue reste masquée. Pour les alliés

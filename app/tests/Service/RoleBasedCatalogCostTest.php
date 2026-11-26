@@ -1,0 +1,146 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Service;
+
+use App\Entity\Universe;
+use App\Service\Balance\CostDistributionCandidate;
+use App\Service\Catalog\GameCatalog;
+use App\Service\Queue\OperationCalculator;
+use PHPUnit\Framework\TestCase;
+
+final class RoleBasedCatalogCostTest extends TestCase
+{
+    public function testAllProfilesFollowTheirBudgetDecisionAndKeepTheElectricityRule(): void
+    {
+        $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
+        $backup = file_get_contents(dirname(__DIR__, 3) . '/docs/SAUVEGARDE_CATALOGUE_COUTS_AVANT_RP.md');
+        $before = json_decode(substr(explode(str_repeat(chr(96), 3), $backup)[1], 4), true, 512, JSON_THROW_ON_ERROR);
+        $calculator = new OperationCalculator($catalog);
+
+        $actual = new Universe();
+        $actual->slug = 'role-based-test';
+        $actual->name = 'Recettes RP';
+        $previous = clone $actual;
+        foreach ($before as $group => $entries) {
+            foreach ($entries as $slug => $ranks) {
+                $previous->gameSettings['catalog_overrides'][$group][$slug]['cost_profiles'] = $ranks;
+            }
+        }
+        $oldConfiguration = $catalog->forUniverse($previous);
+        $newConfiguration = $catalog->forUniverse($actual);
+        $defenseBudgets = [
+            'ground_turret_anti_light' => [5000, 6250, 7812],
+            'ground_turret_anti_escort' => [18000, 22500, 28126],
+            'ground_turret_anti_heavy' => [47000, 58750, 73438],
+            'ground_turret_anti_capital' => [128000, 160000, 200000],
+        ];
+        $count = 0;
+        foreach ($newConfiguration['catalog'] as $group => $entries) {
+            self::assertSame(array_keys($entries), array_keys($before[$group]));
+            foreach ($entries as $slug => $definition) {
+                foreach (GameCatalog::TIERS as $rank => $tier) {
+                    $oldDefinition = $catalog->getTierForUniverse($previous, $group, $slug, $tier);
+                    $newDefinition = $catalog->getTierForUniverse($actual, $group, $slug, $tier);
+                    $oldBudget = CostDistributionCandidate::value($catalog->costs($oldDefinition));
+                    $newBudget = CostDistributionCandidate::value($catalog->costs($newDefinition));
+                    $expectedBudget = $group === 'defenses' ? $defenseBudgets[$slug][$rank] : $oldBudget;
+                    self::assertSame($expectedBudget, $newBudget, "$group/$slug/$tier");
+                    if ($group === 'defenses') {
+                        // Sans hydrogène, la valeur est paire : un point d'écart est parfois inévitable.
+                        if ($rank > 0) {
+                            self::assertEqualsWithDelta($defenseBudgets[$slug][$rank - 1] * 1.25, $newBudget, 1.0);
+                        }
+                        self::assertSame(0, $catalog->costs($newDefinition)['hydrogen']);
+                    }
+                    $orders = in_array($group, ['ships', 'defenses'], true) ? [[1, 1], [1, 100]] : [[1, 1], [5, 1]];
+                    foreach ($orders as [$level, $quantity]) {
+                        $old = $calculator->calculate($oldDefinition, $group, $level, $quantity, [], $oldConfiguration);
+                        $new = $calculator->calculate($newDefinition, $group, $level, $quantity, [], $newConfiguration);
+                        self::assertSame($old['duration'], $new['duration']);
+                        self::assertSame($old['costs']['electricity'] ?? 0, $new['costs']['electricity'] ?? 0);
+                        $valueBefore = CostDistributionCandidate::value($old['costs']);
+                        $valueAfter = CostDistributionCandidate::value($new['costs']);
+                        // L’arrondi d’un prérequis avancé se propage au rang d’entrée et à sa courbe.
+                        $roundingTolerance = max(14, (int) ceil($valueBefore / 1000));
+                        if ($group === 'defenses') {
+                            self::assertSame($expectedBudget * $quantity, $valueAfter, "$group/$slug/$tier/$quantity");
+                        } else {
+                            self::assertLessThanOrEqual($roundingTolerance, abs($valueBefore - $valueAfter), "$group/$slug/$tier/$level/$quantity");
+                        }
+                    }
+                    ++$count;
+                }
+            }
+        }
+        self::assertSame(156, $count);
+    }
+
+    public function testQuotesDoNotInventDefaultMetalOrNanoAndKeepTheElectricityTax(): void
+    {
+        $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
+        $universe = new Universe();
+        $universe->slug = 'role-based-quotes';
+        $universe->name = 'Devis RP';
+        $config = $catalog->forUniverse($universe);
+        $calculator = new OperationCalculator($catalog);
+        $recipes = [
+            ['buildings', 'storage_metal', 'basic', ['metal']],
+            ['buildings', 'storage_metal', 'superior', ['metal']],
+            ['technologies', 'structural_armor', 'basic', ['metal', 'electricity']],
+            ['technologies', 'structural_armor', 'intermediate', ['metal', 'nano', 'electricity']],
+            ['technologies', 'weapons_engineering', 'superior', ['metal', 'nano', 'antimatter', 'electricity']],
+            ['technologies', 'target_acquisition', 'superior', ['nano', 'electricity']],
+            ['technologies', 'signature_reduction', 'superior', ['nano', 'hydrogen', 'electricity']],
+            ['technologies', 'shield_harmonics', 'intermediate', ['nano', 'antimatter', 'electricity']],
+            ['technologies', 'vector_propulsion', 'basic', ['metal', 'nano', 'hydrogen', 'electricity']],
+            ['ships', 'solar_satellite', 'intermediate', ['nano', 'electricity']],
+            ['ships', 'capital', 'superior', ['metal', 'nano', 'antimatter', 'hydrogen', 'electricity']],
+        ];
+
+        foreach ($recipes as [$group, $slug, $tier, $expected]) {
+            $definition = $catalog->getTierForUniverse($universe, $group, $slug, $tier);
+            $quote = $calculator->calculate($definition, $group, 1, 1, [], $config);
+            $materials = array_keys(array_filter($quote['costs'], static fn (int $units) => $units > 0));
+            self::assertEqualsCanonicalizing($expected, $materials, "$group/$slug/$tier");
+            if ($group !== 'buildings') {
+                self::assertSame(100 * (int) ceil($quote['duration'] / 60), $quote['costs']['electricity']);
+            }
+        }
+    }
+
+    public function testRepresentativeRecipesUseMaterialsCorrespondingToTheirRole(): void
+    {
+        $catalog = new GameCatalog(dirname(__DIR__, 2) . '/config/game');
+        foreach (GameCatalog::TIERS as $tier) {
+            $armor = $catalog->costs($catalog->withTier($catalog->get('technologies', 'structural_armor'), $tier));
+            self::assertGreaterThan(0, $armor['metal']);
+            if ($tier === 'basic') {
+                self::assertSame(0, $armor['nano']);
+            } else {
+                self::assertGreaterThan(0, $armor['nano']);
+            }
+            self::assertSame(0, $armor['hydrogen']);
+            self::assertSame(0, $armor['antimatter']);
+            $bomber = $catalog->costs($catalog->withTier($catalog->get('ships', 'bomber'), $tier));
+            self::assertGreaterThan(0, $bomber['hydrogen']);
+            self::assertGreaterThan(0, $bomber['antimatter']);
+            $cargo = $catalog->costs($catalog->withTier($catalog->get('ships', 'transport'), $tier));
+            self::assertGreaterThan(0, $cargo['hydrogen']);
+            self::assertSame(0, $cargo['antimatter']);
+            $collector = $catalog->costs($catalog->withTier($catalog->get('ships', 'hydrogen_collector'), $tier));
+            if ($tier === 'basic') {
+                self::assertSame(0, $collector['hydrogen']);
+            } else {
+                self::assertGreaterThan(0, $collector['hydrogen']);
+            }
+            self::assertSame(0, $collector['antimatter']);
+        }
+        $trap = $catalog->costs($catalog->withTier($catalog->get('buildings', 'mine_antimatter'), 'basic'));
+        self::assertGreaterThan(0, $trap['hydrogen']);
+        self::assertSame(0, $trap['antimatter']);
+        $shield = $catalog->costs($catalog->withTier($catalog->get('technologies', 'shield_harmonics'), 'basic'));
+        self::assertGreaterThan(0, $shield['antimatter']);
+    }
+}

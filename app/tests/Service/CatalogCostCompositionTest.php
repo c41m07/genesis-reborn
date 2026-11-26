@@ -79,7 +79,9 @@ final class CatalogCostCompositionTest extends TestCase
             $costs=$operation->calculate($catalog->getTierForUniverse($universe,'buildings',$slug,'basic'),'buildings',1,1,[],$catalog->forUniverse($universe))['costs'];
             foreach($costs as $resource=>$amount)$sum[$resource]+=$amount;
         }
-        self::assertSame(0,$sum['antimatter']);self::assertSame(0,$sum['hydrogen']);
+        // Le premier piège n’utilise pas sa propre production. Il peut utiliser le gaz de la raffinerie déjà requise.
+        self::assertSame(0, $sum['antimatter']);
+        self::assertGreaterThan(0, $sum['hydrogen']);
         foreach(['initial_stock','colony_initial_stock'] as $kind)foreach($sum as $resource=>$amount)self::assertLessThanOrEqual($catalog->rules()[$kind][$resource],$amount,"$kind/$resource");
         self::assertGreaterThan(0,$catalog->rules()['base_production']['metal']);self::assertGreaterThan(0,$catalog->rules()['base_production']['nano']);
     }
