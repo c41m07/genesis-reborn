@@ -637,6 +637,11 @@ Les liens préremplis de la carte conservent le contexte de leur cible ; une cib
 connue peut rester consultable en formulaire même si la prévisualisation refuse
 actuellement l’envoi, notamment un destinataire qui refuse les transports.
 
+Dans Flottes, changer la colonie active depuis le menu conserve la page
+Missions, Préparer, Orbites ou À quai. Une préparation passe au hangar de la
+nouvelle origine sans reprendre une composition choisie sur l’ancienne. La liste
+des missions actives continue de couvrir toutes les colonies de l’univers.
+
 Les listes et suggestions respectent les droits de mission existants. Une liste
 ne remplace jamais les contrôles de la prévisualisation et de l’envoi : découverte,
 origine, univers, diplomatie, vacances, composition, carburant et capacités restent
