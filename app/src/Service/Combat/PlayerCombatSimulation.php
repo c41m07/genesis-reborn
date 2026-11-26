@@ -94,6 +94,7 @@ final class PlayerCombatSimulation
         return [
             'forces' => $forces,
             'date' => $report->createdAt,
+            'targetName' => $report->target->name,
             'id' => $report->id,
             'known' => array_keys($forces),
         ];

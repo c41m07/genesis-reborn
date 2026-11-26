@@ -1,5 +1,6 @@
 {% extends 'base.html.twig' %}
 {% import 'ui/macros.html.twig' as ui %}
+{% from 'ui/espionage_report_title.html.twig' import title as espionageTitle %}
 {% block title %}{{ archived ? 'Archives des rapports' : 'Rapports' }} · Genesis Reborn{% endblock %}
 {% block body %}
 <div class="reports-workspace player-report-board">
@@ -45,7 +46,7 @@
     {% set extra = report.participantCount~' flottes impliquées' %}
 {% elseif entry.kind == 'espionage' %}
     {% set routeName = 'app_espionage_report' %}
-    {% set title = 'Renseignements · '~report.target.name %}
+    {% set title = espionageTitle(report.target.name) %}
     {% set location = report.target.coordinates() %}
     {% set occurredAt = report.createdAt %}
     {% set state = report.result == 'detected' ? 'Sondes détectées' : report.intelCategories~' catégorie(s)' %}
