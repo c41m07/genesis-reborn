@@ -62,18 +62,24 @@ final class InventoryPageView
         $data['vacation'] = $this->vacations->currentPeriod($membership);
         if ($page === 'boxes') {
             $groups = [];
+            $unreadBoxIds = [];
             foreach ($this->repo->availableResourceBoxes($membership) as $item) {
                 // Une carte représente un contenu identique et ouvre toujours son plus ancien objet disponible.
                 $key = hash('sha256', json_encode($item->payload));
-                $groups[$key] ??= ['item' => $item, 'quantity' => 0, 'unread' => 0, 'firstUnread' => null];
+                $groups[$key] ??= ['item' => $item, 'quantity' => 0, 'unread' => 0];
                 ++$groups[$key]['quantity'];
                 if ($item->giftUnread) {
                     ++$groups[$key]['unread'];
-                    $groups[$key]['firstUnread'] ??= $item->id;
+                    $unreadBoxIds[] = $item->id;
                 }
             }
             $adventBoxes = $this->adventRewards->boxes($membership);
             return $data + [
+                'displayed_unread_boxes' => [
+                    'daily' => $unreadBoxIds,
+                    'advent' => array_values(array_map(static fn ($box) => $box->id,
+                        array_filter($adventBoxes, static fn ($box) => $box->boxUnread))),
+                ],
                 'advent_boxes' => $adventBoxes,
                 'advent_ships' => $adventBoxes ? $this->catalog->all('ships') : [],
                 'advent_resources' => \App\Service\Advent\AdventGifts::RESOURCES,

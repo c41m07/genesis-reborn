@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use App\Service\Boost\InventoryGiftNotices;
 use App\Service\Boost\ResourceBoxUseService;
 use App\Service\Boost\BoostGrantService;
 use App\Service\Boost\BoostUseService;
@@ -16,12 +17,16 @@ final class BoostController extends AbstractController
     #[Route('/boosts', name: 'app_boosts', defaults: ['inventory_page' => 'boosts'], methods: ['GET'])]
     #[Route('/inventaire/boites', name: 'app_inventory_boxes', defaults: ['inventory_page' => 'boxes'], methods: ['GET'])]
     #[Route('/inventaire/recompenses', name: 'app_inventory_pending', defaults: ['inventory_page' => 'pending'], methods: ['GET'])]
-    public function index(Request $request, UniverseContext $context, QueueService $queues, \App\Service\Boost\InventoryPageView $view): Response
+    public function index(Request $request, UniverseContext $context, QueueService $queues, \App\Service\Boost\InventoryPageView $view, InventoryGiftNotices $notices): Response
     {
         $membership = $context->membership();
         // Conserver le règlement des commandes échues avant de lire les opérations disponibles.
         $queues->synchronize($membership);
         $data = $view->prepare($membership, $request->attributes->getString('inventory_page'), $request->query->getInt('page', 1));
+        if (isset($data['displayed_unread_boxes']) && $request->isMethod('GET')) {
+            $notices->acknowledgeDisplayedBoxes($membership, $data['displayed_unread_boxes']);
+        }
+
         return $this->render('boosts/index.html.twig', $data, new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 

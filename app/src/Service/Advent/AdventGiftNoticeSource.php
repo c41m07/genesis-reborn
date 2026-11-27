@@ -26,6 +26,11 @@ final readonly class AdventGiftNoticeSource implements InventoryGiftNoticeSource
         return $summary + ['boxes' => $summary['count'], 'pending' => 0];
     }
 
+    public function acknowledgeBoxes(PlayerUniverse $membership, array $ids): void
+    {
+        $this->rewards->acknowledgeDisplayedBoxes($membership, $ids);
+    }
+
     public function acknowledge(PlayerUniverse $membership, int $through, bool $single = false): void
     {
         $this->rewards->acknowledgeGiftNotices($membership, $through, $single);

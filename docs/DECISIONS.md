@@ -2354,3 +2354,7 @@ Les boîtes remises par un convoi pirate ou par un retour de Bourse ont un déla
 d’ouverture de 24 heures dès la livraison. La mise en attente, la promotion et
 les vacances ne décalent pas l’échéance. La transition préserve les boîtes déjà
 attribuées sans date limite.
+
+## 27 novembre 2026 — Consultation des boîtes
+
+Visiter l’onglet Boîtes acquitte les notifications des boîtes affichées dans l’univers actif. Le joueur peut choisir plus tard quand ouvrir ses boîtes. Les cadeaux en attente et les boosts gardent leur propre état de lecture.
