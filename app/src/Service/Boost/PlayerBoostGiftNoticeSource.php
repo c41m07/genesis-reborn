@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace App\Service\Boost;
 
 use App\Entity\PlayerUniverse;
+use App\Repository\GameRepository;
 use Doctrine\DBAL\Connection;
 use Psr\Clock\ClockInterface;
 
 final readonly class PlayerBoostGiftNoticeSource implements InventoryGiftNoticeSource
 {
     private const UNREAD_FILTER = "player_universe_id = :membership AND gift_unread = 1
-        AND status IN ('available', 'pending') AND (kind <> 'timed_boost' OR earned_at > :cutoff)";
+        AND status IN ('available', 'pending') AND (kind <> 'timed_boost' OR earned_at > :cutoff)
+        AND (kind <> 'resource_box' OR COALESCE(".GameRepository::BOX_DEADLINE_SQL." > :now, 1))";
 
     public function __construct(private Connection $connection, private ClockInterface $clock)
     {
@@ -47,10 +49,12 @@ final readonly class PlayerBoostGiftNoticeSource implements InventoryGiftNoticeS
 
     private function parameters(PlayerUniverse $membership): array
     {
-        // Le délai de sept jours concerne l'objet, même si une tâche de purge ne l'a pas encore marqué expiré.
+        // Le badge tient compte de l’échéance même avant la prochaine visite de l’inventaire.
+        $now = $this->clock->now();
         return [
             'membership' => $membership->id,
-            'cutoff' => $this->clock->now()->setTimezone(new \DateTimeZone('UTC'))->modify('-'.TimedBoostEffects::SHELF_SECONDS.' seconds')->format('Y-m-d H:i:s'),
+            'now' => $now->getTimestamp(),
+            'cutoff' => $now->setTimezone(new \DateTimeZone('UTC'))->modify('-'.TimedBoostEffects::SHELF_SECONDS.' seconds')->format('Y-m-d H:i:s'),
         ];
     }
 }

@@ -159,6 +159,10 @@ final class BoostGrantService
         $boost->sourceKey = $sourceKey;
         $boost->kind = $timedEffect !== null ? TimedBoostEffects::KIND : ($boxPayload === null ? 'boost' : 'resource_box');
         $boost->payload = $timedEffect !== null ? ['effect' => $timedEffect] : ($boxPayload === null ? null : $this->boxes->validatePayload($boxPayload));
+        if ($boxPayload !== null && in_array($sourceType, ['market_overflow', 'pirate_convoy'], true)) {
+            // Fixer l’échéance à la livraison ; la promotion d’un objet en attente ne la repousse pas.
+            $boost->payload['expires_at'] = $now->getTimestamp() + ResourceBoxPolicy::CONVOY_SHELF_SECONDS;
+        }
         $boost->earnedAt = $now;
         $boost->status = $this->repo->countBoosts($membership, 'available') < $this->inventoryCapacity()
             ? 'available'
@@ -183,7 +187,7 @@ final class BoostGrantService
     private function refreshTimedInventoryLocked(PlayerUniverse $membership, \DateTimeImmutable $now): void
     {
         $cutoff = $now->setTimestamp($now->getTimestamp() - TimedBoostEffects::SHELF_SECONDS);
-        $expired = $this->repo->expiredTimedBoosts($membership, $cutoff);
+        $expired = $this->repo->expiredInventoryItems($membership, $cutoff, $now);
         if ($expired === []) {
             return;
         }
@@ -191,6 +195,7 @@ final class BoostGrantService
             // L’expiration ne touche jamais les fenêtres déjà activées : leur
             // historique reste nécessaire aux rattrapages économiques.
             $boost->status = 'expired';
+            $boost->giftUnread = false;
         }
         $this->manager->flush();
         $free = $this->inventoryCapacity() - $this->repo->countBoosts($membership, 'available');
@@ -210,7 +215,10 @@ final class BoostGrantService
         }
         while ($pending = $this->repo->oldestBoost($membership, 'pending')) {
             $this->manager->lock($pending);
-            if ($pending->kind === TimedBoostEffects::KIND && TimedBoostEffects::expiresAt($pending) <= $this->clock->now()) {
+            $now = $this->clock->now();
+            if (ResourceBoxPolicy::hasExpired($pending, $now)
+                || ($pending->kind === TimedBoostEffects::KIND && TimedBoostEffects::expiresAt($pending) <= $now)) {
+                $pending->giftUnread = false;
                 $pending->status = 'expired';
                 $this->manager->flush();
                 continue;

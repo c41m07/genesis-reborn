@@ -33,7 +33,7 @@
         {% elseif reward.state == 'full_pending' %}
             <p><strong>Stockage insuffisant.</strong> Le convoi attend depuis la précédente tentative de livraison.</p>
             {% if deposit_token|default(null) %}
-                <p>Récupérez maintenant la boîte dans votre inventaire.</p>
+                <p>Récupérez maintenant la boîte dans votre inventaire. Vous aurez ensuite 24 h pour l’ouvrir.</p>
                 <form method="post" action="{{ path('app_pirate_campaign_convoy_deposit', {missionNumber: selected}) }}">
                     <input type="hidden" name="_token" value="{{ deposit_token }}">
                     <button type="submit" class="primary">Recevoir la boîte de ressources</button>

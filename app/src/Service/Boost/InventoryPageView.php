@@ -36,7 +36,7 @@ final class InventoryPageView
         }
         $counts['boxes'] += $this->adventRewards->boxCount($membership);
         $data = [
-            'membership' => $membership, 'inventory_page' => $page, 'inventory_counts' => $counts,
+            'inventory_now' => $this->clock->now(), 'membership' => $membership, 'inventory_page' => $page, 'inventory_counts' => $counts,
             'boost_count' => $counts['boosts'], 'pending_boost_count' => $counts['pending'],
             'inventory_capacity' => $this->grants->inventoryCapacity(),
         ];

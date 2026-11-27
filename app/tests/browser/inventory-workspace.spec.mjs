@@ -197,3 +197,22 @@ test('L3 A : inventaire guidé, confirmations, états vides et vacances dans les
   }
   expect(errors).toEqual([]);
 });
+
+test('La boîte commerciale affiche son décompte puis bloque l’ouverture à échéance', async ({ page }) => {
+  const { project, member } = await enter(page);
+  runIsolatedSql(project, `INSERT INTO player_boost (player_universe_id, source_type, source_key, status, kind, payload, earned_at)
+    VALUES (${member}, 'market_overflow', 'market-overflow-browser', 'available', 'resource_box',
+      JSON_OBJECT('format','market_overflow','label','Boîte de surplus de la Bourse','resources',JSON_OBJECT('metal',10),
+      'expires_at', UNIX_TIMESTAMP()+120), UTC_TIMESTAMP()-INTERVAL 86300 SECOND)`);
+  await page.clock.install();
+  await page.goto('/inventaire/boites');
+  const card = page.locator('.resource-box-card').filter({ hasText: 'Boîte de surplus de la Bourse' });
+  const timer = card.locator('[data-countdown-target="time"]');
+  await expect(timer).toContainText(/0h [12]m/);
+  const before = await timer.textContent();
+  await page.clock.fastForward(3000);
+  await expect(timer).not.toHaveText(before);
+  await page.clock.fastForward(120000);
+  await expect(timer).toHaveText('Boîte expirée');
+  await expect(card.getByRole('button', { name: 'Ouvrir cette boîte' })).toBeDisabled();
+});

@@ -1,0 +1,14 @@
+{% macro attributes(item, now) %}
+    {% if item.payload.expires_at is defined %}
+        data-controller="countdown" data-countdown-now-value="{{ now|date('c', 'UTC') }}"
+        data-countdown-end-value="{{ item.payload.expires_at|date('c', 'UTC') }}"
+        data-countdown-ended-label-value="Boîte expirée" data-countdown-refresh-value="false"
+    {% endif %}
+{% endmacro %}
+
+{% macro deadline(item, now, zone) %}
+    {% if item.payload.expires_at is defined %}
+        <p>À ouvrir avant le <time datetime="{{ item.payload.expires_at|date('c', 'UTC') }}">{{ item.payload.expires_at|date('d/m/Y à H:i:s', zone) }}</time>
+            · <span data-countdown-target="time">{{ duration_label(max(0, item.payload.expires_at - now.timestamp)) }}</span></p>
+    {% endif %}
+{% endmacro %}

@@ -1,7 +1,7 @@
 <?php
 namespace App\Service\Boost;
 
-use App\Entity\{AdminAuditLog, Player, Universe};
+use App\Entity\{AdminAuditLog, Player, PlayerBoost, Universe};
 use App\Manager\GameManager;
 use App\Service\Catalog\GameCatalog;
 use Doctrine\ORM\EntityManagerInterface;
@@ -9,6 +9,15 @@ use Psr\Clock\ClockInterface;
 
 final class ResourceBoxPolicy
 {
+    public const CONVOY_SHELF_SECONDS = 86400;
+
+    public static function hasExpired(PlayerBoost $box, \DateTimeImmutable $now): bool
+    {
+        // Les boîtes reçues avant l’introduction du délai gardent leurs conditions.
+        return $box->kind === 'resource_box' && isset($box->payload['expires_at'])
+            && $box->payload['expires_at'] <= $now->getTimestamp();
+    }
+
     public const FORMATS = ['small'=>'Petite boîte de ressources','medium'=>'Boîte moyenne de ressources','large'=>'Grande boîte de ressources'];
     public const AMOUNTS = [
         'small'=>['metal'=>4000,'nano'=>1000,'hydrogen'=>1000,'antimatter'=>200,'electricity'=>2000],

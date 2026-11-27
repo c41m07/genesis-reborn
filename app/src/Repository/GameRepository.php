@@ -534,7 +534,7 @@ final class GameRepository
     /** @return list<GameEvent> Le panneau commun conserve tous les événements applicables. */
     public function visibleGameEvents(PlayerUniverse $membership, \DateTimeImmutable $now): array
     {
-        return $this->eventEntities($this->visibleGameEventsQuery($membership, $now)->orderBy('e.ends_at', 'ASC'), GameEvent::class);
+        return $this->nativeEntities($this->visibleGameEventsQuery($membership, $now)->orderBy('e.ends_at', 'ASC'), GameEvent::class);
     }
 
     public function playerGameEventsPage(PlayerUniverse $membership, \DateTimeImmutable $now, bool $upcoming, int $page): array
@@ -568,7 +568,7 @@ final class GameRepository
         $direction = $newestFirst ? 'DESC' : 'ASC';
         $query = $this->playerChallengesQuery($membership, $statuses)->orderBy('e.scheduled_at', $direction)->addOrderBy('e.id', $direction);
         if ($limit !== null) $query->setMaxResults(max(1, min(50, $limit)));
-        return $this->eventEntities($query, BoostEvent::class);
+        return $this->nativeEntities($query, BoostEvent::class);
     }
 
     private function playerChallengesQuery(PlayerUniverse $membership, array $statuses): QueryBuilder
@@ -600,7 +600,7 @@ final class GameRepository
         $total = (int) (clone $query)->select('COUNT(*)')->resetOrderBy()->executeQuery()->fetchOne();
         $pages = max(1, (int) ceil($total / 25));
         $page = min($pages, max(1, $page));
-        return ['rows' => $this->eventEntities($query->setFirstResult(($page - 1) * 25)->setMaxResults(25), $class),
+        return ['rows' => $this->nativeEntities($query->setFirstResult(($page - 1) * 25)->setMaxResults(25), $class),
             'total' => $total, 'page' => $page, 'pages' => $pages];
     }
 
@@ -609,7 +609,7 @@ final class GameRepository
      * @param class-string<T> $class
      * @return list<T>
      */
-    private function eventEntities(QueryBuilder $query, string $class): array
+    private function nativeEntities(QueryBuilder $query, string $class): array
     {
         // Le mapping Doctrine conserve les types JSON, dates et associations sans seconde lecture non filtrée.
         $mapping = new ResultSetMappingBuilder($this->em);
@@ -1318,15 +1318,20 @@ final class GameRepository
         return $this->em->getRepository(PlayerBoost::class)->findOneBy(['playerUniverse' => $membership, 'status' => $status] + ($kind === null ? [] : ['kind' => $kind]), ['earnedAt' => 'ASC', 'id' => 'ASC']);
     }
 
-    /** @return list<PlayerBoost> Objets dont le délai d’activation est échu. */
-    public function expiredTimedBoosts(PlayerUniverse $membership, \DateTimeImmutable $cutoff): array
+    // Une échéance absente dans le contenu historique donne NULL, jamais une expiration immédiate.
+    public const BOX_DEADLINE_SQL = "CAST(JSON_VALUE(payload, '$.expires_at') AS UNSIGNED)";
+
+    /** @return list<PlayerBoost> Objets disponibles ou en attente qui doivent libérer leur place. */
+    public function expiredInventoryItems(PlayerUniverse $membership, \DateTimeImmutable $boostCutoff, \DateTimeImmutable $now): array
     {
-        return $this->em->createQueryBuilder()->select('b')->from(PlayerBoost::class, 'b')
-            ->where('b.playerUniverse = :membership AND b.kind = :kind AND b.status IN (:statuses)')
-            ->andWhere('b.earnedAt <= :cutoff')
-            ->setParameter('membership', $membership)->setParameter('kind', \App\Service\Boost\TimedBoostEffects::KIND)
-            ->setParameter('statuses', ['available', 'pending'])->setParameter('cutoff', $cutoff)
-            ->getQuery()->getResult();
+        $query = $this->em->getConnection()->createQueryBuilder()->from('player_boost', 'e')
+            ->where('e.player_universe_id = :member')->andWhere("e.status IN ('available', 'pending')")
+            ->andWhere("(e.kind = 'timed_boost' AND e.earned_at <= :cutoff) OR (e.kind = 'resource_box' AND ".self::BOX_DEADLINE_SQL." <= :now)")
+            ->setParameter('member', $membership->id)
+            ->setParameter('cutoff', $boostCutoff->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s'))
+            ->setParameter('now', $now->getTimestamp());
+
+        return $this->nativeEntities($query, PlayerBoost::class);
     }
 
     /** @return list<PlayerBoost> La capacité de l’inventaire borne cette liste. */

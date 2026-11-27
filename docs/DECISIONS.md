@@ -2335,3 +2335,10 @@ Le compteur Inventaire signale chaque nouvelle boîte, les bonus quotidiens et l
 et remet le reliquat dans une boîte de ressources de l’empire. Un rappel suit la même
 règle pour le fret initial. La livraison concerne les retours réglés à compter du changement.
 Le fret déjà en soute reste accessible depuis les flottes à quai.
+
+## 27 novembre 2026 — Délai des boîtes de convoi
+
+Les boîtes remises par un convoi pirate ou par un retour de Bourse ont un délai
+d’ouverture de 24 heures dès la livraison. La mise en attente, la promotion et
+les vacances ne décalent pas l’échéance. La transition préserve les boîtes déjà
+attribuées sans date limite.

@@ -68,6 +68,65 @@ final class ResourceBoxTest extends KernelTestCase
         self::assertSame('used',$box->status);self::assertSame($planet->id,$box->operationId);
     }
 
+    public function testConvoyDeadlineAppliesAtExactly24HoursEvenOnAStaleForm(): void
+    {
+        [$player, $planet] = $this->playerAndPlanet();
+        $member = $player->currentPlayerUniverse;
+        $grants = self::getContainer()->get(BoostGrantService::class);
+        $clock = self::getContainer()->get('clock');
+        $boxes = self::getContainer()->get(ResourceBoxUseService::class);
+        $this->em->wrapInTransaction(function () use ($grants, $member) {
+            $grants->grantMarketOverflowLocked($member, 1, 'antimatter', 0.25);
+            $grants->awardConvoyBoxLocked($member, 1, ['metal' => 1, 'nano' => 0, 'hydrogen' => 0, 'antimatter' => 0]);
+        });
+        $repository = $this->em->getRepository(PlayerBoost::class);
+        $market = $repository->findOneBy(['sourceType' => 'market_overflow']);
+        $pirate = $repository->findOneBy(['sourceType' => 'pirate_convoy']);
+        $deadline = $clock->now()->getTimestamp() + 86400;
+        self::assertSame($deadline, $market->payload['expires_at']);
+        self::assertSame($deadline, $pirate->payload['expires_at']);
+        $clock->sleep(86399);
+        self::assertTrue($boxes->open($member, $market->id, $planet->id, str_repeat('1', 32)));
+        $clock->sleep(1);
+        $notices = self::getContainer()->get(\App\Service\Boost\PlayerBoostGiftNoticeSource::class);
+        self::assertSame(0, $notices->summary($member)['boxes']);
+        self::assertSame('available', $pirate->status);
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Cette boîte a expiré.');
+        $boxes->open($member, $pirate->id, $planet->id, str_repeat('2', 32));
+    }
+
+    public function testExpirationFreesSlotsAndPreservesHistoricalAndEventBoxes(): void
+    {
+        [$player] = $this->playerAndPlanet();
+        $member = $player->currentPlayerUniverse;
+        $grants = self::getContainer()->get(BoostGrantService::class);
+        $permanent = $this->box($member);
+        $this->em->wrapInTransaction(function () use ($grants, $member) {
+            $grants->grantMarketOverflowLocked($member, 7, 'metal', 30);
+            $grants->awardConvoyBoxLocked($member, 8, ['metal' => 5, 'nano' => 0, 'hydrogen' => 0, 'antimatter' => 0]);
+        });
+        $repository = $this->em->getRepository(PlayerBoost::class);
+        $market = $repository->findOneBy(['sourceType' => 'market_overflow']);
+        $pirate = $repository->findOneBy(['sourceType' => 'pirate_convoy']);
+        $pirate->status = 'pending';
+        $legacy = clone $pirate;
+        $legacy->id = null;
+        $legacy->sourceKey = 'pirate-convoy-historical';
+        unset($legacy->payload['expires_at']);
+        $this->em->persist($legacy);
+        $this->em->flush();
+
+        self::getContainer()->get('clock')->sleep(86400);
+        $grants->refreshTimedInventory($member);
+        self::assertSame('expired', $market->status);
+        self::assertSame('expired', $pirate->status);
+        self::assertFalse($market->giftUnread);
+        self::assertSame('available', $legacy->status);
+        self::assertSame('available', $permanent->status);
+        self::assertArrayNotHasKey('expires_at', $permanent->payload);
+    }
+
     public function testFullStorageRollsBackAllDepositsAndKeepsBoxIntact(): void
     {
         [$player,$planet]=$this->playerAndPlanet();$membership=$player->currentPlayerUniverse;$box=$this->box($membership);

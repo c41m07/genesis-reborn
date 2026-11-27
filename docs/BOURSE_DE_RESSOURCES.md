@@ -54,8 +54,7 @@ rentrent et le fret est déchargé jusqu’à la capacité de la colonie ; le
 surplus arrive dans une **Boîte de surplus de la Bourse**, dans l’inventaire
 du joueur de cet univers. Un entrepôt plein envoie le lot entier dans la boîte.
 Si l’inventaire est plein, la boîte rejoint les récompenses en attente.
-Le joueur peut ouvrir la boîte sur une de ses colonies disposant de la place
-nécessaire. Cette règle s’applique aussi au fret rendu après un rappel. Avant l’échéance de l’aller, un rappel annule la
+Le joueur dispose de 24 heures dès la réception pour ouvrir la boîte sur une colonie ayant assez de place. Le délai court aussi en attente et pendant les vacances. Cette règle s’applique aussi au fret rendu après un rappel. Avant l’échéance de l’aller, un rappel annule la
 réservation et rend le fret initial après son trajet de retour. Si la
 colonie de retour est perdue, le convoi attend une nouvelle colonie du même
 empire puis reprend un trajet de 30 min. Il ne crédite jamais le conquérant.

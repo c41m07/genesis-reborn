@@ -1,8 +1,8 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['time', 'dial'];
-    static values = { end: String, now: String, duration: Number, hideOnEnd: Boolean, refresh: { type: Boolean, default: true } };
+    static targets = ['time', 'dial', 'disable'];
+    static values = { end: String, now: String, endedLabel: String, duration: Number, hideOnEnd: Boolean, refresh: { type: Boolean, default: true } };
 
     initialize() {
         // Pour un bonus, conserver le décalage serveur même si Stimulus reconnecte le même élément.
@@ -30,7 +30,11 @@ export default class extends Controller {
             const percent = Math.min(100, 100 * seconds / this.durationValue);
             this.dialTarget.style.setProperty('--remaining', percent + '%');
         }
-        this.timeTarget.textContent = seconds ? `${Math.floor(seconds / 3600)}h ${Math.floor(seconds % 3600 / 60)}m ${seconds % 60}s` : 'Finalisation…';
+        this.timeTarget.textContent = seconds ? `${Math.floor(seconds / 3600)}h ${Math.floor(seconds % 3600 / 60)}m ${seconds % 60}s` : (this.hasEndedLabelValue ? this.endedLabelValue : 'Finalisation…');
+        if (!seconds && this.hasEndedLabelValue) {
+            for (const control of this.disableTargets) control.disabled = true;
+            clearInterval(this.timer);
+        }
         if (!seconds && this.refreshValue && !this.requested) {
             this.requested = true;
             window.dispatchEvent(new CustomEvent('genesis:refresh'));
