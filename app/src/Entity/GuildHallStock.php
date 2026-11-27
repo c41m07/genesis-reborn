@@ -18,4 +18,8 @@ final class GuildHallStock
     /** @var array<string, int> */
     #[ORM\Column(type: 'json')]
     public array $materials = [];
+
+    /** Reliquat inférieur à une unité ; utilisable pour les trajets, pas pour les chantiers. */
+    #[ORM\Column(options: ['default' => 0])]
+    public float $hydrogenFraction = 0.0;
 }

@@ -27,6 +27,11 @@ final readonly class GuildHallStockStore
     public function receiveLocked(GuildHall $hall, array $capacity, array $cargo): array
     {
         $stock = $this->existingLocked($hall);
+        if (($stock?->hydrogenFraction ?? 0.0) > 0.0) {
+            // Les apports sont entiers : le reliquat occupe déjà une part de la
+            // dernière unité de capacité, qui ne peut pas accepter un dépôt entier.
+            $capacity['hydrogen'] = max(0, ($capacity['hydrogen'] ?? 0) - 1);
+        }
         $result = GuildHallStockPolicy::receive($stock?->materials ?? [], $capacity, $cargo);
         if (array_sum($result['delivered']) === 0) {
             return $result;
@@ -79,6 +84,17 @@ final readonly class GuildHallStockStore
             throw new \DomainException('Aucun matériau n’a encore été livré au Hall.');
         }
         $stock->materials = GuildHallStockPolicy::consume($stock->materials, $cost);
+    }
+
+    /** À appeler sous le verrou du Hall, dans la transaction qui réserve les vaisseaux. */
+    public function consumeFuelLocked(GuildHall $hall, float $fuel): void
+    {
+        $stock = $this->existingLocked($hall);
+        $remaining = GuildHallFuelBalance::debit($stock?->materials['hydrogen'] ?? 0, $stock?->hydrogenFraction ?? 0.0, $fuel);
+        if ($stock !== null) {
+            $stock->materials['hydrogen'] = $remaining['whole'];
+            $stock->hydrogenFraction = $remaining['fraction'];
+        }
     }
 
     private function existingLocked(GuildHall $hall): ?GuildHallStock
