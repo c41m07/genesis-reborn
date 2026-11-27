@@ -2288,6 +2288,10 @@ Le plafond passe de 30 à **10 commandes à l’ajout** sur les files existantes
 
 L’administration programme chaque période de visibilité avec un début inclus et une fin exclue en heure de Paris. Le bouton cadeau de la barre supérieure et l’accès direct suivent la même période. Les portes conservent les dates du 1er au 24 décembre et peuvent être rattrapées pendant la visibilité. Une nouvelle saison demande une publication explicite. L’inventaire assure le retrait des cadeaux déjà réservés après la fermeture.
 
+### Nouvelles boîtes de l’Avent · 26 novembre 2026
+
+L’ouverture d’une porte place les nouveaux lots de matériaux ou de vaisseaux dans l’inventaire de l’univers d’obtention, sans versement immédiat. L’ouverture de la boîte permet de choisir une colonie possédée et reste possible jusqu’au 31 décembre inclus, heure de Paris, indépendamment de la fermeture locale. Seule la boîte de matériaux peut dépasser la capacité des entrepôts. Le plafond des 48 premières heures et les prérequis de coque restent applicables. Les réservations historiques, y compris les reliquats partiellement versés, conservent leur retrait antérieur ; aucun délai ne leur est ajouté. Bons, remises et cosmétiques ne changent pas.
+
 ## 25 novembre 2026 — recherches, bâtiments économiques et infrastructures
 
 Les 38 recherches avancées du catalogue ne demandaient aucun niveau de leur propre famille. Décision confirmée pendant le lot : ajouter à chacune le rang immédiatement précédent au niveau 5. Les déblocages mémorisés et les autres conditions restent applicables. Les prix utilisent le prérequis individuel admissible le plus cher et les contributions de chaque bâtiment se composent par rang. Les taux, plafonds, périmètres et durées applicables figurent dans les [règles](REGLES.md#progression-économique-par-rang).

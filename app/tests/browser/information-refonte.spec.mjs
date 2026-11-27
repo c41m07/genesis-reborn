@@ -198,6 +198,23 @@ test('P20 : feedback non envoyé et deux patchnotes publiées', async ({ page, b
   const project = process.env.BROWSER_ROUTER;
   const count = () => queryIsolatedSql(project, `SELECT COUNT(*) FROM user_feedback f JOIN player p ON p.id=f.player_id WHERE p.email=${quote(email)}`);
   runIsolatedSql(project, "INSERT INTO patch_note (title,version,summary,content,status,published_at,created_at,updated_at) VALUES ('Lisibilité des rapports','0.9.2','Les filtres et le type de rapport sont affichés séparément.','Détail de l’amélioration des rapports.','published',DATE_SUB(UTC_TIMESTAMP(),INTERVAL 1 HOUR),UTC_TIMESTAMP(),UTC_TIMESTAMP()),('Classement et navigation','0.9.1','Repères de navigation harmonisés.','Détail du classement.','published',DATE_SUB(UTC_TIMESTAMP(),INTERVAL 2 HOUR),UTC_TIMESTAMP(),UTC_TIMESTAMP())");
+  async function expectVisibleFeedbackError(page) {
+    const errors = page.locator('.feedback-errors');
+    await expect(errors).toContainText('Le titre est obligatoire');
+    await expect(errors).toBeFocused();
+    await page.waitForLoadState('load');
+    await page.evaluate(() => document.fonts.ready);
+    // Ne pas déplacer le document dans le test : l’erreur doit rester
+    // visible après le focus natif qui suit l’envoi et le rendu final.
+    await expect.poll(() => errors.getByRole('heading').evaluate(element => {
+      const box = element.getBoundingClientRect();
+      const x = box.left + Math.min(8, box.width / 2);
+      const y = box.top + box.height / 2;
+      const top = document.elementFromPoint(x, y);
+      return { visible: Boolean(top && element.contains(top)), occludedBy: top && !element.contains(top) ? top.className : null };
+    })).toEqual({ visible: true, occludedBy: null });
+  }
+
   for (const theme of ['dark', 'light']) {
     runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email=${quote(email)}`);
     for (const viewport of [{ width: 1920, height: 1080 }, { width: 390, height: 844 }]) {
@@ -221,20 +238,7 @@ test('P20 : feedback non envoyé et deux patchnotes publiées', async ({ page, b
       }
       await page.getByLabel('Titre', { exact: true }).fill('   ');
       await page.getByRole('button', { name: 'Envoyer mon retour' }).press('Enter');
-      const errors = page.locator('.feedback-errors');
-      await expect(errors).toContainText('Le titre est obligatoire');
-      await expect(errors).toBeFocused();
-      await page.waitForLoadState('load');
-      await page.evaluate(() => document.fonts.ready);
-      // Ne pas déplacer le document dans le test : l’erreur doit rester
-      // visible après le focus natif qui suit l’envoi et le rendu final.
-      await expect.poll(() => errors.getByRole('heading').evaluate(element => {
-        const box = element.getBoundingClientRect();
-        const x = box.left + Math.min(8, box.width / 2);
-        const y = box.top + box.height / 2;
-        const top = document.elementFromPoint(x, y);
-        return { visible: Boolean(top && element.contains(top)), occludedBy: top && !element.contains(top) ? top.className : null };
-      })).toEqual({ visible: true, occludedBy: null });
+      await expectVisibleFeedbackError(page);
       await expect(description).toHaveValue(descriptionText);
       await expect(page.getByLabel('Type', { exact: true })).toHaveValue('improvement');
       expect(count()).toBe('0');
@@ -258,14 +262,17 @@ test('P20 : feedback non envoyé et deux patchnotes publiées', async ({ page, b
       await page.screenshot({ path: info.outputPath(`P20-B-patchnotes-${theme}-${viewport.width}.png`), animations:'disabled', scale:'css' });
     }
   }
-  const native = await browser.newContext({ baseURL, storageState: await page.context().storageState(), javaScriptEnabled: false });
+  const native = await browser.newContext({
+    baseURL, storageState: await page.context().storageState(), javaScriptEnabled: false,
+    viewport: { width: 390, height: 844 },
+  });
   try {
     const tab = await native.newPage();
     await tab.goto('/feedback');
     await fillFeedback(tab);
     await tab.getByLabel('Titre', { exact: true }).fill('   ');
     await tab.getByRole('button', { name: 'Envoyer mon retour' }).press('Enter');
-    await expect(tab.locator('.feedback-errors')).toBeFocused();
+    await expectVisibleFeedbackError(tab);
     await expect(tab.getByLabel('Description détaillée')).toHaveValue('Je consulte la page puis je recharge. Voici les étapes et le résultat attendu.');
     await tab.goto('/patchnotes');
     const details = tab.locator('.patchnote-details').first();

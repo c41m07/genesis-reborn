@@ -1,0 +1,32 @@
+{% if advent_boxes %}
+<section aria-labelledby="advent-boxes-title">
+    <h2 id="advent-boxes-title">Boîtes de l’Avent</h2>
+    <p>Ces cadeaux ne prennent pas de place dans l’inventaire courant.</p>
+    {% for claim in advent_boxes %}
+        <article class="panel" id="advent-box-{{ claim.door }}">
+            {% set shipBox = claim.award.kind|default('') == 'ship_pack' %}
+            <h3>{{ shipBox ? 'Boîte de vaisseaux' : 'Boîte de ressources' }} · Avent {{ claim.adventEdition.season }} · Porte {{ claim.door }}</h3>
+            <p>À ouvrir avant le <time datetime="{{ claim.boxExpiresAt|date('c', 'UTC') }}">{{ claim.boxExpiresAt|date('d/m/Y à H:i', 'Europe/Paris') }}</time>, heure de Paris.</p>
+            {% if shipBox %}
+                <p>{% include 'advent/_offer.html.twig' with {offer:claim.award, ships:advent_ships} only %}</p>
+                <p>La colonie doit avoir débloqué les vaisseaux de ce lot.</p>
+            {% else %}
+                <p>Reste à verser : {% for resource, quantity in claim.resources %}{{ (quantity - claim.creditedResources[resource]|default(0))|quantity(0) }} {{ advent_resources[resource] }}{{ loop.last ? '' : ' · ' }}{% endfor %}</p>
+                <p>Le contenu peut dépasser la capacité des entrepôts.</p>
+            {% endif %}
+            {% if available_colonies %}
+                <form method="post" action="{{ path('app_advent_reserved', {id:claim.adventEdition.id, door:claim.door}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('advent_' ~ claim.adventEdition.id ~ '_' ~ membership.id ~ '_' ~ claim.door) }}">
+                    <input type="hidden" name="choice" value="{{ claim.choice }}">
+                    <label for="advent-box-destination-{{ claim.id }}">Colonie destinataire</label>
+                    <select id="advent-box-destination-{{ claim.id }}" name="colony" required>
+                        <option value="">Choisir une de mes colonies</option>
+                        {% for colony in available_colonies %}<option value="{{ colony.id }}">{{ colony.name }} ({{ colony.coordinates() }})</option>{% endfor %}
+                    </select>
+                    <button class="primary">Ouvrir la boîte<span class="visually-hidden"> de la porte {{ claim.door }}</span></button>
+                </form>
+            {% endif %}
+        </article>
+    {% endfor %}
+</section>
+{% endif %}

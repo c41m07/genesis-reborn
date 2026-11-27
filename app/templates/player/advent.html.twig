@@ -11,7 +11,7 @@
     {% set claim = door.claim %}
     {% set waitingCredit = claim and not claim.deliveredAt and claim.award.kind|default('') in ['research_discount', 'ship_voucher'] %}
     {% set statuses = statuses|merge({('door-' ~ day): {
-        label: claim ? (claim.deliveredAt ? 'Versé' : (waitingCredit ? (claim.award.kind == 'research_discount' ? 'Remise à utiliser' : 'Bon à utiliser') : 'Réservé')) : (door.open ? (destinationsAllowed and colonies ? 'Disponible' : 'Ouverte') : 'À venir'),
+        label: claim ? (claim.deliveredAt ? 'Versé' : (waitingCredit ? (claim.award.kind == 'research_discount' ? 'Remise à utiliser' : 'Bon à utiliser') : (claim.boxExpiresAt ? (boxesOpen ? 'Dans l’inventaire' : 'Expiré') : 'Réservé'))) : (door.open ? (destinationsAllowed and colonies ? 'Disponible' : 'Ouverte') : 'À venir'),
         key: claim ? (claim.deliveredAt ? 'delivered' : 'reserved') : (door.open ? 'open' : 'future')
     }}) %}
     {% if claim and not claim.deliveredAt %}
@@ -42,14 +42,13 @@
             {% if consolidated or pending %}<a class="secondary" href="#advent-rewards">Cadeaux et réserves</a>{% endif %}
         </div>
     </div>
-    <p class="advent-destination">Destination à choisir parmi vos colonies dans <strong>{{ membership.universe.name }}</strong>. Après la clôture, retrouvez vos cadeaux réservés dans <a href="{{ path('app_inventory_pending') }}">Inventaire · Récompenses en attente</a>.</p>
     {% if consolidated %}
         <section class="panel advent-universe" aria-labelledby="advent-universe-status">
             <h2 id="advent-universe-status">Univers de cette édition</h2>
             {% if binding %}
                 <p><strong>{{ bindingUniverse.name|default('Univers d’origine indisponible') }}</strong> · {{ bracketLabels[binding.bracket] }}</p>
                 {% if not destinationsAllowed %}<p>Revenez dans cet univers pour retirer vos cadeaux. Le choix ne peut pas être transféré.</p><a class="secondary" href="{{ path('app_universes') }}">Changer d’univers actif</a>{% endif %}
-                <p>Vos versements en matériaux restent plafonnés à 2 000 métal et 1 000 nano durant les 48 premières heures dans cet univers. Le reliquat reste acquis.</p>
+                <p>Vos versements en matériaux restent plafonnés à 2 000 métal et 1 000 nano durant les 48 premières heures dans cet univers. Le reliquat reste dans la boîte jusqu’à son échéance.</p>
             {% elseif openPeriod and progression %}
                 <p>Tranche dans cet univers : <strong>{{ bracketLabels[progression.bracket] }}</strong>. Choisissez une seule fois : tous les retraits de l’édition se feront ici.</p>
                 <form method="post" action="{{ path('app_advent_bind', {id: edition.id}) }}">
@@ -72,6 +71,7 @@
         <section class="panel advent-calendar" aria-labelledby="advent-calendar-title">
             <h2 id="advent-calendar-title">Choisir une porte</h2>
             <p>Récupérez les portes ouvertes avant le {{ window.visibleUntil|date('d/m/Y', 'Europe/Paris') }} à {{ window.visibleUntil|date('H:i', 'Europe/Paris') }}, heure de Paris.</p>
+            <p class="advent-destination">Dans <a href="{{ path('app_inventory_boxes') }}">Inventaire · Boîtes</a>, choisissez une colonie et ouvrez vos lots jusqu’au 31 décembre, heure de Paris.</p>
             <ul class="advent-meta" aria-label="Contexte de l’édition">
                 {% if consolidated and binding %}<li class="badge">{{ bracketLabels[binding.bracket] }}</li>{% endif %}
                 <li class="badge">Univers actif : {{ membership.universe.name }}</li>

@@ -73,7 +73,7 @@ final class InventoryPagesTest extends WebTestCase
 
     public function testDirectPagesHaveTheirOwnContentAndKeepSharedCapacityAndActiveNavigation(): void
     {
-        foreach (['/boosts'=>'Boosts','/inventaire/boites'=>'Boîtes de ressources','/inventaire/recompenses'=>'Récompenses en attente'] as $url=>$title) {
+        foreach (['/boosts'=>'Boosts','/inventaire/boites'=>'Boîtes','/inventaire/recompenses'=>'Récompenses en attente'] as $url=>$title) {
             $this->client->request('GET',$url);self::assertResponseIsSuccessful();
             self::assertSelectorTextSame('h1',$title);self::assertTrue($this->client->getResponse()->headers->hasCacheControlDirective('no-store'));
             self::assertSelectorExists('nav[aria-label="Navigation de l’inventaire"] a[href="'.$url.'"][aria-current="page"]');

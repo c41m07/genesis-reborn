@@ -155,7 +155,7 @@ test('Inventaire : pages directes, navigation, attente paginée et anciens fragm
   const email=await enter(page), project=process.env.BROWSER_ROUTER;
   const member=Number(queryIsolatedSql(project,`SELECT current_player_universe_id FROM player WHERE email='${email}'`));
   runIsolatedSql(project, `INSERT INTO player_boost (player_universe_id,source_type,source_key,status,earned_at) VALUES ${Array.from({length:28},(_,i)=>`(${member},'event','pending-${member}-${i}','pending',DATE_ADD(UTC_TIMESTAMP(),INTERVAL ${i} SECOND))`).join(',')}`);
-  const routes=[['/boosts','Boosts'],['/inventaire/boites','Boîtes de ressources'],['/inventaire/recompenses','Récompenses en attente']];
+  const routes=[['/boosts','Boosts'],['/inventaire/boites','Boîtes'],['/inventaire/recompenses','Récompenses en attente']];
   for (const theme of ['dark','light']) {
     runIsolatedSql(project,`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
     for (const width of [1440,390,320]) {
@@ -185,7 +185,7 @@ test('Inventaire : pages directes, navigation, attente paginée et anciens fragm
     await expect(plain.locator('[data-pending-item]')).toHaveCount(3);
     const nav=plain.getByRole('navigation',{name:'Navigation de l’inventaire'});
     await nav.getByRole('link',{name:/^Boosts/}).click();await expect(plain.locator('h1')).toHaveText('Boosts');
-    await nav.getByRole('link',{name:/Boîtes de ressources/}).click();await expect(plain.locator('h1')).toHaveText('Boîtes de ressources');
+    await nav.getByRole('link',{name:/^Boîtes/}).click();await expect(plain.locator('h1')).toHaveText('Boîtes');
     await nav.getByRole('link',{name:/Récompenses en attente/}).click();await expect(plain.locator('[data-pending-item]')).toHaveCount(25);
   } finally {await context.close();}
 });

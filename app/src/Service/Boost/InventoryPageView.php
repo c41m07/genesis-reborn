@@ -32,6 +32,7 @@ final class InventoryPageView
             if ($row['status'] === 'available' && $row['kind'] === 'boost') $counts['boosts'] += $quantity;
             if ($row['status'] === 'available' && $row['kind'] === 'resource_box') $counts['boxes'] += $quantity;
         }
+        $counts['boxes'] += $this->adventRewards->boxCount($membership);
         $data = [
             'membership' => $membership, 'inventory_page' => $page, 'inventory_counts' => $counts,
             'boost_count' => $counts['boosts'], 'pending_boost_count' => $counts['pending'],
@@ -57,7 +58,11 @@ final class InventoryPageView
                 $groups[$key] ??= ['item' => $item, 'quantity' => 0];
                 ++$groups[$key]['quantity'];
             }
+            $adventBoxes = $this->adventRewards->boxes($membership);
             return $data + [
+                'advent_boxes' => $adventBoxes,
+                'advent_ships' => $adventBoxes ? $this->catalog->all('ships') : [],
+                'advent_resources' => \App\Service\Advent\AdventGifts::RESOURCES,
                 'resource_boxes' => array_values($groups), 'box_resources' => $this->catalog->rules()['resources'],
                 'available_colonies' => $this->repo->all(Planet::class, ['owner' => $membership], ['id' => 'ASC']),
             ];
