@@ -115,6 +115,20 @@ test('Flottes : les trois rangs restent alignés et arrivent ensemble au devis, 
     const quoted = await (await quoteFromJs).json();
     expect(quoted.composition).toEqual({ fighter: { basic: 2, intermediate: 2, superior: 3 } });
     expect(quoted.ship_adjusted).toBe(false);
+    const duration = recap.locator('[data-fleet-preview-target="duration"]');
+    const arrival = recap.locator('[data-fleet-preview-target="arrival"]');
+    await expect(recap.getByRole('heading', { name: 'Estimation du trajet' })).toBeHidden();
+    const timezone = await page.locator('body').getAttribute('data-timezone');
+    const formatArrival = instant => new Intl.DateTimeFormat('fr-FR', {
+        dateStyle: 'short', timeStyle: 'medium', timeZone: timezone,
+    }).format(new Date(instant)) + ' · ' + timezone;
+    await expect(duration).toHaveText(`${Math.floor(quoted.seconds / 3600)} h ${Math.floor(quoted.seconds % 3600 / 60)} min ${quoted.seconds % 60} s`);
+    await expect(arrival).toHaveText(formatArrival(quoted.arrival_at));
+    await form.locator('[name="coordinates"]').fill('');
+    await expect(duration).toHaveText('—');
+    await expect(arrival).toHaveText('—');
+    await form.locator('[name="coordinates"]').fill(coordinates);
+    await expect(duration).not.toHaveText('—');
     await form.getByRole('button', { name: /Vérifier la mission/ }).click();
     await expect(form.getByRole('heading', { name: 'Confirmez votre mission' })).toBeFocused();
     const reviewTable = form.locator('[data-fleet-wizard-target="summary"]').getByRole('table', { name: 'Composition', exact: true });
