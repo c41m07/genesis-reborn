@@ -28,6 +28,10 @@ final readonly class GuildAtelierStockStore
     {
         $stock = $this->existingLocked($hall);
         $ships = GuildAtelierInventory::receive($stock?->ships ?? [], $composition);
+        if (($stock?->returnCapacity ?? []) !== []) {
+            // Un don ne consomme jamais la place des vaisseaux susceptibles de revenir.
+            GuildAtelierInventory::receive($ships, $stock->returnCapacity);
+        }
         if ($stock === null) {
             $stock = new GuildAtelierStock();
             $stock->hall = $hall;
@@ -48,7 +52,29 @@ final readonly class GuildAtelierStockStore
         if ($stock === null) {
             throw new \DomainException('L’Atelier n’a pas encore reçu de vaisseaux.');
         }
-        $stock->ships = GuildAtelierInventory::reserve($stock->ships, $composition);
+        $available = GuildAtelierInventory::reserve($stock->ships, $composition);
+        $return = GuildAtelierInventory::receive($stock->returnCapacity, $composition);
+        $stock->ships = $available;
+        $stock->returnCapacity = $return;
+    }
+
+    /**
+     * Sous le verrou du Hall et du reçu, le retour consomme sa propre place ;
+     * une livraison terminée libère cette place sans recréditer les vaisseaux.
+     *
+     * @param array<string,array<string,int>> $composition
+     */
+    public function settleReservationLocked(GuildHall $hall, array $composition, bool $returned): void
+    {
+        $stock = $this->existingLocked($hall);
+        if ($stock === null) {
+            throw new \LogicException('Stock de la livraison introuvable.');
+        }
+        $remaining = GuildAtelierInventory::reserve($stock->returnCapacity, $composition);
+        if ($returned) {
+            $stock->ships = GuildAtelierInventory::receive($stock->ships, $composition);
+        }
+        $stock->returnCapacity = $remaining;
     }
 
     /** @param array<string,array<string,int>> $composition */

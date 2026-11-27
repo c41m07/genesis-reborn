@@ -49,6 +49,9 @@
                 {% include 'player/_guild_hall_convoy.html.twig' with {hall:hall, guild:guild, convoy:convoy} only %}
             {% endif %}
         {% endif %}
+        {% if atelier_delivery is not null %}
+            {% include 'player/_guild_atelier_delivery.html.twig' with {hall: hall, guild: guild, delivery: atelier_delivery} only %}
+        {% endif %}
         {% if received_donations|default([]) is not empty %}
             <section class="panel" aria-labelledby="hall-received-donations-title">
                 <h2 id="hall-received-donations-title">Mes derniers dons reçus par l’Atelier</h2>

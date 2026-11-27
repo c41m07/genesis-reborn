@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Tests\Integration;
 
 use App\Entity\{Guild, GuildHall, Planet, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
-use App\Entity\{Fleet, FleetFuelExpense, FleetShip, GuildAtelierStock, GuildDockOrder, GuildHallBuilding, GuildHallConvoy, GuildHallStock, OutboxMessage, PlanetResource};
-use App\Message\{FleetArrived, GuildDockOrderDue, GuildHallConstructionDue};
-use App\MessageHandler\{FleetArrivedHandler, GuildDockOrderDueHandler, GuildHallConstructionDueHandler};
+use App\Entity\{Fleet, FleetFuelExpense, FleetShip, GuildAtelierShipment, GuildAtelierStock, GuildDockOrder, GuildHallBuilding, GuildHallConvoy, GuildHallStock, OutboxMessage, PlanetResource};
+use App\Message\{FleetArrived, GuildAtelierShipmentDue, GuildDockOrderDue, GuildHallConstructionDue};
+use App\MessageHandler\{FleetArrivedHandler, GuildAtelierShipmentDueHandler, GuildDockOrderDueHandler, GuildHallConstructionDueHandler};
 use App\Repository\{GuildHallConvoyRepository, GuildHallRepository};
 use App\Service\Notification\OutboxRelay;
 use App\Service\Colony\ResourceService;
 use App\Service\Fleet\FleetRecallService;
-use App\Service\Guild\{GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyRecovery, GuildHallFunding, GuildHallScheduleProvider, GuildHallService};
+use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyRecovery, GuildHallFunding, GuildHallScheduleProvider, GuildHallService};
 use App\Service\Player\{DiplomacyService, RegistrationService, RelationResolver};
 use App\Service\Universe\{UniverseImporter, UniverseService};
 use App\Tests\Support\GuildHallFixture;
@@ -469,6 +469,137 @@ final class GuildHallTest extends KernelTestCase
         yield 'retour sans Atelier disponible' => [false];
     }
 
+    #[DataProvider('atelierDonationArrivals')]
+    public function testAtelierShipmentIsPublishedAndSettledOnlyOnce(bool $accept): void
+    {
+        $clock = new MockClock('now', new \DateTimeZone('UTC'));
+        $container = self::getContainer();
+        $container->set('clock', $clock);
+        $container->set(GuildHallScheduleProvider::class, new GuildHallScheduleProvider(
+            '{"levels":{"warehouse":{"1":{"cost":{"metal":15},"duration":60}},"atelier":{"1":{"cost":{"metal":25},"duration":60}}},"capacities":{"1":{"metal":100,"hydrogen":999999}}}',
+        ));
+        [$owner, $origin, $guild] = $this->guild('AtelierDispatch', 'ATX');
+        [$member, $target] = $this->player('AtelierRecipient');
+        \App\Tests\Support\GuildRecruitmentFixture::enrol(
+            $container->get(DiplomacyService::class),
+            $container->get(\App\Repository\GameRepository::class),
+            $member,
+            $guild->id,
+        );
+        $hallService = GuildHallFixture::enable($container);
+        $hall = $hallService->contribute($owner, $guild->id, $origin->id, 0, ['hydrogen' => 32]);
+        $hall = $hallService->place($owner, $guild->id, $origin->solarSystem->id, $hall->revision);
+        $hallId = $hall->id;
+        $atelier = new GuildHallBuilding();
+        $atelier->hall = $hall;
+        $atelier->slug = GuildHallBuilding::ATELIER;
+        $atelier->level = 1;
+        $ships = ['transport' => ['basic' => 2]];
+        $send = ['transport' => ['basic' => 1]];
+        $stock = new GuildAtelierStock();
+        $stock->hall = $hall;
+        $stock->ships = $ships;
+        $fuel = new GuildHallStock();
+        $fuel->hall = $hall;
+        $fuel->materials = ['hydrogen' => 900000];
+        foreach ([$atelier, $stock, $fuel] as $fixture) {
+            $this->em->persist($fixture);
+        }
+        $this->em->flush();
+
+        $plan = $container->get(GuildAtelierDeliveryPlanning::class)->preview($owner, $guild->id, $hallId, $target->id, $send, 1.0);
+        self::assertSame($ships, $stock->ships);
+        self::assertGreaterThan(0, $plan->fuel);
+        $departure = $container->get(GuildAtelierDeliveryDeparture::class);
+        $request = [$owner, $guild->id, $hallId, $target->id, $send, 1.0, str_repeat('f', 32), $plan->fingerprint()];
+        $shipment = $departure->start(...$request);
+        self::assertInstanceOf(GuildAtelierShipment::class, $shipment);
+        self::assertNull($departure->start(...$request));
+        self::assertSame($send, $stock->ships);
+        self::assertSame($send, $stock->returnCapacity);
+        self::assertEqualsWithDelta(900000 - $plan->fuel, $fuel->materials['hydrogen'] + $fuel->hydrogenFraction, 0.000001);
+        self::assertNotNull($this->em->getRepository(OutboxMessage::class)->findOneBy([
+            'kind' => GuildAtelierShipmentDue::KIND,
+            'targetId' => $shipment->id,
+            'token' => $shipment->arrivalToken,
+        ]));
+
+        $id = $shipment->id;
+        $due = new GuildAtelierShipmentDue($id, $shipment->arrivalToken);
+        $memberId = $member->id;
+        $targetId = $target->id;
+        $before = $this->dockHullCount($memberId, $targetId, 'transport', 'basic');
+        if (!$accept) {
+            $target->owner = $owner;
+            $this->em->flush();
+        }
+        $handler = $container->get(GuildAtelierShipmentDueHandler::class);
+        $handler($due);
+        self::assertSame('outbound', $shipment->status);
+        $clock->sleep($plan->seconds + 1);
+        $handler($due);
+        $this->em->clear();
+        $handler($due);
+
+        $shipment = $this->em->find(GuildAtelierShipment::class, $id);
+        self::assertSame($accept ? 'delivered' : 'returning', $shipment->status);
+        if (!$accept) {
+            self::assertSame(0, $this->dockHullCount($owner->id, $targetId, 'transport', 'basic'));
+            self::assertNotSame($due->token, $shipment->arrivalToken);
+            $returned = new GuildAtelierShipmentDue($id, $shipment->arrivalToken);
+            $clock->sleep($plan->seconds + 1);
+            $handler($returned);
+            $this->em->clear();
+            $handler($returned);
+            self::assertSame('returned', $this->em->find(GuildAtelierShipment::class, $id)->status);
+        }
+        self::assertSame($before + ($accept ? 1 : 0), $this->dockHullCount($memberId, $targetId, 'transport', 'basic'));
+        $stock = $this->em->find(GuildAtelierStock::class, $hallId);
+        self::assertSame($accept ? $send : $ships, $stock->ships);
+        self::assertSame([], $stock->returnCapacity);
+    }
+
+    public function testAtelierKeepsReturnCapacitySeparateFromAvailableStock(): void
+    {
+        [$owner, $origin, $guild] = $this->guild('AtelierCapacity', 'ATC');
+        $container = self::getContainer();
+        $hallService = GuildHallFixture::enable($container);
+        $hall = $hallService->contribute($owner, $guild->id, $origin->id, 0, ['hydrogen' => 32]);
+        $hall = $hallService->place($owner, $guild->id, $origin->solarSystem->id, $hall->revision);
+        $stock = $container->get(\App\Service\Guild\GuildAtelierStockStore::class);
+        $manager = $container->get(\App\Manager\GameManager::class);
+        $hallId = $hall->id;
+        $unit = ['transport' => ['basic' => 1]];
+        $atLimit = ['transport' => ['basic' => 2147483647]];
+
+        $manager->transaction(function () use ($manager, $hall, $stock, $atLimit): void {
+            $manager->lockCurrent($hall);
+            $stock->receiveLocked($hall, $atLimit);
+        });
+        $manager->transaction(function () use ($manager, $hall, $stock, $unit): void {
+            $manager->lockCurrent($hall);
+            $stock->reserveLocked($hall, $unit);
+        });
+        $inventory = $this->em->find(GuildAtelierStock::class, $hallId);
+        self::assertSame(['transport' => ['basic' => 2147483646]], $inventory->ships);
+        self::assertSame($unit, $inventory->returnCapacity);
+
+        $manager->transaction(function () use ($manager, $hall, $stock, $unit): void {
+            $manager->lockCurrent($hall);
+            try {
+                $stock->receiveLocked($hall, $unit);
+                self::fail('Un don ne doit pas écraser la place promise au retour.');
+            } catch (\DomainException) {
+                // Le vrai worker de don choisit le retour sans toucher aux vaisseaux personnels.
+            }
+            $stock->settleReservationLocked($hall, $unit, returned: true);
+        });
+        $this->em->clear();
+        $inventory = $this->em->find(GuildAtelierStock::class, $hallId);
+        self::assertSame($atLimit, $inventory->ships);
+        self::assertSame([], $inventory->returnCapacity);
+    }
+
     /** @return list<FleetArrived> */
     private function convoyMessages(array $envelopes, int $fleetId): array
     {
@@ -573,13 +704,13 @@ final class GuildHallTest extends KernelTestCase
         return $order;
     }
 
-    private function dockHullCount(int $membershipId, int $planetId): int
+    private function dockHullCount(int $membershipId, int $planetId, string $slug = 'fighter', string $tier = 'intermediate'): int
     {
         return (int) $this->em->getConnection()->fetchOne(
             "SELECT COALESCE(SUM(ship.quantity), 0) FROM fleet_ship ship JOIN fleet fleet ON fleet.id = ship.fleet_id
              WHERE fleet.player_universe_id = ? AND fleet.home_planet_id = ? AND fleet.status = 'idle'
-             AND ship.slug = 'fighter' AND ship.tier = 'intermediate'",
-            [$membershipId, $planetId],
+             AND ship.slug = ? AND ship.tier = ?",
+            [$membershipId, $planetId, $slug, $tier],
         );
     }
 

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\{Guild, GuildHallBuilding, PlayerUniverse};
+use App\Entity\{Guild, GuildMember, GuildHallBuilding, PlayerUniverse};
 use App\Repository\{GameRepository, GuildHallRepository};
-use App\Service\Guild\{GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyView, GuildHallFunding, GuildHallService, GuildHallWarehouseView};
+use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildAtelierDeliveryView,GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyView, GuildHallFunding, GuildHallService, GuildHallWarehouseView};
 use App\Service\Player\{DiplomacyAccessPolicy, RelationResolver, VacationCalendar};
 use App\Service\Universe\UniverseContext;
 use Psr\Clock\ClockInterface;
@@ -25,6 +25,7 @@ final class GuildHallController extends AbstractController
     }
 
     private const CONVOY_REVIEW = 'guild_hall_convoy_review';
+    private const DELIVERY_REVIEW = 'guild_atelier_delivery_review';
 
     #[Route('/guildes/hall', name: 'app_guild_hall', methods: ['GET'])]
     public function show(
@@ -35,6 +36,7 @@ final class GuildHallController extends AbstractController
         GuildHallWarehouseView $warehouse,
         GuildHallConvoyView $convoy,
         ClockInterface $clock,
+        GuildAtelierDeliveryView $delivery,
     ): Response
     {
         [$actor, $guild, $target] = $this->contextForHall();
@@ -72,10 +74,23 @@ final class GuildHallController extends AbstractController
             $convoyData['review'] = $review;
         }
 
+        $deliveryData = null;
+        if ($mayAct && ($warehouseData['enabled'] ?? false) && ($warehouseData['atelier_built'] ?? false)
+            && $policy->allows($game->one(GuildMember::class, ['guild' => $guild, 'playerUniverse' => $actor]), DiplomacyAccessPolicy::ATELIER_DELIVERY)) {
+            $deliveryData = $delivery->describe($actor, $hall);
+            $saved = $request->getSession()->get(self::DELIVERY_REVIEW);
+            if (is_array($saved) && $saved['actor'] === $actor->id && $saved['guild'] === $guild->id
+                && $saved['hall'] === $hall->id && $saved['expires'] >= $clock->now()->getTimestamp()
+                && $saved['key'] === $request->query->getString('delivery_review')) {
+                $deliveryData['review'] = $saved;
+            }
+        }
+
         return $this->render('player/guild_hall.html.twig', [
             'guild' => $guild,
             'warehouse' => $warehouseData,
             'convoy' => $convoyData,
+            'atelier_delivery' => $deliveryData,
             'received_donations' => $hall?->placedAt !== null ? $convoy->receivedDonations($actor, $hall) : [],
             'may_build_at_hall' => $mayAct && $policy->canCommand($actor, $guild),
             'hall' => $hall,
@@ -209,6 +224,68 @@ final class GuildHallController extends AbstractController
                     'ships' => $ships, 'cargo' => $freight, 'speed' => $speed, 'quote' => $quote, 'ship_donation' => $shipDonation,
                 ]);
                 $redirect['review'] = $key;
+            }
+        } catch (\DomainException $error) {
+            $this->addFlash('error', $error->getMessage());
+        }
+
+        return $this->redirectToRoute('app_guild_hall', $redirect, Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/guildes/hall/atelier/livraison', name: 'app_guild_hall_atelier_delivery', methods: ['POST'])]
+    public function sendAtelierDelivery(
+        Request $request,
+        GuildAtelierDeliveryPlanning $planning,
+        GuildAtelierDeliveryDeparture $departure,
+        ClockInterface $clock,
+    ): Response {
+        [$actor, $guild] = $this->contextForHall();
+        $input = $request->request;
+        $hallId = $input->getInt('hall_id');
+        if (!$this->isCsrfTokenValid('guild_hall_atelier_delivery_'.$guild->id.'_'.$hallId, $input->getString('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le Hall.');
+        }
+        $session = $request->getSession();
+        $redirect = ['_fragment' => 'hall-atelier-delivery'];
+        try {
+            if ($input->getString('confirm') === '1') {
+                $review = $session->get(self::DELIVERY_REVIEW);
+                if (!is_array($review) || $review['actor'] !== $actor->id || $review['guild'] !== $guild->id
+                    || $review['hall'] !== $hallId || !hash_equals($review['key'], $input->getString('request_key'))
+                    || $review['expires'] < $clock->now()->getTimestamp()) {
+                    throw new \DomainException('Devis expiré ou déjà utilisé. Vérifiez à nouveau le trajet.');
+                }
+                $session->remove(self::DELIVERY_REVIEW);
+                $shipment = $departure->start(
+                    $actor, $guild->id, $hallId, $review['destination'], $review['ships'],
+                    $review['speed'] / 100, $review['key'], $review['fingerprint'],
+                );
+                $this->addFlash('success', $shipment !== null
+                    ? 'Livraison envoyée depuis l’Atelier. Les vaisseaux arrivent chez le membre, ou reviennent au Hall si la livraison échoue.'
+                    : 'Cette livraison a déjà été envoyée.');
+            } else {
+                $ships = [];
+                foreach ($input->all('ships') as $slug => $ranks) {
+                    if (!is_array($ranks)) {
+                        throw new \DomainException('Composition de livraison invalide.');
+                    }
+                    $ships[$slug] = array_filter(array_map(self::convoyQuantity(...), $ranks));
+                }
+                $speed = $input->getInt('speed', 100);
+                if ($speed < 10 || $speed > 100 || $speed % 10 !== 0) {
+                    throw new \DomainException('Choisissez une vitesse entre 10 et 100 %.');
+                }
+                $plan = $planning->preview($actor, $guild->id, $hallId, $input->getInt('destination'), array_filter($ships), $speed / 100);
+                $key = bin2hex(random_bytes(16));
+                $session->set(self::DELIVERY_REVIEW, [
+                    'key' => $key, 'expires' => $clock->now()->getTimestamp() + 300,
+                    'actor' => $actor->id, 'guild' => $guild->id, 'hall' => $hallId,
+                    'destination' => $plan->destination->id, 'destination_name' => $plan->destination->name,
+                    'recipient' => $plan->destination->owner?->player?->username,
+                    'speed' => $speed, 'ships' => $plan->composition, 'seconds' => $plan->seconds,
+                    'fuel' => $plan->fuel, 'fingerprint' => $plan->fingerprint(),
+                ]);
+                $redirect['delivery_review'] = $key;
             }
         } catch (\DomainException $error) {
             $this->addFlash('error', $error->getMessage());

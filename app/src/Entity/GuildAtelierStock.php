@@ -18,4 +18,8 @@ final class GuildAtelierStock
     /** @var array<string, array<string, int>> */
     #[ORM\Column(type: 'json')]
     public array $ships = [];
+
+    /** @var array<string,array<string,int>> Places gardées pour les livraisons en vol. */
+    #[ORM\Column(type: 'json')]
+    public array $returnCapacity = [];
 }

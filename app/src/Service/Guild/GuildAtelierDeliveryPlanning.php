@@ -58,7 +58,7 @@ final readonly class GuildAtelierDeliveryPlanning
         }
         $this->manager->lockCurrent($destination);
         $recipient = $destination->owner;
-        if ($recipient === null || $recipient->id === $actor->id || $recipient->isForgotten() || $recipient->universe->id !== $actor->universe->id
+        if ($destination->npcPlanet || $recipient === null || $recipient->id === $actor->id || $recipient->isForgotten() || $recipient->universe->id !== $actor->universe->id
             || (int) $this->entityManager->getConnection()->fetchOne(
                 'SELECT guild_id FROM guild_member WHERE player_universe_id = ? FOR UPDATE',
                 [$recipient->id],
