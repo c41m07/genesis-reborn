@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['badge', 'conversations', 'guildRecruitment'];
+    static targets = ['badge', 'conversations', 'guildRecruitment', 'guildRecruitmentDescription', 'inventoryGift', 'inventoryGiftDescription', 'inventoryGiftIndicator'];
     static values = { url: String };
 
     connect() {
@@ -17,6 +17,15 @@ export default class extends Controller {
         window.removeEventListener('genesis:journal-consulted', this.refresh);
         window.clearInterval(this.timer);
         this.abort?.abort();
+    }
+
+    renderCount(badges, count) {
+        if (!Number.isInteger(count) || count < 0) return false;
+        for (const badge of badges) {
+            badge.textContent = count > 99 ? '99+' : String(count);
+            badge.hidden = count === 0;
+        }
+        return true;
     }
 
     async refresh(event) {
@@ -38,14 +47,18 @@ export default class extends Controller {
             for (const badge of this.badgeTargets) badge.hidden = data.unread === 0;
             // La notification pousse une actualisation ; le serveur recompte selon le grade actuel.
             if (data.membership === Number(this.element.dataset.menuNotificationsMembershipValue)) {
-                const count = Number(data.guildRecruitmentCount) || 0;
-                for (const badge of this.guildRecruitmentTargets) {
-                    badge.textContent = count > 0 ? String(count) : '';
-                    badge.hidden = count === 0;
+                this.renderCount(this.guildRecruitmentTargets, data.guildRecruitmentCount);
+                for (const description of this.guildRecruitmentDescriptionTargets) {
+                    const count = data.guildRecruitmentCount;
+                    description.textContent = count > 0 ? count + ' ' + (count === 1 ? description.dataset.singular : description.dataset.plural) : '';
                 }
-                window.dispatchEvent(new CustomEvent('genesis:guild-recruitment-count', {
-                    detail: { membership: data.membership, count },
-                }));
+                const gifts = data.inventoryGiftCount;
+                if (this.renderCount(this.inventoryGiftTargets, gifts)) {
+                    for (const badge of this.inventoryGiftIndicatorTargets) badge.hidden = gifts === 0;
+                    for (const description of this.inventoryGiftDescriptionTargets) {
+                        description.textContent = gifts === 0 ? '' : gifts === 1 ? '1 nouveau cadeau' : gifts + ' nouveaux cadeaux';
+                    }
+                }
             }
             window.dispatchEvent(new CustomEvent('genesis:message-count', { detail: { count: data.unread } }));
             window.dispatchEvent(new CustomEvent('genesis:journal-state', {

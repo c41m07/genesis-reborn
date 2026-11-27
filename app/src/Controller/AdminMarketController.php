@@ -41,7 +41,7 @@ final class AdminMarketController extends AbstractController
         return $this->render('market/admin.html.twig', [
             'universe' => $universe, 'market' => $market, 'rows' => $market ? $presentation->rows($market) : [],
             'labels' => MarketPresentation::LABELS, 'merchantLog' => $markets->merchantLog($universe),
-            'maxStock' => MarketPricing::MAX_STOCK,
+            'maxTarget' => MarketPricing::MAX_TARGET,
         ]);
     }
 }

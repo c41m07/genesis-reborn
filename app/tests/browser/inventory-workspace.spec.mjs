@@ -154,7 +154,7 @@ test('L3 A : inventaire guidé, confirmations, états vides et vacances dans les
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto('/boosts');
   await page.locator('.space-navigation-menu > summary').click();
-  const boxesLink = page.getByRole('navigation', { name: 'Navigation de l’inventaire' }).getByRole('link', { name: /^Boîtes de ressources/ });
+  const boxesLink = page.getByRole('navigation', { name: 'Navigation de l’inventaire' }).getByRole('link', { name: /^Boîtes/ });
   await page.keyboard.press('Tab');
   await boxesLink.focus();
   expect(await boxesLink.evaluate(el => el.matches(':focus-visible') && getComputedStyle(el).outlineStyle !== 'none')).toBe(true);

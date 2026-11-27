@@ -3,15 +3,20 @@
 ## Parcours et ouverture
 
 La station commerciale A:0:0 appartient à l’univers, pas à un joueur. Elle
-n’ajoute ni système explorable, ni planète, ni position attaquable. La page
-Bourse, accessible depuis le menu Opérations, juxtapose le marché et le devis
+n’ajoute ni système explorable, ni planète, ni position attaquable. Lorsqu’elle
+est ouverte, son repère au centre de la galaxie A et le lien dans la légende
+ouvrent directement la Bourse. La page Bourse, aussi accessible depuis le
+menu Opérations, juxtapose le marché et le devis
 (maquette A) ; sur mobile ces deux sections s’empilent. Le suivi est propre à
 l’empire qui a envoyé le convoi.
 
 L’administrateur ouvre la station dans **Univers → Gérer → Bourse de ressources**
 et précise la cible de chacun des quatre matériaux. Le stock initial est cette
-cible, une seule fois. Une modification ultérieure de cible ne crée et ne
-détruit aucun stock. La station n’est pas ouverte automatiquement dans un
+cible, une seule fois. La cible limite le réassort des marchands, pas le
+stock reçu des joueurs : un échange peut porter la réserve au-delà de la
+cible, même si celle-ci vaut un milliard. La station ne remet que le stock
+réel disponible après déduction des réservations. Une modification ultérieure
+de cible ne crée et ne détruit aucun stock. La station n’est pas ouverte automatiquement dans un
 univers. La fermeture empêche les nouveaux départs et le réassort ; les
 missions déjà engagées continuent. À la réouverture, le prochain vendredi
 reprend le calendrier sans distribuer rétrospectivement les semaines fermées.

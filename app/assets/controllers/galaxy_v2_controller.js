@@ -38,7 +38,7 @@ export default class extends Controller {
         'systemPanel', 'systemContent', 'planetPanel', 'planetContent', 'minimapWrap',
         'minimapCanvas', 'fleetLog', 'emptyFlightLog', 'guildFlightFilter', 'motionToggle', 'galaxySelect', 'mapHelp',
         'mapMode', 'mapModeLabel', 'legend', 'filterToggle', 'mapSettings', 'layoutButton',
-        'stations', 'hallStation', 'pirateStation', 'stationDetail', 'stationTitle', 'stationText',
+        'stations', 'hallStation', 'pirateStation', 'stationDetail', 'stationTitle', 'stationText', 'marketStation',
     ];
 
     static values = { map: Object, reducedMotion: Boolean };
@@ -155,6 +155,23 @@ export default class extends Controller {
 
     setCampaignTraffic(traffic = []) {
         this.campaignTraffic = traffic;
+        // Les trajets privés ne sont pas des Fleet. Réutiliser le dessin des trajets
+        // seulement pour les ancres effectivement publiées par la projection propriétaire.
+        this.campaignFlights = traffic.filter(row => row.eta && row.departure).map(row => {
+            const systems = row.systems.map(id => this.systemById.get(Number(id))).filter(system => system?.known);
+            return {
+                id: row.mission,
+                mission: 'pirate_campaign',
+                status: 'traveling',
+                departureAt: row.departure,
+                arrivalAt: row.eta,
+                originSystem: systems[0],
+                destinationSystem: systems[1],
+                originGalaxy: this.gameMap.galaxy,
+                destinationGalaxy: this.gameMap.galaxy,
+                trail: [],
+            };
+        });
         this.pirateSystems = new Set(traffic.filter(row => row.kind === 'pirates')
             .flatMap(row => row.systems.map(Number)));
     }
@@ -438,6 +455,14 @@ export default class extends Controller {
             minY: Math.min(...points.map((system) => system.wy)),
             maxY: Math.max(...points.map((system) => system.wy)),
         } : (this.systemBounds || { minX: -extent, maxX: extent, minY: -extent, maxY: extent });
+        // Une carte peu dense peut regrouper tous ses systèmes sur un bras.
+        // « Vue entière » doit cadrer aussi le noyau si le commerce est ouvert.
+        if (this.hasMarketStationTarget) {
+            bounds.minX = Math.min(0, bounds.minX);
+            bounds.maxX = Math.max(0, bounds.maxX);
+            bounds.minY = Math.min(0, bounds.minY);
+            bounds.maxY = Math.max(0, bounds.maxY);
+        }
         const mobile = this.width <= 720;
         const viewport = {
             left: 28,
@@ -498,6 +523,24 @@ export default class extends Controller {
         if (this.mode === 'system' || this.mode === 'transition-to-planet' || this.mode === 'transition-to-system-from-planet') this.drawSystem(dt);
         if (this.mode === 'planet') this.drawPlanet(dt);
         if (this.mode === 'galaxy') this.drawMinimap();
+        this.placeMarketStation();
+    }
+
+    placeMarketStation() {
+        if (!this.hasMarketStationTarget) return;
+
+        // L’origine est aussi celle du noyau dessiné, quelle que soit la
+        // disposition. La station n’entre pas dans la sélection des systèmes.
+        const { x, y } = this.galaxyPoint({ wx: 0, wy: 0 });
+        const visible = this.mode === 'galaxy' && x >= 22 && y >= 22 && x <= this.width - 22 && y <= this.height - 22;
+        const link = this.marketStationTarget;
+        if (visible) {
+            const style = '--station-x:' + x.toFixed(1) + 'px;--station-y:' + y.toFixed(1) + 'px';
+            if (link.getAttribute('style') !== style) link.setAttribute('style', style);
+        } else if (document.activeElement === link) {
+            this.searchInputTarget.focus({ preventScroll: true });
+        }
+        if (link.hidden === visible) link.hidden = !visible;
     }
 
     galaxyPoint(system) {
@@ -958,7 +1001,7 @@ export default class extends Controller {
 
     drawFlights(ctx) {
         const now = Date.now() + this.serverClockOffset;
-        for (const flight of this.flights) {
+        for (const flight of [...this.flights, ...this.campaignFlights]) {
             if (flight.guildFlight && !this.showGuildFlights) continue;
             let origin = flight.originSystem;
             let destination = flight.destinationSystem;
@@ -966,10 +1009,24 @@ export default class extends Controller {
             const destinationInGalaxy = flight.destinationGalaxy === this.gameMap.galaxy;
             if (!origin && !originInGalaxy && destination) origin = this.galaxyEdgePoint(destination, flight.id, true);
             if (!destination && !destinationInGalaxy && origin) destination = this.galaxyEdgePoint(origin, flight.id, false);
+            if (origin && !destination && flight.mission === 'pirate_campaign') {
+                // Sonde avant rapport ou trajet interne : repère à l'ancre connue,
+                // sans inventer une direction, un point de sortie ou une destination.
+                const point = this.galaxyPoint(origin);
+                ctx.save();
+                ctx.strokeStyle = '#e6bbff';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([3, 3]);
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 15, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+                continue;
+            }
             if (!origin || !destination || (!originInGalaxy && !destinationInGalaxy)) continue;
             if (['attacking', 'defending', 'orbiting', 'orbit_pending', 'station_waiting'].includes(flight.status)) {
                 const point = this.galaxyPoint(destination);
-                const color = missionColors[flight.mission] || '#00d4ff';
+                const color = flight.mission === 'pirate_campaign' ? '#e6bbff' : (missionColors[flight.mission] || '#00d4ff');
                 ctx.save();
                 ctx.strokeStyle = color;
                 ctx.globalAlpha = .38 + .24 * Math.sin(this.elapsed * 2.4 + Number(flight.id));
@@ -1016,7 +1073,7 @@ export default class extends Controller {
             const { x, y } = pointOnRoute(progress);
             flight.trail.push(progress);
             if (flight.trail.length > 12) flight.trail.shift();
-            const color = missionColors[flight.mission] || '#00d4ff';
+            const color = flight.mission === 'pirate_campaign' ? '#e6bbff' : (missionColors[flight.mission] || '#00d4ff');
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
@@ -1191,7 +1248,7 @@ export default class extends Controller {
             this.pinch.distance = distance;
             return;
         }
-        if (this.mode === 'galaxy' && !this.drag && event.target.closest('.gv2-hud, .gv2-map-settings, .gv2-map-controls, .gv2-minimap, .gv2-flight-log')) {
+        if (this.mode === 'galaxy' && !this.drag && event.target.closest('.gv2-hud, .gv2-map-settings, .gv2-map-controls, .gv2-minimap, .gv2-flight-log, .gv2-station--market')) {
             const hadHover = this.hoveredSystem !== null;
             this.hoveredSystem = null;
             if (hadHover) this.drawFrame(0);

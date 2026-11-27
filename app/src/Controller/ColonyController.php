@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\{Planet, PlanetBuilding, PlayerTechnology, PlayerDiscovery, Fleet, FleetShip};
-use App\Repository\{GameRepository, GuildHallRepository};
+use App\Repository\{GameRepository, GuildHallRepository, ResourceMarketRepository};
 use App\Service\Universe\UniverseContext;
 use App\Service\Notification\JournalService;
 use App\Service\Colony\{CatalogueInsights, CatalogueItemLink, ColonyComparisonActivities, ColonyView, GameShell, ResourceService, LiveRegionResponse};
@@ -11,6 +11,7 @@ use App\Service\Queue\QueueService;
 use App\Service\Player\{FirstStepsView, LeaderboardService, PreferencesService, RelationResolver};
 use App\Service\Catalog\GameCatalog;
 use App\Service\Guild\GuildHallFunding;
+use App\Service\Market\MarketTerms;
 use App\Service\Fleet\{GalaxyGeometry, MovementCalculator};
 use App\Manager\GameManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -35,6 +36,7 @@ final class ColonyController extends AbstractController
         private MovementCalculator $movementCalculator,
         private GuildHallRepository $guildHalls,
         private GuildHallFunding $hallFunding,
+        private ResourceMarketRepository $markets,
     )
     {
     }
@@ -513,6 +515,14 @@ final class ColonyController extends AbstractController
                 }
             }
         }
+        // A est la coordonnée commerciale de la galaxie Alpha, nom utilisé
+        // par les cartes livrées. Le repère reste hors des cibles de mission.
+        $galaxyCode = strtolower($selectedGalaxy?->coordinateCode() ?? '');
+        $marketCoordinate = $interactive
+            && in_array($galaxyCode, ['a', 'alpha'], true)
+            && ($this->markets->find($m->universe)?->enabled ?? false)
+            ? MarketTerms::COORDINATE
+            : null;
         $galaxyV2Json = '';
         $flights = [];
         $guildFlightFilterAvailable = false;
@@ -633,6 +643,7 @@ final class ColonyController extends AbstractController
             'galaxies' => $galaxies,
             'selected_galaxy' => $selectedGalaxy,
             'galaxy_v2_json' => $galaxyV2Json,
+            'market_station_coordinate' => $marketCoordinate,
             'map_planet_relations' => $mapPlanetRelations,
             'galaxy_v2_flights' => $flights,
             'galaxy_campaign_traffic' => $campaignTraffic,

@@ -287,9 +287,19 @@ test('Recrutement : présentation, badge des recruteurs et invitation acceptée 
     await expect(applicant.getByRole('button', { name: 'Retirer ma candidature' })).toBeVisible();
     expect(size()).toBe('1');
     await page.goto('/guildes');
-    await expect(page.locator('[data-guild-recruitment-count]')).toHaveText('1');
+    const actionBadge = page.locator('[data-guild-recruitment-count]');
+    await expect(actionBadge).toHaveText('1');
+    await expect(actionBadge).toHaveCSS('background-color', 'rgb(169, 31, 53)');
+    await expect(page.locator('#guild-recruitment-description')).toHaveText('1 candidature de guilde à traiter');
+    await page.setViewportSize({ width: 390, height: 844 });
+    const more = page.locator('.mobile-bottom-nav button');
+    await expect(more.locator('.menu-guild-action-count')).toBeVisible();
+    await expect(more.locator('.menu-guild-action-count')).toHaveText('1');
+    await expect(more).toHaveAccessibleDescription(/1 candidature de guilde à traiter/);
     await page.getByRole('button', { name: 'Accepter la candidature', exact: true }).click();
     await expect(page.locator('#guild-recruitment')).toHaveCount(0);
+    await expect(actionBadge).toBeHidden();
+    await expect(more.locator('.menu-guild-action-count')).toBeHidden();
     expect(size()).toBe('2');
 
     await page.goto('/joueurs/' + invitedId);

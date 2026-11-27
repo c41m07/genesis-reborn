@@ -390,6 +390,23 @@ final class ResourceService
         return ['delivered' => $delivered, 'overflow' => $overflow];
     }
 
+    /**
+     * Le cadeau de l’Avent déroge à la capacité, pas à la production ni aux
+     * dépôts habituels. Le reçu de la boîte et ce versement partagent la transaction.
+     *
+     * @param array<string,int> $contents
+     */
+    public function creditAdventBox(Planet $planet, array $contents, \DateTimeImmutable $at): void
+    {
+        $rows = $this->materialize($planet, $at, lockStocks: true);
+        foreach ($contents as $resource => $amount) {
+            if (!isset($rows[$resource]) || !is_int($amount) || $amount < 0 || !is_finite($rows[$resource]->currentStock + $amount)) {
+                throw new \DomainException('Contenu de la boîte de l’Avent invalide.');
+            }
+            $rows[$resource]->currentStock += $amount;
+        }
+    }
+
     public function refreshProduction(Planet $planet): void
     {
         $levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);

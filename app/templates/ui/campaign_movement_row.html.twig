@@ -1,5 +1,10 @@
+{% import 'ui/macros.html.twig' as ui %}
+{% set ships = movement.ships|default([]) %}
+{% set cargo = movement.cargo|default([]) %}
+{% set detail_id = 'campaign-flight-detail-' ~ movement.kind ~ '-' ~ movement.mission %}
+{% set detail_label = movement.label ~ ' · Mission ' ~ movement.mission %}
 {# Un trajet de campagne n'est pas une Fleet : ni rappel, ni interception, ni transfert. #}
-<article class="flight-operation campaign-traffic-row" data-campaign-kind="{{ movement.kind }}"{% if incoming|default(false) %} data-campaign-incoming="{{ movement.mission }}"{% endif %}>
+<article class="flight-operation campaign-traffic-row" data-campaign-kind="{{ movement.kind }}"{% if incoming|default(false) %} data-campaign-incoming="{{ movement.mission }}"{% endif %}{% if ships or cargo %} data-controller="hover-details" data-action="pointerenter->hover-details#enter pointerleave->hover-details#leave focusout->hover-details#blur keydown->hover-details#escape click->hover-details#card"{% endif %}>
     <div class="operation-heading">
         <strong>{{ movement.label }}</strong>
         <span class="badge">Mission {{ movement.mission }}</span>
@@ -9,6 +14,21 @@
         <p>{{ movement.overdue ? 'Arrivée à confirmer · prévue le' : 'Arrivée prévue le' }}
             <time datetime="{{ movement.eta }}">{{ movement.eta|date('d/m/Y à H:i:s', preferences.timezone|default(app.user.preferences.timezone|default('Europe/Paris'))) }}</time>
         </p>
+    {% endif %}
+    {% if movement.departure and movement.eta %}
+        {{ ui.progress(movement.departure, movement.eta, 'Trajet · ' ~ movement.label) }}
+    {% endif %}
+    {% if ships or cargo %}
+        {# Le panneau ne reçoit que les unités attestées et le fret réellement prévu. #}
+        {% set names = {metal:'Métal', nano:'Nanos', antimatter:'Antimatière', hydrogen:'Hydrogène'} %}
+        {% set resources = [] %}
+        {% for resource, part in cargo %}
+            {% set resources = resources|merge([{label:names[resource], stock:part.whole + (part.extra_half ? 0.5 : 0), precision:1}]) %}
+        {% endfor %}
+        <div class="flight-details-action">
+            {% include 'ui/empire_details_trigger.html.twig' with {detail_name:'Composition et fret'} %}
+        </div>
+        {% include 'ui/empire_details.html.twig' with {detail:{ships:ships, resources:resources}, detail_label:'Composition et fret', detail_id:detail_id, fleet_detail:true} only %}
     {% endif %}
     {% if incoming|default(false) %}
         <p class="muted">Trajet civil protégé · aucune action de flotte disponible.</p>

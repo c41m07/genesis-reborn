@@ -8,7 +8,7 @@
     <div class="page-heading">
         <div>
             <h2 id="advent-rewards-title">Cadeaux et réserves</h2>
-            <p>Les cadeaux réservés restent disponibles dans votre inventaire après la clôture.</p>
+            <p>Les boîtes sont dans l’inventaire. Les anciens lots et les bons restent dans <a href="{{ path('app_inventory_pending') }}">Récompenses en attente</a>.</p>
         </div>
         <a class="secondary" href="#advent-calendar-title">Revenir aux 24 portes</a>
     </div>
@@ -28,7 +28,9 @@
                             <a class="secondary" href="{{ path('app_advent_credit', {id: edition.id, claimId: claim.id}) }}">Voir le devis de la porte {{ day }}</a>
                         {% else %}
                             {% if claim and not claim.deliveredAt and destinationsAllowed and colonies %}
-                                {% if claim.award.kind|default('') == 'ship_pack' %}
+                                {% if claim.boxExpiresAt %}
+                                    {% if boxesOpen and claim.boxUniverseId == membership.universe.id %}<p><a href="{{ path('app_inventory_boxes') }}">Voir la boîte dans l’inventaire</a></p>{% endif %}
+                                {% elseif claim.award.kind|default('') == 'ship_pack' %}
                                     <p>Lot réservé : {% include 'advent/_offer.html.twig' with {offer: claim.award, resources: resources, ships: ships} only %}</p>
                                 {% elseif claim.resources %}
                                     <p>Reste à verser : {% for resource, amount in claim.resources %}{{ (amount - claim.creditedResources[resource]|default(0))|quantity(0) }} {{ resources[resource] }}{{ loop.last ? '' : ' · ' }}{% endfor %}.</p>

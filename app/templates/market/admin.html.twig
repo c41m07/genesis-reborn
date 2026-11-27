@@ -8,13 +8,13 @@
 <div class="market-space market-columns">
     <section class="panel" aria-labelledby="market-admin-config">
         <h2 id="market-admin-config">Ouvrir et approvisionner la station</h2>
-        <p>Le stock cible devient la réserve initiale à la première ouverture seulement. Ensuite, les réglages ne peuvent pas créer de stock ni supprimer de fret ou de réservation.</p>
+        <p>Le stock cible devient la réserve initiale à la première ouverture seulement. Les ventes des joueurs peuvent dépasser la cible. Ensuite, modifier la cible ne crée pas de stock et ne supprime ni fret ni réservation.</p>
         <form method="post" class="market-options">
             <input type="hidden" name="_token" value="{{ csrf_token('market_admin_' ~ universe.id) }}">
             {% for resource, label in labels %}
                 <div class="market-field">
                     <label for="market-target-{{ resource }}">Cible · {{ label }}</label>
-                    <input id="market-target-{{ resource }}" name="{{ resource }}" type="number" required step="1" min="0" max="{{ maxStock }}" value="{{ rows[resource].target|default(0) }}">
+                    <input id="market-target-{{ resource }}" name="{{ resource }}" type="number" required step="1" min="0" max="{{ maxTarget }}" value="{{ rows[resource].target|default(0) }}">
                 </div>
             {% endfor %}
             <label for="market-enable"><input id="market-enable" name="enabled" type="checkbox" value="1" {{ market and market.enabled ? 'checked' : '' }}> Autoriser les échanges et les réassorts hebdomadaires</label>

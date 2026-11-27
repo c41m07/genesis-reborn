@@ -79,8 +79,8 @@ final class WeeklyMerchantDelivery
     public function configure(Player $admin, Universe $universe, bool $enabled, array $targets): void
     {
         foreach (array_keys(MarketPricing::WEIGHTS) as $resource) {
-            if (!isset($targets[$resource]) || !is_int($targets[$resource]) || $targets[$resource] < 0 || $targets[$resource] > MarketPricing::MAX_STOCK) {
-                throw new \DomainException('Indiquez une cible entre 0 et '.MarketPricing::MAX_STOCK.' pour chaque matériau.');
+            if (!isset($targets[$resource]) || !is_int($targets[$resource]) || $targets[$resource] < 0 || $targets[$resource] > MarketPricing::MAX_TARGET) {
+                throw new \DomainException('Indiquez une cible entre 0 et '.MarketPricing::MAX_TARGET.' pour chaque matériau.');
             }
         }
         if ($enabled && array_sum($targets) === 0) {
