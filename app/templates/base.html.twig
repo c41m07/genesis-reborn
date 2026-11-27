@@ -111,11 +111,14 @@
     {% include 'ui/header_technology_goal.html.twig' with {passive: campaignPage} %}
     {% set bonus = active_timed_boost is defined ? active_timed_boost : active_timed_bonus(chrome.membership) %}
     {% if bonus %}
+        {% set remaining = bonus.ends_at.timestamp - bonus.server_now.timestamp %}
+        {% set duration = constant('App\\Service\\Boost\\TimedBoostEffects::ACTIVE_SECONDS') %}
         <div class="header-timed-boost" title="{{ bonus.description }}" data-controller="countdown"
              data-countdown-end-value="{{ bonus.ends_at|date('c') }}" data-countdown-now-value="{{ bonus.server_now|date('c') }}"
-             data-countdown-hide-on-end-value="true" data-countdown-refresh-value="false">
+             data-countdown-duration-value="{{ duration }}" data-countdown-hide-on-end-value="true" data-countdown-refresh-value="false">
+            <span class="boost-dial" aria-hidden="true" data-countdown-target="dial" style="--remaining: {{ 100 * remaining / duration }}%">{{ ui.icon('electricity') }}</span>
             <strong><span class="visually-hidden">Bonus actif · </span>{{ bonus.short_effect }}</strong>
-            <span role="timer" aria-live="off"><span class="visually-hidden">Temps restant · </span><span data-countdown-target="time">{{ duration_label(bonus.ends_at.timestamp - bonus.server_now.timestamp) }}</span></span>
+            <span class="boost-time" role="timer" aria-live="off">{{ ui.icon('clock') }}<span class="visually-hidden">Temps restant · </span><span data-countdown-target="time">{{ duration_label(remaining) }}</span></span>
             <noscript>Fin à {{ bonus.ends_at|date('H:i', preferences.timezone) }}</noscript>
         </div>
     {% endif %}

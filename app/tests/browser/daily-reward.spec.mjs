@@ -1,7 +1,7 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
 
-test('Récompense quotidienne : kit T1, retrait au clavier, stockage plein et activation distincte', async ({ page }) => {
+test('Récompense quotidienne : kit T1, retrait au clavier, stockage plein et activation distincte', async ({ page }, testInfo) => {
     const id = crypto.randomUUID().slice(0, 8);
     const email = 'daily-reward-' + id + '@example.test';
     const password = crypto.randomUUID() + 'Aa1!';
@@ -76,6 +76,25 @@ test('Récompense quotidienne : kit T1, retrait au clavier, stockage plein et ac
         expect(frame.y).toBeLessThan(guide.y + guide.height);
         expect(frame.y + frame.height).toBeGreaterThan(guide.y);
         expect(await page.locator('.topbar').evaluate(bar => bar.scrollWidth <= bar.clientWidth + 1)).toBe(true);
+    }
+    // À mi-parcours, l’anneau doit occuper la moitié du cadran dans les deux thèmes.
+    runIsolatedSql(project, `UPDATE player_boost SET used_at=UTC_TIMESTAMP() - INTERVAL 150 MINUTE
+        WHERE player_universe_id=(SELECT owner_id FROM planet WHERE id=${planetId}) AND kind='timed_boost' AND status='used'`);
+    for (const [theme, width] of [['dark', 1920], ['light', 390]]) {
+        runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE id=${playerId}`);
+        await page.setViewportSize({ width, height: 900 });
+        await page.reload();
+        await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+        const fraction = await bonus.locator('.boost-dial').evaluate(dial =>
+            parseFloat(getComputedStyle(dial).getPropertyValue('--remaining')));
+        expect(fraction).toBeCloseTo(50, 0);
+        const guide = await page.locator('.header-technology-goal').boundingBox();
+        const frame = await bonus.boundingBox();
+        const top = Math.max(0, Math.min(guide.y, frame.y) - 4);
+        await page.screenshot({ path: testInfo.outputPath('bonus-' + theme + '.png'), clip: {
+            x: guide.x - 4, y: top, width: frame.x + frame.width - guide.x + 8,
+            height: Math.max(guide.y + guide.height, frame.y + frame.height) - top + 4,
+        } });
     }
     // Approcher l’échéance de cette seule attribution dans la base éphémère.
     runIsolatedSql(project, `UPDATE player_boost SET used_at=UTC_TIMESTAMP() - INTERVAL 5 HOUR + INTERVAL 8 SECOND

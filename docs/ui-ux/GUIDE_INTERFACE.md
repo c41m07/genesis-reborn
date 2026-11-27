@@ -376,4 +376,4 @@ administratifs et la visibilité des autres joueurs ne sont pas modifiés en bas
 
 ## Bonus temporaire dans l’en-tête
 
-À droite de « Guide techno », le cadre violet indique l’effet chiffré du bonus actif et le temps restant. Le compteur reste silencieux pour les lecteurs d’écran pendant le décompte. Sur petit écran, le guide et le bonus partagent une ligne pour que les deux restent lisibles. À l’expiration, la barre reprend sa disposition habituelle.
+À droite de « Guide techno », le cadre violet indique l’effet chiffré du bonus actif et le temps restant. Un éclair entouré d’un anneau indique la proportion de temps restante. Le chiffre sous l’effet donne la durée précise. Le compteur reste silencieux pour les lecteurs d’écran pendant le décompte. Sur petit écran, le guide et le bonus partagent une ligne pour que les deux restent lisibles. À l’expiration, la barre reprend sa disposition habituelle.
