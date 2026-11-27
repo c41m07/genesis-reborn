@@ -51,6 +51,13 @@ test('Station commerciale : le noyau ouvre la Bourse et ne devient pas un systè
 
     // Un zoom à partir du centre de la scène ne déplace le noyau que par
     // rapport à la caméra : le repère change de position avec la projection.
+    const label = marker.locator('.gv2-station-label');
+    await expect(label).toBeHidden();
+    await marker.hover();
+    await expect(label).toBeVisible();
+    await expect(label).toHaveText('Bourse');
+    await page.mouse.move(0, 0);
+    await expect(label).toBeHidden();
     const beforeZoom = await marker.getAttribute('style');
     await page.getByRole('button', { name: 'Zoomer', exact: true }).click();
     await expect(marker).not.toHaveAttribute('style', beforeZoom);
@@ -89,7 +96,7 @@ test('Station commerciale : le noyau ouvre la Bourse et ne devient pas un systè
         const native = await plain.newPage();
         await native.goto('/carte-v2');
         await expect(native.getByRole('link', { name: 'Station commerciale A:0:0 : ouvrir la Bourse' })).toHaveCount(0);
-        await native.getByRole('link', { name: 'Bourse · A:0:0', exact: true }).click();
+        await native.getByRole('list', { name: 'Repères de la carte' }).getByRole('link', { name: 'Bourse', exact: true }).click();
         await expect(native).toHaveURL(/\/bourse$/);
     } finally {
         await plain.close();

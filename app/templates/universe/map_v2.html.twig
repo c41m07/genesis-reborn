@@ -66,7 +66,8 @@
                 <button type="button" data-action="click->galaxy-v2#fitView">Vue entière</button>
                 <button type="button" class="gv2-home" data-action="click->galaxy-v2#centerHome">Ma colonie</button>
             </div>
-            <div class="gv2-scene" data-galaxy-v2-target="scene">
+            <div class="gv2-scene" data-galaxy-v2-target="scene"
+                 data-action="pointerover->galaxy-v2#stationHover pointerout->galaxy-v2#stationLeave focusin->galaxy-v2#stationFocus focusout->galaxy-v2#stationBlur">
                 <div class="gv2-locator"><span class="gv2-live-dot"></span><span data-galaxy-v2-target="location">{{ selected_galaxy.name|default(membership.universe.name) }}</span></div>
                 <canvas class="gv2-canvas gv2-canvas--galaxy is-active" data-galaxy-v2-target="galaxyCanvas" aria-label="Carte animée de la galaxie. Glissez pour déplacer, molette pour zoomer, cliquez sur un système pour afficher sa fiche."></canvas>
                 <canvas class="gv2-canvas gv2-canvas--system" data-galaxy-v2-target="systemCanvas" aria-label="Vue du système solaire. Cliquez sur une planète pour ouvrir sa vue rapprochée ; sa fiche est accessible dans la liste."></canvas>
@@ -75,13 +76,12 @@
                     <div class="gv2-stations">
                         <a class="gv2-station gv2-station--market" data-galaxy-v2-target="marketStation"
                            href="{{ path('app_market') }}" aria-label="Station commerciale {{ market_station_coordinate }} : ouvrir la Bourse" hidden>
-                            <img src="{{ asset('images/map/station-commerciale.svg') }}" alt="" width="19" height="19">
-                            <span class="gv2-station-label" aria-hidden="true">Bourse · {{ market_station_coordinate }}</span>
+                            <img src="{{ asset('images/map/bourse.png') }}" alt="" width="19" height="19">
+                            <span class="gv2-station-label" aria-hidden="true">Bourse</span>
                         </a>
                     </div>
                 {% endif %}
-                <div class="gv2-stations" data-galaxy-v2-target="stations" hidden
-                     data-action="pointerover->galaxy-v2#stationHover pointerout->galaxy-v2#stationLeave focusin->galaxy-v2#stationFocus focusout->galaxy-v2#stationBlur">
+                <div class="gv2-stations" data-galaxy-v2-target="stations" hidden>
                     <a class="gv2-station gv2-station--hall" data-galaxy-v2-target="hallStation" aria-label="Hall de guilde" hidden>
                         <img data-src="{{ asset('images/map/hall-guilde.png') }}" alt="" width="19" height="19">
                         <span class="gv2-station-label" aria-hidden="true">Hall de guilde</span>
@@ -90,10 +90,6 @@
                         <img data-src="{{ asset('images/map/station-pirate.png') }}" alt="" width="19" height="19">
                         <span class="gv2-station-label" aria-hidden="true">Station pirate</span>
                     </a>
-                    <div id="gv2-station-detail" class="gv2-station-detail" role="status" data-galaxy-v2-target="stationDetail" hidden>
-                        <strong data-galaxy-v2-target="stationTitle"></strong>
-                        <small data-galaxy-v2-target="stationText"></small>
-                    </div>
                 </div>
                 <div class="gv2-scanlines" aria-hidden="true"></div><div class="gv2-vignette" aria-hidden="true"></div>
                 <div class="gv2-tooltip" role="status" data-galaxy-v2-target="tooltip" hidden></div>
@@ -108,8 +104,8 @@
         <li class="gv2-marker--neutral">↘ Neutre / libre</li><li class="gv2-marker--unknown">? Inexploré</li>
         {% if market_station_coordinate %}
             <li class="gv2-market-legend"><a href="{{ path('app_market') }}">
-                <img src="{{ asset('images/map/station-commerciale.svg') }}" alt="" width="16" height="16">
-                Bourse · {{ market_station_coordinate }}
+                <img src="{{ asset('images/map/bourse.png') }}" alt="" width="16" height="16">
+                Bourse
             </a></li>
         {% endif %}
     </ul>

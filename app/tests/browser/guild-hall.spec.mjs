@@ -209,6 +209,18 @@ test('Pilote Hall : don natif, confirmation du commandant et présentation depui
     await expect(station).toBeVisible();
     await expect.poll(() => station.locator('img').evaluate(image => image.naturalWidth)).toBe(192);
     await expect(page.getByRole('link', { name: /Station pirate/ })).toHaveCount(0);
+    const label = station.locator('.gv2-station-label');
+    await expect(label).toBeHidden();
+    await station.hover();
+    await expect(label).toBeVisible();
+    await expect(label).toHaveText('Hall de guilde [HAL]');
+    await page.mouse.move(0, 0);
+    await expect(label).toBeHidden();
+    await station.press('Tab');
+    await page.keyboard.press('Shift+Tab');
+    await expect(station).toBeFocused();
+    await expect(label).toBeVisible();
+    await expect(label).toHaveText('Hall de guilde [HAL]');
     await station.press('Enter');
     await expect(page).toHaveURL(new RegExp('/guildes/' + guild + '$'));
 });

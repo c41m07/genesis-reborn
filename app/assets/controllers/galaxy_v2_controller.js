@@ -38,7 +38,7 @@ export default class extends Controller {
         'systemPanel', 'systemContent', 'planetPanel', 'planetContent', 'minimapWrap',
         'minimapCanvas', 'fleetLog', 'emptyFlightLog', 'guildFlightFilter', 'motionToggle', 'galaxySelect', 'mapHelp',
         'mapMode', 'mapModeLabel', 'legend', 'filterToggle', 'mapSettings', 'layoutButton',
-        'stations', 'hallStation', 'pirateStation', 'stationDetail', 'stationTitle', 'stationText', 'marketStation',
+        'stations', 'hallStation', 'pirateStation', 'marketStation',
     ];
 
     static values = { map: Object, reducedMotion: Boolean };
@@ -540,7 +540,14 @@ export default class extends Controller {
         } else if (document.activeElement === link) {
             this.searchInputTarget.focus({ preventScroll: true });
         }
-        if (link.hidden === visible) link.hidden = !visible;
+        if (link.hidden === visible) {
+            link.hidden = !visible;
+            if (!visible) {
+                if (this.hoveredStation === link) this.hoveredStation = null;
+                if (this.focusedStation === link) this.focusedStation = null;
+                this.updateStationLabel();
+            }
+        }
     }
 
     galaxyPoint(system) {
@@ -1677,7 +1684,7 @@ export default class extends Controller {
         if (event.key !== 'Escape' || event.defaultPrevented || event.target.closest('input, select, textarea')) return;
         if (this.displayedStation) {
             this.hoveredStation = this.focusedStation = null;
-            this.updateStationDetail();
+            this.updateStationLabel();
             event.preventDefault();
             return;
         }
@@ -1888,7 +1895,7 @@ export default class extends Controller {
         this.stationsTarget.hidden = true;
         this.hallStationTarget.hidden = this.pirateStationTarget.hidden = true;
         this.hoveredStation = this.focusedStation = null;
-        this.updateStationDetail();
+        this.updateStationLabel();
     }
 
     layoutStations(system, centerX, centerY, mobile) {
@@ -1908,7 +1915,7 @@ export default class extends Controller {
         // La combinaison (.78, -.78) est en dehors de l'ellipse, y compris au zoom.
         // Ce décalage graphique ancré dans le système est indépendant des angles planétaires.
         this.setStation(this.pirateStationTarget, pirate, centerX + radiusX * .78 * scale, centerY - radiusX * aspect * .78 * scale, diameter);
-        if (!this.stationsTarget.contains(this.displayedStation) || this.displayedStation?.hidden) this.updateStationDetail();
+        if (!this.stationsTarget.contains(this.displayedStation) || this.displayedStation?.hidden) this.updateStationLabel();
     }
 
     setStation(link, available, x, y, diameter) {
@@ -1928,6 +1935,7 @@ export default class extends Controller {
             if (link.getAttribute('href') !== available.profileUrl) link.setAttribute('href', available.profileUrl);
             const label = available.tag ? 'Hall de guilde [' + available.tag + ']' : 'Hall de guilde';
             if (link.getAttribute('aria-label') !== label) {
+                // Le même repère sert aux différents systèmes visités.
                 link.setAttribute('aria-label', label);
                 link.querySelector('.gv2-station-label').textContent = label;
             }
@@ -1943,39 +1951,36 @@ export default class extends Controller {
         const link = this.stationLink(event.target);
         if (!link || link.contains(event.relatedTarget)) return;
         this.hoveredStation = link;
-        this.updateStationDetail();
+        this.updateStationLabel();
     }
 
     stationLeave(event) {
         const link = this.stationLink(event.target);
         if (event.pointerType !== 'mouse' || !link || link.contains(event.relatedTarget)) return;
         this.hoveredStation = null;
-        this.updateStationDetail();
+        this.updateStationLabel();
     }
 
     stationFocus(event) {
         const link = this.stationLink(event.target);
         this.focusedStation = link?.matches(':focus-visible') ? link : null;
-        this.updateStationDetail();
+        this.updateStationLabel();
     }
 
     stationBlur(event) {
         if (!this.stationLink(event.target)) return;
         this.focusedStation = null;
-        this.updateStationDetail();
+        this.updateStationLabel();
     }
 
-    updateStationDetail() {
+    updateStationLabel() {
         const next = [this.focusedStation, this.hoveredStation]
             .find((link) => link && !link.hidden) || null;
         if (next === this.displayedStation) return;
+        // Un seul nom reste affiché. Échap peut le fermer en conservant le focus sur le lien.
+        this.displayedStation?.removeAttribute('data-show-label');
         this.displayedStation = next;
-        this.stationDetailTarget.hidden = !next;
-        if (!next) return;
-        const hall = next === this.hallStationTarget;
-        this.stationDetailTarget.dataset.kind = hall ? 'hall' : 'pirate';
-        this.stationTitleTarget.textContent = next.getAttribute('aria-label');
-        this.stationTextTarget.textContent = hall ? 'Repère fixe, à côté de l’étoile.' : 'Repère fixe, visible après reconnaissance.';
+        next?.setAttribute('data-show-label', '');
     }
 
     drawStar(ctx, x, y, color, time) {
