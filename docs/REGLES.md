@@ -973,7 +973,7 @@ possédée et découverte. Sans solution, l’attente persiste.
 
 ## Calendrier de l’Avent
 
-L’administration choisit la période de visibilité dans chaque univers. Les portes du 1er au 24 décembre s’ouvrent à minuit à Paris. Chaque compte peut rattraper les jours passés pendant la période et obtenir un lot par porte pour toute la saison. À l’heure de fermeture, la page et les portes ferment. Les lots déjà réservés restent retirables dans l’inventaire. [Détail du calendrier et des réservations](CALENDRIER_AVENT.md).
+L’administration choisit la période de visibilité dans chaque univers. Les portes du 1er au 24 décembre s’ouvrent à minuit à Paris. Chaque compte peut rattraper les jours passés pendant la période et obtenir un lot par porte pour toute la saison. À l’heure de fermeture, la page et les portes ferment. Les nouveaux lots de matériaux et de vaisseaux deviennent des boîtes à ouvrir depuis l’inventaire, jusqu’au 31 décembre inclus en heure de Paris. Les matériaux d’une boîte de l’Avent peuvent dépasser la capacité des entrepôts ; les dépôts habituels restent plafonnés. Les anciens lots déjà réservés conservent leur retrait sans cette nouvelle échéance. [Détail du calendrier et des réservations](CALENDRIER_AVENT.md).
 
 ## Bourse de ressources
 

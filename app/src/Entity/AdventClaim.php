@@ -47,6 +47,17 @@ class AdventClaim
     #[ORM\Column(type: 'json', nullable: true)]
     public ?array $creditedResources = null;
 
+    // L’absence d’échéance distingue les réservations historiques et les
+    // avoirs, qui ne doivent pas hériter de la clôture des nouvelles boîtes.
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $boxExpiresAt = null;
+
+    #[ORM\Column(nullable: true)]
+    public ?int $boxUniverseId = null;
+
+    #[ORM\Column(options: ['default' => false])]
+    public bool $boxUnread = false;
+
     #[ORM\Column(nullable: true)]
     public ?int $redeemedQueueId = null;
 

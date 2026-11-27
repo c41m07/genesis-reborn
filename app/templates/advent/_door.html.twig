@@ -9,6 +9,14 @@
     {% if actionable and credit %}
         {% include 'advent/_offer.html.twig' with {offer: claim.award, resources: resources, ships: ships} only %}
         <p><a class="secondary" href="{{ path('app_advent_credit', {id: edition.id, claimId: claim.id}) }}">Voir le devis de cette remise</a></p>
+    {% elseif claim and claim.boxExpiresAt and not claim.deliveredAt %}
+        {% if boxesOpen and destinationsAllowed and claim.boxUniverseId == membership.universe.id %}
+            <p><a class="secondary" href="{{ path('app_inventory_boxes') }}">Ouvrir ma boîte dans l’inventaire</a></p>
+        {% elseif not boxesOpen %}
+            <p>Cette boîte de l’Avent a expiré.</p>
+        {% else %}
+            <p>Revenez dans l’univers d’obtention de cette boîte.</p>
+        {% endif %}
     {% elseif actionable %}
         <details{% if milestone %} open{% endif %}>
             <summary>{{ claim ? 'Reprendre le versement' : 'Choisir mon cadeau' }}<span class="visually-hidden">, porte {{ day }}</span></summary>
@@ -49,13 +57,14 @@
                         </select>
                     {% endif %}
                 {% endif %}
-                <label for="advent-colony-{{ day }}">Colonie destinataire</label>
-                <select name="colony" id="advent-colony-{{ day }}" required>
-                    <option value="">Choisir une de mes colonies</option>
-                    {% for colony in colonies %}<option value="{{ colony.id }}">{{ colony.name }} ({{ colony.coordinates() }})</option>{% endfor %}
-                </select>
-                {% if milestone and consolidated %}<p class="advent-notice">Si les conditions ne sont pas réunies, le cadeau choisi reste réservé. Les prérequis d’un lot de vaisseaux sont vérifiés sur la colonie destinataire.</p>{% endif %}
-                <button class="primary">{{ claim ? 'Retenter le versement' : 'Confirmer le cadeau et la destination' }}</button>
+                {% if claim %}
+                    <label for="advent-colony-{{ day }}">Colonie destinataire</label>
+                    <select name="colony" id="advent-colony-{{ day }}" required>
+                        <option value="">Choisir une de mes colonies</option>
+                        {% for colony in colonies %}<option value="{{ colony.id }}">{{ colony.name }} ({{ colony.coordinates() }})</option>{% endfor %}
+                    </select>
+                {% endif %}
+                <button class="primary">{{ claim ? 'Retenter le versement' : 'Confirmer le cadeau' }}</button>
             </form>
         </details>
     {% elseif claim and not claim.deliveredAt %}

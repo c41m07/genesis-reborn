@@ -66,6 +66,7 @@ final class AdventController extends AbstractController
             'bindingUniverse' => $bindingUniverse,
             'progression' => $progression,
             'destinationsAllowed' => $destinationsAllowed,
+            'boxesOpen' => $now < $calendar->boxExpiry($edition->season),
             'openPeriod' => $edition->startsAt <= $now && $now < $window->visibleUntil,
             'bracketLabels' => ['beginner' => 'Débutant ×1', 'intermediate' => 'Intermédiaire ×6', 'veteran' => 'Vétéran ×24'],
             'claimed' => count($claims),
@@ -105,6 +106,7 @@ final class AdventController extends AbstractController
         $membership = $context->membership();
         $player = $this->player();
         $reserved = $request->attributes->get('_route') === 'app_advent_reserved';
+        $claim = null;
         if ($reserved) {
             $claim = $game->one(AdventClaim::class, ['player' => $player, 'adventEdition' => $id, 'door' => $door]);
             $edition = $claim?->adventEdition;
@@ -117,7 +119,11 @@ final class AdventController extends AbstractController
         if (!$this->isCsrfTokenValid('advent_'.$id.'_'.$membership->id.'_'.$door, $request->request->getString('_token'))) {
             throw $this->createAccessDeniedException('Rechargez la page pour vérifier votre univers et votre destination.');
         }
-        $planet = $game->find(Planet::class, $request->request->getInt('colony'));
+        // Une nouvelle boîte rejoint l’inventaire, sans destination choisie à
+        // la porte. Une colonie existante sert seulement de contexte au verrou.
+        $planet = $reserved || $request->request->has('colony')
+            ? $game->find(Planet::class, $request->request->getInt('colony'))
+            : ($game->planets($membership->universe, $membership)[0] ?? null);
         if (!$planet instanceof Planet || $planet->owner?->id !== $membership->id
             || $planet->solarSystem->galaxy->universe->id !== $membership->universe->id) {
             throw $this->createNotFoundException('Cette colonie ne peut pas recevoir votre cadeau.');
@@ -130,6 +136,8 @@ final class AdventController extends AbstractController
         }
         $message = match ($result['state']) {
             'delivered' => 'Porte '.$door.' : cadeau livré à '.$planet->name.'.',
+            'box_ready' => 'Porte '.$door.' : boîte disponible dans votre inventaire.',
+            'box_expired' => 'L’échéance de cette boîte de l’Avent est passée.',
             'partial' => 'Une partie du lot a été versée. Le reste est réservé jusqu’à ce que votre plafond initial soit levé.',
             'early_cap' => 'Le plafond de vos 48 premières heures est atteint. Le lot reste réservé.',
             'ships_reserved' => 'Lot réservé. Toutes les coques doivent pouvoir être construites sur la colonie choisie et le hangar doit pouvoir les recevoir.',
@@ -142,10 +150,10 @@ final class AdventController extends AbstractController
             'stale' => 'Cette destination ou cet univers n’est plus accessible. Aucun cadeau n’a été versé.',
             default => 'Cette porte ou ce choix de cadeau n’est pas disponible.',
         };
-        $this->addFlash(in_array($result['state'], ['delivered', 'already', 'partial', 'credit_ready'], true) ? 'success' : 'error', $message);
+        $this->addFlash(in_array($result['state'], ['delivered', 'already', 'partial', 'credit_ready', 'box_ready'], true) ? 'success' : 'error', $message);
 
         if ($reserved) {
-            return $this->redirectToRoute('app_inventory_pending', status: Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute($claim?->boxExpiresAt !== null ? 'app_inventory_boxes' : 'app_inventory_pending', status: Response::HTTP_SEE_OTHER);
         }
 
         return $this->redirectToRoute('app_advent_edition', ['id' => $id, '_fragment' => 'advent-door-'.$door], Response::HTTP_SEE_OTHER);

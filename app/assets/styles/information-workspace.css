@@ -697,6 +697,11 @@ body.ui-refined[data-ui-page="feedback"] .feedback-workspace.social-board {
 /* P20 : le lien facultatif reste disponible sans éloigner la capture et l’envoi. */
 .feedback-workspace.social-board .feedback-optional-fields > * { min-width:0; }
 .feedback-workspace.social-board .feedback-errors { scroll-margin-top:1rem; }
+@media (max-width: 740px) {
+    /* L’ancre doit passer sous la barre collante des ressources, qui peut
+       occuper plusieurs lignes sur téléphone, même sans JavaScript. */
+    .feedback-workspace.social-board .feedback-errors { scroll-margin-top:8rem; }
+}
 @media (min-width: 1280px) and (min-height: 900px) {
     .feedback-workspace.social-board .feedback-primary > .account-grid { margin-block:.75rem; }
     .feedback-workspace.social-board .feedback-primary > p:first-of-type { margin-block:.35rem .6rem; }
