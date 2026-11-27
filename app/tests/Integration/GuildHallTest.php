@@ -12,7 +12,7 @@ use App\Repository\GuildHallRepository;
 use App\Service\Notification\OutboxRelay;
 use App\Service\Colony\ResourceService;
 use App\Service\Fleet\FleetRecallService;
-use App\Service\Guild\{GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallFunding, GuildHallScheduleProvider, GuildHallService};
+use App\Service\Guild\{GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyRecovery, GuildHallFunding, GuildHallScheduleProvider, GuildHallService};
 use App\Service\Player\{DiplomacyService, RegistrationService, RelationResolver};
 use App\Service\Universe\{UniverseImporter, UniverseService};
 use App\Tests\Support\GuildHallFixture;
@@ -268,6 +268,103 @@ final class GuildHallTest extends KernelTestCase
         self::assertSame(2, $expenses->count(['fleetId' => $id]));
         self::assertEqualsWithDelta($return['spent_now'], $expenses->findOneBy(['fleetId' => $id, 'phase' => 'player_recall'])->hydrogen, 0.000001);
         self::assertEqualsWithDelta($return['return_fuel'], $expenses->findOneBy(['fleetId' => $id, 'phase' => 'return'])->hydrogen, 0.000001);
+    }
+
+    public function testConvoyWaitsAtItsReturnCoordinatesAndOnlyTheOwnerCanRecoverIt(): void
+    {
+        $clock = new MockClock('now', new \DateTimeZone('UTC'));
+        $container = self::getContainer();
+        $container->set('clock', $clock);
+        $container->set(GuildHallScheduleProvider::class, new GuildHallScheduleProvider(
+            '{"levels":{"warehouse":{"1":{"cost":{"metal":15},"duration":60}}},"capacities":{"1":{"metal":100}}}',
+        ));
+        [$owner, $origin, $guild] = $this->guild('StrandedConvoyOwner', 'SCO');
+        [$other] = $this->player('StrandedConvoyOther');
+        $hallService = GuildHallFixture::enable($container);
+        $hall = $hallService->contribute($owner, $guild->id, $origin->id, 0, ['hydrogen' => 32]);
+        $hall = $hallService->place($owner, $guild->id, $origin->solarSystem->id, $hall->revision);
+        [$ownerId, $otherId, $originId, $hallId] = [$owner->id, $other->id, $origin->id, $hall->id];
+        $idle = $this->em->getRepository(Fleet::class)->findOneBy([
+            'playerUniverse' => $owner, 'homePlanet' => $origin, 'status' => 'idle',
+        ]);
+        if ($idle === null) {
+            $idle = new Fleet();
+            $idle->playerUniverse = $owner;
+            $idle->homePlanet = $origin;
+            $this->em->persist($idle);
+        }
+        $ship = new FleetShip();
+        $ship->fleet = $idle;
+        $ship->slug = 'transport';
+        $ship->quantity = 1;
+        $this->em->persist($ship);
+        $this->em->flush();
+        $idleId = $idle->id;
+
+        $departure = $container->get(GuildHallConvoyDeparture::class);
+        $ships = ['transport' => ['basic' => 1]];
+        $freight = ['metal' => 40];
+        $preview = $departure->preview($owner, $guild->id, $hallId, $originId, $ships, 1.0, $freight);
+        $convoy = $departure->send($owner, $guild->id, $hallId, $originId, $ships, 1.0, $freight, str_repeat('d', 32), $preview['fingerprint']);
+        self::assertInstanceOf(GuildHallConvoy::class, $convoy);
+        $id = $convoy->fleet->id;
+        $handler = $container->get(FleetArrivedHandler::class);
+        $clock->sleep($convoy->fleet->travelSeconds + 1);
+        $handler(new FleetArrived($id, $convoy->outboundToken));
+        $this->em->clear();
+
+        // Fixture : simuler un changement de propriétaire hors du parcours
+        // d’abandon ordinaire, qui peut refuser une colonie avec flotte active.
+        $fleet = $this->em->find(Fleet::class, $id);
+        self::assertSame('returning', $fleet->status);
+        $origin = $this->em->find(Planet::class, $originId);
+        $origin->owner = $this->em->find(PlayerUniverse::class, $otherId);
+        $this->em->flush();
+        $before = $this->stock($origin, 'metal');
+        $return = new FleetArrived($id, $fleet->dispatchToken);
+        $clock->sleep($fleet->travelSeconds + 1);
+        $handler($return);
+        $this->em->clear();
+        $handler($return);
+        $this->em->clear();
+
+        $fleet = $this->em->find(Fleet::class, $id);
+        self::assertSame('hall_wait', $fleet->status);
+        self::assertSame($originId, $fleet->navigation['hall_recovery']['position_planet_id']);
+        self::assertEqualsWithDelta(25.0, $fleet->freight()['metal'], 0.000001);
+        self::assertEqualsWithDelta(0.0, $fleet->reservedFuel, 0.000001);
+        self::assertEqualsWithDelta($before, $this->stock($this->em->find(Planet::class, $originId), 'metal'), 0.000001);
+        self::assertSame(2, $this->em->getRepository(FleetFuelExpense::class)->count(['fleetId' => $id]));
+        $recovery = $container->get(GuildHallConvoyRecovery::class);
+        $this->em->clear();
+        $origin = $this->em->find(Planet::class, $originId);
+        $owner = $this->em->find(PlayerUniverse::class, $ownerId);
+        $origin->owner = $owner;
+        $capacity = $container->get(ResourceService::class)->capacity($origin, 'metal', []);
+        $metal = $this->em->getRepository(PlanetResource::class)->findOneBy(['planet' => $origin, 'resourceType' => 'metal']);
+        $metal->currentStock = $capacity - 10;
+        $metal->lastUpdatedAt = $clock->now();
+        $this->em->flush();
+        $key = str_repeat('f', 32);
+        self::assertTrue($recovery->land($owner, $id, $key));
+        $this->em->clear();
+        self::assertFalse($recovery->land($this->em->find(PlayerUniverse::class, $ownerId), $id, $key));
+        $this->em->clear();
+        $idle = $this->em->find(Fleet::class, $idleId);
+        self::assertSame('completed', $this->em->find(Fleet::class, $id)->status);
+        self::assertEqualsWithDelta($capacity, $this->stock($this->em->find(Planet::class, $originId), 'metal'), 0.001);
+        self::assertEqualsWithDelta(15.0, $idle->cargo['metal'], 0.001);
+        self::assertSame(1, $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $idle, 'slug' => 'transport'])->quantity);
+        self::assertEqualsWithDelta(15.0, $this->em->find(GuildHallStock::class, $hallId)->materials['metal'], 0.001);
+        self::assertSame(2, $this->em->getRepository(FleetFuelExpense::class)->count(['fleetId' => $id]));
+
+        // Une transaction refusée ferme le gestionnaire Doctrine : garder ce contrôle en dernier.
+        try {
+            $recovery->land($this->em->find(PlayerUniverse::class, $otherId), $id, str_repeat('e', 32));
+            self::fail('Le nouveau propriétaire de la colonie ne doit pas récupérer le convoi.');
+        } catch (\DomainException $exception) {
+            self::assertSame('Convoi inaccessible.', $exception->getMessage());
+        }
     }
 
     /** @return list<FleetArrived> */
