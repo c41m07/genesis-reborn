@@ -301,3 +301,9 @@ body.authenticated .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a:not([
     .gv2-station-label { display:none; }
     .gv2-station-detail { top:45px; }
 }
+
+/* Le repère central doit rester lisible sur la lueur blanche du noyau. */
+.gv2-station--market { --station-color:#a0f5f4; }
+.gv2-station--market img { filter:drop-shadow(0 0 4px #030b14); }
+.gv2-market-legend a { display:inline-flex; align-items:center; gap:6px; }
+.gv2-market-legend img { flex:none; }

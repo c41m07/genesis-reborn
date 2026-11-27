@@ -38,7 +38,7 @@ export default class extends Controller {
         'systemPanel', 'systemContent', 'planetPanel', 'planetContent', 'minimapWrap',
         'minimapCanvas', 'fleetLog', 'emptyFlightLog', 'guildFlightFilter', 'motionToggle', 'galaxySelect', 'mapHelp',
         'mapMode', 'mapModeLabel', 'legend', 'filterToggle', 'mapSettings', 'layoutButton',
-        'stations', 'hallStation', 'pirateStation', 'stationDetail', 'stationTitle', 'stationText',
+        'stations', 'hallStation', 'pirateStation', 'stationDetail', 'stationTitle', 'stationText', 'marketStation',
     ];
 
     static values = { map: Object, reducedMotion: Boolean };
@@ -455,6 +455,14 @@ export default class extends Controller {
             minY: Math.min(...points.map((system) => system.wy)),
             maxY: Math.max(...points.map((system) => system.wy)),
         } : (this.systemBounds || { minX: -extent, maxX: extent, minY: -extent, maxY: extent });
+        // Une carte peu dense peut regrouper tous ses systèmes sur un bras.
+        // « Vue entière » doit cadrer aussi le noyau si le commerce est ouvert.
+        if (this.hasMarketStationTarget) {
+            bounds.minX = Math.min(0, bounds.minX);
+            bounds.maxX = Math.max(0, bounds.maxX);
+            bounds.minY = Math.min(0, bounds.minY);
+            bounds.maxY = Math.max(0, bounds.maxY);
+        }
         const mobile = this.width <= 720;
         const viewport = {
             left: 28,
@@ -515,6 +523,24 @@ export default class extends Controller {
         if (this.mode === 'system' || this.mode === 'transition-to-planet' || this.mode === 'transition-to-system-from-planet') this.drawSystem(dt);
         if (this.mode === 'planet') this.drawPlanet(dt);
         if (this.mode === 'galaxy') this.drawMinimap();
+        this.placeMarketStation();
+    }
+
+    placeMarketStation() {
+        if (!this.hasMarketStationTarget) return;
+
+        // L’origine est aussi celle du noyau dessiné, quelle que soit la
+        // disposition. La station n’entre pas dans la sélection des systèmes.
+        const { x, y } = this.galaxyPoint({ wx: 0, wy: 0 });
+        const visible = this.mode === 'galaxy' && x >= 22 && y >= 22 && x <= this.width - 22 && y <= this.height - 22;
+        const link = this.marketStationTarget;
+        if (visible) {
+            const style = '--station-x:' + x.toFixed(1) + 'px;--station-y:' + y.toFixed(1) + 'px';
+            if (link.getAttribute('style') !== style) link.setAttribute('style', style);
+        } else if (document.activeElement === link) {
+            this.searchInputTarget.focus({ preventScroll: true });
+        }
+        if (link.hidden === visible) link.hidden = !visible;
     }
 
     galaxyPoint(system) {
@@ -1222,7 +1248,7 @@ export default class extends Controller {
             this.pinch.distance = distance;
             return;
         }
-        if (this.mode === 'galaxy' && !this.drag && event.target.closest('.gv2-hud, .gv2-map-settings, .gv2-map-controls, .gv2-minimap, .gv2-flight-log')) {
+        if (this.mode === 'galaxy' && !this.drag && event.target.closest('.gv2-hud, .gv2-map-settings, .gv2-map-controls, .gv2-minimap, .gv2-flight-log, .gv2-station--market')) {
             const hadHover = this.hoveredSystem !== null;
             this.hoveredSystem = null;
             if (hadHover) this.drawFrame(0);
