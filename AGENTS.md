@@ -1,69 +1,44 @@
 # Consignes du dépôt
 
-- Mettre à jour le README dans le même lot lorsque changent l’architecture, les dépendances, les commandes ou les fonctionnalités qui y sont documentées.
+## Règles critiques
 
-- Répondre en français. Faire des changements ciblés et préserver tout travail déjà présent dans le dépôt.
-- Ne pas changer les règles de jeu ou les valeurs d’équilibrage sans décision explicite ; le code décrit le comportement, les décisions produit sont consignées dans [docs/DECISIONS.md](docs/DECISIONS.md) et les règles actuelles dans [docs/REGLES.md](docs/REGLES.md).
-- Lancer d’abord les commandes disponibles dans le [Makefile](Makefile). Vérifications validées : `make validate`, `make lint`, `make assets` (équivalent à `npm run build` depuis `app/`), `make test`, `make test-browser`.
-- Le périmètre livré et les objectifs sont dans [README.md](README.md), [docs/README.md](docs/README.md) et [docs/FEUILLE_DE_ROUTE.md](docs/FEUILLE_DE_ROUTE.md). Les documents de `docs/archives/` sont historiques, sauf mention contraire ; leur index distingue les références conservées des bilans remplacés.
-- Conserver les logos et les SVG d’identité.
+- **Univers et droits.** Vérifier côté serveur la participation du joueur, le propriétaire, l’univers et les permissions de chaque ressource, y compris dans les listes, compteurs et fragments privés.
+- **Base existante.** La création d’une migration et son application sont deux opérations distinctes. Avant toute migration, restauration ou import qui modifie une base existante, obtenir l’autorisation explicite et vérifier une sauvegarde. Voir le [guide des sauvegardes](docs/SAUVEGARDES.md).
+- **Gameplay.** Toute modification des règles ou de l’équilibrage exige une décision explicite. Consigner la décision dans [les décisions produit](docs/DECISIONS.md) et actualiser [les règles du jeu](docs/REGLES.md). Justifier et documenter toute suppression ou incompatibilité.
+- **Données privées.** Garder les secrets et les données personnelles hors des fichiers versionnés, des journaux, des commentaires et des comptes rendus.
+- **Actions différées.** Préserver les transactions, verrous, jetons et protections contre les doubles effets d’un message obsolète ou rejoué.
 
-## Quand une fonctionnalité est-elle terminée ?
+## Commencer et terminer un lot
 
-- Avant de coder, définir un critère de fin observable du point de vue du joueur, de l’administrateur ou de l’exploitant. Repérer le parcours qui répond déjà au besoin et les composants préparés pour ce même usage, y compris ceux sans appelant, sans option d’activation ou sans commentaire TODO.
-- Prolonger le parcours existant lorsqu’il convient. Si deux voies couvrent le même besoin, préciser ce que chacune apporte, laquelle fait référence et si elles peuvent déclencher deux fois le même effet. Pour une transition, documenter les données, liens ou messages à préserver et la condition de retrait de l’ancienne voie. Soumettre toute perte de comportement à une décision explicite.
-- Avant de clore le lot, exercer le parcours depuis son entrée réelle jusqu’au résultat attendu. Pour un traitement différé, vérifier aussi le déclencheur, le routage, le worker et l’effet final. Un message mis en file prouve seulement sa mise en file.
-- Vérifier quel service Symfony sélectionne avec la configuration de production livrée et si ses dépendances sont disponibles. Pour une option, vérifier le comportement par défaut et celui obtenu à l’activation. Un test avec un faux fournisseur doit être complété par la vérification du branchement livré. Faire les essais en environnement isolé, sans envoi réel ni exposition de secrets.
-- Consigner dans la PR le critère de fin, le résultat observé et la vérification qui le démontre. Terminer dans le lot tout branchement manquant relevant de son périmètre. Si une dépendance externe ou une décision bloque la suite, garder la fonctionnalité ouverte et inscrire dans le suivi de reprise le blocage, le travail restant et le critère de clôture.
-- Distinguer une fonctionnalité complète et désactivée par décision documentée d’un parcours inachevé. Si le déclenchement dépend d’une configuration du VPS inaccessible depuis le dépôt, indiquer « planification non vérifiable depuis le dépôt » et préciser la vérification d’exploitation restante.
+- Répondre en français. Avant toute intervention, vérifier la branche, `git status` et les modifications locales. Préserver le travail présent, les logos et les SVG d’identité. Annoncer uniquement les actions réalisables avec les accès et les outils vérifiés dans la session.
+- Partir du [périmètre livré](README.md), de [l’index documentaire](docs/README.md) et de [la feuille de route](docs/FEUILLE_DE_ROUTE.md). L’index de `docs/archives/` précise quelles références historiques restent utiles.
+- Avant de coder, définir un résultat observable par le joueur, l’administrateur ou l’exploitant. Rechercher le parcours existant et les composants déjà préparés, même sans appelant, option d’activation ou TODO.
+- Prolonger le parcours existant lorsqu’il convient. Si deux voies coexistent, identifier celle qui fait référence, les effets susceptibles de se produire deux fois, les données, liens et messages à préserver et la condition de retrait de l’ancienne voie. Faire valider toute perte de comportement.
+- Exercer le parcours depuis son entrée réelle. Consigner le critère, le résultat observé et la vérification dans la PR ou le compte rendu du lot. Relire le diff pour repérer code provisoire, commentaires périmés et modifications étrangères.
+- Terminer les branchements relevant du lot. Si une décision ou une dépendance externe manque, garder le lot ouvert et inscrire le blocage, le travail restant et le critère de clôture dans le suivi de reprise. Pour une fonctionnalité désactivée, citer la décision correspondante. Si le déclenchement dépend d’un VPS inaccessible, indiquer « planification non vérifiable depuis le dépôt » et préciser le contrôle d’exploitation restant.
 
-## Qualité du code et continuité de la refactorisation
+## Choisir les vérifications du lot
 
-- Poursuivre les conventions et la séparation des responsabilités établies dans le projet. Examiner les composants existants et la documentation d’architecture avant d’introduire une nouvelle organisation.
-- Avant de modifier un domaine déjà refactorisé, consulter sa documentation actuelle et le suivi pertinent du chantier ; ne pas recommencer les travaux validés sans constater un problème précis.
-- Appliquer ces conventions au code nouveau et aux portions de code existant concernées par la tâche. Ne pas étendre une modification ciblée à une réécriture générale sans justification.
-- Préserver les améliorations déjà réalisées : chargements ciblés, lectures regroupées, séparation entre préparation d’affichage et traitements métier, gestion des actualisations et protections contre les régressions.
-- Toute simplification ou optimisation doit apporter un bénéfice concret de compréhension, de fiabilité, de maintenance ou de performance, sans retirer d’information utile ni modifier implicitement le comportement.
-- Employer un vocabulaire cohérent avec le modèle et les règles du jeu. Respecter la convention du dépôt pour les identifiants de code et conserver les textes destinés aux utilisateurs en français.
-- Choisir des noms explicites, des types adaptés et une présentation lisible. Éviter les instructions métier condensées, les abréviations ambiguës et les abstractions sans besoin réel.
-- Donner une responsabilité claire aux composants. Découper les traitements difficiles à comprendre ou à vérifier sans multiplier les couches et les méthodes artificielles.
-- Ne pas modifier les routes publiques, colonnes SQL, clés persistées, formats de messages ou autres contrats pour une simple harmonisation de style.
-- Ne pas masquer un échec par une exception ignorée, une valeur de repli trompeuse ou un message de réussite injustifié.
-- Séparer les changements mécaniques importants des modifications de comportement afin de garder des différences faciles à relire.
+Partir des cibles du [Makefile](Makefile). Choisir les lignes qui correspondent aux risques de la modification. Exercer les opérations qui changent un état sur des données synthétiques en environnement isolé.
 
-## Commentaires et documentation du code
+| Changement | Vérification attendue |
+| --- | --- |
+| Carte ou formulaire Twig, CSS ou Stimulus | Compiler avec `make assets` si les assets changent. Cibler le parcours avec `make test-browser` et son argument `BROWSER_ARGS` (par exemple `quantity-max.spec.mjs`). Exercer l’action sur ordinateur et mobile, au clavier, dans les thèmes concernés. Pour un champ Quantité, saisir 291 puis utiliser Max. Vérifier que tous les chiffres et chaque coût restent visibles dans leur case. |
+| Règle métier, accès ou correctif | Avec `make test-php` et son argument `PHP_TEST_PATH`, reproduire le cas depuis l’entrée concernée. Vérifier le résultat, les limites et les refus applicables, notamment pour un autre joueur ou univers. Ajouter un test de régression lorsqu’il est pertinent. |
+| Mission, livraison, récompense ou notification différée | Suivre le déclencheur, l’outbox, le routage et le worker jusqu’à l’effet visible. Pour un convoi, vérifier la boîte et le rapport attendus. Rejouer le message et vérifier l’absence de double effet. Si le risque porte sur deux actions simultanées, les exécuter réellement en concurrence. |
+| Service Symfony, fournisseur ou option | Vérifier le service sélectionné par la configuration de production livrée et la disponibilité de ses dépendances. Tester l’état par défaut puis l’activation. Compléter les essais avec un faux fournisseur par le contrôle du branchement livré, en environnement isolé et sans envoi externe. |
+| Schéma ou sauvegarde | Tester la migration sur une base isolée et contrôler le schéma avec `make lint-schema`. Pour une modification de la chaîne de sauvegarde, exercer la restauration isolée avec `make test-backup`. |
+| Refactorisation ou optimisation | Couvrir les résultats et les droits des contextes touchés. Pour annoncer un gain, appliquer le protocole de mesure de la section Performances. |
+| Documentation ou consignes | Contrôler les liens, les commandes citées et leur accord avec le code, le Makefile ou le workflow concerné. |
 
-- À chaque ajout ou modification de code, rédiger ou actualiser les commentaires utiles au fil du développement. Expliquer l’intention des traitements concernés pendant leur mise en œuvre.
-- Écrire les commentaires explicatifs en français simple, direct et naturel, comme des notes permettant de retrouver l’intention du code.
-- Commenter obligatoirement les choix non évidents et les traitements complexes ou sensibles lorsque le code seul ne permet pas de comprendre leur raison.
-- Expliquer notamment les étapes importantes d’un algorithme, les raisons et le périmètre d’un verrou, l’ordre nécessaire des opérations, les contrôles de confidentialité, les risques de données périmées, l’idempotence, les cas particuliers et les compatibilités historiques.
-- Pour un traitement métier comportant plusieurs étapes non évidentes, ajouter une courte explication d’ensemble et des commentaires aux étapes qui le nécessitent.
-- Expliquer l’intention, les contraintes et les raisons des choix ; ne pas paraphraser mécaniquement les affectations, conditions ou boucles.
-- Vérifier le comportement avant de le décrire. Ne pas présenter une hypothèse ou une garantie non démontrée comme un fait.
-- Lorsqu’un traitement change, actualiser ses commentaires dans le même lot. Retirer les commentaires faux ou inutiles et conserver les explications historiques encore nécessaires.
-- Utiliser les PHPDoc pour les informations que les types natifs n’expriment pas suffisamment, notamment les structures de tableaux, les contrats et les contraintes d’utilisation.
-- Préserver les annotations techniques et directives imposées par les outils.
-- Ne jamais inclure de secrets ou de données personnelles dans les commentaires.
+## Lisibilité, commentaires et refactorisation
 
-## Vérification des refactorisations et optimisations
-
-- Distinguer les lectures, la préparation d’affichage, la synchronisation, la validation et les écritures. Rendre identifiables les effets de bord nécessaires.
-- Ne pas réintroduire de chargements globaux lorsqu’une préparation ciblée existe. Vérifier les usages et les données réellement nécessaires aux pages concernées.
-- Ne pas remplacer des requêtes répétées par un chargement illimité en mémoire.
-- Lorsqu’une amélioration de performance est annoncée, comparer des scénarios équivalents et préciser les conditions de mesure. Indiquer « non mesuré » lorsque les données manquent.
-- Adapter les tests aux risques : résultats métier, accès refusés, cas limites et concurrence lorsque pertinente. Deux appels séquentiels ne prouvent pas la sécurité d’actions simultanées.
-- Avant de terminer, relire les différences pour vérifier la cohérence du code et des commentaires, l’absence de régression, de code provisoire et de modifications étrangères à la tâche.
-
-## Lisibilité et conventions du code
-
-- Écrire le nouveau code et les parties modifiées avec une présentation lisible : une instruction par ligne, indentation régulière, accolades et conditions développées lorsque cela facilite la lecture. Respecter les conventions Symfony/PHP du projet ; ne pas condenser une méthode pour réduire artificiellement sa longueur.
-- Utiliser des noms explicites en anglais pour les classes, méthodes et variables. Dans les traitements métier, préférer `membership`, `selectedPlanet` ou `activeQueues` aux abréviations ambiguës ; conserver les messages destinés aux utilisateurs en français.
-- Donner à chaque classe et méthode une responsabilité claire. Découper les traitements en étapes cohérentes, sans imposer de taille arbitraire ni multiplier les méthodes qui ne font que déléguer sans apporter de sens.
-- Déclarer les types des propriétés, paramètres et retours lorsque possible. Documenter les structures de tableaux utiles à la compréhension ; introduire un DTO ou un objet de présentation lorsque la complexité le justifie, sans généralisation systématique.
-- Centraliser les règles métier et constantes validées ; éviter de dupliquer les formules entre PHP, Twig et JavaScript. Mutualiser les comportements réellement communs sans créer d'abstraction générique pour des besoins hypothétiques.
-- Expliquer par des commentaires les raisons, invariants, contraintes de concurrence et choix non évidents. Éviter les commentaires et PHPDoc qui répètent simplement les noms ou les types déjà explicites.
-- Gérer explicitement les erreurs attendues. Ne pas masquer un échec avec une valeur de repli trompeuse, une exception ignorée ou une suppression de journalisation ; préserver les réponses neutres et protections prévues pour les parcours sensibles.
-- Limiter les changements au périmètre utile. Séparer autant que possible reformatage massif, refactorisation et changement métier pour permettre leur revue ; retirer le code devenu inutile après vérification de ses usages. Toute dépendance ou nouvel outil doit répondre à un besoin identifié et être documenté, sans installation systématique.
+- Suivre [l’architecture](docs/ARCHITECTURE.md), les conventions et le suivi du domaine. Limiter le changement au besoin établi, conserver les lectures ciblées et les protections déjà validées. Séparer reformatage, refactorisation et changement de comportement pour faciliter la revue.
+- Écrire les identifiants en anglais, les messages utilisateur en français. Choisir des noms métier explicites, typer propriétés, paramètres et retours, écrire une instruction par ligne et développer les conditions lorsque cela facilite la lecture. Conserver les conventions Symfony/PHP.
+- Donner une responsabilité claire à chaque composant. Centraliser les règles et constantes communes à PHP, Twig et JavaScript. Introduire un DTO, une abstraction ou une dépendance pour un besoin identifié. Documenter tout nouvel outil et vérifier les usages avant de retirer du code.
+- Préserver les contrats publics et persistés, notamment routes, colonnes SQL, clés et messages. Traiter les erreurs attendues, préserver la journalisation et les réponses neutres des parcours sensibles.
+- Commenter en français les choix que le code seul n’explique pas. Pour un traitement complexe, donner son intention d’ensemble puis expliquer les étapes sensibles : ordre des opérations, périmètre d’un verrou, visibilité, état périmé, idempotence ou compatibilité historique.
+- Actualiser les commentaires avec le code après avoir vérifié le comportement. Retirer ceux devenus faux ou redondants. Réserver les PHPDoc aux contrats, structures de tableaux et contraintes que les types natifs expriment mal. Préserver les annotations requises par les outils.
 
 ## Architecture Symfony, Doctrine, Twig et Stimulus
 
@@ -88,26 +63,18 @@
 
 ## Performances et protections contre les régressions
 
-- Mesurer avant et après une optimisation avec le même scénario, les mêmes données, le même mode de débogage et des états de cache comparables. Distinguer nombre de requêtes, temps SQL, temps serveur, mémoire, volume transféré et rendu navigateur ; séparer premier chargement et passages à chaud. Ne pas présenter une estimation comme un gain vérifié.
+- Mesurer avant et après une optimisation avec le même scénario, les mêmes données, le même mode de débogage et des états de cache comparables. Distinguer nombre de requêtes, temps SQL, temps serveur, mémoire, volume transféré et rendu navigateur ; séparer premier chargement et passages à chaud. Indiquer « non mesuré » si les données manquent.
 - Éviter les requêtes répétées par carte, rang ou ligne : charger ensemble les niveaux, stocks, files et associations nécessaires. Filtrer et paginer en base lorsque pertinent, préserver le tri global et vérifier les index avec les requêtes réelles ; ne pas remplacer les lectures répétées par le chargement illimité de données.
 - Respecter dans les listes, recherches, compteurs et réponses HTML/JSON les mêmes règles de visibilité et d'univers. Une optimisation de requête, jointure ou pagination ne doit ni exposer une ressource interdite ni exclure silencieusement un résultat autorisé.
 - Réutiliser les lectures communes pendant une requête uniquement lorsque leur état reste valable. Après écriture, synchronisation, rollback ou rafraîchissement sous verrou, invalider ou recharger les données concernées ; ne pas valider une action avec un stock ou une permission périmés. Tout cache partagé doit définir son périmètre, sa durée et son invalidation, avec isolation des données privées.
 - Optimiser les actualisations et fichiers du navigateur selon les mesures, sans réduire arbitrairement la fraîcheur des informations. Respecter les exclusions explicites du chantier, notamment une barre de ressources à conserver : vérifier aussi les effets indirects des services partagés.
 - Utiliser des données synthétiques et des environnements isolés pour les essais modifiant l'état. Ne pas déclencher d'action de jeu sur la base habituelle, perturber une instance de tests partagée ou envoyer des notifications externes pour produire un benchmark. Ne pas changer les verrous ni l'ordre des transactions sans étude dédiée des accès concurrents.
-- Pour chaque lot de refactorisation, couvrir les comportements et accès à risque par des tests pertinents. Vérifier les cas limites, les contextes multiples et, lorsque nécessaire, la concurrence réelle et l'idempotence ; deux appels séquentiels ne prouvent pas la sécurité de deux actions simultanées.
 - Lorsque pertinent, ajouter des garde-fous de performance sur un scénario stable : plafonds de requêtes avec marge justifiée et comparaison de plusieurs volumes pour détecter les lectures par élément. Éviter les nombres SQL exacts fragiles et les seuils de temps serrés en CI ; ne pas affaiblir les tests pour faire passer une optimisation.
-- Avancer par lots cohérents, mesurer leurs résultats et respecter les validations avant fusion décrites ci-dessous avant d'enchaîner le lot suivant. Conserver une possibilité de retour arrière compatible avec les données et documenter les limites ; une CI réussie ne remplace pas la recette des parcours concernés avant publication.
-
-## Protection des données, sécurité et fiabilité
-
-- Protection des données : distinguer la création d’une migration de son application. Sur une base existante, exiger une autorisation explicite et une sauvegarde vérifiée avant migration, restauration ou import modifiant les données.
-- Secrets et données personnelles : ne jamais versionner ni afficher de mots de passe, jetons, fichiers d’environnement privés ou données personnelles dans les journaux et comptes rendus.
-- Isolation des univers et permissions : vérifier côté serveur le propriétaire, la participation et l’univers de chaque ressource manipulée, même si l’interface masque déjà l’action.
-- Concurrence et traitements différés : préserver les transactions, verrous et jetons existants ; vérifier qu’un message reçu plusieurs fois ou devenu obsolète ne produit aucun double effet.
-- Tests de régression : pour un correctif métier, ajouter un test reproduisant le problème lorsque pertinent ; couvrir les refus d’accès et les cas limites concernés.
+- Documenter les limites des mesures et conserver une possibilité de retour arrière compatible avec les données.
 
 ## Maintenance continue de la documentation
 
+- Mettre à jour le README dans le même lot lorsque changent les fonctionnalités, commandes, dépendances ou choix d’architecture qui y sont documentés.
 - Tenir la documentation à jour au fur et à mesure du développement, dans le même lot que les changements concernés : README, documentation de `docs/`, wiki lorsqu’il est accessible, guides d’installation et d’utilisation, références techniques, feuille de route et suivi de reprise.
 - À chaque ajout, modification ou suppression de fonctionnalité, commande, dépendance ou élément d’architecture, examiner les documents concernés et les synchroniser avec le comportement réellement vérifié. Ajouter les explications des nouveautés et retirer ou corriger celles qui ne s’appliquent plus.
 - Supprimer les contenus et fichiers documentaires devenus inutilisés, redondants ou orphelins après avoir vérifié leurs références et leur utilité. L’absence de lien entrant ne suffit pas à justifier une suppression ; préserver les décisions validées et les références historiques utiles, en les archivant et en les identifiant clairement lorsque nécessaire.
@@ -148,18 +115,15 @@
 - Lors de la mise en production, prévoir la vérification du domaine et la soumission du sitemap dans Google Search Console avec un accès autorisé au compte propriétaire. Ne pas annoncer cette étape comme réalisée sans en avoir vérifié le résultat.
 - Lors d’un changement de template ou de routage concerné, contrôler le HTML rendu (alternatives, métadonnées et directives d’indexation), ainsi que les réponses de `robots.txt` et `sitemap.xml` si elles sont modifiées.
 
-## Vérifications pendant le développement et avant fusion
+## Branches, livraison et CI
 
-- Pendant le développement, lancer les contrôles locaux adaptés aux fichiers modifiés et aux risques identifiés, ainsi que `git diff --check` avant commit ou push. Les six contrôles complets ne sont pas exigés à chaque commit ou push sur une branche de travail.
-- Avant fusion vers `dev` ou `alpha`, attendre la réussite de la CI complète sur la dernière version de la PR : validation Compose, lint, tests PHP et Python, compilation des assets, tests navigateur et vérification du diff ; la CI vérifie aussi la sauvegarde et la restauration isolées.
-- Pour reproduire les six contrôles localement : `make validate`, `make lint`, `make test`, `make assets`, `BROWSER_PERSISTENCE=1 make test-browser` et `git diff --check`. Une CI complète réussie ne nécessite pas de relancer systématiquement toute la suite locale.
-- Ouvrir les PR en brouillon pendant le développement. La CI légère vérifie le diff, Compose, PHP/Twig/YAML et le conteneur Symfony, compile les assets et lance les tests Python, sans base ni migration. Elle ne remplace pas les tests locaux ciblés nécessaires au changement.
-- Passer la PR en « prête à relire » lorsque le lot est prêt à fusionner : cela lance la CI complète. Toute nouvelle mise à jour d’une PR prête relance la CI complète ; repasser en brouillon si le développement reprend. Les push seuls sur les branches de travail et sur `dev` ne déclenchent pas de CI. Les push sur `alpha` conservent la CI complète. Le lancement manuel propose une catégorie ou la suite complète. Seule la suite complète peut publier sur une branche de livraison.
-- La protection GitHub de `dev` a été retirée le 27 novembre 2026 à la demande du propriétaire. Si un lot passe par une PR, attendre les cinq jobs `quality` avant fusion. Un push direct demandé explicitement ne lance pas la CI.
-- Poursuivre le travail pendant la CI : relire ou documenter le lot courant, ou développer un lot indépendant sur une autre branche issue de `dev` actualisée. Préserver la branche testée pour éviter les relances inutiles et ne pas partager une base de test entre exécutions simultanées. Examiner le résultat de chaque vérification avant de valider ou fusionner le lot ; attendre la CI ne bloque pas le développement indépendant.
-- Ne pas répéter un contrôle déjà réussi sur un contenu inchangé sans problème justifiant une nouvelle exécution. Une correction de code ou une actualisation de la branche impose une nouvelle validation adaptée, puis la CI complète sur la dernière version avant fusion.
-- Corriger les échecs sans supprimer ni affaiblir les tests, puis relancer les contrôles concernés. Une branche de travail peut être poussée pour diagnostic en signalant les échecs ou contrôles impossibles ; ne pas fusionner tant qu’un contrôle requis échoue, manque ou reste inexpliqué.
-- Présenter les résultats avant de déclarer le travail terminé. Distinguer contrôles ciblés, suite complète locale, CI GitHub, intégration et déploiement ; ne pas présenter les contrôles locaux comme une validation de la CI GitHub.
+- **Par défaut**, créer une branche par lot depuis `dev` actualisée et ouvrir sa PR en brouillon vers `dev`. Nommer la branche `feature/<sujet>`, `fix/<sujet>`, `refactor/<sujet>`, `docs/<sujet>` ou `chore/<sujet>`, selon le lot. Écrire le sujet en minuscules, sans accents, avec des tirets et sans préfixe `codex/`.
+- **Sur demande explicite du propriétaire**, un push direct sur `dev` est autorisé. Sa protection a été retirée le 27 novembre 2026. Ce push ne déclenche pas la CI. Indiquer dans le compte rendu les contrôles effectués et si une CI a été lancée manuellement.
+- Pendant le développement, lancer les contrôles ciblés pertinents et `git diff --check` avant commit ou push. Une PR en brouillon ajoute une CI légère qui vérifie le diff, Compose, PHP/Twig/YAML et le conteneur Symfony, compile les assets et exécute les tests Python, sans base ni migration.
+- **Avant fusion vers `dev` ou `alpha`**, actualiser la branche si nécessaire et passer la PR en « prête à relire ». Attendre la CI complète et ses cinq jobs `quality` réussis sur la dernière révision. Un nouveau commit sur une PR prête relance la suite complète. Repasser en brouillon si le développement reprend.
+- Une branche de travail peut être poussée pour diagnostic en signalant les échecs. Avant fusion, corriger tout échec sans affaiblir les tests et relancer les contrôles concernés. Éviter de répéter un contrôle réussi sur un contenu identique. Pendant la CI, un lot indépendant peut commencer sur une autre branche avec une base de test distincte. Un lot dépendant attend l’intégration du précédent.
+- Le [workflow CI](.github/workflows/ci.yml) exécute aussi la suite complète sur les push vers `alpha`. Le lancement manuel propose une catégorie ou la suite complète. Seule la suite complète peut publier sur une branche de livraison.
+- Pour reproduire les contrôles locaux : `make validate`, `make lint`, `make test`, `make assets`, `BROWSER_PERSISTENCE=1 make test-browser` et `git diff --check`. La CI complète vérifie aussi la sauvegarde et la restauration isolées. Distinguer recette du parcours, contrôles locaux, CI GitHub, intégration et déploiement dans le bilan.
 
 ## Documents de pilotage et périmètre d'application
 
@@ -175,12 +139,4 @@
 - **Niveaux 1–2** : analyse rapide, modification ciblée et tests pertinents. **Niveau 3** : analyse des dépendances et tests adaptés. **Niveaux 4–5** : planification détaillée, analyse d'architecture, vérifications renforcées et revue des risques.
 - Réévaluer la complexité après deux corrections ciblées infructueuses, une dépendance inattendue, un changement de périmètre ou un risque de perte de données/sécurité. Ne pas répéter indéfiniment la même tentative.
 - Si l'environnement autorise explicitement une sélection de modèle **entre sous-tâches**, envisager Sol Mini (simple), Sol Moyen (intermédiaire) et Astra (critique, si disponible). Ne jamais affirmer qu'un changement de modèle a eu lieu sans preuve de l'outil. À défaut, adapter uniquement la profondeur d'analyse.
-- Le protocole adaptatif ne dispense **jamais** de la CI complète avant fusion, ni des validations de phase du prompt maître V4. Les contrôles locaux pendant le développement suivent la section de vérification ci-dessus.
-
-## Continuité et protection du projet
-
-- Vérifier `git status`, la branche et les modifications locales avant toute intervention ; ne pas écraser le travail existant. Utiliser une branche dédiée pour la mission, sauf consigne explicite contraire.
-- Nomenclature des branches : utiliser `feature/<sujet>` pour une fonctionnalité, `fix/<sujet>` pour un correctif, `refactor/<sujet>` pour une refactorisation, `docs/<sujet>` pour la documentation et `chore/<sujet>` pour la maintenance. Le sujet doit être explicite, en minuscules, sans accents et séparé par des tirets. Ne pas utiliser de préfixe `codex/`. Chaque nouveau lot part de `dev` actualisée et possède sa propre PR vers `dev`, en brouillon pendant le développement. Un lot indépendant peut commencer pendant la CI d’un autre lot ; un lot dépendant attend son intégration dans `dev`. Avant chaque fusion, actualiser la branche si nécessaire et attendre la CI complète réussie sur sa dernière version.
-- Préserver les fonctionnalités et décisions existantes. Toute suppression ou modification incompatible doit être justifiée, documentée et, si elle touche le gameplay, soumise à décision explicite.
-- Actualiser la documentation pertinente, notamment README, ROADMAP, décisions et suivi de reprise lorsque les changements le justifient ; ne pas réécrire des audits historiques comme s'ils décrivaient automatiquement l'état courant.
-- Ne pas promettre d'exécution hors session, de contournement de quotas ou d'accès à des outils non vérifiés.
+- Le niveau de complexité conserve les validations de phase du prompt maître V4. Les modalités de livraison figurent dans la section « Branches, livraison et CI ».
