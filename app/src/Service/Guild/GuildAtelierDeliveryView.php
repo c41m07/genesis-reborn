@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Guild;
 
-use App\Entity\{GuildAtelierStock, GuildHall, GuildMember, Planet, PlayerUniverse};
+use App\Entity\{GuildAtelierShipment, GuildAtelierStock, GuildHall, GuildMember, Planet, PlayerUniverse};
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,7 +22,7 @@ final readonly class GuildAtelierDeliveryView
     public function describe(PlayerUniverse $actor, GuildHall $hall): array
     {
         $destinations = $this->em->createQueryBuilder()
-            ->select('colony.id AS id, colony.name AS name, player.username AS recipient')
+            ->select('colony.id AS id, colony.name AS name, player.username AS recipient, recipient.id AS owner_id')
             ->from(Planet::class, 'colony')
             ->innerJoin('colony.owner', 'recipient')
             ->innerJoin('recipient.player', 'player')
@@ -45,6 +45,29 @@ final readonly class GuildAtelierDeliveryView
             }
         }
 
-        return ['destinations' => $destinations, 'ships' => $ships];
+        // Ne pas remontrer les coordonnées ni le nom d’un ancien membre.
+        $current = [];
+        foreach ($destinations as $destination) {
+            $current[(int) $destination['id']] = $destination;
+        }
+        $history = [];
+        $shipments = $this->em->getRepository(GuildAtelierShipment::class)->findBy(
+            ['hallId' => $hall->id, 'guildId' => $hall->guild->id, 'universeId' => $actor->universe->id],
+            ['id' => 'DESC'],
+            12,
+        );
+        foreach ($shipments as $shipment) {
+            $destination = $current[$shipment->destinationId] ?? null;
+            $history[] = [
+                'id' => $shipment->id,
+                'unit_count' => array_sum(array_map(array_sum(...), $shipment->ships)),
+                'recipient' => $destination !== null && (int) $destination['owner_id'] === $shipment->recipientId
+                    ? $destination['recipient'].' · '.$destination['name'] : null,
+                'status' => $shipment->status,
+                'arrival_at' => $shipment->arrivalAt,
+            ];
+        }
+
+        return ['destinations' => $destinations, 'ships' => $ships, 'history' => $history];
     }
 }

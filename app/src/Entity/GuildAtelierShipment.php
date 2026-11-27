@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 /** Les vaisseaux du Hall voyagent sans appartenir à la flotte personnelle du gestionnaire. */
 #[ORM\Entity]
 #[ORM\Table(name: 'guild_atelier_shipment')]
+#[ORM\Index(name: 'guild_atelier_shipment_history', columns: ['hall_id', 'guild_id', 'universe_id', 'id'])]
 #[ORM\Index(name: 'guild_atelier_shipment_due', columns: ['status', 'arrival_at'])]
 final class GuildAtelierShipment
 {

@@ -23,7 +23,8 @@ final class Version20261127130800 extends AbstractMigration
             ships JSON NOT NULL, navigation JSON NOT NULL, reserved_fuel DOUBLE PRECISION NOT NULL,
             departure_at DATETIME NOT NULL, arrival_at DATETIME NOT NULL,
             status VARCHAR(20) NOT NULL, arrival_token VARCHAR(36) NOT NULL,
-            INDEX guild_atelier_shipment_due (status, arrival_at), PRIMARY KEY (id)
+            INDEX guild_atelier_shipment_due (status, arrival_at),
+            INDEX guild_atelier_shipment_history (hall_id, guild_id, universe_id, id), PRIMARY KEY (id)
         ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB");
     }
 

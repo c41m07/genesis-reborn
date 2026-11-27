@@ -526,6 +526,7 @@ final class GuildHallTest extends KernelTestCase
 
         $id = $shipment->id;
         $due = new GuildAtelierShipmentDue($id, $shipment->arrivalToken);
+        $ownerId = $owner->id;
         $memberId = $member->id;
         $targetId = $target->id;
         $before = $this->dockHullCount($memberId, $targetId, 'transport', 'basic');
@@ -580,6 +581,18 @@ final class GuildHallTest extends KernelTestCase
         $stock = $this->em->find(GuildAtelierStock::class, $hallId);
         self::assertSame($accept ? $send : $ships, $stock->ships);
         self::assertSame([], $stock->returnCapacity);
+        $savedHall = $this->em->find(GuildHall::class, $hallId);
+        $viewer = $this->em->find(PlayerUniverse::class, $ownerId);
+        $history = $container->get(\App\Service\Guild\GuildAtelierDeliveryView::class)->describe($viewer, $savedHall)['history'];
+        self::assertCount(1, $history);
+        self::assertSame($id, $history[0]['id']);
+        self::assertSame(1, $history[0]['unit_count']);
+        self::assertSame($accept ? 'delivered' : 'returned', $history[0]['status']);
+        if ($accept) {
+            self::assertStringContainsString('AtelierRecipient', $history[0]['recipient']);
+        } else {
+            self::assertNull($history[0]['recipient']);
+        }
     }
 
     public function testAtelierKeepsReturnCapacitySeparateFromAvailableStock(): void

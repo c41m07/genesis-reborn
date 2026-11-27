@@ -75,4 +75,22 @@
             <button type="submit" class="primary">Calculer le trajet et le carburant</button>
         </form>
     {% endif %}
+    <h3>Dernières livraisons de l’Atelier</h3>
+    {% if delivery.history is empty %}
+        <p>Aucune livraison envoyée depuis ce Hall.</p>
+    {% else %}
+        {% set states = {outbound: 'En route', returning: 'De retour vers le Hall', delivered: 'Livrée', returned: 'Rentrée au Hall', lost: 'Hall d’origine indisponible'} %}
+        <ul>
+            {% for shipment in delivery.history %}
+                <li>
+                    Livraison #{{ shipment.id }} : {{ shipment.unit_count|number_format(0, ',', ' ') }} {{ shipment.unit_count == 1 ? 'vaisseau' : 'vaisseaux' }}
+                    {% if shipment.recipient is not null %} · {{ shipment.recipient }}{% endif %}
+                    · {{ states[shipment.status]|default('État indisponible') }}
+                    {% if shipment.status in ['outbound', 'returning'] %}
+                        · Arrivée prévue le <time datetime="{{ shipment.arrival_at|date('c', 'UTC') }}">{{ shipment.arrival_at|date('d/m/Y à H:i', 'UTC') }} UTC</time>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 </section>
