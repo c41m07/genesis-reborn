@@ -337,6 +337,12 @@ de la Vue générale ; [recette et captures](../REFONTE_VISUELLE_INTERFACES.md).
 
 ## Catalogues du cœur de jeu
 
+Les cartes suivent le même ordre que les filtres. Le pictogramme de catégorie accompagne le libellé sur les trois rangs.
+
+- Bâtiments : énergie, production, stockage, infrastructures, fortifications.
+- Recherche : économie (coûts), industrie (durées de construction), logistique (soutes et réserves), propulsion (vitesse), combat, défense, colonisation, espionnage.
+- Chantier spatial : légers, bombardiers, escorteurs, lourds, capitaux, transport, colonisation, espionnage, utilitaires.
+
 - Dans les quatre catalogues, un badge à côté du rang montre le niveau actuel (bâtiments et recherches) ou le nombre d’unités en réserve ou installées (vaisseaux et défenses). Le badge affiche en rouge les niveaux et effectifs à zéro. La flèche verte reste visible quand la commande est disponible.
 - Les grandes valeurs suivent la notation compacte du jeu ; la description accessible de l’onglet conserve la valeur exacte, même pour un rang verrouillé. Les libellés peuvent s’abréger lorsqu’ils manquent de place, sans changer le nom accessible du rang. Le badge n’ajoute aucun arrêt au clavier. La carte du rang choisi garde son compteur détaillé et ses prérequis.
 - « Prérequis manquants » ouvre une liste de liens en superposition. Le rang verrouillé garde son libellé et son illustration passe du noir et blanc à la couleur au survol ou au focus.

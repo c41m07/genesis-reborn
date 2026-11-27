@@ -15,23 +15,18 @@
     {% set slug = card.definition.slug %}
     {% set families = families|merge({(slug): (families[slug]|default([]))|merge([card])}) %}
 {% endfor %}
-{# La première ligne présente les familles représentatives des planches ; aucune entrée n’est ajoutée au catalogue. #}
-{% set highlightedFamilies = {
-    technologies: ['engineering_foundations','naval_engineering','nanomaterial_synthesis','colonial_expansion'],
-    ships: ['fighter','probe','transport','interceptor'],
-}[group]|default([])|filter(key => families[key] is defined) %}
-{% set orderedFamilies = highlightedFamilies|merge(families|keys|filter(key => key not in highlightedFamilies)) %}
-{% for slug in orderedFamilies %}
-    {% set ranks = families[slug] %}
+{% set categoryIcons = {
+    buildings: {energy:'electricity', economy:'extraction', storage:'storage', infrastructure:'buildings', defense:'fortification'},
+    technologies: {economy:'economy', industry:'industry', logistics:'logistics', propulsion:'propulsion', combat:'target', defense:'shield', expansion:'expansion', espionage:'intelligence', infrastructure:'research'},
+    ships: {light:'fleet', bomber:'bomber', escort:'escort', heavy:'heavy', capital:'capital', transport:'freighter', colony:'colony-ship', espionage:'probe', utility:'satellite'},
+} %}
+{# Les familles conservent l’ordre du catalogue pour les trois rangs, même après filtrage. #}
+{% for slug, ranks in families %}
     {% set definition = (ranks|first).definition %}
     {% set category = (ranks|first).filter_category %}
     {% set accessible = ranks|filter(card => not card.failures or card.maximum) %}
-    {% set familyLabels = {
-        buildings:{power_plant:'Énergie', mine_metal:'Extraction', mine_nano:'Fabrication', mine_hydrogen:'Raffinage'},
-        ships:{probe:'Reconnaissance', transport:'Transport'},
-    } %}
-    {% set familyLabel = familyLabels[group][slug]|default(catalog_filter_options[group][category]|default(group == 'buildings' ? 'Installation' : '')) %}
-    {% set familyIcon = {buildings:'buildings', technologies:'research', ships:'fleet', defenses:'diplomacy'}[group] %}
+    {% set familyLabel = catalog_filter_options[group][category] %}
+    {% set familyIcon = group == 'defenses' ? 'diplomacy' : categoryIcons[group][category] %}
     <article class="panel catalog-card card--{{ group }} building-card" data-building-catalog-target="family" data-slug="{{ slug }}" data-catalog-filter-target="card" data-category="{{ category }}" data-catalog-visible="{{ show_locked_items or accessible ? 'true' : 'false' }}" {% if not show_locked_items and not accessible %}hidden{% endif %}>
         <nav class="building-rank-tabs" aria-label="Rangs de {{ definition.label }}">
             {% for card in ranks %}

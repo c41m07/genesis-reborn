@@ -94,7 +94,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(toggle).toHaveAttribute('aria-checked', 'false');
     await expect(tab('superior')).toBeHidden();
     await expect(panel('basic')).toBeVisible();
-    await page.getByRole('button', { name: 'Production', exact: true }).click();
+    await page.getByRole('button', { name: 'Énergie', exact: true }).click();
     await toggle.click();
     await expect(page.locator('.building-card[data-category="storage"]').first()).toBeHidden();
     await tab('intermediate').click();
@@ -102,7 +102,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(page).toHaveURL(/#item-power_plant-intermediate$/);
     await page.goBack();
     await expect(panel('superior')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Production', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: 'Énergie', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await page.goForward();
     await expect(panel('intermediate')).toBeVisible();
     const previousFamily = await family.elementHandle();
@@ -111,7 +111,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await refreshed;
     await expect.poll(() => previousFamily.evaluate(element => element.isConnected)).toBe(false);
     await expect(tab('intermediate')).toHaveAttribute('aria-selected', 'true');
-    await expect(page.getByRole('button', { name: 'Production', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: 'Énergie', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await expect(toggle).toHaveAttribute('aria-checked', 'true');
     await page.getByRole('button', { name: 'Tous', exact: true }).click();
     for (const [width, columns] of [[1920, 4], [1600, 4], [1440, 4], [768, 2], [390, 1], [320, 1]]) {
