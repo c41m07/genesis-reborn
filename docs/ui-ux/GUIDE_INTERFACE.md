@@ -141,6 +141,10 @@ Les fondations existantes doivent être relevées dans `assets/styles/`, `assets
 
 Couleurs sémantiques; typographies et échelle; espacements/grille/breakpoints; rayons/ombres; icônes; focus, hover, disabled et erreurs; règles de mouvement; boutons, champs, tableaux, filtres, cartes, onglets, menus, modales, notifications, alertes, badges, pagination, progressions, états vides et chargements.
 
+### Pictogrammes du menu joueur
+
+Chaque destination de la barre latérale a un pictogramme distinct à côté de son libellé. La Bourse utilise une balance et l’Inventaire un sac à dos. Les raccourcis de la barre mobile reprennent le pictogramme de leur destination. Les lecteurs d’écran annoncent le libellé du lien.
+
 ### Onglets et filtres en pastilles
 
 La référence visuelle commune est le filtre de catalogue : pastilles arrondies, contour discret, fond transparent et état actif cyan légèrement teinté. Utiliser la classe partagée `ui-tabs` et les règles de `assets/styles/tabs.css` pour les onglets de page, les filtres de catalogue et les familles de l’administration. Les pastilles passent à la ligne sur petit écran ; le focus clavier reste visible. L’état actif s’appuie sur `aria-current`, `aria-selected` ou `aria-pressed` selon le comportement existant. Les thèmes clair et sombre utilisent leurs variables de couleur.
