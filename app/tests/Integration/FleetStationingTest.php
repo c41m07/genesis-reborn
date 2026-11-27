@@ -148,12 +148,14 @@ final class FleetStationingTest extends WebTestCase
     {
         $member = $this->player->currentPlayerUniverse;
         $fleets = self::getContainer()->get(FleetService::class);
-        $fleet = $this->send(['hydrogen' => 50]);
-        $this->arrive($fleet);
-
         $stock = $this->em->getRepository(PlanetResource::class)->findOneBy([
             'planet' => $this->target, 'resourceType' => 'hydrogen',
         ]);
+        $stock->currentStock = 100;
+        $this->em->flush();
+        $fleet = $this->send(['hydrogen' => 50]);
+        $this->arrive($fleet);
+        self::assertEqualsWithDelta(150, $stock->currentStock, 1e-8);
         $composition = ['transport' => 2];
         $quote = $fleets->preview($member, $this->target, 'station', $this->home->id, $composition, 1);
         $before = $stock->currentStock;

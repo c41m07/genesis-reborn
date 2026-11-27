@@ -38,7 +38,7 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
   const navigation = page.getByRole('navigation', { name: 'Navigation principale', exact: true });
   const campaign = navigation.getByRole('link', { name: 'Campagne pirate', exact: true });
   await expect(campaign).toHaveAttribute('href', campaignPath);
-  expect(await campaign.evaluate(link => link.previousElementSibling?.textContent.trim())).toBe('Flottes');
+  await expect(campaign.locator('xpath=preceding-sibling::*[1]')).toHaveAccessibleName('Flottes');
 
   // La lecture, même avec le shell complet et JavaScript, ne réarme pas la présence.
   await page.goto(campaignPath);
