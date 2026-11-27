@@ -97,6 +97,12 @@ final readonly class GuildHallStockStore
         }
     }
 
+    public function assertFuelAvailableLocked(GuildHall $hall, float $fuel): void
+    {
+        $stock = $this->existingLocked($hall);
+        GuildHallFuelBalance::debit($stock?->materials['hydrogen'] ?? 0, $stock?->hydrogenFraction ?? 0.0, $fuel);
+    }
+
     private function existingLocked(GuildHall $hall): ?GuildHallStock
     {
         if ($hall->id === null || $hall->placedAt === null || $hall->solarSystem === null || $hall->guild->archivedAt !== null) {

@@ -51,6 +51,13 @@ final readonly class GuildAtelierStockStore
         $stock->ships = GuildAtelierInventory::reserve($stock->ships, $composition);
     }
 
+    /** @param array<string,array<string,int>> $composition */
+    public function assertReservableLocked(GuildHall $hall, array $composition): void
+    {
+        $stock = $this->existingLocked($hall);
+        GuildAtelierInventory::reserve($stock?->ships ?? [], $composition);
+    }
+
     private function existingLocked(GuildHall $hall): ?GuildAtelierStock
     {
         if ($hall->id === null || $hall->placedAt === null || $hall->solarSystem === null || $hall->guild->archivedAt !== null) {
