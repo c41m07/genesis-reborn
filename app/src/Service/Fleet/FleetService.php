@@ -1,7 +1,8 @@
 <?php
 namespace App\Service\Fleet;
 use App\Service\Report\DiplomaticReportWriter;
-use App\Entity\{Fleet,FleetShip,Planet,PlayerUniverse,SolarSystem,PlayerDiscovery,PlayerTechnology};
+use App\Service\Guild\GuildHallConvoyWorker;
+use App\Entity\{Fleet,FleetShip,GuildHallConvoy,Planet,PlayerUniverse,SolarSystem,PlayerDiscovery,PlayerTechnology};
 use App\Repository\GameRepository;
 use App\Manager\GameManager;
 use App\Service\Colony\{ActionGuard,ResourceService};
@@ -17,7 +18,7 @@ use App\Service\Player\VacationCalendar;
 use App\Service\Boost\TimedBoostEffects;
 final class FleetService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment, private FirstSteps $firstSteps, private DiplomaticReportWriter $diplomaticReports, private FleetFuelExpenseRecorder $fuelExpenses, private TimedBoostEffects $timedBoosts) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment, private FirstSteps $firstSteps, private DiplomaticReportWriter $diplomaticReports, private FleetFuelExpenseRecorder $fuelExpenses, private TimedBoostEffects $timedBoosts, private GuildHallConvoyWorker $hallConvoys) {}
     private function coords(SolarSystem $s,?int $position): array { return [$s->id,$s->galaxy->id,$s->coordX,$s->coordY,$position]; }
     public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0, bool $requireUnexplored = false): array
     {
@@ -264,6 +265,11 @@ final class FleetService
             $f=$this->repo->find(Fleet::class,$id);if(!$f) return;
             $m=$f->playerUniverse;$this->guard->lockMembershipForProcessing($m);$this->manager->lock($f);
             if(!in_array($f->status,['traveling','returning','defending','orbiting'],true) || !hash_equals($f->dispatchToken,$token) || !$f->arrivalAt || $f->arrivalAt>$this->clock->now()) return;
+            if ($f->mission === GuildHallConvoy::MISSION) {
+                $this->hallConvoys->processLocked($f, $token, $this->clock->now());
+
+                return;
+            }
             if($f->mission==='station') { $this->queues->synchronize($m);$this->stationing->arriveLocked($f);return; }
             $processingPlanet=$f->status==='returning'?($f->returnPlanet??$f->homePlanet):$f->homePlanet;
             $this->guard->lockForCompletion($m,$processingPlanet);$this->queues->synchronize($m);

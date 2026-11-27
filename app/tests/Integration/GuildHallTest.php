@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace App\Tests\Integration;
 
 use App\Entity\{Guild, GuildHall, Planet, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
+use App\Entity\{Fleet, FleetShip, GuildDockOrder, GuildHallBuilding, GuildHallConvoy, GuildHallStock, OutboxMessage, PlanetResource};
+use App\Message\{FleetArrived, GuildDockOrderDue, GuildHallConstructionDue};
+use App\MessageHandler\{FleetArrivedHandler, GuildDockOrderDueHandler, GuildHallConstructionDueHandler};
 use App\Repository\GuildHallRepository;
-use App\Service\Guild\{GuildHallFunding, GuildHallService};
+use App\Service\Notification\OutboxRelay;
+use App\Service\Colony\ResourceService;
+use App\Service\Guild\{GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallFunding, GuildHallScheduleProvider, GuildHallService};
 use App\Service\Player\{DiplomacyService, RegistrationService, RelationResolver};
 use App\Service\Universe\{UniverseImporter, UniverseService};
 use App\Tests\Support\GuildHallFixture;
@@ -15,6 +20,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Clock\MockClock;
 use Symfony\Component\Process\Process;
 
 final class GuildHallTest extends KernelTestCase
@@ -34,6 +40,245 @@ final class GuildHallTest extends KernelTestCase
         $schema->dropSchema($metadata);
         $schema->createSchema($metadata);
         self::getContainer()->get(UniverseImporter::class)->import();
+    }
+
+    public function testRealConvoyCreditsTheHallAndKeepsOverflowOnReturnWithoutReplayingEitherEffect(): void
+    {
+        $clock = new MockClock('now', new \DateTimeZone('UTC'));
+        $container = self::getContainer();
+        $container->set('clock', $clock);
+        $container->set(GuildHallScheduleProvider::class, new GuildHallScheduleProvider(
+            '{"levels":{"warehouse":{"1":{"cost":{"metal":15},"duration":60}}},"capacities":{"1":{"metal":100}}}',
+        ));
+        [$owner, $origin, $guild] = $this->guild('ConvoyOwner', 'CVO');
+        $hallService = GuildHallFixture::enable($container);
+        $hall = $hallService->contribute($owner, $guild->id, $origin->id, 0, ['hydrogen' => 32]);
+        $hall = $hallService->place($owner, $guild->id, $origin->solarSystem->id, $hall->revision);
+        $hallId = $hall->id;
+        $guildId = $guild->id;
+        $originId = $origin->id;
+        $ownerId = $owner->id;
+
+        // Le trajet part du vrai service. Seuls les vaisseaux de départ et le
+        // barème sont des fixtures ; la flotte en vol n'est pas construite à la main.
+        $idle = $this->em->getRepository(Fleet::class)->findOneBy([
+            'playerUniverse' => $owner, 'homePlanet' => $origin, 'status' => 'idle',
+        ]);
+        if ($idle === null) {
+            $idle = new Fleet();
+            $idle->playerUniverse = $owner;
+            $idle->homePlanet = $origin;
+            $this->em->persist($idle);
+        }
+        $transportShip = new FleetShip();
+        $transportShip->fleet = $idle;
+        $transportShip->slug = 'transport';
+        $transportShip->quantity = 1;
+        $this->em->persist($transportShip);
+        $this->em->flush();
+        $idleId = $idle->id;
+
+        $departure = $container->get(GuildHallConvoyDeparture::class);
+        $convoy = $departure->send(
+            $owner, $guild->id, $hallId, $originId, ['transport' => ['basic' => 1]], 1.0, ['metal' => 40], str_repeat('c', 32),
+        );
+        self::assertInstanceOf(GuildHallConvoy::class, $convoy);
+        $id = $convoy->fleet->id;
+        $outboundToken = $convoy->outboundToken;
+        self::assertSame($outboundToken, $convoy->fleet->dispatchToken);
+        self::assertSame(0, $convoy->fleet->navigation['target'][4]);
+
+        $relay = $container->get(OutboxRelay::class);
+        $messages = $container->get('messenger.transport.async');
+        $handler = $container->get(FleetArrivedHandler::class);
+        $relay->run();
+        self::assertSame([], $this->convoyMessages($messages->getSent(), $id));
+
+        $clock->sleep($convoy->fleet->travelSeconds + 1);
+        $relay->run();
+        $outbound = $this->convoyMessages($messages->getSent(), $id);
+        self::assertCount(1, $outbound);
+        self::assertSame($outboundToken, $outbound[0]->dispatchToken);
+        $handler(new FleetArrived($id, 'jeton-obsolete'));
+        $this->em->clear();
+        self::assertNull($this->em->find(GuildHallStock::class, $hallId));
+        $handler($outbound[0]);
+        $this->em->clear();
+        $handler($outbound[0]);
+        $this->em->clear();
+        $fleet = $this->em->find(Fleet::class, $id);
+        self::assertSame('returning', $fleet->status);
+        self::assertSame(['metal' => 15], array_filter($this->em->find(GuildHallStock::class, $hallId)->materials));
+        self::assertEqualsWithDelta(25.0, $fleet->cargo['metal'], 0.001);
+        self::assertNotSame($outboundToken, $fleet->dispatchToken);
+
+        $clock->sleep($fleet->travelSeconds + 1);
+        $origin = $this->em->find(Planet::class, $originId);
+        $capacity = $container->get(ResourceService::class)->capacity($origin, 'metal', []);
+        $metal = $this->em->getRepository(PlanetResource::class)->findOneBy([
+            'planet' => $origin, 'resourceType' => 'metal',
+        ]);
+        // Figer le stock juste avant le traitement pour isoler le débordement.
+        $metal->currentStock = $capacity - 10.0;
+        $metal->lastUpdatedAt = $clock->now();
+        $this->em->flush();
+
+        $relay->run();
+        $legs = $this->convoyMessages($messages->getSent(), $id);
+        self::assertCount(2, $legs);
+        self::assertSame($fleet->dispatchToken, $legs[1]->dispatchToken);
+        $handler($legs[1]);
+        $this->em->clear();
+        $handler($legs[1]);
+        $this->em->clear();
+        $idle = $this->em->find(Fleet::class, $idleId);
+        $origin = $this->em->find(Planet::class, $originId);
+        self::assertSame($ownerId, $idle->playerUniverse->id);
+        self::assertSame('completed', $this->em->find(Fleet::class, $id)->status);
+        self::assertEqualsWithDelta($capacity, $this->stock($origin, 'metal'), 0.001);
+        self::assertEqualsWithDelta(15.0, $idle->cargo['metal'], 0.001);
+        self::assertSame(1, $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $idle, 'slug' => 'transport'])->quantity);
+        self::assertSame(['metal' => 15], array_filter($this->em->find(GuildHallStock::class, $hallId)->materials));
+
+        // La collecte paie le premier entrepôt ; son niveau n’est acquis qu’à la fin.
+        $orders = $container->get(GuildHallBuildingOrders::class);
+        $building = $orders->start($idle->playerUniverse, $guildId, $hallId, GuildHallBuilding::WAREHOUSE, 0);
+        $buildingId = $building->id;
+        self::assertSame(0, $building->level);
+        self::assertEquals($clock->now()->modify('+60 seconds'), $building->finishesAt);
+        self::assertSame([], array_filter($this->em->find(GuildHallStock::class, $hallId)->materials));
+        $relay->run();
+        self::assertCount(0, array_filter($messages->getSent(), static fn ($entry) => $entry->getMessage() instanceof GuildHallConstructionDue));
+
+        $clock->sleep(60);
+        $relay->run();
+        $builds = array_values(array_filter($messages->getSent(), static fn ($entry) => $entry->getMessage() instanceof GuildHallConstructionDue));
+        self::assertCount(1, $builds);
+        $completion = $builds[0]->getMessage();
+        self::assertSame($buildingId, $completion->buildingId);
+        $constructionHandler = $container->get(GuildHallConstructionDueHandler::class);
+        $constructionHandler($completion);
+        $this->em->clear();
+        $constructionHandler($completion);
+        $this->em->clear();
+        $built = $this->em->find(GuildHallBuilding::class, $buildingId);
+        self::assertSame(1, $built->level);
+        self::assertNull($built->finishesAt);
+        self::assertSame([], array_filter($this->em->find(GuildHallStock::class, $hallId)->materials));
+    }
+
+    /** @return list<FleetArrived> */
+    private function convoyMessages(array $envelopes, int $fleetId): array
+    {
+        $messages = [];
+        foreach ($envelopes as $envelope) {
+            $message = $envelope->getMessage();
+            if ($message instanceof FleetArrived && $message->fleetId === $fleetId) {
+                $messages[] = $message;
+            }
+        }
+
+        return $messages;
+    }
+
+    public function testDockOutboxWaitsAndReplaysWithoutDoubleCredit(): void
+    {
+        $clock = new MockClock('now');
+        self::getContainer()->set('clock', $clock);
+        [$owner, $origin, $guild] = $this->guild('DockOwner', 'DKO');
+        $order = $this->fixtureDockOrder($owner, $origin, $guild, $clock);
+        $id = $order->id;
+        $planetId = $origin->id;
+        $token = $order->dispatchToken;
+        $relay = self::getContainer()->get(OutboxRelay::class);
+        $transport = self::getContainer()->get('messenger.transport.async');
+
+        $relay->run();
+        self::assertCount(0, array_filter($transport->getSent(), static fn ($entry) => $entry->getMessage() instanceof GuildDockOrderDue));
+        $clock->sleep(60);
+        $relay->run();
+        $messages = array_values(array_filter($transport->getSent(), static fn ($entry) => $entry->getMessage() instanceof GuildDockOrderDue));
+        self::assertCount(1, $messages);
+        $due = $messages[0]->getMessage();
+        self::assertSame($id, $due->orderId);
+        self::assertSame($token, $due->dispatchToken);
+
+        $handler = self::getContainer()->get(GuildDockOrderDueHandler::class);
+        $before = $this->dockHullCount($owner->id, $planetId);
+        $handler(new GuildDockOrderDue($id, 'expired-token'));
+        self::assertSame($before, $this->dockHullCount($owner->id, $planetId));
+        $handler($due);
+        $this->em->clear();
+        $handler($due);
+        self::assertSame($before + 7, $this->dockHullCount($owner->id, $planetId));
+        self::assertNotNull($this->em->find(GuildDockOrder::class, $id)->completedAt);
+    }
+
+    public function testDockKeepsPersonalHullsOnTheReceiptWhenAColonyChangesHands(): void
+    {
+        $clock = new MockClock('now');
+        self::getContainer()->set('clock', $clock);
+        [$owner, $origin, $guild] = $this->guild('DockBefore', 'DKB');
+        [$newOwner] = $this->player('DockAfter');
+        $order = $this->fixtureDockOrder($owner, $origin, $guild, $clock);
+        $id = $order->id;
+        $originId = $origin->id;
+        $newOwnerId = $newOwner->id;
+        $due = new GuildDockOrderDue($id, $order->dispatchToken);
+        $origin->owner = $newOwner;
+        $this->em->flush();
+        $this->em->clear();
+
+        $clock->sleep(60);
+        $handler = self::getContainer()->get(GuildDockOrderDueHandler::class);
+        $handler($due);
+        $this->em->clear();
+        $handler($due);
+        self::assertSame(0, $this->dockHullCount($newOwnerId, $originId));
+        $remaining = $this->em->find(GuildDockOrder::class, $id);
+        self::assertNull($remaining->completedAt);
+        self::assertSame($owner->id, $remaining->membershipId);
+        self::assertSame(7, $remaining->quantity);
+    }
+
+    private function fixtureDockOrder(PlayerUniverse $owner, Planet $origin, Guild $guild, MockClock $clock): GuildDockOrder
+    {
+        // Préparer un ordre payé pour cibler le relais et la restitution, sans prétendre tester le départ.
+        $order = new GuildDockOrder();
+        $order->universe = $owner->universe;
+        $order->hallId = $guild->id;
+        $order->membershipId = $owner->id;
+        $order->originPlanetId = $origin->id;
+        $order->requestKey = str_repeat('a', 32);
+        $order->shipSlug = 'fighter';
+        $order->sourceTier = 'basic';
+        $order->targetTier = 'intermediate';
+        $order->quantity = 7;
+        $order->dispatchToken = str_repeat('b', 36);
+        $order->startedAt = $clock->now()->setTimezone(new \DateTimeZone('UTC'));
+        $order->dueAt = $order->startedAt->modify('+60 seconds');
+        $this->em->persist($order);
+        $this->em->flush();
+
+        $outbox = new OutboxMessage();
+        $outbox->kind = GuildDockOrderDue::KIND;
+        $outbox->targetId = $order->id;
+        $outbox->token = $order->dispatchToken;
+        $outbox->dueAt = $order->dueAt;
+        $this->em->persist($outbox);
+        $this->em->flush();
+
+        return $order;
+    }
+
+    private function dockHullCount(int $membershipId, int $planetId): int
+    {
+        return (int) $this->em->getConnection()->fetchOne(
+            "SELECT COALESCE(SUM(ship.quantity), 0) FROM fleet_ship ship JOIN fleet fleet ON fleet.id = ship.fleet_id
+             WHERE fleet.player_universe_id = ? AND fleet.home_planet_id = ? AND fleet.status = 'idle'
+             AND ship.slug = 'fighter' AND ship.tier = 'intermediate'",
+            [$membershipId, $planetId],
+        );
     }
 
     public function testFixtureDoesNotActivateHallOnFreshKernel(): void

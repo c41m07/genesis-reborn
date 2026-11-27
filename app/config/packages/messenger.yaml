@@ -34,6 +34,8 @@ framework:
             'App\Message\CombatEventDue': async
             'App\Message\PlayerCombatSimulationDue': combat_simulation
             'App\Message\GuildProjectRewardsDue': async
+            'App\Message\GuildDockOrderDue': async
+            'App\Message\GuildHallConstructionDue': async
             'App\Message\OccupationDue': async
             'App\Message\EmpireReconstructionDue': async
             'App\Message\UniverseClosureDue': async
