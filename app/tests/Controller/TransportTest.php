@@ -201,6 +201,33 @@ final class TransportTest extends WebTestCase
         self::assertSame(1, $notices->count($sender));
     }
 
+    public function testTransportBetweenOwnColoniesShowsOneReportThroughReturn(): void
+    {
+        $this->client->disableReboot();
+        $member = $this->sender->currentPlayerUniverse;
+        $this->target->owner = $member;
+        $this->em->flush();
+        $this->client->loginUser($this->sender);
+        $fleet = $this->send();
+        $report = $this->em->getRepository(TransportReport::class)->findOneBy(['fleet' => $fleet]);
+        self::assertNotNull($report);
+
+        foreach (['traveling', 'returning', 'completed'] as $stage) {
+            $fleet = $this->em->find(Fleet::class, $fleet->id);
+            if ($stage !== 'traveling') {
+                $this->arrive($fleet);
+            }
+            self::assertSame($stage, $fleet->status);
+            self::assertSame(1, $this->em->getRepository(TransportReport::class)->count(['fleet' => $fleet]));
+            self::assertSame(1, self::getContainer()->get(ReportNoticeRepository::class)->count($member));
+            $crawler = $this->client->request('GET', '/rapports?type=economy');
+            self::assertResponseIsSuccessful();
+            $rows = $crawler->filter('a.report-row');
+            self::assertCount(1, $rows);
+            self::assertSame('/rapports/transport/'.$report->id, parse_url($rows->attr('href'), PHP_URL_PATH));
+        }
+    }
+
     public function testReceptionDefaultsToAlliesAndOwnColoniesRemainAllowed(): void
     {
         $this->recipient->preferences = [];
