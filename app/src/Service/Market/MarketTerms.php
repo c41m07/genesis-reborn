@@ -63,9 +63,6 @@ final readonly class MarketTerms
         }
         $fill = MarketPricing::exchange($pay, $receive, $quantity, $projected, $market->targets,
             ($market->stock[$receive] ?? 0) - ($reserved['outgoing'][$receive] ?? 0));
-        if (($market->stock[$pay] ?? 0) + ($reserved['incoming'][$pay] ?? 0) + $quantity > MarketPricing::MAX_STOCK) {
-            throw new \DomainException('Les entrepôts de la station ne peuvent plus recevoir ce lot.');
-        }
 
         $definition = $this->catalog->getTierForUniverse($member->universe, 'ships', 'transport', $rank);
         $definition['quantity'] = $cargos;

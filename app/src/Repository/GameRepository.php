@@ -1066,6 +1066,29 @@ final class GameRepository
         return $this->all(Universe::class, ['status' => 'active'], ['id' => 'ASC']);
     }
 
+    /** @return list<int> Identifiants actifs, à relever avant la transaction de rotation. */
+    public function activeUniverseIds(): array
+    {
+        return array_map('intval', $this->em->createQueryBuilder()
+            ->select('u.id')->from(Universe::class, 'u')->where('u.status = :status')
+            ->setParameter('status', 'active')->orderBy('u.id', 'ASC')->getQuery()->getSingleColumnResult());
+    }
+
+    /** @param list<int> $ids @return list<Universe> */
+    public function lockActiveUniversesForRotation(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        // La première lecture de la transaction doit être verrouillante. Une lecture
+        // ordinaire avant ce verrou figerait un instantané ignorant la rotation déjà inscrite.
+        return $this->em->createQueryBuilder()->select('u')->from(Universe::class, 'u')
+            ->where('u.id IN (:ids)')->andWhere('u.status = :status')
+            ->setParameter('ids', $ids)->setParameter('status', 'active')->orderBy('u.id', 'ASC')
+            ->getQuery()->setLockMode(LockMode::PESSIMISTIC_WRITE)->setHint(Query::HINT_REFRESH, true)->getResult();
+    }
+
     public function weeklyBoostEventFor(Universe $universe, \DateTimeImmutable $monday): ?BoostEvent
     {
         return $this->em->createQueryBuilder()->select('e')->from(BoostEvent::class, 'e')->where('e.universe = :universe')->andWhere('e.eventKey LIKE :prefix')->setParameter('universe', $universe)->setParameter('prefix', 'weekly-' . $monday->format('Ymd') . '-u' . $universe->id . '-%')->setMaxResults(1)->getQuery()->getOneOrNullResult();

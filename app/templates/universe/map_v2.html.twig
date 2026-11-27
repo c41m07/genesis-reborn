@@ -71,6 +71,15 @@
                 <canvas class="gv2-canvas gv2-canvas--galaxy is-active" data-galaxy-v2-target="galaxyCanvas" aria-label="Carte animée de la galaxie. Glissez pour déplacer, molette pour zoomer, cliquez sur un système pour afficher sa fiche."></canvas>
                 <canvas class="gv2-canvas gv2-canvas--system" data-galaxy-v2-target="systemCanvas" aria-label="Vue du système solaire. Cliquez sur une planète pour ouvrir sa vue rapprochée ; sa fiche est accessible dans la liste."></canvas>
                 <canvas class="gv2-canvas gv2-canvas--planet" data-galaxy-v2-target="planetCanvas" aria-label="Vue rapprochée de la planète"></canvas>
+                {% if market_station_coordinate %}
+                    <div class="gv2-stations">
+                        <a class="gv2-station gv2-station--market" data-galaxy-v2-target="marketStation"
+                           href="{{ path('app_market') }}" aria-label="Station commerciale {{ market_station_coordinate }} : ouvrir la Bourse" hidden>
+                            <img src="{{ asset('images/map/station-commerciale.svg') }}" alt="" width="19" height="19">
+                            <span class="gv2-station-label" aria-hidden="true">Bourse · {{ market_station_coordinate }}</span>
+                        </a>
+                    </div>
+                {% endif %}
                 <div class="gv2-stations" data-galaxy-v2-target="stations" hidden
                      data-action="pointerover->galaxy-v2#stationHover pointerout->galaxy-v2#stationLeave focusin->galaxy-v2#stationFocus focusout->galaxy-v2#stationBlur">
                     <a class="gv2-station gv2-station--hall" data-galaxy-v2-target="hallStation" aria-label="Hall de guilde" hidden>
@@ -97,6 +106,12 @@
         <li class="gv2-marker--own">⌂ Vos colonies</li><li class="gv2-marker--allied">↗ Allié</li>
         <li class="gv2-marker--enemy">↙ Ennemi</li><li class="gv2-marker--npc">↖ PNJ</li>
         <li class="gv2-marker--neutral">↘ Neutre / libre</li><li class="gv2-marker--unknown">? Inexploré</li>
+        {% if market_station_coordinate %}
+            <li class="gv2-market-legend"><a href="{{ path('app_market') }}">
+                <img src="{{ asset('images/map/station-commerciale.svg') }}" alt="" width="16" height="16">
+                Bourse · {{ market_station_coordinate }}
+            </a></li>
+        {% endif %}
     </ul>
         <section class="gv2-map-settings is-collapsed" aria-label="Affichage de la carte" data-galaxy-v2-target="mapSettings">
             <button type="button" class="gv2-filter-toggle" data-galaxy-v2-target="filterToggle" data-action="click->galaxy-v2#toggleMapFilters" aria-expanded="false" aria-controls="gv2-filter-content">Filtres · <span data-galaxy-v2-target="mapModeLabel">Exploration</span></button>

@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\MockClock;
+use Symfony\Component\Process\Process;
 
 final class WeeklyRotationTest extends KernelTestCase
 {
@@ -91,6 +92,52 @@ final class WeeklyRotationTest extends KernelTestCase
         $events->tick();self::assertSame($first->id,$this->current()->id);
         $this->clock->sleep(604800);$events->tick();self::assertSame('combat',$this->current()->templateKey);
         $this->clock->sleep(604800);$events->tick();self::assertSame('transport',$this->current()->templateKey);
+    }
+
+    public function testConcurrentTickSeesWeeklyOccurrenceCommittedWhileWaitingForUniverse(): void
+    {
+        $db = $this->em->getConnection();
+        $firstId = $db->fetchOne("SELECT MIN(id) FROM universe WHERE status = 'active'");
+        $second = new Process([
+            PHP_BINARY, dirname(__DIR__).'/Support/concurrent_weekly_rotation.php',
+            $this->clock->now()->format(DATE_ATOM),
+        ], timeout: 25);
+        $db->beginTransaction();
+        try {
+            // Bloquer le second tick sur le premier verrou du chemin courant, puis
+            // valider la création des occurrences avant de le laisser continuer.
+            $db->fetchOne('SELECT id FROM universe WHERE id = ? FOR UPDATE', [$firstId]);
+            $second->start();
+            $id = 0;
+            $deadline = microtime(true) + 12;
+            $waiting = false;
+            while ($second->isRunning() && microtime(true) < $deadline) {
+                if (!$id && preg_match('/connection=(\d+)/', $second->getOutput(), $matches)) {
+                    $id = (int) $matches[1];
+                }
+                foreach ($id ? $db->fetchAllAssociative('SHOW FULL PROCESSLIST') : [] as $row) {
+                    $sql = strtolower((string) ($row['Info'] ?? ''));
+                    if ((int) $row['Id'] === $id && str_contains($sql, 'universe') && str_contains($sql, 'for update')) {
+                        $waiting = true;
+                        break 2;
+                    }
+                }
+                usleep(10000);
+            }
+            self::assertTrue($waiting, 'Le deuxième tick doit attendre le verrou : '.$second->getErrorOutput());
+            self::getContainer()->get(BoostEventService::class)->tick();
+            $db->commit();
+
+            self::assertSame(0, $second->wait(), $second->getErrorOutput());
+            self::assertStringContainsString('tick-completed', $second->getOutput());
+            self::assertSame(1, $this->em->getRepository(BoostEvent::class)->count(['universe' => $this->universe]));
+            self::assertSame('active', $this->current()->status);
+        } finally {
+            if ($db->isTransactionActive()) {
+                $db->rollBack();
+            }
+            $second->stop(0.5);
+        }
     }
 
     public function testCreatingAndEnablingTemplateUsesItsObjectiveAndFrozenRewardRules(): void

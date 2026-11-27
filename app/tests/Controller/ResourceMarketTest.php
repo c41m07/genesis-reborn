@@ -137,6 +137,35 @@ final class ResourceMarketTest extends WebTestCase
         self::assertSame(2, $this->em->find(FleetShip::class, $transport->id)->quantity);
     }
 
+    public function testTradeCanIncreaseStationStockPastTheMaximumMerchantTarget(): void
+    {
+        [$player, $planet] = $this->fixture('MarketBeyondTarget');
+        $member = $player->currentPlayerUniverse;
+        $universe = $member->universe;
+        $limit = \App\Service\Market\MarketPricing::MAX_TARGET;
+        self::getContainer()->get(WeeklyMerchantDelivery::class)->configure($player, $universe, true, [
+            'metal' => $limit, 'nano' => $limit, 'hydrogen' => $limit, 'antimatter' => $limit,
+        ]);
+        $markets = self::getContainer()->get(ResourceMarketRepository::class);
+        $convoys = self::getContainer()->get(MarketConvoys::class);
+        $quote = $convoys->preview($member, $planet, [
+            'pay' => 'metal', 'receive' => 'nano', 'quantity' => 300, 'rank' => 'basic', 'cargos' => 1,
+        ]);
+        $convoys->depart($member, $planet, $quote, str_repeat('a', 32));
+        $trade = $this->em->getRepository(MarketTrade::class)->findOneBy(['membershipId' => $member->id]);
+        self::assertNotNull($trade);
+        self::assertSame($limit, $markets->find($universe)->stock['metal'], 'Le stock ne bouge pas avant livraison.');
+        $this->clock->sleep(1800);
+        $token = $trade->token;
+        $convoys->processDue($trade->id, $token);
+        $convoys->processDue($trade->id, $token);
+        $market = $markets->find($universe);
+        self::assertSame($limit + 300, $market->stock['metal']);
+        self::assertSame($limit - $quote['received'], $market->stock['nano']);
+        self::assertSame(-300, $market->pressure['metal']);
+        self::assertSame($quote['received'], $market->pressure['nano']);
+    }
+
     public function testRecallAndOverflowPreserveAssetsWithoutNewTrade(): void
     {
         [$player, $planet, $transport] = $this->fixture('MarketRecall');

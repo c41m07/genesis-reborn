@@ -10,7 +10,7 @@ final class MarketPricing
     public const WEIGHTS = ['metal' => 2, 'nano' => 4, 'hydrogen' => 1, 'antimatter' => 8];
     public const SCALE = 10_000;
     public const MAX_LOT = 1_000_000;
-    public const MAX_STOCK = 1_000_000_000;
+    public const MAX_TARGET = 1_000_000_000;
     public const FEE_PERCENT = 2;
 
     /**
@@ -42,7 +42,8 @@ final class MarketPricing
         $proceeds = self::value($sold, $paidPosition - $quantity, $paidPosition, $targets[$sold] ?? 0);
         $fill = static function (int $budget) use ($bought, $boughtPosition, $targets): int {
             $low = 0;
-            $high = self::MAX_STOCK + 1;
+            // Un lot payé ne peut jamais acheter plus de 24 fois sa quantité : poids 8 contre 1, cours de 150 % contre 50 %.
+            $high = self::MAX_LOT * 24 + 1;
             while ($low + 1 < $high) {
                 $q = intdiv($low + $high, 2);
                 if (self::value($bought, $boughtPosition, $boughtPosition + $q, $targets[$bought] ?? 0) <= $budget) {
