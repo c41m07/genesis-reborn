@@ -57,7 +57,7 @@ export default class extends Controller {
                     for (const link of this.fleetLinkTargets) {
                         const url = new URL(orbits.count ? link.dataset.orbitsUrl : link.dataset.missionsUrl, window.location.origin);
                         if (orbits.count) url.searchParams.set('colony', orbits.colony);
-                        link.href = url.href;
+                        link.href = url.pathname + url.search + url.hash;
                     }
                     for (const description of this.orbitDescriptionTargets) {
                         description.textContent = orbits.count ? orbits.count + (orbits.count === 1 ? ' demande d’orbite à traiter' : ' demandes d’orbite à traiter') : '';
