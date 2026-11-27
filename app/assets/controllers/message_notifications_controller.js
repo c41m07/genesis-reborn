@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['badge', 'conversations', 'guildRecruitment', 'guildRecruitmentDescription', 'inventoryGift', 'inventoryGiftDescription', 'inventoryGiftIndicator', 'inventoryTab', 'orbitCount', 'orbitDescription', 'fleetLink'];
+    static targets = ['badge', 'messageDescription', 'conversations', 'guildRecruitment', 'guildRecruitmentDescription', 'inventoryGift', 'inventoryGiftDescription', 'inventoryGiftIndicator', 'inventoryTab', 'orbitCount', 'orbitDescription', 'fleetLink'];
     static values = { url: String };
 
     connect() {
@@ -44,9 +44,15 @@ export default class extends Controller {
             if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) return;
             const data = await response.json();
             if (request.signal.aborted) return;
-            for (const badge of this.badgeTargets) badge.hidden = data.unread === 0;
             // La notification pousse une actualisation ; le serveur recompte selon le grade actuel.
             if (data.membership === Number(this.element.dataset.menuNotificationsMembershipValue)) {
+                const unread = data.unread;
+                if (this.renderCount(this.badgeTargets, unread)) {
+                    for (const description of this.messageDescriptionTargets) {
+                        description.textContent = unread ? unread + (unread === 1 ? ' message non lu' : ' messages non lus') : '';
+                    }
+                    window.dispatchEvent(new CustomEvent('genesis:message-count', { detail: { count: unread } }));
+                }
                 this.renderCount(this.guildRecruitmentTargets, data.guildRecruitmentCount);
                 for (const description of this.guildRecruitmentDescriptionTargets) {
                     const count = data.guildRecruitmentCount;
@@ -77,7 +83,6 @@ export default class extends Controller {
                     }
                 }
             }
-            window.dispatchEvent(new CustomEvent('genesis:message-count', { detail: { count: data.unread } }));
             window.dispatchEvent(new CustomEvent('genesis:journal-state', {
                 detail: { membership: data.membership, unread: data.journalUnread },
             }));

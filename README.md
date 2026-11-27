@@ -572,7 +572,7 @@ La fenêtre des **Quotidiennes** affiche le cycle de sept jours à la première
 page de jeu après une connexion volontaire, si le lot est disponible. **Plus tard**
 ou Échap ferment sans retrait ; le cadeau en haut permet de rouvrir la fenêtre.
 Le cadeau disparaît après le retrait. L’enveloppe ne s’affiche que pour des
-messages non lus ; la messagerie reste accessible dans le menu. Les raccourcis
+messages non lus. Dans le menu, **Messages** affiche un compteur rouge pour les messages privés et de guilde non lus. Il disparaît quand tous ont été lus. Les raccourcis
 du haut affichent leur nom au survol ou au clavier ; Admin reste réservé aux
 comptes autorisés.
 
