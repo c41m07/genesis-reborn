@@ -256,6 +256,44 @@ final class FleetDestinationTest extends WebTestCase
         }
     }
 
+    public function testColonySelectorKeepsTheCurrentFleetPageIncludingAfterLiveRefresh(): void
+    {
+        $homeId = $this->home->id;
+        $otherId = $this->own->id;
+        $live = ['HTTP_ACCEPT' => 'application/json', 'HTTP_X_GENESIS_LIVE' => '1'];
+        foreach ([
+            '/flottes' => 'Missions actives',
+            '/flottes/preparer' => 'Préparer une mission',
+            '/flottes/orbites' => 'Demandes d’orbite',
+            '/flottes/quai' => 'À quai et stationnements',
+        ] as $url => $title) {
+            $this->client->request('GET', '/planetes/'.$homeId);
+            $crawler = $this->client->request('GET', $url);
+            self::assertResponseIsSuccessful();
+            // Soumettre le formulaire réellement rendu dans le menu, y compris sans JavaScript.
+            $selectedForm = $crawler->filter('[data-live-region="colony-selector"] form')->form();
+            self::assertSame($url, parse_url($selectedForm->getUri(), PHP_URL_PATH));
+            $this->client->submit($selectedForm, ['origin' => (string) $otherId]);
+            self::assertResponseIsSuccessful();
+            self::assertSelectorTextSame('h1', $title);
+            self::assertSelectorTextContains('.fleet-colony-scope', $this->own->name);
+            self::assertSelectorExists('.fleet-page-layout[data-fleet-colony="'.$otherId.'"]');
+            self::assertSelectorExists('#sidebar-colony option[value="'.$otherId.'"][selected]');
+            self::assertSelectorExists('[data-live-region="resources"][data-resource-strip-url-value="/planetes/'.$otherId.'/ressources"]');
+
+            $this->client->request('GET', $url, ['origin' => $otherId], server: $live);
+            self::assertResponseIsSuccessful();
+            $regions = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR)['regions'];
+            $fragment = new \Symfony\Component\DomCrawler\Crawler($regions['colony-selector']);
+            self::assertCount(1, $fragment->filter('form[action="'.$url.'"] #sidebar-colony[name="origin"] option[value="'.$otherId.'"][selected]'));
+
+            $this->client->request('GET', $url, ['origin' => $this->foreign->id]);
+            self::assertResponseStatusCodeSame(404);
+            $this->client->request('GET', '/');
+            self::assertResponseRedirects('/planetes/'.$otherId);
+        }
+    }
+
     public function testLegacyUrlsPreservePreparationAndRejectForeignColonies(): void
     {
         $this->client->request('GET','/planetes/'.$this->home->id);

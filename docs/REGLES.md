@@ -322,6 +322,20 @@ L’inventaire peut contenir **100 objets disponibles** par joueur et par univer
 
 **Boosts d’inventaire** : seules les commandes actives de la file de construction, de recherche ou de production (vaisseaux et défenses inclus) peuvent être accélérées. Les missions de flotte restent éligibles aux récompenses prévues mais pas à l’utilisation d’un boost. Une accélération de flotte déjà enregistrée n’est ni annulée, ni recalculée, ni remboursée.
 
+#### Témoins d’action et de cadeau
+
+Dans la navigation, le nombre rouge de recrutement signale les candidatures
+encore à décider pour le commandant et les titulaires de la permission de
+recruter, ou les invitations reçues pour un joueur sans guilde. Lire la page
+ou une conversation ne modifie pas ce nombre. Les messages ordinaires gardent
+leur indicateur de lecture distinct.
+
+Le nombre à côté d’Inventaire indique les cadeaux nouveaux, encore disponibles
+ou en attente, de l’empire actif. Il ne compte ni les anciens objets de stock,
+ni les objets utilisés ou dont le délai est passé. « Marquer les cadeaux comme
+vus » enlève uniquement le témoin des cadeaux signalés sur cette page, sans
+les ouvrir ni les utiliser. Les cadeaux arrivés depuis le rendu restent signalés.
+
 #### Boîtes de ressources — décisions du 8 novembre, réalisation du 9 novembre 2026
 
 Le contenu annoncé est fixe, sans tirage aléatoire, et reste figé dans chaque
@@ -636,6 +650,11 @@ des permissions de la mission.
 Les liens préremplis de la carte conservent le contexte de leur cible ; une cible
 connue peut rester consultable en formulaire même si la prévisualisation refuse
 actuellement l’envoi, notamment un destinataire qui refuse les transports.
+
+Dans Flottes, changer la colonie active depuis le menu conserve la page
+Missions, Préparer, Orbites ou À quai. Une préparation passe au hangar de la
+nouvelle origine sans reprendre une composition choisie sur l’ancienne. La liste
+des missions actives continue de couvrir toutes les colonies de l’univers.
 
 Les listes et suggestions respectent les droits de mission existants. Une liste
 ne remplace jamais les contrôles de la prévisualisation et de l’envoi : découverte,
