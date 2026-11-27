@@ -120,6 +120,8 @@ final class FleetRecallTest extends WebTestCase
         if($mission==='transport') {
             $report=$this->em->getRepository(TransportReport::class)->findOneBy(['fleet'=>$f]);
             self::assertSame('refused',$report->status);self::assertSame('player_recall',$report->snapshot['refusal_reason']);
+            self::assertEqualsWithDelta(50, $report->snapshot['returned']['hydrogen'], .000001);
+            self::assertEqualsWithDelta(50, ($report->snapshot['returned_deposited']['hydrogen'] ?? 0) + ($report->snapshot['return_overflow']['hydrogen'] ?? 0), .000001);
             self::assertSame([],$report->snapshot['delivered']);self::assertEqualsWithDelta(100,($report->snapshot['returned_deposited']['metal']??0)+($report->snapshot['return_overflow']['metal']??0),.000001);
         }
     }

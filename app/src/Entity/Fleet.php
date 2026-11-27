@@ -43,6 +43,36 @@ class Fleet
     public int $travelSeconds = 0;
     #[ORM\Column(length: 36)]
     public string $dispatchToken = '';
+
     #[ORM\Column(options: ['default' => false])]
     public bool $firstStepsSpy = false;
+
+    /** Le reliquat d’orbite reste à bord pendant le retour, séparé du fret à livrer. */
+    public function releaseOrbitFuel(): void
+    {
+        if ($this->orbitFuel > 0) {
+            $this->navigation['unused_fuel_at_dock'] = ($this->navigation['unused_fuel_at_dock'] ?? 0) + $this->orbitFuel;
+            $this->reservedFuel = max(0.0, $this->reservedFuel - $this->orbitFuel);
+            $this->orbitFuel = 0;
+        }
+    }
+
+    /** Le carburant encore utilisable et le reliquat du retour sont embarqués avec le fret. */
+    public function freight(): array
+    {
+        $freight = $this->cargo;
+        if (isset($freight['hydrogen'])) {
+            $unused = $this->navigation['unused_fuel_at_dock'] ?? 0;
+            $freight['hydrogen'] = max(0.0, $freight['hydrogen'] - $this->reservedFuel - $unused);
+        }
+        return $freight;
+    }
+
+    public function discardDockedFuel(): void
+    {
+        $this->cargo = $this->freight();
+        unset($this->navigation['unused_fuel_at_dock']);
+        $this->reservedFuel = 0;
+        $this->storedFuel = 0;
+    }
 }

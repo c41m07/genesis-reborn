@@ -224,7 +224,7 @@ final class ResourceMarketTest extends WebTestCase
         self::assertSame($member->id, $boxes[0]->playerUniverse->id);
         self::assertTrue($boxes[0]->giftUnread);
         self::assertEquals(['metal' => 300], $boxes[0]->payload['resources']);
-        self::assertGreaterThan(0, $transport->fleet->storedFuel);
+        self::assertSame(0.0, $transport->fleet->storedFuel);
         self::assertNull($trade->exchangedAt);
         self::assertSame([], self::getContainer()->get(ResourceMarketRepository::class)->find($member->universe)->pressure);
     }

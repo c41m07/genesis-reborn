@@ -41,13 +41,13 @@ restent préservées hors du lot. Destinations initialement 4/5, réévaluées �
 
 1. Catégories selon la matrice, saisie personnalisée système/planète et validation
    serveur. Les listes et les permissions restent distinctes.
-2. Réserve embarquée à quai, départs suivants, limites de capacité et déchargement.
+2. Paiement du départ par la colonie, limites de capacité et déchargement du fret.
 3. Stationnement : arrivée, rappel, repli, attente et reprise ; transitions sous
    les verrous existants, jetons d’outbox invalidés et transferts atomiques.
 4. Interfaces, visibilité autorisée, actions de reprise et déchargement, tests
    d’isolation et rejouabilité, documentation puis CI avant toute fusion.
 
-## Décisions validées le 14 novembre 2026
+## Décisions du 14 novembre 2026, actualisées le 27 novembre
 
 - Exploration : systèmes non explorés, coordonnées seules. Colonisation : planètes
   neutres découvertes et colonisables. Transport/défense/orbite : mes planètes et
@@ -61,11 +61,9 @@ restent préservées hors du lot. Destinations initialement 4/5, réévaluées �
   avec durées, séjour et retour existants ; droits chez les autres inchangés.
 - Stationnement : nouvelle base à l’arrivée réussie, pas de retour automatique.
   Réserver deux fois le coût aller selon les formules actuelles, consommer l’aller
-  à l’installation et conserver le carburant restant à bord.
-- Rappel avant arrivée selon le devis existant. Réserve embarquée mutualisée avec
-  la flotte inactive de la colonie, utilisée avant le stock planétaire lors des
-  départs suivants. Un départ est refusé si la capacité des vaisseaux restants ne
-  peut plus porter la réserve et le fret conservés.
+  pour le trajet et perdre le reliquat à l’installation.
+- Le rappel conserve le carburant jusqu’au retour. Chaque nouveau départ utilise
+  le stock de la colonie. Le fret restant à quai doit tenir dans les soutes disponibles.
 - Fret déchargé dans les capacités disponibles ; surplus conservé à bord.
   Actions explicites de déchargement, sans perte automatique du surplus.
 - Destination perdue : d’abord l’origine possédée et atteignable avec la réserve,
@@ -79,10 +77,9 @@ restent préservées hors du lot. Destinations initialement 4/5, réévaluées �
 ## Architecture implémentée
 
 Les vaisseaux à quai sont regroupés dans une flotte inactive par colonie.
-FleetHold distingue storedFuel (à quai), reservedFuel (voyage) et le fret
-d’hydrogène. Chaque départ débite d’abord le stock embarqué puis la planète,
-tout en embarquant physiquement le carburant total. Le fret conservé à quai
-n’est pas rechargé automatiquement : il se décharge explicitement.
+FleetHold distingue le carburant réservé au voyage et l’hydrogène chargé en fret.
+La colonie paie tout le carburant au départ. Le reliquat du voyage est perdu à quai.
+Le fret resté en soute peut être déchargé explicitement.
 
 FleetStationing traite les arrivées avant le garde historique de la planète
 d’origine, car cette origine peut être perdue. Il consomme une seule fois le
@@ -104,7 +101,7 @@ Une conversion en empire oublié ne transforme pas une attente en installation
 gratuite ; l’état reste conservé, sans inventer un mécanisme de sauvetage.
 
 Les stocks à quai restent conservés avec les défenseurs survivants d’une colonie
-toujours possédée après combat. L’abandon confirmé inclut carburant et fret dans
+toujours possédée après combat. L’abandon confirmé inclut le fret dans
 les pertes annoncées et auditées, puis les vide. Aucun boost ni objectif de
 transport n’est attribué au Stationnement.
 

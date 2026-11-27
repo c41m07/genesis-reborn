@@ -11,6 +11,7 @@ use App\MessageHandler\{FleetArrivedHandler, GuildDockOrderDueHandler, GuildHall
 use App\Repository\GuildHallRepository;
 use App\Service\Notification\OutboxRelay;
 use App\Service\Colony\ResourceService;
+use App\Service\Fleet\FleetRecallService;
 use App\Service\Guild\{GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallFunding, GuildHallScheduleProvider, GuildHallService};
 use App\Service\Player\{DiplomacyService, RegistrationService, RelationResolver};
 use App\Service\Universe\{UniverseImporter, UniverseService};
@@ -186,6 +187,87 @@ final class GuildHallTest extends KernelTestCase
         self::assertSame(1, $built->level);
         self::assertNull($built->finishesAt);
         self::assertSame([], array_filter($this->em->find(GuildHallStock::class, $hallId)->materials));
+    }
+
+    public function testRecallKeepsHydrogenFreightSeparateFromSpentAndDiscardedFuel(): void
+    {
+        $clock = new MockClock('now', new \DateTimeZone('UTC'));
+        $container = self::getContainer();
+        $container->set('clock', $clock);
+        $container->set(GuildHallScheduleProvider::class, new GuildHallScheduleProvider(
+            '{"levels":{"warehouse":{"1":{"cost":{"metal":15},"duration":60}}},"capacities":{"1":{"metal":100}}}',
+        ));
+        [$owner, $origin, $guild] = $this->guild('RecalledHallConvoy', 'RHC');
+        $hallService = GuildHallFixture::enable($container);
+        $hall = $hallService->contribute($owner, $guild->id, $origin->id, 0, ['hydrogen' => 32]);
+        $hall = $hallService->place($owner, $guild->id, $origin->solarSystem->id, $hall->revision);
+        $idle = $this->em->getRepository(Fleet::class)->findOneBy([
+            'playerUniverse' => $owner, 'homePlanet' => $origin, 'status' => 'idle',
+        ]);
+        if ($idle === null) {
+            $idle = new Fleet();
+            $idle->playerUniverse = $owner;
+            $idle->homePlanet = $origin;
+            $this->em->persist($idle);
+        }
+        $idle->storedFuel = 100.0; // Ancien stock qui ne doit plus financer le départ.
+        $ship = new FleetShip();
+        $ship->fleet = $idle;
+        $ship->slug = 'transport';
+        $ship->quantity = 1;
+        $this->em->persist($ship);
+        $this->em->flush();
+        $idleId = $idle->id;
+        $originId = $origin->id;
+        $hallId = $hall->id;
+        $composition = ['transport' => ['basic' => 1]];
+        $departure = $container->get(GuildHallConvoyDeparture::class);
+        $before = $container->get(ResourceService::class)->snapshot($origin)['hydrogen']['stock'];
+        $preview = $departure->preview($owner, $guild->id, $hallId, $originId, $composition, 1.0, ['hydrogen' => 7]);
+        self::assertEqualsWithDelta($preview['total_fuel'], $preview['planet_fuel'], 0.000001);
+        $convoy = $departure->send($owner, $guild->id, $hallId, $originId, $composition, 1.0, ['hydrogen' => 7], str_repeat('a', 32), $preview['fingerprint']);
+        self::assertInstanceOf(GuildHallConvoy::class, $convoy);
+        self::assertEqualsWithDelta($before - $preview['total_fuel'] - 7, $this->stock($origin, 'hydrogen'), 0.001);
+        $this->em->refresh($idle);
+        self::assertEqualsWithDelta(0.0, $idle->storedFuel, 0.000001);
+        $fleet = $convoy->fleet;
+        $id = $fleet->id;
+        $outboundToken = $fleet->dispatchToken;
+        $clock->sleep(max(1, intdiv($fleet->travelSeconds, 4)));
+        $recalls = $container->get(FleetRecallService::class);
+        $return = $recalls->preview($owner, $fleet);
+        self::assertGreaterThan(0.0, $return['spent_now']);
+        self::assertGreaterThan(0.0, $return['unused_fuel']);
+        self::assertTrue($recalls->recall($owner, $id, null, $return['version'], str_repeat('b', 32)));
+        $this->em->refresh($fleet);
+        self::assertEqualsWithDelta(7.0, $fleet->freight()['hydrogen'], 0.000001);
+        $clock->sleep($fleet->travelSeconds + 1);
+
+        $capacity = $container->get(ResourceService::class)->capacity($origin, 'hydrogen', []);
+        $hydrogen = $this->em->getRepository(PlanetResource::class)->findOneBy(['planet' => $origin, 'resourceType' => 'hydrogen']);
+        $hydrogen->currentStock = $capacity - 2.0;
+        $hydrogen->lastUpdatedAt = $clock->now();
+        $this->em->flush();
+        $handler = $container->get(FleetArrivedHandler::class);
+        $returnMessage = new FleetArrived($id, $fleet->dispatchToken);
+        $handler(new FleetArrived($id, $outboundToken));
+        $this->em->clear();
+        $handler($returnMessage);
+        $this->em->clear();
+        $handler($returnMessage);
+        $this->em->clear();
+
+        $idle = $this->em->find(Fleet::class, $idleId);
+        $origin = $this->em->find(Planet::class, $originId);
+        self::assertSame('completed', $this->em->find(Fleet::class, $id)->status);
+        self::assertNull($this->em->find(GuildHallStock::class, $hallId));
+        self::assertEqualsWithDelta($capacity, $this->stock($origin, 'hydrogen'), 0.001);
+        self::assertEqualsWithDelta(5.0, $idle->cargo['hydrogen'], 0.001);
+        self::assertEqualsWithDelta(0.0, $idle->storedFuel, 0.000001);
+        $expenses = $this->em->getRepository(FleetFuelExpense::class);
+        self::assertSame(2, $expenses->count(['fleetId' => $id]));
+        self::assertEqualsWithDelta($return['spent_now'], $expenses->findOneBy(['fleetId' => $id, 'phase' => 'player_recall'])->hydrogen, 0.000001);
+        self::assertEqualsWithDelta($return['return_fuel'], $expenses->findOneBy(['fleetId' => $id, 'phase' => 'return'])->hydrogen, 0.000001);
     }
 
     /** @return list<FleetArrived> */

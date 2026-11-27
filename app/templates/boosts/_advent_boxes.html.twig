@@ -27,7 +27,6 @@
                 </form>
             {% endif %}
 
-            {% if claim.boxUnread %}{% include 'boosts/_mark_box_seen.html.twig' with {id:claim.id, source:'advent'} %}{% endif %}
         </article>
     {% endfor %}
 </section>

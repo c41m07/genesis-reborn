@@ -84,6 +84,14 @@ final readonly class AdventRewards
             ->setParameter('through', $through)->execute();
     }
 
+    /** @param list<int> $ids */
+    public function acknowledgeDisplayedBoxes(PlayerUniverse $membership, array $ids): void
+    {
+        $this->availableBoxesQuery($membership)->update()->set('c.boxUnread', 'false')
+            ->andWhere('c.boxUnread = true AND c.id IN (:ids)')->setParameter('ids', $ids)
+            ->getQuery()->execute();
+    }
+
     private function availableBoxesQuery(PlayerUniverse $membership): \Doctrine\ORM\QueryBuilder
     {
         return $this->em->createQueryBuilder()->from(AdventClaim::class, 'c')

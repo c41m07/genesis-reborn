@@ -4,16 +4,24 @@ namespace App\Service\Colony;
 final class CatalogFilters
 {
     private const LABELS=[
-        'buildings'=>['all'=>'Tous','economy'=>'Production','storage'=>'Stockage','infrastructure'=>'Infrastructures','defense'=>'Fortifications'],
-        'technologies'=>['all'=>'Toutes','economy'=>'Économie et industrie','combat'=>'Combat','logistics'=>'Propulsion et logistique','expansion'=>'Colonisation','defense'=>'Défense','espionage'=>'Espionnage','infrastructure'=>'Autres recherches'],
-        'ships'=>['all'=>'Tous','light'=>'Légers','escort'=>'Escorteurs','bomber'=>'Bombardiers','heavy'=>'Lourds','capital'=>'Capitaux','transport'=>'Transport','colony'=>'Colonisation','espionage'=>'Espionnage','utility'=>'Utilitaires'],
+        'buildings'=>['all'=>'Tous','energy'=>'Énergie','economy'=>'Production','storage'=>'Stockage','infrastructure'=>'Infrastructures','defense'=>'Fortifications'],
+        'technologies'=>['all'=>'Toutes','economy'=>'Économie','industry'=>'Industrie','logistics'=>'Logistique','propulsion'=>'Propulsion','combat'=>'Combat','defense'=>'Défense','expansion'=>'Colonisation','espionage'=>'Espionnage','infrastructure'=>'Autres recherches'],
+        'ships'=>['all'=>'Tous','light'=>'Légers','bomber'=>'Bombardiers','escort'=>'Escorteurs','heavy'=>'Lourds','capital'=>'Capitaux','transport'=>'Transport','colony'=>'Colonisation','espionage'=>'Espionnage','utility'=>'Utilitaires'],
         'defenses'=>['all'=>'Toutes','light'=>'Anti-légers','escort'=>'Anti-escorteurs','heavy'=>'Anti-lourds','capital'=>'Anti-capitaux','defense'=>'Autres défenses'],
     ];
 
     public function category(string $group,array $definition): string
     {
         $slug=$definition['slug'];$effect=$definition['effect'] ?? [];
-        if ($group==='buildings') return isset($definition['production_resource'])?'economy':(isset($definition['storage_resource'])?'storage':($slug==='fortress'?'defense':'infrastructure'));
+        if ($group === 'buildings') {
+            return match (true) {
+                ($definition['production_resource'] ?? null) === 'electricity' => 'energy',
+                isset($definition['production_resource']) => 'economy',
+                isset($definition['storage_resource']) => 'storage',
+                $slug === 'fortress' => 'defense',
+                default => 'infrastructure',
+            };
+        }
         if ($group==='defenses') return isset(self::LABELS['defenses'][$definition['target_class'] ?? ''])?$definition['target_class']:'defense';
         if ($group==='ships') {
             if ($slug==='transport') return 'transport';
@@ -23,13 +31,33 @@ final class CatalogFilters
             return in_array($category,['light','escort','bomber','heavy','capital'],true)?$category:'utility';
         }
         return match($effect['type'] ?? '') {
-            'time_discount','cost_discount'=>'economy',
+            'time_discount' => 'industry',
+            'cost_discount' => 'economy',
             'planet_limit'=>'expansion',
             'defense_rebuild'=>'defense',
             'unlock'=>'espionage',
-            'stat_bonus'=>in_array($effect['stat'] ?? '',['cargo_capacity','fuel_capacity'],true) || in_array('speed_system',$effect['stats'] ?? [],true)?'logistics':'combat',
+            'stat_bonus' => match (true) {
+                in_array('speed_system', $effect['stats'] ?? [], true) => 'propulsion',
+                in_array($effect['stat'] ?? '', ['cargo_capacity', 'fuel_capacity'], true) => 'logistics',
+                default => 'combat',
+            },
             'extra_shot_chance'=>'combat',
             default=>'infrastructure',
+        };
+    }
+
+    // Les sélections de mission reprennent les catégories du chantier, y compris les rôles civils.
+    public function shipIcon(array $definition): string
+    {
+        $category = $this->category('ships', $definition);
+
+        return match ($category) {
+            'light' => 'fleet',
+            'transport' => 'freighter',
+            'colony' => 'colony-ship',
+            'espionage' => 'probe',
+            'utility' => 'satellite',
+            'bomber', 'escort', 'heavy', 'capital' => $category,
         };
     }
 

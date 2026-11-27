@@ -53,6 +53,8 @@ final readonly class GuildHallConvoyWorker
             // consommé sa réserve, qui ne peut pas payer un second trajet.
             // Conserver la position atteinte et le fret, sans crédit au tiers.
             $this->return->consumeReturnReserveLocked($fleet);
+            // Le trajet est terminé ; un reliquat de rappel n'est pas du fret récupérable.
+            $fleet->discardDockedFuel();
             $fleet->navigation['hall_recovery']['position_planet_id'] = $home->id;
             $fleet->status = 'hall_wait';
             $fleet->arrivalAt = null;

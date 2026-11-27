@@ -81,6 +81,7 @@ test('L3 A : inventaire guidé, confirmations, états vides et vacances dans les
   const research = Number(queryIsolatedSql(project, `SELECT id FROM queue_item WHERE planet_id=${second.id} AND queue_type='research'`));
   runIsolatedSql(project, `INSERT INTO fleet(player_universe_id,home_planet_id,destination_id,destination_system_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,departure_at,arrival_at,travel_seconds,dispatch_token) SELECT ${member},${home},id,solar_system_id,'returning','transport',1,'{}',0,0,0,UTC_TIMESTAMP(),DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 DAY),86400,'${crypto.randomUUID().replaceAll('-', '')}' FROM planet WHERE id=${second.id}`);
 
+  let boxesVisited = false;
   for (const theme of ['dark', 'light']) {
     runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${owner.email}'`);
     for (const width of [1440, 768, 390, 320]) {
@@ -94,7 +95,14 @@ test('L3 A : inventaire guidé, confirmations, états vides et vacances dans les
         for (const [href, count] of [['/boosts', '12'], ['/inventaire/boites', '88'], ['/inventaire/recompenses', '3']]) {
           await expect(nav.locator(`a[href="${href}"] .badge`)).toHaveText(count);
         }
-        await expect(nav.locator('[data-page="boxes"]')).toHaveText('1 nouveau');
+        if (key === 'boxes') boxesVisited = true;
+        if (boxesVisited) {
+          await expect(nav.locator('[data-page="boxes"]')).toBeHidden();
+          await expect(page.locator('.inventory-gift-count')).toHaveText('1');
+        } else {
+          await expect(nav.locator('[data-page="boxes"]')).toHaveText('1 nouveau');
+          await expect(page.locator('.inventory-gift-count')).toHaveText('2');
+        }
         await expect(nav.locator('[data-page="pending"]')).toHaveText('1 nouveau');
         if (key === 'boosts') {
           const picker = page.getByLabel('Opération à accélérer', { exact: true });

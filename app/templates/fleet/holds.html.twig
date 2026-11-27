@@ -1,8 +1,7 @@
 {% for fleet in holds %}
-    {% if fleet.storedFuel>0 or fleet.cargo|reduce((sum, amount) => sum + amount, 0)>0 %}
+    {% if fleet.cargo|reduce((sum, amount) => sum + amount, 0)>0 %}
         <section class="panel fleet-hold fleet-hold-reserve" aria-labelledby="hold-{{ fleet.id }}">
-            <h2 id="hold-{{ fleet.id }}">Réserve embarquée à quai</h2>
-            <p>Carburant : {{ fleet.storedFuel|quantity(2) }} hydrogène, utilisé avant le stock planétaire lors des prochains départs.</p>
+            <h2 id="hold-{{ fleet.id }}">Fret à quai</h2>
             <ul>
                 {% for slug, amount in fleet.cargo %}
                     {% if amount>0 %}<li>{{ resources[slug] }} : {{ amount|quantity(2) }}</li>{% endif %}
@@ -10,14 +9,12 @@
             </ul>
             <p>Le fret reste à bord jusqu’au déchargement. Les vaisseaux restant à quai doivent pouvoir porter les stocks conservés.</p>
             <div class="fleet-hold-actions">
-                {% for kind,label in {fuel:'Décharger le carburant',cargo:'Décharger le fret'} %}
-                    <form method="post" action="{{ path('app_fleet_unload',{planet:fleet.homePlanet.id}) }}">
-                        <input type="hidden" name="_token" value="{{ csrf_token('fleet_unload_'~fleet.homePlanet.id) }}">
-                        <input type="hidden" name="request_key" value="{{ request_key() }}">
-                        <input type="hidden" name="kind" value="{{ kind }}">
-                        <button class="secondary">{{ label }}</button>
-                    </form>
-                {% endfor %}
+                <form method="post" action="{{ path('app_fleet_unload',{planet:fleet.homePlanet.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('fleet_unload_'~fleet.homePlanet.id) }}">
+                    <input type="hidden" name="request_key" value="{{ request_key() }}">
+                    <input type="hidden" name="kind" value="cargo">
+                    <button class="secondary">Décharger le fret</button>
+                </form>
             </div>
             <p class="muted">Déchargement limité à la place disponible ; le surplus reste embarqué.</p>
         </section>

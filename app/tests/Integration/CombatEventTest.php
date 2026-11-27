@@ -254,7 +254,7 @@ final class CombatEventTest extends KernelTestCase
         self::assertSame(0.0, $externalOrbit->orbitFuel);
         self::assertSame('idle', $garrison->status);
         self::assertGreaterThan(0, $garrisonShip->quantity);
-        self::assertSame(100.0, $garrison->storedFuel);
+        self::assertSame(0.0, $garrison->storedFuel);
         self::assertSame(['metal' => 50], $garrison->cargo);
     }
     public function testCombatRunsAndPersistsOneDeterministicRoundPerMinute(): void

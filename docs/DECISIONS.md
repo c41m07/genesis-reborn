@@ -1,5 +1,17 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Carburant perdu à quai — 27 novembre 2026
+
+Décision du propriétaire. Chaque nouveau départ paie la totalité de son devis
+sur le stock de la colonie de départ. Le retour ou l’installation à quai détruit
+le reliquat de carburant. Le fret d’hydrogène reste une ressource transportable.
+Cette règle remplace la mutualisation et le déchargement du carburant à quai.
+Elle s’applique aussi aux réserves déjà à quai, qui ne financent plus de vol et
+ne peuvent plus être déchargées. La colonne historique reste compatible sans migration.
+Les réserves en vol restent disponibles pour les trajets déjà payés et les replis.
+Les anciens retours déjà programmés dont le reliquat était fusionné avec le fret
+terminent leur dépôt selon les données enregistrées afin de préserver le fret légitime.
+
 ## Bonus de recherche par rang — 26 novembre 2026
 
 Les technologies de réduction de durée ou de coût, de statistiques de combat
@@ -2342,3 +2354,7 @@ Les boîtes remises par un convoi pirate ou par un retour de Bourse ont un déla
 d’ouverture de 24 heures dès la livraison. La mise en attente, la promotion et
 les vacances ne décalent pas l’échéance. La transition préserve les boîtes déjà
 attribuées sans date limite.
+
+## 27 novembre 2026 — Consultation des boîtes
+
+Visiter l’onglet Boîtes acquitte les notifications des boîtes affichées dans l’univers actif. Le joueur peut choisir plus tard quand ouvrir ses boîtes. Les cadeaux en attente et les boosts gardent leur propre état de lecture.

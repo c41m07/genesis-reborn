@@ -641,8 +641,7 @@ final class CombatEventService
                 if($participant->fleet->status!=='occupying') {
                     if(in_array($participant->fleet->id,$occupationContext['fleet_ids']??[],true)) $this->releaseOccupationFuel($participant->fleet);
                     elseif($participant->fleet->mission==='conquer' && ($this->occupations->isEnabled() || $participant->fleet->orbitDurationSeconds===OccupationPolicy::DURATION_SECONDS)) {
-                        $participant->fleet->reservedFuel=max(0,$participant->fleet->reservedFuel-$participant->fleet->orbitFuel);
-                        $participant->fleet->orbitFuel=0;
+                        $participant->fleet->releaseOrbitFuel();
                     } else $this->consumeOrbitFuel($participant->fleet);
                     $this->sendFleetHome($participant);
                 }
@@ -1038,8 +1037,8 @@ final class CombatEventService
             $fleet->departureAt = null;
             $fleet->arrivalAt = null;
             $survivors=array_sum(array_map(static fn($ship)=>$ship->quantity,$this->repo->all(FleetShip::class,['fleet'=>$fleet])));
-            if($capturedByAnotherCommander || $survivors===0) {$fleet->cargo=[];$fleet->storedFuel=0;}
-            $fleet->reservedFuel = 0;
+            $fleet->discardDockedFuel();
+            if($capturedByAnotherCommander || $survivors===0) $fleet->cargo=[];
             $fleet->dispatchToken = \Symfony\Component\Uid\Uuid::v4()->toRfc4122();
 
             return;
@@ -1136,7 +1135,10 @@ final class CombatEventService
         $duration=max(1,$fleet->orbitDurationSeconds);
         $elapsed=$fleet->departureAt===null?0:max(0,$this->clock->now()->getTimestamp()-$fleet->departureAt->getTimestamp());
         $spent=$fleet->orbitFuel*min(1,$elapsed/$duration);
-        $this->fuelExpenses->burnLocked($fleet, $spent, 'occupation_release');$fleet->reservedFuel=max(0,$fleet->reservedFuel-$fleet->orbitFuel);$fleet->orbitFuel=0;
+        $this->fuelExpenses->burnLocked($fleet, $spent, 'occupation_release');
+        $fleet->reservedFuel = max(0.0, $fleet->reservedFuel - $spent);
+        $fleet->orbitFuel -= $spent;
+        $fleet->releaseOrbitFuel();
     }
     private function registerGarrison(CombatEvent $event, PlayerUniverse $defender): void
     {

@@ -19,7 +19,7 @@ final class CatalogFiltersTest extends TestCase
     public function testResearchUsesCurrentEffectsInsteadOfOldCombatList(): void
     {
         $catalog=new GameCatalog(dirname(__DIR__,2).'/config/game');$filters=new CatalogFilters();
-        foreach (['cryogenic_reserves'=>'logistics','modular_cargo_bays'=>'logistics','vector_propulsion'=>'logistics','colonial_expansion'=>'expansion',
+        foreach (['cryogenic_reserves'=>'logistics','modular_cargo_bays'=>'logistics','vector_propulsion'=>'propulsion','engineering_foundations'=>'industry','nanomaterial_synthesis'=>'economy','colonial_expansion'=>'expansion',
             'automated_defense_repair'=>'defense','naval_engineering'=>'economy','weapons_engineering'=>'combat','signature_masking'=>'espionage'] as $slug=>$expected) {
             self::assertSame($expected,$filters->category('technologies',$catalog->all('technologies')[$slug]),$slug);
         }

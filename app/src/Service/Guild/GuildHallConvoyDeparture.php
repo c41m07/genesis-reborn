@@ -64,7 +64,7 @@ final readonly class GuildHallConvoyDeparture
                 throw new \DomainException('Le trajet ou le carburant a changé. Demandez un nouveau devis.');
             }
             $this->resources->consume($origin, $costs, lockStocks: true);
-            $idle->storedFuel -= $fuel['stored_fuel_used'];
+            $idle->storedFuel = 0;
 
             $fleet = new Fleet();
             $fleet->playerUniverse = $member;

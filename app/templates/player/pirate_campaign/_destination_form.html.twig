@@ -20,7 +20,7 @@
     {% else %}
         <p>Colonie : <strong>{{ choice.target }}</strong>. Durée prévue : {{ choice.seconds }} s.</p>
         {% if survivors %}
-            <p>Hydrogène prélevé sur la réserve embarquée : {{ choice.hydrogen }}. Reliquat après le trajet : {{ choice.remaining }}.</p>
+            <p>Hydrogène prélevé sur la réserve embarquée : {{ choice.hydrogen }}. Reliquat perdu à quai : {{ choice.remaining }}.</p>
             <p>Les vaisseaux et leur réserve restante ne sont rendus qu’après l’arrivée dans un hangar admissible.</p>
         {% else %}
             <p>Le convoi ne déposera le lot entier qu’à son arrivée, si la colonie vous appartient toujours et dispose de la place nécessaire.</p>

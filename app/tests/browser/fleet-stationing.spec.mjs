@@ -33,21 +33,22 @@ async function send(page,data) {
   return Number(queryIsolatedSql(data.project,`SELECT id FROM fleet WHERE player_universe_id=${data.member} AND mission='station' AND status='traveling'`));
 }
 
-test('Stationnement : nouvelle base, réserve à quai, déchargement et rendu accessible',async({page},testInfo)=>{
+test('Stationnement : nouvelle base, perte du carburant à quai et rendu accessible',async({page},testInfo)=>{
   const data=await prepare(page),id=await send(page,data);
   accelerateTravelingMission(data.project,data.email,'station');
   await expect.poll(()=>queryIsolatedSql(data.project,`SELECT status FROM fleet WHERE id=${id}`),{timeout:20000}).toBe('completed');
   await page.goto('/planetes/'+data.own.id);await page.goto('/flottes/quai');
-  await expect(page.getByRole('heading',{name:'Réserve embarquée à quai',exact:true})).toBeVisible();
-  expect(Number(queryIsolatedSql(data.project,`SELECT SUM(stored_fuel) FROM fleet WHERE home_planet_id=${data.own.id} AND status='idle'`))).toBeGreaterThan(0);
+  await expect(page.getByRole('button',{name:'Décharger le carburant',exact:true})).toHaveCount(0);
+  expect(Number(queryIsolatedSql(data.project,`SELECT SUM(stored_fuel) FROM fleet WHERE home_planet_id=${data.own.id} AND status='idle'`))).toBe(0);
   for(const viewport of [{width:1440,height:1000},{width:390,height:844}]) {
     await page.setViewportSize(viewport);await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBeTruthy();
     expect((await new AxeBuilder({page}).include('main').analyze()).violations.filter(v=>['serious','critical'].includes(v.impact))).toEqual([]);
     await page.screenshot({path:testInfo.outputPath('stationnement-'+viewport.width+'.png'),fullPage:true,animations:'disabled'});
   }
-  const unload=page.getByRole('button',{name:'Décharger le carburant',exact:true});await unload.focus();await expect(unload).toBeFocused();
-  await page.keyboard.press('Enter');await expect(page.getByText(/Déchargement effectué/)).toBeVisible();
+  const prepareDeparture = page.getByRole('link',{name:'Préparer un départ',exact:true});
+  await prepareDeparture.focus();
+  await expect(prepareDeparture).toBeFocused();
   expect(Number(queryIsolatedSql(data.project,`SELECT SUM(quantity) FROM fleet_ship`))).toBe(4);
 });
 

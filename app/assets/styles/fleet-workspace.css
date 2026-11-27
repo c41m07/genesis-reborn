@@ -531,7 +531,7 @@ body.authenticated :is(.fleet-redesign, .pirate-campaign) .fleet-composition-con
     .core-fleet-recap-facts>div { padding:2px 0; }
 }
 @media(max-width:600px) {
-    .fleet-composition-name .icon { display:none; }
+    .fleet-composition-name { flex-direction:column; align-items:flex-start; gap:2px; }
     .core-fleet-recap { padding:12px; }
 }
 /* Le texte de corps du récapitulatif garde le contraste sur son fond légèrement teinté. */

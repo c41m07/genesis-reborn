@@ -96,7 +96,7 @@ final class ColonyAbandonmentTest extends WebTestCase
         self::assertSame(1,$this->auditCount());$audit=$this->em->getRepository(AdminAuditLog::class)->findOneBy(['action'=>'player_colony_abandoned']);
         self::assertTrue($audit->details['planet']['was_npc']);self::assertSame($this->home->id,$audit->details['planet']['id']);self::assertCount(3,$audit->details['cancelled_orders']);self::assertSame(2,$audit->details['losses']['ships'][0]['quantity']);
         self::assertSame($preview['version'],$audit->details['confirmed_version']);self::assertArrayNotHasKey('request_key',$audit->details);
-        self::assertSame(70.0,$audit->details['losses']['fleet_cargo'][0]['cargo']['hydrogen']);
+        self::assertEquals(20,$audit->details['losses']['fleet_cargo'][0]['cargo']['hydrogen']);
         self::assertSame(0.0,$idle->storedFuel);self::assertSame([],$idle->cargo);
     }
 

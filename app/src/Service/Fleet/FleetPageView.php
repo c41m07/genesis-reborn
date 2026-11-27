@@ -116,7 +116,7 @@ final class FleetPageView
                     $data['idle'][] = ['fleet' => $fleet, 'ships' => $shipsByFleet[$fleet->id]];
                 }
             }
-            $data['catalog'] = $this->catalog->all('ships');
+            $data['catalog'] = $config['catalog']['ships'];
             $data['resources'] = $this->catalog->rules()['resources'];
         }
         if (in_array($page, ['missions', 'prepare'], true)) {
