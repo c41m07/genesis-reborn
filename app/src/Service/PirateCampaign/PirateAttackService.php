@@ -36,6 +36,7 @@ final class PirateAttackService
         private ClockInterface $clock,
         private PirateConvoyDeliveryService $convoys,
         private ProfileCosmetics $cosmetics,
+        private PirateMissionReports $reports,
     ) {
     }
 
@@ -671,6 +672,7 @@ final class PirateAttackService
                 }
             }
         }
+        $this->reports->battle($campaign, $result, new \DateTimeImmutable($timeline->checkpoint()['resolved']));
         $campaign->reservedShips = $survivors;
         $campaign->report = [
             'outcome' => $result['outcome'],

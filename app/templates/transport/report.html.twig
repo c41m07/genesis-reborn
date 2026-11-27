@@ -7,11 +7,14 @@
     <p class="report-eyebrow">ÉCONOMIE · N° {{ report.id }}</p>
     <h1>Rapport de transport</h1>
     <div class="core-transport-route"><p>{{ report.snapshot.origin }} → {{ report.snapshot.destination }} · <time datetime="{{ report.createdAt|date('c') }}">{{ report.createdAt|date('d/m/Y H:i') }}</time></p>
-        <span class="badge core-report-state{{ report.status == 'delivered' ? ' is-success' : (report.status == 'refused' ? ' is-risk' : '') }}">{{ {traveling:'Transport en route',delivered:'Livraison effectuée',refused:'Livraison refusée'}[report.status]|default(report.status) }}</span>
+        <span class="badge core-report-state{{ report.status == 'delivered' ? ' is-success' : (report.status == 'refused' ? ' is-risk' : '') }}">{{ {traveling:'Transport en route',delivered:'Livraison effectuée',refused:'Livraison refusée',destination_lost:'Destination perdue',waiting_capacity:'En attente de retrait',arrived:'Arrivée confirmée'}[report.status]|default(report.status) }}</span>
     </div>
 </header>
-{% if app.request.attributes.get('_route') == 'app_transport_report' %}{% include 'ui/report_notice_form.html.twig' with {report_notice_kind:'transport'} %}{% endif %}
+{% if campaign_report_id is defined %}{% include 'ui/report_notice_form.html.twig' with {report_notice_kind:'campaign'} %}{% elseif app.request.attributes.get('_route') == 'app_transport_report' %}{% include 'ui/report_notice_form.html.twig' with {report_notice_kind:'transport'} %}{% endif %}
 <div class="player-transport-core">
+{% if report.snapshot.boxed|default(false) and report.status == 'delivered' %}
+    <p class="player-report-note">Le convoi a livré une boîte contenant le fret indiqué dans votre inventaire.</p>
+{% endif %}
 <section class="transport-board-summary" aria-labelledby="transport-board-summary-title">
     <h2 id="transport-board-summary-title" class="visually-hidden">Résumé du transport</h2>
     <dl class="report-metrics transport-board-metrics">

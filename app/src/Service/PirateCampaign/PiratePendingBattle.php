@@ -53,7 +53,7 @@ final class PiratePendingBattle
                 continue;
             }
 
-            // Pas de liste d'unités, d'HP ou de logs par round dans le checkpoint : seuls les totaux à appliquer.
+            // La restitution agrège les survivants par coque et rang.
             $slug = $unit['slug'];
             $tier = $unit['tier'];
             $survivors[$slug][$tier] = ($survivors[$slug][$tier] ?? 0) + ($unit['quantity'] ?? 1);
@@ -62,9 +62,45 @@ final class PiratePendingBattle
         return self::record($attempt, $arrivedAt, $nominalArrivalAt, [
             'outcome' => $result['outcome'],
             'rounds_played' => $result['rounds_played'],
+            'rounds' => self::reportRounds($result['rounds']),
             'losses' => $result['losses'],
             'survivors' => $survivors,
         ]);
+    }
+
+    /** Le rapport utilise les compteurs du moteur compact. Ne conserver aucun journal de tirs individuel. */
+    private static function reportRounds(array $rounds): array
+    {
+        $summary = [];
+        foreach ($rounds as $round) {
+            $groups = $round['groups'] ?? [];
+            foreach ($round['shots'] ?? [] as $shot) {
+                $attacker = self::reportGroup($shot['attacker']);
+                $groups[$attacker] ??= ['shots' => 0, 'hits' => 0, 'lost' => 0];
+                ++$groups[$attacker]['shots'];
+                if ($shot['hit']) {
+                    ++$groups[$attacker]['hits'];
+                }
+                if ($shot['destroyed']) {
+                    $target = self::reportGroup($shot['target']);
+                    $groups[$target] ??= ['shots' => 0, 'hits' => 0, 'lost' => 0];
+                    ++$groups[$target]['lost'];
+                }
+            }
+            $summary[] = ['number' => $round['number'], 'groups' => $groups];
+        }
+
+        return $summary;
+    }
+
+    private static function reportGroup(string $unit): string
+    {
+        // Le moteur identifie chaque coque par propriétaire, rôle, modèle, rang éventuel et numéro.
+        $parts = explode(':', $unit);
+        array_pop($parts);
+        unset($parts[1]);
+
+        return implode(':', $parts);
     }
 
     private static function record(int $attempt, \DateTimeImmutable $arrivedAt, \DateTimeImmutable $nominalArrivalAt, array $payload): self
@@ -117,7 +153,7 @@ final class PiratePendingBattle
      * À prendre sous verrou du propriétaire après contrôle du jeton, puis à consommer dans la même
      * transaction que rapport, pertes et ordre de retour. Si la transaction échoue, relire le
      * checkpoint intact en base ; ne pas conserver cette instance consommée.
-     * @return array{outcome: string, rounds_played: int, losses: array<string,int>, survivors: array<string,array<string,int>>}|null
+     * @return array{outcome: string, rounds_played: int, rounds?: list<array>, losses: array<string,int>, survivors: array<string,array<string,int>>}|null
      */
     public function takeWhenDue(int $attempt, \DateTimeImmutable $at): ?array
     {
@@ -157,7 +193,7 @@ final class PiratePendingBattle
         }
         $arrivedAt = self::parseTime($data['arrived_at']);
         $nominalArrivalAt = self::parseTime($data['nominal_arrival_at']);
-        $payload = array_intersect_key($data['payload'], array_flip(['outcome', 'rounds_played', 'losses', 'survivors']));
+        $payload = array_intersect_key($data['payload'], array_flip(['outcome', 'rounds_played', 'rounds', 'losses', 'survivors']));
         $battle = self::record($data['attempt'], $arrivedAt, $nominalArrivalAt, $payload);
         $battle->consumed = $data['consumed'];
 

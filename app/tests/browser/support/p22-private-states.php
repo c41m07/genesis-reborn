@@ -77,6 +77,21 @@ if ($mode === 'report' && $recon === null) {
         $delivery->replaceState($timeline);
     }
     $em->persist($delivery);
+} elseif ($mode === 'combat' && $recon !== null) {
+    // Le test navigateur part d’une victoire attestée. Le test de persistance exerce les phases du worker.
+    $attack = $em->getRepository(PirateAttackCampaign::class)->findOneBy(['reconnaissance' => $recon]);
+    $scenario = $recon->battleProofFor($member, $at)['prepared']->battleForServer();
+    $attack->scenario = $scenario->snapshot();
+    $formation = $attack->scenario['units'];
+    foreach ($formation as &$unit) {
+        $unit['quantity'] *= 10;
+    }
+    unset($unit);
+    $attack->timeline['units'] = $formation;
+    $result = $scenario->resolve(new \App\Service\Combat\CombatSimulator(), $formation, 17);
+    $manager = new \App\Manager\GameManager($em);
+    $reports = new \App\Service\PirateCampaign\PirateMissionReports($manager, new \App\Repository\GameRepository($em), new GameCatalog('/app/config/game'));
+    $manager->transaction(fn () => $reports->battle($attack, $result, new DateTimeImmutable($attack->timeline['resolved'])));
 } else {
     throw new RuntimeException('Étape de fixture inattendue.');
 }

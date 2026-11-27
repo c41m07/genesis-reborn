@@ -15,7 +15,7 @@
             arrival_confirmed: 'Arrivée confirmée',
             full_pending: 'À déposer',
             destination_lost: 'Destination perdue',
-            credited: 'Lot crédité',
+            credited: reward.boxed|default(false) ? 'Boîte reçue' : 'Lot crédité',
         } %}
         {% if convoyStates[reward.state] is defined %}
             <p class="badge{{ visualState ? ' pirate-economy-badge' : '' }}">{{ convoyStates[reward.state] }}</p>
@@ -31,20 +31,21 @@
         {% elseif reward.state == 'arrival_confirmed' %}
             <p>Arrivée confirmée, versement non confirmé.</p>
         {% elseif reward.state == 'full_pending' %}
-            <p><strong>Stockage insuffisant.</strong> Lot entier en attente : espace insuffisant lors du dernier contrôle.</p>
+            <p><strong>Stockage insuffisant.</strong> Le convoi attend depuis la précédente tentative de livraison.</p>
             {% if deposit_token|default(null) %}
-                <p>Libérez assez de place dans la colonie de destination, puis retentez la remise du lot entier.</p>
+                <p>Récupérez maintenant la boîte dans votre inventaire.</p>
                 <form method="post" action="{{ path('app_pirate_campaign_convoy_deposit', {missionNumber: selected}) }}">
                     <input type="hidden" name="_token" value="{{ deposit_token }}">
-                    <button type="submit" class="primary">Retenter le dépôt dans la même colonie</button>
+                    <button type="submit" class="primary">Recevoir la boîte de ressources</button>
                 </form>
             {% endif %}
         {% elseif reward.state == 'destination_lost' %}
             <p>Destination perdue. Aucun nouveau trajet n’est confirmé.</p>
         {% elseif reward.state == 'credited' %}
-            <p>Lot entier crédité le
+            <p>{{ reward.boxed|default(false) ? 'Boîte de ressources reçue le' : 'Lot entier crédité le' }}
                 <time datetime="{{ reward.credited_at }}">{{ reward.credited_at|date('d/m/Y à H:i:s', 'UTC') }} UTC</time>.
             </p>
+            {% if reward.boxed|default(false) %}<a href="{{ path('app_inventory_boxes') }}">Voir mes boîtes</a>{% endif %}
         {% endif %}
         {% set labels = {metal: 'Métal', nano: 'Nanos', antimatter: 'Antimatière', hydrogen: 'Hydrogène'} %}
         <dl{% if visualState %} class="pirate-campaign-reward"{% endif %}>

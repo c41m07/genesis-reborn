@@ -112,8 +112,8 @@ test('P22 : états privés de campagne en lecture seule', async ({ page, browser
       await expect(convoy.locator('dl')).toHaveClass('pirate-campaign-reward');
       await expect(convoy.locator('dl')).toHaveCSS('display','grid');
       await expect(convoy).toContainText('Stockage insuffisant.');
-      await expect(convoy).toContainText('espace insuffisant lors du dernier contrôle');
-      await expect(convoy.getByRole('button',{name:'Retenter le dépôt dans la même colonie'})).toBeVisible();
+      await expect(convoy).toContainText('Récupérez maintenant la boîte dans votre inventaire.');
+      await expect(convoy.getByRole('button',{name:'Recevoir la boîte de ressources'})).toBeVisible();
       await expect(convoy.getByText('Lot crédité',{exact:true})).toHaveCount(0);
       return convoy;
     });
@@ -121,4 +121,36 @@ test('P22 : états privés de campagne en lecture seule', async ({ page, browser
   } finally { await isolated.close(); }
   expect(forbidden).toEqual([]);
   expect(queryIsolatedSql(project,"SELECT COUNT(*) FROM outbox_message WHERE kind LIKE 'pirate_%'")).toBe('0');
+});
+
+test('Un ancien convoi en attente remet une seule boîte et un rapport de transport privé', async ({ page, browser, baseURL }) => {
+  const owner = await syntheticAccount(page);
+  const project = process.env.BROWSER_ROUTER;
+  expect(project).toMatch(/^genesis-browser-test-[0-9]+-[0-9]+$/);
+  for (const state of ['report', 'full', 'combat']) {
+    execFileSync('docker', ['exec', '-u', 'www-data', '-e', 'P22_TEST_PROJECT=' + project, project + '-app-1',
+      'php', '/app/tests/browser/support/p22-private-states.php', String(owner.origin), state]);
+  }
+  await page.goto(path + '/1');
+  await page.getByRole('link', {name: 'Ouvrir le rapport de combat'}).click();
+  await expect(page.getByRole('heading', {name: 'Rapport de combat', exact: true})).toBeVisible();
+  await expect(page.locator('#combat-rounds details').first()).toBeVisible();
+  await page.goto(path + '/1');
+  await page.getByRole('button', {name: 'Recevoir la boîte de ressources'}).click();
+  await expect(page.getByText('Boîte reçue', {exact: true})).toBeVisible();
+  await page.getByRole('link', {name: 'Voir mes boîtes'}).click();
+  await expect(page.getByText('Boîte du convoi pirate', {exact: true}).first()).toBeVisible();
+  await page.goto('/rapports?type=economy');
+  await page.getByRole('link', {name: /Transport · Convoi de remerciement/}).click();
+  await expect(page.getByRole('heading', {name: 'Rapport de transport'})).toBeVisible();
+  await expect(page.getByText(/une boîte contenant le fret/)).toBeVisible();
+  const detail = page.url();
+  const foreignContext = await browser.newContext({baseURL});
+  try {
+    const other = await foreignContext.newPage();
+    await syntheticAccount(other);
+    expect((await other.goto(detail)).status()).toBe(404);
+  } finally {
+    await foreignContext.close();
+  }
 });

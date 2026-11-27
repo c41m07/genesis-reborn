@@ -4,7 +4,7 @@
     <div><dt>Destinataire</dt><dd>{{ snapshot.recipient }}</dd></div>
     <div><dt>Départ</dt><dd>{{ snapshot.origin }}</dd></div>
     <div><dt>Destination</dt><dd>{{ snapshot.destination }}</dd></div>
-    <div><dt>État</dt><dd>{{ {traveling:'En route', delivered:'Livraison effectuée', refused:'Livraison refusée'}[report.status]|default(report.status) }}</dd></div>
+    <div><dt>État</dt><dd>{{ {traveling:'En route', delivered:'Livraison effectuée', refused:'Livraison refusée',destination_lost:'Destination perdue',waiting_capacity:'En attente de retrait',arrived:'Arrivée confirmée'}[report.status]|default(report.status) }}</dd></div>
     <div><dt>Départ de la mission</dt><dd>{{ report.createdAt|date('d/m/Y H:i') }}</dd></div>
     {% if report.resolvedAt %}<div><dt>Résolution de la livraison</dt><dd>{{ report.resolvedAt|date('d/m/Y H:i') }}</dd></div>{% endif %}
 </dl></section>{% endset %}

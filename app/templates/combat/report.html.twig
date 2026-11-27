@@ -10,13 +10,13 @@
     <header class="report-heading">
         <p class="report-eyebrow">COMBAT · N° {{ report.id }}</p>
         <h1>Rapport de combat</h1>
-        <p>{{ report.combatEvent.planet.name }} · {{ report.combatEvent.planet.coordinates() }} · {{ report.resolvedAt|date('d/m/Y H:i') }}</p>
+        <p>{% if campaign_location is defined %}Campagne pirate · {{ campaign_location }} · {{ report.snapshot.location_code }}{% else %}{{ report.combatEvent.planet.name }} · {{ report.combatEvent.planet.coordinates() }}{% endif %} · {{ report.resolvedAt|date('d/m/Y H:i') }}</p>
     </header>
-{% if app.request.attributes.get('_route') == 'app_combat_report' %}{% include 'ui/report_notice_form.html.twig' with {report_notice_kind:'combat'} %}{% endif %}
+{% if campaign_report_id is defined %}{% include 'ui/report_notice_form.html.twig' with {report_notice_kind:'campaign'} %}{% elseif app.request.attributes.get('_route') == 'app_combat_report' %}{% include 'ui/report_notice_form.html.twig' with {report_notice_kind:'combat'} %}{% endif %}
     {% if not playerBoard %}    <section class="panel report-summary {{ defeated ? 'report-summary--defeat' : '' }}" aria-labelledby="combat-result">
         <h2 id="combat-result">{% if viewer_verdict|default(null) %}{{ {win:'Victoire de votre camp', loss:'Défaite de votre camp', hold:'Position maintenue', draw:'Égalité'}[viewer_verdict] }}{% else %}{{ {attacker_wins:'Victoire des attaquants', defender_wins:'Victoire de la défense', draw:'Égalité'}[report.outcome]|default('Combat terminé') }}{% endif %}</h2>
         <p>Le combat sur {{ report.combatEvent.planet.name }} est terminé.{% if defeated %} Votre camp a perdu le combat.{% endif %}</p>
-        <p class="muted">{{ report.rounds|length }} round(s) enregistré(s){% if report.snapshot.max_rounds is defined %} · Limite : {{ report.snapshot.max_rounds }} rounds{% endif %}</p>
+        <p class="muted">{{ report.snapshot.rounds_played|default(report.rounds|length) }} round(s) joué(s){% if report.snapshot.max_rounds is defined %} · Limite : {{ report.snapshot.max_rounds }} rounds{% endif %}</p>
     </section>
 {% endif %}
     <nav class="ui-tabs report-section-nav" aria-label="Sections du rapport">
@@ -63,7 +63,7 @@
     <section class="panel" id="combat-rounds" aria-labelledby="combat-rounds-title">
         <h2 id="combat-rounds-title">Combat détaillé</h2>
         {% if playerBoard %}
-        <p class="muted">{{ report.rounds|length }} round(s) enregistré(s){% if report.snapshot.max_rounds is defined %} · Limite : {{ report.snapshot.max_rounds }} rounds{% endif %}. Dépliez un round pour consulter les actions et effectifs.</p>
+        <p class="muted">{{ report.snapshot.rounds_played|default(report.rounds|length) }} round(s) joué(s){% if report.snapshot.max_rounds is defined %} · Limite : {{ report.snapshot.max_rounds }} rounds{% endif %}. {% if round_details %}Dépliez un round pour consulter les actions et effectifs.{% endif %}</p>
         {% else %}<p class="muted">Statistiques par round, par flotte et par rang.</p>{% endif %}
         {% for round in round_details %}
             {% include 'combat/_report_round.html.twig' with {first_round: loop.first} %}

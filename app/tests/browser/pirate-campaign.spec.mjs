@@ -115,10 +115,12 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
       await reportPage.close();
     }
     // Le vrai départ a figé le reçu d'hydrogène. Avancer les deux horodatages du même écart
-    // conserve la durée native, tandis que le worker reste couvert par sa recette métier.
+    // conserve la durée native. Le relais transmet ensuite le jeton au vrai worker.
     const shift = Number(queryIsolatedSql(project, 'SELECT GREATEST(TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), due_at), 0) + 2 FROM pirate_reconnaissance WHERE membership_id=' + member + ' AND reported_at IS NULL'));
     expect(Number.isSafeInteger(shift) && shift >= 2).toBe(true);
-    runIsolatedSql(project, 'UPDATE pirate_reconnaissance SET departed_at=DATE_SUB(departed_at,INTERVAL ' + shift + ' SECOND), due_at=DATE_SUB(due_at,INTERVAL ' + shift + ' SECOND), reported_at=UTC_TIMESTAMP(), detected=0 WHERE membership_id=' + member + ' AND reported_at IS NULL');
+    runIsolatedSql(project, 'UPDATE pirate_reconnaissance SET departed_at=DATE_SUB(departed_at,INTERVAL ' + shift + ' SECOND), due_at=DATE_SUB(due_at,INTERVAL ' + shift + ' SECOND) WHERE membership_id=' + member + ' AND reported_at IS NULL');
+    runIsolatedSql(project, "INSERT INTO outbox_message (kind,target_id,token,due_at) SELECT 'pirate_reconnaissance',id,dispatch_token,due_at FROM pirate_reconnaissance WHERE id=" + reportId);
+    await expect.poll(() => queryIsolatedSql(project, "SELECT COUNT(*) FROM pirate_mission_report WHERE category='espionage' AND reconnaissance_id=" + reportId), { timeout: 20000 }).toBe('1');
     const setFighterQuantity = quantity => runIsolatedSql(project, "UPDATE fleet_ship fs JOIN fleet f ON f.id=fs.fleet_id SET fs.quantity=" + quantity + " WHERE f.home_planet_id=" + origin + " AND f.status='idle' AND fs.slug='fighter' AND fs.tier='basic'");
     setFighterQuantity(0);
     await nativePage.getByRole('link', { name: 'Actualiser le dossier', exact: true }).click();
@@ -130,7 +132,10 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     await expect(nativePage.getByRole('link', { name: 'Ouvrir le rapport d’espionnage' })).toHaveAttribute('href', spyReport);
     const intelPage = await nativeContext.newPage();
     try {
-      const reportResponse = await intelPage.goto(base + spyReport);
+      await intelPage.goto(base + '/rapports?type=espionage');
+      const centralLink = intelPage.getByRole('link', {name: /Espionnage · Campagne pirate/});
+      await expect(centralLink).toHaveCount(1);
+      const reportResponse = await intelPage.goto(new URL(await centralLink.getAttribute('href'), base).href);
       expect(reportResponse.status()).toBe(200);
       expect(reportResponse.headers()['cache-control']).toContain('no-store');
       await expect(intelPage.getByRole('heading', { name: 'Renseignement de combat complet' })).toBeVisible();

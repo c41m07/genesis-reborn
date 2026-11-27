@@ -119,6 +119,7 @@ final class PirateConvoyDossierProjection
         $due = $state === 'protected_travel' ? $dates['due_at'] : null;
 
         return [
+            ...($right->deliveredAsBox() ? ['boxed' => true] : []),
             'state' => $state,
             'amounts' => $rewards,
             'expected_arrival_at' => $due?->format(DATE_ATOM),

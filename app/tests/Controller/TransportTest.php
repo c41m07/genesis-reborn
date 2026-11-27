@@ -101,10 +101,11 @@ final class TransportTest extends WebTestCase
         $tool->dropSchema([
             $this->em->getClassMetadata(ReportNotice::class),
             $this->em->getClassMetadata(DiplomaticReport::class),
+            $this->em->getClassMetadata(\App\Entity\PirateMissionReport::class),
         ]);
         $connection = $this->em->getConnection();
         try {
-            foreach (['Version20261122010100', 'Version20261124083000'] as $version) {
+            foreach (['Version20261122010100', 'Version20261124083000', 'Version20261127130000'] as $version) {
                 require_once dirname(__DIR__, 2).'/migrations/'.$version.'.php';
                 $class = 'DoctrineMigrations\\'.$version;
                 $migration = new $class($connection, new \Psr\Log\NullLogger());
@@ -133,7 +134,7 @@ final class TransportTest extends WebTestCase
                  WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'report_notice' AND CONSTRAINT_NAME = 'report_notice_one_report'",
             );
             self::assertSame(
-                ['combat_log_id', 'espionage_report_id', 'transport_report_id', 'diplomatic_report_id'],
+                ['combat_log_id', 'espionage_report_id', 'transport_report_id', 'diplomatic_report_id', 'pirate_mission_report_id'],
                 array_column((static function (string $clause): array {
                     preg_match_all('/`?(\w+)`?\s+is\s+not\s+null/i', $clause, $parts, PREG_SET_ORDER);
                     return $parts;
@@ -149,8 +150,10 @@ final class TransportTest extends WebTestCase
             // Rétablir les noms de contraintes du SchemaTool pour les recettes suivantes.
             $connection->executeStatement('DROP TABLE IF EXISTS report_notice');
             $connection->executeStatement('DROP TABLE IF EXISTS diplomatic_report');
+            $connection->executeStatement('DROP TABLE IF EXISTS pirate_mission_report');
             $tool->createSchema([
                 $this->em->getClassMetadata(DiplomaticReport::class),
+                $this->em->getClassMetadata(\App\Entity\PirateMissionReport::class),
                 $this->em->getClassMetadata(ReportNotice::class),
             ]);
         }

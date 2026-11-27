@@ -59,6 +59,13 @@ final class BoostGrantService
         return $this->grant($membership, 'daily_reward', 'daily-'.$accountId.'-'.$date, false, timedEffect: $effect);
     }
 
+    /** Le worker tient déjà le verrou du bénéficiaire et du droit de livraison. */
+    public function awardConvoyBoxLocked(PlayerUniverse $membership, int $deliveryId, array $resources): bool
+    {
+        return $this->grant($membership, 'pirate_convoy', 'pirate-convoy-'.$deliveryId, false,
+            ['format' => 'convoy', 'resources' => $resources]);
+    }
+
     public function awardGuildProject(PlayerUniverse $membership,int $definitionId): bool
     {
         if($definitionId<1) throw new \DomainException('Modèle de projet invalide.');

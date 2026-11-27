@@ -9,7 +9,7 @@ use App\Manager\GameManager;
 use App\Message\PirateConvoyDue;
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
-use App\Service\Colony\ResourceService;
+use App\Service\Boost\BoostGrantService;
 use App\Service\Fleet\{FleetNavigation, MovementCalculator};
 use Psr\Clock\ClockInterface;
 
@@ -21,7 +21,8 @@ final readonly class PirateConvoyDeliveryService
         private GameCatalog $catalog,
         private FleetNavigation $navigation,
         private MovementCalculator $movement,
-        private ResourceService $resources,
+        private BoostGrantService $inventory,
+        private PirateMissionReports $reports,
         private ClockInterface $clock,
     ) {
     }
@@ -144,6 +145,8 @@ final readonly class PirateConvoyDeliveryService
             $this->manager->flush();
         }
 
+        $this->reports->startTransport($right, $timeline, $planet, $owner, $at);
+
         $event = new OutboxMessage();
         $event->kind = PirateConvoyDue::KIND;
         $event->targetId = $right->id;
@@ -185,7 +188,7 @@ final readonly class PirateConvoyDeliveryService
             if ($now < $due) {
                 return max(1000, ($due->getTimestamp() - $now->getTimestamp()) * 1000);
             }
-            $planet = $this->lockDepositTarget($owner, $phase['destination']);
+            $planet = $this->ownedPlanetLocked($owner, $phase['destination']);
             $now = $this->now();
             if (!$owner->universe->isAccessible($now)) {
                 return null;
@@ -218,7 +221,7 @@ final readonly class PirateConvoyDeliveryService
             $timeline = $right->timeline();
             if ($timeline->state() === 'waiting_capacity') {
                 $destination = $timeline->checkpoint()['destination'];
-                $planet = $this->lockDepositTarget($owner, $destination);
+                $planet = $this->ownedPlanetLocked($owner, $destination);
                 $now = $this->now();
                 if (!$owner->universe->isAccessible($now)) {
                     return null;
@@ -245,23 +248,14 @@ final readonly class PirateConvoyDeliveryService
             $timeline->recordDestinationLoss($owner->id, $owner->universe->id, $destinationId, $at);
         } else {
             $cargo = $timeline->quote->depositAmounts();
-            $result = $this->resources->deposit($planet, $cargo, allOrNothing: true);
-            $at = $this->now();
-            if (!$owner->universe->isAccessible($at)) {
-                // Les écritures déjà préparées doivent repartir avec la transaction, même sans reçu.
-                throw new \DomainException('L’univers s’est fermé avant la finalisation du dépôt.');
-            }
-            if (max([0.0, ...array_values($result['overflow'])]) > 0.0) {
-                $timeline->recordCapacityShortage($owner->id, $owner->universe->id, $destinationId, $at);
-            } else {
-                if ($result['delivered'] !== $cargo
-                    || !$timeline->recordSettlementAfterCredit($owner->id, $owner->universe->id, $destinationId, $at)) {
-                    throw new \LogicException('Le lot et le reçu du convoi doivent être enregistrés intégralement.');
-                }
+            // Le contenu reste groupé dans l’inventaire jusqu’au choix de la colonie à l’ouverture.
+            if (!$this->inventory->awardConvoyBoxLocked($owner, $right->id, $cargo)
+                || !$timeline->recordSettlementAfterCredit($owner->id, $owner->universe->id, $destinationId, $at)) {
+                throw new \LogicException('La boîte et le reçu du convoi doivent être enregistrés ensemble.');
             }
         }
-        // Le dépôt entier, la réception et le marqueur durable sont flushés ensemble par GameManager.
-        $right->replaceState($timeline);
+        $this->reports->finishTransport($right, $timeline, $planet, $owner, $at);
+        $right->replaceState($timeline, deliveredAsBox: $planet !== null);
     }
 
     /** @return array{account:int,universe:int}|null */
@@ -289,18 +283,6 @@ final readonly class PirateConvoyDeliveryService
         $right = $this->repository->lockPirateConvoy($deliveryId, $owner);
 
         return $owner->universe->isAccessible($this->now()) ? $right : null;
-    }
-
-    private function lockDepositTarget(PlayerUniverse $owner, int $destination): ?Planet
-    {
-        // Après participation → univers → droit, verrouiller planète puis stocks avant d'attester
-        // une arrivée. ResourceService relira ces mêmes lignes déjà détenues à son heure native.
-        $planet = $this->ownedPlanetLocked($owner, $destination);
-        if ($planet !== null) {
-            $this->repository->lockedPlanetResources($planet);
-        }
-
-        return $planet;
     }
 
     private function ownedPlanetLocked(PlayerUniverse $owner, int $destinationId): ?Planet

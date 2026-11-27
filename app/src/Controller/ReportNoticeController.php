@@ -26,7 +26,7 @@ final class ReportNoticeController extends AbstractController
         ], headers: self::PRIVATE);
     }
 
-    #[Route('/rapports/{kind}/{id}/consultation', name: 'app_report_notice_consult', requirements: ['kind' => 'combat|espionage|transport|diplomatic', 'id' => '\d+'], methods: ['POST'])]
+    #[Route('/rapports/{kind}/{id}/consultation', name: 'app_report_notice_consult', requirements: ['kind' => 'combat|espionage|transport|diplomatic|campaign', 'id' => '\d+'], methods: ['POST'])]
     public function consult(string $kind, int $id, Request $request, UniverseContext $context, ReportNoticeRepository $notices, ClockInterface $clock): Response
     {
         $membership = $context->membership();
@@ -43,6 +43,7 @@ final class ReportNoticeController extends AbstractController
         }
 
         $route = match ($kind) {
+            'campaign' => 'app_pirate_mission_report',
             'combat' => 'app_combat_report',
             'espionage' => 'app_espionage_report',
             'transport' => 'app_transport_report',

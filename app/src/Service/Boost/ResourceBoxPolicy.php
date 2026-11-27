@@ -36,6 +36,24 @@ final class ResourceBoxPolicy
     public function validatePayload(array $payload): array
     {
         $format=$payload['format'] ?? '';
+        if ($format === 'convoy') {
+            // Le devis peut dépasser les plafonds des cadeaux administratifs et contient des demi-unités.
+            $resources = [];
+            $cargo = $payload['resources'] ?? null;
+            if (!is_array($cargo) || count($cargo) !== 4) {
+                throw new \DomainException('Cargaison du convoi invalide.');
+            }
+            foreach (['metal', 'nano', 'antimatter', 'hydrogen'] as $resource) {
+                $amount = $cargo[$resource] ?? null;
+                if ((!is_int($amount) && !is_float($amount)) || !is_finite((float) $amount)
+                    || $amount < 0 || $amount > 9007199254740991 || floor(2 * $amount) != 2 * $amount) {
+                    throw new \DomainException('Quantité du convoi invalide.');
+                }
+                $resources[$resource] = (float) $amount;
+            }
+
+            return ['format' => $format, 'label' => 'Boîte du convoi pirate', 'resources' => $resources];
+        }
         if (!is_string($format) || !isset(self::FORMATS[$format]) || !is_array($payload['resources'] ?? null)) throw new \DomainException('Contenu de boîte invalide.');
         $resources=[];
         foreach ($this->catalog->rules()['resources'] as $slug=>$label) $resources[$slug]=$this->amount($payload['resources'][$slug] ?? null,$label);

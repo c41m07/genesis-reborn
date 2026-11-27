@@ -53,6 +53,10 @@ final readonly class PiratePilotLocalReader
             return null;
         }
 
+        if (isset($dossier['briefing']['losses'], $dossier['briefing']['recon_report_id'])) {
+            $dossier['briefing']['combat_report_id'] = $this->repository->lastCombatReport($viewer, $dossier['briefing']['recon_report_id']);
+        }
+
         // Un droit se lit seulement après autorisation du dossier ; ne pas en inférer une victoire.
         $visible = $this->convoyProjection->visibleKeys($dossier, $keys);
         $rights = $this->convoys->forOwnedDossier($viewer, $visible, $at);

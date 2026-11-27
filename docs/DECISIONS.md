@@ -2320,3 +2320,7 @@ Kévin valide la maquette A, la station A:0:0 et le voyage protégé de 30 minut
 ## Bonus quotidiens : phase temporaire plutôt que versement en ressources
 
 Les reçus antérieurs restent valides pour poursuivre le cycle, sans remboursement ni réattribution. Le même reçu est enregistré avec l’objet d’inventaire, dans une transaction verrouillée. La participation active à l’instant du retrait reçoit l’objet. Un bonus consommé immédiatement sur le temps restant d’une tâche et un bonus temporaire sont deux objets différents. Voir les [règles](REGLES.md#bonus-quotidiens-temporaires) pour le cycle et les valeurs d’essai. Les valeurs de combat de 10 % sont le réglage d’essai du lot et s’ajustent à la suite d’une décision d’équilibrage.
+
+## 27 novembre 2026 — Rapports de campagne et récompense du convoi
+
+Les rapports privés de reconnaissance et de combat de la campagne rejoignent les rubriques Espionnage et Combats. Chaque trajet du convoi produit un rapport de transport dans Économie. À la livraison, une boîte de ressources contient la totalité du fret annoncé, demi-unités comprises. Le joueur choisit une colonie de son univers à l’ouverture. Elle doit pouvoir accueillir tout le contenu. Une livraison déjà créditée avant cette évolution reste acquise et ne donne aucune boîte supplémentaire.

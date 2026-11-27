@@ -994,3 +994,7 @@ Un retrait quotidien par **compte**, tous univers confondus. Le jour change à m
 | 7 | Production renforcée | Production brute des colonies de l’empire ×1,15 sur le seul intervalle actif ; consommations et plafonds continuent de s’appliquer. |
 
 L’effet combat est figé à l’ouverture du combat et ne s’applique pas aux combats PNJ. Les trajets spécifiques de la Bourse, de la campagne pirate et des convois du Hall ne prennent pas le bonus de vol.
+
+## Rapports de campagne et fret des convois pirates
+
+Les rapports privés de reconnaissance et de combat de la campagne rejoignent les rubriques Espionnage et Combats. Chaque trajet du convoi produit un rapport de transport dans Économie. À la livraison, une boîte de ressources contient la totalité du fret annoncé, demi-unités comprises. Le joueur choisit une colonie de son univers à l’ouverture. Elle doit pouvoir accueillir tout le contenu. Une livraison déjà créditée avant cette évolution reste acquise et ne donne aucune boîte supplémentaire.

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Player;
+use App\Entity\{PirateMissionReport, Player};
+use App\Repository\GameRepository;
 use App\Service\PirateCampaign\PirateReconReportReader;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\When;
@@ -18,7 +19,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class PirateReconReportController extends AbstractController
 {
     #[Route('/rapports/espionnage-pirate/{id}', name: 'app_pirate_recon_report', requirements: ['id' => '[1-9][0-9]{0,9}'], methods: ['GET'], env: ['dev', 'prod'])]
-    public function report(int $id, PirateReconReportReader $reader): Response
+    public function report(int $id, PirateReconReportReader $reader, GameRepository $games): Response
     {
         $account = $this->getUser();
         $viewer = $account instanceof Player ? $account->currentPlayerUniverse : null;
@@ -28,6 +29,7 @@ final class PirateReconReportController extends AbstractController
             return new Response('Rapport introuvable.', Response::HTTP_NOT_FOUND, $headers);
         }
 
-        return $this->render('player/pirate_campaign/recon_report.html.twig', ['report' => $report], new Response(headers: $headers));
+        $receipt = $games->one(PirateMissionReport::class, ['reconnaissance' => $id, 'category' => 'espionage']);
+        return $this->render('player/pirate_campaign/recon_report.html.twig', ['report' => $report, 'campaign_report_id' => $receipt?->id], new Response(headers: $headers));
     }
 }

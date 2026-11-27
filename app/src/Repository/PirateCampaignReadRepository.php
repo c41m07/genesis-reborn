@@ -87,8 +87,23 @@ final readonly class PirateCampaignReadRepository
             $viewer->player->id, $viewer->id, $at)
             ->andWhere('mission.id = :id AND IDENTITY(mission.owner) = scopeOwner.id AND IDENTITY(galaxy.universe) = realm.id')
             ->andWhere('mission.reportedAt <= :now AND mission.dueAt <= :now')
+            // Le retrait personnel ferme aussi l’ancien lien du dossier et l’import dans le simulateur.
+            ->andWhere("NOT EXISTS (SELECT removed.id FROM App\Entity\ReportArchive removed, App\Entity\PirateMissionReport receipt
+                WHERE receipt.reconnaissance = mission AND receipt.category = 'espionage' AND removed.playerUniverse = seat
+                    AND removed.kind = 'campaign' AND removed.reportId = receipt.id AND removed.removedAt IS NOT NULL)")
             ->setParameter('id', $id)
             ->getQuery()->setHint(Query::HINT_REFRESH, true)->getOneOrNullResult();
+    }
+
+    public function lastCombatReport(PlayerUniverse $viewer, int $scoutId): ?int
+    {
+        $id = $this->em->getConnection()->fetchOne('SELECT r.id'.PirateReportRepository::SOURCE.' WHERE '.PirateReportRepository::OWNER."
+            AND seat.id=? AND r.reconnaissance_id=? AND r.category='combat'
+            AND r.sequence_number=(SELECT MAX(latest.sequence_number) FROM pirate_mission_report latest
+                WHERE latest.reconnaissance_id=r.reconnaissance_id AND latest.category='combat') AND ".
+            ReportArchiveRepository::notRemovedSql('r.id', 'campaign', 'seat.id').' ORDER BY r.sequence_number DESC LIMIT 1', [$viewer->id, $scoutId]);
+
+        return $id === false ? null : (int) $id;
     }
 
     private function scope(QueryBuilder $query, int $accountId, int $membershipId, \DateTimeImmutable $at): QueryBuilder

@@ -195,8 +195,7 @@ restent décrits dans les [scénarios isolés](EXPLOITATION.md).
 
 ## Protection de dev
 
-Le workflow ne rend pas ses contrôles obligatoires à lui seul. Dans les paramètres
-GitHub du dépôt, protéger `dev` en imposant une PR avant fusion et les cinq
+Le 27 novembre 2026, le propriétaire a demandé de retirer la protection de `dev` pour permettre les push directs. La branche ne déclenche pas de CI sur push. Pour rétablir la protection précédente, imposer une PR avant fusion et les cinq
 contrôles suivants sur la dernière version de la PR :
 
 - `quality (php, lot 0)`

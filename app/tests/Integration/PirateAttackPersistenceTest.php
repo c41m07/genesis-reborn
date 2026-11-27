@@ -1419,7 +1419,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         }
     }
 
-    public function testPilotConvoyIsScheduledOnlyAfterVictoryAndRetriesTheWholeLotAtTheSameColony(): void
+    public function testPilotConvoyIsScheduledOnlyAfterVictoryAndDeliversOneExactInventoryBox(): void
     {
         [$owner, $home, $ally, $attack, $event] = $this->pilotVictoryWithConvoy();
         $service = self::getContainer()->get(PirateConvoyDeliveryService::class);
@@ -1455,18 +1455,46 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->stampStocks($home->id, ['metal' => $capacity - 41, 'nano' => 0.0, 'antimatter' => 0.0]);
         $service->processDue($right->id, $event['token']);
         $service->processDue($right->id, $event['token']);
-        self::assertSame('waiting_capacity', $right->timeline()->state());
+        self::assertSame('settled', $right->timeline()->state());
         self::assertEquals($late, $right->timeline()->chronology()['arrived_at']);
         self::assertSame($capacity - 41, $this->resourceStock($home->id, 'metal'));
-        self::assertSame(0.0, $this->resourceStock($home->id, 'nano'), 'Une autre ressource du lot ne peut pas être versée seule.');
+        self::assertSame(0.0, $this->resourceStock($home->id, 'nano'));
         self::assertSame(0.0, $this->resourceStock($home->id, 'antimatter'));
+        self::assertSame('settled', $service->retryDeposit($owner, $right->id));
+        $box = $this->convoyBox($right->id);
+        self::assertSame($owner->id, $box->playerUniverse->id);
+        self::assertSame('delivered', $db->fetchOne("SELECT status FROM pirate_mission_report WHERE category='economy'"));
+        $combats = $this->em->getRepository(\App\Entity\PirateMissionReport::class)->findBy(['category' => 'combat']);
+        self::assertCount(1, $combats);
+        $combat = $combats[0];
+        self::assertSame($attack->report['outcome'], $combat->status);
+        self::assertCount($attack->report['rounds_played'], $combat->snapshot['rounds']);
+        $bilan = self::getContainer()->get(\App\Service\Combat\CombatReportPresenter::class)
+            ->present($combat->snapshot, $combat->snapshot['rounds'], $owner->id);
+        self::assertSame(2, $bilan['totals']['own']['initial']);
+        self::assertGreaterThan(0, $bilan['totals']['enemy']['lost']);
+        self::assertGreaterThan(0, array_sum(array_column($bilan['round_details'], 'shots_count')));
         $this->stampStocks($home->id, ['metal' => $capacity - 41.5]);
-        self::assertSame('settled', $service->retryDeposit($owner, $right->id));
-        self::assertSame('settled', $service->retryDeposit($owner, $right->id));
+        $open = self::getContainer()->get(\App\Service\Boost\ResourceBoxUseService::class);
+        $key = bin2hex(random_bytes(16));
+        self::assertTrue($open->open($owner, $box->id, $home->id, $key));
+        self::assertFalse($open->open($owner, $box->id, $home->id, $key));
         self::assertSame($capacity, $this->resourceStock($home->id, 'metal'));
         self::assertSame(0.5, $this->resourceStock($home->id, 'nano'));
         self::assertSame(3.5, $this->resourceStock($home->id, 'antimatter'));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
+    }
+
+    private function convoyBox(int $deliveryId): \App\Entity\PlayerBoost
+    {
+        $boxes = $this->em->getRepository(\App\Entity\PlayerBoost::class)->findBy(['sourceKey' => 'pirate-convoy-'.$deliveryId]);
+        self::assertCount(1, $boxes);
+        $box = $boxes[0];
+        self::assertSame('resource_box', $box->kind);
+        self::assertSame('available', $box->status);
+        self::assertEquals(['metal' => 41.5, 'nano' => 0.5, 'antimatter' => 3.5, 'hydrogen' => 0], $box->payload['resources']);
+
+        return $box;
     }
 
     public function testConvoyReceiptFailureRollsBackWholeDepositAndCanBeReplayed(): void
@@ -1489,6 +1517,8 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         }
         self::assertSame(0.0, $this->resourceStock($homeId, 'metal'));
         self::assertSame(0.0, $this->resourceStock($homeId, 'nano'));
+        self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM player_boost WHERE source_type='pirate_convoy'"));
+        self::assertSame('traveling', $db->fetchOne("SELECT status FROM pirate_mission_report WHERE category='economy'"));
         self::assertNull($db->fetchOne('SELECT settled_at FROM pirate_convoy_delivery WHERE id = ?', [$rightId]));
         self::assertSame($event['token'], $db->fetchOne('SELECT dispatch_token FROM pirate_convoy_delivery WHERE id = ?', [$rightId]));
         self::ensureKernelShutdown();
@@ -1498,8 +1528,9 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $service = self::getContainer()->get(PirateConvoyDeliveryService::class);
         $service->processDue($rightId, $event['token']);
         $service->processDue($rightId, $event['token']);
-        self::assertSame(41.5, $this->resourceStock($homeId, 'metal'));
-        self::assertSame(0.5, $this->resourceStock($homeId, 'nano'));
+        $this->convoyBox($rightId);
+        self::assertSame(0.0, $this->resourceStock($homeId, 'metal'));
+        self::assertSame(0.0, $this->resourceStock($homeId, 'nano'));
         self::assertSame('settled', $this->em->find(PirateConvoyDelivery::class, $rightId)->timeline()->state());
     }
 
@@ -1529,9 +1560,10 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->stampStocks($home->id, ['metal' => 0.0, 'nano' => 0.0, 'antimatter' => 0.0]);
         $reply = $this->raceConvoy($member, $rightId, $event['token'], 'claim', $home->id);
         self::assertContains($reply, ['traveling', 'settled']);
-        self::assertSame(41.5, $this->resourceStock($home->id, 'metal'));
-        self::assertSame(0.5, $this->resourceStock($home->id, 'nano'));
-        self::assertSame(3.5, $this->resourceStock($home->id, 'antimatter'));
+        $this->convoyBox($rightId);
+        self::assertSame(0.0, $this->resourceStock($home->id, 'metal'));
+        self::assertSame(0.0, $this->resourceStock($home->id, 'nano'));
+        self::assertSame(0.0, $this->resourceStock($home->id, 'antimatter'));
         $this->em->refresh($right);
         self::assertSame('settled', $right->timeline()->state());
     }
@@ -1573,7 +1605,8 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame(0.0, $this->resourceStock($next->id, 'metal'), 'Même après le nouveau terme, le jeton ancien reste muet.');
         $service->processDue($rightId, $after['token']);
         $service->processDue($rightId, $after['token']);
-        self::assertSame(41.5, $this->resourceStock($next->id, 'metal'));
+        $this->convoyBox($rightId);
+        self::assertSame(0.0, $this->resourceStock($next->id, 'metal'));
         self::assertSame(0.0, $this->resourceStock($lost->id, 'metal'));
     }
 
@@ -1629,7 +1662,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
 
         $first = $this->clock->now();
         $later = $first->modify('+45 seconds');
-        $reply = $this->advanceClockDuringConvoyLock('retarget', $member, $rightId, $event['token'], $next->id, lockStocks: false,
+        $reply = $this->advanceClockDuringConvoyLock('retarget', $member, $rightId, $event['token'], $next->id,
             first: $first, later: $later);
         self::assertSame('traveling', $reply);
         $this->em->refresh($right);
@@ -1642,7 +1675,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame(0.0, $this->resourceStock($next->id, 'metal'));
     }
 
-    public function testConvoyArrivalAndReceiptAreObservedAfterWaitingOnStocks(): void
+    public function testConvoyArrivalAndReceiptAreObservedAfterWaitingOnPlanet(): void
     {
         [$member, $home, , , $event] = $this->pilotVictoryWithConvoy();
         $rightId = (int) $event['target_id'];
@@ -1652,14 +1685,15 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->advanceTo($later);
         $this->stampStocks($home->id, ['metal' => 0.0, 'nano' => 0.0, 'antimatter' => 0.0]);
         self::assertSame('processed', $this->advanceClockDuringConvoyLock('worker', $member, $rightId, $event['token'],
-            $home->id, lockStocks: true, first: $first, later: $later));
+            $home->id, first: $first, later: $later));
         $this->em->refresh($right);
         self::assertEquals($later, $right->timeline()->chronology()['arrived_at']);
         self::assertEquals($later, $right->timeline()->chronology()['settled_at']);
-        self::assertSame(41.5, $this->resourceStock($home->id, 'metal'));
+        $this->convoyBox($rightId);
+        self::assertSame(0.0, $this->resourceStock($home->id, 'metal'));
     }
 
-    public function testConvoyManualClaimDoesNotUseTheWindowThatClosedDuringStockWait(): void
+    public function testConvoyManualClaimDoesNotUseTheWindowThatClosedDuringPlanetWait(): void
     {
         [$member, $home, , , $event] = $this->pilotVictoryWithConvoy();
         $rightId = (int) $event['target_id'];
@@ -1667,7 +1701,12 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->advanceTo($right->timeline()->chronology()['due_at']);
         $capacity = self::getContainer()->get(\App\Service\Colony\ResourceService::class)->capacity($home, 'metal', []);
         $this->stampStocks($home->id, ['metal' => $capacity]);
-        self::getContainer()->get(PirateConvoyDeliveryService::class)->processDue($rightId, $event['token']);
+        // Ancien convoi arrivé sous la règle du dépôt direct, encore récupérable après migration.
+        $timeline = $right->timeline();
+        self::assertTrue($timeline->arriveWhenDue($event['token'], $this->clock->now()));
+        self::assertTrue($timeline->recordCapacityShortage($member->id, $member->universe->id, $home->id, $this->clock->now()));
+        $right->replaceState($timeline);
+        $this->em->flush();
         self::assertSame('waiting_capacity', $right->timeline()->state());
         $first = $this->clock->now();
         $later = $first->modify('+15 seconds');
@@ -1675,7 +1714,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->em->flush();
         $this->stampStocks($home->id, ['metal' => 0.0, 'nano' => 0.0, 'antimatter' => 0.0]);
         self::assertNull($this->advanceClockDuringConvoyLock('claim', $member, $rightId, $event['token'],
-            $home->id, lockStocks: true, first: $first, later: $later));
+            $home->id, first: $first, later: $later));
         $this->em->refresh($right);
         self::assertSame('waiting_capacity', $right->timeline()->state());
         self::assertSame(0.0, $this->resourceStock($home->id, 'metal'));
@@ -1689,7 +1728,6 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         int $deliveryId,
         string $token,
         int $destination,
-        bool $lockStocks,
         \DateTimeImmutable $first,
         \DateTimeImmutable $later,
     ): ?string {
@@ -1708,9 +1746,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $proc->setTimeout(25);
         $db->beginTransaction();
         try {
-            $db->fetchOne($lockStocks
-                ? 'SELECT id FROM planet_resource WHERE planet_id = ? FOR UPDATE'
-                : 'SELECT id FROM planet WHERE id = ? FOR UPDATE', [$destination]);
+            $db->fetchOne('SELECT id FROM planet WHERE id = ? FOR UPDATE', [$destination]);
             $proc->start();
             $deadline = microtime(true) + 14;
             while (!is_file($ready) && microtime(true) < $deadline) {
@@ -1724,7 +1760,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
                 foreach ($db->fetchAllAssociative('SHOW FULL PROCESSLIST') as $row) {
                     $query = strtoupper($row['Info'] ?? '');
                     if ((int) $row['Id'] === $connectionId && str_contains($query, 'FOR UPDATE')
-                        && str_contains($query, $lockStocks ? 'PLANET_RESOURCE' : 'FROM PLANET ')) {
+                        && str_contains($query, 'FROM PLANET ')) {
                         $blocked = true;
                         break 2;
                     }

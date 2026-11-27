@@ -30,8 +30,14 @@
   les essais n’envoient aucun vaisseau et ne prétendent pas prévoir l’issue réelle.
 - Un relevé historique sans scénario figé affiche seulement la composition connue, sans import
   approximatif. Le rapport est une lecture de la reconnaissance existante, sans nouveau
-  journal d’espionnage de planète, et sans second envoi de sonde. Il s’ouvre depuis le dossier
-  pirate, pas depuis le sélecteur des rapports planétaires du simulateur.
+  journal d’espionnage de planète, et sans second envoi de sonde. Le dossier pirate et la rubrique Espionnage des Rapports ouvrent la même reconnaissance.
+- Chaque tentative résolue publie le bilan des deux camps dans Rapports → Combats. Le joueur
+  peut y consulter les effectifs, pertes et rounds enregistrés et retrouver le rapport depuis le dossier.
+- Chaque trajet du convoi dispose d’un rapport de transport dans Rapports → Économie. À la livraison,
+  le joueur reçoit dans l’inventaire une boîte contenant exactement la cargaison. Les entrepôts
+  sont vérifiés à l’ouverture sur la colonie choisie. Un inventaire plein place la boîte en attente.
+  Les anciens convois bloqués par le stockage peuvent être retirés depuis le dossier. Les anciennes
+  livraisons déjà créditées conservent leur reçu. L’historique reprend les preuves encore conservées.
 
 ## Choix de l’escorte
 
