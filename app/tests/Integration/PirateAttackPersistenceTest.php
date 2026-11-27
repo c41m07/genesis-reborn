@@ -130,10 +130,12 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         ]);
         self::assertStringContainsString('Trajet civil protégé', $html);
         self::assertStringContainsString('role="progressbar"', $html);
-        self::assertStringContainsString('Fret du convoi', $html);
+        self::assertStringContainsString('Composition et fret', $html);
+        self::assertStringContainsString('popovertarget="campaign-flight-detail-convoy-1"', $html);
+        self::assertStringContainsString('Fret transporté', $html);
         self::assertStringContainsString('Métal', $html);
         self::assertStringContainsString($after['incoming'][0]['eta'], $html);
-        self::assertDoesNotMatchRegularExpression('/<(?:form|a|button)\b/', $html);
+        self::assertDoesNotMatchRegularExpression('/<(?:form|a)\b/', $html);
         self::assertStringNotContainsString('data-incoming-attack', $html);
         self::assertSame([], $after['presence'], 'La station pirate n’est plus projetée après la victoire.');
         self::assertSame([], $traffic->forGalaxy($neighbor, $ownGalaxy));
