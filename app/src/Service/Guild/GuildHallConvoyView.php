@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace App\Service\Guild;
 
-use App\Entity\{Fleet, FleetShip, PlayerUniverse};
-use App\Repository\GameRepository;
+use App\Entity\{Fleet, FleetShip, GuildHall, PlayerUniverse};
+use App\Repository\{GameRepository, GuildHallConvoyRepository};
 use App\Service\Catalog\GameCatalog;
 
 final readonly class GuildHallConvoyView
 {
-    public function __construct(private GameRepository $repository, private GameCatalog $catalog)
-    {
+    public function __construct(
+        private GameRepository $repository,
+        private GameCatalog $catalog,
+        private GuildHallConvoyRepository $convoys,
+    ) {
     }
 
     public function describe(PlayerUniverse $member, int $requestedOrigin): array
@@ -52,5 +55,28 @@ final readonly class GuildHallConvoyView
             'ships' => $rows,
             'materials' => ['hydrogen' => 'Hydrogène', 'metal' => 'Métal', 'nano' => 'Nano', 'antimatter' => 'Antimatière'],
         ];
+    }
+
+    /** @return list<array{ships: list<array{name: string, rank: string, quantity: int}>}> */
+    public function receivedDonations(PlayerUniverse $member, GuildHall $hall): array
+    {
+        $receipts = $this->convoys->receivedHallShipDonations($member, $hall);
+        if ($receipts === []) {
+            return [];
+        }
+        $catalogue = $this->catalog->forUniverse($member->universe)['catalog']['ships'];
+        $ranks = ['basic' => 'Basique', 'intermediate' => 'Intermédiaire', 'superior' => 'Supérieur'];
+        $rows = [];
+        foreach ($receipts as $receipt) {
+            $ships = [];
+            foreach ($receipt->deliveredShips ?? [] as $slug => $quantities) {
+                foreach ($quantities as $rank => $quantity) {
+                    $ships[] = ['name' => $catalogue[$slug]['label'] ?? $slug, 'rank' => $ranks[$rank] ?? $rank, 'quantity' => $quantity];
+                }
+            }
+            $rows[] = ['ships' => $ships];
+        }
+
+        return $rows;
     }
 }

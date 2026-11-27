@@ -76,6 +76,7 @@ final class GuildHallController extends AbstractController
             'guild' => $guild,
             'warehouse' => $warehouseData,
             'convoy' => $convoyData,
+            'received_donations' => $hall?->placedAt !== null ? $convoy->receivedDonations($actor, $hall) : [],
             'may_build_at_hall' => $mayAct && $policy->canCommand($actor, $guild),
             'hall' => $hall,
             'required' => $target,

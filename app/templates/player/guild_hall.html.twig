@@ -49,6 +49,23 @@
                 {% include 'player/_guild_hall_convoy.html.twig' with {hall:hall, guild:guild, convoy:convoy} only %}
             {% endif %}
         {% endif %}
+        {% if received_donations|default([]) is not empty %}
+            <section class="panel" aria-labelledby="hall-received-donations-title">
+                <h2 id="hall-received-donations-title">Mes derniers dons reçus par l’Atelier</h2>
+                <ul>
+                    {% for donation in received_donations %}
+                        <li>
+                            <span>Reçu au Hall</span>
+                            <ul>
+                                {% for ship in donation.ships %}
+                                    <li>{{ ship.quantity|number_format(0, ',', ' ') }} × {{ ship.name }} · {{ ship.rank }}</li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
         {% if not may_act %}
             <p class="panel">Vous pouvez consulter le Hall, mais pas contribuer ni le placer pendant les vacances.</p>
         {% elseif remaining > 0 %}

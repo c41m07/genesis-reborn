@@ -8,7 +8,7 @@ use App\Entity\{Guild, GuildHall, Planet, PlayerDiscovery, PlayerUniverse, Solar
 use App\Entity\{Fleet, FleetFuelExpense, FleetShip, GuildAtelierStock, GuildDockOrder, GuildHallBuilding, GuildHallConvoy, GuildHallStock, OutboxMessage, PlanetResource};
 use App\Message\{FleetArrived, GuildDockOrderDue, GuildHallConstructionDue};
 use App\MessageHandler\{FleetArrivedHandler, GuildDockOrderDueHandler, GuildHallConstructionDueHandler};
-use App\Repository\GuildHallRepository;
+use App\Repository\{GuildHallConvoyRepository, GuildHallRepository};
 use App\Service\Notification\OutboxRelay;
 use App\Service\Colony\ResourceService;
 use App\Service\Fleet\FleetRecallService;
@@ -431,6 +431,13 @@ final class GuildHallTest extends KernelTestCase
         $fleet = $this->em->find(Fleet::class, $id);
         $receipt = $this->em->find(GuildHallConvoy::class, $id);
         self::assertNotNull($receipt->settledAt);
+        $convoys = self::getContainer()->get(GuildHallConvoyRepository::class);
+        $savedHall = $this->em->find(GuildHall::class, $hallId);
+        $received = $convoys->receivedHallShipDonations($fleet->playerUniverse, $savedHall);
+        self::assertCount($accept ? 1 : 0, $received);
+        if ($accept) {
+            self::assertSame($ships, $received[0]->deliveredShips);
+        }
         if ($accept) {
             self::assertSame('completed', $fleet->status);
             self::assertSame([], $fleet->cargo);
