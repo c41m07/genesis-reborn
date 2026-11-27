@@ -50,7 +50,6 @@ final readonly class GuildHallConvoyView
             'colonies' => $colonies,
             'origin' => $origin,
             'ships' => $rows,
-            'request_key' => bin2hex(random_bytes(16)),
             'materials' => ['hydrogen' => 'Hydrogène', 'metal' => 'Métal', 'nano' => 'Nano', 'antimatter' => 'Antimatière'],
         ];
     }

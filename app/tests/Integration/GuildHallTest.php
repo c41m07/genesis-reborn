@@ -79,10 +79,19 @@ final class GuildHallTest extends KernelTestCase
         $idleId = $idle->id;
 
         $departure = $container->get(GuildHallConvoyDeparture::class);
+        $beforePreview = $this->em->getRepository(Fleet::class)->count(['playerUniverse' => $owner]);
+        $preview = $departure->preview($owner, $guildId, $hallId, $originId, ['transport' => ['basic' => 1]], 1.0, ['metal' => 40]);
+        self::assertGreaterThan(0, $preview['seconds']);
+        self::assertGreaterThan(0.0, $preview['total_fuel']);
+        self::assertSame($beforePreview, $this->em->getRepository(Fleet::class)->count(['playerUniverse' => $owner]));
+        $this->em->refresh($transportShip);
+        self::assertSame(1, $transportShip->quantity);
         $convoy = $departure->send(
-            $owner, $guild->id, $hallId, $originId, ['transport' => ['basic' => 1]], 1.0, ['metal' => 40], str_repeat('c', 32),
+            $owner, $guildId, $hallId, $originId, ['transport' => ['basic' => 1]], 1.0, ['metal' => 40], str_repeat('c', 32), $preview['fingerprint'],
         );
         self::assertInstanceOf(GuildHallConvoy::class, $convoy);
+        self::assertSame($preview['seconds'], $convoy->fleet->travelSeconds);
+        self::assertEqualsWithDelta($preview['total_fuel'], $convoy->fleet->reservedFuel, 0.000001);
         $id = $convoy->fleet->id;
         $outboundToken = $convoy->outboundToken;
         $oneWayFuel = $convoy->fleet->reservedFuel / 2;

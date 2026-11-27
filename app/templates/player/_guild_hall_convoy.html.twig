@@ -13,17 +13,46 @@
             </select>
             <button type="submit" class="secondary">Voir les vaisseaux disponibles</button>
         </form>
-        {% if convoy.ships is empty %}
+        {% set ranks = {basic:'Basique', intermediate:'Intermédiaire', superior:'Supérieur'} %}
+        {% if convoy.review is defined %}
+            {% set review = convoy.review %}
+            <div aria-labelledby="hall-convoy-review">
+                <h3 id="hall-convoy-review">Vérifier le convoi</h3>
+                <p>Départ : {{ convoy.origin.name }} · Vitesse : {{ review.speed }} %</p>
+                {% set hours = review.quote.seconds // 3600 %}
+                {% set minutes = (review.quote.seconds % 3600) // 60 %}
+                <p>Trajet aller : {% if hours %}{{ hours }} h {% endif %}{{ minutes }} min {{ review.quote.seconds % 60 }} s.</p>
+                <p>Hydrogène aller-retour : {{ review.quote.total_fuel|number_format(2, ',', ' ') }} H,
+                    dont {{ review.quote.planet_fuel|number_format(2, ',', ' ') }} H prélevés sur la colonie en plus du fret.</p>
+                <ul>
+                    {% for ship in convoy.ships %}
+                        {% for rank, quantity in review.ships[ship.slug]|default({}) %}
+                            <li>{{ quantity|number_format(0, ',', ' ') }} × {{ ship.name }} · {{ ranks[rank] }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for slug, label in convoy.materials %}
+                        {% if review.cargo[slug] is defined %}<li>{{ label }} : {{ review.cargo[slug]|number_format(0, ',', ' ') }}</li>{% endif %}
+                    {% endfor %}
+                </ul>
+                <form method="post" action="{{ path('app_guild_hall_send_convoy') }}">
+                    <input type="hidden" name="hall_id" value="{{ hall.id }}">
+                    <input type="hidden" name="origin" value="{{ convoy.origin.id }}">
+                    <input type="hidden" name="request_key" value="{{ review.key }}">
+                    <input type="hidden" name="confirm" value="1">
+                    <input type="hidden" name="_token" value="{{ csrf_token('guild_hall_convoy_' ~ guild.id ~ '_' ~ hall.id) }}">
+                    <button type="submit" class="primary">Confirmer et envoyer le convoi</button>
+                    <a href="{{ path('app_guild_hall', {convoy_origin: convoy.origin.id}) }}#hall-convoy-title">Revenir au formulaire</a>
+                </form>
+            </div>
+        {% elseif convoy.ships is empty %}
             <p>Aucun vaisseau disponible pour le transport depuis {{ convoy.origin.name }}.</p>
         {% else %}
             <form method="post" action="{{ path('app_guild_hall_send_convoy') }}">
                 <input type="hidden" name="hall_id" value="{{ hall.id }}">
                 <input type="hidden" name="origin" value="{{ convoy.origin.id }}">
-                <input type="hidden" name="request_key" value="{{ convoy.request_key }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('guild_hall_convoy_' ~ guild.id ~ '_' ~ hall.id) }}">
                 <fieldset>
                     <legend>Vaisseaux au sol · {{ convoy.origin.name }}</legend>
-                    {% set ranks = {basic:'Basique', intermediate:'Intermédiaire', superior:'Supérieur'} %}
                     <table>
                         <thead><tr><th scope="col">Vaisseau</th>{% for label in ranks %}<th scope="col">{{ label }}</th>{% endfor %}</tr></thead>
                         <tbody>
@@ -65,8 +94,7 @@
                     </select>
                 </label>
                 <p>L’hydrogène du trajet aller-retour est réservé au départ, en plus du fret.</p>
-                <label><input type="checkbox" name="confirm" value="1" required> Confirmer l’envoi de ces matériaux au stock de guilde</label>
-                <button type="submit" class="primary">Envoyer le convoi</button>
+                <button type="submit" class="primary">Vérifier le trajet et le carburant</button>
             </form>
         {% endif %}
     {% endif %}

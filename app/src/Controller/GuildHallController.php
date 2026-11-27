@@ -9,6 +9,7 @@ use App\Repository\{GameRepository, GuildHallRepository};
 use App\Service\Guild\{GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyView, GuildHallFunding, GuildHallService, GuildHallWarehouseView};
 use App\Service\Player\{DiplomacyAccessPolicy, RelationResolver, VacationCalendar};
 use App\Service\Universe\UniverseContext;
+use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
 use Symfony\Component\Routing\Attribute\Route;
@@ -23,6 +24,8 @@ final class GuildHallController extends AbstractController
     ) {
     }
 
+    private const CONVOY_REVIEW = 'guild_hall_convoy_review';
+
     #[Route('/guildes/hall', name: 'app_guild_hall', methods: ['GET'])]
     public function show(
         Request $request,
@@ -31,6 +34,7 @@ final class GuildHallController extends AbstractController
         VacationCalendar $vacations,
         GuildHallWarehouseView $warehouse,
         GuildHallConvoyView $convoy,
+        ClockInterface $clock,
     ): Response
     {
         [$actor, $guild, $target] = $this->contextForHall();
@@ -53,11 +57,19 @@ final class GuildHallController extends AbstractController
 
         $warehouseData = $hall?->placedAt !== null ? $warehouse->describe($hall) : null;
 
+        $convoyData = $mayAct && ($warehouseData['enabled'] ?? false)
+            ? $convoy->describe($actor, $request->query->getInt('convoy_origin')) : null;
+        $review = $convoyData !== null ? $request->getSession()->get(self::CONVOY_REVIEW) : null;
+        if ($convoyData !== null && is_array($review) && $review['actor'] === $actor->id && $review['hall'] === $hall->id
+            && $review['guild'] === $guild->id && $review['origin'] === $convoyData['origin']?->id && $review['expires'] >= $clock->now()->getTimestamp()
+            && $review['key'] === $request->query->getString('review')) {
+            $convoyData['review'] = $review;
+        }
+
         return $this->render('player/guild_hall.html.twig', [
             'guild' => $guild,
             'warehouse' => $warehouseData,
-            'convoy' => $mayAct && ($warehouseData['enabled'] ?? false)
-                ? $convoy->describe($actor, $request->query->getInt('convoy_origin')) : null,
+            'convoy' => $convoyData,
             'may_build_at_hall' => $mayAct && $policy->canCommand($actor, $guild),
             'hall' => $hall,
             'required' => $target,
@@ -133,7 +145,7 @@ final class GuildHallController extends AbstractController
     }
 
     #[Route('/guildes/hall/convoi', name: 'app_guild_hall_send_convoy', methods: ['POST'])]
-    public function sendConvoy(Request $request, GuildHallConvoyDeparture $departure): Response
+    public function sendConvoy(Request $request, GuildHallConvoyDeparture $departure, ClockInterface $clock): Response
     {
         [$actor, $guild] = $this->contextForHall();
         $hallId = $request->request->getInt('hall_id');
@@ -141,32 +153,53 @@ final class GuildHallController extends AbstractController
             throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le Hall.');
         }
         $origin = $request->request->getInt('origin');
+        $session = $request->getSession();
+        $redirect = ['convoy_origin' => $origin];
         try {
-            if ($request->request->getString('confirm') !== '1') {
-                throw new \DomainException('Confirmez le dépôt au Hall de guilde.');
-            }
-            $ships = [];
-            foreach ($request->request->all('ships') as $slug => $ranks) {
-                if (!is_array($ranks)) {
-                    throw new \DomainException('Composition du convoi invalide.');
+            if ($request->request->getString('confirm') === '1') {
+                $review = $session->get(self::CONVOY_REVIEW);
+                if (!is_array($review) || $review['actor'] !== $actor->id || $review['guild'] !== $guild->id
+                    || $review['hall'] !== $hallId || $review['origin'] !== $origin
+                    || $review['key'] !== $request->request->getString('request_key') || $review['expires'] < $clock->now()->getTimestamp()) {
+                    throw new \DomainException('Devis expiré ou déjà utilisé. Vérifiez à nouveau le trajet.');
                 }
-                $ships[$slug] = array_map(self::convoyQuantity(...), $ranks);
-            }
-            $freight = array_map(self::convoyQuantity(...), $request->request->all('cargo'));
-            $speed = $request->request->getInt('speed', 100);
-            if ($speed < 10 || $speed > 100 || $speed % 10 !== 0) {
-                throw new \DomainException('Choisissez une vitesse entre 10 et 100 %.');
-            }
+                $session->remove(self::CONVOY_REVIEW);
+                $receipt = $departure->send(
+                    $actor, $guild->id, $hallId, $origin, $review['ships'], $review['speed'] / 100,
+                    $review['cargo'], $review['key'], $review['quote']['fingerprint'],
+                );
+                $this->addFlash('success', $receipt !== null
+                    ? 'Convoi envoyé. Le carburant aller-retour est réservé.'
+                    : 'Ce convoi a déjà été envoyé.');
+            } else {
+                $ships = [];
+                foreach ($request->request->all('ships') as $slug => $ranks) {
+                    if (!is_array($ranks)) {
+                        throw new \DomainException('Composition du convoi invalide.');
+                    }
+                    $ships[$slug] = array_filter(array_map(self::convoyQuantity(...), $ranks));
+                }
+                $ships = array_filter($ships);
+                $freight = array_filter(array_map(self::convoyQuantity(...), $request->request->all('cargo')));
+                $speed = $request->request->getInt('speed', 100);
+                if ($speed < 10 || $speed > 100 || $speed % 10 !== 0) {
+                    throw new \DomainException('Choisissez une vitesse entre 10 et 100 %.');
+                }
 
-            $receipt = $departure->send($actor, $guild->id, $hallId, $origin, $ships, $speed / 100, $freight, $request->request->getString('request_key'));
-            $this->addFlash('success', $receipt !== null
-                ? 'Convoi envoyé. Le carburant aller-retour est réservé.'
-                : 'Ce convoi a déjà été envoyé.');
+                $quote = $departure->preview($actor, $guild->id, $hallId, $origin, $ships, $speed / 100, $freight);
+                $key = bin2hex(random_bytes(16));
+                $session->set(self::CONVOY_REVIEW, [
+                    'key' => $key, 'expires' => $clock->now()->getTimestamp() + 300,
+                    'actor' => $actor->id, 'guild' => $guild->id, 'hall' => $hallId, 'origin' => $origin,
+                    'ships' => $ships, 'cargo' => $freight, 'speed' => $speed, 'quote' => $quote,
+                ]);
+                $redirect['review'] = $key;
+            }
         } catch (\DomainException $error) {
             $this->addFlash('error', $error->getMessage());
         }
 
-        return $this->redirectToRoute('app_guild_hall', ['convoy_origin' => $origin], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('app_guild_hall', $redirect, Response::HTTP_SEE_OTHER);
     }
 
     /** Une saisie non entière ou hors bornes n’est jamais arrondie ni tronquée. */
