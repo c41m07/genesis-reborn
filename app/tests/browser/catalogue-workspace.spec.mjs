@@ -61,6 +61,12 @@ test('L7B : quatre cartes, vraies lignes et cinq coûts lisibles sur quatre form
             const compact = page.getByRole('switch', { name: 'Vue condensée' });
             if (await compact.getAttribute('aria-checked') === 'true') await compact.click();
             const cards = page.locator('.building-card:visible');
+            // Le jeu de données a terminé toutes les recherches basiques. Ce rang propose encore un niveau à payer.
+            if (group === 'technologies') await page.locator('#building-tab-engineering_foundations-superior').click();
+            const tile = cards.locator('.building-costs > [data-resource]:visible').first();
+            await expect(tile).toHaveAccessibleName(await tile.getAttribute('title'));
+            await expect(tile).toHaveText(await tile.locator('[data-cost-amount]').textContent());
+            await expect(tile.locator('.icon')).toBeVisible();
             if (width === 1440) {
                 const boxes = await cards.evaluateAll(nodes => nodes.slice(0, 4).map(n => n.getBoundingClientRect().top));
                 expect(new Set(boxes).size).toBe(1);
@@ -70,6 +76,20 @@ test('L7B : quatre cartes, vraies lignes et cinq coûts lisibles sur quatre form
             const first = cards.first(), second = cards.nth(1);
             expect((await second.boundingBox()).y).toBeGreaterThanOrEqual((await first.boundingBox()).y + (await first.boundingBox()).height);
             await expect(first.locator('.building-rank:not([hidden]) .catalog-card-art')).toBeHidden();
+            if (group === 'ships' || group === 'defenses') {
+                const heading = first.getByRole('tabpanel').locator('.catalogue-card-identity');
+                const field = heading.getByRole('spinbutton', { name: 'Quantité' });
+                await field.click();
+                await expect(field).toBeFocused();
+                const maximum = heading.getByRole('button', { name: /^Max/ });
+                if (width === 390) {
+                    await maximum.click();
+                    await expect.poll(async () => Number(await field.inputValue())).toBeGreaterThan(1);
+                    await expect(heading.locator('.quantity-status')).toBeEmpty();
+                } else {
+                    await maximum.click({ trial: true });
+                }
+            }
             const priceErrors = await page.locator('.building-rank:not([hidden]) .building-costs').evaluateAll(strips => strips.flatMap(strip => {
                 const cells = [...strip.children].filter(cell => !cell.hidden);
                 const ys = cells.map(cell => Math.round(cell.getBoundingClientRect().y));
@@ -256,7 +276,12 @@ test('Fidélité catalogues : même composition en Full HD et actions lisibles s
                 }
                 const cards = catalog.locator('.building-card:visible');
                 const panel = cards.first().getByRole('tabpanel');
-                await expect(panel.locator('.catalogue-level-badge')).toBeVisible();
+                const identity = panel.locator('.catalogue-card-identity');
+                if (section === 'ships' || section === 'defenses') {
+                    await expect(identity.getByRole('spinbutton', { name: 'Quantité' })).toBeVisible();
+                } else {
+                    await expect(identity.locator('.catalogue-level-badge')).toBeVisible();
+                }
                 const art = await panel.locator('.catalogue-card-visual').boundingBox();
                 const tabs = await cards.first().locator('.building-rank-tabs').boundingBox();
                 expect(art.y + art.height).toBeLessThanOrEqual(tabs.y + 1);

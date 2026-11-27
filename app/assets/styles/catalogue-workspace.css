@@ -98,10 +98,7 @@ body[data-ui-page="catalogues"] :is(#panel-buildings,#panel-technologies,#panel-
 .catalog-workspace .building-card .building-costs { gap:4px; margin-bottom:14px; min-height:0; }
 .catalog-workspace .building-card .building-costs>span { font-size:14px; }
 .catalog-workspace .building-card .building-costs strong { font-size:inherit; color:inherit; }
-.catalog-workspace .building-card .building-costs small { font-size:11px; }
 .catalog-workspace .building-costs .icon { width:18px; height:18px; }
-.catalog-workspace .building-costs:has(>span:nth-child(4)) .cost-label-full { display:none; }
-.catalog-workspace .building-costs:has(>span:nth-child(4)) .cost-label-short { display:inline; }
 .catalog-workspace .building-card .card-benefits { padding:10px; margin-bottom:14px; }
 .catalog-workspace .card-benefits-content>div { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .catalog-workspace .card-benefits-content>div>span { min-width:0; }
@@ -115,7 +112,7 @@ body[data-ui-page="catalogues"] :is(#panel-buildings,#panel-technologies,#panel-
 .catalog-workspace .building-card .catalog-build-action:disabled { text-align:left; justify-content:flex-start; }
 .catalog-workspace .catalog-missing-resource { display:block; margin-top:3px; font-variant-numeric:tabular-nums; }
 .catalog-workspace .building-card .catalog-build-action.has-missing-resources { color:#ffa3a3; background:var(--panel); padding:12px; }
-.catalog-workspace .quantity-status { display:block; margin:6px 0; }
+.catalog-workspace .quantity-status:not(:empty) { display:block; margin:6px 0; }
 
 /* Un même formulaire et les mêmes données changent de disposition ; rien n’est dupliqué. */
 body[data-ui-page="catalogues"] :is(#panel-buildings,#panel-technologies,#panel-ships,#panel-defenses).catalog-condensed .building-grid { grid-template-columns:minmax(0,1fr); }
@@ -302,10 +299,7 @@ body[data-theme=light] .catalog-workspace .catalog-build-action.primary:not(:dis
     border-color:color-mix(in srgb,var(--gold) 33%,var(--line));
     background:color-mix(in srgb,var(--gold) 8%,var(--panel));
 }
-/* Garder le coût à côté de Quantité tant que ses montants tiennent. Sinon,
-   passer le groupe entier sous la saisie, dans l’ordre de la barre de ressources. */
-.core-construction-order { display:flex; flex-wrap:wrap; align-items:start; gap:6px 10px; margin-bottom:10px; }
-.core-construction-cost { flex:1 1 max-content; min-width:0; max-width:100%; }
+.core-construction-cost { min-width:0; margin-bottom:10px; }
 .core-construction-quantity { min-width:0; }
 .core-construction-quantity label { display:block; margin:0 0 6px; font-size:11px; font-weight:700; color:var(--muted); }
 .core-construction-quantity .quantity-input { flex-wrap:nowrap; }
@@ -352,11 +346,9 @@ body[data-theme=light] .catalog-workspace .catalog-build-action.primary:not(:dis
 }
 .catalog-workspace .core-construction-cost .building-costs > span.insufficient { border-color:currentColor; }
 .catalog-workspace .core-construction-cost .building-costs > span[hidden] { display:none; }
-.catalog-workspace .core-construction-cost .building-costs small { overflow-wrap:anywhere; }
 .catalog-workspace .core-unit-details .card-benefits { margin:8px 0 0; }
 .core-unit-price { list-style:none; padding:0; margin:0; }
 .core-unit-price li { margin:4px 0; }
-.catalog-workspace .catalog-condensed .core-construction-order { display:grid; grid-template-columns:minmax(0,1fr); }
 .catalog-workspace .catalog-condensed .core-unit-gain { grid-area:1/2; }
 .catalog-workspace .catalog-condensed .core-unit-details { grid-area:2/2; }
 .catalog-workspace .catalog-condensed .core-unit-details .card-benefits { grid-area:auto; }
@@ -365,9 +357,7 @@ body[data-theme=light] .catalog-workspace .catalog-build-action.primary:not(:dis
     .catalog-workspace .catalog-condensed .core-unit-gain { grid-area:4/1/5/3; }
     .catalog-workspace .catalog-condensed .core-unit-details { grid-area:7/1/8/3; }
 }
-@container(max-width:322px) { .core-construction-order { display:grid; grid-template-columns:minmax(0,1fr); } }
 @media(max-width:600px) {
-    .core-construction-order { display:grid; grid-template-columns:minmax(0,1fr); }
     .core-construction-quantity .quantity-status { max-width:none; }
 }
 
@@ -493,6 +483,20 @@ body[data-ui-page="catalogues"] .catalog-workspace .catalog-operations-rail {
     margin: 0;
     text-align: start;
     overflow-wrap: anywhere;
+}
+/* Dans les lignes d’unités, le titre et la saisie peuvent grandir avec le lot.
+   Les onglets restent dans le flux pour laisser la commande accessible au clic. */
+.catalog-workspace .catalog-condensed :is(.card--ships,.card--defenses) .building-rank-tabs {
+    position: static;
+    max-width: 100%;
+}
+.catalog-workspace .catalog-condensed :is(.card--ships,.card--defenses) .catalog-level {
+    margin-block-start: 0;
+}
+@media (min-width: 1200px) {
+    .catalog-workspace .catalog-condensed :is(.card--ships,.card--defenses) .catalog-level {
+        grid-area: 2 / 1;
+    }
 }
 .catalog-workspace .catalogue-level-badge {
     align-self: start;
@@ -792,17 +796,6 @@ body[data-theme="light"] .catalogue-cancel { --catalogue-decision-danger: #a92f4
     .catalog-workspace section:not(.catalog-condensed) .building-card
         .building-costs:not(:has(> span:nth-child(4))) > span[hidden] {
         display: none;
-    }
-    /* Dans un coût de lot à trois tuiles, l’abréviation évite de couper
-       Électricité en plein mot. Le libellé intégral reste accessible. */
-    .catalog-workspace section:not(.catalog-condensed) .core-construction-cost
-        .building-costs:has(> span:nth-child(3):last-child) > [data-resource="electricity"] .cost-label-full {
-        display: none;
-    }
-    .catalog-workspace section:not(.catalog-condensed) .core-construction-cost
-        .building-costs:has(> span:nth-child(3):last-child) > [data-resource="electricity"] .cost-label-short {
-        display: inline;
-        white-space: nowrap;
     }
 }
 @media (max-width: 600px) {

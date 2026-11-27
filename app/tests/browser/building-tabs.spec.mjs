@@ -61,6 +61,7 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(family.getByRole('tab')).toHaveCount(3);
     await expect(family.locator('.building-rank-tabs .building-rank-level')).toHaveText(['Niv. 260', 'Niv. 0', 'Niv. 0']);
     await expect(tab('superior').locator('.building-rank-level')).toHaveClass(/is-empty/);
+    await expect(tab('superior').locator('.building-rank-level')).toHaveCSS('color', 'rgb(255, 163, 163)');
     await expect(tab('superior')).toHaveAccessibleDescription(/Niveau 0.*Rang verrouillé/);
     await expect(tab('basic')).toHaveAttribute('aria-selected', 'true');
     await expect(panel('basic').locator('.catalogue-level-badge')).toHaveText('Niv. 260');
@@ -269,7 +270,7 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
     sql(`INSERT INTO planet_defense (planet_id,slug,tier,quantity) VALUES (${planet},'ground_turret_anti_light','basic',1250000)`);
     // Les unités conservées restent lisibles quand leur nouvelle construction n'est pas débloquée.
     await page.goto(`${path}?section=ships#item-fighter-intermediate`);
-    await expect(page.locator('#item-fighter-intermediate .catalogue-level-badge')).toHaveText('1,25 M en réserve');
+    await expect(page.locator('#building-tab-fighter-intermediate .building-rank-level')).toHaveText('1,25 M');
     await expect(page.locator('#building-tab-fighter-intermediate')).toHaveAccessibleDescription(/1 250 000 unités possédées.*Rang verrouillé/);
     await expect(page.locator('#item-fighter-intermediate .card-body>form')).toHaveCount(0);
     sql(`INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'shipyard','intermediate',1)`);
@@ -294,16 +295,18 @@ test('Recherche, chantier et défenses partagent les onglets et préservent leur
         await expect(panel('basic').locator('form [name="group"]')).toHaveValue(group);
         await expect(panel('basic').locator('form [name="tier"]')).toHaveValue('basic');
         await expect(family.locator('.card-stock-badge, .tier-label')).toHaveCount(0);
-        await expect(panel('basic').locator('.catalogue-level-badge')).toHaveText(group === 'technologies' ? 'Niv. 5' : group === 'ships' ? '125,00 k en réserve' : '1,25 M installés');
+        if (group === 'technologies') await expect(panel('basic').locator('.catalogue-level-badge')).toHaveText('Niv. 5');
+        else await expect(panel('basic').locator('.catalogue-level-badge')).toHaveCount(0);
         await expect(tab('basic').locator('.building-rank-level')).toHaveText(group === 'technologies' ? 'Niv. 5' : group === 'ships' ? '125 k' : '1,25 M');
         await expect(tab('basic')).toHaveAccessibleName(group === 'technologies' ? /^Bas(?:ique|\.) Niv\. 5$/ : group === 'ships' ? /^Bas(?:ique|\.) 125 k$/ : /^Bas(?:ique|\.) 1,25 M$/);
         await expect(tab('superior').locator('.building-rank-level')).toHaveText(group === 'technologies' ? 'Niv. 0' : '0');
+        await expect(tab('superior').locator('.building-rank-level')).toHaveCSS('color', group === 'defenses' ? 'rgb(163, 41, 57)' : 'rgb(255, 163, 163)');
         if (group !== 'technologies') {
             await expect(tab('basic')).toHaveAccessibleDescription(group === 'ships' ? /125 000 unités possédées/ : /1 250 000 unités installées/);
             await panel('basic').getByLabel('Quantité', { exact: true }).fill('3');
             await tab('intermediate').click();
             if (group === 'ships') {
-                await expect(panel('intermediate').locator('.catalogue-level-badge')).toHaveText('1,25 M en réserve');
+                await expect(tab('intermediate').locator('.building-rank-level')).toHaveText('1,25 M');
                 await expect(panel('intermediate').getByLabel('Quantité', { exact: true })).toHaveValue('1');
             }
             await tab('basic').click();

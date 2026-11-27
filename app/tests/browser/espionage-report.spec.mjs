@@ -39,7 +39,7 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
   await card('probe').getByRole('button', { name: /Construire/ }).click();
   accelerateQueuedItem(process.env.BROWSER_ROUTER, email, 'shipyard', 'probe');
   await page.reload();
-  await expect(page.locator('#item-probe-basic .catalogue-level-badge')).toHaveText('1 en réserve', { timeout: 60000 });
+  await expect(page.locator('#building-tab-probe-basic .building-rank-level')).toHaveText('1', { timeout: 60000 });
 
   await page.getByRole('navigation',{name:page.viewportSize().width<=740?'Navigation mobile':'Navigation principale'}).getByRole('link', { name: 'Flottes', exact: true }).click();
    await page.getByRole('navigation',{name:'Navigation des flottes'}).getByRole('link',{name:'Préparer une mission',exact:true}).click();

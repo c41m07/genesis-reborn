@@ -117,7 +117,7 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   await page.getByRole('navigation',{name:'Navigation principale',exact:true}).getByRole('link',{name:'Chantier spatial',exact:true}).click();
   accelerateShipyard(process.env.BROWSER_ROUTER,email);
   await page.reload();
-  for(const name of ['probe','colony_ship','transport']) await expect(page.locator('#item-'+name+'-basic .catalogue-level-badge')).toHaveText('1 en réserve',{timeout:90000});
+  for(const name of ['probe','colony_ship','transport']) await expect(page.locator('#building-tab-'+name+'-basic .building-rank-level')).toHaveText('1',{timeout:90000});
   await page.getByRole('navigation',{name:page.viewportSize().width<=740?'Navigation mobile':'Navigation principale'}).getByRole('link',{name:'Flottes',exact:true}).click();
   await page.getByRole('navigation',{name:'Navigation des flottes'}).getByRole('link',{name:'Préparer une mission',exact:true}).click();
   let form=page.locator('.fleet-form form').first();
