@@ -78,11 +78,19 @@ final class GuildRecruitmentTest extends WebTestCase
         $this->browser->loginUser($officer);
         $this->browser->request('GET', '/guildes');
         self::assertSelectorTextContains('[data-guild-recruitment-count]', '1');
+        self::assertSelectorExists('.guild-action-count[data-guild-recruitment-count]:not([hidden])');
+        self::assertSelectorTextContains('#guild-recruitment-description', '1 candidature de guilde à traiter');
+        $this->browser->request('GET', '/guildes');
+        self::assertSelectorTextContains('[data-guild-recruitment-count]', '1');
         self::assertSelectorTextContains('#guild-recruitment', 'RecruitCandidate');
         $this->browser->submitForm('Accepter la candidature');
         self::assertResponseRedirects('/guildes', 303);
         self::assertSame($guild->id, $this->member($candidate)->guild->id);
         self::assertNull($this->entities->find(GuildRecruitment::class, $pending->id));
+        $this->browser->followRedirect();
+        self::assertSelectorExists('[data-guild-recruitment-count][hidden]');
+        $this->browser->request('GET', '/messages/non-lus');
+        self::assertSame(0, json_decode($this->browser->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR)['guildRecruitmentCount']);
     }
 
     public function testInvitationNeedsTheInvitedPlayerToAccept(): void

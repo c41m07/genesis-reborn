@@ -5,6 +5,16 @@
 <div class="page-refinement inventory-page inventory-space inventory-redesign player-inventory-board" data-page-sections="disabled"{% if inventory_page!='pending' %} data-controller="inventory-review"{% endif %}>
 <div class="page-heading"><div><p class="inventory-board-eyebrow">Opérations · objets et récompenses</p><h1>{{ pageTitle }}</h1><p>{{ {boosts:'Accélérez une opération active de votre empire.',boxes:'Choisissez la colonie qui recevra le contenu d’une boîte.',pending:'Consultez les récompenses conservées lorsque votre inventaire est plein.'}[inventory_page] }}</p></div></div>
 {% include 'ui/inventory_navigation.html.twig' %}
+{% if giftNotices.count %}
+<form method="post" action="{{ path('app_inventory_gift_notice_consult') }}" class="panel inventory-gift-notice">
+    {% set through = giftNotices.through|json_encode %}
+    <p><strong>{{ giftNotices.count }} {{ giftNotices.count == 1 ? 'nouveau cadeau' : 'nouveaux cadeaux' }}</strong> dans votre inventaire.</p>
+    <input type="hidden" name="page" value="{{ inventory_page }}">
+    <input type="hidden" name="through" value="{{ through }}">
+    <input type="hidden" name="_token" value="{{ csrf_token('inventory-gifts-' ~ chrome.membership.id ~ '-' ~ inventory_page ~ '-' ~ through) }}">
+    <button type="submit" class="secondary">Marquer les cadeaux comme vus</button>
+</form>
+{% endif %}
 {% if inventory_page != 'boosts' %}
 {% include 'boosts/_capacity.html.twig' %}
 {% endif %}
