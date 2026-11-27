@@ -8,7 +8,8 @@
 {% endif %}
 <nav class="ui-tabs space-navigation" aria-label="{{ navigationLabel }}">
     {% for destination in destinations %}
-        <a href="{{ path(destination.route, destination.parameters|default({})) }}"{% if destination.active %} class="active" aria-current="{{ currentAriaValue|default('page') }}"{% endif %}>{{ destination.label }}{% if destination.count is defined %} <span class="badge">{{ destination.count }}</span>{% endif %}</a>
+        <a href="{{ path(destination.route, destination.parameters|default({})) }}"{% if destination.active %} class="active" aria-current="{{ currentAriaValue|default('page') }}"{% endif %}>{{ destination.label }}{% if destination.count is defined %} <span class="badge">{{ destination.count }}</span>{% endif %}{% if destination.newCount is defined %}
+            <span class="inventory-new-label" data-message-notifications-target="inventoryTab" data-page="{{ destination.noticePage }}"{% if not destination.newCount %} hidden{% endif %}>{{ destination.newCount }} {{ destination.newCount == 1 ? 'nouveau' : 'nouveaux' }}</span>{% endif %}</a>
     {% endfor %}
 </nav>
 {% if compact|default(false) %}

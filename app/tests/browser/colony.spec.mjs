@@ -117,7 +117,7 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   await page.getByRole('navigation',{name:'Navigation principale',exact:true}).getByRole('link',{name:'Chantier spatial',exact:true}).click();
   accelerateShipyard(process.env.BROWSER_ROUTER,email);
   await page.reload();
-  for(const name of ['probe','colony_ship','transport']) await expect(page.locator('#item-'+name+'-basic .catalogue-level-badge')).toHaveText('1 en réserve',{timeout:90000});
+  for(const name of ['probe','colony_ship','transport']) await expect(page.locator('#building-tab-'+name+'-basic .building-rank-level')).toHaveText('1',{timeout:90000});
   await page.getByRole('navigation',{name:page.viewportSize().width<=740?'Navigation mobile':'Navigation principale'}).getByRole('link',{name:'Flottes',exact:true}).click();
   await page.getByRole('navigation',{name:'Navigation des flottes'}).getByRole('link',{name:'Préparer une mission',exact:true}).click();
   let form=page.locator('.fleet-form form').first();
@@ -148,6 +148,19 @@ test('Chantier, estimation, colonisation, transport et exploration réels', asyn
   await page.waitForLoadState('load');await page.getByLabel('Choisir une colonie').selectOption(String(origin));await expect(page).toHaveURL(url=>url.pathname==='/planetes/'+origin&&url.search==='?section=technologies');await expect(page.locator('#panel-technologies')).toBeVisible();
   await page.getByRole('navigation',{name:'Navigation principale',exact:true}).getByRole('link',{name:'Vue générale',exact:true}).click();await expect(page).toHaveURL(new RegExp('/planetes/'+origin+'$'));
   await page.getByRole('navigation',{name:page.viewportSize().width<=740?'Navigation mobile':'Navigation principale'}).getByRole('link',{name:'Flottes',exact:true}).click();
+  // Le même sélecteur conserve la page Missions et charge les ressources de la nouvelle colonie.
+  // Attendre le bundle différé : avant sa connexion, le sélecteur natif ne soumet pas le formulaire.
+  await page.waitForLoadState('load');
+  const colonySelector = page.getByLabel('Choisir une colonie');
+  await expect(colonySelector).toHaveValue(String(origin));
+  await colonySelector.selectOption(String(target.id));
+  await expect(page).toHaveURL(url => url.pathname === '/flottes' && url.searchParams.get('origin') === String(target.id));
+  await expect(page.locator('.fleet-page-layout')).toHaveAttribute('data-fleet-colony', String(target.id));
+  await expect(page.locator('[data-live-region="resources"]')).toHaveAttribute('data-resource-strip-url-value', '/planetes/'+target.id+'/ressources');
+  await page.waitForLoadState('load');
+  await expect(colonySelector).toHaveValue(String(target.id));
+  await colonySelector.selectOption(String(origin));
+  await expect(page.locator('.fleet-page-layout')).toHaveAttribute('data-fleet-colony', String(origin));
   const fleetMenu = page.locator('.space-navigation-menu');
   if (await fleetMenu.locator('summary').isVisible() && !(await fleetMenu.evaluate(element => element.open))) await fleetMenu.locator('summary').click();
   await page.getByRole('navigation',{name:'Navigation des flottes'}).getByRole('link',{name:'Préparer une mission',exact:true}).click();

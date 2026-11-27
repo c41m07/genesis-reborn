@@ -4,7 +4,7 @@ namespace App\Service\Combat;
 
 use App\Entity\{CombatLog, DiplomaticReport, EspionageReport, PlayerUniverse, ReportArchive, TransportReport};
 use App\Manager\GameManager;
-use App\Repository\GameRepository;
+use App\Repository\{GameRepository, PirateReportRepository};
 use App\Service\Fleet\EspionageReportReader;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
@@ -13,6 +13,7 @@ final class ReportArchiveService
 {
     private const TYPES = ['combat' => [CombatLog::class, 'app_combat_report'], 'espionage' => [EspionageReport::class, 'app_espionage_report'], 'economy' => [TransportReport::class, 'app_transport_report'], 'diplomatic' => [DiplomaticReport::class, 'app_diplomatic_report']];
     public function __construct(
+        private PirateReportRepository $campaigns,
         private EntityManagerInterface $em,
         private GameManager $manager,
         private GameRepository $repo,
@@ -38,6 +39,11 @@ final class ReportArchiveService
                 FROM diplomatic_report r JOIN player_universe recipient ON recipient.id=r.recipient_id
                 WHERE recipient.id=:member AND recipient.universe_id=:universe",
         ];
+        if ($this->campaigns->admitted($member)) {
+            $queries['campaign'] = "SELECT 'campaign' AS kind, r.id, r.created_at AS happened_at"
+                .PirateReportRepository::SOURCE.' WHERE '.PirateReportRepository::OWNER
+                .' AND seat.id=:member AND seat.universe_id=:universe';
+        }
         $params = ['member' => $member->id, 'universe' => $member->universe->id];
         foreach ($queries as $kind => &$sql) {
             if ($criteria) {
@@ -53,6 +59,7 @@ final class ReportArchiveService
                 if ($criteria->values['planet'] !== '') {
                     $params['planet'] = \App\Service\Search\SearchCriteria::pattern($criteria->values['planet']);
                     $sql .= match ($kind) {
+                        'campaign' => " AND LOWER(r.location) LIKE :planet ESCAPE '!'",
                         'combat' => " AND LOWER(p.name) LIKE :planet ESCAPE '!'",
                         'espionage' => " AND EXISTS (SELECT 1 FROM planet ep WHERE ep.id=r.target_id AND LOWER(ep.name) LIKE :planet ESCAPE '!')",
                         'diplomatic' => " AND LOWER(r.location) LIKE :planet ESCAPE '!'",
@@ -62,6 +69,7 @@ final class ReportArchiveService
                 if ($criteria->values['participant'] !== '') {
                     $params['person'] = \App\Service\Search\SearchCriteria::pattern($criteria->values['participant']);
                     $sql .= match ($kind) {
+                        'campaign' => " AND (LOWER(account.username) LIKE :person ESCAPE '!' OR 'pirates' LIKE :person ESCAPE '!')",
                         'combat' => " AND EXISTS (SELECT 1 FROM combat_participant pc JOIN player_universe pm ON pm.id=pc.player_universe_id LEFT JOIN player pp ON pp.id=pm.player_id WHERE pc.combat_event_id=e.id AND pm.universe_id=:universe AND LOWER(COALESCE(pp.username,'Empire oublié')) LIKE :person ESCAPE '!')",
                         'espionage' => " AND EXISTS (SELECT 1 FROM player pp WHERE pp.id=sender.player_id AND LOWER(pp.username) LIKE :person ESCAPE '!')",
                         'diplomatic' => " AND EXISTS (SELECT 1 FROM player_universe counterparty JOIN player pp ON pp.id=counterparty.player_id WHERE counterparty.id=r.counterpart_id AND counterparty.universe_id=:universe AND counterparty.forgotten_at IS NULL AND LOWER(pp.username) LIKE :person ESCAPE '!')",
@@ -81,8 +89,14 @@ final class ReportArchiveService
         // Compter et paginer après les droits et les filtres, y compris dans l’onglet Tous.
         $all = implode(' UNION ALL ', $queries);
         $selected = $filter === 'all' ? $all : $queries[$filter];
+        if (isset($queries['campaign']) && in_array($filter, ['espionage', 'combat', 'economy'], true)) {
+            $selected .= ' UNION ALL '.$queries['campaign'].' AND r.category=:campaignCategory';
+        }
         $connection = $this->em->getConnection();
         $total = (int) $connection->fetchOne('SELECT COUNT(*) FROM (' . $all . ') all_reports', $params);
+        if (str_contains($selected, ':campaignCategory')) {
+            $params['campaignCategory'] = $filter;
+        }
         $count = $filter === 'all' ? $total : (int) $connection->fetchOne('SELECT COUNT(*) FROM (' . $selected . ') selected_reports', $params);
         $pages = max(1, (int) ceil($count / 50));
         $page = min($page, $pages);
@@ -95,6 +109,7 @@ final class ReportArchiveService
         $reportsByKind = [];
         foreach ($idsByKind as $kind => $ids) {
             $reportsByKind[$kind] = match ($kind) {
+                'campaign' => $this->campaigns->summaries($member, $ids),
                 'combat' => $this->summaries->combats($member, $ids),
                 'espionage' => $this->summaries->espionage($member, $ids),
                 'economy' => $this->summaries->transports($member, $ids),
@@ -103,10 +118,15 @@ final class ReportArchiveService
         }
         $entries = [];
         foreach ($rows as $row) {
-            [, $route] = self::TYPES[$row['kind']];
+            $campaign = $row['kind'] === 'campaign';
+            $route = $campaign ? 'app_pirate_mission_report' : self::TYPES[$row['kind']][1];
+            $report = $reportsByKind[$row['kind']][(int) $row['id']] ?? null;
+            if ($campaign && $report === null) {
+                continue;
+            }
             $entries[] = [
-                'kind' => $row['kind'],
-                'report' => $reportsByKind[$row['kind']][(int) $row['id']] ?? null,
+                'kind' => $campaign ? $report['category'] : $row['kind'],
+                'report' => $campaign ? $report + ['id' => $row['id']] : $report,
                 'route' => $route,
                 'key' => $row['kind'] . ':' . $row['id'],
             ];
@@ -140,18 +160,20 @@ final class ReportArchiveService
             $this->manager->lock($member);
             $reports = [];
             foreach ($keys as $key) {
-                if (!is_string($key) || !preg_match('/^(combat|espionage|economy|diplomatic):([1-9][0-9]{0,9})$/D', $key, $match)) {
+                if (!is_string($key) || !preg_match('/^(combat|espionage|economy|diplomatic|campaign):([1-9][0-9]{0,9})$/D', $key, $match)) {
                     throw new \DomainException('Sélection de rapports invalide.');
                 }
                 $kind = $match[1];
                 $id = (int) $match[2];
                 $report = match ($kind) {
+                    'campaign' => $this->campaigns->visible($member, $id),
                     'combat' => $this->combats->findVisible($member, $id),
                     'espionage' => $this->espionage->findVisible($member, $id),
                     'economy' => $this->repo->find(TransportReport::class, $id),
                     'diplomatic' => $this->repo->one(DiplomaticReport::class, ['id' => $id, 'recipient' => $member]),
                 };
                 $allowed = $report !== null && match ($kind) {
+                    'campaign' => true, // visible() a déjà vérifié le propriétaire et son univers.
                     'combat' => $report->combatEvent->planet->solarSystem->galaxy->universe->id === $member->universe->id,
                     'espionage' => $report->sender->universe->id === $member->universe->id,
                     'diplomatic' => $report->recipient->id === $member->id && $report->recipient->universe->id === $member->universe->id,

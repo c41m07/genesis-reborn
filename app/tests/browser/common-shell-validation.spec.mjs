@@ -23,6 +23,19 @@ async function enter(page) {
 test('Socle commun : menus et panneau événement au clavier, deux thèmes et parcours natif', async ({ page, browser, baseURL }, info) => {
   test.setTimeout(150000);
   const { email, home } = await enter(page);
+  const navigation = page.getByRole('navigation', { name: 'Navigation principale', exact: true });
+  await expect(navigation.getByRole('link', { name: 'Bourse' }).locator('use')).toHaveAttribute('href', /#scales$/);
+  await expect(navigation.getByRole('link', { name: 'Inventaire' }).locator('use')).toHaveAttribute('href', /#backpack$/);
+  const icons = await navigation.locator('a').evaluateAll(links => links.map(link => link.querySelector('svg use').getAttribute('href')));
+  expect(new Set(icons).size).toBe(icons.length);
+  // Chaque repère du menu doit aussi correspondre à un dessin effectivement servi.
+  const symbols = await page.evaluate(async () => {
+    const response = await fetch('/art/icons.svg');
+    const sprite = new DOMParser().parseFromString(await response.text(), 'image/svg+xml');
+    return [...sprite.querySelectorAll('symbol')].map(symbol => symbol.id);
+  });
+  for (const icon of icons) expect(symbols).toContain(icon.split('#')[1]);
+
   // La recette du tiroir ne dépend ni d’une rotation active ni d’un scénario précédent.
   runIsolatedSql(process.env.BROWSER_ROUTER, `INSERT INTO game_event(name,description,type,status,starts_at,ends_at,parameters,visible_to_players) VALUES('Annonce fictive du socle','','announcement','active',UTC_TIMESTAMP()-INTERVAL 1 HOUR,UTC_TIMESTAMP()+INTERVAL 1 HOUR,'{}',1)`);
   for (const theme of ['dark', 'light']) {

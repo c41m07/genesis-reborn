@@ -1,2 +1,2 @@
 {# Garder le compteur de cette vue réutilisable par son actualisation. #}
-<span class="badge" data-live-region="overview-flight-metric"><strong>{{ active_fleet_count|default(active_fleets|length) + pirate_campaign_traffic(membership).outbound|length }}</strong></span>
+<span class="badge" data-live-region="overview-flight-metric"><strong>{{ active_fleet_count|default(active_fleets|length) + pirate_campaign_traffic(membership).outbound|length + market_flights|default([])|length }}</strong></span>

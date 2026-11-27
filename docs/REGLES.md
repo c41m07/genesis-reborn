@@ -224,7 +224,7 @@ Les 19 recherches ont reçu des libellés français distincts et des slugs dédi
 
 Les courbes, bonus communs entre rangs, profils de mobilité, ciblage furtif, retarget après destruction et matrice de contres sont décrits dans [BALANCING_IMPLEMENTATION_2026-11-02.md](archives/PROGRESSION_2026-11-02.md). Ces choix sont validés pour l’implémentation ; les jalons économiques demeurent des objectifs à mesurer en Alpha.
 
-Pour les bonus et les courbes, ce rééquilibrage remplace les formules historiques de la section précédente : les bonus de recherche ne se composent plus par rang. L’investissement pondéré vaut la somme des niveaux de chaque rang, plafonnés à leur maximum et pondérés par 1 / 1,25 / 1,5625, divisée par le maximum pondéré des trois rangs. La progression commune vaut `ln(1 + 2 × investissement) / ln(3)` ; le bonus vaut cette progression multipliée par le plafond configuré. La réduction de durée des bâtiments par la recherche reste plafonnée à 70 % et la réduction de coût à 40 %. Le plafond relevé à 89,5 % ne concerne que le laboratoire et le chantier (voir la progression économique par rang). La cadence accorde une seule chance supplémentaire commune, plafonnée à 50 % par tir de base. Les coûts et durées utilisent les courbes par phase de `config/game/rules.yaml`, sous réserve des décisions plus récentes sur les producteurs. Les statistiques de combat R14 et les compositions de coûts du 5 novembre restent prioritaires sur les anciens exemples chiffrés.
+Pour les bonus et les courbes, ce rééquilibrage remplace les formules historiques de la section précédente : les bonus de recherche ne se composent plus par rang. L’investissement pondéré vaut la somme des niveaux de chaque rang, plafonnés à leur maximum et pondérés par 21 / 30 / 49 pour les quinze familles à rendement décroissant, divisée par le maximum pondéré des trois rangs. La progression commune vaut `ln(1 + 2 × investissement) / ln(3)` ; le bonus vaut cette progression multipliée par le plafond configuré. La réduction de durée des bâtiments par la recherche reste plafonnée à 70 % et la réduction de coût à 40 %. Le plafond relevé à 89,5 % ne concerne que le laboratoire et le chantier (voir la progression économique par rang). La cadence accorde une seule chance supplémentaire commune, plafonnée à 50 % par tir de base. Les coûts et durées utilisent les courbes par phase de `config/game/rules.yaml`, sous réserve des décisions plus récentes sur les producteurs. Les statistiques de combat R14 et les compositions de coûts du 5 novembre restent prioritaires sur les anciens exemples chiffrés.
 
 
 ### Tirs secondaires et contres — 4 novembre 2026
@@ -321,6 +321,20 @@ Le nombre maximum de vaisseaux par flotte est fixé par défaut à **1 000 000**
 L’inventaire peut contenir **100 objets disponibles** par joueur et par univers, boosts et boîtes de ressources confondus. Les récompenses supplémentaires restent en attente et rejoignent l’inventaire de la plus ancienne à la plus récente lorsqu’une place se libère. Cette capacité remplace la limite précédente de 3 emplacements.
 
 **Boosts d’inventaire** : seules les commandes actives de la file de construction, de recherche ou de production (vaisseaux et défenses inclus) peuvent être accélérées. Les missions de flotte restent éligibles aux récompenses prévues mais pas à l’utilisation d’un boost. Une accélération de flotte déjà enregistrée n’est ni annulée, ni recalculée, ni remboursée.
+
+#### Témoins d’action et de cadeau
+
+Dans la navigation, le nombre rouge de recrutement signale les candidatures
+encore à décider pour le commandant et les titulaires de la permission de
+recruter, ou les invitations reçues pour un joueur sans guilde. Lire la page
+ou une conversation ne modifie pas ce nombre. Les messages ordinaires gardent
+leur indicateur de lecture distinct.
+
+Le nombre à côté d’Inventaire indique les cadeaux nouveaux, encore disponibles
+ou en attente, de l’empire actif. Il ne compte ni les anciens objets de stock,
+ni les objets utilisés ou dont le délai est passé. « Marquer les cadeaux comme
+vus » enlève uniquement le témoin des cadeaux signalés sur cette page, sans
+les ouvrir ni les utiliser. Les cadeaux arrivés depuis le rendu restent signalés.
 
 #### Boîtes de ressources — décisions du 8 novembre, réalisation du 9 novembre 2026
 
@@ -637,6 +651,11 @@ Les liens préremplis de la carte conservent le contexte de leur cible ; une cib
 connue peut rester consultable en formulaire même si la prévisualisation refuse
 actuellement l’envoi, notamment un destinataire qui refuse les transports.
 
+Dans Flottes, changer la colonie active depuis le menu conserve la page
+Missions, Préparer, Orbites ou À quai. Une préparation passe au hangar de la
+nouvelle origine sans reprendre une composition choisie sur l’ancienne. La liste
+des missions actives continue de couvrir toutes les colonies de l’univers.
+
 Les listes et suggestions respectent les droits de mission existants. Une liste
 ne remplace jamais les contrôles de la prévisualisation et de l’envoi : découverte,
 origine, univers, diplomatie, vacances, composition, carburant et capacités restent
@@ -698,7 +717,7 @@ aucun prélèvement dans le fret d’hydrogène ni à distance dans les stocks d
 Le refus est sans effet si le carburant ou une destination autorisée manque.
 
 Le rappel n’exécute pas la mission initiale et préserve les vaisseaux, le fret
-et le carburant inutilisé. Une nouvelle programmation invalide les anciens messages ;
+jusqu’au retour. Le carburant inutilisé est perdu à quai. Une nouvelle programmation invalide les anciens messages ;
 une double confirmation ne crée aucun double retour. L’origine historique reste
 conservée ; propriété et univers de la colonie de retour sont revérifiés à l’arrivée.
 Le dépôt applique les capacités de stockage habituelles, avec débordement tracé.
@@ -929,18 +948,14 @@ et découverte du même univers. La nouvelle base devient effective uniquement
 après l’arrivée réussie ; aucune mission de retour ni récompense n’est créée.
 Les prochains départs utilisent la nouvelle base et les formules habituelles.
 
-Le départ réserve deux fois le carburant aller. À chaque arrivée, seul le coût
-du trajet effectivement programmé est consommé. Un rappel avant arrivée utilise
-le devis habituel et conserve aussi le carburant inutilisé. Le carburant restant
-à l’installation devient un stock embarqué de la flotte inactive de la colonie,
-séparé du fret d’hydrogène. Les départs suivants utilisent d’abord ce carburant,
-puis l’hydrogène de la planète. Le fret est chargé depuis les stocks planétaires ;
-le surplus déjà embarqué n’est pas rechargé automatiquement.
+Le stationnement réserve au départ deux fois le carburant aller, intégralement payé
+par la colonie de départ. La flotte utilise cette réserve pour le trajet, un rappel
+ou un repli. Dès l’installation à quai, le carburant restant est définitivement perdu.
+Chaque nouveau départ prélève tout le carburant du devis sur sa colonie.
 
-Le fret est déposé dans les capacités disponibles. Le surplus reste embarqué,
-sans perte automatique ; des commandes distinctes déchargent le carburant ou
-le fret, toujours selon la place disponible. Un départ est refusé si les
-vaisseaux laissés à quai ne peuvent plus porter les stocks conservés.
+L’hydrogène chargé comme fret suit les mêmes règles de dépôt que les autres
+ressources. Le surplus du stationnement reste en soute et peut être déchargé dans
+la limite du stockage disponible. Les vaisseaux laissés à quai doivent pouvoir porter ce fret.
 
 Si la destination est perdue, repli vers l’origine si elle reste possédée et
 atteignable avec la réserve, sinon vers la colonie possédée atteignable au trajet
@@ -954,4 +969,36 @@ possédée et découverte. Sans solution, l’attente persiste.
 
 ## Calendrier de l’Avent
 
-L’administration choisit la période de visibilité dans chaque univers. Les portes du 1er au 24 décembre s’ouvrent à minuit à Paris. Chaque compte peut rattraper les jours passés pendant la période et obtenir un lot par porte pour toute la saison. À l’heure de fermeture, la page et les portes ferment. Les lots déjà réservés restent retirables dans l’inventaire. [Détail du calendrier et des réservations](CALENDRIER_AVENT.md).
+L’administration choisit la période de visibilité dans chaque univers. Les portes du 1er au 24 décembre s’ouvrent à minuit à Paris. Chaque compte peut rattraper les jours passés pendant la période et obtenir un lot par porte pour toute la saison. À l’heure de fermeture, la page et les portes ferment. Les nouveaux lots de matériaux et de vaisseaux deviennent des boîtes à ouvrir depuis l’inventaire, jusqu’au 31 décembre inclus en heure de Paris. Les matériaux d’une boîte de l’Avent peuvent dépasser la capacité des entrepôts ; les dépôts habituels restent plafonnés. Les anciens lots déjà réservés conservent leur retrait sans cette nouvelle échéance. [Détail du calendrier et des réservations](CALENDRIER_AVENT.md).
+
+## Bourse de ressources
+
+La station commerciale A:0:0, ouverte par univers, échange les quatre matériaux sans électricité. Le lot voyage sur les propres cargos du joueur, protégés en mission commerciale. Il est échangé en station après 30 minutes, puis livré après les 30 minutes du retour. Au déchargement, le surplus est placé dans une boîte de ressources de l’empire, y compris après un rappel. Si l’inventaire est plein, la boîte attend une place. Les frais d’essai sont de 2 %. Vendredi à 9 h à Paris, les marchands réapprovisionnent jusqu’à la moitié des ventes réelles hebdomadaires de la station, sans dépasser la cible ni modifier les cours. [Détail du parcours et du stock](BOURSE_DE_RESSOURCES.md).
+
+## Bonus quotidiens temporaires
+
+Un retrait quotidien par **compte**, tous univers confondus. Le jour change à minuit, heure de Paris. Une date manquée n’efface pas le cycle des sept cadeaux. Le cadeau reste dans l’inventaire de l’univers actif, sans modifier les stocks d’une colonie. En cas d’inventaire plein, l’objet attend une place. Il expire même en attente sept jours (168 h) après le retrait. L’activation manuelle ouvre une fenêtre de cinq heures ; un seul bonus temporaire peut être actif à la fois. Les boosts instantanés déjà détenus restent utilisables séparément.
+
+| Jour | Cadeau | Effet |
+| --- | --- | --- |
+| 1 | Moteurs économes | −20 % de carburant de trajet au départ : transport, stationnement, exploration et colonisation ; la réserve et le profil de rappel sont figés. |
+| 2 | Soutes modulaires | +20 % de capacité de fret pour transport et stationnement, hors réservoir. Un excédent revenu n’est pas détruit ; il est à décharger avant de redéployer des vaisseaux si la réserve ne tient plus. |
+| 3 | Coffres renforcés | Part d’entrepôt protégée du pillage doublée, de 10 % à 20 % avec le réglage habituel, relevée au début d’un combat. |
+| 4 | Défense renforcée | +10 % de dégâts en défense PvP ; flotte et défenses au sol. |
+| 5 | Offensive renforcée | +10 % de dégâts en attaque PvP. |
+| 6 | Rythme accéléré | Travail des files ×1,25 seulement pendant les cinq heures actives, y compris pour une nouvelle tête de file. |
+| 7 | Production renforcée | Production brute des colonies de l’empire ×1,15 sur le seul intervalle actif ; consommations et plafonds continuent de s’appliquer. |
+
+L’effet combat est figé à l’ouverture du combat et ne s’applique pas aux combats PNJ. Les trajets spécifiques de la Bourse, de la campagne pirate et des convois du Hall ne prennent pas le bonus de vol.
+
+## Rapports de campagne et fret des convois pirates
+
+Les rapports privés de reconnaissance et de combat de la campagne rejoignent les rubriques Espionnage et Combats. Chaque trajet du convoi produit un rapport de transport dans Économie. À la livraison, une boîte de ressources contient la totalité du fret annoncé, demi-unités comprises. Le joueur choisit une colonie de son univers à l’ouverture. Elle doit pouvoir accueillir tout le contenu. Une livraison déjà créditée avant cette évolution reste acquise et ne donne aucune boîte supplémentaire.
+
+## Notifications des boîtes et des demandes d’orbite
+
+Les nouvelles boîtes de convoi pirate et de surplus de Bourse expirent exactement 24 heures après leur livraison, même en attente ou pendant les vacances. À l’échéance, le contenu non retiré est perdu. Chaque boîte porte sa propre date limite. Les boîtes déjà attribuées sans échéance gardent leurs conditions.
+
+Une boîte de convoi pirate devient nouvelle lors de sa livraison effective. Toute nouvelle boîte suit cette règle de signalement, quelle que soit sa provenance. Un objet reçu lorsque l’inventaire est plein est signalé dans les récompenses en attente. Son éventuelle promotion conserve son état de lecture. La consultation de l’onglet Boîtes marque les boîtes affichées comme vues sans les ouvrir. Un premier retrait réussi, même partiel pour l’Avent, ou un marquage comme vu retire le signal de la boîte. Les stocks antérieurs conservent leur état de lecture.
+
+Le badge Flottes compte les demandes d’orbite reçues qui attendent encore une réponse sur les colonies du joueur dans son univers. Le lien ouvre la colonie de la demande à l’échéance la plus proche. Les anciennes demandes à traiter après l’arrivée restent accessibles.

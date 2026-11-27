@@ -534,7 +534,7 @@ final class GameRepository
     /** @return list<GameEvent> Le panneau commun conserve tous les événements applicables. */
     public function visibleGameEvents(PlayerUniverse $membership, \DateTimeImmutable $now): array
     {
-        return $this->eventEntities($this->visibleGameEventsQuery($membership, $now)->orderBy('e.ends_at', 'ASC'), GameEvent::class);
+        return $this->nativeEntities($this->visibleGameEventsQuery($membership, $now)->orderBy('e.ends_at', 'ASC'), GameEvent::class);
     }
 
     public function playerGameEventsPage(PlayerUniverse $membership, \DateTimeImmutable $now, bool $upcoming, int $page): array
@@ -568,7 +568,7 @@ final class GameRepository
         $direction = $newestFirst ? 'DESC' : 'ASC';
         $query = $this->playerChallengesQuery($membership, $statuses)->orderBy('e.scheduled_at', $direction)->addOrderBy('e.id', $direction);
         if ($limit !== null) $query->setMaxResults(max(1, min(50, $limit)));
-        return $this->eventEntities($query, BoostEvent::class);
+        return $this->nativeEntities($query, BoostEvent::class);
     }
 
     private function playerChallengesQuery(PlayerUniverse $membership, array $statuses): QueryBuilder
@@ -600,7 +600,7 @@ final class GameRepository
         $total = (int) (clone $query)->select('COUNT(*)')->resetOrderBy()->executeQuery()->fetchOne();
         $pages = max(1, (int) ceil($total / 25));
         $page = min($pages, max(1, $page));
-        return ['rows' => $this->eventEntities($query->setFirstResult(($page - 1) * 25)->setMaxResults(25), $class),
+        return ['rows' => $this->nativeEntities($query->setFirstResult(($page - 1) * 25)->setMaxResults(25), $class),
             'total' => $total, 'page' => $page, 'pages' => $pages];
     }
 
@@ -609,7 +609,7 @@ final class GameRepository
      * @param class-string<T> $class
      * @return list<T>
      */
-    private function eventEntities(QueryBuilder $query, string $class): array
+    private function nativeEntities(QueryBuilder $query, string $class): array
     {
         // Le mapping Doctrine conserve les types JSON, dates et associations sans seconde lecture non filtrée.
         $mapping = new ResultSetMappingBuilder($this->em);
@@ -852,6 +852,41 @@ final class GameRepository
         return $query->orderBy('f.arrivalAt', 'ASC')->addOrderBy('f.id', 'ASC')->getQuery()->getResult();
     }
 
+    /** @return array{count:int, colony:?int} Demandes reçues et première colonie à ouvrir depuis le menu. */
+    public function orbitDecisionsDue(PlayerUniverse $viewer, \DateTimeImmutable $now): array
+    {
+        if (!$viewer->isPlayerControlled() || $viewer->player->lockedAt !== null) {
+            return ['count' => 0, 'colony' => null];
+        }
+        // Compter dans l’univers du destinataire sans charger les flottes ni les découvertes.
+        // Les anciennes demandes à l’arrivée restent recevables sans date limite.
+        $row = $this->em->getConnection()->fetchAssociative(<<<'SQL'
+            SELECT COUNT(*) OVER () AS total, f.destination_id AS colony
+            FROM fleet f
+            JOIN planet target ON target.id = f.destination_id
+            JOIN solar_system ts ON ts.id = target.solar_system_id
+            JOIN galaxy tg ON tg.id = ts.galaxy_id
+            JOIN planet home ON home.id = f.home_planet_id
+            JOIN solar_system hs ON hs.id = home.solar_system_id
+            JOIN galaxy hg ON hg.id = hs.galaxy_id
+            JOIN player_universe sender ON sender.id = f.player_universe_id
+            WHERE target.owner_id = :viewer AND sender.id <> :viewer
+              AND tg.universe_id = :universe AND hg.universe_id = :universe AND sender.universe_id = :universe
+              AND f.mission = 'orbit' AND (
+                (f.status = 'orbit_pending' AND JSON_EXTRACT(f.navigation, '$.orbit_request.version') IS NULL)
+                OR (f.status = 'traveling' AND f.arrival_at > :now
+                    AND JSON_EXTRACT(f.navigation, '$.orbit_request.version') = 1
+                    AND JSON_VALUE(f.navigation, '$.orbit_request.status') = 'pending'
+                    AND JSON_EXTRACT(f.navigation, '$.orbit_request.recipient_id') = :viewer
+                    AND JSON_EXTRACT(f.navigation, '$.orbit_request.planet_id') = target.id)
+              )
+            ORDER BY f.arrival_at IS NULL, f.arrival_at, f.id LIMIT 1
+            SQL, ['viewer' => $viewer->id, 'universe' => $viewer->universe->id,
+                'now' => $now->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s')]);
+
+        return $row ? ['count' => (int) $row['total'], 'colony' => (int) $row['colony']] : ['count' => 0, 'colony' => null];
+    }
+
     public function activeFleetsInUniverse(Universe $universe): array
     {
         return $this->em->createQueryBuilder()->select(
@@ -1066,6 +1101,29 @@ final class GameRepository
         return $this->all(Universe::class, ['status' => 'active'], ['id' => 'ASC']);
     }
 
+    /** @return list<int> Identifiants actifs, à relever avant la transaction de rotation. */
+    public function activeUniverseIds(): array
+    {
+        return array_map('intval', $this->em->createQueryBuilder()
+            ->select('u.id')->from(Universe::class, 'u')->where('u.status = :status')
+            ->setParameter('status', 'active')->orderBy('u.id', 'ASC')->getQuery()->getSingleColumnResult());
+    }
+
+    /** @param list<int> $ids @return list<Universe> */
+    public function lockActiveUniversesForRotation(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        // La première lecture de la transaction doit être verrouillante. Une lecture
+        // ordinaire avant ce verrou figerait un instantané ignorant la rotation déjà inscrite.
+        return $this->em->createQueryBuilder()->select('u')->from(Universe::class, 'u')
+            ->where('u.id IN (:ids)')->andWhere('u.status = :status')
+            ->setParameter('ids', $ids)->setParameter('status', 'active')->orderBy('u.id', 'ASC')
+            ->getQuery()->setLockMode(LockMode::PESSIMISTIC_WRITE)->setHint(Query::HINT_REFRESH, true)->getResult();
+    }
+
     public function weeklyBoostEventFor(Universe $universe, \DateTimeImmutable $monday): ?BoostEvent
     {
         return $this->em->createQueryBuilder()->select('e')->from(BoostEvent::class, 'e')->where('e.universe = :universe')->andWhere('e.eventKey LIKE :prefix')->setParameter('universe', $universe)->setParameter('prefix', 'weekly-' . $monday->format('Ymd') . '-u' . $universe->id . '-%')->setMaxResults(1)->getQuery()->getOneOrNullResult();
@@ -1193,6 +1251,7 @@ final class GameRepository
             \App\Message\PirateAttackDue::KIND,
             \App\Message\PirateConvoyDue::KIND,
             \App\Message\PirateSurvivorsDue::KIND,
+            \App\Message\MarketConvoyDue::KIND,
         ]);
         if (!$notifications) {
             // La programmation annuelle peut précéder Noël de plusieurs mois.
@@ -1257,6 +1316,47 @@ final class GameRepository
     public function oldestBoost(PlayerUniverse $membership, string $status, ?string $kind = null): ?PlayerBoost
     {
         return $this->em->getRepository(PlayerBoost::class)->findOneBy(['playerUniverse' => $membership, 'status' => $status] + ($kind === null ? [] : ['kind' => $kind]), ['earnedAt' => 'ASC', 'id' => 'ASC']);
+    }
+
+    // Une échéance absente dans le contenu historique donne NULL, jamais une expiration immédiate.
+    public const BOX_DEADLINE_SQL = "CAST(JSON_VALUE(payload, '$.expires_at') AS UNSIGNED)";
+
+    /** @return list<PlayerBoost> Objets disponibles ou en attente qui doivent libérer leur place. */
+    public function expiredInventoryItems(PlayerUniverse $membership, \DateTimeImmutable $boostCutoff, \DateTimeImmutable $now): array
+    {
+        $query = $this->em->getConnection()->createQueryBuilder()->from('player_boost', 'e')
+            ->where('e.player_universe_id = :member')->andWhere("e.status IN ('available', 'pending')")
+            ->andWhere("(e.kind = 'timed_boost' AND e.earned_at <= :cutoff) OR (e.kind = 'resource_box' AND ".self::BOX_DEADLINE_SQL." <= :now)")
+            ->setParameter('member', $membership->id)
+            ->setParameter('cutoff', $boostCutoff->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s'))
+            ->setParameter('now', $now->getTimestamp());
+
+        return $this->nativeEntities($query, PlayerBoost::class);
+    }
+
+    /** @return list<PlayerBoost> La capacité de l’inventaire borne cette liste. */
+    public function availableTimedBoosts(PlayerUniverse $membership): array
+    {
+        return $this->em->getRepository(PlayerBoost::class)->findBy(
+            ['playerUniverse' => $membership, 'status' => 'available', 'kind' => \App\Service\Boost\TimedBoostEffects::KIND],
+            ['earnedAt' => 'ASC', 'id' => 'ASC'], 100,
+        );
+    }
+
+    /** @return list<PlayerBoost> Historique borné par le début possible et celui demandé. */
+    public function timedBoostWindows(PlayerUniverse $membership, \DateTimeImmutable $after, \DateTimeImmutable $until, ?string $effect): array
+    {
+        $query = $this->em->createQueryBuilder()->select('b')->from(PlayerBoost::class, 'b')
+            ->where('b.playerUniverse = :membership AND b.kind = :kind AND b.status = :used')
+            ->andWhere('b.usedAt > :after AND b.usedAt <= :until')
+            ->setParameter('membership', $membership)->setParameter('kind', \App\Service\Boost\TimedBoostEffects::KIND)
+            ->setParameter('used', 'used')->setParameter('after', $after)->setParameter('until', $until)
+            ->orderBy('b.usedAt', 'ASC');
+        if ($effect !== null) {
+            $query->andWhere('b.operationType = :effect')->setParameter('effect', $effect);
+        }
+
+        return $query->getQuery()->getResult();
     }
 
     public function riskBoostCountSince(PlayerUniverse $membership, \DateTimeImmutable $from, \DateTimeImmutable $until): int

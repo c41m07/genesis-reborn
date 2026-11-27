@@ -1,5 +1,6 @@
+{% import 'ui/macros.html.twig' as ui %}
 {% set campaignTraffic = galaxy_campaign_traffic|default([]) %}
-<p class="gv2-empty-log" data-galaxy-v2-target="emptyFlightLog"{% if galaxy_v2_flights is not empty or campaignTraffic is not empty %} hidden{% endif %}>Aucune flotte en mission visible.</p>
+<p class="gv2-empty-log" data-galaxy-v2-target="emptyFlightLog"{% if galaxy_v2_flights is not empty or campaignTraffic is not empty or galaxy_market_traffic|default([]) is not empty %} hidden{% endif %}>Aucune flotte en mission visible.</p>
 {% for flight in galaxy_v2_flights %}
     {% set guildFlight = flight.guildFlight|default(false) %}
     <article class="gv2-flight-entry" data-flight-id="{{ flight.id }}"{% if guildFlight %} data-guild-flight{% endif %}>
@@ -21,6 +22,14 @@
         {% endif %}
     </article>
 {% endfor %}
+{% for convoy in galaxy_market_traffic|default([]) %}
+    <article class="gv2-flight-entry" data-market-trade="{{ convoy.id }}">
+        <strong>Convoi de Bourse</strong><span>{{ convoy.label }}</span>
+        <small>{{ convoy.from }} → {{ convoy.to }}</small>
+        {% if convoy.arrivalAt %}<time datetime="{{ convoy.arrivalAt }}" data-galaxy-v2-countdown="{{ convoy.arrivalAt }}">{{ convoy.arrivalAt|date('d/m/Y à H:i:s', preferences.timezone|default(app.user.preferences.timezone|default('Europe/Paris'))) }}</time>{% endif %}
+        <a href="{{ path('app_market', {_fragment:'market-trade-'~convoy.id}) }}">Suivre le convoi n°{{ convoy.id }}</a>
+    </article>
+{% endfor %}
 {% for movement in campaignTraffic %}
     <article class="gv2-flight-entry" data-campaign-kind="{{ movement.kind }}">
         <strong><span aria-hidden="true">{{ movement.kind == 'pirates' ? 'P' : '◇' }}</span> {{ movement.label }}</strong>
@@ -29,6 +38,9 @@
             <small>{{ movement.overdue ? 'Arrivée à confirmer · prévue le' : 'Arrivée prévue le' }}
                 <time datetime="{{ movement.eta }}">{{ movement.eta|date('d/m/Y à H:i:s', preferences.timezone|default(app.user.preferences.timezone|default('Europe/Paris'))) }}</time>
             </small>
+        {% endif %}
+        {% if movement.departure and movement.eta %}
+            {{ ui.progress(movement.departure, movement.eta, 'Trajet · ' ~ movement.label) }}
         {% endif %}
     </article>
 {% endfor %}

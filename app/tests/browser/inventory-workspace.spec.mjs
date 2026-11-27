@@ -73,6 +73,7 @@ test('L3 A : inventaire guidé, confirmations, états vides et vacances dans les
   }
   for (let i = 0; i < 3; i++) rows.push(`(${member},'event','inventory-a-pending-${i}','pending',DATE_SUB(UTC_TIMESTAMP(),INTERVAL ${3 - i} MINUTE),'boost',NULL)`);
   runIsolatedSql(project, `INSERT INTO player_boost(player_universe_id,source_type,source_key,status,earned_at,kind,payload) VALUES ${rows.join(',')}`);
+  runIsolatedSql(project, `UPDATE player_boost SET gift_unread=1 WHERE player_universe_id=${member} AND source_key IN ('inventory-a-box-1-0','inventory-a-pending-0')`);
   for (const [planet, type, slug] of [[home, 'building', 'mine_metal'], [second.id, 'research', 'engineering_foundations']]) {
     runIsolatedSql(project, `INSERT INTO queue_item(planet_id,player_universe_id,queue_type,item_slug,tier,item_level,quantity,duration_seconds,started_at,queued_at,dispatch_token,paid_costs) VALUES (${planet},${member},'${type}','${slug}','basic',1,1,86400,UTC_TIMESTAMP(),UTC_TIMESTAMP(),'${crypto.randomUUID().replaceAll('-', '')}','{}')`);
   }
@@ -80,6 +81,7 @@ test('L3 A : inventaire guidé, confirmations, états vides et vacances dans les
   const research = Number(queryIsolatedSql(project, `SELECT id FROM queue_item WHERE planet_id=${second.id} AND queue_type='research'`));
   runIsolatedSql(project, `INSERT INTO fleet(player_universe_id,home_planet_id,destination_id,destination_system_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,departure_at,arrival_at,travel_seconds,dispatch_token) SELECT ${member},${home},id,solar_system_id,'returning','transport',1,'{}',0,0,0,UTC_TIMESTAMP(),DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 DAY),86400,'${crypto.randomUUID().replaceAll('-', '')}' FROM planet WHERE id=${second.id}`);
 
+  let boxesVisited = false;
   for (const theme of ['dark', 'light']) {
     runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${owner.email}'`);
     for (const width of [1440, 768, 390, 320]) {
@@ -93,6 +95,15 @@ test('L3 A : inventaire guidé, confirmations, états vides et vacances dans les
         for (const [href, count] of [['/boosts', '12'], ['/inventaire/boites', '88'], ['/inventaire/recompenses', '3']]) {
           await expect(nav.locator(`a[href="${href}"] .badge`)).toHaveText(count);
         }
+        if (key === 'boxes') boxesVisited = true;
+        if (boxesVisited) {
+          await expect(nav.locator('[data-page="boxes"]')).toBeHidden();
+          await expect(page.locator('.inventory-gift-count')).toHaveText('1');
+        } else {
+          await expect(nav.locator('[data-page="boxes"]')).toHaveText('1 nouveau');
+          await expect(page.locator('.inventory-gift-count')).toHaveText('2');
+        }
+        await expect(nav.locator('[data-page="pending"]')).toHaveText('1 nouveau');
         if (key === 'boosts') {
           const picker = page.getByLabel('Opération à accélérer', { exact: true });
           await picker.selectOption('queue-' + research);
@@ -154,7 +165,7 @@ test('L3 A : inventaire guidé, confirmations, états vides et vacances dans les
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto('/boosts');
   await page.locator('.space-navigation-menu > summary').click();
-  const boxesLink = page.getByRole('navigation', { name: 'Navigation de l’inventaire' }).getByRole('link', { name: /^Boîtes de ressources/ });
+  const boxesLink = page.getByRole('navigation', { name: 'Navigation de l’inventaire' }).getByRole('link', { name: /^Boîtes/ });
   await page.keyboard.press('Tab');
   await boxesLink.focus();
   expect(await boxesLink.evaluate(el => el.matches(':focus-visible') && getComputedStyle(el).outlineStyle !== 'none')).toBe(true);
@@ -193,4 +204,23 @@ test('L3 A : inventaire guidé, confirmations, états vides et vacances dans les
     await verifyView(page, info, key + '-vacances', 'light', 390);
   }
   expect(errors).toEqual([]);
+});
+
+test('La boîte commerciale affiche son décompte puis bloque l’ouverture à échéance', async ({ page }) => {
+  const { project, member } = await enter(page);
+  runIsolatedSql(project, `INSERT INTO player_boost (player_universe_id, source_type, source_key, status, kind, payload, earned_at)
+    VALUES (${member}, 'market_overflow', 'market-overflow-browser', 'available', 'resource_box',
+      JSON_OBJECT('format','market_overflow','label','Boîte de surplus de la Bourse','resources',JSON_OBJECT('metal',10),
+      'expires_at', UNIX_TIMESTAMP()+120), UTC_TIMESTAMP()-INTERVAL 86300 SECOND)`);
+  await page.clock.install();
+  await page.goto('/inventaire/boites');
+  const card = page.locator('.resource-box-card').filter({ hasText: 'Boîte de surplus de la Bourse' });
+  const timer = card.locator('[data-countdown-target="time"]');
+  await expect(timer).toContainText(/0h [12]m/);
+  const before = await timer.textContent();
+  await page.clock.fastForward(3000);
+  await expect(timer).not.toHaveText(before);
+  await page.clock.fastForward(120000);
+  await expect(timer).toHaveText('Boîte expirée');
+  await expect(card.getByRole('button', { name: 'Ouvrir cette boîte' })).toBeDisabled();
 });

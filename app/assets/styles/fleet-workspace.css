@@ -508,6 +508,13 @@ body.authenticated .fleet-redesign .core-fleet-side .fleet-mission-summary-card 
 :is(.fleet-redesign, .pirate-campaign) .fleet-composition-table :is(th,td):last-child { border-inline-end:0; }
 :is(.fleet-redesign, .pirate-campaign) .fleet-composition-table thead { background:color-mix(in srgb,var(--accent) 11%,var(--panel)); }
 :is(.fleet-redesign, .pirate-campaign) .fleet-composition-table tbody tr:nth-child(even) { background:color-mix(in srgb,var(--accent) 4%,var(--panel)); }
+body.authenticated :is(.fleet-redesign, .pirate-campaign) .fleet-composition-table .fleet-type-heading th {
+    background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+    border-top: 1px solid var(--line);
+    color: var(--accent);
+    padding: .45rem .65rem;
+    text-align: start;
+}
 .fleet-composition-name { display:inline-flex; align-items:center; gap:6px; min-width:0; }
 .fleet-composition-name .icon { width:15px; height:15px; flex:none; color:var(--accent); }
 body.authenticated :is(.fleet-redesign, .pirate-campaign) .fleet-composition-control > .fleet-composition-maximum {
@@ -531,7 +538,7 @@ body.authenticated :is(.fleet-redesign, .pirate-campaign) .fleet-composition-con
     .core-fleet-recap-facts>div { padding:2px 0; }
 }
 @media(max-width:600px) {
-    .fleet-composition-name .icon { display:none; }
+    .fleet-composition-name { flex-direction:column; align-items:flex-start; gap:2px; }
     .core-fleet-recap { padding:12px; }
 }
 /* Le texte de corps du récapitulatif garde le contraste sur son fond légèrement teinté. */

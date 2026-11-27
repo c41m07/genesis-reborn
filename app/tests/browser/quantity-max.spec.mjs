@@ -20,6 +20,54 @@ async function enter(page) {
     return { email, planet, project: process.env.BROWSER_ROUTER };
 }
 
+test('Les quantités du Chantier et des Défenses restent lisibles au clavier', async ({ page }, info) => {
+    const { planet, project } = await enter(page);
+    runIsolatedSql(project, `INSERT INTO planet_building (planet_id,slug,tier,level) VALUES (${planet},'shipyard','basic',1),(${planet},'fortress','basic',1)`);
+    for (const [section, slug] of [['ships', 'probe'], ['defenses', 'ground_turret_anti_light']]) {
+        await page.goto(`/planetes/${planet}?section=${section}`);
+        const panel = page.locator(`#item-${slug}-basic`);
+        const input = panel.getByRole('spinbutton', { name: 'Quantité' });
+        // Reproduire aussi le devis recalculé par Max avant de vérifier les dimensions des tuiles.
+        const preview = page.waitForResponse(response => response.url().includes('/construction-maximum'));
+        await panel.getByRole('button', { name: /^Max : quantité maximale/ }).click();
+        await preview;
+        await expect.poll(async () => Number(await input.inputValue())).toBeGreaterThan(1);
+        for (const width of [1920, 1440, 390, 320]) {
+            await page.setViewportSize({ width, height: 900 });
+            for (const value of ['100', '291', '1234567890']) {
+                await input.fill(value);
+                await expect(input).toBeFocused();
+                // La valeur DOM seule reste correcte même si le navigateur masque les derniers chiffres.
+                const fits = await input.evaluate(field => {
+                    const style = getComputedStyle(field);
+                    const context = document.createElement('canvas').getContext('2d');
+                    context.font = style.fontSize + ' ' + style.fontFamily;
+                    const room = field.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+                    return style.appearance === 'textfield' && context.measureText(field.value).width <= room + 1;
+                });
+                expect(fits, section + ' à ' + width + ' px, quantité ' + value).toBe(true);
+                const overflowing = await panel.locator('[data-cost-amount]:visible').evaluateAll(amounts =>
+                    amounts.filter(amount => {
+                        // Mesurer les lignes de texte elles-mêmes : un parent peut masquer le débordement.
+                        const cell = amount.closest('[data-resource]').getBoundingClientRect();
+                        const range = document.createRange();
+                        range.selectNodeContents(amount);
+                        return [...range.getClientRects()].some(line => line.right > cell.right + 1 || line.left < cell.left - 1);
+                    }).map(amount => amount.textContent));
+                expect(overflowing, section + ' à ' + width + ' px').toEqual([]);
+            }
+            expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+        }
+        await input.fill('1');
+        await input.press('ArrowUp');
+        await expect(input).toHaveValue('2');
+        await input.fill('291');
+        await page.setViewportSize({ width: 1920, height: 900 });
+        await input.evaluate(field => field.scrollIntoView({block: 'center', behavior: 'instant'}));
+        await panel.locator('.quantity-input').screenshot({ path: info.outputPath(section + '-quantite.png') });
+    }
+});
+
 test('Construction : Max dépasse 100, ajuste la saisie et refuse un achat lorsque le maximum devient nul', async ({ page, browser }, info) => {
     test.setTimeout(120000);
     const { email, planet, project } = await enter(page);

@@ -160,3 +160,86 @@ body[data-theme=light] .technology-tree{--tech-met:#376647;--tech-missing:#79562
 @media (max-width: 740px) {
     .topbar .advent-shortcut { font-size: 11px; }
 }
+
+.topbar > .header-timed-boost {
+    --boost-ink: #eedfff;
+    --boost-muted: #d2bce9;
+    --boost-panel: #302344;
+    --boost-track: #59436e;
+    --boost-accent: #c6a1f1;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-content: center;
+    align-items: center;
+    gap: 2px 8px;
+    min-width: 0;
+    max-width: 15rem;
+    min-height: 40px;
+    padding: 3px 9px;
+    border: 1px solid #9676c5;
+    border-radius: 7px;
+    background: linear-gradient(110deg, #49345e, var(--boost-panel) 75%);
+    color: var(--boost-ink);
+    font-size: 12px;
+    line-height: 1.15;
+}
+.header-timed-boost .boost-dial {
+    grid-row: 1 / span 2;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    color: var(--boost-accent);
+    background: radial-gradient(closest-side, var(--boost-panel) 80%, transparent 84%),
+        conic-gradient(var(--boost-accent) var(--remaining), var(--boost-track) 0);
+}
+.boost-dial .icon { width: 15px; height: 15px; }
+.header-timed-boost strong { font-size: inherit; line-height: 1.1; }
+.header-timed-boost .boost-time {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--boost-muted);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.boost-time .icon { width: 11px; height: 11px; }
+.header-timed-boost noscript { grid-column: 1 / -1; }
+.topbar > .header-timed-boost[hidden] { display: none; }
+[data-theme="light"] .header-timed-boost {
+    --boost-ink: #502578;
+    --boost-muted: #684b81;
+    --boost-panel: #f3ebff;
+    --boost-track: #dfcfee;
+    --boost-accent: #785099;
+    background: linear-gradient(110deg, #e3d1f4, var(--boost-panel) 75%);
+}
+@media (max-width: 540px) {
+    .topbar > .header-timed-boost { padding-inline: 5px; column-gap: 5px; }
+    .header-timed-boost .boost-dial { width: 22px; }
+    .boost-dial .icon { width: 13px; height: 13px; }
+}
+@media (max-width: 1250px) {
+    .topbar > .header-timed-boost { grid-area: boost; }
+    .authenticated .topbar:has(> .header-timed-boost:not([hidden])) {
+        grid-template-columns: auto minmax(0,1fr) minmax(0,auto) auto;
+        grid-template-areas: "universe guide boost events" "tools tools tools tools";
+    }
+}
+@media (min-width: 741px) and (max-width: 1020px) {
+    .authenticated .topbar:has(> .header-timed-boost:not([hidden])) {
+        grid-template-columns: auto auto minmax(0,1fr) auto auto;
+        grid-template-areas: "menu universe guide boost events" "tools tools tools tools tools";
+    }
+}
+@media (max-width: 540px) {
+    /* Réserver une ligne commune au guide et au bonus, même pendant les événements saisonniers. */
+    .authenticated[data-theme]:has(.topbar > .header-timed-boost:not([hidden])) { --topbar-height: 146px; }
+    .authenticated .topbar:has(> .header-timed-boost:not([hidden])) {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        grid-template-areas: "universe events" "guide boost" "tools tools";
+        grid-template-rows: 44px 44px 44px;
+    }
+}

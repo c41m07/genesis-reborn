@@ -1,13 +1,14 @@
-{% extends 'base.html.twig' %}
+{% extends 'espionage/report.html.twig' %}
 {% block title %}Rapport d’espionnage pirate · Genesis Reborn{% endblock %}
-{% block body %}
-<div class="mission-report report-workspace player-report-detail pirate-recon-report">
-    <a class="inline-link report-back" href="{{ path('app_pirate_campaign', {missionNumber: report.mission}) }}">← Retour au dossier de campagne</a>
+{% block intel_heading %}
     <header class="report-heading">
         <p class="report-eyebrow">RENSEIGNEMENTS · CAMPAGNE PIRATE</p>
-        <h1>Rapport d’espionnage pirate</h1>
+        <h1>Rapport d’espionnage</h1>
         <p>{{ report.targetName }} · Système {{ report.location }} · <time datetime="{{ report.date|date('c') }}">{{ report.date|date('d/m/Y H:i', preferences.timezone) }}</time></p>
     </header>
+{% endblock %}
+{% block intel_content %}
+    <p><a class="inline-link" href="{{ path('app_pirate_campaign', {missionNumber: report.mission}) }}">Retour au dossier de campagne</a></p>
     <section class="panel report-summary" aria-labelledby="pirate-recon-summary">
         <h2 id="pirate-recon-summary">{{ report.complete ? 'Renseignement de combat complet' : 'Renseignement historique' }}</h2>
         <p>Une sonde envoyée et perdue. Le relevé a été reçu.</p>
@@ -52,5 +53,4 @@
             </details>
         {% endif %}
     </section>
-</div>
 {% endblock %}

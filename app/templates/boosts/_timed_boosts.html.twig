@@ -1,0 +1,22 @@
+<section class="panel" aria-labelledby="timed-boost-title">
+    <h2 id="timed-boost-title">Bonus temporaires</h2>
+    <p>Chaque bonus s’utilise dans les sept jours suivant le retrait. Une fois activé, il dure cinq heures. Un seul bonus temporaire peut être actif à la fois.</p>
+    {% if active_timed_boost %}
+        <p><strong>{{ active_timed_boost.label }}</strong> est actif jusqu’au <time datetime="{{ active_timed_boost.ends_at|date('c') }}">{{ active_timed_boost.ends_at|date('d/m/Y H:i', preferences.timezone) }}</time>.</p>
+    {% endif %}
+    {% for item in timed_boosts %}
+        <article class="boost-operation">
+            <h3>{{ item.label }}</h3>
+            <p>{{ item.description }} À activer avant le <time datetime="{{ item.expires_at|date('c') }}">{{ item.expires_at|date('d/m/Y H:i', preferences.timezone) }}</time>.</p>
+            {% if not active_timed_boost and not vacation %}
+                <form method="post" action="{{ path('app_timed_boost_activate', {id:item.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('timed_boost_' ~ item.id) }}">
+                    <input type="hidden" name="request_key" value="{{ request_key() }}">
+                    <button class="primary">Activer {{ item.label }}</button>
+                </form>
+            {% endif %}
+        </article>
+    {% else %}
+        <p>Aucun bonus temporaire à activer.</p>
+    {% endfor %}
+</section>

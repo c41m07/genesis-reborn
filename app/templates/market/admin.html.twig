@@ -1,0 +1,42 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Bourse · {{ universe.name }} · Administration{% endblock %}
+{% block body %}
+<div class="page-heading">
+    <div><p class="eyebrow">Univers · {{ universe.slug }}</p><h1>Bourse de {{ universe.name }}</h1><p>Station A:0:0 · Quantités par ressource et suivi du convoi des marchands.</p></div>
+    <a class="secondary" href="{{ path('app_admin_universe_manage', {id: universe.id}) }}">Revenir à l’univers</a>
+</div>
+<div class="market-space market-columns">
+    <section class="panel" aria-labelledby="market-admin-config">
+        <h2 id="market-admin-config">Ouvrir et approvisionner la station</h2>
+        <p>Le stock cible devient la réserve initiale à la première ouverture seulement. Les ventes des joueurs peuvent dépasser la cible. Ensuite, modifier la cible ne crée pas de stock et ne supprime ni fret ni réservation.</p>
+        <form method="post" class="market-options">
+            <input type="hidden" name="_token" value="{{ csrf_token('market_admin_' ~ universe.id) }}">
+            {% for resource, label in labels %}
+                <div class="market-field">
+                    <label for="market-target-{{ resource }}">Cible · {{ label }}</label>
+                    <input id="market-target-{{ resource }}" name="{{ resource }}" type="number" required step="1" min="0" max="{{ maxTarget }}" value="{{ rows[resource].target|default(0) }}">
+                </div>
+            {% endfor %}
+            <label for="market-enable"><input id="market-enable" name="enabled" type="checkbox" value="1" {{ market and market.enabled ? 'checked' : '' }}> Autoriser les échanges et les réassorts hebdomadaires</label>
+            <button class="primary" type="submit">Enregistrer la configuration</button>
+        </form>
+    </section>
+    <section class="panel" aria-labelledby="market-admin-stock">
+        <h2 id="market-admin-stock">Stock et dernières livraisons</h2>
+        <p>Vendredi à 9 h, Paris : jusqu’à 50 % des ventes réelles de la station, limité par la cible et sans effet sur le cours.</p>
+        {% if rows %}
+            <div class="market-table-wrap" tabindex="0" role="region" aria-labelledby="market-admin-stock">
+                <table class="data-table market-table">
+                    <thead><tr><th>Ressource</th><th>Physique</th><th>Disponible</th><th>Cible</th></tr></thead>
+                    <tbody>{% for row in rows %}<tr><th scope="row">{{ row.label }}</th><td>{{ row.stock|number_format(0, ',', ' ') }}</td><td>{{ row.available|number_format(0, ',', ' ') }}</td><td>{{ row.target|number_format(0, ',', ' ') }}</td></tr>{% endfor %}</tbody>
+                </table>
+            </div>
+        {% endif %}
+        {% for delivery in merchantLog %}
+            <div class="market-trip"><strong>{{ delivery.occurrence }}</strong>{% for resource, amount in delivery.quantities %}<span>{{ amount|number_format(0, ',', ' ') }} {{ labels[resource] }}</span>{% else %}<span>Aucun apport dû</span>{% endfor %}</div>
+        {% else %}
+            <p>Aucun convoi marchand traité.</p>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

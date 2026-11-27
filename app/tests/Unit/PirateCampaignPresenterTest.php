@@ -64,7 +64,7 @@ final class PirateCampaignPresenterTest extends TestCase
         self::assertStringContainsString('+17 071,5', $html);
         self::assertStringContainsString('des vaisseaux en réserve', $html);
         self::assertStringContainsString('de l’électricité', $html);
-        self::assertStringContainsString('Ce n’est pas une condition pour combattre', $html);
+        self::assertStringContainsString('vous recevrez une boîte de ressources dans votre inventaire', $html);
         self::assertStringNotContainsString('fixture-pirate-job', $html);
     }
 

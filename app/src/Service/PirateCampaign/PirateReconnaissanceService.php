@@ -30,6 +30,7 @@ final class PirateReconnaissanceService
         private ClockInterface $clock,
         private PirateCampaignCatalogue $campaign,
         private ResourceService $resources,
+        private PirateMissionReports $reports,
     ) {
     }
 
@@ -175,7 +176,7 @@ final class PirateReconnaissanceService
                 if (!$membership->universe->isAccessible($departedAt)) {
                     throw new \DomainException('L’univers s’est fermé avant le départ de la sonde.');
                 }
-                $idle->storedFuel -= $fuelReceipt->fromHold;
+                $idle->storedFuel = 0;
             }
             $dueAt = $departedAt->modify('+'.$seconds.' seconds');
 
@@ -254,7 +255,17 @@ final class PirateReconnaissanceService
             $this->manager->lockCurrent($membership->universe);
             $mission = $this->repository->lockPirateReconnaissance($missionId, $membership);
 
-            return $mission?->reportWhenDue($membership, $token, $this->clock->now());
+            if ($mission === null) {
+                return null;
+            }
+            $at = $this->clock->now();
+            $wasReported = $mission->reportedMissionKeyFor($membership, $at) !== null;
+            $delay = $mission->reportWhenDue($membership, $token, $at);
+            if (!$wasReported && $mission->reportedMissionKeyFor($membership, $at) !== null) {
+                $this->reports->reconnaissance($mission, $at);
+            }
+
+            return $delay;
         });
     }
 

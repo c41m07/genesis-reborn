@@ -101,10 +101,11 @@ final class TransportTest extends WebTestCase
         $tool->dropSchema([
             $this->em->getClassMetadata(ReportNotice::class),
             $this->em->getClassMetadata(DiplomaticReport::class),
+            $this->em->getClassMetadata(\App\Entity\PirateMissionReport::class),
         ]);
         $connection = $this->em->getConnection();
         try {
-            foreach (['Version20261122010100', 'Version20261124083000'] as $version) {
+            foreach (['Version20261122010100', 'Version20261124083000', 'Version20261127130000'] as $version) {
                 require_once dirname(__DIR__, 2).'/migrations/'.$version.'.php';
                 $class = 'DoctrineMigrations\\'.$version;
                 $migration = new $class($connection, new \Psr\Log\NullLogger());
@@ -133,7 +134,7 @@ final class TransportTest extends WebTestCase
                  WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'report_notice' AND CONSTRAINT_NAME = 'report_notice_one_report'",
             );
             self::assertSame(
-                ['combat_log_id', 'espionage_report_id', 'transport_report_id', 'diplomatic_report_id'],
+                ['combat_log_id', 'espionage_report_id', 'transport_report_id', 'diplomatic_report_id', 'pirate_mission_report_id'],
                 array_column((static function (string $clause): array {
                     preg_match_all('/`?(\w+)`?\s+is\s+not\s+null/i', $clause, $parts, PREG_SET_ORDER);
                     return $parts;
@@ -149,8 +150,10 @@ final class TransportTest extends WebTestCase
             // Rétablir les noms de contraintes du SchemaTool pour les recettes suivantes.
             $connection->executeStatement('DROP TABLE IF EXISTS report_notice');
             $connection->executeStatement('DROP TABLE IF EXISTS diplomatic_report');
+            $connection->executeStatement('DROP TABLE IF EXISTS pirate_mission_report');
             $tool->createSchema([
                 $this->em->getClassMetadata(DiplomaticReport::class),
+                $this->em->getClassMetadata(\App\Entity\PirateMissionReport::class),
                 $this->em->getClassMetadata(ReportNotice::class),
             ]);
         }
@@ -196,6 +199,33 @@ final class TransportTest extends WebTestCase
         self::assertSame(2, (int) $connection->fetchOne('SELECT COUNT(*) FROM report_notice'));
         self::assertSame($readAt, $connection->fetchOne('SELECT consulted_at FROM report_notice WHERE player_universe_id = ?', [$recipient->id]));
         self::assertSame(1, $notices->count($sender));
+    }
+
+    public function testTransportBetweenOwnColoniesShowsOneReportThroughReturn(): void
+    {
+        $this->client->disableReboot();
+        $member = $this->sender->currentPlayerUniverse;
+        $this->target->owner = $member;
+        $this->em->flush();
+        $this->client->loginUser($this->sender);
+        $fleet = $this->send();
+        $report = $this->em->getRepository(TransportReport::class)->findOneBy(['fleet' => $fleet]);
+        self::assertNotNull($report);
+
+        foreach (['traveling', 'returning', 'completed'] as $stage) {
+            $fleet = $this->em->find(Fleet::class, $fleet->id);
+            if ($stage !== 'traveling') {
+                $this->arrive($fleet);
+            }
+            self::assertSame($stage, $fleet->status);
+            self::assertSame(1, $this->em->getRepository(TransportReport::class)->count(['fleet' => $fleet]));
+            self::assertSame(1, self::getContainer()->get(ReportNoticeRepository::class)->count($member));
+            $crawler = $this->client->request('GET', '/rapports?type=economy');
+            self::assertResponseIsSuccessful();
+            $rows = $crawler->filter('a.report-row');
+            self::assertCount(1, $rows);
+            self::assertSame('/rapports/transport/'.$report->id, parse_url($rows->attr('href'), PHP_URL_PATH));
+        }
     }
 
     public function testReceptionDefaultsToAlliesAndOwnColoniesRemainAllowed(): void

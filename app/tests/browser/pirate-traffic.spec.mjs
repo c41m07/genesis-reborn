@@ -9,6 +9,7 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
     const stroke = CanvasRenderingContext2D.prototype.stroke;
     window.testGalaxyGlyphs = new Set();
     window.testOwnedRing = false;
+    window.testCampaignAnchor = false;
     window.testFirstPlanet = null;
     CanvasRenderingContext2D.prototype.fillText = function (text, x, y, ...rest) {
       if (this.canvas.classList.contains('gv2-canvas--galaxy')) window.testGalaxyGlyphs.add(text);
@@ -19,6 +20,7 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
     };
     CanvasRenderingContext2D.prototype.stroke = function (...args) {
       if (this.canvas.classList.contains('gv2-canvas--galaxy') && this.strokeStyle === '#00e676' && this.lineWidth >= 3) window.testOwnedRing = true;
+      if (this.canvas.classList.contains('gv2-canvas--galaxy') && this.strokeStyle === '#e6bbff' && this.getLineDash().length) window.testCampaignAnchor = true;
       return stroke.apply(this, args);
     };
   });
@@ -60,10 +62,42 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
     await expect(scout).toHaveCount(1);
     await expect(scout).toContainText('Sonde de reconnaissance');
     await expect(scout.locator('time')).toHaveAttribute('datetime', /T/);
-    await expect(scout.getByRole('button')).toHaveCount(0);
+    await expect(scout.getByRole('progressbar')).toBeVisible();
+    const details = scout.getByRole('region', { name: 'Composition et fret' });
+    const trigger = scout.getByRole('button', { name: /Composition et fret/ });
+    await scout.hover();
+    await expect(details).toBeVisible();
+    await expect(details.getByText(/sonde/i)).toBeVisible();
+    await expect(details.locator('dd')).toHaveText(['1']);
+    await page.keyboard.press('Escape');
+    await expect(details).toBeHidden();
+    await trigger.focus();
+    await expect(details).toBeVisible();
+    await trigger.press('Escape');
+    await expect(details).toBeHidden();
+    await trigger.click();
+    await expect(details).toBeVisible();
+    const countdown = scout.locator('[data-progress-target="remaining"]');
+    const previous = await countdown.textContent();
+    await expect(countdown).not.toHaveText(previous);
+    await expect(scout.getByRole('button')).toHaveCount(1);
     await expect(scout.getByRole('link', { name: 'Consulter le dossier de campagne' })).toHaveAttribute('href', '/evenements/campagne-pirate/1');
     await expect(flights.locator('[data-active-fleet]')).toHaveCount(0);
     await expect(page.locator('[data-campaign-kind="pirates"],[data-campaign-kind="convoy"]')).toHaveCount(0);
+  }
+
+  const nativeMobile = await browser.newContext({
+    javaScriptEnabled: false, hasTouch: true, viewport: { width: 390, height: 844 },
+    storageState: await page.context().storageState(),
+  });
+  try {
+    const phone = await nativeMobile.newPage();
+    await phone.goto(new URL('/flottes', page.url()).href);
+    const scout = phone.locator('[data-campaign-kind="scout"]');
+    await scout.getByRole('button', { name: /Composition et fret/ }).tap();
+    await expect(scout.getByRole('region', { name: 'Composition et fret' }).getByText(/sonde/i)).toBeVisible();
+  } finally {
+    await nativeMobile.close();
   }
 
   const metric = page.locator('[data-live-region="overview-flight-metric"]');
@@ -79,7 +113,7 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
   const read = JSON.parse(await shell.getAttribute('data-galaxy-v2-map-value'));
   expect(read.campaignTraffic).toHaveLength(1);
   expect(read.campaignTraffic[0]).toMatchObject({ kind: 'scout', mission: 1, systems: [system] });
-  expect(Object.keys(read.campaignTraffic[0]).sort()).toEqual(['eta', 'kind', 'label', 'mission', 'overdue', 'systems']);
+  expect(Object.keys(read.campaignTraffic[0]).sort()).toEqual(['departure', 'eta', 'kind', 'label', 'mission', 'overdue', 'systems']);
   const payload = await page.evaluate(async id => {
     const response = await fetch('/flottes/surveillance?campaign=1&galaxy=' + id);
     return { data: await response.json(), cache: response.headers.get('cache-control') };
@@ -87,6 +121,8 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
   expect(payload.cache).toMatch(/no-store/);
   expect(payload.data.campaignTraffic).toEqual(read.campaignTraffic);
   await expect(page.locator('.gv2-flight-log [data-campaign-kind="scout"]')).toBeVisible();
+  await expect(page.locator('.gv2-flight-log [data-campaign-kind="scout"]').getByRole('progressbar')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.testCampaignAnchor)).toBe(true);
   await expect(page.locator('.gv2-flight-log [data-campaign-kind="pirates"]')).toHaveCount(0);
 
   const station = page.getByRole('link', { name: 'Station pirate repérée, aucune case planétaire', exact: true });
@@ -108,7 +144,7 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
   const reported = JSON.parse(await shell.getAttribute('data-galaxy-v2-map-value')).campaignTraffic;
   expect(reported).toHaveLength(1);
   expect(reported[0]).toMatchObject({ kind: 'pirates', mission: 1, systems: [system], eta: null });
-  expect(Object.keys(reported[0]).sort()).toEqual(['eta', 'kind', 'label', 'mission', 'overdue', 'systems']);
+  expect(Object.keys(reported[0]).sort()).toEqual(['departure', 'eta', 'kind', 'label', 'mission', 'overdue', 'systems']);
   await expect.poll(() => page.evaluate(() => window.testOwnedRing)).toBe(true);
   expect(await page.evaluate(() => ['P', '◆', '◇'].some(symbol => window.testGalaxyGlyphs.has(symbol)))).toBe(false);
   await expect(station).toHaveCount(0);
@@ -125,12 +161,14 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
   await expect(station).toBeVisible();
   const sprite = station.locator('img');
   await expect.poll(() => sprite.evaluate(image => image.naturalWidth)).toBe(192);
-  const detail = page.locator('#gv2-station-detail');
+  const detail = station.locator('.gv2-station-label');
+  await expect(detail).toBeHidden();
   const rest = await sprite.boundingBox();
   expect(rest.width).toBeLessThanOrEqual(19);
   expect((await station.boundingBox()).width).toBeGreaterThanOrEqual(44);
   await sprite.hover();
-  await expect(detail).toContainText('aucune case planétaire');
+  await expect(detail).toBeVisible();
+  await expect(detail).toHaveText('Station pirate');
   const enlarged = await sprite.boundingBox();
   expect(enlarged.width).toBeGreaterThan(rest.width);
   expect(enlarged.width).toBeLessThanOrEqual(23);

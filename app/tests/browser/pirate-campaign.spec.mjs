@@ -38,7 +38,7 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
   const navigation = page.getByRole('navigation', { name: 'Navigation principale', exact: true });
   const campaign = navigation.getByRole('link', { name: 'Campagne pirate', exact: true });
   await expect(campaign).toHaveAttribute('href', campaignPath);
-  expect(await campaign.evaluate(link => link.previousElementSibling?.textContent.trim())).toBe('Flottes');
+  await expect(campaign.locator('xpath=preceding-sibling::*[1]')).toHaveAccessibleName('Flottes');
 
   // La lecture, même avec le shell complet et JavaScript, ne réarme pas la présence.
   await page.goto(campaignPath);
@@ -115,10 +115,12 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
       await reportPage.close();
     }
     // Le vrai départ a figé le reçu d'hydrogène. Avancer les deux horodatages du même écart
-    // conserve la durée native, tandis que le worker reste couvert par sa recette métier.
+    // conserve la durée native. Le relais transmet ensuite le jeton au vrai worker.
     const shift = Number(queryIsolatedSql(project, 'SELECT GREATEST(TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), due_at), 0) + 2 FROM pirate_reconnaissance WHERE membership_id=' + member + ' AND reported_at IS NULL'));
     expect(Number.isSafeInteger(shift) && shift >= 2).toBe(true);
-    runIsolatedSql(project, 'UPDATE pirate_reconnaissance SET departed_at=DATE_SUB(departed_at,INTERVAL ' + shift + ' SECOND), due_at=DATE_SUB(due_at,INTERVAL ' + shift + ' SECOND), reported_at=UTC_TIMESTAMP(), detected=0 WHERE membership_id=' + member + ' AND reported_at IS NULL');
+    runIsolatedSql(project, 'UPDATE pirate_reconnaissance SET departed_at=DATE_SUB(departed_at,INTERVAL ' + shift + ' SECOND), due_at=DATE_SUB(due_at,INTERVAL ' + shift + ' SECOND) WHERE membership_id=' + member + ' AND reported_at IS NULL');
+    runIsolatedSql(project, "INSERT INTO outbox_message (kind,target_id,token,due_at) SELECT 'pirate_reconnaissance',id,dispatch_token,due_at FROM pirate_reconnaissance WHERE id=" + reportId);
+    await expect.poll(() => queryIsolatedSql(project, "SELECT COUNT(*) FROM pirate_mission_report WHERE category='espionage' AND reconnaissance_id=" + reportId), { timeout: 20000 }).toBe('1');
     const setFighterQuantity = quantity => runIsolatedSql(project, "UPDATE fleet_ship fs JOIN fleet f ON f.id=fs.fleet_id SET fs.quantity=" + quantity + " WHERE f.home_planet_id=" + origin + " AND f.status='idle' AND fs.slug='fighter' AND fs.tier='basic'");
     setFighterQuantity(0);
     await nativePage.getByRole('link', { name: 'Actualiser le dossier', exact: true }).click();
@@ -130,7 +132,10 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     await expect(nativePage.getByRole('link', { name: 'Ouvrir le rapport d’espionnage' })).toHaveAttribute('href', spyReport);
     const intelPage = await nativeContext.newPage();
     try {
-      const reportResponse = await intelPage.goto(base + spyReport);
+      await intelPage.goto(base + '/rapports?type=espionage');
+      const centralLink = intelPage.getByRole('link', {name: /Espionnage · Campagne pirate/});
+      await expect(centralLink).toHaveCount(1);
+      const reportResponse = await intelPage.goto(new URL(await centralLink.getAttribute('href'), base).href);
       expect(reportResponse.status()).toBe(200);
       expect(reportResponse.headers()['cache-control']).toContain('no-store');
       await expect(intelPage.getByRole('heading', { name: 'Renseignement de combat complet' })).toBeVisible();
@@ -153,6 +158,7 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
 
     // La limite du dossier doit rester distincte du stock affiché.
     setFighterQuantity(5);
+    runIsolatedSql(project, "INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'bomber','basic',1 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle'");
     runIsolatedSql(project, "INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'fighter','intermediate',2 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle' ON DUPLICATE KEY UPDATE quantity=2");
     runIsolatedSql(project, "INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'solar_satellite','basic',1 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle' ON DUPLICATE KEY UPDATE quantity=1");
     runIsolatedSql(project, `UPDATE universe SET game_settings=JSON_MERGE_PATCH(game_settings,'{"limits":{"max_fleet_size":3}}') WHERE id=${universe}`);
@@ -171,6 +177,10 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     const escortTable = dossier.getByRole('table', { name: 'Choisir l’escorte', exact: true });
     await expect(escortTable.getByRole('columnheader')).toHaveText(['Élément', 'Basique', 'Intermédiaire', 'Supérieur']);
     await expect(escortTable.getByText(/Satellite/)).toHaveCount(0);
+    await expect(escortTable.locator('th[scope=rowgroup]')).toContainText(['Légers', 'Bombardiers']);
+    const bomberIcon = escortTable.getByRole('rowheader', { name: /Bombardier/ }).locator('svg');
+    await expect(bomberIcon).toBeVisible();
+    await expect(bomberIcon.locator('use')).toHaveAttribute('href', /#bomber$/);
     const fighter = escortTable.getByRole('row', { name: /^Chasseur de patrouille/ });
     const [basic, intermediate, superior] = await fighter.getByRole('spinbutton').all();
     await expect(fighter.getByRole('button')).toHaveCount(3);
@@ -215,6 +225,8 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     // Les maxima choisis dans les deux rangs arrivent ensemble au devis, sans départ.
     await assault.click();
     await expect(dossier.getByRole('heading', { name: 'Confirmer l’attaque', exact: true })).toBeVisible();
+    await expect(dossier.getByText('Hydrogène prélevé sur la colonie', { exact: true })).toBeVisible();
+    await expect(dossier.getByText('Pris dans la réserve embarquée', { exact: true })).toHaveCount(0);
     await expect(dossier.getByRole('list', { name: 'Escorte choisie' }).getByRole('listitem')).toHaveText([
       'Chasseur de patrouille : 1',
       'Chasseur multirôle : 2',

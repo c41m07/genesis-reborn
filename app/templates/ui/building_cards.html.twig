@@ -15,23 +15,17 @@
     {% set slug = card.definition.slug %}
     {% set families = families|merge({(slug): (families[slug]|default([]))|merge([card])}) %}
 {% endfor %}
-{# La première ligne présente les familles représentatives des planches ; aucune entrée n’est ajoutée au catalogue. #}
-{% set highlightedFamilies = {
-    technologies: ['engineering_foundations','naval_engineering','nanomaterial_synthesis','colonial_expansion'],
-    ships: ['fighter','probe','transport','interceptor'],
-}[group]|default([])|filter(key => families[key] is defined) %}
-{% set orderedFamilies = highlightedFamilies|merge(families|keys|filter(key => key not in highlightedFamilies)) %}
-{% for slug in orderedFamilies %}
-    {% set ranks = families[slug] %}
+{% set categoryIcons = {
+    buildings: {energy:'electricity', economy:'extraction', storage:'storage', infrastructure:'buildings', defense:'fortification'},
+    technologies: {economy:'economy', industry:'industry', logistics:'logistics', propulsion:'propulsion', combat:'target', defense:'shield', expansion:'expansion', espionage:'intelligence', infrastructure:'research'},
+} %}
+{# Les familles conservent l’ordre du catalogue pour les trois rangs, même après filtrage. #}
+{% for slug, ranks in families %}
     {% set definition = (ranks|first).definition %}
     {% set category = (ranks|first).filter_category %}
     {% set accessible = ranks|filter(card => not card.failures or card.maximum) %}
-    {% set familyLabels = {
-        buildings:{power_plant:'Énergie', mine_metal:'Extraction', mine_nano:'Fabrication', mine_hydrogen:'Raffinage'},
-        ships:{probe:'Reconnaissance', transport:'Transport'},
-    } %}
-    {% set familyLabel = familyLabels[group][slug]|default(catalog_filter_options[group][category]|default(group == 'buildings' ? 'Installation' : '')) %}
-    {% set familyIcon = {buildings:'buildings', technologies:'research', ships:'fleet', defenses:'diplomacy'}[group] %}
+    {% set familyLabel = catalog_filter_options[group][category] %}
+    {% set familyIcon = group == 'ships' ? ship_category_icon(definition) : (group == 'defenses' ? 'diplomacy' : categoryIcons[group][category]) %}
     <article class="panel catalog-card card--{{ group }} building-card" data-building-catalog-target="family" data-slug="{{ slug }}" data-catalog-filter-target="card" data-category="{{ category }}" data-catalog-visible="{{ show_locked_items or accessible ? 'true' : 'false' }}" {% if not show_locked_items and not accessible %}hidden{% endif %}>
         <nav class="building-rank-tabs" aria-label="Rangs de {{ definition.label }}">
             {% for card in ranks %}
@@ -98,15 +92,18 @@
                     {% endif %}
                 </div>
                 <div class="card-body">
+                    {% set missingLaboratory = card.missing_research_laboratory|default(null) %}
+                    {% set blockedCard = card.maximum or card.failures or missingLaboratory or vacation %}
+                    {% set missingResources = card.payment.missing|default([]) %}
+                    {% set blocked = missingResources is not empty or queueFull or card.capacity_full|default(false) %}
+                    {% set orderFormId = 'order-'~group~'-'~slug~'-'~card.tier %}
                     <div class="catalog-card-heading catalogue-card-identity">
                         <h3>{{ d.label }}</h3>
-                        <span class="catalogue-level-badge" data-catalogue-state="{{ cardState }}">
-                            {% if leveled %}
-                                {{ cardState == 'maximum' ? 'Max. ' ~ card.level : 'Niv. ' ~ card.level }}
-                            {% else %}
-                                {{ card.quantity|quantity }} {{ group == 'defenses' ? (card.quantity > 1 ? 'installés' : 'installé') : 'en réserve' }}
-                            {% endif %}
-                        </span>
+                        {% if leveled %}
+                            <span class="catalogue-level-badge" data-catalogue-state="{{ cardState }}">{{ cardState == 'maximum' ? 'Max. ' ~ card.level : 'Niv. ' ~ card.level }}</span>
+                        {% else %}
+                            {% include 'ui/core_construction_quantity.html.twig' with {inactive: blockedCard} %}
+                        {% endif %}
                         {% include 'ui/catalogue_info.html.twig' %}
                     </div>
                     {% set guidedCard = training_hint is defined and training_hint is not null and training_hint.item == slug and card.tier == 'basic' %}
@@ -118,9 +115,23 @@
                     {% set costsOverview %}
                     <p class="catalog-cost-heading"{% if not leveled %} data-construction-quantity-target="costHeading"{% endif %}>{{ leveled ? 'Coût du niveau '~card.target : 'Coût du lot × 1' }}</p>
                     <div class="costs building-costs" aria-label="{{ leveled ? 'Coût du prochain niveau' : 'Coût du lot' }}">
-                        {% for resource in resourceOrder %}{% set cost = card.costs[resource]|default(0) %}{% if cost > 0 %}
-                            <span data-resource="{{ resource }}" data-resource-label="{{ resources[resource].label }}"{% if not leveled %} data-construction-quantity-target="cost"{% endif %} class="{{ cost > resources[resource].stock ? 'insufficient' : '' }}" title="{{ resources[resource].label }} : {{ cost|number_format(0, ',', ' ') }}{{ cost > resources[resource].stock ? ' · Manque '~(cost-resources[resource].stock)|round(0,'ceil')|number_format(0, ',', ' ')~' '~resources[resource].label : '' }}" aria-label="{{ resources[resource].label }} : {{ cost|number_format(0, ',', ' ') }}{{ cost > resources[resource].stock ? ' · Manque '~(cost-resources[resource].stock)|round(0,'ceil')|number_format(0, ',', ' ')~' '~resources[resource].label : '' }}">{{ ui.icon(resource) }}<span><strong data-cost-amount>{{ cost|compact_number }}</strong><small><span class="cost-label-full">{{ resources[resource].label }}</span><abbr class="cost-label-short" title="{{ resources[resource].label }}">{{ {metal:'Métal',nano:'Nano',hydrogen:'Hydro.',antimatter:'Antim.',electricity:'Élec.'}[resource]|default(resources[resource].label) }}</abbr></small></span></span>
-                        {% endif %}{% endfor %}
+                        {% for resource in resourceOrder %}
+                            {% set cost = card.costs[resource]|default(0) %}
+                            {% if cost > 0 %}
+                                {% set resourceLabel = resources[resource].label %}
+                                {% set shortage = cost > resources[resource].stock %}
+                                {% set description = resourceLabel~' : '~cost|number_format(0, ',', ' ') %}
+                                {% if shortage %}
+                                    {% set missingAmount = (cost - resources[resource].stock)|round(0, 'ceil') %}
+                                    {% set description = description~' · Manque '~missingAmount|number_format(0, ',', ' ')~' '~resourceLabel %}
+                                {% endif %}
+                                <span role="img" data-resource="{{ resource }}" data-resource-label="{{ resourceLabel }}"
+                                      {% if not leveled %}data-construction-quantity-target="cost"{% endif %}
+                                      class="{{ shortage ? 'insufficient' : '' }}" title="{{ description }}" aria-label="{{ description }}">
+                                    {{ ui.icon(resource) }}<span><strong data-cost-amount>{{ cost|compact_number }}</strong></span>
+                                </span>
+                            {% endif %}
+                        {% endfor %}
                     </div>
                     {% endset %}
                     {% if leveled %}{{ costsOverview }}{% endif %}
@@ -136,14 +147,9 @@
                         {% include 'ui/core_construction_benefit.html.twig' %}
                     {% endif %}
                     {% if card.economic|default(null) %}{% include 'ui/economic_units.html.twig' with {state:card.economic,definition:d} %}{% endif %}
-                    {% set missingLaboratory = card.missing_research_laboratory|default(null) %}
-                    {% set blockedCard = card.maximum or card.failures or missingLaboratory or vacation %}
                     {% if blockedCard %}<div class="catalog-blocked">
                         {% if not leveled %}
-                            <div class="core-construction-order">
-                                {% include 'ui/core_construction_quantity.html.twig' with {inactive: true} %}
-                                <div class="core-construction-cost">{{ costsOverview }}</div>
-                            </div>
+                            <div class="core-construction-cost">{{ costsOverview }}</div>
                         {% endif %}
                     {% endif %}
                     {% if card.maximum %}<p class="requirement{{ maximumPending ? '' : ' complete' }}">{{ ui.icon(maximumPending ? 'clock' : 'check') }} {{ maximumPending ? 'Dernier niveau programmé' : 'Niveau maximum atteint' }}</p>
@@ -168,12 +174,10 @@
                         </details>
                     {% elseif vacation %}<p class="requirement">Mode vacances : les constructions et recherches sont suspendues.</p>
                     {% else %}
-                        {% set missingResources = card.payment.missing %}
                         {% set wait = not queueFull ? card.payment.paymentWait : null %}
                         {% set estimate = wait ? card.payment.paymentEstimate : null %}
                         {% set actionLabel = group=='buildings' ? 'Améliorer au niveau '~card.target : (group=='technologies' ? 'Rechercher le niveau '~card.target : ((currentQueue ? 'Ajouter à la file' : 'Construire') ~ ' : ' ~ d.label ~ ' × 1')) %}
-                        {% set blocked = missingResources is not empty or queueFull or card.capacity_full|default(false) %}
-                        <form method="post" action="{{ path('app_queue_add', {id: planet.id}) }}"{% if not leveled %} data-construction-quantity-target="form"{% endif %}>
+                        <form method="post" action="{{ path('app_queue_add', {id: planet.id}) }}"{% if not leveled %} id="{{ orderFormId }}" data-construction-quantity-target="form"{% endif %}>
                             <input type="hidden" name="_token" value="{{ csrf_token('build'~planet.id) }}">
                             <input type="hidden" name="request_key" value="{{ request_key() }}">
                             <input type="hidden" name="group" value="{{ group }}">
@@ -182,10 +186,7 @@
                             {% if guidedCard and card.target == 1 and slug in ['mine_metal', 'engineering_foundations'] %}<input type="hidden" name="guided_first_step" value="1">{% endif %}
                             <input type="hidden" name="tier" value="{{ card.tier }}">
                             {% if not leveled %}
-                                <div class="core-construction-order">
-                                    {% include 'ui/core_construction_quantity.html.twig' with {inactive: false} %}
-                                    <div class="core-construction-cost">{{ costsOverview }}</div>
-                                </div>
+                                <div class="core-construction-cost">{{ costsOverview }}</div>
                             {% endif %}
                             <div class="catalog-payment">
                                 <button class="{{ not blocked ? 'primary' : 'secondary' }} full catalog-build-action{{ missingResources and not queueFull ? ' has-missing-resources' : '' }}"{% if blocked %} disabled{% endif %}{% if not leveled %} data-construction-quantity-target="submit" data-order-name="{{ d.label }}" data-queue-occupied="{{ currentQueue ? 'true' : 'false' }}"{% endif %}><span class="catalog-action-label"{% if not leveled %} data-construction-quantity-target="label"{% endif %}>{% if queueFull %}File pleine{% elseif missingResources %}Il manque :{% for resource in resourceOrder|filter(key => missingResources[key] is defined) %}{% set missing = missingResources[resource] %}<span class="catalog-missing-resource" data-resource="{{ resource }}">{{ missing.label }} : {{ missing.amount|number_format(0, ',', ' ') }}</span>{% endfor %}{% elseif card.capacity_full|default(false) %}Aucune place disponible{% else %}{{ actionLabel }}{% endif %}</span><span{% if blocked %} hidden{% endif %}{% if not leveled %} data-construction-quantity-target="arrow"{% endif %}>{{ ui.icon('arrow') }}</span></button>

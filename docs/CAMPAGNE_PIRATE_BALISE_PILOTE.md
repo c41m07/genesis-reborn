@@ -35,8 +35,7 @@ Un changement de participant ou d’univers, une colonie non possédée, un
 système non découvert ou une preuve existante ne préparent aucun ordre.
 
 L’intention CSRF Symfony couvre l’origine, le système choisi par les preuves
-de jeu et le devis H₂ natif (réserve embarquée utilisable, complément du
-stock et durée), sans date de clic. Recalcul sous les mêmes verrous avant
+de jeu et le devis H₂ natif (coût total sur le stock de la colonie et durée), sans date de clic. Recalcul sous les mêmes verrous avant
 vérification du jeton. Tant que l’intention reste invalide ou le contexte
 occupé, il n’y a ni paiement, sonde retirée, ligne de mission ni événement.
 Après confirmation seulement le lanceur natif atomique s’exécute, sans faire
@@ -92,14 +91,12 @@ transport Messenger réellement relayé et workers, sans compte ni donnée réel
 
 ### Reprise de la remise d'un convoi
 
-Une victoire n'impose jamais d'attendre son convoi pour accéder à la mission suivante. Si le contrôle
-de stockage a laissé le lot entier en attente, ce droit apparaît dans le dossier de la mission gagnée
-et non comme un nouvel ordre de la mission courante. Le bouton « Retenter le dépôt dans la même
-colonie » ne propose aucune destination et ne crée aucun trajet. Il reste absent du dossier sans
-droit propriétaire en attente, ou si le droit a changé depuis le rendu. Le POST exige un jeton établi
-pour le droit, l'état exact et la vraie destination, revérifiés après verrous; le service natif applique
-la remise en entier (ou place le droit en attente de nouveau). Si la destination n'appartient plus à
-l'empire, aucun stock n'est crédité. Aucun rattrapage n'est tenté au chargement du dossier.
+Chaque victoire ouvre la mission suivante. Le convoi remet à son bénéficiaire une boîte contenant
+toute la cargaison. Le joueur choisit ensuite la colonie où l’ouvrir dans son inventaire.
+Un ancien convoi bloqué par le stockage reste accessible dans le dossier de la mission gagnée.
+« Recevoir la boîte de ressources » vérifie le droit, le jeton et la destination sous verrou.
+L’attribution de la boîte et le reçu du transport sont enregistrés ensemble. Si la destination a changé
+de propriétaire, le dossier permet de choisir un autre trajet. Une consultation ne déclenche aucun gain.
 
 Une destination de convoi peut être choisie après une victoire sans départ ou après perte constatée
 de l'ancienne colonie, et seulement à partir d'un point civil réellement attesté. Le choix porte sur
@@ -115,8 +112,7 @@ Si le retour d'une escorte est réellement bloqué et que son point d'arrêt et 
 attestés, le dossier de cette mission peut proposer une autre colonie du même empire. L'aperçu
 affiche durée, coût et reliquat d'hydrogène sans déplacer ni débiter quoi que ce soit. Au second
 clic, le jeton ne couvre que cette solution et le vrai devis est recalculé sous verrou. La remise
-au hangar est indivisible : vaisseaux et réserve embarquée restante, jamais un crédit de stock
-planétaire. L'échéance affichée n'est pas un reçu. Si le hangar refuse le lot ou si la destination
+au hangar installe les vaisseaux et détruit le reliquat de carburant dans la même transaction. L'échéance affichée n'est pas un reçu. Si le hangar refuse le lot ou si la destination
 est perdue en vol, les survivants restent en attente sans restitution affichée et l'ancien ordre
 ne permet pas de relancer le trajet.
 

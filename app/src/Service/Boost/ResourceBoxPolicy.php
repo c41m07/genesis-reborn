@@ -1,7 +1,7 @@
 <?php
 namespace App\Service\Boost;
 
-use App\Entity\{AdminAuditLog, Player, Universe};
+use App\Entity\{AdminAuditLog, Player, PlayerBoost, Universe};
 use App\Manager\GameManager;
 use App\Service\Catalog\GameCatalog;
 use Doctrine\ORM\EntityManagerInterface;
@@ -9,6 +9,15 @@ use Psr\Clock\ClockInterface;
 
 final class ResourceBoxPolicy
 {
+    public const CONVOY_SHELF_SECONDS = 86400;
+
+    public static function hasExpired(PlayerBoost $box, \DateTimeImmutable $now): bool
+    {
+        // Les boîtes reçues avant l’introduction du délai gardent leurs conditions.
+        return $box->kind === 'resource_box' && isset($box->payload['expires_at'])
+            && $box->payload['expires_at'] <= $now->getTimestamp();
+    }
+
     public const FORMATS = ['small'=>'Petite boîte de ressources','medium'=>'Boîte moyenne de ressources','large'=>'Grande boîte de ressources'];
     public const AMOUNTS = [
         'small'=>['metal'=>4000,'nano'=>1000,'hydrogen'=>1000,'antimatter'=>200,'electricity'=>2000],
@@ -36,6 +45,40 @@ final class ResourceBoxPolicy
     public function validatePayload(array $payload): array
     {
         $format=$payload['format'] ?? '';
+        if ($format === 'market_overflow') {
+            $resources = $payload['resources'] ?? null;
+            if (!is_array($resources) || count($resources) !== 1) {
+                throw new \DomainException('Le surplus de Bourse doit contenir un seul matériau.');
+            }
+            $resource = array_key_first($resources);
+            $amount = $resources[$resource];
+            // La production continue peut laisser une place fractionnaire en entrepôt.
+            // Garder le reliquat exact, y compris lors de la relecture à l’ouverture.
+            if (!isset(\App\Service\Market\MarketPricing::WEIGHTS[$resource])
+                || (!is_float($amount) && !is_int($amount)) || !is_finite((float) $amount)
+                || $amount <= 0 || $amount > 9007199254740991) {
+                throw new \DomainException('Contenu de la boîte de surplus de Bourse invalide.');
+            }
+            return ['format' => $format, 'label' => 'Boîte de surplus de la Bourse', 'resources' => [$resource => $amount]];
+        }
+        if ($format === 'convoy') {
+            // Le devis peut dépasser les plafonds des cadeaux administratifs et contient des demi-unités.
+            $resources = [];
+            $cargo = $payload['resources'] ?? null;
+            if (!is_array($cargo) || count($cargo) !== 4) {
+                throw new \DomainException('Cargaison du convoi invalide.');
+            }
+            foreach (['metal', 'nano', 'antimatter', 'hydrogen'] as $resource) {
+                $amount = $cargo[$resource] ?? null;
+                if ((!is_int($amount) && !is_float($amount)) || !is_finite((float) $amount)
+                    || $amount < 0 || $amount > 9007199254740991 || floor(2 * $amount) != 2 * $amount) {
+                    throw new \DomainException('Quantité du convoi invalide.');
+                }
+                $resources[$resource] = (float) $amount;
+            }
+
+            return ['format' => $format, 'label' => 'Boîte du convoi pirate', 'resources' => $resources];
+        }
         if (!is_string($format) || !isset(self::FORMATS[$format]) || !is_array($payload['resources'] ?? null)) throw new \DomainException('Contenu de boîte invalide.');
         $resources=[];
         foreach ($this->catalog->rules()['resources'] as $slug=>$label) $resources[$slug]=$this->amount($payload['resources'][$slug] ?? null,$label);

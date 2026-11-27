@@ -22,6 +22,7 @@ final class ColonyView
         private CatalogAccess $access,
         private CatalogFilters $filters,
         private EmpireDetails $empireDetails,
+        private \App\Service\Market\MarketTraffic $marketTraffic,
         private EconomicUnitCapacity $economicUnits,
         private ClockInterface $clock,
     )
@@ -184,20 +185,12 @@ final class ColonyView
                 uksort($groupDefinitions, fn(string $a, string $b): int => $categoryOrder[$this->filters->category($group, $groupDefinitions[$a])] <=> $categoryOrder[$this->filters->category($group, $groupDefinitions[$b])] ?: ($order[$a] ?? PHP_INT_MAX) <=> ($order[$b] ?? PHP_INT_MAX));
             } elseif ($group === 'ships') {
                 $shipCategory = fn(array $ship): string => $this->filters->category('ships', $ship);
-                $classOrder = [
-                    'light' => 1,
-                    'escort' => 2,
-                    'bomber' => 3,
-                    'heavy' => 4,
-                    'capital' => 5,
-                ];
-                uksort($groupDefinitions, static function (string $a, string $b) use ($groupDefinitions, $shipCategory, $classOrder, $categoryOrder): int {
+                uksort($groupDefinitions, static function (string $a, string $b) use ($groupDefinitions, $shipCategory, $categoryOrder): int {
                     $left = $groupDefinitions[$a];
                     $right = $groupDefinitions[$b];
                     $leftType = $shipCategory($left);
                     $rightType = $shipCategory($right);
-                    $typeOrder = $categoryOrder;
-                    $typeComparison = $typeOrder[$leftType] <=> $typeOrder[$rightType];
+                    $typeComparison = $categoryOrder[$leftType] <=> $categoryOrder[$rightType];
                     if ($typeComparison !== 0) {
                         return $typeComparison;
                     }
@@ -208,10 +201,6 @@ final class ColonyView
                         'heavy',
                         'capital',
                     ], true)) {
-                        $classComparison = ($classOrder[$left['category'] ?? ''] ?? PHP_INT_MAX) <=> ($classOrder[$right['category'] ?? ''] ?? PHP_INT_MAX);
-                        if ($classComparison !== 0) {
-                            return $classComparison;
-                        }
                         $attackComparison = ($left['base_attack'] ?? 0) <=> ($right['base_attack'] ?? 0);
                         if ($attackComparison !== 0) {
                             return $attackComparison;
@@ -307,6 +296,7 @@ final class ColonyView
             'combat_events' => $combatEvents,
             'defense_quantities' => $defenseQuantities,
             'active_fleets' => $activeFleets,
+            'market_flights' => $this->marketTraffic->forViewer($membership),
             'membership' => $membership,
             'planet' => $planet,
             'planets' => $this->repo->planets($membership->universe, $membership),

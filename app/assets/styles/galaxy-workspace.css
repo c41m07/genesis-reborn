@@ -266,7 +266,7 @@ body.authenticated .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a:not([
 .galaxy-list-toolbar .galaxy-index-filter input { min-width:0; width:100%; }
 
 /* Les liens des stations gardent une cible tactile plus large que leur dessin. */
-[data-gv2-local-first-steps][hidden], .gv2-stations[hidden], .gv2-station[hidden], .gv2-station-detail[hidden] { display:none; }
+[data-gv2-local-first-steps][hidden], .gv2-stations[hidden], .gv2-station[hidden] { display:none; }
 .gv2-stations { position:absolute; inset:0; z-index:4; pointer-events:none; }
 .gv2-station {
     --station-color:#ffdc93;
@@ -284,20 +284,18 @@ body.authenticated .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a:not([
     width:min(23px,var(--planet-diameter,24px)); height:min(23px,var(--planet-diameter,24px));
 }
 .gv2-station:focus-visible { outline:2px solid #77d5e9; outline-offset:-5px; border-radius:50%; }
-.gv2-station-label, .gv2-station-detail {
+.gv2-station-label {
+    display:none;
     border:1px solid #536980; border-radius:5px; background:#101b2bf5;
     color:#e7eef6; text-align:left; line-height:1.35;
-}
-.gv2-station-label {
     position:absolute; left:calc(100% + 3px); bottom:calc(50% + 6px);
     padding:3px 7px; white-space:nowrap; color:var(--station-color); font-size:12px; pointer-events:none;
 }
 .gv2-station--pirate .gv2-station-label { left:auto; right:calc(100% + 3px); }
-.gv2-station-detail { position:absolute; inset:12px 12px auto auto; width:min(300px,calc(100% - 24px)); padding:8px 10px; }
-.gv2-station-detail strong, .gv2-station-detail small { display:block; }
-.gv2-station-detail strong { color:#ffdc93; }
-.gv2-station-detail[data-kind=pirate] strong { color:#ffab93; }
-@media(max-width:720px) {
-    .gv2-station-label { display:none; }
-    .gv2-station-detail { top:45px; }
-}
+.gv2-station[data-show-label] .gv2-station-label { display:block; }
+
+/* Le repère central doit rester lisible sur la lueur blanche du noyau. */
+.gv2-station--market { --station-color:#a0f5f4; }
+.gv2-station--market img { filter:drop-shadow(0 0 4px #030b14); }
+.gv2-market-legend a { display:inline-flex; align-items:center; gap:6px; }
+.gv2-market-legend img { flex:none; }

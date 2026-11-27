@@ -1,0 +1,8 @@
+{% import 'ui/macros.html.twig' as ui %}
+<span class="badge guild-action-count menu-guild-action-count"
+      data-message-notifications-target="guildRecruitment" aria-hidden="true"
+      {% if not pendingRecruitment %}hidden{% endif %}>{{ pendingRecruitment > 99 ? '99+' : pendingRecruitment }}</span>
+<span class="inventory-gift-mobile-indicator" data-message-notifications-target="inventoryGiftIndicator"
+      aria-hidden="true" {% if not giftCount %}hidden{% endif %}>{{ ui.gift_icon() }}</span>
+<span class="report-mobile-indicator" data-report-badge-target="indicator" aria-hidden="true"
+      {% if not unreadReports %}hidden{% endif %}></span>

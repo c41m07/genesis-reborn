@@ -253,6 +253,7 @@ connecteur sur cet endpoint. Aucun déploiement n’a été effectué.
 | Adresse | Objectif |
 | --- | --- |
 | `/flottes` | Missions personnelles de toutes les colonies de l’empire actif, par pages de 30 |
+| `/flottes/empire` | Effectifs de l’univers actif en lecture seule, accessibles depuis Flottes et la comparaison des colonies |
 | `/flottes/preparer` | Composition → Destination → Confirmation, avec résumé de trois missions |
 | `/flottes/orbites` | Demandes envoyées et reçues de la colonie active |
 | `/flottes/quai` | Vaisseaux et réserves de la colonie, stationnements en attente de tout l’empire |

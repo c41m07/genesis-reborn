@@ -1,7 +1,7 @@
 import { test, expect } from './support/isolated-test.mjs';
 import { queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
 
-test('Récompense quotidienne : kit T1, manque de place, retrait clavier et un seul reçu', async ({ page }) => {
+test('Récompense quotidienne : kit T1, retrait au clavier, stockage plein et activation distincte', async ({ page }, testInfo) => {
     const id = crypto.randomUUID().slice(0, 8);
     const email = 'daily-reward-' + id + '@example.test';
     const password = crypto.randomUUID() + 'Aa1!';
@@ -41,19 +41,70 @@ test('Récompense quotidienne : kit T1, manque de place, retrait clavier et un s
     await button.focus();
     await expect(button).toBeFocused();
     await page.keyboard.press('Enter');
-    await expect(page.getByRole('alert').filter({ hasText: 'Stockage insuffisant' })).toContainText('métal');
-    await expect(button).toBeVisible();
-    expect(receipts()).toBe(0);
-    expect(stock('nano')).toBeLessThan(5225);
-
-    runIsolatedSql(project, "UPDATE planet_resource SET current_stock=5000 WHERE planet_id=" + planetId + " AND resource_type='metal'");
-    await button.click();
     await expect(page.getByRole('status').filter({ hasText: 'Jour 1 récupéré' })).toBeVisible();
     await expect(button).toHaveCount(0);
     expect(receipts()).toBe(1);
-    expect(stock('metal')).toBeGreaterThanOrEqual(5500);
-    expect(stock('nano')).toBeGreaterThanOrEqual(5250);
+    expect(stock('metal')).toBe(10000);
+    expect(stock('nano')).toBe(5000);
     await page.getByRole('link', { name: 'Actualiser la récompense' }).click();
     await expect(page.getByText('Votre compte a déjà récupéré son lot du jour.', { exact: false })).toBeVisible();
     expect(receipts()).toBe(1);
+    const giftCount = () => page.evaluate(async () => {
+        // Le navigateur partage la session et résout le sous-domaine local du jeu isolé.
+        const response = await fetch('/messages/non-lus');
+        if (!response.ok) throw new Error('Le compteur des cadeaux est indisponible.');
+        return (await response.json()).inventoryGiftCount;
+    });
+    expect(await giftCount()).toBe(1);
+    await page.goto('/boosts');
+    await expect(page.locator('.inventory-gift-notice')).toContainText('1 nouveau cadeau');
+    await page.getByRole('button', { name: 'Marquer les cadeaux comme vus' }).click();
+    await expect(page.locator('.inventory-gift-notice')).toHaveCount(0);
+    expect(await giftCount()).toBe(0);
+    const bonus = page.locator('.header-timed-boost');
+    await expect(bonus).toHaveCount(0);
+    await page.getByRole('button', { name: 'Activer Moteurs économes' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Bonus actif pendant cinq heures' })).toBeVisible();
+    await expect(page.getByText('est actif jusqu’au', { exact: false })).toContainText('Moteurs économes');
+    await expect(bonus).toContainText('Carburant civil −20 %');
+    await page.goto('/planetes/' + planetId);
+    for (const width of [1920, 1280, 1024, 768, 541, 390, 320]) {
+        await page.setViewportSize({ width, height: 900 });
+        const guide = await page.locator('.header-technology-goal').boundingBox();
+        const frame = await bonus.boundingBox();
+        expect(frame.x).toBeGreaterThanOrEqual(guide.x + guide.width - 1);
+        expect(frame.y).toBeLessThan(guide.y + guide.height);
+        expect(frame.y + frame.height).toBeGreaterThan(guide.y);
+        expect(await page.locator('.topbar').evaluate(bar => bar.scrollWidth <= bar.clientWidth + 1)).toBe(true);
+    }
+    // À mi-parcours, l’anneau doit occuper la moitié du cadran dans les deux thèmes.
+    runIsolatedSql(project, `UPDATE player_boost SET used_at=UTC_TIMESTAMP() - INTERVAL 150 MINUTE
+        WHERE player_universe_id=(SELECT owner_id FROM planet WHERE id=${planetId}) AND kind='timed_boost' AND status='used'`);
+    for (const [theme, width] of [['dark', 1920], ['light', 390]]) {
+        runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE id=${playerId}`);
+        await page.setViewportSize({ width, height: 900 });
+        await page.reload();
+        await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+        const fraction = await bonus.locator('.boost-dial').evaluate(dial =>
+            parseFloat(getComputedStyle(dial).getPropertyValue('--remaining')));
+        expect(fraction).toBeCloseTo(50, 0);
+        const guide = await page.locator('.header-technology-goal').boundingBox();
+        const frame = await bonus.boundingBox();
+        const top = Math.max(0, Math.min(guide.y, frame.y) - 4);
+        await page.screenshot({ path: testInfo.outputPath('bonus-' + theme + '.png'), clip: {
+            x: guide.x - 4, y: top, width: frame.x + frame.width - guide.x + 8,
+            height: Math.max(guide.y + guide.height, frame.y + frame.height) - top + 4,
+        } });
+    }
+    // Approcher l’échéance de cette seule attribution dans la base éphémère.
+    runIsolatedSql(project, `UPDATE player_boost SET used_at=UTC_TIMESTAMP() - INTERVAL 5 HOUR + INTERVAL 8 SECOND
+        WHERE player_universe_id=(SELECT owner_id FROM planet WHERE id=${planetId}) AND kind='timed_boost' AND status='used'`);
+    await page.reload();
+    const timer = bonus.getByRole('timer');
+    await expect(timer).toBeVisible();
+    const first = await timer.textContent();
+    await expect(timer).not.toHaveText(first);
+    await expect(bonus).toBeHidden({timeout:12000});
+    await page.reload();
+    await expect(bonus).toHaveCount(0);
 });

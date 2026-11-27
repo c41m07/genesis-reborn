@@ -38,7 +38,7 @@ class QueueItem
     public bool $firstStepsGuided = false;
     /**
      * Paramètres figés du calcul et dernier segment du travail restant.
-     * @var array{base: float, cap: float, max: int, building_growth?: array<string, float>|null, checkpoint: ?int, work: float, full: int}|null
+     * @var array{base?: float, cap?: float, max?: int, throughput_until?: int, throughput_factor?: float, research_weights?: array<string, int|float>, building_growth?: array<string, float>|null, checkpoint: ?int, work: float, full: int}|null
      */
     #[ORM\Column(type: 'json', nullable: true)]
     public ?array $liveTiming = null;

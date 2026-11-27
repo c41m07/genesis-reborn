@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+{% block title %}Flotte de l’empire · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="fleet-page-layout fleet-space fleet-redesign" data-page-sections="disabled">
+    <div class="page-heading"><div><h1>Flotte de l’empire</h1><p>{{ membership.universe.name }} · Toutes vos colonies et missions</p></div></div>
+    {% include 'ui/fleet_navigation.html.twig' %}
+    <section class="panel account-panel" aria-labelledby="empire-fleet-title">
+        <h2 id="empire-fleet-title">Effectifs par rang</h2>
+        {% if ships %}
+            <p>{{ total|number_format(0, ',', ' ') }} {{ total == 1 ? 'unité' : 'unités' }} au total</p>
+            {% include 'fleet/_ship_selection_table.html.twig' with {
+                ships: ships, catalog: catalog, readOnly: true, headingId: 'empire-fleet-title'
+            } only %}
+        {% else %}
+            <p>Votre empire ne possède encore aucune unité.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

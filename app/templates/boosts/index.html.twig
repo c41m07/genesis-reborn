@@ -1,17 +1,28 @@
 {% extends 'base.html.twig' %}
-{% set pageTitle = {boosts:'Boosts',boxes:'Boîtes de ressources',pending:'Récompenses en attente'}[inventory_page] %}
+{% set pageTitle = {boosts:'Boosts',boxes:'Boîtes',pending:'Récompenses en attente'}[inventory_page] %}
 {% block title %}{{ pageTitle }} · Inventaire · Genesis Reborn{% endblock %}
 {% block body %}
 <div class="page-refinement inventory-page inventory-space inventory-redesign player-inventory-board" data-page-sections="disabled"{% if inventory_page!='pending' %} data-controller="inventory-review"{% endif %}>
 <div class="page-heading"><div><p class="inventory-board-eyebrow">Opérations · objets et récompenses</p><h1>{{ pageTitle }}</h1><p>{{ {boosts:'Accélérez une opération active de votre empire.',boxes:'Choisissez la colonie qui recevra le contenu d’une boîte.',pending:'Consultez les récompenses conservées lorsque votre inventaire est plein.'}[inventory_page] }}</p></div></div>
 {% include 'ui/inventory_navigation.html.twig' %}
+{% if giftNotices.count %}
+<form method="post" action="{{ path('app_inventory_gift_notice_consult') }}" class="panel inventory-gift-notice">
+    {% set through = giftNotices.through|json_encode %}
+    <p><strong>{{ giftNotices.count }} {{ giftNotices.count == 1 ? 'nouveau cadeau' : 'nouveaux cadeaux' }}</strong> dans votre inventaire.</p>
+    <input type="hidden" name="page" value="{{ inventory_page }}">
+    <input type="hidden" name="through" value="{{ through }}">
+    <input type="hidden" name="_token" value="{{ csrf_token('inventory-gifts-' ~ chrome.membership.id ~ '-' ~ inventory_page ~ '-' ~ through) }}">
+    <button type="submit" class="secondary">Marquer les cadeaux comme vus</button>
+</form>
+{% endif %}
 {% if inventory_page != 'boosts' %}
 {% include 'boosts/_capacity.html.twig' %}
 {% endif %}
-{% if inventory_page=='boosts' %}{% include 'boosts/_boosts.html.twig' %}
+{% if inventory_page=='boosts' %}{% include 'boosts/_timed_boosts.html.twig' %}{% include 'boosts/_boosts.html.twig' %}
 {% elseif inventory_page=='boxes' %}
 <section id="inventory-boxes" class="inventory-boxes" aria-labelledby="inventory-boxes-title"><h2 id="inventory-boxes-title" class="visually-hidden">Boîtes disponibles</h2>
-{% include 'boosts/_resource_boxes.html.twig' %}{% if resource_boxes is empty %}<p class="panel">Aucune boîte de ressources disponible.</p>{% endif %}</section>
+{% include 'boosts/_resource_boxes.html.twig' %}{% if resource_boxes is empty and advent_boxes is empty %}<p class="panel">Aucune boîte disponible.</p>{% endif %}</section>
+{% include 'boosts/_advent_boxes.html.twig' %}
 {% else %}{% include 'boosts/_pending.html.twig' %}{% endif %}
 <details class="panel boost-information"><summary>Comprendre vos bonus</summary><p>La capacité concerne les boosts et boîtes disponibles dans cet univers. Les récompenses en attente sont conservées séparément et rejoignent automatiquement l’inventaire, de la plus ancienne à la plus récente, lorsqu’une place se libère.</p>{% if inventory_page=='boosts' %}<p>Un boost s’applique au temps restant d’une opération active. Les réductions successives se calculent sur le nouveau temps restant.</p>{% endif %}</details>
 {% if inventory_page!='pending' %}{% include 'boosts/_review_dialog.html.twig' %}{% endif %}

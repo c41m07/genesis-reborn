@@ -50,3 +50,49 @@ body.authenticated .message-markdown-help p{margin:8px 0;overflow-wrap:anywhere}
 body.authenticated .message-content .message-plain{white-space:pre-wrap}
 body.authenticated .message-meta time{color:inherit}
 body.authenticated[data-theme=light] .inbox-item.active small{color:#44545f}
+
+body.authenticated .badge.message-unread-count,
+body.authenticated .badge.guild-action-count {
+    background: #a91f35;
+    color: #fff;
+    border: 1px solid #a91f35;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+.sidebar nav .message-unread-count, .sidebar nav .guild-action-count, .sidebar nav .inventory-gift-count { margin-inline-start: auto; flex-shrink: 0; }
+.topbar .mobile-menu .menu-guild-action-count, .mobile-bottom-nav .menu-guild-action-count {
+    position: absolute;
+    inset-block-start: 2px;
+    inset-inline-start: 2px;
+    padding: 0 3px;
+    min-width: 15px;
+    line-height: 15px;
+    font-size: 10px;
+}
+.inventory-gift-mobile-indicator {
+    position: absolute;
+    inset-block-end: .25rem;
+    inset-inline-start: .4rem;
+    color: var(--accent);
+    line-height: 1;
+}
+body.authenticated .inventory-gift-mobile-indicator .icon { width: 12px; height: 12px; }
+.message-unread-count[hidden], .guild-action-count[hidden], .inventory-gift-count[hidden], .inventory-gift-mobile-indicator[hidden] { display: none; }
+.inventory-gift-notice { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; }
+.inventory-gift-notice p { margin: 0; }
+
+.inventory-new-label { color: var(--accent); font-size: .85em; font-weight: 700; }
+.mobile-bottom-nav a:has(.orbit-menu-count) { position: relative; }
+.mobile-bottom-nav .orbit-menu-count {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: .15rem;
+    padding: 0 .25rem;
+    font-size: 10px;
+    line-height: 15px;
+}
+
+@media (max-width: 740px) {
+    /* La demande d’orbite peut afficher la carte temps réel au moment où le joueur touche Flottes. */
+    .authenticated .event-toast { bottom: calc(72px + env(safe-area-inset-bottom)); }
+}

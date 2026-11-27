@@ -30,8 +30,14 @@
   les essais n’envoient aucun vaisseau et ne prétendent pas prévoir l’issue réelle.
 - Un relevé historique sans scénario figé affiche seulement la composition connue, sans import
   approximatif. Le rapport est une lecture de la reconnaissance existante, sans nouveau
-  journal d’espionnage de planète, et sans second envoi de sonde. Il s’ouvre depuis le dossier
-  pirate, pas depuis le sélecteur des rapports planétaires du simulateur.
+  journal d’espionnage de planète, et sans second envoi de sonde. Le dossier pirate et la rubrique Espionnage des Rapports ouvrent la même reconnaissance.
+- Chaque tentative résolue publie le bilan des deux camps dans Rapports → Combats. Le joueur
+  peut y consulter les effectifs, pertes et rounds enregistrés et retrouver le rapport depuis le dossier.
+- Chaque trajet du convoi dispose d’un rapport de transport dans Rapports → Économie. À la livraison,
+  le joueur reçoit dans l’inventaire une boîte contenant exactement la cargaison. Les entrepôts
+  sont vérifiés à l’ouverture sur la colonie choisie. Un inventaire plein place la boîte en attente.
+  Les anciens convois bloqués par le stockage peuvent être retirés depuis le dossier. Les anciennes
+  livraisons déjà créditées conservent leur reçu. L’historique reprend les preuves encore conservées.
 
 ## Choix de l’escorte
 
@@ -43,6 +49,19 @@
   et de la limite totale après les unités déjà choisies dans les autres cases.
 - L’aperçu puis la confirmation sont inchangés : le formulaire ne transmet que les choix liés au
   devis, et le serveur les revalide au départ. Afficher ou vérifier le devis ne lance pas d’attaque.
+
+## Suivre le trajet et recevoir le titre final
+
+- Depuis **Flottes** ou **Vue générale**, le joueur voit le temps restant et la progression
+  depuis le départ constaté. La composition reprend les vaisseaux partis ou les survivants
+  réservés. Le convoi affiche le fret de son droit, jamais un nombre de vaisseaux inventé.
+- Dans **Galaxie**, le journal suit l’échéance ; la carte relie deux systèmes seulement
+  lorsqu’ils sont connus du propriétaire. Si elle ne dispose que d’une ancre (notamment la
+  sonde avant son rapport), elle marque cette ancre sans révéler de direction. Ni la guilde
+  ni les autres commandants ne reçoivent ces trajets. L’échéance dépassée ne prouve pas l’arrivée.
+- La victoire de la mission 20, **La nuit se brise**, débloque le titre
+  **Chasseur de Pirate amateur** une fois par compte. Le titre est à équiper dans le profil ;
+  aucun réglage ni titre existant n’est remplacé. Ce lot ne réattribue pas les victoires antérieures.
 
 ## Pour l'exploitation lors d'un déploiement décidé par l'opérateur
 

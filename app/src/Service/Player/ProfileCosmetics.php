@@ -10,14 +10,17 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class ProfileCosmetics
 {
+    public const PIRATE_HUNTER_TITLE = 'amateur_pirate_hunter';
+
     public const DEFINITIONS = [
+        self::PIRATE_HUNTER_TITLE => ['slot' => 'title', 'label' => 'Chasseur de Pirate amateur'],
         'guardian_of_stars' => ['slot' => 'title', 'label' => 'Gardien des étoiles'],
         'polar_night' => ['slot' => 'banner', 'label' => 'Nuit polaire'],
     ];
 
     public function __construct(private GameManager $manager, private EntityManagerInterface $em) {}
 
-    /** @param list<string> $codes Le compte est déjà verrouillé par le droit Avent. */
+    /** @param list<string> $codes Le compte est déjà verrouillé par l’appelant. */
     public function grantLocked(Player $player, array $codes, \DateTimeImmutable $at): void
     {
         foreach (array_unique($codes) as $code) {

@@ -36,7 +36,7 @@ final class CombatReportPresenter
         $units = [];
         foreach ($snapshot['participants'] ?? [] as $participant) {
             $npc = (bool) ($participant['pve_npc'] ?? false);
-            $owner = $npc ? 'npc:'.$participant['planet_id'] : (string) $participant['fleet_id'];
+            $owner = $participant['report_owner'] ?? ($npc ? 'npc:'.$participant['planet_id'] : (string) $participant['fleet_id']);
             $role = $participant['role'];
             $camp = $participant['camp'] ?? ($role === 'attacker' ? 'attackers' : 'defenders');
             $label = $npc ? 'Flotte PNJ' : ((int) ($participant['player_universe_id'] ?? 0) === $membershipId ? 'Votre flotte' : ($camp === $viewerCamp ? 'Flotte alliée' : 'Flotte adverse'));

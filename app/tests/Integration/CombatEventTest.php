@@ -15,6 +15,8 @@ use App\Entity\PlanetBuilding;
 use App\Entity\PlanetNpcShip;
 use App\Entity\PlanetResource;
 use App\Entity\PlayerTechnology;
+use App\Entity\PlayerBoost;
+use App\Service\Boost\{TimedBoostEffects, TimedBoostUseService};
 use App\Manager\GameManager;
 use App\Message\CombatEventDue;
 use App\Message\FleetArrived;
@@ -252,7 +254,7 @@ final class CombatEventTest extends KernelTestCase
         self::assertSame(0.0, $externalOrbit->orbitFuel);
         self::assertSame('idle', $garrison->status);
         self::assertGreaterThan(0, $garrisonShip->quantity);
-        self::assertSame(100.0, $garrison->storedFuel);
+        self::assertSame(0.0, $garrison->storedFuel);
         self::assertSame(['metal' => 50], $garrison->cargo);
     }
     public function testCombatRunsAndPersistsOneDeterministicRoundPerMinute(): void
@@ -500,7 +502,9 @@ final class CombatEventTest extends KernelTestCase
         self::assertSame(1, $this->em->getRepository(CombatEvent::class)->count(['planet' => $target]));
     }
 
-    public function testCombatSnapshotsApplyEachMembershipTechnologyWithoutChangingPlanetDefenses(): void
+    #[\PHPUnit\Framework\Attributes\TestWith([false])]
+    #[\PHPUnit\Framework\Attributes\TestWith([true])]
+    public function testCombatSnapshotsApplyEachMembershipTechnologyWithoutChangingPlanetDefenses(bool $timedEffects): void
     {
         $clock = $this->clock();
         $defender = $this->player('TechDefender');
@@ -535,7 +539,17 @@ final class CombatEventTest extends KernelTestCase
         $this->em->persist($turret);
         $this->em->flush();
 
+        if ($timedEffects) {
+            $this->activateTimedCombatFixture($attacker, TimedBoostEffects::PVP_ATTACK, $clock);
+            $this->activateTimedCombatFixture($defender, TimedBoostEffects::PVP_DEFENSE, $clock);
+            $clock->sleep(TimedBoostEffects::ACTIVE_SECONDS - 1);
+        }
+
         $fleet = $this->attackFleet($attacker, $origin, $target, 'tech-combat');
+        if ($timedEffects) {
+            $fleet->arrivalAt = $clock->now();
+            $this->em->flush();
+        }
         $combat = self::getContainer()->get(CombatEventService::class);
         $manager = self::getContainer()->get(GameManager::class);
         self::assertTrue($manager->transaction(fn (): bool => $combat->joinAttack($fleet)));
@@ -551,12 +565,36 @@ final class CombatEventTest extends KernelTestCase
         foreach ($log->snapshot['participants'] as $participant) {
             $snapshots[$participant['fleet_id']] = $participant;
         }
-        self::assertEqualsWithDelta(55.308718046242326, $snapshots[$fleet->id]['units'][0]['precision'], 0.000001);
+        self::assertEqualsWithDelta(55.24817199, $snapshots[$fleet->id]['units'][0]['precision'], 0.000001);
         self::assertSame(['weapon_calibration' => ['basic' => 2]], $snapshots[$fleet->id]['technology_levels']);
         $defenderSnapshot = array_values(array_filter($snapshots, static fn (array $participant): bool => $participant['player_universe_id'] === $defender->currentPlayerUniverse->id))[0];
-        self::assertEqualsWithDelta(55.15594535470353, $defenderSnapshot['units'][0]['precision'], 0.000001);
+        self::assertEqualsWithDelta(55.12511114, $defenderSnapshot['units'][0]['precision'], 0.000001);
         self::assertSame(['weapon_calibration' => ['basic' => 1]], $defenderSnapshot['technology_levels']);
         self::assertSame(78, $log->snapshot['defenses'][0]['precision']);
+        $factory = self::getContainer()->get(\App\Service\Combat\CombatUnitFactory::class);
+        foreach ([$snapshots[$fleet->id], $defenderSnapshot] as $snapshot) {
+            foreach ($snapshot['units'] as $profile) {
+                $unmodified = $factory->ships($origin->solarSystem->galaxy->universe,
+                    [$profile['slug'] => [$profile['tier'] => $profile['quantity']]], $snapshot['technology_levels'])[0];
+                self::assertEqualsWithDelta($unmodified['base_attack'] * ($timedEffects ? 1.1 : 1.0), $profile['base_attack'], 1e-8);
+            }
+        }
+        $originalTurret = $factory->defense($target->solarSystem->galaxy->universe, $turret->slug, $turret->tier, ['weapon_calibration' => ['basic' => 1]], []);
+        self::assertEqualsWithDelta($originalTurret['base_attack'] * ($timedEffects ? 1.1 : 1.0), $log->snapshot['defenses'][0]['base_attack'], 1e-8);
+    }
+
+    private function activateTimedCombatFixture(Player $player, string $effect, MockClock $clock): void
+    {
+        $item = new PlayerBoost();
+        $item->playerUniverse = $player->currentPlayerUniverse;
+        $item->sourceType = 'daily_reward';
+        $item->sourceKey = 'fixture-'.$effect;
+        $item->kind = TimedBoostEffects::KIND;
+        $item->payload = ['effect' => $effect];
+        $item->earnedAt = $clock->now();
+        $this->em->persist($item);
+        $this->em->flush();
+        self::getContainer()->get(TimedBoostUseService::class)->activate($item->playerUniverse, $item->id, str_repeat('d', 32));
     }
 
     public function testBeginnerProtectionExpiresAndBlocksFiveToOneScoreAdvantage(): void
@@ -894,7 +932,9 @@ final class CombatEventTest extends KernelTestCase
         self::assertTrue($combat->orbitAutoAccepted($sender->currentPlayerUniverse, $target));
     }
 
-    public function testWinningAttackLootProtectsStorageFloorAndSplitsBySurvivingCargoSpace(): void
+    #[\PHPUnit\Framework\Attributes\TestWith([false])]
+    #[\PHPUnit\Framework\Attributes\TestWith([true])]
+    public function testWinningAttackLootProtectsStorageFloorAndSplitsBySurvivingCargoSpace(bool $timedShield): void
     {
         $clock = $this->clock();
         $clock->sleep(19 * 86400);
@@ -935,6 +975,10 @@ final class CombatEventTest extends KernelTestCase
         $this->em->persist($secondCargo);
         $this->em->flush();
 
+        if ($timedShield) {
+            $this->activateTimedCombatFixture($defender, TimedBoostEffects::LOOT_SHIELD, $clock);
+        }
+        $protectedRatio = $timedShield ? 0.2 : 0.1;
         $combat = self::getContainer()->get(CombatEventService::class);
         $manager = self::getContainer()->get(\App\Manager\GameManager::class);
         self::assertTrue($manager->transaction(fn (): bool => $combat->joinAttack($first)));
@@ -948,7 +992,7 @@ final class CombatEventTest extends KernelTestCase
         $projected = self::getContainer()->get(\App\Service\Colony\ResourceService::class)->snapshot($target);
         $expectedLoot = 0;
         foreach ($projected as $resource) {
-            $expectedLoot += max(0, (int) floor($resource['stock'] - $resource['capacity'] * 0.1));
+            $expectedLoot += max(0, (int) floor($resource['stock'] - $resource['capacity'] * $protectedRatio));
         }
         $combat->resolve($event->id, $event->dispatchToken);
 
@@ -961,7 +1005,7 @@ final class CombatEventTest extends KernelTestCase
         self::assertSame(1, $this->em->getRepository(\App\Entity\PlayerBoost::class)->count(['playerUniverse' => $attacker->currentPlayerUniverse, 'sourceType' => 'risk_mission']));
         $combatEvent = $this->em->getRepository(\App\Entity\BoostEvent::class)->findOneBy(['universe' => $attacker->currentPlayerUniverse->universe, 'templateKey' => 'combat', 'status' => 'active']);
         self::assertGreaterThan(0, $this->em->getRepository(\App\Entity\BoostEventContribution::class)->findOneBy(['event' => $combatEvent, 'playerUniverse' => $attacker->currentPlayerUniverse])->value);
-        self::assertSame(0.1, $log->snapshot['loot']['protected_storage_ratio']);
+        self::assertSame($protectedRatio, $log->snapshot['loot']['protected_storage_ratio']);
         self::assertSame(1.0, $log->snapshot['loot']['ratio']);
         $firstLoot = $log->snapshot['loot']['fleets'][$first->id] ?? [];
         $secondLoot = $log->snapshot['loot']['fleets'][$second->id] ?? [];

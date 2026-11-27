@@ -13,6 +13,10 @@ Cette fusion ne constitue pas un déploiement. Aucune nouvelle migration n’a �
 L’entrée **Ma guilde** ouvre `/guildes` pour un membre ; sans guilde, elle devient
 **Guildes** et ouvre la recherche. La navigation commune donne accès à Membres,
 Grades et permissions, Projets collectifs, Personnalisation (commandant) et Gestion.
+Le badge rouge chiffré indique les candidatures à traiter pour les grades
+autorisés, ou les invitations de guilde pour le destinataire sans guilde. Il
+disparaît quand les dossiers sont réglés, pas quand on lit la page ou le canal.
+
 La création utilise `/guildes/creer`. **Projets collectifs** ouvre les projets en
 cours sur `/guildes/projets`. Sa navigation relie les projets disponibles
 (`/guildes/projets/disponibles`) et l’historique (`/guildes/projets/historique`).

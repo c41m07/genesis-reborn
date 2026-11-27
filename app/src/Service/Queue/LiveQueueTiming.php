@@ -15,7 +15,13 @@ final class LiveQueueTiming
         // Les commandes antérieures conservent leur courbe lors d’un gain de vitesse.
         $discount = isset($timing['building_growth'])
             ? GameCatalog::infrastructureBonus($levels, $timing['cap'], $timing['max'], $timing['building_growth'])
-            : GameCatalog::diminishingBonus($levels, $timing['cap'], $timing['max']);
+            : GameCatalog::diminishingBonus(
+                $levels,
+                $timing['cap'],
+                $timing['max'],
+                // Les premiers instantanés utilisaient les poids communs aux rangs.
+                $timing['research_weights'] ?? GameCatalog::LEGACY_RESEARCH_WEIGHTS,
+            );
 
         return max(1, (int) ceil($timing['base'] * ((100 - $discount) / 100)));
     }
@@ -33,6 +39,8 @@ final class LiveQueueTiming
         }
 
         $elapsed = max(0, $at - $timing['checkpoint']);
+        $boosted = min($elapsed, self::boostedSeconds($timing, $timing['checkpoint']));
+        $elapsed += $boosted * (($timing['throughput_factor'] ?? 1.0) - 1);
 
         return max(0.0, $timing['work'] - $elapsed / $timing['full']);
     }
@@ -47,18 +55,56 @@ final class LiveQueueTiming
         $item->liveTiming['work'] = $work;
         $item->liveTiming['full'] = $full;
         // L’arrondi ne modifie que l’échéance et non le travail sauvé au checkpoint.
-        $remaining = self::seconds($work, $full);
+        $remaining = self::projectSeconds($item->liveTiming, $work, $at);
         $item->durationSeconds = max(1, $at + $remaining - $item->startedAt->getTimestamp());
     }
 
     public static function boostedRemainingSeconds(QueueItem $item, int $at, float $divisor): int
     {
         if ($item->liveTiming !== null) {
-            return self::seconds(self::remainingWork($item->liveTiming, $at) / $divisor, $item->liveTiming['full']);
+            return self::projectSeconds($item->liveTiming, self::remainingWork($item->liveTiming, $at) / $divisor, $at);
         }
         $elapsed = max(0, $at - $item->startedAt->getTimestamp());
 
         return max(0, QueueTiming::boostedDuration($item->durationSeconds, $elapsed, $divisor) - $elapsed);
+    }
+
+    /** Enregistrer seulement le travail qui reste à l’ouverture ou à la clôture de la fenêtre. */
+    public static function setThroughput(QueueItem $item, int $at, ?int $until, float $factor = 1.0): void
+    {
+        if ($item->startedAt === null) {
+            throw new \LogicException('La vitesse temporaire exige un ordre démarré.');
+        }
+        // Défenses et commandes historiques n’ont pas de courbe de recherche ;
+        // un repère de travail suffit, sans inventer le coût ni la durée d’origine.
+        $item->liveTiming ??= ['checkpoint' => $item->startedAt->getTimestamp(), 'work' => 1.0, 'full' => $item->durationSeconds];
+        $work = self::remainingWork($item->liveTiming, $at);
+        $item->liveTiming['checkpoint'] = $at;
+        $item->liveTiming['work'] = $work;
+        unset($item->liveTiming['throughput_until'], $item->liveTiming['throughput_factor']);
+        if ($until !== null && $until > $at && $factor > 1.0) {
+            $item->liveTiming['throughput_until'] = $until;
+            $item->liveTiming['throughput_factor'] = $factor;
+        }
+        $remaining = self::projectSeconds($item->liveTiming, $work, $at);
+        $item->durationSeconds = max(1, $at + $remaining - $item->startedAt->getTimestamp());
+    }
+
+    private static function boostedSeconds(array $timing, int $at): int
+    {
+        return max(0, ($timing['throughput_until'] ?? $at) - $at);
+    }
+
+    private static function projectSeconds(array $timing, float $work, int $at): int
+    {
+        $normal = $work * $timing['full'];
+        $boosted = self::boostedSeconds($timing, $at);
+        $factor = $timing['throughput_factor'] ?? 1.0;
+        $seconds = $normal <= $boosted * $factor
+            ? $normal / $factor
+            : $normal - $boosted * ($factor - 1.0);
+
+        return self::seconds($seconds, 1);
     }
 
     /** @return array{start: ?\DateTimeImmutable, percent: float} */

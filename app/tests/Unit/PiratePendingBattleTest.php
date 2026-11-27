@@ -29,6 +29,10 @@ final class PiratePendingBattleTest extends TestCase
         self::assertNull($battle->takeWhenDue(2, $this->at(124)));
 
         $payload = $battle->takeWhenDue(1, $this->at(124));
+        self::assertCount(2, $payload['rounds']);
+        self::assertSame([1, 2], array_column($payload['rounds'], 'number'));
+        self::assertSame(1, array_sum(array_column($payload['rounds'][1]['groups'], 'lost')));
+        unset($payload['rounds']);
         self::assertSame(['outcome' => 'attacker_wins', 'rounds_played' => 2, 'losses' => ['pirates:raider' => 1],
             'survivors' => ['fighter' => ['basic' => 1]]], $payload);
         self::assertNull($battle->takeWhenDue(1, $this->at(124)));
@@ -41,7 +45,7 @@ final class PiratePendingBattleTest extends TestCase
         self::assertEquals($this->at(130), $prepared->workerDueAt(), 'Le retard ne décale pas l’arrivée fournie par le worker.');
         $before = json_decode(json_encode($prepared->checkpointForPersistence(), JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
         self::assertSame(['version', 'attempt', 'arrived_at', 'nominal_arrival_at', 'consumed', 'payload'], array_keys($before));
-        self::assertSame(['outcome', 'rounds_played', 'losses', 'survivors'], array_keys($before['payload']));
+        self::assertSame(['outcome', 'rounds_played', 'rounds', 'losses', 'survivors'], array_keys($before['payload']));
         self::assertFalse($before['consumed']);
 
         $discarded = $prepared->takeWhenDue(2, $this->at(220));

@@ -1,12 +1,13 @@
 # Réglages et études d’équilibrage
 
-## Expérience : kit T1 et récompenses quotidiennes
+## Historique : kit T1 et ancien barème quotidien
 
-Le kit T1 de la première planète des nouveaux comptes et le barème quotidien
-expérimental constituent un même lot. Stocks initiaux : 5 000 métal, nano,
+Le kit T1 de la première planète des nouveaux comptes et l’ancien barème quotidien
+expérimental constituaient un même lot. Stocks initiaux : 5 000 métal, nano,
 hydrogène et antimatière, 0 électricité. Le reste des dotations existantes,
-des capacités et des taux reste inchangé. Le barème ajustable se trouve dans
-`daily_reward_experiment` (catalogue) ; il ne débite jamais une planète.
+des capacités et des taux reste inchangé. Le barème `daily_reward_experiment` reste
+disponible aux relectures de simulation historique : le retrait joueur accorde
+maintenant les [bonus temporaires](REGLES.md#bonus-quotidiens-temporaires).
 
 | Jour de retrait | Métal | Nano |
 | --- | ---: | ---: |

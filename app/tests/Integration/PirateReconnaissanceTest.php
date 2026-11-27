@@ -390,7 +390,7 @@ final class PirateReconnaissanceTest extends KernelTestCase
     }
 
     #[DataProvider('outcomes')]
-    public function testOmegaPilotConsumesNativeRoundTripFromHoldThenGroundWithoutRefund(bool $detected): void
+    public function testOmegaPilotConsumesNativeRoundTripFromGroundWithoutRefund(bool $detected): void
     {
         [$member, $home, , $stock, $ally] = $this->fixture(omega: true);
         $this->preparePilotFuel($home, $stock, 10.0);
@@ -470,6 +470,8 @@ final class PirateReconnaissanceTest extends KernelTestCase
         if ($pilot) {
             $this->preparePilotFuel($home, $stock, 10.0);
             $system = $home->solarSystem;
+            $quote = self::getContainer()->get(FleetService::class)
+                ->quote($member, $home, 'explore', $system->id, ['probe' => ['basic' => 1]], 1.0);
         }
         $db = $this->em->getConnection();
         $directory = sys_get_temp_dir().'/genesis-pirate-race-'.bin2hex(random_bytes(8));
@@ -525,7 +527,7 @@ final class PirateReconnaissanceTest extends KernelTestCase
             self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_reconnaissance'));
             self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
             if ($pilot) {
-                self::assertEqualsWithDelta(9.2, $this->pilotGroundStock($home->id), 1e-10);
+                self::assertEqualsWithDelta(10.0 - $quote['total_fuel'], $this->pilotGroundStock($home->id), 1e-10);
                 self::assertSame(0.0, (float) $db->fetchOne('SELECT stored_fuel FROM fleet WHERE id = ?', [$stock->fleet->id]));
             }
         } finally {
@@ -549,15 +551,20 @@ final class PirateReconnaissanceTest extends KernelTestCase
         [$member, $home, $system, $stock] = $this->fixture();
         $db = $this->em->getConnection();
         // Rejouer les migrations de campagne depuis le schéma historique, sans toucher aux tables métier.
+        $db->executeStatement('DROP TABLE report_notice');
+        $db->executeStatement('DROP TABLE pirate_mission_report');
+        $db->executeStatement('DROP TABLE diplomatic_report');
         $db->executeStatement('DROP TABLE pirate_convoy_delivery');
         $db->executeStatement('DROP TABLE pirate_attack_campaign');
         $db->executeStatement('DROP TABLE pirate_reconnaissance');
         try {
-            require_once dirname(__DIR__, 2).'/migrations/Version20261120000900.php';
-            require_once dirname(__DIR__, 2).'/migrations/Version20261120000930.php';
-            require_once dirname(__DIR__, 2).'/migrations/Version20261120000950.php';
-            require_once dirname(__DIR__, 2).'/migrations/Version20261120001000.php';
-            foreach ([\DoctrineMigrations\Version20261120000900::class, \DoctrineMigrations\Version20261120000930::class, \DoctrineMigrations\Version20261120000950::class, \DoctrineMigrations\Version20261120001000::class] as $class) {
+            $versions = [
+                'Version20261120000900', 'Version20261120000930', 'Version20261120000950', 'Version20261120001000',
+                'Version20261122010100', 'Version20261124083000', 'Version20261127130000',
+            ];
+            foreach ($versions as $version) {
+                require_once dirname(__DIR__, 2).'/migrations/'.$version.'.php';
+                $class = 'DoctrineMigrations\\'.$version;
                 $migration = new $class($db, new NullLogger());
                 $migration->up(new Schema());
                 foreach ($migration->getSql() as $query) {
@@ -574,6 +581,9 @@ final class PirateReconnaissanceTest extends KernelTestCase
         } finally {
             // Les noms de contraintes des migrations diffèrent de ceux générés par SchemaTool.
             // Retirer uniquement ces tables de fixture, dans l’ordre inverse de leurs dépendances.
+            $db->executeStatement('DROP TABLE IF EXISTS report_notice');
+            $db->executeStatement('DROP TABLE IF EXISTS pirate_mission_report');
+            $db->executeStatement('DROP TABLE IF EXISTS diplomatic_report');
             $db->executeStatement('DROP TABLE IF EXISTS pirate_convoy_delivery');
             $db->executeStatement('DROP TABLE IF EXISTS pirate_attack_campaign');
             $db->executeStatement('DROP TABLE IF EXISTS pirate_reconnaissance');

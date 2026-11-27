@@ -57,7 +57,7 @@ test('Le catalogue affiche les gains par niveau, consommations et tourelles spé
   await expect(page.locator('#item-engineering_foundations-basic .card-benefits')).toContainText('Réduction du temps de construction des bâtiments');
   await expect(page.locator('#item-nanomaterial_synthesis-basic .card-benefits')).toContainText('Réduction du coût de construction des bâtiments');
   await expect(page.locator('#item-naval_engineering-basic .card-benefits')).toContainText('Réduction du coût de construction des vaisseaux');
-  const levelOneEffects={engineering_foundations:'+1,32 %',naval_engineering:'+0,76 %',automated_defense_repair:'+3,63 %',nanomaterial_synthesis:'+0,76 %',vector_propulsion:'+0,47 %',weapon_calibration:'+0,28 %',target_acquisition:'+0,28 %',structural_armor:'+0,47 %',shield_harmonics:'+0,47 %',evasive_navigation:'+0,38 %',signature_reduction:'−0,47 %',rapid_fire_cycle:'+0,95 %',cryogenic_reserves:'+0,47 %',modular_cargo_bays:'+0,47 %',weapons_engineering:'+0,47 %'};
+  const levelOneEffects={engineering_foundations:'+1,06 %',naval_engineering:'+0,61 %',automated_defense_repair:'+2,94 %',nanomaterial_synthesis:'+0,61 %',vector_propulsion:'+0,38 %',weapon_calibration:'+0,23 %',target_acquisition:'+0,23 %',structural_armor:'+0,38 %',shield_harmonics:'+0,38 %',evasive_navigation:'+0,3 %',signature_reduction:'−0,38 %',rapid_fire_cycle:'+0,76 %',cryogenic_reserves:'+0,38 %',modular_cargo_bays:'+0,38 %',weapons_engineering:'+0,38 %'};
   for(const [slug,expected] of Object.entries(levelOneEffects))await expect(page.locator('#item-'+slug+'-basic .card-benefits')).toContainText(expected);
 
   await page.goto(planetPath+'?section=ships');

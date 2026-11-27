@@ -44,8 +44,14 @@ export default class extends Controller {
             this.inputTarget.max = String(maximum);
             this.inputTarget.min = maximum > 0 ? '1' : '0';
             if (maximize || requested > maximum || maximum === 0) this.inputTarget.value = String(maximum);
-            this.statusTarget.textContent = maximum === 0 ? data.reason :
-                (requested > maximum && !maximize ? 'Quantité ajustée. ' : '') + 'Maximum constructible : ' + exactNumber(maximum) + '.';
+            // Le champ affiche déjà le lot choisi. Seuls un blocage ou une correction de saisie demandent une explication.
+            let status = '';
+            if (maximum === 0) {
+                status = data.reason;
+            } else if (!maximize && requested > maximum) {
+                status = 'Quantité ajustée.';
+            }
+            this.statusTarget.textContent = status;
             this.renderPreview(data);
             this.updateWait(data.paymentWait, data.paymentEstimate);
             this.submitTarget.disabled = maximum === 0;

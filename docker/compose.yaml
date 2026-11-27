@@ -57,6 +57,12 @@ services:
       database: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
     networks: [backend]
+    healthcheck:
+      test: [CMD, php, -r, "exit(is_file('var/run/simulation-worker.heartbeat') && time()-filemtime('var/run/simulation-worker.heartbeat')<45 ? 0 : 1);"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 6
   relay:
     <<: *app
     user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"

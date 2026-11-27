@@ -24,9 +24,17 @@ final class BoostEventService
 
     public function tick(): array
     {
-        return $this->manager->transaction(function (): array {
-            $now = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
-            $this->scheduleWeeklyInstances($now);
+        $now = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
+        $settings = $this->eventSettings();
+        $anchor = (new \DateTimeImmutable((string) ($settings['first_occurrence_at'] ?? 'next monday 00:00 UTC'), new \DateTimeZone('UTC')))->setTimezone(new \DateTimeZone('UTC'))->setTime(0, 0);
+        $monday = $now->modify('monday this week')->setTime(0, 0);
+        $ids = $anchor <= $now && $monday >= $anchor ? $this->repo->activeUniverseIds() : [];
+
+        return $this->manager->transaction(function () use ($now, $settings, $anchor, $monday, $ids): array {
+            $universes = $this->repo->lockActiveUniversesForRotation($ids);
+            if ($universes !== []) {
+                $this->scheduleWeeklyInstances($universes, $monday, $anchor, $settings);
+            }
             $closed = 0;
             foreach ($this->repo->boostEvents('active') as $event) {
                 if ($event->endsAt && $event->endsAt <= $now) {
@@ -40,7 +48,6 @@ final class BoostEventService
             }
 
             $started = 0;
-            $settings = $this->eventSettings();
             $limit = max(1, min(20, (int) ($settings['max_concurrent'] ?? 2)));
             foreach ($this->repo->activeUniverses() as $universe) {
                 foreach ($this->repo->boostEventsForUniverse('scheduled', $universe) as $event) {
@@ -122,17 +129,11 @@ final class BoostEventService
         });
     }
 
-    private function scheduleWeeklyInstances(\DateTimeImmutable $now): void
+    /** @param list<Universe> $universes Univers encore actifs, verrouillés par ordre d’identifiant. */
+    private function scheduleWeeklyInstances(array $universes, \DateTimeImmutable $monday, \DateTimeImmutable $anchor, array $settings): void
     {
-        $settings = $this->eventSettings();
-        $anchor = (new \DateTimeImmutable((string) ($settings['first_occurrence_at'] ?? 'next monday 00:00 UTC'), new \DateTimeZone('UTC')))->setTimezone(new \DateTimeZone('UTC'))->setTime(0, 0);
-        $monday = $now->modify('monday this week')->setTime(0, 0);
-        if ($anchor > $now || $monday < $anchor) {
-            return;
-        }
         $weekIndex = intdiv($monday->getTimestamp() - $anchor->getTimestamp(), 604800);
-        foreach ($this->repo->activeUniverses() as $universe) {
-            $this->manager->lock($universe);
+        foreach ($universes as $universe) {
             // Le verrou d'univers réserve une seule occurrence par semaine, même si la liste des modèles change.
             if ($this->repo->weeklyBoostEventFor($universe,$monday)!==null) continue;
             $templates=array_values(array_filter($this->rotations->definitions($universe),static fn(array $row):bool=>(bool)($row['enabled'] ?? true)));

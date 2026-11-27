@@ -1,0 +1,146 @@
+{% extends 'base.html.twig' %}
+{% block title %}Bourse de ressources · Genesis Reborn{% endblock %}
+{% block body %}
+<div class="market-space">
+    <header class="panel market-hero">
+        <div>
+            <p class="market-kicker">Station commerciale · A:0:0</p>
+            <h1>Bourse de ressources</h1>
+            <p>Échangez des ressources avec vos propres cargos. Le fret n’arrive qu’au retour.</p>
+        </div>
+        <ul aria-label="Conditions du trajet"><li>Convoi protégé</li><li>30 min aller · 30 min retour</li></ul>
+    </header>
+    {% set zone = member.player.preferences.timezone|default('Europe/Paris') %}
+    {% if not market or not market.enabled %}
+        <p class="panel">La Bourse n’accepte pas de nouveaux départs dans cet univers. Les convois engagés terminent leur trajet.</p>
+    {% else %}
+        <div class="market-columns">
+            <section class="panel" aria-labelledby="market-prices">
+                <p class="market-kicker">Marché · {{ member.universe.name }}</p>
+                <h2 id="market-prices">Cours et stock disponible</h2>
+                <p>Les achats font monter le cours ; les ventes le font baisser.</p>
+                <div class="market-table-wrap" tabindex="0" role="region" aria-labelledby="market-prices">
+                    <table class="data-table market-table">
+                        <thead><tr><th scope="col">Ressource</th><th scope="col">Indice</th><th scope="col">Sur 24 h</th><th scope="col">Stock disponible</th></tr></thead>
+                        <tbody>
+                        {% for row in rows %}
+                            <tr>
+                                <th scope="row">{{ row.label }}</th>
+                                <td>{{ row.index|number_format(2, ',', ' ') }}</td>
+                                <td>{{ row.trend > 0 ? '+' : '' }}{{ row.trend|number_format(1, ',', ' ') }} %</td>
+                                <td>{{ row.available|number_format(0, ',', ' ') }}{% if row.available < 1 %} · Épuisé{% endif %}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="muted">Indice indicatif : le devis donne ce que vous recevrez pour le lot, frais de {{ fee }} % inclus. Les lots réservés ne sont plus disponibles.</p>
+                <p>Les marchands reviennent le vendredi à 9 h (heure de Paris) et ravitaillent la station sans changer le cours.</p>
+            </section>
+            <section class="panel" aria-labelledby="market-quote">
+                <p class="market-kicker">Préparer un échange</p>
+                <h2 id="market-quote">Votre devis</h2>
+                {% if quote %}
+                    {% set q = quote.details %}
+                    <div class="market-volumes">
+                        <div><span>J’envoie</span><strong>{{ q.quantity|number_format(0, ',', ' ') }} {{ labels[q.pay] }}</strong></div>
+                        <div><span>Je reçois net</span><strong>{{ q.received|number_format(0, ',', ' ') }} {{ labels[q.receive] }}</strong></div>
+                    </div>
+                    <dl class="market-data">
+                        <div><dt>Colonie de départ et retour</dt><dd>{% for colony in colonies %}{% if colony.id == q.planet %}{{ colony.name }} · {{ colony.coordinates }}{% endif %}{% endfor %}</dd></div>
+                        <div><dt>Cargos engagés</dt><dd>{{ q.cargos }} · {{ ranks[q.rank] }}</dd></div>
+                        <div><dt>Soute à l’aller</dt><dd>{{ q.quantity|number_format(0, ',', ' ') }} / {{ q.outCapacity|number_format(0, ',', ' ') }}</dd></div>
+                        <div><dt>Soute au retour</dt><dd>{{ q.received|number_format(0, ',', ' ') }} / {{ q.returnCapacity|number_format(0, ',', ' ') }}</dd></div>
+                        <div><dt>Hydrogène du trajet, hors fret</dt><dd>{{ (q.oneWayFuel * 2)|number_format(2, ',', ' ') }} H · dont {{ q.planetFuel|number_format(2, ',', ' ') }} H sur la colonie</dd></div>
+                        <div><dt>Quantité avant frais</dt><dd>{{ q.before_fee|number_format(0, ',', ' ') }} {{ labels[q.receive] }}</dd></div>
+                    </dl>
+                    <p>Le devis ne réserve rien. Le départ fige votre prix et réserve le lot à la station. Retour estimé à <time datetime="{{ utcNow|date_modify('+60 minutes')|date('c', 'UTC') }}">{{ utcNow|date_modify('+60 minutes')|date('H:i T', zone) }}</time> si vous partez maintenant.</p>
+                    <form method="post" class="market-actions">
+                        <input type="hidden" name="_token" value="{{ csrf_token('market_' ~ member.id) }}">
+                        <input type="hidden" name="quote_key" value="{{ quote.key }}">
+                        <button class="primary" type="submit" name="action" value="send">Confirmer et lancer les cargos</button>
+                        <button class="secondary" type="submit" name="action" value="clear">Modifier l’échange</button>
+                    </form>
+                {% elseif planet %}
+                    <form method="get" class="market-choose-origin">
+                        <label for="market-origin">Colonie de départ</label>
+                        <select name="planet" id="market-origin">
+                            {% for colony in colonies %}<option value="{{ colony.id }}" {{ colony.id == planet.id ? 'selected' : '' }}>{{ colony.name }} · {{ colony.coordinates }}</option>{% endfor %}
+                        </select>
+                        <button type="submit" class="secondary">Choisir</button>
+                    </form>
+                    <form method="post" class="market-options">
+                        <input type="hidden" name="_token" value="{{ csrf_token('market_' ~ member.id) }}">
+                        <input type="hidden" name="planet" value="{{ planet.id }}">
+                        <div class="market-field">
+                            <label for="market-pay">J’envoie</label>
+                            <select id="market-pay" name="pay">{% for key, label in labels %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select>
+                        </div>
+                        <div class="market-field">
+                            <label for="market-receive">Je souhaite recevoir</label>
+                            <select id="market-receive" name="receive">{% for key, label in labels %}<option value="{{ key }}" {{ key == 'nano' ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select>
+                        </div>
+                        <div class="market-field">
+                            <label for="market-quantity">Quantité à envoyer</label>
+                            <input id="market-quantity" name="quantity" type="number" min="1" max="{{ maxLot }}" step="1" required>
+                        </div>
+                        <div class="market-field">
+                            <label for="market-rank">Rang des cargos</label>
+                            <select id="market-rank" name="rank">
+                                {% for key, label in ranks %}<option value="{{ key }}">{{ label }} · {{ cargoStocks[key]|default(0)|number_format(0, ',', ' ') }} disponibles</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="market-field">
+                            <label for="market-cargos">Nombre de cargos</label>
+                            <input id="market-cargos" name="cargos" type="number" min="1" step="1" value="1" required>
+                        </div>
+                        <button type="submit" class="primary" name="action" value="quote">Calculer le devis</button>
+                    </form>
+                {% else %}
+                    <p>Il vous faut une colonie et au moins un cargo pour commercer.</p>
+                {% endif %}
+            </section>
+        </div>
+    {% endif %}
+    <section class="panel" aria-labelledby="market-tracking">
+        <h2 id="market-tracking">Suivi des convois</h2>
+        {% if market and market.enabled %}
+            <ol class="market-timeline">
+                <li><strong>Départ de la colonie</strong><span>Les cargos partent avec le fret.</span></li>
+                <li><strong>Échange à A:0:0</strong><span>Après 30 min, le lot est échangé à la station.</span></li>
+                <li><strong>Retour à la colonie</strong><span>30 min plus tard, les cargos arrivent.</span></li>
+                <li><strong>Déchargement</strong><span>Le surplus rejoint votre inventaire dans une boîte à ouvrir sous 24 h.</span></li>
+            </ol>
+        {% endif %}
+        {% set statusLabels = {'outbound':'Vers la station', 'returning':'Vers la colonie', 'awaiting_colony':'Colonie de retour à choisir', 'completed':'Convoi revenu', 'abandoned':'Convoi abandonné'} %}
+        {% for trade in trades %}
+            <article class="market-trip" id="market-trade-{{ trade.id }}">
+                <div>
+                    <strong>Convoi n°{{ trade.id }} · {{ statusLabels[trade.status]|default(trade.status) }}</strong>
+                    <span>{{ trade.payQuantity|number_format(0, ',', ' ') }} {{ labels[trade.payResource] }} → {{ trade.receiveQuantity|number_format(0, ',', ' ') }} {{ labels[trade.receiveResource] }}{{ trade.recalled ? ' · Rappelé, sans échange' : '' }}</span>
+                    {% if trade.dueAt %}<span>Arrivée prévue le <time datetime="{{ trade.dueAt|date('c', 'UTC') }}">{{ trade.dueAt|date('d/m à H:i T', zone) }}</time></span>{% endif %}
+                </div>
+                {% if trade.status == 'outbound' and trade.dueAt > utcNow %}
+                    <form method="post">
+                        <input type="hidden" name="_token" value="{{ csrf_token('market_' ~ member.id) }}">
+                        <input type="hidden" name="trade" value="{{ trade.id }}">
+                        <button class="secondary" type="submit" name="action" value="recall">Rappeler le convoi</button>
+                    </form>
+                {% elseif trade.status == 'awaiting_colony' and colonies %}
+                    <form method="post" class="market-actions">
+                        <input type="hidden" name="_token" value="{{ csrf_token('market_' ~ member.id) }}">
+                        <input type="hidden" name="trade" value="{{ trade.id }}">
+                        <label for="market-reply-{{ trade.id }}">Nouvelle colonie</label>
+                        <select name="planet" id="market-reply-{{ trade.id }}">{% for colony in colonies %}<option value="{{ colony.id }}">{{ colony.name }} · {{ colony.coordinates }}</option>{% endfor %}</select>
+                        <button class="secondary" type="submit" name="action" value="reroute">Rapatrier le convoi</button>
+                    </form>
+                {% endif %}
+            </article>
+        {% else %}
+            <p>Aucun convoi commercial pour le moment.</p>
+        {% endfor %}
+        <p><a href="{{ path('app_inventory_boxes') }}">Voir mes boîtes de ressources</a></p>
+        <p><a href="{{ path('app_fleet_holds') }}">Consulter et décharger les soutes des colonies</a></p>
+    </section>
+</div>
+{% endblock %}

@@ -1,12 +1,13 @@
-{% if chrome.membership and report_notice_unread(chrome.membership, report_notice_kind, report.id) %}
+{% set notice_id = campaign_report_id|default(report.id) %}
+{% if chrome.membership and report_notice_unread(chrome.membership, report_notice_kind, notice_id) %}
     {% set report_notice_query = {} %}
     {% for key in ['type', 'view', 'page', 'planet', 'participant', 'from', 'until'] %}
         {% set value = app.request.query.getString(key) %}
         {% if value %}{% set report_notice_query = report_notice_query|merge({(key):value}) %}{% endif %}
     {% endfor %}
     <form method="post" class="report-notice-form" data-controller="report-notice"
-          action="{{ path('app_report_notice_consult', {kind:report_notice_kind, id:report.id}|merge(report_notice_query)) }}">
-        <input type="hidden" name="_token" value="{{ csrf_token('report-notice-'~chrome.membership.id~'-'~report_notice_kind~'-'~report.id) }}">
+          action="{{ path('app_report_notice_consult', {kind:report_notice_kind, id:notice_id}|merge(report_notice_query)) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('report-notice-'~chrome.membership.id~'-'~report_notice_kind~'-'~notice_id) }}">
         <span class="badge">Nouveau rapport</span>
         <button type="submit" class="secondary">Marquer ce rapport comme lu</button>
     </form>

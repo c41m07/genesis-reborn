@@ -26,6 +26,7 @@ framework:
             'App\Message\AdventCaptureDue': async
             'App\Message\QueueItemFinished': async
             'App\Message\FleetArrived': async
+            'App\Message\MarketConvoyDue': async
             'App\Message\PirateReconnaissanceDue': async
             'App\Message\PirateAttackDue': async
             'App\Message\PirateConvoyDue': async

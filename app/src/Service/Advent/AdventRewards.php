@@ -42,12 +42,63 @@ final readonly class AdventRewards
     public function pending(PlayerUniverse $membership): array
     {
         return $this->em->createQuery('SELECT c, e FROM '.AdventClaim::class.' c JOIN c.adventEdition e
-            WHERE c.player = :player AND c.deliveredAt IS NULL AND (e.plan = :custom OR EXISTS (
+            WHERE c.player = :player AND c.deliveredAt IS NULL AND c.boxExpiresAt IS NULL AND (e.plan = :custom OR EXISTS (
                 SELECT b.id FROM '.AdventBinding::class.' b WHERE b.player = c.player
                 AND b.adventEdition = e AND b.universeId = :universe))
             ORDER BY e.season DESC, c.door')
             ->setParameter('player', $membership->player)->setParameter('custom', 'custom')
             ->setParameter('universe', $membership->universe->id)->getResult();
+    }
+
+    /** @return list<AdventClaim> */
+    public function boxes(PlayerUniverse $membership): array
+    {
+        return $this->availableBoxesQuery($membership)
+            ->select('c, e')->join('c.adventEdition', 'e')
+            ->orderBy('c.boxExpiresAt', 'ASC')->addOrderBy('c.door', 'ASC')
+            ->getQuery()->getResult();
+    }
+
+    public function boxCount(PlayerUniverse $membership): int
+    {
+        return (int) $this->availableBoxesQuery($membership)->select('COUNT(c.id)')->getQuery()->getSingleScalarResult();
+    }
+
+    /** @return array{count:int,through:?int} */
+    public function giftNoticeSummary(PlayerUniverse $membership): array
+    {
+        $result = $this->availableBoxesQuery($membership)->andWhere('c.boxUnread = true')
+            ->select('COUNT(c.id) AS total, MAX(c.id) AS newest')->getQuery()->getSingleResult();
+
+        return ['count' => (int) $result['total'], 'through' => $result['newest'] === null ? null : (int) $result['newest']];
+    }
+
+    public function acknowledgeGiftNotices(PlayerUniverse $membership, int $through, bool $single = false): void
+    {
+        // Une nouvelle boîte créditée pendant la consultation doit garder son indicateur.
+        $this->em->createQuery('UPDATE '.AdventClaim::class.' c SET c.boxUnread = false
+            WHERE c.player = :player AND c.boxUniverseId = :universe AND c.boxUnread = true
+            AND c.deliveredAt IS NULL AND c.boxExpiresAt > :now AND c.id '.($single ? '=' : '<=').' :through')
+            ->setParameter('player', $membership->player)->setParameter('universe', $membership->universe->id)
+            ->setParameter('now', $this->clock->now()->setTimezone(new \DateTimeZone('UTC')))
+            ->setParameter('through', $through)->execute();
+    }
+
+    /** @param list<int> $ids */
+    public function acknowledgeDisplayedBoxes(PlayerUniverse $membership, array $ids): void
+    {
+        $this->availableBoxesQuery($membership)->update()->set('c.boxUnread', 'false')
+            ->andWhere('c.boxUnread = true AND c.id IN (:ids)')->setParameter('ids', $ids)
+            ->getQuery()->execute();
+    }
+
+    private function availableBoxesQuery(PlayerUniverse $membership): \Doctrine\ORM\QueryBuilder
+    {
+        return $this->em->createQueryBuilder()->from(AdventClaim::class, 'c')
+            ->where('c.player = :player AND c.deliveredAt IS NULL AND c.boxUniverseId = :universe AND c.boxExpiresAt > :now')
+            ->setParameter('player', $membership->player)
+            ->setParameter('universe', $membership->universe->id)
+            ->setParameter('now', $this->clock->now()->setTimezone(new \DateTimeZone('UTC')));
     }
 
     /** @return array{state: string, missing?: array<string, int>} */
@@ -95,7 +146,7 @@ final readonly class AdventRewards
             // Une lecture courante du droit voit la décision d’un autre onglet
             // même si une lecture précédente avait ouvert un instantané SQL.
             $existing = $this->em->getConnection()->fetchAssociative(
-                'SELECT id, delivered_at FROM advent_claim WHERE player_id = ? AND advent_edition_id = ? AND door = ? FOR UPDATE',
+                'SELECT id, delivered_at, credited_resources FROM advent_claim WHERE player_id = ? AND advent_edition_id = ? AND door = ? FOR UPDATE',
                 [$player->id, $edition->id, $door],
             );
             if ($existing !== false && $existing['delivered_at'] !== null) {
@@ -104,6 +155,21 @@ final readonly class AdventRewards
             $claim = $existing === false ? null : $this->em->find(AdventClaim::class, (int) $existing['id']);
             if ($claim !== null && $claim->choice !== $choice) {
                 return ['state' => 'reserved'];
+            }
+            if ($claim !== null && $claim->boxExpiresAt !== null) {
+                if ($claim->boxUniverseId !== $membership->universe->id) {
+                    return ['state' => 'wrong_universe'];
+                }
+                if ($now >= $claim->boxExpiresAt) {
+                    return ['state' => 'box_expired'];
+                }
+                if (!$reservationOnly) {
+                    return ['state' => 'box_ready'];
+                }
+                // Un autre onglet peut avoir versé une partie du contenu avant
+                // l’obtention de nos verrous : reprendre le reliquat courant.
+                $claim->creditedResources = $existing['credited_resources'] === null
+                    ? null : json_decode($existing['credited_resources'], true, 512, JSON_THROW_ON_ERROR);
             }
             if ($claim === null) {
                 $definition = $edition->doors[$door] ?? null;
@@ -123,6 +189,15 @@ final readonly class AdventRewards
                 $claim->award = $binding === null ? null : $options[$choice];
                 $claim->resources = $binding === null ? $options[$choice] : ($claim->award['resources'] ?? []);
                 $claim->openedAt = $now;
+                if (in_array($claim->award['kind'] ?? 'resources', ['resources', 'ship_pack'], true)) {
+                    $expires = $this->calendar->boxExpiry($edition->season);
+                    if ($now >= $expires) {
+                        return ['state' => 'box_expired'];
+                    }
+                    $claim->boxExpiresAt = $expires;
+                    $claim->boxUniverseId = $membership->universe->id;
+                    $claim->boxUnread = true;
+                }
                 $this->manager->save($claim);
                 if ($binding !== null && $door === 24) {
                     // Les deux cosmétiques sont acquis à l’ouverture même si
@@ -134,6 +209,10 @@ final readonly class AdventRewards
             $kind = $claim->award['kind'] ?? 'resources';
             if ($kind === 'research_discount' || $kind === 'ship_voucher') {
                 return ['state' => 'credit_ready'];
+            }
+            if ($claim->boxExpiresAt !== null && !$reservationOnly) {
+                // L’ouverture de la porte crée le droit, pas le crédit sur une colonie.
+                return ['state' => 'box_ready'];
             }
             if ($kind === 'ship_pack') {
                 if (!$this->ships->deliverLocked($membership, $planet, $claim->award['units'], $now)) {
@@ -169,17 +248,22 @@ final readonly class AdventRewards
                     return ['state' => 'early_cap'];
                 }
             }
-            $deposit = $this->resources->deposit($planet, $portion, allOrNothing: true);
-            $missing = [];
-            foreach ($deposit['overflow'] as $resource => $amount) {
-                if ($amount > 0.0) {
-                    $missing[$resource] = (int) ceil($amount);
+            if ($claim->boxExpiresAt !== null) {
+                $this->resources->creditAdventBox($planet, $portion, $now);
+                // Même un premier versement partiel correspond à une ouverture de la boîte.
+                $claim->boxUnread = false;
+            } else {
+                // Les anciens reçus gardent leur délai et leurs règles de dépôt.
+                $deposit = $this->resources->deposit($planet, $portion, allOrNothing: true);
+                $missing = [];
+                foreach ($deposit['overflow'] as $resource => $amount) {
+                    if ($amount > 0.0) {
+                        $missing[$resource] = (int) ceil($amount);
+                    }
                 }
-            }
-            if ($missing !== []) {
-                // La porte et son choix sont enregistrés sans crédit partiel.
-                // La reprise est volontaire et le même lot reste réservé.
-                return ['state' => 'full', 'missing' => $missing];
+                if ($missing !== []) {
+                    return ['state' => 'full', 'missing' => $missing];
+                }
             }
 
             if ($binding !== null) {

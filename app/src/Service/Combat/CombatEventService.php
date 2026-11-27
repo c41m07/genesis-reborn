@@ -24,6 +24,7 @@ use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Boost\BoostGrantService;
 use App\Service\Boost\BoostEventService;
+use App\Service\Boost\TimedBoostEffects;
 use App\Service\Colony\ResourceService;
 use App\Service\Notification\NotificationService;
 use App\Service\Report\ReportNoticeWriter;
@@ -60,6 +61,7 @@ final class CombatEventService
         private \App\Service\Player\EmpireReconstructionScheduler $reconstruction,
         private \App\Service\Queue\QueueService $queues,
         private \App\Service\Fleet\FleetFuelExpenseRecorder $fuelExpenses,
+        private TimedBoostEffects $timedBoosts,
     ) {}
 
     public function canAttack(PlayerUniverse $attacker, Planet $target): bool
@@ -421,6 +423,8 @@ final class CombatEventService
             $attackerParticipants = array_values(array_filter($participants, static fn (CombatParticipant $p): bool => $p->role === 'attacker'));
             $campByMembership = $this->attackerCamps($attackerParticipants);
             $technologyLevels = [];
+            $damageFactors = [];
+            $pvp = $event->planet->owner?->isPlayerControlled() === true && !$event->planet->npcPlanet;
             foreach ($participants as $participant) {
                 if (isset($snapshotParticipantIds[(int) $participant->id])) {
                     continue;
@@ -432,6 +436,14 @@ final class CombatEventService
                 foreach($this->repo->all(FleetShip::class,['fleet'=>$fleet],['id'=>'ASC']) as $fleetShip) if($fleetShip->quantity>0) $composition[$fleetShip->slug][$fleetShip->tier]=$fleetShip->quantity;
                 $units=$this->unitFactory->ships($participant->playerUniverse->universe,$composition,$technologyLevels[$membershipId]);
                 $role = $participant->role;
+                if ($pvp && $participant->playerUniverse->isPlayerControlled()) {
+                    $effect = $role === 'attacker' ? TimedBoostEffects::PVP_ATTACK : TimedBoostEffects::PVP_DEFENSE;
+                    $factor = $damageFactors[$membershipId][$effect] ??= $this->timedBoosts->factor($participant->playerUniverse, $effect, $event->startedAt);
+                    foreach ($units as &$unit) {
+                        $this->applyTimedDamage($unit, $factor);
+                    }
+                    unset($unit);
+                }
                 $camp = $role === 'attacker' ? ($campByMembership[$membershipId] ?? 'attacker-' . $membershipId) : 'defenders';
                 if($occupationContext!==null) $camp=$this->occupationCamp($participant->playerUniverse,$occupationContext,$camp);
                 // Une arrivée traitée en retard ne modifie jamais un round déjà validé.
@@ -475,6 +487,7 @@ final class CombatEventService
 
             $defenseSnapshots = $state['defenses'] ?? [];
             if (!array_key_exists('defenses', $state)) {
+                $defenseFactor = $pvp ? $this->timedBoosts->factor($event->planet->owner, TimedBoostEffects::PVP_DEFENSE, $event->startedAt) : 1.0;
                 foreach ($this->repo->all(PlanetDefense::class, ['planet' => $event->planet], ['id' => 'ASC']) as $defense) {
                     if ($defense->quantity < 1) {
                         continue;
@@ -482,6 +495,7 @@ final class CombatEventService
                     $defender=$event->planet->owner;
                     $defenderLevels=$defender?$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$defender]):[];
                     $definition=$this->unitFactory->defense($event->planet->solarSystem->galaxy->universe,$defense->slug,$defense->tier,$defenderLevels,$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$event->planet])['fortress']??[]);
+                    $this->applyTimedDamage($definition, $defenseFactor);
                     $defenseSnapshots[] = $definition + [
                         'id' => (string) $defense->id,
                         'camp' => $this->occupationNpcCamp($event,$occupationContext),
@@ -627,8 +641,7 @@ final class CombatEventService
                 if($participant->fleet->status!=='occupying') {
                     if(in_array($participant->fleet->id,$occupationContext['fleet_ids']??[],true)) $this->releaseOccupationFuel($participant->fleet);
                     elseif($participant->fleet->mission==='conquer' && ($this->occupations->isEnabled() || $participant->fleet->orbitDurationSeconds===OccupationPolicy::DURATION_SECONDS)) {
-                        $participant->fleet->reservedFuel=max(0,$participant->fleet->reservedFuel-$participant->fleet->orbitFuel);
-                        $participant->fleet->orbitFuel=0;
+                        $participant->fleet->releaseOrbitFuel();
                     } else $this->consumeOrbitFuel($participant->fleet);
                     $this->sendFleetHome($participant);
                 }
@@ -682,11 +695,27 @@ final class CombatEventService
         $byMembership[$round][$membership->id]['damage'] += $damage;
     }
 
+    private function applyTimedDamage(array &$unit, float $factor): void
+    {
+        if ($factor === 1.0) {
+            return;
+        }
+        // Les profils restent figés dans l’instantané, même si le worker reprend
+        // un round après l’expiration du bonus.
+        foreach (['base_attack', 'secondary_attack'] as $field) {
+            if (isset($unit[$field])) {
+                $unit[$field] *= $factor;
+            }
+        }
+    }
+
     private function collectLoot(array $participants, string $outcome, CombatEvent $event): array
     {
         $rules = $this->catalog->rules();
         $ratio = max(0.0, min(1.0, (float) ($rules['combat_loot_ratio'] ?? 1.0)));
-        $protectedRatio = max(0.0, min(1.0, (float) ($rules['combat_loot_protected_storage_ratio'] ?? 0.1)));
+        $protectedRatio = $this->timedBoosts->protectedRatio(
+            $event->planet->owner, (float) ($rules['combat_loot_protected_storage_ratio'] ?? 0.1), $event->startedAt,
+        );
         $result = ['ratio' => $ratio, 'protected_storage_ratio' => $protectedRatio, 'fleets' => [], 'total' => []];
         if ($outcome !== 'attacker_wins' || !$event->planet->owner) {
             return $result;
@@ -933,7 +962,7 @@ final class CombatEventService
         $automated_defense_repair = $planet->owner ? ($this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $planet->owner])['automated_defense_repair'] ?? []) : [];
         $rules = $this->catalog->rules();
         $repairDefinition=$this->catalog->get('technologies','automated_defense_repair');
-        $rebuildPercent=\App\Service\Catalog\GameCatalog::diminishingBonus($automated_defense_repair,(float)($rules['defense_rebuild_max_percent']??40),(int)($repairDefinition['max_level']??25));
+        $rebuildPercent=$this->catalog->researchBonus($automated_defense_repair,(float)($rules['defense_rebuild_max_percent']??40),(int)($repairDefinition['max_level']??25));
         foreach ($defenseSnapshots as $snapshot) {
             $id = (int) $snapshot['id'];
             $defense = $this->repo->find(PlanetDefense::class, $id);
@@ -1008,8 +1037,8 @@ final class CombatEventService
             $fleet->departureAt = null;
             $fleet->arrivalAt = null;
             $survivors=array_sum(array_map(static fn($ship)=>$ship->quantity,$this->repo->all(FleetShip::class,['fleet'=>$fleet])));
-            if($capturedByAnotherCommander || $survivors===0) {$fleet->cargo=[];$fleet->storedFuel=0;}
-            $fleet->reservedFuel = 0;
+            $fleet->discardDockedFuel();
+            if($capturedByAnotherCommander || $survivors===0) $fleet->cargo=[];
             $fleet->dispatchToken = \Symfony\Component\Uid\Uuid::v4()->toRfc4122();
 
             return;
@@ -1106,7 +1135,10 @@ final class CombatEventService
         $duration=max(1,$fleet->orbitDurationSeconds);
         $elapsed=$fleet->departureAt===null?0:max(0,$this->clock->now()->getTimestamp()-$fleet->departureAt->getTimestamp());
         $spent=$fleet->orbitFuel*min(1,$elapsed/$duration);
-        $this->fuelExpenses->burnLocked($fleet, $spent, 'occupation_release');$fleet->reservedFuel=max(0,$fleet->reservedFuel-$fleet->orbitFuel);$fleet->orbitFuel=0;
+        $this->fuelExpenses->burnLocked($fleet, $spent, 'occupation_release');
+        $fleet->reservedFuel = max(0.0, $fleet->reservedFuel - $spent);
+        $fleet->orbitFuel -= $spent;
+        $fleet->releaseOrbitFuel();
     }
     private function registerGarrison(CombatEvent $event, PlayerUniverse $defender): void
     {

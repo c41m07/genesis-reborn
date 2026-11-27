@@ -8,18 +8,16 @@ async function openAdventDocument(page, url) {
     expect(response?.ok()).toBe(true);
 }
 
-async function submitDoorWithKeyboard(page, door, edition, day, colony) {
+async function submitDoorWithKeyboard(page, door, edition, day) {
     const radio = door.getByRole('radio');
     await radio.press('Space');
     await expect(radio).toBeChecked();
     const choice = await radio.getAttribute('value');
-    const destination = door.getByLabel('Colonie destinataire');
-    await destination.selectOption(String(colony));
-    await expect(destination).toHaveValue(String(colony));
+    await expect(door.getByLabel('Colonie destinataire')).toHaveCount(0);
 
     const calendar = '/evenements/avent/' + edition;
     const action = calendar + '/portes/' + day;
-    const button = door.getByRole('button', { name: 'Confirmer le cadeau et la destination' });
+    const button = door.getByRole('button', { name: 'Confirmer le cadeau' });
     // Le retour peut viser l’ancre déjà ouverte : attendre le POST et le vrai
     // GET de redirection, pas une URL qui correspondait avant la soumission.
     const [post, document] = await Promise.all([
@@ -37,7 +35,7 @@ async function submitDoorWithKeyboard(page, door, edition, day, colony) {
     expect(post.status()).toBe(303);
     const submittedFields = new URLSearchParams(post.request().postData() ?? '');
     expect(submittedFields.get('choice')).toBe(choice);
-    expect(submittedFields.get('colony')).toBe(String(colony));
+    expect(submittedFields.has('colony')).toBe(false);
     expect(document.status()).toBe(200);
     await expect(page).toHaveURL(new URL(calendar + '#advent-door-' + day, post.url()).href);
     await page.waitForLoadState('load');
@@ -47,7 +45,7 @@ function activateInOmega(project, edition) {
     runIsolatedSql(project, "INSERT INTO advent_window (universe_id, edition_id, name, visible_from, visible_until) SELECT u.id, e.id, e.name, e.starts_at, e.closes_at FROM universe u JOIN advent_edition e ON e.id=" + edition + " WHERE u.slug='omega-1'");
 }
 
-test('Avent : retrouver sans JavaScript un cadeau réservé après la clôture', async ({ page, browser, baseURL }) => {
+test('Avent : ouvrir sans JavaScript une boîte après la clôture du calendrier', async ({ page, browser, baseURL }) => {
     const marker = crypto.randomUUID().slice(0, 8);
     const email = 'fixture-advent-' + marker + '@example.test';
     const password = crypto.randomUUID() + 'Aa!';
@@ -93,10 +91,9 @@ test('Avent : retrouver sans JavaScript un cadeau réservé après la clôture',
         await expect(first).toBeVisible();
         await first.getByText('Choisir mon cadeau', { exact: false }).press('Enter');
         await first.getByLabel('Cadeau de la porte 1').selectOption('0');
-        await first.getByLabel('Colonie destinataire').selectOption(String(colony));
-        await first.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).click();
-        await expect(first.getByText('Réservé', { exact: true })).toBeVisible();
-        await expect(mobile.getByText('Aucun versement partiel.', { exact: false })).toBeVisible();
+        await first.getByRole('button', { name: 'Confirmer le cadeau' }).click();
+        await expect(first.getByText('Dans l’inventaire', { exact: true })).toBeVisible();
+        await expect(first.getByRole('link', { name: 'Ouvrir ma boîte dans l’inventaire' })).toBeVisible();
         expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM advent_claim WHERE delivered_at IS NULL'))).toBe(1);
 
         // L’onglet déjà ouvert doit aussi quitter la page à la fermeture.
@@ -126,10 +123,11 @@ test('Avent : retrouver sans JavaScript un cadeau réservé après la clôture',
         await mobile.goto('/evenements');
         await expect(mobile.getByRole('link', { name: 'Calendrier de l’Avent' })).toHaveCount(0);
         expect((await mobile.goto('/evenements/avent/' + edition)).status()).toBe(404);
-        await mobile.goto('/inventaire/recompenses');
-        await mobile.getByLabel('Colonie destinataire').selectOption(String(colony));
-        await mobile.getByRole('button', { name: 'Retenter le versement' }).click();
-        await expect(mobile.getByRole('button', { name: 'Retenter le versement' })).toHaveCount(0);
+        await mobile.goto('/inventaire/boites');
+        const box = mobile.locator('#advent-box-1');
+        await box.getByLabel('Colonie destinataire').selectOption(String(colony));
+        await box.getByRole('button', { name: 'Ouvrir la boîte de la porte 1' }).click();
+        await expect(box).toHaveCount(0);
         expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM advent_claim WHERE delivered_at IS NOT NULL'))).toBe(1);
     } finally {
         await native.close();
@@ -168,8 +166,9 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
     }];
     // L’édition précède la vraie inscription : la photo d’arrivée est faite
     // par le service natif au choix de l’univers, pas inventée par la fixture.
-    runIsolatedSql(project, "INSERT INTO advent_edition (season, name, starts_at, closes_at, doors, published_at, plan) VALUES (2100, 'Avent des étoiles', UTC_TIMESTAMP() - INTERVAL 1 DAY, UTC_TIMESTAMP() + INTERVAL 30 DAY, '" + JSON.stringify(doors) + "', UTC_TIMESTAMP(), 'consolidated')");
-    const edition = Number(queryIsolatedSql(project, 'SELECT id FROM advent_edition WHERE season=2100'));
+    // L’année synthétique reste dans la plage de publication (2000–2099).
+    runIsolatedSql(project, "INSERT INTO advent_edition (season, name, starts_at, closes_at, doors, published_at, plan) VALUES (2098, 'Avent des étoiles', UTC_TIMESTAMP() - INTERVAL 1 DAY, UTC_TIMESTAMP() + INTERVAL 30 DAY, '" + JSON.stringify(doors) + "', UTC_TIMESTAMP(), 'consolidated')");
+    const edition = Number(queryIsolatedSql(project, 'SELECT id FROM advent_edition WHERE season=2098'));
     activateInOmega(project, edition);
     const marker = crypto.randomUUID().slice(0, 8);
     const email = 'advent-return-' + marker + '@example.test';
@@ -219,9 +218,14 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
         await expect(door.locator('details')).toHaveAttribute('open', '');
         await expect(choice).toBeFocused();
         await door.getByRole('radio').check();
-        await door.getByLabel('Colonie destinataire').selectOption(String(colony));
-        await door.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).press('Enter');
-        await expect(door.getByText('Versé', { exact: true })).toBeVisible();
+        await door.getByRole('button', { name: 'Confirmer le cadeau' }).press('Enter');
+        await expect(door.getByText('Dans l’inventaire', { exact: true })).toBeVisible();
+        await door.getByRole('link', { name: 'Ouvrir ma boîte dans l’inventaire' }).press('Enter');
+        const firstBox = mobile.locator('#advent-box-1');
+        await firstBox.getByLabel('Colonie destinataire').selectOption(String(colony));
+        await firstBox.getByRole('button', { name: 'Ouvrir la boîte de la porte 1' }).press('Enter');
+        await expect(firstBox).toHaveCount(0);
+        await mobile.goto('/evenements/avent/' + edition);
         expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM advent_binding WHERE advent_edition_id=' + edition))).toBe(1);
         expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM advent_claim WHERE delivered_at IS NOT NULL AND advent_edition_id=' + edition))).toBe(1);
 
@@ -230,7 +234,7 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
             await page.setViewportSize({ width, height });
             await openAdventDocument(page, '/evenements/avent/' + edition + '#advent-door-6');
             const help = page.locator('main.shell--advent .first-steps-popup[open] .first-steps-preview');
-            const action = page.locator('#advent-door-6').getByRole('button', { name: 'Confirmer le cadeau et la destination' });
+            const action = page.locator('#advent-door-6').getByRole('button', { name: 'Confirmer le cadeau' });
             await expect(help).toBeVisible();
             await action.click({ trial: true });
             await expect(page.getByRole('link', { name: /^Porte 6,/ })).not.toHaveCSS('border-left-color', await page.getByRole('link', { name: /^Porte 7,/ }).evaluate((tile) => getComputedStyle(tile).borderLeftColor));
@@ -272,8 +276,7 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
         await expect(sixth.getByText('Flotte utilitaire', { exact: true })).toBeVisible();
         await expect(sixth.getByRole('radio')).toHaveCount(2);
         await sixth.getByRole('radio').first().press('Space');
-        await sixth.getByLabel('Colonie destinataire').selectOption(String(colony));
-        await sixth.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).press('Enter');
+        await sixth.getByRole('button', { name: 'Confirmer le cadeau' }).press('Enter');
         await expect(sixth.getByRole('link', { name: 'Voir le devis de cette remise' })).toBeVisible();
         const reserves = mobile.getByRole('region', { name: 'Cadeaux et réserves' });
         await mobile.getByRole('link', { name: 'Cadeaux et réserves', exact: true }).press('Enter');
@@ -285,7 +288,7 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
         const researchDoor = mobile.locator('#advent-door-12');
         await expect(mobile).toHaveURL(/#advent-door-12$/);
         await expect(researchDoor).toBeFocused();
-        await submitDoorWithKeyboard(mobile, researchDoor, edition, 12, colony);
+        await submitDoorWithKeyboard(mobile, researchDoor, edition, 12);
         const researchCredit = researchDoor.getByRole('link', { name: 'Voir le devis de cette remise' });
         await expect(researchCredit).toBeVisible();
         await expect(researchDoor).toBeFocused();
@@ -302,13 +305,13 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
         const fightDoor = mobile.locator('#advent-door-18');
         await expect(mobile).toHaveURL(/#advent-door-18$/);
         await expect(fightDoor).toBeFocused();
-        await submitDoorWithKeyboard(mobile, fightDoor, edition, 18, colony);
-        await expect(fightDoor.getByText('Réservé', { exact: true })).toBeVisible();
+        await submitDoorWithKeyboard(mobile, fightDoor, edition, 18);
+        await expect(fightDoor.getByText('Dans l’inventaire', { exact: true })).toBeVisible();
         expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM advent_claim WHERE advent_edition_id='
             + edition + ' AND door=18 AND delivered_at IS NULL AND original_destination_id=' + colony))).toBe(1);
         await mobile.getByRole('link', { name: 'Cadeaux et réserves', exact: true }).press('Enter');
         await expect(milestones.getByRole('link', { name: 'Voir le devis de la porte 12' })).toBeVisible();
-        await expect(milestones.getByText('Lot réservé :', { exact: false })).toBeVisible();
+        await expect(milestones.getByRole('link', { name: 'Voir la boîte dans l’inventaire' })).toBeVisible();
         await reserves.getByRole('link', { name: 'Choisir mon cadeau lourd' }).press('Enter');
         const last = mobile.locator('#advent-door-24');
         await expect(last.getByRole('radio')).toHaveCount(1);
@@ -366,8 +369,7 @@ test('Avent consolidé : tranche avant choix, élection et versement clavier en 
     await page.goto('/evenements/avent/' + edition + '#advent-door-24');
     const finaleDoor = page.locator('#advent-door-24');
     await finaleDoor.getByRole('radio').check();
-    await finaleDoor.getByLabel('Colonie destinataire').selectOption(String(colony));
-    await finaleDoor.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).press('Enter');
+    await finaleDoor.getByRole('button', { name: 'Confirmer le cadeau' }).press('Enter');
     await expect(finaleDoor.getByText('Bon à utiliser', { exact: true })).toBeVisible();
     expect(Number(queryIsolatedSql(project, "SELECT COUNT(*) FROM profile_cosmetic WHERE player_id=(SELECT id FROM player WHERE email='" + email + "') AND equipped=0"))).toBe(2);
 
@@ -392,8 +394,8 @@ test('Avent : devis J6 et J12 maquetés, calcul et confirmation séparés', asyn
     doors[6].options.beginner = [{ kind: 'ship_voucher', slug: 'transport', tier: 'basic', quantity: 1, budget_metal: 6000 }];
     doors[12].options.beginner = [{ kind: 'research_discount', percent: 50, budget_metal: 7500 }];
     doors[24].options.beginner = [{ kind: 'ship_voucher', slug: 'cruiser', tier: 'basic', quantity: 1, budget_metal: 16000 }];
-    runIsolatedSql(project, "INSERT INTO advent_edition (season,name,starts_at,closes_at,doors,published_at,plan) VALUES (2101,'Avent Devis','" + new Date(now - 86400000).toISOString().slice(0, 19).replace('T', ' ') + "',UTC_TIMESTAMP() + INTERVAL 30 DAY,'" + JSON.stringify(doors) + "',UTC_TIMESTAMP(),'consolidated')");
-    const edition = Number(queryIsolatedSql(project, 'SELECT id FROM advent_edition WHERE season=2101'));
+    runIsolatedSql(project, "INSERT INTO advent_edition (season,name,starts_at,closes_at,doors,published_at,plan) VALUES (2097,'Avent Devis','" + new Date(now - 86400000).toISOString().slice(0, 19).replace('T', ' ') + "',UTC_TIMESTAMP() + INTERVAL 30 DAY,'" + JSON.stringify(doors) + "',UTC_TIMESTAMP(),'consolidated')");
+    const edition = Number(queryIsolatedSql(project, 'SELECT id FROM advent_edition WHERE season=2097'));
     activateInOmega(project, edition);
     await page.goto('/inscription');
     await page.getByLabel('Adresse email').fill(email);
@@ -457,8 +459,7 @@ test('Avent : devis J6 et J12 maquetés, calcul et confirmation séparés', asyn
             await mobile.getByRole('link', { name: new RegExp('^Porte ' + day + ',') }).press('Enter');
             const door = mobile.locator('#advent-door-' + day);
             await door.getByRole('radio').press('Space');
-            await door.getByLabel('Colonie destinataire').selectOption(String(colony));
-            await door.getByRole('button', { name: 'Confirmer le cadeau et la destination' }).press('Enter');
+            await door.getByRole('button', { name: 'Confirmer le cadeau' }).press('Enter');
             const link = door.getByRole('link', { name: 'Voir le devis de cette remise' });
             const destination = await link.getAttribute('href');
             expect(destination).toContain('/avoirs/');

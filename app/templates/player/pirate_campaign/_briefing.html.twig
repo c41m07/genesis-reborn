@@ -16,6 +16,7 @@
 {% if briefing.losses is not null %}
     <section class="pirate-campaign-losses report-summary" aria-labelledby="pirate-losses-title">
         <h3 id="pirate-losses-title">Rapport de combat · {{ briefing.status }}</h3>
+        {% if briefing.combat_report_id|default(null) %}<a href="{{ path('app_pirate_mission_report', {id: briefing.combat_report_id}) }}">Ouvrir le rapport de combat</a>{% endif %}
         {% if briefing.combat_rounds|default(null) is not null %}
             <p class="muted">Rounds joués : {{ briefing.combat_rounds }}.</p>
         {% endif %}

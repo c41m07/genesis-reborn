@@ -41,7 +41,15 @@
 <div class="report-archive-entry">
 <label class="report-select" for="report-select-{{ entry.key }}"><input type="checkbox" id="report-select-{{ entry.key }}" name="selected[]" data-report-selection-target="item" data-action="change->report-selection#update" value="{{ entry.key }}"><span class="visually-hidden">Sélectionner le rapport {{ reportKinds[entry.kind]|default(reportFilters[entry.kind]) }} n° {{ report.id }}</span></label>
 {% set entryNew = unread_report_keys[entry.key]|default(false) %}
-{% if entry.kind == 'combat' %}
+{% if entry.route == 'app_pirate_mission_report' %}
+    {% set routeName = entry.route %}
+    {% set title = reportKinds[entry.kind] ~ ' · ' ~ (entry.kind == 'economy' ? 'Convoi de remerciement' : 'Campagne pirate') %}
+    {% set location = report.location %}
+    {% set occurredAt = date(report.created_at, 'UTC') %}
+    {% set state = {reported:'Renseignements reçus', attacker_wins:'Victoire de votre camp', defender_wins:'Défaite de votre camp', draw:'Égalité', traveling:'En route', delivered:'Livré', destination_lost:'Destination perdue',waiting_capacity:'En attente de retrait',arrived:'Arrivée confirmée'}[report.status] %}
+    {% set stateClass = '' %}
+    {% set extra = '' %}
+{% elseif entry.kind == 'combat' %}
     {% set routeName = 'app_combat_report' %}
     {% set title = 'Combat · '~report.planet.name %}
     {% set location = report.planet.coordinates() %}

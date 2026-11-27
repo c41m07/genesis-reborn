@@ -26,7 +26,7 @@ final class TechnologyEffectCalculator
             $maxLevel=max(1,(int)($definition['max_level']??25));
             if(($effect['type']??null)==='extra_shot_chance'){
                 $cap=(float)($effect['max_bonus']??0.5);
-                $chance=GameCatalog::diminishingBonus($rankLevels,$cap,$maxLevel);
+                $chance=$this->catalog->researchBonus($rankLevels,$cap,$maxLevel);
                 foreach($units as &$unit){if((float)($unit['base_attack']??0)>0)$unit['extra_shot_chances'][]=max(0.0,min(1.0,$chance));}unset($unit);
                 continue;
             }
@@ -34,7 +34,7 @@ final class TechnologyEffectCalculator
             $stats=$effect['stats']??[$effect['stat']??null];$stats=array_values(array_filter($stats,'is_string'));
             $cap=$effect['max_bonus']??null;$formula=$effect['formula']??'flat';
             if(!is_numeric($cap)||!is_finite((float)$cap)||!in_array($formula,['flat','percent'],true))throw new \DomainException('Effet technologique invalide : '.$slug.'.');
-            $bonus=GameCatalog::diminishingBonus($rankLevels,(float)$cap,$maxLevel);
+            $bonus=$this->catalog->researchBonus($rankLevels,(float)$cap,$maxLevel);
             foreach($units as &$unit){
                 if(($effect['targets']??null)==='combat_ships'&&(float)($unit['base_attack']??0)<=0)continue;
                 foreach($stats as $stat){

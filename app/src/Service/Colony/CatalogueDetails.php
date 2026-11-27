@@ -190,7 +190,15 @@ final class CatalogueDetails
         } elseif (in_array($type, ['time_discount', 'cost_discount'], true)) {
             $sections[] = $this->section('Application', [$type === 'time_discount' ? 'La réduction est calculée au lancement de chaque nouvelle construction de bâtiment.' : 'La réduction est calculée au lancement de chaque nouvelle construction concernée, sur les ressources facturées. Les montants sont arrondis vers le haut.', 'Les opérations déjà en file conservent leur coût payé et leur durée enregistrée.', ($effect['targets'] ?? '') === 'ships' ? 'Les défenses et les bâtiments ne bénéficient pas de cette réduction.' : 'Les recherches, vaisseaux et défenses ne bénéficient pas de cette réduction.']);
         }
-        $sections[] = $this->section('Progression des rangs', [in_array($slug, ['signature_masking', 'intelligence_countermeasures', 'tactical_intelligence'], true) ? 'Les niveaux Basique, Intermédiaire et Supérieur sont pondérés par 1, 1,25 et 1,5625. Leur somme est arrondie pour obtenir le niveau effectif d’espionnage.' : 'Les trois rangs sont développés séparément et contribuent à un bonus commun à rendements décroissants. Le gain du prochain niveau dépend donc aussi des niveaux possédés dans les autres rangs.', 'La recherche est partagée entre toutes vos colonies de cet univers. Un changement de colonie ne remet pas ses niveaux à zéro.']);
+        $rankProgression = match ($type) {
+            'planet_limit' => 'Chaque niveau acquis ajoute une place de colonie dans la limite de votre univers.',
+            'unlock' => 'Les niveaux Basique, Intermédiaire et Supérieur sont pondérés par 1, 1,25 et 1,5625. Leur somme est arrondie pour obtenir le niveau effectif d’espionnage.',
+            default => 'À niveau égal, le rang Supérieur contribue le plus au bonus. Le Basique compte pour 21 parts, l’Intermédiaire pour 30 et le Supérieur pour 49 avant application des rendements décroissants.',
+        };
+        $sections[] = $this->section('Progression des rangs', [
+            $rankProgression,
+            'La recherche est partagée entre toutes vos colonies de cet univers. Un changement de colonie ne remet pas ses niveaux à zéro.',
+        ]);
         $sections[] = $this->section('Prix en matériaux', ['Chaque niveau coûte 35 % de plus que le précédent avant arrondi. Aux rangs avancés, le prix de départ vaut 110 % du passage le plus cher exigé dans cette même famille de recherche. Les autres prérequis servent au déblocage.']);
         return ['intro' => $intro, 'scope' => $scope, 'sections' => $sections];
     }
@@ -332,7 +340,7 @@ final class CatalogueDetails
         $sections[] = $this->section('Boucliers', [$shieldText]);
         if ($defense) {
             $repair = $this->catalog->get('technologies', 'automated_defense_repair');
-            $rebuild = GameCatalog::diminishingBonus($technologies['automated_defense_repair'] ?? [], (float) ($rules['defense_rebuild_max_percent'] ?? 40), (int) ($repair['max_level'] ?? 25));
+            $rebuild = $this->catalog->researchBonus($technologies['automated_defense_repair'] ?? [], (float) ($rules['defense_rebuild_max_percent'] ?? 40), (int) ($repair['max_level'] ?? 25));
             $sections[] = $this->section('Déploiement et reconstruction', ['Installation fixe sur cette planète : elle ne peut ni voyager ni rejoindre une flotte. Chaque rang possède sa propre réserve d’unités.', 'Après le combat, la recherche Drones réparateurs reconstruit une partie des défenses détruites. Le nombre est arrondi à l’entier inférieur pour chaque type et rang.'], [['label' => 'Taux actuel de reconstruction', 'value' => $rebuild, 'unit' => '% des pertes']]);
         } else {
             if (($itemDefinition['mobile'] ?? true) === false) {

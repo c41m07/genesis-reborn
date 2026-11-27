@@ -72,7 +72,7 @@ test('Les visuels WebP et les cartes légères restent décodables sur les parco
       await imageDownload(catalogue, colony, 'img.colony-scene', /colony-overview[.]webp$/, 600_000);
       await imageDownload(catalogue, '/planetes', '.planet-index-art img', /planet-desert[.]webp$/, 270_000);
       await imageDownload(catalogue, colony + '?section=buildings', '.catalog-card:not([hidden]) .catalog-card-art img', /power_plant__basic-768[.]webp$/, 250_000);
-      await imageDownload(catalogue, colony + '?section=technologies&showLockedItems=1', '.catalog-card:not([hidden]) .catalog-card-art img', /engineering_foundations__basic-768[.]webp$/, 230_000);
+      await imageDownload(catalogue, colony + '?section=technologies&showLockedItems=1', '.catalog-card:not([hidden]) .catalog-card-art img', /naval_engineering__basic-768[.]webp$/, 230_000);
     } finally {
       await context.close();
     }

@@ -100,6 +100,7 @@ final class TechnologyGuideStepTest extends TestCase
         $resources = new ResourceService(
             $repo, $manager, $catalog, $clock, new GameEventService($repo, $manager, $clock),
             new VacationCalendar($repo, $clock), new EconomicUnitCapacity($repo, $catalog),
+            new \App\Service\Boost\TimedBoostEffects($repo, $clock),
         );
         $requirements = new RequirementChecker($catalog);
         $insights = new CatalogueInsights(

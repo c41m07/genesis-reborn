@@ -64,7 +64,7 @@ final class DailyRewardController extends AbstractController
     {
         $membership = $this->context->membership();
         if ($request->request->getInt('membership') !== $membership->id) {
-            $this->addFlash('error', 'Votre univers actif a changé. Vérifiez la destination avant de récupérer le lot.');
+            $this->addFlash('error', 'Votre univers actif a changé. Vérifiez l’inventaire actif avant de récupérer le lot.');
             return $this->redirectToRoute('app_daily_reward', status: Response::HTTP_SEE_OTHER);
         }
         $planet = $this->ownedPlanet($membership, $request->request->getInt('colony'));
@@ -76,7 +76,7 @@ final class DailyRewardController extends AbstractController
         try {
             $result = $this->rewards->claim($this->player(), $membership, $planet, $date);
         } catch (\DomainException) {
-            $this->addFlash('error', 'Cette planète ou cet univers ne peut plus recevoir le lot. Rien n’a été retiré.');
+            $this->addFlash('error', 'Cet univers ne peut plus recevoir le lot. Rien n’a été retiré.');
             return $this->redirectToRoute('app_daily_reward', status: Response::HTTP_SEE_OTHER);
         }
 
@@ -85,19 +85,16 @@ final class DailyRewardController extends AbstractController
             case 'claimed':
                 // Le lien d’ancrage transfère le focus au résultat même en navigation native.
                 $destination['_fragment'] = 'daily-reward-heading';
-                $this->addFlash('success', 'Jour '.$result['slot'].' récupéré : le lot est dans les stocks de '.$planet->name.'.');
+                $this->addFlash('success', 'Jour '.$result['slot'].' récupéré : le bonus a été ajouté à vos récompenses dans cet univers.');
                 break;
             case 'already':
                 $this->addFlash('success', 'Votre compte a déjà récupéré son lot de ce jour.');
-                break;
-            case 'full':
-                $this->addFlash('error', $this->storageMessage($result['required'], $result['missing']));
                 break;
             case 'busy':
                 $this->addFlash('error', 'Une autre action est en cours sur votre compte. Aucun lot n’a été retiré ; réessayez.');
                 break;
             default:
-                $this->addFlash('error', 'Le jour ou l’univers actif a changé. Vérifiez le lot et sa destination.');
+                $this->addFlash('error', 'Le jour ou l’univers actif a changé. Vérifiez le lot et votre univers.');
                 $destination = [];
                 break;
         }
@@ -131,15 +128,4 @@ final class DailyRewardController extends AbstractController
         return 'daily_reward:'.$membership->id.':'.$planet->id.':'.$date;
     }
 
-    /** @param array<string,int> $required @param array<string,int> $missing */
-    private function storageMessage(array $required, array $missing): string
-    {
-        $details = [];
-        foreach ($missing as $resource => $amount) {
-            $name = ['metal' => 'métal', 'nano' => 'nano'][$resource];
-            $details[] = $name.' : libérez '.$amount.' ('.$required[$resource].' de capacité libre nécessaire au total)';
-        }
-
-        return 'Stockage insuffisant. '.implode(' ; ', $details).'. Le même lot reste récupérable : rien n’a été crédité.';
-    }
 }

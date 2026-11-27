@@ -92,11 +92,15 @@ final class AdventTest extends WebTestCase
         $this->client->request('POST', $url, ['choice' => '0', 'colony' => $planet->id, '_token' => $token]);
         self::assertResponseRedirects($editionUrl.'#advent-door-1', 303);
         $this->client->followRedirect();
-        self::assertSelectorTextContains('#advent-door-1', 'Réservé');
-        $initial = $db->fetchAssociative('SELECT choice, resources, delivered_at, original_destination_id, delivered_destination_id FROM advent_claim');
+        self::assertSelectorTextContains('#advent-door-1', 'Dans l’inventaire');
+        $initial = $db->fetchAssociative('SELECT choice, resources, delivered_at, original_destination_id, delivered_destination_id, box_expires_at FROM advent_claim');
         self::assertSame(0, (int) $initial['choice']);
         self::assertSame($planet->id, (int) $initial['original_destination_id']);
         self::assertNull($initial['delivered_at']);
+        self::assertSame('2026-12-31 23:00:00', $initial['box_expires_at']);
+        // Simuler un reçu déjà existant au moment de la migration.
+        $db->executeStatement('UPDATE advent_claim SET box_expires_at = NULL, box_universe_id = NULL, box_unread = 0');
+        $this->em->clear();
 
         // Le calendrier et un formulaire mémorisé sont inaccessibles dans un autre univers.
         $member = $this->select($member, 'turbo-1');
@@ -135,6 +139,121 @@ final class AdventTest extends WebTestCase
         $this->client->loginUser($other);
         $this->client->request('POST', $inventoryUrl);
         self::assertResponseStatusCodeSame(404);
+    }
+
+    public function testResourceBoxChoosesColonyAtOpeningPreservesOverflowAndRejectsAtParisMidnight(): void
+    {
+        $admin = $this->player('AdventBoxAdmin', admin: true);
+        $player = $this->player('AdventBoxMember');
+        $neighbor = $this->player('AdventBoxNeighbor');
+        $planet = $this->planet($player);
+        $foreignId = $this->planet($neighbor)->id;
+        $editionId = $this->publish($admin);
+        $edition = $this->em->find(AdventEdition::class, $editionId);
+        $doors = $edition->doors;
+        $doors[1]['options'][0] = ['metal' => 20000];
+        $edition->doors = $doors;
+        $this->em->flush();
+        $db = $this->em->getConnection();
+        $planetId = $planet->id;
+        $this->clock->modify('2026-12-31T22:59:58Z');
+        $this->client->loginUser($this->em->find(Player::class, $player->id));
+        $url = '/evenements/avent/'.$editionId;
+        foreach ([1, 2] as $door) {
+            $crawler = $this->client->request('GET', $url);
+            $form = $crawler->filter('#advent-door-'.$door.' form')->form(['choice' => '0']);
+            self::assertArrayNotHasKey('colony', $form->getPhpValues());
+            $this->client->submit($form);
+            self::assertResponseRedirects($url.'#advent-door-'.$door, 303);
+        }
+        $membership = $this->em->find(Player::class, $player->id)->currentPlayerUniverse;
+        $notices = static::getContainer()->get(AdventRewards::class);
+        $firstBoxId = (int) $db->fetchOne('SELECT id FROM advent_claim WHERE door = 1');
+        $lastBoxId = (int) $db->fetchOne('SELECT id FROM advent_claim WHERE door = 2');
+        self::assertSame(['count' => 2, 'through' => $lastBoxId], $notices->giftNoticeSummary($membership));
+        $notices->acknowledgeGiftNotices($membership, $firstBoxId);
+        self::assertSame(['count' => 1, 'through' => $lastBoxId], $notices->giftNoticeSummary($membership));
+
+        $bounds = static::getContainer()->get(ResourceService::class);
+        $capacity = $bounds->capacity($planet, 'metal', []);
+        $preBox = $capacity - 500.0;
+        $this->fixtureStocks($planetId, '2026-12-31 22:59:59', ['metal' => (int) $preBox]);
+        $crawler = $this->client->request('GET', '/inventaire/boites');
+        self::assertSelectorTextContains('#advent-box-1', 'Boîte de ressources');
+        self::assertSelectorTextContains('#advent-box-1', '01/01/2027 à 00:00');
+        $first = $crawler->filter('#advent-box-1 form')->form(['colony' => $planetId]);
+        $second = $crawler->filter('#advent-box-2 form')->form(['colony' => $planetId]);
+        $this->client->request('POST', $first->getUri(), array_replace($first->getPhpValues(), ['colony' => $foreignId]));
+        self::assertResponseStatusCodeSame(404);
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_claim WHERE delivered_at IS NOT NULL'));
+        $this->clock->sleep(1);
+        $this->client->submit($first);
+        self::assertResponseRedirects('/inventaire/boites', 303);
+        self::assertSame('2026-12-31 22:59:59', $db->fetchOne('SELECT delivered_at FROM advent_claim WHERE door = 1'));
+        $stock = fn (): float => (float) $db->fetchOne("SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = 'metal'", [$planetId]);
+        self::assertEqualsWithDelta($preBox + 20000, $stock(), .01);
+        $this->client->submit($first);
+        self::assertEqualsWithDelta($preBox + 20000, $stock(), .01);
+
+        $this->clock->sleep(1);
+        $this->client->submit($second);
+        self::assertResponseRedirects('/inventaire/boites', 303);
+        $this->client->followRedirect();
+        self::assertSelectorNotExists('#advent-box-2');
+        self::assertSelectorTextContains('body', 'L’échéance de cette boîte de l’Avent est passée.');
+        self::assertNull($db->fetchOne('SELECT delivered_at FROM advent_claim WHERE door = 2'));
+        $membership = $this->em->find(Player::class, $player->id)->currentPlayerUniverse;
+        self::assertSame(['count' => 0, 'through' => null], $notices->giftNoticeSummary($membership));
+        $this->em->clear();
+        $planet = $this->em->find(Planet::class, $planetId);
+        $this->clock->sleep(600);
+        $bounds->consume($planet, ['metal' => 10000]);
+        $ordinaryDeposit = $bounds->deposit($planet, ['metal' => 1]);
+        $this->em->flush();
+        self::assertSame(1.0, $ordinaryDeposit['overflow']['metal']);
+        self::assertEqualsWithDelta($preBox + 10000, $stock(), .01);
+    }
+
+    public function testInventoryBadgeCountsAdventAndDailyWithoutConsumingEither(): void
+    {
+        $admin = $this->player('MixedGiftAdmin', admin: true);
+        $player = $this->player('MixedGiftMember');
+        $editionId = $this->publish($admin);
+        $this->clock->modify('2026-12-01T10:00:00Z');
+        $this->client->loginUser($this->em->find(Player::class, $player->id));
+
+        // Récupérer les deux cadeaux depuis leurs pages, avec les vrais formulaires et jetons.
+        $url = '/evenements/avent/'.$editionId;
+        $calendar = $this->client->request('GET', $url);
+        $this->client->submit($calendar->filter('#advent-door-1 form')->form(['choice' => '0']));
+        self::assertResponseRedirects($url.'#advent-door-1', 303);
+        $this->client->request('GET', '/recompense-quotidienne');
+        $this->client->submitForm('Récupérer');
+        self::assertResponseStatusCodeSame(303);
+
+        $count = function (): int {
+            $this->client->request('GET', '/messages/non-lus');
+            self::assertResponseIsSuccessful();
+            $body = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+
+            return $body['inventoryGiftCount'];
+        };
+        self::assertSame(2, $count());
+        $this->client->request('GET', '/inventaire/boites');
+        self::assertSelectorTextContains('.inventory-gift-notice', '1 nouveau cadeau');
+        self::assertSelectorExists('[data-page="boxes"][hidden]');
+        self::assertSelectorTextContains('#advent-box-1 .inventory-new-label', 'Nouveau');
+        $this->client->submitForm('Marquer les cadeaux comme vus');
+        self::assertResponseRedirects('/inventaire/boites', 303);
+        self::assertSame(0, $count());
+
+        $this->client->request('GET', '/inventaire/boites');
+        self::assertSelectorExists('#advent-box-1');
+        $this->client->request('GET', '/boosts');
+        self::assertSelectorTextContains('main', 'Moteurs économes');
+        $db = $this->em->getConnection();
+        self::assertNull($db->fetchOne('SELECT delivered_at FROM advent_claim WHERE advent_edition_id = ? AND door = 1', [$editionId]));
+        self::assertSame('available', $db->fetchOne("SELECT status FROM player_boost WHERE source_type = 'daily_reward'"));
     }
 
     public function testActivationMidMonthAndIndependentWindowsForTheSameSeason(): void
@@ -286,6 +405,13 @@ final class AdventTest extends WebTestCase
                 self::assertSame(0, $worker->wait(), $worker->getErrorOutput());
                 $results[] = trim($worker->getOutput());
             }
+            if (!$retry) {
+                self::assertEqualsCanonicalizing(['box_ready', 'reserved'], $results);
+                self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_claim WHERE delivered_at IS NULL AND box_expires_at IS NOT NULL'));
+                self::assertEqualsWithDelta(500, (float) $db->fetchOne("SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = 'metal'", [$origin->id]), .01);
+                return;
+            }
+
             self::assertEqualsCanonicalizing(['delivered', 'already'], $results);
             self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_claim WHERE delivered_at IS NOT NULL'));
             $receipt = $db->fetchAssociative('SELECT choice, original_destination_id, delivered_destination_id FROM advent_claim');
@@ -380,6 +506,9 @@ final class AdventTest extends WebTestCase
         $this->fixtureStocks($colony, '2026-11-30 23:00:00', ['metal' => 0, 'nano' => 0]);
         $this->client->request('POST', $uri.'/portes/1', ['_token' => $token, 'choice' => '0', 'colony' => $colony]);
         self::assertResponseRedirects($uri.'#advent-door-1', 303);
+        $crawler = $this->client->request('GET', '/inventaire/boites');
+        $this->client->submit($crawler->filter('#advent-box-1 form')->form(['colony' => $colony]));
+        self::assertResponseRedirects('/inventaire/boites', 303);
         self::assertSame(['metal' => 2000, 'nano' => 1000], json_decode($db->fetchOne('SELECT credited_resources FROM advent_claim'), true));
         self::assertNull($db->fetchOne('SELECT delivered_at FROM advent_claim'));
 
@@ -394,14 +523,40 @@ final class AdventTest extends WebTestCase
         $this->clock->sleep(49 * 3600);
         $this->client->getCookieJar()->clear();
         $this->client->loginUser($senior);
-        $crawler = $this->client->request('GET', $uri);
-        $token = $crawler->filter('#advent-door-1 input[name="_token"]')->attr('value');
         $this->fixtureStocks($colony, '2026-12-03 00:00:00', ['metal' => 0, 'nano' => 0]);
-        $this->client->request('POST', $uri.'/portes/1', ['_token' => $token, 'choice' => '0', 'colony' => $colony]);
-        self::assertResponseRedirects($uri.'#advent-door-1', 303);
+        $crawler = $this->client->request('GET', '/inventaire/boites');
+        $this->client->submit($crawler->filter('#advent-box-1 form')->form(['colony' => $colony]));
+        self::assertResponseRedirects('/inventaire/boites', 303);
         self::assertSame(['metal' => 3600, 'nano' => 1800], json_decode($db->fetchOne('SELECT credited_resources FROM advent_claim'), true));
         self::assertNotNull($db->fetchOne('SELECT delivered_at FROM advent_claim'));
         self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM advent_claim'));
+
+        // Un ancien reçu partiellement payé ne disparaît pas au réveillon ;
+        // le montant déjà payé ne doit pas être rejoué.
+        $this->em->clear();
+        $legacy = new AdventClaim();
+        $legacy->player = $this->em->find(Player::class, $senior->id);
+        $legacy->adventEdition = $this->em->find(AdventEdition::class, $id);
+        $legacy->door = 2;
+        $legacy->choice = 0;
+        $legacy->originalDestinationId = $colony;
+        $legacy->resources = ['metal' => 3600, 'nano' => 1800];
+        $legacy->creditedResources = ['metal' => 2000, 'nano' => 1000];
+        $legacy->openedAt = $this->clock->now();
+        $this->em->persist($legacy);
+        $this->em->flush();
+        $this->clock->modify('2027-01-01T00:00:00Z');
+        $this->client->getCookieJar()->clear();
+        $this->client->loginUser($legacy->player);
+        $this->fixtureStocks($colony, '2027-01-01 00:00:00', ['metal' => 500, 'nano' => 500]);
+        $crawler = $this->client->request('GET', '/inventaire/recompenses');
+        $legacyForm = $crawler->selectButton('Retenter le versement')->form(['colony' => $colony]);
+        $this->client->submit($legacyForm);
+        self::assertResponseRedirects('/inventaire/recompenses', 303);
+        $this->client->submit($legacyForm);
+        self::assertResponseRedirects('/inventaire/recompenses', 303);
+        self::assertEqualsWithDelta(2100, (float) $db->fetchOne("SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = 'metal'", [$colony]), .01);
+        self::assertEqualsWithDelta(1300, (float) $db->fetchOne("SELECT current_stock FROM planet_resource WHERE planet_id = ? AND resource_type = 'nano'", [$colony]), .01);
     }
 
     public function testCaptureDefersWithoutTakingTheEditionWhileAccountIsChangingUniverse(): void
@@ -530,11 +685,12 @@ final class AdventTest extends WebTestCase
         $this->clock->sleep(5 * 86400);
         $rewards = static::getContainer()->get(AdventRewards::class);
         $db = $this->em->getConnection();
-        self::assertSame('ships_reserved', $rewards->open($member, $membership, $planet, $edition, 6, 0)['state']);
+        self::assertSame('box_ready', $rewards->open($member, $membership, $planet, $edition, 6, 0)['state']);
+        self::assertSame('ships_reserved', $rewards->open($member, $membership, $planet, $edition, 6, 0, reservationOnly: true)['state']);
         self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM fleet_ship WHERE slug = 'probe'"));
         $membership->catalogUnlocks['v2:planet:'.$planet->id.':ships:probe:basic'] = true;
         $this->em->flush();
-        self::assertSame('delivered', $rewards->open($member, $membership, $planet, $edition, 6, 0)['state']);
+        self::assertSame('delivered', $rewards->open($member, $membership, $planet, $edition, 6, 0, reservationOnly: true)['state']);
         self::assertSame('already', $rewards->open($member, $membership, $planet, $edition, 6, 0)['state']);
         self::assertSame(12, (int) $db->fetchOne("SELECT quantity FROM fleet_ship WHERE slug = 'probe' AND tier = 'basic'"));
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM queue_item'));
@@ -558,6 +714,37 @@ final class AdventTest extends WebTestCase
             self::assertSame(count($codes), (int) $db->fetchOne('SELECT COUNT(*) FROM profile_cosmetic WHERE equipped = 1'));
             $crawler = $this->client->followRedirect();
         }
+        // Deux boîtes de la même coque permettent de contrôler la seconde
+        // exacte de fermeture indépendamment des prérequis d’une autre coque.
+        $this->em->clear();
+        $edition = $this->em->find(AdventEdition::class, $id);
+        $doors = $edition->doors;
+        foreach ([18, 23] as $door) {
+            $doors[$door]['options']['beginner'][0] = $doors[6]['options']['beginner'][0];
+        }
+        $edition->doors = $doors;
+        $this->em->flush();
+        $planetId = $planet->id;
+        $this->clock->modify('2026-12-31T22:59:59Z');
+        $this->client->getCookieJar()->clear();
+        $this->client->loginUser($this->em->find(Player::class, $member->id));
+        foreach ([18, 23] as $door) {
+            $crawler = $this->client->request('GET', '/evenements/avent/'.$id);
+            $this->client->submit($crawler->filter('#advent-door-'.$door.' form')->form(['choice' => '0']));
+            self::assertResponseStatusCodeSame(303);
+        }
+        $crawler = $this->client->request('GET', '/inventaire/boites');
+        self::assertSelectorTextContains('#advent-box-18', 'Boîte de vaisseaux');
+        $valid = $crawler->filter('#advent-box-18 form')->form(['colony' => $planetId]);
+        $expired = $crawler->filter('#advent-box-23 form')->form(['colony' => $planetId]);
+        $this->client->submit($valid);
+        self::assertResponseRedirects('/inventaire/boites', 303);
+        self::assertSame(24, (int) $db->fetchOne("SELECT quantity FROM fleet_ship WHERE slug = 'probe' AND tier = 'basic'"));
+        $this->clock->sleep(1);
+        $this->client->submit($expired);
+        self::assertResponseRedirects('/inventaire/boites', 303);
+        self::assertSame(24, (int) $db->fetchOne("SELECT quantity FROM fleet_ship WHERE slug = 'probe' AND tier = 'basic'"));
+        self::assertNull($db->fetchOne('SELECT delivered_at FROM advent_claim WHERE door = 23'));
     }
 
     public function testResearchAndHullVouchersUseTheNativeQueueAndNeverRefundTheDiscount(): void

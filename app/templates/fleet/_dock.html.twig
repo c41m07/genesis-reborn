@@ -1,7 +1,7 @@
 <div class="fleet-dock-layout" data-live-region="fleet-holds">
     <section class="panel fleet-dock-ships" aria-labelledby="dock-ships-title">
         <h2 id="dock-ships-title">Vaisseaux mobiles à quai · colonie active</h2>
-        <p>Disponibles au départ de la colonie active.</p>
+        <p>La colonie fournit le carburant à chaque départ. Le carburant restant à l’arrivée à quai est perdu.</p>
         {% for row in idle %}
             <ul class="fleet-dock-ship-list">
                 {% for ship in row.ships %}

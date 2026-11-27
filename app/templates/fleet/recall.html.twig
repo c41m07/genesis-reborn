@@ -34,7 +34,7 @@
                     <div><dt>Arrivée estimée</dt><dd>{{ quote.arrival_at|date('d/m/Y H:i:s',preferences.timezone) }}</dd></div>
                     <div><dt>Carburant consommé avant le retour</dt><dd>{{ quote.spent_now|quantity(2) }} hydrogène</dd></div>
                     <div><dt>Carburant réservé pour le retour</dt><dd>{{ quote.return_fuel|quantity(2) }} hydrogène</dd></div>
-                    <div><dt>Carburant inutilisé conservé</dt><dd>{{ quote.unused_fuel|quantity(2) }} hydrogène</dd></div>
+                    <div><dt>Carburant perdu à quai</dt><dd>{{ quote.unused_fuel|quantity(2) }} hydrogène</dd></div>
                 </dl>
                 <h3>Fret conservé</h3>
                 <ul class="fleet-decision-freight">{% for slug,amount in quote.freight|filter(amount => amount > 0) %}<li>{{ resources[slug] }} : {{ amount|quantity(2) }}</li>{% else %}<li>Aucun fret.</li>{% endfor %}</ul>

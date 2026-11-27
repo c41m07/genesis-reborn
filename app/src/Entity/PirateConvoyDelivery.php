@@ -91,10 +91,22 @@ class PirateConvoyDelivery
         return new self($attack, $owner, $timeline, $wonAt);
     }
 
+    public function reconnaissance(): PirateReconnaissance
+    {
+        return $this->attack->reconnaissance;
+    }
+
+    public function deliveredAsBox(): bool
+    {
+        return $this->settledAt !== null && ($this->checkpoint['reward_kind'] ?? null) === 'resource_box';
+    }
+
     public function timeline(): PirateConvoyTimeline
     {
+        $checkpoint = $this->checkpoint;
+        unset($checkpoint['reward_kind']);
         $timeline = PirateConvoyTimeline::fromCheckpoint($this->winningAttempt, $this->victoryAt,
-            PirateConvoyQuote::fromFrozenParts($this->quoteParts), $this->membershipId, $this->universeId, $this->checkpoint);
+            PirateConvoyQuote::fromFrozenParts($this->quoteParts), $this->membershipId, $this->universeId, $checkpoint);
         $activeToken = $timeline->state() === 'traveling' ? $this->checkpoint['token'] : null;
         $due = $timeline->state() === 'traveling' ? $timeline->chronology()['due_at'] : null;
         if ($this->dispatchToken !== $activeToken || $this->nextAt != $due || $this->settledAt != $timeline->chronology()['settled_at']
@@ -106,7 +118,7 @@ class PirateConvoyDelivery
     }
 
     /** L'appelant doit appliquer et sauvegarder sous le verrou du droit, dans la transaction du dépôt/outbox. */
-    public function replaceState(PirateConvoyTimeline $timeline): void
+    public function replaceState(PirateConvoyTimeline $timeline, bool $deliveredAsBox = false): void
     {
         $checkpoint = $timeline->checkpoint();
         if ($timeline->winningAttempt !== $this->winningAttempt
@@ -119,6 +131,9 @@ class PirateConvoyDelivery
         $dates = $timeline->chronology();
         $this->checkpoint = $checkpoint;
         $this->settledAt = $dates['settled_at'];
+        if ($deliveredAsBox && $this->settledAt !== null) {
+            $this->checkpoint['reward_kind'] = 'resource_box';
+        }
         $this->nextAt = $timeline->state() === 'traveling' ? $dates['due_at'] : null;
         $this->dispatchToken = $this->nextAt === null ? null : $checkpoint['token'];
     }

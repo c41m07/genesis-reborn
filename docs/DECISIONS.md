@@ -1,5 +1,30 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Carburant perdu à quai — 27 novembre 2026
+
+Décision du propriétaire. Chaque nouveau départ paie la totalité de son devis
+sur le stock de la colonie de départ. Le retour ou l’installation à quai détruit
+le reliquat de carburant. Le fret d’hydrogène reste une ressource transportable.
+Cette règle remplace la mutualisation et le déchargement du carburant à quai.
+Elle s’applique aussi aux réserves déjà à quai, qui ne financent plus de vol et
+ne peuvent plus être déchargées. La colonne historique reste compatible sans migration.
+Les réserves en vol restent disponibles pour les trajets déjà payés et les replis.
+Les anciens retours déjà programmés dont le reliquat était fusionné avec le fret
+terminent leur dépôt selon les données enregistrées afin de préserver le fret légitime.
+
+## Bonus de recherche par rang — 26 novembre 2026
+
+Les technologies de réduction de durée ou de coût, de statistiques de combat
+et de flotte, de tir supplémentaire et de réparation des défenses utilisent les
+poids Basique 21, Intermédiaire 30 et Supérieur 49 avant la courbe logarithmique.
+Pour les canons à énergie focalisée, les paliers 25/0/0, 25/25/0 et 25/25/25
+donnent respectivement +7,98 %, +16,00 % et +25 % de dégâts.
+Le plafond propre à chaque famille et les niveaux acquis sont conservés.
+Les niveaux existants produisent le nouvel effet dès le prochain calcul, avec
+une baisse possible pour les empires ayant surtout investi dans les premiers rangs.
+Les commandes déjà acceptées gardent leur prix et leur courbe de durée pour le travail restant.
+La colonisation, les trois recherches de renseignement et les bâtiments gardent leurs règles.
+
 ## Laboratoire et chantier — plafond de durée du 26 novembre 2026
 
 Kévin fixe à 89,5 % la réduction maximale à 25/25/25 du laboratoire pour les
@@ -269,7 +294,7 @@ L’intégration et ses vérifications sont détaillées dans [BUILDING_BALANCE_
 ### Messagerie et panneaux d’alliances — 5 novembre 2026
 
 - La recherche de destinataires porte sur les pseudos des joueurs du même univers, à partir de deux caractères. La liste privée ne présente que les joueurs avec lesquels au moins un message a été échangé.
-- Le canal de guilde reste en tête. Les conversations privées comportant des messages non lus précèdent les autres, puis suivent l’ordre du dernier message. Une pastille rouge signale les non-lus dans les conversations et sur l’entrée « Messages » de la navigation. Les indicateurs sont actualisés à réception d’une notification et toutes les quinze secondes.
+- Le canal de guilde reste en tête. Les conversations privées comportant des messages non lus précèdent les autres, puis suivent l’ordre du dernier message. Une pastille rouge signale les conversations non lues. Dans le menu, « Messages » affiche leur nombre de messages non lus dans un badge rouge, plafonné visuellement à 99+ et masqué à zéro. Les indicateurs sont actualisés à réception d’une notification et toutes les quinze secondes.
 - L’ouverture d’une conversation marque les messages affichés comme lus. La lecture du canal de guilde est suivie séparément pour chaque joueur et chaque guilde.
 - La page Alliances s’ouvre sur « Guildes ». Les liens sont ordonnés « Guildes », « Diplomatie », « Relation » et seul le panneau sélectionné est affiché. « Diplomatie » regroupe les relations entre guildes, « Relation » les contrats entre commandants.
 
@@ -2275,6 +2300,10 @@ Le plafond passe de 30 à **10 commandes à l’ajout** sur les files existantes
 
 L’administration programme chaque période de visibilité avec un début inclus et une fin exclue en heure de Paris. Le bouton cadeau de la barre supérieure et l’accès direct suivent la même période. Les portes conservent les dates du 1er au 24 décembre et peuvent être rattrapées pendant la visibilité. Une nouvelle saison demande une publication explicite. L’inventaire assure le retrait des cadeaux déjà réservés après la fermeture.
 
+### Nouvelles boîtes de l’Avent · 26 novembre 2026
+
+L’ouverture d’une porte place les nouveaux lots de matériaux ou de vaisseaux dans l’inventaire de l’univers d’obtention, sans versement immédiat. L’ouverture de la boîte permet de choisir une colonie possédée et reste possible jusqu’au 31 décembre inclus, heure de Paris, indépendamment de la fermeture locale. Seule la boîte de matériaux peut dépasser la capacité des entrepôts. Le plafond des 48 premières heures et les prérequis de coque restent applicables. Les réservations historiques, y compris les reliquats partiellement versés, conservent leur retrait antérieur ; aucun délai ne leur est ajouté. Bons, remises et cosmétiques ne changent pas.
+
 ## 25 novembre 2026 — recherches, bâtiments économiques et infrastructures
 
 Les 38 recherches avancées du catalogue ne demandaient aucun niveau de leur propre famille. Décision confirmée pendant le lot : ajouter à chacune le rang immédiatement précédent au niveau 5. Les déblocages mémorisés et les autres conditions restent applicables. Les prix utilisent le prérequis individuel admissible le plus cher et les contributions de chaque bâtiment se composent par rang. Les taux, plafonds, périmètres et durées applicables figurent dans les [règles](REGLES.md#progression-économique-par-rang).
@@ -2295,3 +2324,37 @@ Vaisseaux : chiffrer séparément la coque (M), le blindage ou la précision (N)
 ### Progression du prix des défenses, 26 novembre 2026
 
 Le rang Intermédiaire vaut 125 % du Basique et le rang Supérieur 125 % de l’Intermédiaire, en H × 1 + M × 2 + N × 4 + A × 8, hors électricité. Le Basique et les matériaux de chaque recette RP restent inchangés ; arrondir à la valeur réalisable la plus proche. Les prix et les statistiques des vaisseaux ne changent pas. Voir [les recettes RP](CATALOGUE_COUTS_RP.md#défenses).
+
+## Bourse de ressources et convoi des marchands — 26 novembre 2026
+
+Kévin valide la maquette A, la station A:0:0 et le voyage protégé de 30 minutes par trajet. L’étalon initial est 8 H = 4 M = 2 N = 1 AM, avec des frais d’essai de 2 %. Le carburant ne dépend pas de la position de départ à flotte égale ; le rappel n’est possible qu’avant l’échange. La réserve initiale est administrée par univers. Le convoi marchand du vendredi 9 h Europe/Paris apporte jusqu’à 50 % de ce que la station a vendu aux joueurs, dans la place disponible sous la cible, sans toucher au cours. [Architecture et cas limites](BOURSE_DE_RESSOURCES.md).
+
+## Bonus quotidiens : phase temporaire plutôt que versement en ressources
+
+Les reçus antérieurs restent valides pour poursuivre le cycle, sans remboursement ni réattribution. Le même reçu est enregistré avec l’objet d’inventaire, dans une transaction verrouillée. La participation active à l’instant du retrait reçoit l’objet. Un bonus consommé immédiatement sur le temps restant d’une tâche et un bonus temporaire sont deux objets différents. Voir les [règles](REGLES.md#bonus-quotidiens-temporaires) pour le cycle et les valeurs d’essai. Les valeurs de combat de 10 % sont le réglage d’essai du lot et s’ajustent à la suite d’une décision d’équilibrage.
+
+## 27 novembre 2026 — Rapports de campagne et récompense du convoi
+
+Les rapports privés de reconnaissance et de combat de la campagne rejoignent les rubriques Espionnage et Combats. Chaque trajet du convoi produit un rapport de transport dans Économie. À la livraison, une boîte de ressources contient la totalité du fret annoncé, demi-unités comprises. Le joueur choisit une colonie de son univers à l’ouverture. Elle doit pouvoir accueillir tout le contenu. Une livraison déjà créditée avant cette évolution reste acquise et ne donne aucune boîte supplémentaire.
+
+## Signaux de nouveauté dans les menus — 27 novembre 2026
+
+Le compteur Inventaire signale chaque nouvelle boîte, les bonus quotidiens et les récompenses placées en attente. La consultation du rapport d’un convoi et celle de sa boîte sont indépendantes. Les destinations existantes Boîtes et Récompenses en attente portent leur propre compteur de nouveautés. Le badge rouge de Flottes conduit aux décisions d’orbite en attente.
+
+## 27 novembre 2026 — Surplus au retour de la Bourse
+
+À la demande du propriétaire, un convoi commercial verse la part qui tient en entrepôt
+et remet le reliquat dans une boîte de ressources de l’empire. Un rappel suit la même
+règle pour le fret initial. La livraison concerne les retours réglés à compter du changement.
+Le fret déjà en soute reste accessible depuis les flottes à quai.
+
+## 27 novembre 2026 — Délai des boîtes de convoi
+
+Les boîtes remises par un convoi pirate ou par un retour de Bourse ont un délai
+d’ouverture de 24 heures dès la livraison. La mise en attente, la promotion et
+les vacances ne décalent pas l’échéance. La transition préserve les boîtes déjà
+attribuées sans date limite.
+
+## 27 novembre 2026 — Consultation des boîtes
+
+Visiter l’onglet Boîtes acquitte les notifications des boîtes affichées dans l’univers actif. Le joueur peut choisir plus tard quand ouvrir ses boîtes. Les cadeaux en attente et les boosts gardent leur propre état de lecture.

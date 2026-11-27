@@ -14,9 +14,10 @@ use Psr\Clock\ClockInterface;
 use App\Service\Player\FirstStepRewardPolicy;
 use App\Service\Player\FirstSteps;
 use App\Service\Player\VacationCalendar;
+use App\Service\Boost\TimedBoostEffects;
 final class FleetService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment, private FirstSteps $firstSteps, private DiplomaticReportWriter $diplomaticReports, private FleetFuelExpenseRecorder $fuelExpenses) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment, private FirstSteps $firstSteps, private DiplomaticReportWriter $diplomaticReports, private FleetFuelExpenseRecorder $fuelExpenses, private TimedBoostEffects $timedBoosts) {}
     private function coords(SolarSystem $s,?int $position): array { return [$s->id,$s->galaxy->id,$s->coordX,$s->coordY,$position]; }
     public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0, bool $requireUnexplored = false): array
     {
@@ -69,7 +70,31 @@ final class FleetService
         $windowHours=$reinforcement?$this->occupations->reinforcementHours($target):($mission==='conquer' && $this->occupations->isEnabled()?24:(in_array($mission,['attack','conquer','defend'],true)?((int)($this->catalog->rules()['combat_window_seconds']??600)/3600):($mission==='orbit'?$orbitHours:0)));
         $techLevels=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$m]);
         $ships=$this->technologyEffects->applyToShips($ships,$techLevels,$m->universe);
+        // Les missions ordinaires figent le tarif de l’aller dans la navigation.
+        // Les trajets de campagne, de marché et de guilde n’emploient pas ce bonus.
+        $freightFactor = 1.0;
+        if (in_array($mission, ['transport', 'station', 'explore', 'colonize'], true)) {
+            $now = $this->clock->now();
+            $effect = $this->timedBoosts->windows($m, $now, $now)[0]->operationType ?? null;
+            if ($effect === TimedBoostEffects::CIVIL_FUEL) {
+                $factor = TimedBoostEffects::definition($effect)['factor'];
+                foreach ($ships as &$ship) {
+                    $ship['fuel_travel_system'] *= $factor;
+                    $ship['fuel_travel_galaxy'] *= $factor;
+                }
+                unset($ship);
+            } elseif ($effect === TimedBoostEffects::CIVIL_FREIGHT && in_array($mission, ['transport', 'station'], true)) {
+                $freightFactor = TimedBoostEffects::definition($effect)['factor'];
+            }
+        }
         $quote=$this->calculator->quote($this->coords($origin->solarSystem,$origin->position),$this->coords($system,$target instanceof Planet?$target->position:null),$ships,$ratio,$config['multipliers']['travel_time'],$this->catalog->rules()['fuel_ratio_policy'],$windowHours);
+        if ($freightFactor > 1.0) {
+            // L’ajout concerne seulement le fret ; sans bonus, le devis conserve
+            // exactement son contrat d’origine (dont le zéro entier des sondes).
+            $extraFreight = $quote['cargo_capacity'] * ($freightFactor - 1.0);
+            $quote['cargo_capacity'] += $extraFreight;
+            $quote['freight_capacity'] += $extraFreight;
+        }
         $shipsAdjusted=$adjusted;
         $requestedCargo=[];
         foreach($cargo as $resource=>$amount) {
@@ -126,7 +151,7 @@ final class FleetService
             if($mission==='station' && $q['target']->owner?->id!==$m->id) throw new \DomainException('Cette colonie ne vous appartient plus.');
             if($q['idle']) $this->manager->lock($q['idle']);
             $costs=$q['freight'];$costs['hydrogen']=($costs['hydrogen']??0)+$q['planet_fuel'];$this->resources->consume($origin,$costs);
-            if($q['idle']) $q['idle']->storedFuel-=$q['stored_fuel_used'];
+            if($q['idle']) $q['idle']->storedFuel = 0;
             $cargo=$q['freight'];$cargo['hydrogen']=($cargo['hydrogen']??0)+$q['total_fuel'];
             $f=new Fleet();$f->playerUniverse=$m;$f->homePlanet=$origin;$f->destination=$q['target'] instanceof Planet?$q['target']:null;$f->destinationSystem=$q['system'];$f->status='traveling';$f->mission=$mission;$f->speedRatio=$ratio;$f->cargo=$cargo;$f->reservedFuel=$q['total_fuel'];$f->orbitFuel=$q['orbit_fuel'];$f->orbitDurationSeconds=$mission==='defend' && $q['target'] instanceof Planet && $this->occupations->activeFor($q['target'])!==null?(int)round($this->occupations->reinforcementHours($q['target'])*3600):($mission==='conquer' && $this->occupations->isEnabled()?\App\Service\Combat\OccupationPolicy::DURATION_SECONDS:(int)round($orbitHours*3600));$f->travelSeconds=$q['seconds'];$f->departureAt=$this->clock->now();$f->arrivalAt=$this->clock->now()->modify('+'.$f->travelSeconds.' seconds');$f->navigation=$this->navigation->freeze($this->coords($origin->solarSystem,$origin->position),$this->coords($q['system'],$q['target'] instanceof Planet?$q['target']->position:null),$q['movement_ships'],$ratio,$this->catalog->rules()['fuel_ratio_policy'],$q,$f->departureAt);$this->manager->save($f);$this->manager->flush();
             $f->firstStepsSpy = $tutorialSpy;
@@ -184,8 +209,10 @@ final class FleetService
         $fleet->reservedFuel=$quote['return_fuel'];$fleet->orbitFuel=0;
         $fleet->returnPlanet=$returnPlanet;$fleet->navigation=$quote['navigation'];
         if($fleet->mission==='station') {
-            $fleet->reservedFuel+=$quote['unused_fuel'];
+            $fleet->reservedFuel += $quote['unused_fuel'];
             $fleet->navigation['station']['leg_fuel']=$quote['return_fuel'];
+        } else {
+            $fleet->navigation['unused_fuel_at_dock'] = $quote['unused_fuel'];
         }
         $this->orbitRequests->close($fleet,'withdrawn',$quote['at']);
         $fleet->navigation['recall']=['at'=>$quote['at']->format(DATE_ATOM),'progress'=>$quote['progress'],
@@ -215,7 +242,7 @@ final class FleetService
             $fleet->reservedFuel = max(0, $fleet->reservedFuel - $spent);
             $fleet->orbitFuel -= $spent;
         }
-        $this->releaseOrbitFuel($fleet);
+        $fleet->releaseOrbitFuel();
         $this->transports->recordConversionRecall($fleet, 'admin_recall');
         $this->startReturn($fleet);
     }
@@ -248,10 +275,13 @@ final class FleetService
             }
             if($f->status==='returning') {
                 $this->fuelExpenses->burnLocked($f, $f->reservedFuel, 'return');
+                $f->reservedFuel = 0;
+                $f->discardDockedFuel();
                 $deposit=$this->resources->deposit($processingPlanet, $f->cargo);
                 if($f->mission==='transport') $this->transports->recordReturn($f,$deposit);
                 $idle=$this->repo->one(Fleet::class,['homePlanet'=>$processingPlanet,'playerUniverse'=>$m,'status'=>'idle']);
                 if(!$idle) { $idle=new Fleet();$idle->homePlanet=$processingPlanet;$idle->playerUniverse=$m;$this->manager->save($idle);$this->manager->flush(); }
+                $idle->storedFuel = 0;
                 foreach($this->repo->all(FleetShip::class,['fleet'=>$f]) as $s) {
                     $stock=$this->repo->one(FleetShip::class,['fleet'=>$idle,'slug'=>$s->slug,'tier'=>$s->tier])??new FleetShip();$stock->fleet=$idle;$stock->slug=$s->slug;$stock->tier=$s->tier;$stock->quantity+=$s->quantity;$this->manager->save($stock);$this->manager->remove($s);
                 }
@@ -260,19 +290,19 @@ final class FleetService
             }
             $oneWay=max(0,($f->reservedFuel-$f->orbitFuel)/2);$this->fuelExpenses->burnLocked($f, $oneWay, 'outbound');$f->reservedFuel-=$oneWay;
             if($m->isForgotten()) {
-                $this->releaseOrbitFuel($f);$this->transports->recordConversionRecall($f);$this->startReturn($f,$f->arrivalAt);return;
+                $f->releaseOrbitFuel();$this->transports->recordConversionRecall($f);$this->startReturn($f,$f->arrivalAt);return;
             }
             if($f->mission!=='transport' && ($this->vacations->isActive($m) || ($f->destination?->owner!==null && $this->vacations->isActive($f->destination->owner)))) {
-                $this->releaseOrbitFuel($f);$this->startReturn($f,$f->arrivalAt);
+                $f->releaseOrbitFuel();$this->startReturn($f,$f->arrivalAt);
                 $this->notifications->enqueue($m,'Mission annulée : un empire concerné est en vacances. Votre flotte rentre.',journalKind:'arrival');
                 return;
             }
             if(in_array($f->mission,['attack','conquer'],true)) {
                 if($this->combats->joinAttack($f)) return;
-                $this->releaseOrbitFuel($f);$this->notifications->enqueue($m,'La fenêtre de combat était déjà close. Votre flotte repart.',journalKind:'arrival');
+                $f->releaseOrbitFuel();$this->notifications->enqueue($m,'La fenêtre de combat était déjà close. Votre flotte repart.',journalKind:'arrival');
             } elseif($f->mission==='defend') {
                 if($this->combats->arriveDefender($f)) return;
-                $this->releaseOrbitFuel($f);$this->notifications->enqueue($m,'La fenêtre de combat était close. Votre flotte repart.',journalKind:'arrival');
+                $f->releaseOrbitFuel();$this->notifications->enqueue($m,'La fenêtre de combat était close. Votre flotte repart.',journalKind:'arrival');
             } elseif($f->mission==='orbit') {
                 if(($request=$this->orbitRequests->read($f))!==null) {
                     $this->manager->lock($f->destination);
@@ -281,7 +311,7 @@ final class FleetService
                             && ($request['recipient_id']??null)===$f->destination->owner->id
                             && ($request['status']??null)==='pending'?'expired':'invalid';
                         $this->orbitRequests->close($f,$reason,$this->clock->now());
-                        $this->releaseOrbitFuel($f);$this->startReturn($f,$f->arrivalAt);
+                        $f->releaseOrbitFuel();$this->startReturn($f,$f->arrivalAt);
                         $this->notifications->enqueue($m,'Orbite impossible sur '.$f->destination->name.' : aucun accord valide à l’arrivée. Votre flotte rentre.',journalKind:'arrival');
                         return;
                     }
@@ -291,7 +321,7 @@ final class FleetService
                     if($f->destination->owner->id!==$m->id) $this->notifications->enqueue($f->destination->owner,'Une flotte autorisée de '.$m->getDisplayName().' est arrivée sur '.$f->destination->name.'.',journalKind:'arrival');
                     return;
                 }
-                if(!$this->combats->canOrbit($m,$f->destination)) { $this->releaseOrbitFuel($f);$this->startReturn($f,$f->arrivalAt);return; }
+                if(!$this->combats->canOrbit($m,$f->destination)) { $f->releaseOrbitFuel();$this->startReturn($f,$f->arrivalAt);return; }
                 if($this->combats->orbitAutoAccepted($m,$f->destination)) {
                     if($this->combats->joinOpenDefense($f)) return;
                     $this->startOrbit($f);
@@ -403,7 +433,7 @@ final class FleetService
             }
             $this->diplomaticReports->record($fleet->playerUniverse, $host, 'orbit', $accept ? 'accepted' : 'refused', $fleet->destination->name);
             if (!$accept) {
-                $this->releaseOrbitFuel($fleet);
+                $fleet->releaseOrbitFuel();
                 $this->startReturn($fleet);
                 $this->notifications->enqueue($fleet->playerUniverse, 'Votre demande d’orbite sur ' . $fleet->destination->name . ' a été refusée; la flotte rentre.');
                 return;
@@ -423,7 +453,7 @@ final class FleetService
         foreach($this->repo->pendingOrbitsFor($host) as $fleet) {
             $this->manager->lock($fleet->destination);$this->manager->lock($fleet);
             if($fleet->status!=='orbit_pending' || $fleet->destination->owner?->id!==$host->id) continue;
-            $this->releaseOrbitFuel($fleet);$this->startReturn($fleet);
+            $fleet->releaseOrbitFuel();$this->startReturn($fleet);
             $this->notifications->enqueue($fleet->playerUniverse,'Demande d’orbite refusée : l’empire d’accueil passe en vacances. Votre flotte rentre.');
         }
     }
@@ -455,7 +485,7 @@ final class FleetService
                 $this->fuelExpenses->burnLocked($fleet, $spent, 'conversion_recall_orbit');$fleet->reservedFuel=max(0,$fleet->reservedFuel-$spent);
                 $fleet->orbitFuel-=$spent;
             }
-            $this->releaseOrbitFuel($fleet);
+            $fleet->releaseOrbitFuel();
             $this->transports->recordConversionRecall($fleet);
             $this->startReturn($fleet);
             $returned[]=$fleet->id;
@@ -489,7 +519,7 @@ final class FleetService
                 $spent=$fleet->orbitFuel*min(1,max(0,($this->clock->now()->getTimestamp()-$fleet->departureAt->getTimestamp())/$duration));
                 $this->fuelExpenses->burnLocked($fleet, $spent, 'occupation_return');$fleet->reservedFuel=max(0,$fleet->reservedFuel-$spent);$fleet->orbitFuel-=$spent;
             }
-            $this->releaseOrbitFuel($fleet);
+            $fleet->releaseOrbitFuel();
             $quantity=array_sum(array_map(static fn(FleetShip $ship): int=>$ship->quantity,$this->repo->all(FleetShip::class,['fleet'=>$fleet])));
             if($quantity>0) $this->startReturn($fleet);
             else { $fleet->status='completed';$fleet->arrivalAt=null;$fleet->cargo=[];$fleet->reservedFuel=0;$fleet->dispatchToken=Uuid::v4()->toRfc4122(); }
@@ -498,10 +528,6 @@ final class FleetService
         return $returned;
     }
 
-    private function releaseOrbitFuel(Fleet $f): void
-    {
-        $f->reservedFuel=max(0,$f->reservedFuel-$f->orbitFuel);$f->orbitFuel=0;
-    }
     private function consumeShip(Fleet $f,string $slug): string
     {
         $ships=$this->repo->all(FleetShip::class,['fleet'=>$f,'slug'=>$slug]);usort($ships,static fn($a,$b)=>array_search($a->tier,GameCatalog::TIERS,true)<=>array_search($b->tier,GameCatalog::TIERS,true));foreach($ships as $ship)if($ship->quantity>0){--$ship->quantity;return $ship->tier;}throw new \LogicException('Vaisseau de mission absent.');

@@ -20,6 +20,8 @@ final readonly class ReportNoticeRepository
 
     /** Les prédicats de visibilité repris des fiches s’appliquent aussi à tout marqueur privé. */
     private const VISIBLE = [
+        'campaign' => 'EXISTS (SELECT 1'.PirateReportRepository::SOURCE.' WHERE '.PirateReportRepository::OWNER.'
+            AND seat.id=n.player_universe_id AND seat.universe_id=:universe AND r.id=n.pirate_mission_report_id)',
         'combat' => <<<'SQL'
             EXISTS (
                 SELECT 1 FROM combat_log report JOIN combat_event ce ON ce.id = report.combat_event_id
@@ -52,10 +54,10 @@ final readonly class ReportNoticeRepository
             SQL,
     ];
 
-    private const COLUMNS = ['combat' => 'combat_log_id', 'espionage' => 'espionage_report_id', 'transport' => 'transport_report_id', 'diplomatic' => 'diplomatic_report_id'];
-    private const LIST_KINDS = ['combat' => 'combat', 'espionage' => 'espionage', 'economy' => 'transport', 'diplomatic' => 'diplomatic'];
+    private const COLUMNS = ['campaign' => 'pirate_mission_report_id', 'combat' => 'combat_log_id', 'espionage' => 'espionage_report_id', 'transport' => 'transport_report_id', 'diplomatic' => 'diplomatic_report_id'];
+    private const LIST_KINDS = ['campaign' => 'campaign', 'combat' => 'combat', 'espionage' => 'espionage', 'economy' => 'transport', 'diplomatic' => 'diplomatic'];
 
-    public function __construct(private EntityManagerInterface $em)
+    public function __construct(private EntityManagerInterface $em, private PirateReportRepository $campaigns)
     {
     }
 
@@ -64,6 +66,9 @@ final readonly class ReportNoticeRepository
         $eligible = [];
         $parameters = $this->parameters($membership);
         foreach (self::LIST_KINDS as $listKind => $kind) {
+            if ($kind === 'campaign' && !$this->campaigns->admitted($membership)) {
+                continue;
+            }
             $column = self::COLUMNS[$kind];
             $parameter = 'archive_'.$kind;
             // Archivé ne veut pas dire lu : masquer du témoin sans modifier l’état de lecture.
@@ -97,6 +102,9 @@ final readonly class ReportNoticeRepository
         $parameters = $this->parameters($membership);
         $types = [];
         foreach (self::LIST_KINDS as $listKind => $kind) {
+            if ($kind === 'campaign' && !$this->campaigns->admitted($membership)) {
+                continue;
+            }
             $column = self::COLUMNS[$kind];
             if (!isset($requests[$listKind])) {
                 continue;
@@ -137,6 +145,9 @@ final readonly class ReportNoticeRepository
 
     public function consult(PlayerUniverse $membership, string $kind, int $id, \DateTimeImmutable $now): bool
     {
+        if ($kind === 'campaign' && !$this->campaigns->admitted($membership)) {
+            return false;
+        }
         $criteria = $this->identityAndAccess($kind);
         $parameters = $this->parameters($membership) + ['report' => $id];
         // Rien n’est créé ici : même en cas de double consultation, la date originale reste.
@@ -149,6 +160,9 @@ final readonly class ReportNoticeRepository
 
     private function available(PlayerUniverse $membership, string $kind, int $id, bool $unreadOnly): bool
     {
+        if ($kind === 'campaign' && !$this->campaigns->admitted($membership)) {
+            return false;
+        }
         return (bool) $this->em->getConnection()->fetchOne(
             'SELECT 1 FROM report_notice n WHERE '.$this->identityAndAccess($kind)
                 .($unreadOnly ? ' AND n.consulted_at IS NULL' : '').' LIMIT 1',

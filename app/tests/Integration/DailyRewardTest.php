@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Integration;
 
-use App\Entity\{DailyRewardClaim, Galaxy, Planet, PlanetResource, Player, QueueItem, SolarSystem, Universe};
+use App\Entity\{DailyRewardClaim, Galaxy, Planet, PlanetResource, Player, PlayerBoost, QueueItem, SolarSystem, Universe};
 use App\Service\Player\{DailyRewardService, RegistrationService};
+use App\Service\Boost\TimedBoostEffects;
+use App\Service\Colony\ResourceService;
 use App\Service\Queue\QueueService;
 use App\Service\Universe\UniverseService;
 use App\Validator\DTO\RegistrationData;
@@ -81,8 +83,9 @@ final class DailyRewardTest extends WebTestCase
         $firstDay = $rewards->status($player)['date'];
         self::assertSame('2026-12-01', $firstDay);
         self::assertSame(['state' => 'claimed', 'slot' => 1], $rewards->claim($player, $memberA, $first, $firstDay));
-        self::assertSame(5500.0, $this->stock($first, 'metal')->currentStock);
-        self::assertSame(5250.0, $this->stock($first, 'nano')->currentStock);
+        self::assertSame(5000.0, $this->stock($first, 'metal')->currentStock);
+        self::assertSame(5000.0, $this->stock($first, 'nano')->currentStock);
+        self::assertSame(1, $this->em->getRepository(PlayerBoost::class)->count(['playerUniverse' => $memberA]));
         $this->select($player, $b);
         $memberB = $player->currentPlayerUniverse;
         self::assertSame(['state' => 'stale'], $rewards->claim($player, $memberA, $first, $firstDay));
@@ -92,10 +95,11 @@ final class DailyRewardTest extends WebTestCase
         self::assertSame('2026-12-02', $rewards->status($player)['date']);
         self::assertSame(['state' => 'stale'], $rewards->claim($player, $memberB, $second, $firstDay));
         $this->clock->sleep(2 * 86400); // Deux jours sans retrait ne consomment aucun palier.
-        foreach ([2 => [750,400], 3 => [1000,500], 4 => [1250,650], 5 => [1500,750], 6 => [1750,900], 7 => [2500,1250], 1 => [500,250]] as $slot => [$metal, $nano]) {
+        foreach ([2 => TimedBoostEffects::CIVIL_FREIGHT, 3 => TimedBoostEffects::LOOT_SHIELD, 4 => TimedBoostEffects::PVP_DEFENSE,
+            5 => TimedBoostEffects::PVP_ATTACK, 6 => TimedBoostEffects::QUEUE_SPEED, 7 => TimedBoostEffects::PRODUCTION, 1 => TimedBoostEffects::CIVIL_FUEL] as $slot => $effect) {
             $status = $rewards->status($player);
             self::assertSame($slot, $status['slot']);
-            self::assertSame(['metal' => $metal, 'nano' => $nano], $status['reward']);
+            self::assertSame($effect, $status['reward']['effect']);
             $this->setStocks($second, 1000.0, 1000.0);
             self::assertSame(['state' => 'claimed', 'slot' => $slot], $rewards->claim($player, $memberB, $second, $status['date']));
             $this->clock->sleep(86400);
@@ -103,23 +107,18 @@ final class DailyRewardTest extends WebTestCase
         self::assertSame(8, $this->em->getRepository(DailyRewardClaim::class)->count(['player' => $player]));
     }
 
-    public function testCapacityDoesNotPartiallyCreditAndDoesNotSpendNextSlot(): void
+    public function testFullColonyDoesNotBlockTheDailyReward(): void
     {
         [$universe, $planet] = $this->map('capacity-reward');
         $player = $this->player('Capacity', true);
         $this->select($player, $universe);
         $current = $player->currentPlayerUniverse;
         $rewards = self::getContainer()->get(DailyRewardService::class);
-        $this->setStocks($planet, 9700.0, 8000.0);
-        $blocked = $rewards->claim($player, $current, $planet, '2026-12-01');
-        self::assertSame(['state' => 'full', 'required' => ['metal' => 500, 'nano' => 250], 'missing' => ['metal' => 200]], $blocked);
-        self::assertSame(8000.0, $this->stock($planet, 'nano')->currentStock);
-        self::assertSame(0, $this->em->getRepository(DailyRewardClaim::class)->count());
-        $this->clock->sleep(60);
-        $this->setStocks($planet, 9500.0, 9750.0);
-        self::assertSame(['state' => 'claimed', 'slot' => 1], $rewards->claim($player, $current, $planet, '2026-12-02'));
+        $this->setStocks($planet, 10000.0, 10000.0);
+        self::assertSame(['state' => 'claimed', 'slot' => 1], $rewards->claim($player, $current, $planet, '2026-12-01'));
         self::assertSame(10000.0, $this->stock($planet, 'metal')->currentStock);
         self::assertSame(10000.0, $this->stock($planet, 'nano')->currentStock);
+        self::assertSame(1, $this->em->getRepository(PlayerBoost::class)->count(['playerUniverse' => $current, 'kind' => TimedBoostEffects::KIND]));
     }
 
     public function testRewardFormShowsDestinationAndUpdatesWithoutNewLogin(): void
@@ -131,7 +130,7 @@ final class DailyRewardTest extends WebTestCase
         $this->client->request('GET', '/recompense-quotidienne?colony='.$planet->id);
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Récompense quotidienne');
-        self::assertSelectorTextContains('section[aria-labelledby="daily-reward-heading"]', $planet->name);
+        self::assertSelectorTextContains('section[aria-labelledby="daily-reward-heading"]', 'Inventaire de votre empire');
         self::assertSelectorTextContains('section[aria-labelledby="daily-reward-heading"]', 'form-reward');
         $claimButtons = 'section[aria-labelledby="daily-reward-heading"] form button[type="submit"]';
         $describedClaim = $claimButtons.'[aria-describedby~="daily-reward-rules"][aria-describedby~="daily-reward-destination"]';
@@ -174,7 +173,7 @@ final class DailyRewardTest extends WebTestCase
         self::assertSame(0, $this->em->getRepository(DailyRewardClaim::class)->count());
     }
 
-    public function testConcurrentDailyClaimsUseOneReceiptAndOneDeposit(): void
+    public function testConcurrentDailyClaimsUseOneReceiptAndOneInventoryItem(): void
     {
         [$u, $planet] = $this->map('race-reward');
         $p = $this->player('RaceReward', true);
@@ -185,8 +184,9 @@ final class DailyRewardTest extends WebTestCase
         self::assertSame(['already', 'claimed'], $states);
         $this->em->clear();
         $fresh = $this->em->find(Planet::class, $planet->id);
-        self::assertSame(5500.0, $this->stock($fresh, 'metal')->currentStock);
-        self::assertSame(5250.0, $this->stock($fresh, 'nano')->currentStock);
+        self::assertSame(5000.0, $this->stock($fresh, 'metal')->currentStock);
+        self::assertSame(5000.0, $this->stock($fresh, 'nano')->currentStock);
+        self::assertSame(1, $this->em->getRepository(PlayerBoost::class)->count(['kind' => TimedBoostEffects::KIND]));
         self::assertSame(1, $this->em->getRepository(DailyRewardClaim::class)->count());
     }
 
@@ -207,6 +207,109 @@ final class DailyRewardTest extends WebTestCase
         sort($actual);
         self::assertSame([[5000.0, 0.0], [10000.0, 10000.0]], $actual);
         self::assertFalse($this->em->find(Player::class, $p->id)->firstPlanetStarterPending);
+    }
+
+    public function testInventoryActivationCannotStackAndExpiresAtBothBoundaries(): void
+    {
+        [$universe, $planet] = $this->map('timed-reward');
+        $player = $this->player('TimedReward', true);
+        $this->select($player, $universe);
+        $this->client->loginUser($player);
+        $this->client->request('GET', '/recompense-quotidienne?colony='.$planet->id);
+        $this->client->submitForm('Récupérer');
+
+        $membership = $player->currentPlayerUniverse;
+        $item = $this->em->getRepository(PlayerBoost::class)->findOneBy(['playerUniverse' => $membership, 'kind' => TimedBoostEffects::KIND]);
+        self::assertSame('available', $item->status);
+        $this->clock->sleep(TimedBoostEffects::SHELF_SECONDS - 1);
+        $this->client->getCookieJar()->clear();
+        $this->client->loginUser($player);
+        $this->client->request('GET', '/boosts');
+        self::assertResponseIsSuccessful();
+        $this->client->submitForm('Activer Moteurs économes');
+        self::assertResponseRedirects('/boosts', 303);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('#timed-boost-title + p + p', 'Moteurs économes');
+        $effects = self::getContainer()->get(TimedBoostEffects::class);
+        self::assertSame(0.8, $effects->factor($membership, TimedBoostEffects::CIVIL_FUEL));
+
+        $this->client->request('GET', '/recompense-quotidienne?colony='.$planet->id);
+        $this->client->submitForm('Récupérer');
+        self::assertResponseStatusCodeSame(303);
+        $this->client->request('GET', '/boosts');
+        self::assertSelectorNotExists('form[action*="/boosts/temporaires/"]');
+        $this->clock->sleep(TimedBoostEffects::ACTIVE_SECONDS);
+        self::assertSame(1.0, $effects->factor($membership, TimedBoostEffects::CIVIL_FUEL));
+        $this->client->request('GET', '/boosts');
+        self::assertSelectorExists('form[action*="/boosts/temporaires/"]');
+        $this->clock->sleep(TimedBoostEffects::SHELF_SECONDS - TimedBoostEffects::ACTIVE_SECONDS);
+        $this->client->getCookieJar()->clear();
+        $this->client->loginUser($player);
+        $this->client->request('GET', '/boosts');
+        self::assertSelectorNotExists('form[action*="/boosts/temporaires/"]');
+        self::assertSame(1, $this->em->getRepository(PlayerBoost::class)->count(['status' => 'expired']));
+    }
+
+    public function testTemporaryThroughputSchedulesActiveAndWaitingCommandsAtTheCorrectRate(): void
+    {
+        [$universe, $planet] = $this->map('timed-queue');
+        $player = $this->player('TimedQueue', true);
+        $this->select($player, $universe);
+        $membership = $player->currentPlayerUniverse;
+        $queues = self::getContainer()->get(QueueService::class);
+        $queues->add($membership, $planet, 'buildings', 'power_plant', 1, str_repeat('a', 32));
+        $queues->add($membership, $planet, 'buildings', 'power_plant', 1, str_repeat('b', 32));
+        [$first, $next] = $this->em->getRepository(QueueItem::class)->findBy(['planet' => $planet], ['id' => 'ASC']);
+        self::assertSame(120, $first->durationSeconds);
+        $nextNominal = $next->durationSeconds;
+        $firstToken = $first->dispatchToken;
+
+        $this->clock->sleep(20);
+        $this->activateFixture($player, TimedBoostEffects::QUEUE_SPEED);
+        self::assertSame(100, $first->durationSeconds, '20 s avant puis 100 s de travail en 80 s.');
+        self::assertNotSame($firstToken, $first->dispatchToken);
+        $this->clock->sleep(80);
+        $queues->complete($first->id, $firstToken);
+        self::assertNotNull($this->em->find(QueueItem::class, $first->id));
+        $queues->complete($first->id, $first->dispatchToken);
+        self::assertNotNull($next->startedAt);
+        self::assertSame((int) ceil($nextNominal / 1.25), $next->durationSeconds);
+    }
+
+    public function testProductionCatchupOnlyBoostsTheFiveHoursAndUpdatesProtectionDisplay(): void
+    {
+        [$universe, $planet] = $this->map('timed-production');
+        $player = $this->player('TimedProduction', true);
+        $this->select($player, $universe);
+        $this->setStocks($planet, 100, 100);
+        $resources = self::getContainer()->get(ResourceService::class);
+        $base = $resources->snapshot($planet)['metal'];
+        self::assertGreaterThan(0, $base['rate']);
+        $this->clock->sleep(3600);
+        $this->activateFixture($player, TimedBoostEffects::PRODUCTION);
+        self::assertEqualsWithDelta($base['rate'] * 1.15, $resources->snapshot($planet)['metal']['rate'], 1e-8);
+        $this->clock->sleep(6 * 3600);
+        $credit = $resources->snapshot($planet)['metal'];
+        self::assertEqualsWithDelta($base['rate'], $credit['rate'], 1e-8);
+        self::assertEqualsWithDelta(100 + $base['rate'] * (2 + 5 * 1.15) * 3600, $credit['stock'], 1e-4);
+        $this->activateFixture($player, TimedBoostEffects::LOOT_SHIELD);
+        $shield = $resources->snapshot($planet)['metal'];
+        self::assertEqualsWithDelta($base['protectedCapacity'] * 2, $shield['protectedCapacity'], 1e-7);
+    }
+
+    private function activateFixture(Player $player, string $effect): void
+    {
+        $item = new PlayerBoost();
+        $item->playerUniverse = $player->currentPlayerUniverse;
+        $item->sourceType = 'daily_reward';
+        $item->sourceKey = 'fixture-'.$effect;
+        $item->kind = TimedBoostEffects::KIND;
+        $item->payload = ['effect' => $effect];
+        $item->earnedAt = $this->clock->now();
+        $this->em->persist($item);
+        $this->em->flush();
+        self::getContainer()->get(\App\Service\Boost\TimedBoostUseService::class)
+            ->activate($item->playerUniverse, $item->id, bin2hex(random_bytes(16)));
     }
 
     private function player(string $name, bool $eligible, bool $verified = true): Player
