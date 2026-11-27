@@ -2328,3 +2328,10 @@ Les rapports privés de reconnaissance et de combat de la campagne rejoignent le
 ## Signaux de nouveauté dans les menus — 27 novembre 2026
 
 Le compteur Inventaire signale chaque nouvelle boîte, les bonus quotidiens et les récompenses placées en attente. La consultation du rapport d’un convoi et celle de sa boîte sont indépendantes. Les destinations existantes Boîtes et Récompenses en attente portent leur propre compteur de nouveautés. Le badge rouge de Flottes conduit aux décisions d’orbite en attente.
+
+## 27 novembre 2026 — Surplus au retour de la Bourse
+
+À la demande du propriétaire, un convoi commercial verse la part qui tient en entrepôt
+et remet le reliquat dans une boîte de ressources de l’empire. Un rappel suit la même
+règle pour le fret initial. La livraison concerne les retours réglés à compter du changement.
+Le fret déjà en soute reste accessible depuis les flottes à quai.

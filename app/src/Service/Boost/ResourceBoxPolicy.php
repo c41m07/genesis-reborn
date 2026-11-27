@@ -36,6 +36,22 @@ final class ResourceBoxPolicy
     public function validatePayload(array $payload): array
     {
         $format=$payload['format'] ?? '';
+        if ($format === 'market_overflow') {
+            $resources = $payload['resources'] ?? null;
+            if (!is_array($resources) || count($resources) !== 1) {
+                throw new \DomainException('Le surplus de Bourse doit contenir un seul matériau.');
+            }
+            $resource = array_key_first($resources);
+            $amount = $resources[$resource];
+            // La production continue peut laisser une place fractionnaire en entrepôt.
+            // Garder le reliquat exact, y compris lors de la relecture à l’ouverture.
+            if (!isset(\App\Service\Market\MarketPricing::WEIGHTS[$resource])
+                || (!is_float($amount) && !is_int($amount)) || !is_finite((float) $amount)
+                || $amount <= 0 || $amount > 9007199254740991) {
+                throw new \DomainException('Contenu de la boîte de surplus de Bourse invalide.');
+            }
+            return ['format' => $format, 'label' => 'Boîte de surplus de la Bourse', 'resources' => [$resource => $amount]];
+        }
         if ($format === 'convoy') {
             // Le devis peut dépasser les plafonds des cadeaux administratifs et contient des demi-unités.
             $resources = [];

@@ -109,7 +109,7 @@
                 <li><strong>Départ de la colonie</strong><span>Les cargos partent avec le fret.</span></li>
                 <li><strong>Échange à A:0:0</strong><span>Après 30 min, le lot est échangé à la station.</span></li>
                 <li><strong>Retour à la colonie</strong><span>30 min plus tard, les cargos arrivent.</span></li>
-                <li><strong>Déchargement</strong><span>Si le stock est plein, le surplus reste en soute.</span></li>
+                <li><strong>Déchargement</strong><span>Le surplus rejoint votre inventaire dans une boîte de ressources.</span></li>
             </ol>
         {% endif %}
         {% set statusLabels = {'outbound':'Vers la station', 'returning':'Vers la colonie', 'awaiting_colony':'Colonie de retour à choisir', 'completed':'Convoi revenu', 'abandoned':'Convoi abandonné'} %}
@@ -139,6 +139,7 @@
         {% else %}
             <p>Aucun convoi commercial pour le moment.</p>
         {% endfor %}
+        <p><a href="{{ path('app_inventory_boxes') }}">Voir mes boîtes de ressources</a></p>
         <p><a href="{{ path('app_fleet_holds') }}">Consulter et décharger les soutes des colonies</a></p>
     </section>
 </div>

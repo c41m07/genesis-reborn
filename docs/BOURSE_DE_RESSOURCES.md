@@ -51,7 +51,11 @@ en transit restent comptés dans le classement et la protection.
 À A:0:0, le reçu d’échange débite la station et y crédite le fret initial.
 Le joueur ne touche pas encore au lot reçu. Au retour réel, les cargos
 rentrent et le fret est déchargé jusqu’à la capacité de la colonie ; le
-surplus reste en soute. Avant l’échéance de l’aller, un rappel annule la
+surplus arrive dans une **Boîte de surplus de la Bourse**, dans l’inventaire
+du joueur de cet univers. Un entrepôt plein envoie le lot entier dans la boîte.
+Si l’inventaire est plein, la boîte rejoint les récompenses en attente.
+Le joueur peut ouvrir la boîte sur une de ses colonies disposant de la place
+nécessaire. Cette règle s’applique aussi au fret rendu après un rappel. Avant l’échéance de l’aller, un rappel annule la
 réservation et rend le fret initial après son trajet de retour. Si la
 colonie de retour est perdue, le convoi attend une nouvelle colonie du même
 empire puis reprend un trajet de 30 min. Il ne crédite jamais le conquérant.

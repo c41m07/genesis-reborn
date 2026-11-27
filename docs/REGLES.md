@@ -977,7 +977,7 @@ L’administration choisit la période de visibilité dans chaque univers. Les p
 
 ## Bourse de ressources
 
-La station commerciale A:0:0, ouverte par univers, échange les quatre matériaux sans électricité. Le lot voyage sur les propres cargos du joueur, protégés en mission commerciale. Il est échangé en station après 30 minutes, puis livré après les 30 minutes du retour. Les frais d’essai sont de 2 %. Vendredi à 9 h à Paris, les marchands réapprovisionnent jusqu’à la moitié des ventes réelles hebdomadaires de la station, sans dépasser la cible ni modifier les cours. [Détail du parcours et du stock](BOURSE_DE_RESSOURCES.md).
+La station commerciale A:0:0, ouverte par univers, échange les quatre matériaux sans électricité. Le lot voyage sur les propres cargos du joueur, protégés en mission commerciale. Il est échangé en station après 30 minutes, puis livré après les 30 minutes du retour. Au déchargement, le surplus est placé dans une boîte de ressources de l’empire, y compris après un rappel. Si l’inventaire est plein, la boîte attend une place. Les frais d’essai sont de 2 %. Vendredi à 9 h à Paris, les marchands réapprovisionnent jusqu’à la moitié des ventes réelles hebdomadaires de la station, sans dépasser la cible ni modifier les cours. [Détail du parcours et du stock](BOURSE_DE_RESSOURCES.md).
 
 ## Bonus quotidiens temporaires
 

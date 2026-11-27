@@ -8,6 +8,7 @@ use App\Entity\{Fleet, FleetShip, MarketTrade, OutboxMessage, Planet, PlayerUniv
 use App\Manager\GameManager;
 use App\Message\MarketConvoyDue;
 use App\Repository\{GameRepository, ResourceMarketRepository};
+use App\Service\Boost\BoostGrantService;
 use App\Service\Colony\{ActionGuard, ResourceService};
 use App\Service\Player\VacationCalendar;
 use Psr\Clock\ClockInterface;
@@ -22,6 +23,7 @@ final readonly class MarketConvoys
         private ActionGuard $guard,
         private ResourceService $resources,
         private MarketTerms $terms,
+        private BoostGrantService $grants,
         private VacationCalendar $vacations,
         private ClockInterface $clock,
     ) {
@@ -239,7 +241,7 @@ final readonly class MarketConvoys
             $this->manager->save($ship);
         }
         if (($overflow = $deposit['overflow'][$resource] ?? 0) > 0) {
-            $idle->cargo[$resource] = ($idle->cargo[$resource] ?? 0) + $overflow;
+            $this->grants->grantMarketOverflowLocked($member, $trade->id, $resource, $overflow);
         }
         if ($trade->recalled) {
             $usedOutbound = 2 * $trade->oneWayFuel - $trade->reservedFuel;

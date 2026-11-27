@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
-use App\Entity\{Fleet, FleetShip, MarketTrade, Planet, PlanetResource, Player, Universe};
+use App\Entity\{Fleet, FleetShip, MarketTrade, Planet, PlanetResource, Player, PlayerBoost, Universe};
 use App\Message\MarketConvoyDue;
 use App\MessageHandler\MarketConvoyDueHandler;
 use App\Repository\ResourceMarketRepository;
@@ -145,6 +145,7 @@ final class ResourceMarketTest extends WebTestCase
 
         $closed = $this->em->find(MarketTrade::class, $first->id);
         self::assertSame('completed', $closed->status);
+        self::assertSame(0, $this->em->getRepository(PlayerBoost::class)->count(['sourceType' => 'market_overflow']));
         $this->client->request('GET', '/flottes');
         self::assertResponseIsSuccessful();
         self::assertSelectorNotExists('[data-market-trade]');
@@ -209,8 +210,7 @@ final class ResourceMarketTest extends WebTestCase
         $this->clock->sleep(300);
         $convoys->processDue($trade->id, $oldToken);
         self::assertSame('returning', $trade->status);
-        // Une autre activité remplit le stockage avant l’arrivée. Le lot non
-        // déchargé doit rester disponible sur la flotte inactive.
+        // Un entrepôt déjà plein envoie tout le fret rappelé dans une seule boîte.
         $metal = $this->em->getRepository(PlanetResource::class)->findOneBy(['planet' => $planet, 'resourceType' => 'metal']);
         $metal->currentStock = $before + 10_000_000;
         $this->em->flush();
@@ -218,10 +218,68 @@ final class ResourceMarketTest extends WebTestCase
         $convoys->processDue($trade->id, $newToken);
         $convoys->processDue($trade->id, $newToken);
         self::assertSame(2, $transport->quantity);
-        self::assertEqualsWithDelta(300, $transport->fleet->cargo['metal'], 0.001);
+        self::assertArrayNotHasKey('metal', $transport->fleet->cargo);
+        $boxes = $this->em->getRepository(PlayerBoost::class)->findBy(['sourceType' => 'market_overflow']);
+        self::assertCount(1, $boxes);
+        self::assertSame($member->id, $boxes[0]->playerUniverse->id);
+        self::assertTrue($boxes[0]->giftUnread);
+        self::assertEquals(['metal' => 300], $boxes[0]->payload['resources']);
         self::assertGreaterThan(0, $transport->fleet->storedFuel);
         self::assertNull($trade->exchangedAt);
         self::assertSame([], self::getContainer()->get(ResourceMarketRepository::class)->find($member->universe)->pressure);
+    }
+
+    public function testPartialUnloadBoxesOnlyTheRemainderAndThePlayerCanRedeemIt(): void
+    {
+        [$player, $planet, $ship] = $this->fixture('MarketBox');
+        $member = $player->currentPlayerUniverse;
+        self::getContainer()->get(WeeklyMerchantDelivery::class)->configure($player, $member->universe, true, $this->targets());
+        $convoys = self::getContainer()->get(MarketConvoys::class);
+        $quote = $convoys->preview($member, $planet, [
+            'pay' => 'metal', 'receive' => 'nano', 'quantity' => 300, 'rank' => 'basic', 'cargos' => 1,
+        ]);
+        $convoys->depart($member, $planet, $quote, str_repeat('b', 32));
+        $trade = $this->em->getRepository(MarketTrade::class)->findOneBy(['membershipId' => $member->id]);
+        $handler = self::getContainer()->get(MarketConvoyDueHandler::class);
+        $outbound = $this->relay($trade->id)['message'];
+        $this->clock->sleep(1800);
+        $handler($outbound);
+        $message = $this->relay($trade->id)['message'];
+        $this->clock->sleep(1800);
+
+        // La production fractionnaire a laissé exactement 10,25 unités libres à la livraison.
+        $resources = self::getContainer()->get(ResourceService::class);
+        $capacity = $resources->capacity($planet, 'nano', []);
+        $stock = $resources->materialize($planet)['nano'];
+        $stock->currentStock = $capacity - 10.25;
+        $idle = $this->em->find(Fleet::class, $ship->fleet->id);
+        $idle->cargo = ['metal' => 8];
+        $this->em->flush();
+        $handler($message);
+        $handler($message);
+        $this->em->clear();
+
+        $boxes = $this->em->getRepository(PlayerBoost::class)->findBy(['sourceType' => 'market_overflow']);
+        self::assertCount(1, $boxes);
+        $remainder = $trade->receiveQuantity - 10.25;
+        self::assertEquals(['nano' => $remainder], $boxes[0]->payload['resources']);
+        self::assertEquals($capacity, $this->stock($planet->id, 'nano'));
+        self::assertEquals(['metal' => 8], $this->em->find(Fleet::class, $ship->fleet->id)->cargo);
+
+        // Ouvrir la boîte depuis l’inventaire réel après avoir libéré de la place.
+        $stock = $this->em->find(PlanetResource::class, $stock->id);
+        $stock->currentStock = 0;
+        $this->em->flush();
+        $this->client->loginUser($this->em->find(Player::class, $player->id));
+        $page = $this->client->request('GET', '/inventaire/boites');
+        self::assertResponseIsSuccessful();
+        $card = $page->filter('[data-box-id="'.$boxes[0]->id.'"]');
+        self::assertSame('Boîte de surplus de la Bourse', $card->filter('h3')->text());
+        $this->client->submit($card->selectButton('Ouvrir cette boîte')->form(['planet_id' => $planet->id]));
+        self::assertResponseRedirects('/inventaire/boites');
+        $this->client->followRedirect();
+        self::assertSelectorNotExists('[data-box-id="'.$boxes[0]->id.'"]');
+        self::assertEqualsWithDelta($remainder, $this->stock($planet->id, 'nano'), 0.000001);
     }
 
     public function testMerchantUsesClosedWeekPhysicalStockAndIsIdempotent(): void

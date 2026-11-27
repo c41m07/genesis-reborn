@@ -66,6 +66,18 @@ final class BoostGrantService
             ['format' => 'convoy', 'resources' => $resources]);
     }
 
+    /** Le dépôt en entrepôt et la boîte partagent la transaction du retour commercial. */
+    public function grantMarketOverflowLocked(PlayerUniverse $membership, int $tradeId, string $resource, float $amount): void
+    {
+        $created = $this->grant($membership, 'market_overflow', 'market-overflow-'.$tradeId, false,
+            ['format' => 'market_overflow', 'resources' => [$resource => $amount]]);
+        if (!$created) {
+            // Un retour déjà terminé est écarté par le jeton avant le dépôt.
+            // Une boîte préexistante à ce stade impose d’annuler aussi le crédit en entrepôt.
+            throw new \LogicException('Une boîte de surplus existe déjà pour ce convoi.');
+        }
+    }
+
     public function awardGuildProject(PlayerUniverse $membership,int $definitionId): bool
     {
         if($definitionId<1) throw new \DomainException('Modèle de projet invalide.');
