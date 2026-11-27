@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Integration;
 
 use App\Entity\{Guild, GuildHall, Planet, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
-use App\Entity\{Fleet, FleetFuelExpense, FleetShip, GuildDockOrder, GuildHallBuilding, GuildHallConvoy, GuildHallStock, OutboxMessage, PlanetResource};
+use App\Entity\{Fleet, FleetFuelExpense, FleetShip, GuildAtelierStock, GuildDockOrder, GuildHallBuilding, GuildHallConvoy, GuildHallStock, OutboxMessage, PlanetResource};
 use App\Message\{FleetArrived, GuildDockOrderDue, GuildHallConstructionDue};
 use App\MessageHandler\{FleetArrivedHandler, GuildDockOrderDueHandler, GuildHallConstructionDueHandler};
 use App\Repository\GuildHallRepository;
@@ -365,6 +365,101 @@ final class GuildHallTest extends KernelTestCase
         } catch (\DomainException $exception) {
             self::assertSame('Convoi inaccessible.', $exception->getMessage());
         }
+    }
+
+    #[DataProvider('atelierDonationArrivals')]
+    public function testHallShipDonationOnlyTransfersAfterAnAcceptedArrival(bool $accept): void
+    {
+        $clock = new MockClock('now', new \DateTimeZone('UTC'));
+        $container = self::getContainer();
+        $container->set('clock', $clock);
+        $container->set(GuildHallScheduleProvider::class, new GuildHallScheduleProvider(
+            '{"levels":{"warehouse":{"1":{"cost":{"metal":15},"duration":60}},"atelier":{"1":{"cost":{"metal":25},"duration":60}}},"capacities":{"1":{"metal":100}}}',
+        ));
+        [$owner, $origin, $guild] = $this->guild('AtelierDonor', 'ATD');
+        $hallService = GuildHallFixture::enable($container);
+        $hall = $hallService->contribute($owner, $guild->id, $origin->id, 0, ['hydrogen' => 32]);
+        $hall = $hallService->place($owner, $guild->id, $origin->solarSystem->id, $hall->revision);
+        $hallId = $hall->id;
+        // Fixture de construction uniquement : le départ et le règlement passent par les services.
+        $atelier = new GuildHallBuilding();
+        $atelier->hall = $hall;
+        $atelier->slug = GuildHallBuilding::ATELIER;
+        $atelier->level = 1;
+        $this->em->persist($atelier);
+        $idle = $this->em->getRepository(Fleet::class)->findOneBy([
+            'playerUniverse' => $owner, 'homePlanet' => $origin, 'status' => 'idle',
+        ]);
+        if ($idle === null) {
+            $idle = new Fleet();
+            $idle->playerUniverse = $owner;
+            $idle->homePlanet = $origin;
+            $this->em->persist($idle);
+        }
+        $ship = new FleetShip();
+        $ship->fleet = $idle;
+        $ship->slug = 'transport';
+        $ship->quantity = 2;
+        $this->em->persist($ship);
+        $this->em->flush();
+        $idleId = $idle->id;
+
+        $departure = $container->get(GuildHallConvoyDeparture::class);
+        $ships = ['transport' => ['basic' => 1]];
+        $devis = $departure->preview($owner, $guild->id, $hallId, $origin->id, $ships, 1.0, [], shipDonation: true);
+        self::assertGreaterThan(0, $devis['total_fuel']);
+        $convoy = $departure->send(
+            $owner, $guild->id, $hallId, $origin->id, $ships, 1.0, [],
+            str_repeat('a', 32), $devis['fingerprint'], shipDonation: true,
+        );
+        self::assertInstanceOf(GuildHallConvoy::class, $convoy);
+        self::assertNull($this->em->find(GuildAtelierStock::class, $hallId));
+        self::assertSame(1, $ship->quantity);
+        $id = $convoy->fleet->id;
+        $outbound = new FleetArrived($id, $convoy->outboundToken);
+        if (!$accept) {
+            $this->em->remove($atelier);
+            $this->em->flush();
+        }
+        $handler = $container->get(FleetArrivedHandler::class);
+        $clock->sleep($convoy->fleet->travelSeconds + 1);
+        $handler($outbound);
+        $this->em->clear();
+        $handler($outbound);
+        $this->em->clear();
+
+        $fleet = $this->em->find(Fleet::class, $id);
+        $receipt = $this->em->find(GuildHallConvoy::class, $id);
+        self::assertNotNull($receipt->settledAt);
+        if ($accept) {
+            self::assertSame('completed', $fleet->status);
+            self::assertSame([], $fleet->cargo);
+            self::assertEqualsWithDelta(0.0, $fleet->reservedFuel, 0.000001);
+            self::assertSame($ships, $receipt->deliveredShips);
+            self::assertSame($ships, $this->em->find(GuildAtelierStock::class, $hallId)->ships);
+            self::assertSame(0, $this->em->getRepository(FleetShip::class)->count(['fleet' => $fleet]));
+            self::assertSame(1, $this->em->getRepository(FleetFuelExpense::class)->count(['fleetId' => $id]));
+        } else {
+            self::assertSame('returning', $fleet->status);
+            self::assertNull($receipt->deliveredShips);
+            self::assertNull($this->em->find(GuildAtelierStock::class, $hallId));
+            $clock->sleep($fleet->travelSeconds + 1);
+            $return = new FleetArrived($id, $fleet->dispatchToken);
+            $handler($return);
+            $this->em->clear();
+            $handler($return);
+            $this->em->clear();
+            self::assertSame('completed', $this->em->find(Fleet::class, $id)->status);
+            self::assertSame(2, $this->em->getRepository(FleetFuelExpense::class)->count(['fleetId' => $id]));
+        }
+        $idle = $this->em->find(Fleet::class, $idleId);
+        self::assertSame($accept ? 1 : 2, $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $idle, 'slug' => 'transport'])->quantity);
+    }
+
+    public static function atelierDonationArrivals(): iterable
+    {
+        yield 'reçu par l’Atelier' => [true];
+        yield 'retour sans Atelier disponible' => [false];
     }
 
     /** @return list<FleetArrived> */

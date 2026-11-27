@@ -21,6 +21,7 @@ final readonly class GuildHallConvoyWorker
         private EntityManagerInterface $em,
         private GuildHallScheduleProvider $schedules,
         private GuildHallConvoyArrival $arrival,
+        private GuildAtelierDonations $donations,
         private GuildHallConvoyReturn $return,
         private FleetDispatch $dispatch,
         private FleetNavigation $navigation,
@@ -80,7 +81,15 @@ final readonly class GuildHallConvoyWorker
         // Départ = réservation ; l’Observatoire ne compte que les consommations réelles.
         $this->fuelExpenses->burnLocked($fleet, $oneWay, 'outbound');
         $fleet->reservedFuel -= $oneWay;
-        if ($schedule === null) {
+        if ($receipt->shipDonation) {
+            if ($schedule !== null && $this->donations->acceptLocked($receipt, $hall, $token, $now)) {
+                $this->notifications->enqueue($fleet->playerUniverse, 'Vos vaisseaux ont rejoint le stock de l’Atelier.', journalKind: 'arrival');
+
+                return;
+            }
+            $receipt->settle($token, $now, []);
+            $this->notifications->enqueue($fleet->playerUniverse, 'Don non livré : vos vaisseaux reviennent à leur colonie.', journalKind: 'arrival');
+        } elseif ($schedule === null) {
             // Pas de dépôt si la guilde a disparu, si le membre l’a quittée ou
             // si les opérations ne sont plus configurées. Le fret revient intact.
             $receipt->settle($token, $now, []);

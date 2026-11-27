@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'guild_hall_building_slot', columns: ['hall_id', 'slug'])]
 final class GuildHallBuilding
 {
+    public const ATELIER = 'atelier';
     public const DOCK = 'dock';
     public const WAREHOUSE = 'warehouse';
 

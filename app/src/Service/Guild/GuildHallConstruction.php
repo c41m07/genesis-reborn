@@ -36,7 +36,7 @@ final readonly class GuildHallConstruction
         array $cost,
         int $durationSeconds,
     ): GuildHallBuilding {
-        if (!in_array($slug, [GuildHallBuilding::WAREHOUSE, GuildHallBuilding::DOCK], true)
+        if (!in_array($slug, [GuildHallBuilding::WAREHOUSE, GuildHallBuilding::DOCK, GuildHallBuilding::ATELIER], true)
             || $durationSeconds < 1 || $durationSeconds > 2147483647 || array_sum($cost) <= 0) {
             throw new \DomainException('Le barème de ce chantier est indisponible.');
         }

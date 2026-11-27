@@ -32,6 +32,13 @@ final class GuildHallConvoy
     #[ORM\Column(type: 'json')]
     public array $delivered = [];
 
+    #[ORM\Column(options: ['default' => false])]
+    public bool $shipDonation = false;
+
+    /** @var array<string,array<string,int>>|null */
+    #[ORM\Column(type: 'json', nullable: true)]
+    public ?array $deliveredShips = null;
+
     public function scheduleOutbound(string $previousToken, string $token): void
     {
         if ($token === '' || $this->settledAt !== null || !hash_equals($this->outboundToken, $previousToken)) {
