@@ -413,6 +413,8 @@ Après modification d’un service consommé par les processus persistants locau
 docker compose --env-file .env.local restart worker simulation-worker relay notifier
 ```
 
+Chaque consommateur publie son propre témoin de santé. Docker vérifie séparément celui des missions et celui des simulations de combat.
+
 Compiler avant les tests navigateur : la compilation remplace les fichiers de `app/public/build/`. Les dépendances et résultats générés (`app/vendor/`, `app/node_modules/`, `app/var/`, `app/public/build/`, `app/test-results/`, `app/playwright-report/`, `output/` et les rapports de couverture) sont ignorés par Git. Les captures conservées comme documentation restent dans `docs/ui-ux/captures/`.
 
 ## Base de données et données de développement

@@ -193,6 +193,8 @@ Ne pas appliquer au serveur les valeurs d’exemple ou les résultats des instan
 jetables comme s’ils avaient été vérifiés sur l’Alpha. Les essais perturbateurs
 restent décrits dans les [scénarios isolés](EXPLOITATION.md).
 
+Le contrôle de santé du consommateur de simulations vérifie son propre fichier `simulation-worker.heartbeat`. Le consommateur des missions utilise `worker.heartbeat`.
+
 ## Protection de dev
 
 Le 27 novembre 2026, le propriétaire a demandé de retirer la protection de `dev` pour permettre les push directs. La branche ne déclenche pas de CI sur push. Pour rétablir la protection précédente, imposer une PR avant fusion et les cinq
