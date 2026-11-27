@@ -161,12 +161,14 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
   await expect(station).toBeVisible();
   const sprite = station.locator('img');
   await expect.poll(() => sprite.evaluate(image => image.naturalWidth)).toBe(192);
-  const detail = page.locator('#gv2-station-detail');
+  const detail = station.locator('.gv2-station-label');
+  await expect(detail).toBeHidden();
   const rest = await sprite.boundingBox();
   expect(rest.width).toBeLessThanOrEqual(19);
   expect((await station.boundingBox()).width).toBeGreaterThanOrEqual(44);
   await sprite.hover();
-  await expect(detail).toContainText('aucune case planétaire');
+  await expect(detail).toBeVisible();
+  await expect(detail).toHaveText('Station pirate');
   const enlarged = await sprite.boundingBox();
   expect(enlarged.width).toBeGreaterThan(rest.width);
   expect(enlarged.width).toBeLessThanOrEqual(23);

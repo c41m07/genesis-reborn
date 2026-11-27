@@ -607,7 +607,7 @@ La migration de compatibilité `Version20261111173000` réconcilie les bases aya
 Dans le simulateur, les tableaux des deux camps affichent toutes les lignes de l’étape en cours. Dans la vue générale, « Détail des points » affiche la répartition au-dessus du résumé de la colonie.
 
 Carte V2 : un anneau vert épais entoure les systèmes où vous possédez une planète.
-Au survol, le tag de la guilde qui y possède un Hall précède les coordonnées, par exemple `[TT] A:43`. Dans la vue système, une flèche suit le segment local du trajet vers la planète ou la sortie du système lorsque la progression est connue. Le Hall ouvre la présentation de sa guilde et la station pirate repérée ouvre la campagne. La fiche
+Au survol, le tag de la guilde qui y possède un Hall précède les coordonnées, par exemple `[TT] A:43`. Dans la vue système, une flèche suit le segment local du trajet vers la planète ou la sortie du système lorsque la progression est connue. Les trois stations affichent leur nom au survol ou au focus clavier. La Bourse a sa propre illustration au centre de la galaxie. Le Hall ouvre la présentation de sa guilde et la station pirate repérée ouvre la campagne. La fiche
 planète propose un retour à son système, au clavier et au toucher ; sa croix
 garde le retour galaxie. Dans les filtres de Galaxie, « Afficher les flottes de guilde »
 montre les missions ordinaires des membres de votre guilde, sondes comprises,
