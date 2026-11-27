@@ -1,5 +1,9 @@
 # Design system — Genesis Reborn
 
+## Tableaux de flotte
+
+La préparation de mission, le choix de l’escorte pirate et la page Flotte de l’empire partagent le tableau Élément / Basique / Intermédiaire / Supérieur. Chaque groupe reprend une catégorie du chantier spatial. Les familles sont triées par puissance croissante à partir du profil de base de l’univers. La valeur de tri est la moyenne de la coque, du bouclier et des dégâts d’une salve (attaque multipliée par le nombre moyen de tirs). Les égalités suivent l’identifiant de famille. Le récapitulatif cumule les unités possédées, y compris les satellites fixes, les flottes en vol, les cargos de Bourse et les escortes pirates encore réservées.
+
 ## Ordre des champs de ressources
 
 - Le bandeau, la saisie du fret, les dons (Hall et projets collectifs) et les réglages administratifs correspondants présentent les ressources dans l’ordre de `ResourceService::DISPLAY_ORDER` : métal, nano, hydrogène, antimatière, électricité. L’ordre du DOM sert aussi à la navigation au clavier et n’est pas modifié en CSS. Les prix, les détails unitaires et les ressources manquantes des quatre catalogues reprennent ce même ordre, y compris après recalcul de la quantité.

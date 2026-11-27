@@ -177,6 +177,7 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     const escortTable = dossier.getByRole('table', { name: 'Choisir l’escorte', exact: true });
     await expect(escortTable.getByRole('columnheader')).toHaveText(['Élément', 'Basique', 'Intermédiaire', 'Supérieur']);
     await expect(escortTable.getByText(/Satellite/)).toHaveCount(0);
+    await expect(escortTable.locator('th[scope=rowgroup]')).toContainText(['Légers', 'Bombardiers']);
     const bomberIcon = escortTable.getByRole('rowheader', { name: /Bombardier/ }).locator('svg');
     await expect(bomberIcon).toBeVisible();
     await expect(bomberIcon.locator('use')).toHaveAttribute('href', /#bomber$/);
