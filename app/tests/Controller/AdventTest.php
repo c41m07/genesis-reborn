@@ -240,7 +240,9 @@ final class AdventTest extends WebTestCase
         };
         self::assertSame(2, $count());
         $this->client->request('GET', '/inventaire/boites');
-        self::assertSelectorTextContains('.inventory-gift-notice', '2 nouveaux cadeaux');
+        self::assertSelectorTextContains('.inventory-gift-notice', '1 nouveau cadeau');
+        self::assertSelectorExists('[data-page="boxes"][hidden]');
+        self::assertSelectorTextContains('#advent-box-1 .inventory-new-label', 'Nouveau');
         $this->client->submitForm('Marquer les cadeaux comme vus');
         self::assertResponseRedirects('/inventaire/boites', 303);
         self::assertSame(0, $count());

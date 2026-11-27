@@ -47,6 +47,16 @@ final readonly class PlayerBoostGiftNoticeSource implements InventoryGiftNoticeS
         );
     }
 
+    public function acknowledgeBoxes(PlayerUniverse $membership, array $ids): void
+    {
+        $this->connection->executeStatement(
+            "UPDATE player_boost SET gift_unread = 0 WHERE id IN (:ids)
+             AND kind = 'resource_box' AND status = 'available' AND ".self::UNREAD_FILTER,
+            $this->parameters($membership) + ['ids' => $ids],
+            ['ids' => \Doctrine\DBAL\ArrayParameterType::INTEGER],
+        );
+    }
+
     private function parameters(PlayerUniverse $membership): array
     {
         // Le badge tient compte de l’échéance même avant la prochaine visite de l’inventaire.

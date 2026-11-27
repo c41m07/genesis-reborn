@@ -36,6 +36,18 @@ final readonly class InventoryGiftNotices
         return compact('count', 'through', 'boxes', 'pending') + ['boosts' => $count - $boxes - $pending];
     }
 
+    /** @param array<string, list<int>> $displayedIds */
+    public function acknowledgeDisplayedBoxes(PlayerUniverse $membership, array $displayedIds): void
+    {
+        // Une attribution survenue après la lecture des cartes doit encore être signalée.
+        foreach ($this->sources as $source) {
+            $ids = $displayedIds[$source->key()] ?? [];
+            if ($ids !== []) {
+                $source->acknowledgeBoxes($membership, $ids);
+            }
+        }
+    }
+
     /** @param array<string, int> $through Limites authentifiées tirées du rendu initial. */
     public function acknowledge(PlayerUniverse $membership, array $through, bool $single = false): void
     {
