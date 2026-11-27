@@ -49,18 +49,43 @@ test('Récompense quotidienne : kit T1, retrait au clavier, stockage plein et ac
     await page.getByRole('link', { name: 'Actualiser la récompense' }).click();
     await expect(page.getByText('Votre compte a déjà récupéré son lot du jour.', { exact: false })).toBeVisible();
     expect(receipts()).toBe(1);
-    const giftCount = async () => {
-        const response = await page.request.get('/messages/non-lus');
-        expect(response.ok()).toBe(true);
+    const giftCount = () => page.evaluate(async () => {
+        // Le navigateur partage la session et résout le sous-domaine local du jeu isolé.
+        const response = await fetch('/messages/non-lus');
+        if (!response.ok) throw new Error('Le compteur des cadeaux est indisponible.');
         return (await response.json()).inventoryGiftCount;
-    };
+    });
     expect(await giftCount()).toBe(1);
     await page.goto('/boosts');
     await expect(page.locator('.inventory-gift-notice')).toContainText('1 nouveau cadeau');
     await page.getByRole('button', { name: 'Marquer les cadeaux comme vus' }).click();
     await expect(page.locator('.inventory-gift-notice')).toHaveCount(0);
     expect(await giftCount()).toBe(0);
+    const bonus = page.locator('.header-timed-boost');
+    await expect(bonus).toHaveCount(0);
     await page.getByRole('button', { name: 'Activer Moteurs économes' }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Bonus actif pendant cinq heures' })).toBeVisible();
     await expect(page.getByText('est actif jusqu’au', { exact: false })).toContainText('Moteurs économes');
+    await expect(bonus).toContainText('Carburant civil −20 %');
+    await page.goto('/planetes/' + planetId);
+    for (const width of [1920, 1280, 1024, 768, 541, 390, 320]) {
+        await page.setViewportSize({ width, height: 900 });
+        const guide = await page.locator('.header-technology-goal').boundingBox();
+        const frame = await bonus.boundingBox();
+        expect(frame.x).toBeGreaterThanOrEqual(guide.x + guide.width - 1);
+        expect(frame.y).toBeLessThan(guide.y + guide.height);
+        expect(frame.y + frame.height).toBeGreaterThan(guide.y);
+        expect(await page.locator('.topbar').evaluate(bar => bar.scrollWidth <= bar.clientWidth + 1)).toBe(true);
+    }
+    // Approcher l’échéance de cette seule attribution dans la base éphémère.
+    runIsolatedSql(project, `UPDATE player_boost SET used_at=UTC_TIMESTAMP() - INTERVAL 5 HOUR + INTERVAL 8 SECOND
+        WHERE player_universe_id=(SELECT owner_id FROM planet WHERE id=${planetId}) AND kind='timed_boost' AND status='used'`);
+    await page.reload();
+    const timer = bonus.getByRole('timer');
+    await expect(timer).toBeVisible();
+    const first = await timer.textContent();
+    await expect(timer).not.toHaveText(first);
+    await expect(bonus).toBeHidden({timeout:12000});
+    await page.reload();
+    await expect(bonus).toHaveCount(0);
 });

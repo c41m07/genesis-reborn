@@ -25,17 +25,17 @@ final readonly class TimedBoostEffects
 
     public function __construct(private GameRepository $repo, private ClockInterface $clock) {}
 
-    /** @return list<array{effect:string,label:string,description:string,factor:float}> */
+    /** @return list<array{effect:string,label:string,short_effect:string,description:string,factor:float}> */
     public static function schedule(): array
     {
         return [
-            ['effect' => self::CIVIL_FUEL, 'label' => 'Moteurs économes', 'description' => '−20 % de carburant de trajet pour les missions civiles concernées.', 'factor' => 0.80],
-            ['effect' => self::CIVIL_FREIGHT, 'label' => 'Soutes modulaires', 'description' => '+20 % de capacité de fret pour les transports et stationnements.', 'factor' => 1.20],
-            ['effect' => self::LOOT_SHIELD, 'label' => 'Coffres renforcés', 'description' => 'Double la part des entrepôts protégée du pillage : de 10 % à 20 % avec les règles habituelles.', 'factor' => 2.00],
-            ['effect' => self::PVP_DEFENSE, 'label' => 'Défense renforcée', 'description' => '+10 % de dégâts en défense contre un autre joueur.', 'factor' => 1.10],
-            ['effect' => self::PVP_ATTACK, 'label' => 'Offensive renforcée', 'description' => '+10 % de dégâts en attaque contre un autre joueur.', 'factor' => 1.10],
-            ['effect' => self::QUEUE_SPEED, 'label' => 'Rythme accéléré', 'description' => '+25 % de travail des files tant que le boost est actif.', 'factor' => 1.25],
-            ['effect' => self::PRODUCTION, 'label' => 'Production renforcée', 'description' => '+15 % de production brute dans vos colonies.', 'factor' => 1.15],
+            ['effect' => self::CIVIL_FUEL, 'label' => 'Moteurs économes', 'short_effect' => 'Carburant civil −20 %', 'description' => '−20 % de carburant de trajet pour les missions civiles concernées.', 'factor' => 0.80],
+            ['effect' => self::CIVIL_FREIGHT, 'label' => 'Soutes modulaires', 'short_effect' => 'Fret civil +20 %', 'description' => '+20 % de capacité de fret pour les transports et stationnements.', 'factor' => 1.20],
+            ['effect' => self::LOOT_SHIELD, 'label' => 'Coffres renforcés', 'short_effect' => 'Part protégée ×2', 'description' => 'Double la part des entrepôts protégée du pillage : de 10 % à 20 % avec les règles habituelles.', 'factor' => 2.00],
+            ['effect' => self::PVP_DEFENSE, 'label' => 'Défense renforcée', 'short_effect' => 'Dégâts en défense JcJ +10 %', 'description' => '+10 % de dégâts en défense contre un autre joueur.', 'factor' => 1.10],
+            ['effect' => self::PVP_ATTACK, 'label' => 'Offensive renforcée', 'short_effect' => 'Dégâts en attaque JcJ +10 %', 'description' => '+10 % de dégâts en attaque contre un autre joueur.', 'factor' => 1.10],
+            ['effect' => self::QUEUE_SPEED, 'label' => 'Rythme accéléré', 'short_effect' => 'Vitesse des files +25 %', 'description' => '+25 % de travail des files tant que le boost est actif.', 'factor' => 1.25],
+            ['effect' => self::PRODUCTION, 'label' => 'Production renforcée', 'short_effect' => 'Production brute +15 %', 'description' => '+15 % de production brute dans vos colonies.', 'factor' => 1.15],
         ];
     }
 
@@ -72,6 +72,20 @@ final readonly class TimedBoostEffects
         return $this->repo->timedBoostWindows(
             $membership, $from->setTimestamp($from->getTimestamp() - self::ACTIVE_SECONDS), $to, $effect,
         );
+    }
+
+    /**
+     * Le bandeau et l’inventaire utilisent la même fenêtre, fin exclue.
+     * @return array{effect:string,label:string,short_effect:string,description:string,factor:float,ends_at:\DateTimeImmutable,server_now:\DateTimeImmutable}|null
+     */
+    public function activeBonus(PlayerUniverse $membership): ?array
+    {
+        $now = $this->clock->now();
+        $active = $this->windows($membership, $now, $now)[0] ?? null;
+        if ($active === null) {
+            return null;
+        }
+        return self::definition($active->operationType) + ['ends_at' => self::endsAt($active), 'server_now' => $now];
     }
 
     public function factor(?PlayerUniverse $membership, string $effect, ?\DateTimeImmutable $at = null): float

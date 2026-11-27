@@ -373,3 +373,7 @@ du retrait des archives. Le formulaire reste utilisable sans JavaScript ; la not
 d’aide précise l’effet. Les commandes se replient sous le rapport sur mobile.
 Seule la visibilité personnelle change : la fiche du rapport, les marqueurs
 administratifs et la visibilité des autres joueurs ne sont pas modifiés en base.
+
+## Bonus temporaire dans l’en-tête
+
+À droite de « Guide techno », le cadre violet indique l’effet chiffré du bonus actif et le temps restant. Le compteur reste silencieux pour les lecteurs d’écran pendant le décompte. Sur petit écran, le guide et le bonus partagent une ligne pour que les deux restent lisibles. À l’expiration, la barre reprend sa disposition habituelle.

@@ -81,10 +81,7 @@ final class InventoryPageView
                 'available_colonies' => $this->repo->all(Planet::class, ['owner' => $membership], ['id' => 'ASC']),
             ];
         }
-        $now = $this->clock->now();
-        $active = $this->timedEffects->windows($membership, $now, $now)[0] ?? null;
-        $data['active_timed_boost'] = $active === null ? null : TimedBoostEffects::definition($active->operationType)
-            + ['ends_at' => TimedBoostEffects::endsAt($active)];
+        $data['active_timed_boost'] = $this->timedEffects->activeBonus($membership);
         $data['timed_boosts'] = array_map(
             static fn ($item) => TimedBoostEffects::definition($item->payload['effect'])
                 + ['id' => $item->id, 'expires_at' => TimedBoostEffects::expiresAt($item)],

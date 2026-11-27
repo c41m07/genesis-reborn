@@ -107,7 +107,19 @@
 {% set showTechnologyGoal = app.user and chrome.membership and chrome.planet and chrome.planet.owner and chrome.planet.owner.id == chrome.membership.id %}
 {% set showEventDrawer = app.user and chrome.membership and chrome.events is not empty %}
 <header class="topbar{{ entryPublicPage ? ' entry-public-header' : '' }}">{% if app.user %}<button class="mobile-menu" data-navigation-target="toggle" data-action="navigation#toggle" aria-controls="command-navigation" aria-expanded="false" aria-label="Ouvrir le menu"{% if chrome.membership %} aria-describedby="report-unread-description guild-recruitment-description inventory-gift-description"{% endif %}>{{ ui.icon('menu') }}<span class="menu-unread-dot" data-menu-notifications-target="badge" role="img" aria-label="Notifications à consulter dans le menu" {% if not chrome.unreadMessages|default(0) and not unreadPatchNote and not chrome.journal.unreadCount|default(0) %}hidden{% endif %}></span>{% if chrome.membership %}{% include 'ui/menu_special_notices.html.twig' with {pendingRecruitment: pendingRecruitment, giftCount: giftNotices.count, unreadReports: unreadReports} only %}{% endif %}</button><a class="universe-context" href="{{ path('app_universes') }}" aria-label="Ouvrir les univers · {{ chrome.membership?chrome.membership.universe.name:'Centre de commandement' }}" {% if route=='app_universes' %}aria-current="page"{% endif %}>{{ ui.icon('universe') }}<span>{{ chrome.membership?chrome.membership.universe.name:'Centre de commandement' }}</span><span class="connection-dot"></span></a>
-{% if showTechnologyGoal %}{% include 'ui/header_technology_goal.html.twig' with {passive: campaignPage} %}{% endif %}
+{% if showTechnologyGoal %}
+    {% include 'ui/header_technology_goal.html.twig' with {passive: campaignPage} %}
+    {% set bonus = active_timed_boost is defined ? active_timed_boost : active_timed_bonus(chrome.membership) %}
+    {% if bonus %}
+        <div class="header-timed-boost" title="{{ bonus.description }}" data-controller="countdown"
+             data-countdown-end-value="{{ bonus.ends_at|date('c') }}" data-countdown-now-value="{{ bonus.server_now|date('c') }}"
+             data-countdown-hide-on-end-value="true" data-countdown-refresh-value="false">
+            <strong><span class="visually-hidden">Bonus actif · </span>{{ bonus.short_effect }}</strong>
+            <span role="timer" aria-live="off"><span class="visually-hidden">Temps restant · </span><span data-countdown-target="time">{{ duration_label(bonus.ends_at.timestamp - bonus.server_now.timestamp) }}</span></span>
+            <noscript>Fin à {{ bonus.ends_at|date('H:i', preferences.timezone) }}</noscript>
+        </div>
+    {% endif %}
+{% endif %}
 {% if chrome.adventUntil|default(null) %}
 <div class="event-drawer-wrap topbar-season">
     {% if showEventDrawer %}{% include 'ui/event_drawer.html.twig' %}{% endif %}

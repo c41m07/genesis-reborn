@@ -160,3 +160,43 @@ body[data-theme=light] .technology-tree{--tech-met:#376647;--tech-missing:#79562
 @media (max-width: 740px) {
     .topbar .advent-shortcut { font-size: 11px; }
 }
+
+.topbar > .header-timed-boost {
+    display: grid;
+    align-content: center;
+    gap: 1px;
+    min-width: 0;
+    max-width: 15rem;
+    padding: 3px 8px;
+    border: 1px solid #9676c5;
+    border-radius: 6px;
+    background: #302344;
+    color: #eedfff;
+    font-size: 12px;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+}
+.topbar > .header-timed-boost[hidden] { display: none; }
+[data-theme="light"] .header-timed-boost { background: #f3ebff; color: #502578; }
+@media (max-width: 1250px) {
+    .topbar > .header-timed-boost { grid-area: boost; }
+    .authenticated .topbar:has(> .header-timed-boost:not([hidden])) {
+        grid-template-columns: auto minmax(0,1fr) minmax(0,auto) auto;
+        grid-template-areas: "universe guide boost events" "tools tools tools tools";
+    }
+}
+@media (min-width: 741px) and (max-width: 1020px) {
+    .authenticated .topbar:has(> .header-timed-boost:not([hidden])) {
+        grid-template-columns: auto auto minmax(0,1fr) auto auto;
+        grid-template-areas: "menu universe guide boost events" "tools tools tools tools tools";
+    }
+}
+@media (max-width: 540px) {
+    /* Réserver une ligne commune au guide et au bonus, même pendant les événements saisonniers. */
+    .authenticated[data-theme]:has(.topbar > .header-timed-boost:not([hidden])) { --topbar-height: 146px; }
+    .authenticated .topbar:has(> .header-timed-boost:not([hidden])) {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        grid-template-areas: "universe events" "guide boost" "tools tools";
+        grid-template-rows: 44px 44px 44px;
+    }
+}
