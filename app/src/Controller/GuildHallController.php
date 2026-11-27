@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\{Guild, PlayerUniverse};
+use App\Entity\{Guild, GuildHallBuilding, PlayerUniverse};
 use App\Repository\{GameRepository, GuildHallRepository};
-use App\Service\Guild\{GuildHallFunding, GuildHallService};
+use App\Service\Guild\{GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyView, GuildHallFunding, GuildHallService, GuildHallWarehouseView};
 use App\Service\Player\{DiplomacyAccessPolicy, RelationResolver, VacationCalendar};
 use App\Service\Universe\UniverseContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,7 +24,14 @@ final class GuildHallController extends AbstractController
     }
 
     #[Route('/guildes/hall', name: 'app_guild_hall', methods: ['GET'])]
-    public function show(Request $request, GameRepository $game, DiplomacyAccessPolicy $policy, VacationCalendar $vacations): Response
+    public function show(
+        Request $request,
+        GameRepository $game,
+        DiplomacyAccessPolicy $policy,
+        VacationCalendar $vacations,
+        GuildHallWarehouseView $warehouse,
+        GuildHallConvoyView $convoy,
+    ): Response
     {
         [$actor, $guild, $target] = $this->contextForHall();
         $hall = $this->halls->forGuild($guild);
@@ -44,8 +51,14 @@ final class GuildHallController extends AbstractController
         $after = max(0, $request->query->getInt('after'));
         $sites = $mayPlace ? $this->halls->availableSites($actor, $query, $after) : [];
 
+        $warehouseData = $hall?->placedAt !== null ? $warehouse->describe($hall) : null;
+
         return $this->render('player/guild_hall.html.twig', [
             'guild' => $guild,
+            'warehouse' => $warehouseData,
+            'convoy' => $mayAct && ($warehouseData['enabled'] ?? false)
+                ? $convoy->describe($actor, $request->query->getInt('convoy_origin')) : null,
+            'may_build_at_hall' => $mayAct && $policy->canCommand($actor, $guild),
             'hall' => $hall,
             'required' => $target,
             'remaining' => $remaining,
@@ -96,6 +109,77 @@ final class GuildHallController extends AbstractController
         }
 
         return $this->redirectToRoute('app_guild_hall', status: Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/guildes/hall/entrepot/construire', name: 'app_guild_hall_build_warehouse', methods: ['POST'])]
+    public function buildWarehouse(Request $request, GuildHallBuildingOrders $orders): Response
+    {
+        [$actor, $guild] = $this->contextForHall();
+        $hallId = $request->request->getInt('hall_id');
+        if (!$this->isCsrfTokenValid('guild_hall_build_warehouse_'.$guild->id.'_'.$hallId, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le Hall.');
+        }
+        try {
+            if ($request->request->getString('confirm') !== '1') {
+                throw new \DomainException('Confirmez la dépense des matériaux de guilde.');
+            }
+            $orders->start($actor, $guild->id, $hallId, GuildHallBuilding::WAREHOUSE, $request->request->getInt('level', -1));
+            $this->addFlash('success', 'La construction de l’entrepôt est lancée.');
+        } catch (\DomainException $error) {
+            $this->addFlash('error', $error->getMessage());
+        }
+
+        return $this->redirectToRoute('app_guild_hall', status: Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/guildes/hall/convoi', name: 'app_guild_hall_send_convoy', methods: ['POST'])]
+    public function sendConvoy(Request $request, GuildHallConvoyDeparture $departure): Response
+    {
+        [$actor, $guild] = $this->contextForHall();
+        $hallId = $request->request->getInt('hall_id');
+        if (!$this->isCsrfTokenValid('guild_hall_convoy_'.$guild->id.'_'.$hallId, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le Hall.');
+        }
+        $origin = $request->request->getInt('origin');
+        try {
+            if ($request->request->getString('confirm') !== '1') {
+                throw new \DomainException('Confirmez le dépôt au Hall de guilde.');
+            }
+            $ships = [];
+            foreach ($request->request->all('ships') as $slug => $ranks) {
+                if (!is_array($ranks)) {
+                    throw new \DomainException('Composition du convoi invalide.');
+                }
+                $ships[$slug] = array_map(self::convoyQuantity(...), $ranks);
+            }
+            $freight = array_map(self::convoyQuantity(...), $request->request->all('cargo'));
+            $speed = $request->request->getInt('speed', 100);
+            if ($speed < 10 || $speed > 100 || $speed % 10 !== 0) {
+                throw new \DomainException('Choisissez une vitesse entre 10 et 100 %.');
+            }
+
+            $receipt = $departure->send($actor, $guild->id, $hallId, $origin, $ships, $speed / 100, $freight, $request->request->getString('request_key'));
+            $this->addFlash('success', $receipt !== null
+                ? 'Convoi envoyé. Le carburant aller-retour est réservé.'
+                : 'Ce convoi a déjà été envoyé.');
+        } catch (\DomainException $error) {
+            $this->addFlash('error', $error->getMessage());
+        }
+
+        return $this->redirectToRoute('app_guild_hall', ['convoy_origin' => $origin], Response::HTTP_SEE_OTHER);
+    }
+
+    /** Une saisie non entière ou hors bornes n’est jamais arrondie ni tronquée. */
+    private static function convoyQuantity(mixed $amount): int
+    {
+        if ($amount === '' || $amount === '0') {
+            return 0;
+        }
+        if (!is_string($amount) || !preg_match('/^[1-9][0-9]{0,8}$/D', $amount) || (int) $amount > 100_000_000) {
+            throw new \DomainException('Saisissez une quantité entière entre 0 et 100 000 000.');
+        }
+
+        return (int) $amount;
     }
 
     /** @return array{PlayerUniverse, Guild, int} */

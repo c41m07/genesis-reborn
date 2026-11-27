@@ -28,7 +28,7 @@
             {% if installed %}
                 <a class="primary guild-hall-site-link" href="{{ path('app_map_v2', {galaxy:system.galaxy.id, system:system.id}) }}">{{ ui.icon('galaxy') }} Voir le système dans Galaxie</a>
                 <aside class="guild-hall-closed">
-                    <h3>Dons clos</h3>
+                    <h3>Dons d’installation clos</h3>
                     <p>Le Hall est installé : il n’est plus possible de contribuer ou de choisir un autre emplacement.</p>
                 </aside>
             {% elseif remaining == 0 %}
@@ -43,6 +43,12 @@
             {% endif %}
             <p class="muted">Le Hall revendique le système. Il ne remplace aucune planète et ne donne ni bonus ni nouveau pouvoir.</p>
         </section>
+        {% if installed and warehouse is not null %}
+            {% include 'player/_guild_hall_warehouse.html.twig' with {hall:hall, guild:guild, warehouse:warehouse, may_build:may_build_at_hall} only %}
+            {% if convoy is not null %}
+                {% include 'player/_guild_hall_convoy.html.twig' with {hall:hall, guild:guild, convoy:convoy} only %}
+            {% endif %}
+        {% endif %}
         {% if not may_act %}
             <p class="panel">Vous pouvez consulter le Hall, mais pas contribuer ni le placer pendant les vacances.</p>
         {% elseif remaining > 0 %}

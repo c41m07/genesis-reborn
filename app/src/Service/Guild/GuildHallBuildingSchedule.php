@@ -52,6 +52,11 @@ final readonly class GuildHallBuildingSchedule
         }
     }
 
+    public function maximumLevel(string $slug): int
+    {
+        return count($this->levels[$slug] ?? []);
+    }
+
     /** @return array{cost:array<string,int>,duration:int,maxLevel:int} */
     public function quote(string $slug, int $currentLevel): array
     {
