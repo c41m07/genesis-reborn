@@ -93,13 +93,6 @@ test('Quotidiennes : une ouverture à la connexion, sept jours, fermeture et ret
     setMetal(10000);
     await gift.press('Enter');
     await dialog.getByRole('button', { name: 'Récupérer le lot' }).click();
-    await expect(page.getByRole('alert').filter({ hasText: 'Stockage insuffisant' })).toBeVisible();
-    await expect(gift).toBeVisible();
-    expect(receipts()).toBe(0);
-
-    setMetal(5000);
-    await gift.click();
-    await dialog.getByRole('button', { name: 'Récupérer le lot' }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Jour 1 récupéré' })).toBeVisible();
     await expect(gift).toHaveCount(0);
     await expect(page.locator('#daily-reward-heading')).toBeFocused();

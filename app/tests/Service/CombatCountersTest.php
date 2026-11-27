@@ -168,7 +168,7 @@ final class CombatCountersTest extends TestCase
         $manager = new GameManager($entityManager);
         $clock = new MockClock('2026-11-24T12:00:00Z');
         $capacity = new EconomicUnitCapacity($repo, $catalog);
-        $resources = new ResourceService($repo, $manager, $catalog, $clock, new GameEventService($repo, $manager, $clock), new VacationCalendar($repo, $clock), $capacity);
+        $resources = new ResourceService($repo, $manager, $catalog, $clock, new GameEventService($repo, $manager, $clock), new VacationCalendar($repo, $clock), $capacity, new \App\Service\Boost\TimedBoostEffects($repo, $clock));
         $requirements = new RequirementChecker($catalog);
         $view = new CatalogueDetails($catalog, $resources, new TechnologyEffectCalculator($catalog), $requirements, new CatalogAccess($repo, $catalog, $requirements), $capacity);
         $universe = new Universe();

@@ -14,9 +14,10 @@ use Psr\Clock\ClockInterface;
 use App\Service\Player\FirstStepRewardPolicy;
 use App\Service\Player\FirstSteps;
 use App\Service\Player\VacationCalendar;
+use App\Service\Boost\TimedBoostEffects;
 final class FleetService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment, private FirstSteps $firstSteps, private DiplomaticReportWriter $diplomaticReports, private FleetFuelExpenseRecorder $fuelExpenses) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment, private FirstSteps $firstSteps, private DiplomaticReportWriter $diplomaticReports, private FleetFuelExpenseRecorder $fuelExpenses, private TimedBoostEffects $timedBoosts) {}
     private function coords(SolarSystem $s,?int $position): array { return [$s->id,$s->galaxy->id,$s->coordX,$s->coordY,$position]; }
     public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0, bool $requireUnexplored = false): array
     {
@@ -69,7 +70,31 @@ final class FleetService
         $windowHours=$reinforcement?$this->occupations->reinforcementHours($target):($mission==='conquer' && $this->occupations->isEnabled()?24:(in_array($mission,['attack','conquer','defend'],true)?((int)($this->catalog->rules()['combat_window_seconds']??600)/3600):($mission==='orbit'?$orbitHours:0)));
         $techLevels=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$m]);
         $ships=$this->technologyEffects->applyToShips($ships,$techLevels,$m->universe);
+        // Les missions ordinaires figent le tarif de l’aller dans la navigation.
+        // Les trajets de campagne, de marché et de guilde n’emploient pas ce bonus.
+        $freightFactor = 1.0;
+        if (in_array($mission, ['transport', 'station', 'explore', 'colonize'], true)) {
+            $now = $this->clock->now();
+            $effect = $this->timedBoosts->windows($m, $now, $now)[0]->operationType ?? null;
+            if ($effect === TimedBoostEffects::CIVIL_FUEL) {
+                $factor = TimedBoostEffects::definition($effect)['factor'];
+                foreach ($ships as &$ship) {
+                    $ship['fuel_travel_system'] *= $factor;
+                    $ship['fuel_travel_galaxy'] *= $factor;
+                }
+                unset($ship);
+            } elseif ($effect === TimedBoostEffects::CIVIL_FREIGHT && in_array($mission, ['transport', 'station'], true)) {
+                $freightFactor = TimedBoostEffects::definition($effect)['factor'];
+            }
+        }
         $quote=$this->calculator->quote($this->coords($origin->solarSystem,$origin->position),$this->coords($system,$target instanceof Planet?$target->position:null),$ships,$ratio,$config['multipliers']['travel_time'],$this->catalog->rules()['fuel_ratio_policy'],$windowHours);
+        if ($freightFactor > 1.0) {
+            // L’ajout concerne seulement le fret ; sans bonus, le devis conserve
+            // exactement son contrat d’origine (dont le zéro entier des sondes).
+            $extraFreight = $quote['cargo_capacity'] * ($freightFactor - 1.0);
+            $quote['cargo_capacity'] += $extraFreight;
+            $quote['freight_capacity'] += $extraFreight;
+        }
         $shipsAdjusted=$adjusted;
         $requestedCargo=[];
         foreach($cargo as $resource=>$amount) {

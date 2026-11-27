@@ -2316,3 +2316,7 @@ Le rang Intermédiaire vaut 125 % du Basique et le rang Supérieur 125 % de l’
 ## Bourse de ressources et convoi des marchands — 26 novembre 2026
 
 Kévin valide la maquette A, la station A:0:0 et le voyage protégé de 30 minutes par trajet. L’étalon initial est 8 H = 4 M = 2 N = 1 AM, avec des frais d’essai de 2 %. Le carburant ne dépend pas de la position de départ à flotte égale ; le rappel n’est possible qu’avant l’échange. La réserve initiale est administrée par univers. Le convoi marchand du vendredi 9 h Europe/Paris apporte jusqu’à 50 % de ce que la station a vendu aux joueurs, dans la place disponible sous la cible, sans toucher au cours. [Architecture et cas limites](BOURSE_DE_RESSOURCES.md).
+
+## Bonus quotidiens : phase temporaire plutôt que versement en ressources
+
+Les reçus antérieurs restent valides pour poursuivre le cycle, sans remboursement ni réattribution. Le même reçu est enregistré avec l’objet d’inventaire, dans une transaction verrouillée. La participation active à l’instant du retrait reçoit l’objet. Un bonus consommé immédiatement sur le temps restant d’une tâche et un bonus temporaire sont deux objets différents. Voir les [règles](REGLES.md#bonus-quotidiens-temporaires) pour le cycle et les valeurs d’essai. Les valeurs de combat de 10 % sont le réglage d’essai du lot et s’ajustent à la suite d’une décision d’équilibrage.

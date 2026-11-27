@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\{Player, PlayerBoost, PlayerUniverse, Universe};
+use App\Service\Boost\TimedBoostEffects;
 use App\Service\Player\RegistrationService;
 use App\Service\Universe\{UniverseImporter, UniverseService};
 use App\Validator\DTO\RegistrationData;
@@ -107,16 +108,20 @@ final class InventoryGiftNoticesTest extends WebTestCase
         Player $owner,
         string $key,
         string $status = 'available',
-        string $kind = 'timed_boost',
+        string $kind = TimedBoostEffects::KIND,
         bool $unread = true,
         ?\DateTimeImmutable $earnedAt = null,
     ): int {
         $item = new PlayerBoost();
         $item->playerUniverse = $this->entities->getReference(PlayerUniverse::class, $owner->currentPlayerUniverse->id);
-        $item->sourceType = $kind === 'timed_boost' ? 'daily_reward' : 'event';
+        $item->sourceType = $kind === TimedBoostEffects::KIND ? 'daily_reward' : 'event';
         $item->sourceKey = $key;
         $item->status = $status;
         $item->kind = $kind;
+        // Un cadeau quotidien possède le même effet enregistré que lors d’une attribution réelle.
+        if ($kind === TimedBoostEffects::KIND) {
+            $item->payload = ['effect' => TimedBoostEffects::CIVIL_FUEL];
+        }
         $item->giftUnread = $unread;
         $item->earnedAt = $earnedAt ?? $this->now;
         $this->entities->persist($item);

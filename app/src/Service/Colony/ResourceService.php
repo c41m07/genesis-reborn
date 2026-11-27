@@ -6,13 +6,15 @@ use App\Manager\GameManager;
 use App\Service\Catalog\GameCatalog;
 use Psr\Clock\ClockInterface;
 use App\Service\Player\VacationCalendar;
+use App\Service\Boost\TimedBoostEffects;
+
 final class ResourceService
 {
     /** Ordre du bandeau et des champs de ressources, sans incidence sur les calculs. */
     public const DISPLAY_ORDER = ['metal', 'nano', 'hydrogen', 'antimatter', 'electricity'];
 
 
-    public function __construct(private GameRepository $repo,private GameManager $manager,private GameCatalog $catalog,private ClockInterface $clock,private \App\Service\Event\GameEventService $events,private VacationCalendar $vacations,private EconomicUnitCapacity $economicUnits) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private GameCatalog $catalog,private ClockInterface $clock,private \App\Service\Event\GameEventService $events,private VacationCalendar $vacations,private EconomicUnitCapacity $economicUnits, private TimedBoostEffects $timedBoosts) {}
     public static function stock(float $stock,float $rate,\DateTimeImmutable $last,\DateTimeImmutable $now,float $cap): float
     {
         return min(max($cap,$stock),max(0,$stock)+max(0,$now->getTimestamp()-$last->getTimestamp())*$rate);
@@ -53,7 +55,7 @@ final class ResourceService
         return new CatalogueProductionContext(
             $planet,
             $planet->owner !== null && $this->vacations->isActive($planet->owner, $now),
-            $this->events->productionMultiplier($planet->solarSystem->galaxy->universe, $now),
+            $this->productionMultiplier($planet, $now),
             $this->economicUnits->inventory($planet),
         );
     }
@@ -78,7 +80,7 @@ final class ResourceService
         $tier = $definition['_tier'];
         $universe = $this->catalog->forUniverse($planet->solarSystem->galaxy->universe);
         $eventMultiplier = $context?->eventMultiplier
-            ?? $this->events->productionMultiplier($planet->solarSystem->galaxy->universe);
+            ?? $this->productionMultiplier($planet, $this->clock->now());
         // Même rendement local que la source civile d’operatingInput, sans multiplier
         // par les effectifs ni déduire les pertes de stockage d’un aperçu par unité active.
         return (float) $economic['production_per_hour'][$tier] / 3600
@@ -129,7 +131,7 @@ final class ResourceService
             }
         }
         $factories=[];
-        $eventMultiplier=$productionMultiplier??$this->events->productionMultiplier($planet->solarSystem->galaxy->universe,$at);
+        $eventMultiplier=$productionMultiplier??$this->productionMultiplier($planet,$at??$this->clock->now());
         foreach($base as $slug=>$rate)$base[$slug]*=$eventMultiplier;
         foreach($civilSources as &$sources)foreach($sources as &$rate)$rate*=$eventMultiplier;
         unset($sources,$rate);
@@ -216,28 +218,69 @@ final class ResourceService
         return $result;
     }
 
-    private function simulateRange(Planet $planet,array $levels,array $stocks,\DateTimeImmutable $from,\DateTimeImmutable $to,?array $economicInventory=null):array
+    private function productionMultiplier(Planet $planet, \DateTimeImmutable $at): float
     {
-        $universe=$planet->solarSystem->galaxy->universe;$cursor=$from;
-        $economicInventory??=$this->economicUnits->inventory($planet);
-        $points=$this->events->productionChangePoints($universe,$from,$to);$points[]=$to;
-        $periods=$planet->owner !== null ? $this->vacations->periods($planet->owner) : [];
-        foreach($periods as $period) foreach([$period->startedAt,$period->effectiveEndAt()] as $boundary) {
-            if($boundary>$from && $boundary<$to) $points[]=$boundary;
+        return $this->events->productionMultiplier($planet->solarSystem->galaxy->universe, $at)
+            * $this->timedBoosts->factor($planet->owner, TimedBoostEffects::PRODUCTION, $at);
+    }
+
+    private function simulateRange(Planet $planet, array $levels, array $stocks, \DateTimeImmutable $from, \DateTimeImmutable $to, ?array $economicInventory = null, ?array $windows = null): array
+    {
+        $universe = $planet->solarSystem->galaxy->universe;
+        $cursor = $from;
+        $economicInventory ??= $this->economicUnits->inventory($planet);
+        $points = $this->events->productionChangePoints($universe, $from, $to);
+        $points[] = $to;
+        $periods = $planet->owner !== null ? $this->vacations->periods($planet->owner) : [];
+        $windows ??= $this->timedBoosts->windows($planet->owner, $from, $to, TimedBoostEffects::PRODUCTION);
+        foreach ($periods as $period) {
+            foreach ([$period->startedAt, $period->effectiveEndAt()] as $boundary) {
+                if ($boundary > $from && $boundary < $to) {
+                    $points[] = $boundary;
+                }
+            }
         }
-        usort($points,static fn(\DateTimeImmutable $a,\DateTimeImmutable $b):int=>$a<=>$b);
-        foreach($points as $point){$seconds=max(0,$point->getTimestamp()-$cursor->getTimestamp());if($seconds>0 && !$this->vacations->activeAt($periods,$cursor))$stocks=$this->simulate($planet,$levels,$stocks,$seconds,$cursor,$economicInventory)['stocks'];$cursor=$point;}
-        $result=$this->simulate($planet,$levels,$stocks,0,$to,$economicInventory);
-        if($this->vacations->activeAt($periods,$to)) $result=$this->pause($result);
-        return $result;
+        // Le stock peut ne pas avoir été lu pendant les cinq heures. Rejouer
+        // les coupures dans l’ordre sans appliquer le multiplicateur à tout l’intervalle.
+        foreach ($windows as $window) {
+            if ($window->operationType !== TimedBoostEffects::PRODUCTION) {
+                continue;
+            }
+            foreach ([$window->usedAt, TimedBoostEffects::endsAt($window)] as $boundary) {
+                if ($boundary > $from && $boundary < $to) {
+                    $points[] = $boundary;
+                }
+            }
+        }
+        usort($points, static fn (\DateTimeImmutable $a, \DateTimeImmutable $b): int => $a <=> $b);
+        $multiplier = fn (\DateTimeImmutable $at): float => $this->events->productionMultiplier($universe, $at)
+            * TimedBoostEffects::factorInWindows($windows, TimedBoostEffects::PRODUCTION, $at);
+        foreach ($points as $point) {
+            $seconds = max(0, $point->getTimestamp() - $cursor->getTimestamp());
+            if ($seconds > 0 && !$this->vacations->activeAt($periods, $cursor)) {
+                $stocks = $this->simulate($planet, $levels, $stocks, $seconds, $cursor, $economicInventory, $multiplier($cursor))['stocks'];
+            }
+            $cursor = $point;
+        }
+        $result = $this->simulate($planet, $levels, $stocks, 0, $to, $economicInventory, $multiplier($to));
+
+        return $this->vacations->activeAt($periods, $to) ? $this->pause($result) : $result;
     }
 
     public function snapshot(Planet $planet,bool $includeEconomy=false,?\DateTimeImmutable $observedAt=null): array
     {
         $levels=$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$planet]);$rows=[];foreach($this->repo->all(PlanetResource::class,['planet'=>$planet]) as $resource)$rows[$resource->resourceType]=$resource;
-        $protectedRatio=max(0.0,min(1.0,(float)($this->catalog->rules()['combat_loot_protected_storage_ratio']??0.1)));
-        $economicInventory=$this->economicUnits->inventory($planet);
-        $input=$this->operatingInput($planet,$levels,economicInventory:$economicInventory);
+        $now = $observedAt ?? $this->clock->now();
+        $anchor = $rows['electricity']->lastUpdatedAt ?? (array_values($rows)[0]->lastUpdatedAt ?? $now);
+        $from = min($anchor, $now);
+        // Une seule lecture d’effets pour tous les taux, capacités et stocks de cet instantané.
+        $windows = $this->timedBoosts->windows($planet->owner, $from, $now);
+        $baseProtection = (float) ($this->catalog->rules()['combat_loot_protected_storage_ratio'] ?? 0.1);
+        $protectedRatio = max(0.0, min(1.0, $baseProtection * TimedBoostEffects::factorInWindows($windows, TimedBoostEffects::LOOT_SHIELD, $now)));
+        $economicInventory = $this->economicUnits->inventory($planet);
+        $multiplier = $this->events->productionMultiplier($planet->solarSystem->galaxy->universe, $now)
+            * TimedBoostEffects::factorInWindows($windows, TimedBoostEffects::PRODUCTION, $now);
+        $input = $this->operatingInput($planet, $levels, $now, $multiplier, $economicInventory);
         $producedResources=array_column($input['factories'],'resource');
         $result=[];
         foreach($this->catalog->rules()['resources'] as $slug=>$label){
@@ -246,7 +289,11 @@ final class ResourceService
             if($includeEconomy) $result[$slug]+= ['gross'=>0.0,'consumption'=>0.0,'uncredited'=>0.0,'sources'=>[],'consumptionSources'=>[],'estimateSeconds'=>null,'potentialGross'=>0.0,'potentialSources'=>[],'productionInputs'=>[],'consumptionPotential'=>0.0,'consumerSources'=>[]];
         }
         if($rows===[])return $result;
-        $anchor=$rows['electricity']->lastUpdatedAt??array_values($rows)[0]->lastUpdatedAt;$now=$observedAt??$this->clock->now();$stocks=[];foreach($rows as $slug=>$resource)$stocks[$slug]=$resource->currentStock;$simulation=$this->simulateRange($planet,$levels,$stocks,$anchor<$now?$anchor:$now,$now,$economicInventory);
+        $stocks = [];
+        foreach ($rows as $slug => $resource) {
+            $stocks[$slug] = $resource->currentStock;
+        }
+        $simulation = $this->simulateRange($planet, $levels, $stocks, $from, $now, $economicInventory, $windows);
         foreach($this->catalog->rules()['resources'] as $slug=>$label){
             $result[$slug]['stock']=max(0.0,(float)($simulation['stocks'][$slug]??0));
             $result[$slug]['rate']=(float)($simulation['rates'][$slug]??0.0);

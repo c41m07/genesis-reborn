@@ -24,6 +24,7 @@ use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Boost\BoostGrantService;
 use App\Service\Boost\BoostEventService;
+use App\Service\Boost\TimedBoostEffects;
 use App\Service\Colony\ResourceService;
 use App\Service\Notification\NotificationService;
 use App\Service\Report\ReportNoticeWriter;
@@ -60,6 +61,7 @@ final class CombatEventService
         private \App\Service\Player\EmpireReconstructionScheduler $reconstruction,
         private \App\Service\Queue\QueueService $queues,
         private \App\Service\Fleet\FleetFuelExpenseRecorder $fuelExpenses,
+        private TimedBoostEffects $timedBoosts,
     ) {}
 
     public function canAttack(PlayerUniverse $attacker, Planet $target): bool
@@ -421,6 +423,8 @@ final class CombatEventService
             $attackerParticipants = array_values(array_filter($participants, static fn (CombatParticipant $p): bool => $p->role === 'attacker'));
             $campByMembership = $this->attackerCamps($attackerParticipants);
             $technologyLevels = [];
+            $damageFactors = [];
+            $pvp = $event->planet->owner?->isPlayerControlled() === true && !$event->planet->npcPlanet;
             foreach ($participants as $participant) {
                 if (isset($snapshotParticipantIds[(int) $participant->id])) {
                     continue;
@@ -432,6 +436,14 @@ final class CombatEventService
                 foreach($this->repo->all(FleetShip::class,['fleet'=>$fleet],['id'=>'ASC']) as $fleetShip) if($fleetShip->quantity>0) $composition[$fleetShip->slug][$fleetShip->tier]=$fleetShip->quantity;
                 $units=$this->unitFactory->ships($participant->playerUniverse->universe,$composition,$technologyLevels[$membershipId]);
                 $role = $participant->role;
+                if ($pvp && $participant->playerUniverse->isPlayerControlled()) {
+                    $effect = $role === 'attacker' ? TimedBoostEffects::PVP_ATTACK : TimedBoostEffects::PVP_DEFENSE;
+                    $factor = $damageFactors[$membershipId][$effect] ??= $this->timedBoosts->factor($participant->playerUniverse, $effect, $event->startedAt);
+                    foreach ($units as &$unit) {
+                        $this->applyTimedDamage($unit, $factor);
+                    }
+                    unset($unit);
+                }
                 $camp = $role === 'attacker' ? ($campByMembership[$membershipId] ?? 'attacker-' . $membershipId) : 'defenders';
                 if($occupationContext!==null) $camp=$this->occupationCamp($participant->playerUniverse,$occupationContext,$camp);
                 // Une arrivée traitée en retard ne modifie jamais un round déjà validé.
@@ -475,6 +487,7 @@ final class CombatEventService
 
             $defenseSnapshots = $state['defenses'] ?? [];
             if (!array_key_exists('defenses', $state)) {
+                $defenseFactor = $pvp ? $this->timedBoosts->factor($event->planet->owner, TimedBoostEffects::PVP_DEFENSE, $event->startedAt) : 1.0;
                 foreach ($this->repo->all(PlanetDefense::class, ['planet' => $event->planet], ['id' => 'ASC']) as $defense) {
                     if ($defense->quantity < 1) {
                         continue;
@@ -482,6 +495,7 @@ final class CombatEventService
                     $defender=$event->planet->owner;
                     $defenderLevels=$defender?$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$defender]):[];
                     $definition=$this->unitFactory->defense($event->planet->solarSystem->galaxy->universe,$defense->slug,$defense->tier,$defenderLevels,$this->repo->levelsByTier(PlanetBuilding::class,['planet'=>$event->planet])['fortress']??[]);
+                    $this->applyTimedDamage($definition, $defenseFactor);
                     $defenseSnapshots[] = $definition + [
                         'id' => (string) $defense->id,
                         'camp' => $this->occupationNpcCamp($event,$occupationContext),
@@ -682,11 +696,27 @@ final class CombatEventService
         $byMembership[$round][$membership->id]['damage'] += $damage;
     }
 
+    private function applyTimedDamage(array &$unit, float $factor): void
+    {
+        if ($factor === 1.0) {
+            return;
+        }
+        // Les profils restent figés dans l’instantané, même si le worker reprend
+        // un round après l’expiration du bonus.
+        foreach (['base_attack', 'secondary_attack'] as $field) {
+            if (isset($unit[$field])) {
+                $unit[$field] *= $factor;
+            }
+        }
+    }
+
     private function collectLoot(array $participants, string $outcome, CombatEvent $event): array
     {
         $rules = $this->catalog->rules();
         $ratio = max(0.0, min(1.0, (float) ($rules['combat_loot_ratio'] ?? 1.0)));
-        $protectedRatio = max(0.0, min(1.0, (float) ($rules['combat_loot_protected_storage_ratio'] ?? 0.1)));
+        $protectedRatio = $this->timedBoosts->protectedRatio(
+            $event->planet->owner, (float) ($rules['combat_loot_protected_storage_ratio'] ?? 0.1), $event->startedAt,
+        );
         $result = ['ratio' => $ratio, 'protected_storage_ratio' => $protectedRatio, 'fleets' => [], 'total' => []];
         if ($outcome !== 'attacker_wins' || !$event->planet->owner) {
             return $result;

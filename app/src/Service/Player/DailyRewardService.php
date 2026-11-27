@@ -6,8 +6,8 @@ namespace App\Service\Player;
 
 use App\Entity\{DailyRewardClaim, Planet, Player, PlayerUniverse};
 use App\Manager\GameManager;
-use App\Service\Catalog\GameCatalog;
-use App\Service\Colony\{ActionGuard, ResourceService};
+use App\Service\Boost\{BoostGrantService, TimedBoostEffects};
+use App\Service\Colony\ActionGuard;
 use Doctrine\DBAL\Exception\LockWaitTimeoutException;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
@@ -18,18 +18,17 @@ final class DailyRewardService
         private GameManager $manager,
         private EntityManagerInterface $em,
         private ActionGuard $guard,
-        private ResourceService $resources,
-        private GameCatalog $catalog,
+        private BoostGrantService $grants,
         private ClockInterface $clock,
     ) {}
 
-    /** @return array{date:string,claimed:bool,slot:int,reward:array{metal:int,nano:int}} */
+    /** @return array{date:string,claimed:bool,slot:int,reward:array{effect:string,label:string,description:string,factor:float}} */
     public function status(Player $player): array
     {
         return $this->statusAt($player, $this->day());
     }
 
-    /** @return array{state:string,slot?:int,required?:array<string,int>,missing?:array<string,int>} */
+    /** @return array{state:string,slot?:int} */
     public function claim(Player $player, PlayerUniverse $membership, Planet $planet, string $formDate): array
     {
         return $this->manager->transaction(function () use ($player, $membership, $planet, $formDate): array {
@@ -61,16 +60,10 @@ final class DailyRewardService
                 return ['state' => 'already'];
             }
 
-            $deposit = $this->resources->deposit($planet, $status['reward'], allOrNothing: true);
-            $missing = [];
-            foreach ($deposit['overflow'] as $resource => $amount) {
-                if ($amount > 0.0) {
-                    $missing[$resource] = (int) ceil($amount);
-                }
-            }
-            if ($missing !== []) {
-                // Aucun reçu n’est créé : ce même jour du cycle reste disponible, même demain.
-                return ['state' => 'full', 'required' => $status['reward'], 'missing' => $missing];
+            // Le reçu quotidien et l’objet sont atomiques. Une répétition ne doit ni doubler
+            // l’objet, ni créditer des ressources comme le faisait l’ancien parcours.
+            if (!$this->grants->awardDailyLocked($membership, $player->id, $formDate, $status['reward']['effect'])) {
+                return ['state' => 'already'];
             }
 
             $receipt = new DailyRewardClaim();
@@ -84,20 +77,10 @@ final class DailyRewardService
         });
     }
 
-    /** @return list<array{metal:int,nano:int}> */
+    /** @return list<array{effect:string,label:string,description:string,factor:float}> */
     public function schedule(): array
     {
-        $schedule = $this->catalog->rules()['daily_reward_experiment'] ?? null;
-        if (!is_array($schedule) || !array_is_list($schedule) || count($schedule) !== 7) {
-            throw new \LogicException('Le barème quotidien doit couvrir les sept jours du cycle.');
-        }
-        foreach ($schedule as $amounts) {
-            if (!is_array($amounts) || count($amounts) !== 2 || !is_int($amounts['metal'] ?? null)
-                || !is_int($amounts['nano'] ?? null) || min($amounts['metal'], $amounts['nano']) <= 0) {
-                throw new \LogicException('Le barème quotidien exige des quantités positives de métal et nano.');
-            }
-        }
-        return $schedule;
+        return TimedBoostEffects::schedule();
     }
 
     private function day(): \DateTimeImmutable
@@ -105,7 +88,7 @@ final class DailyRewardService
         return $this->clock->now()->setTimezone(new \DateTimeZone('Europe/Paris'))->setTime(0, 0);
     }
 
-    /** @return array{date:string,claimed:bool,slot:int,reward:array{metal:int,nano:int}} */
+    /** @return array{date:string,claimed:bool,slot:int,reward:array{effect:string,label:string,description:string,factor:float}} */
     private function statusAt(Player $player, \DateTimeImmutable $day, bool $forUpdate = false): array
     {
         $schedule = $this->schedule();

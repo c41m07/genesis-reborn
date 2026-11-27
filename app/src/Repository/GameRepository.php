@@ -1283,6 +1283,42 @@ final class GameRepository
         return $this->em->getRepository(PlayerBoost::class)->findOneBy(['playerUniverse' => $membership, 'status' => $status] + ($kind === null ? [] : ['kind' => $kind]), ['earnedAt' => 'ASC', 'id' => 'ASC']);
     }
 
+    /** @return list<PlayerBoost> Objets dont le délai d’activation est échu. */
+    public function expiredTimedBoosts(PlayerUniverse $membership, \DateTimeImmutable $cutoff): array
+    {
+        return $this->em->createQueryBuilder()->select('b')->from(PlayerBoost::class, 'b')
+            ->where('b.playerUniverse = :membership AND b.kind = :kind AND b.status IN (:statuses)')
+            ->andWhere('b.earnedAt <= :cutoff')
+            ->setParameter('membership', $membership)->setParameter('kind', \App\Service\Boost\TimedBoostEffects::KIND)
+            ->setParameter('statuses', ['available', 'pending'])->setParameter('cutoff', $cutoff)
+            ->getQuery()->getResult();
+    }
+
+    /** @return list<PlayerBoost> La capacité de l’inventaire borne cette liste. */
+    public function availableTimedBoosts(PlayerUniverse $membership): array
+    {
+        return $this->em->getRepository(PlayerBoost::class)->findBy(
+            ['playerUniverse' => $membership, 'status' => 'available', 'kind' => \App\Service\Boost\TimedBoostEffects::KIND],
+            ['earnedAt' => 'ASC', 'id' => 'ASC'], 100,
+        );
+    }
+
+    /** @return list<PlayerBoost> Historique borné par le début possible et celui demandé. */
+    public function timedBoostWindows(PlayerUniverse $membership, \DateTimeImmutable $after, \DateTimeImmutable $until, ?string $effect): array
+    {
+        $query = $this->em->createQueryBuilder()->select('b')->from(PlayerBoost::class, 'b')
+            ->where('b.playerUniverse = :membership AND b.kind = :kind AND b.status = :used')
+            ->andWhere('b.usedAt > :after AND b.usedAt <= :until')
+            ->setParameter('membership', $membership)->setParameter('kind', \App\Service\Boost\TimedBoostEffects::KIND)
+            ->setParameter('used', 'used')->setParameter('after', $after)->setParameter('until', $until)
+            ->orderBy('b.usedAt', 'ASC');
+        if ($effect !== null) {
+            $query->andWhere('b.operationType = :effect')->setParameter('effect', $effect);
+        }
+
+        return $query->getQuery()->getResult();
+    }
+
     public function riskBoostCountSince(PlayerUniverse $membership, \DateTimeImmutable $from, \DateTimeImmutable $until): int
     {
         return (int) $this->em->createQueryBuilder()->select('COUNT(b.id)')->from(PlayerBoost::class, 'b')->where('b.playerUniverse = :membership')->andWhere('b.sourceType = :source')->andWhere('b.earnedAt >= :from')->andWhere('b.earnedAt < :until')->setParameter('membership', $membership)->setParameter('source', 'risk_mission')->setParameter('from', $from)->setParameter('until', $until)->getQuery()->getSingleScalarResult();

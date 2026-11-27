@@ -1,8 +1,9 @@
 <?php
 namespace App\Tests\Integration;
 
-use App\Entity\{Fleet,FleetShip,Planet,PlanetResource,Player,PlayerDiscovery,Universe};
+use App\Entity\{Fleet,FleetShip,Planet,PlanetResource,Player,PlayerBoost,PlayerDiscovery,Universe};
 use App\Service\Colony\ResourceService;
+use App\Service\Boost\{TimedBoostEffects, TimedBoostUseService};
 use App\Service\Fleet\{FleetHold,FleetRecallService,FleetService,FleetStationing};
 use App\Service\Player\RegistrationService;
 use App\Service\Universe\{UniverseImporter,UniverseService};
@@ -60,6 +61,63 @@ final class FleetStationingTest extends WebTestCase
         self::getContainer()->get(FleetService::class)->arrive($fleet->id,$fleet->dispatchToken);
     }
     private function stock(Planet $planet): ?Fleet {return $this->em->getRepository(Fleet::class)->findOneBy(['homePlanet'=>$planet,'playerUniverse'=>$this->player->currentPlayerUniverse,'status'=>'idle']);}
+
+    public function testTimedCivilFuelQuoteAndArrivalKeepTheDepartureRate(): void
+    {
+        $membership = $this->player->currentPlayerUniverse;
+        $fleets = self::getContainer()->get(FleetService::class);
+        $preview = fn (): array => $fleets->preview($membership, $this->home, 'station', $this->target->id, ['transport' => 2], 1);
+        $baseline = $preview();
+        $this->activateTimedBoost(TimedBoostEffects::CIVIL_FUEL);
+        $discount = $preview();
+        self::assertEqualsWithDelta($baseline['total_fuel'] * 0.8, $discount['total_fuel'], 1e-8);
+        self::assertSame($baseline['seconds'], $discount['seconds']);
+        $fleet = $this->send();
+        self::assertEqualsWithDelta($discount['total_fuel'], $fleet->reservedFuel, 1e-8);
+        $this->clock->sleep(TimedBoostEffects::ACTIVE_SECONDS);
+        self::assertEqualsWithDelta($baseline['total_fuel'], $preview()['total_fuel'], 1e-8);
+        $this->arrive($fleet);
+        self::assertEqualsWithDelta($discount['one_way_fuel'], $this->stock($this->target)->storedFuel, 1e-8);
+    }
+
+    public function testTimedCivilFreightIsLoadedAndUnloadedWithoutAffectingFuel(): void
+    {
+        $membership = $this->player->currentPlayerUniverse;
+        $fleets = self::getContainer()->get(FleetService::class);
+        $preview = fn (): array => $fleets->preview($membership, $this->home, 'station', $this->target->id, ['transport' => 2], 1);
+        $baseline = $preview();
+        $this->activateTimedBoost(TimedBoostEffects::CIVIL_FREIGHT);
+        $larger = $preview();
+        self::assertEqualsWithDelta($baseline['total_fuel'], $larger['total_fuel'], 1e-8);
+        self::assertEqualsWithDelta($baseline['cargo_capacity'] * 1.2, $larger['cargo_capacity'], 1e-8);
+        $amount = (int) floor($baseline['freight_capacity']) + 1;
+        $stock = $this->em->getRepository(PlanetResource::class)->findOneBy(['planet' => $this->home, 'resourceType' => 'metal']);
+        $stock->currentStock = $amount + 10;
+        $targetStock = $this->em->getRepository(PlanetResource::class)->findOneBy(['planet' => $this->target, 'resourceType' => 'metal']);
+        $targetStock->currentStock = 1e8;
+        $this->em->flush();
+        $fleet = $this->send(['metal' => $amount]);
+        self::assertSame($amount, (int) $fleet->cargo['metal']);
+        $this->clock->sleep(TimedBoostEffects::ACTIVE_SECONDS);
+        $this->arrive($fleet);
+        $full = $this->stock($this->target);
+        // La colonie cible et sa soute à quai conservent la totalité après l’expiration.
+        self::assertSame($amount, (int) $full->cargo['metal']);
+    }
+
+    private function activateTimedBoost(string $effect): void
+    {
+        $item = new PlayerBoost();
+        $item->playerUniverse = $this->player->currentPlayerUniverse;
+        $item->sourceType = 'daily_reward';
+        $item->sourceKey = 'fixture-'.$effect;
+        $item->kind = TimedBoostEffects::KIND;
+        $item->payload = ['effect' => $effect];
+        $item->earnedAt = $this->clock->now();
+        $this->em->persist($item);
+        $this->em->flush();
+        self::getContainer()->get(TimedBoostUseService::class)->activate($item->playerUniverse, $item->id, str_repeat('f', 32));
+    }
 
     public function testArrivalMovesBaseOnceAndKeepsFuelAndFreightOverflow(): void
     {

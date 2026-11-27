@@ -5,14 +5,12 @@
 Lot proposé à la relecture vers `dev`. Les 19 recherches avancent après le niveau 5 du rang précédent. Les devis dépendent des prérequis, les productions et capacités se composent par rang. Les limites numériques des dépôts et le traitement des commandes antérieures figurent dans les [décisions](DECISIONS.md). La fusion et la publication restent à décider. [PR de rééquilibrage](https://github.com/c41m07/genesis-reborn/pull/166).
 
 
-## Kit T1 et récompense quotidienne (expérimentation)
+## Kit T1 et bonus quotidiens
 
-Le kit T1 de la première planète des nouveaux comptes et le bouton quotidien
-forment un lot indivisible. Le clic est attaché au compte et à la date civile
-de Paris ; la planète reste celle annoncée dans l’univers actif. La place doit
-permettre de transférer le lot entier, sans consommation du jour en cas
-d’insuffisance. Le barème métal/nano ×10 reste expérimental. Aucun changement
-des kits de colonisation, de la production ou des comptes existants.
+Le kit T1 reste réservé à la première planète des nouveaux comptes. Le clic quotidien
+reste attaché au compte et à la date civile de Paris. L’objet rejoint l’inventaire
+de l’univers actif, sans dépôt sur une planète ; il expire sous sept jours s’il
+n’a pas été activé. Voir les [règles des bonus](REGLES.md#bonus-quotidiens-temporaires).
 
 ## Coûts par rang et première colonisation — 19 novembre 2026
 
