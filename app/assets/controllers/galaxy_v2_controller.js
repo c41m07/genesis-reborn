@@ -5,7 +5,7 @@ const galaxyHelp = 'Glisser pour naviguer · Molette pour zoomer · Cliquer sur 
 const solarHelp = 'Cliquez sur une planète pour sa vue rapprochée ; utilisez la liste pour sa fiche.';
 const missionColors = {
     explore: '#00d4ff', spy: '#a78bfa', colonize: '#2dd4a0', transport: '#34d399',
-    attack: '#f43f5e', conquer: '#ffb040', defend: '#60a5fa', orbit: '#f472b6', station: '#2dd4a0',
+    market: '#ffd378', attack: '#f43f5e', conquer: '#ffb040', defend: '#60a5fa', orbit: '#f472b6', station: '#2dd4a0',
 };
 const mapMarkers = {
     unknown: { symbol: '?', color: '#ffda66', label: 'Inexploré' },
@@ -56,6 +56,7 @@ export default class extends Controller {
             destinationSystem: this.systemById.get(Number(flight.destinationSystemId)),
             trail: [],
         }));
+        this.setMarketTraffic(this.gameMap.marketTraffic);
         this.setCampaignTraffic(this.gameMap.campaignTraffic);
         this.showGuildFlights = true;
         this.updateGuildFlightFilter(this.gameMap.guildFilterAvailable);
@@ -105,7 +106,7 @@ export default class extends Controller {
                 this.timerInterval = null;
                 return;
             }
-            if (this.flights.length && !this.timerInterval) this.timerInterval = window.setInterval(() => this.updateFlightTimers(), 1000);
+            if ((this.flights.length || this.marketFlights.length) && !this.timerInterval) this.timerInterval = window.setInterval(() => this.updateFlightTimers(), 1000);
             this.updateFlightTimers();
             this.startLoop();
         };
@@ -113,7 +114,7 @@ export default class extends Controller {
         this.resize();
         this.indexSearch();
         this.updateMotionButton();
-        this.timerInterval = this.flights.length ? window.setInterval(() => this.updateFlightTimers(), 1000) : null;
+        this.timerInterval = (this.flights.length || this.marketFlights.length) ? window.setInterval(() => this.updateFlightTimers(), 1000) : null;
         this.updateFlightTimers();
         this.fleetRefreshHandler = event => this.refreshVisibleFleets(event.detail);
         window.addEventListener('genesis:visible-fleets', this.fleetRefreshHandler);
@@ -143,14 +144,31 @@ export default class extends Controller {
             destinationSystem: this.systemById.get(Number(flight.destinationSystemId)),
             trail: [],
         }));
+        this.setMarketTraffic(data.marketTraffic);
         this.setCampaignTraffic(data.campaignTraffic);
         this.fleetLogTarget.innerHTML = data.fleetLog;
         this.updateGuildFlightFilter(data.guildFilterAvailable);
         this.applyFleetFilter();
-        if (this.flights.length && !this.timerInterval && !document.hidden)
+        if ((this.flights.length || this.marketFlights.length) && !this.timerInterval && !document.hidden)
             this.timerInterval = window.setInterval(() => this.updateFlightTimers(), 1000);
         this.updateFlightTimers();
         this.drawFrame(0);
+    }
+
+    setMarketTraffic(convoys = []) {
+        // La station est au centre de la galaxie A dans les deux dispositions.
+        // Elle ne rejoint jamais le catalogue des systèmes ou des cibles.
+        this.marketFlights = convoys.map(convoy => {
+            const colony = this.systemById.get(Number(convoy.colonySystemId));
+            const station = convoy.stationHere ? { wx: 0, wy: 0 } : null;
+            return {
+                ...convoy, mission: 'market', trail: [],
+                status: convoy.destinationOnly ? 'station_waiting' : (convoy.status === 'outbound' ? 'traveling' : 'returning'),
+                originSystem: colony, originGalaxy: colony ? this.gameMap.galaxy : null,
+                destinationSystem: convoy.destinationOnly ? colony : station,
+                destinationGalaxy: (convoy.destinationOnly ? colony : station) ? this.gameMap.galaxy : null,
+            };
+        });
     }
 
     setCampaignTraffic(traffic = []) {
@@ -199,19 +217,20 @@ export default class extends Controller {
             row.hidden = !this.showGuildFlights;
         }
         const hasTraffic = this.flights.some(flight => !flight.guildFlight || this.showGuildFlights)
-            || this.campaignTraffic.length > 0;
+            || this.marketFlights.length > 0 || this.campaignTraffic.length > 0;
         this.emptyFlightLogTarget.hidden = hasTraffic;
         this.element.querySelector('[data-galaxy-v2-empty-label]').hidden = hasTraffic;
         const log = this.element.querySelector('.gv2-flight-log');
-        if (hasTraffic && (this.campaignTraffic.length || this.showGuildFlights && this.flights.some(flight => flight.guildFlight))
+        if (hasTraffic && (this.marketFlights.length || this.campaignTraffic.length || this.showGuildFlights && this.flights.some(flight => flight.guildFlight))
             && log.classList.contains('is-empty')) log.open = true;
         log.classList.toggle('is-empty', !hasTraffic);
     }
 
     clearPrivateTraffic() {
+        this.setMarketTraffic();
         this.setCampaignTraffic();
         this.flights = this.flights.filter(flight => !flight.guildFlight);
-        for (const row of this.fleetLogTarget.querySelectorAll('[data-campaign-kind], [data-guild-flight]')) row.remove();
+        for (const row of this.fleetLogTarget.querySelectorAll('[data-campaign-kind], [data-guild-flight], [data-market-trade]')) row.remove();
         this.updateGuildFlightFilter(false);
         this.applyFleetFilter();
         this.drawFrame(0);
@@ -1008,7 +1027,7 @@ export default class extends Controller {
 
     drawFlights(ctx) {
         const now = Date.now() + this.serverClockOffset;
-        for (const flight of [...this.flights, ...this.campaignFlights]) {
+        for (const flight of [...this.flights, ...this.campaignFlights, ...this.marketFlights]) {
             if (flight.guildFlight && !this.showGuildFlights) continue;
             let origin = flight.originSystem;
             let destination = flight.destinationSystem;
@@ -1050,7 +1069,11 @@ export default class extends Controller {
             if (!Number.isFinite(departure) || !Number.isFinite(arrival) || arrival <= departure) continue;
             let progress = this.flightProgress(flight, now);
             let from = origin, to = destination;
-            if (flight.status === 'returning' && !flight.recallRoute && !flight.forwardRoute) {
+            const marketReturn = flight.mission === 'market' && flight.status === 'returning';
+            if (marketReturn) {
+                // Reprendre la même courbe en sens inverse, depuis le point atteint en cas de rappel.
+                progress = (1 - progress) * flight.returnFraction;
+            } else if (flight.status === 'returning' && !flight.recallRoute && !flight.forwardRoute) {
                 from = destination;
                 to = origin;
             }
@@ -1103,7 +1126,7 @@ export default class extends Controller {
             ctx.globalAlpha = 1;
             const tangentX = (1 - progress) * (cx - a.x) + progress * (b.x - cx);
             const tangentY = (1 - progress) * (cy - a.y) + progress * (b.y - cy);
-            this.drawFlightArrow(ctx, x, y, tangentX, tangentY, color);
+            this.drawFlightArrow(ctx, x, y, marketReturn ? -tangentX : tangentX, marketReturn ? -tangentY : tangentY, color);
             ctx.restore();
         }
     }

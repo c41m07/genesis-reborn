@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\{MarketMerchantDelivery, MarketTrade, ResourceMarket, Universe};
+use App\Entity\{Galaxy, Planet, PlayerUniverse, MarketMerchantDelivery, MarketTrade, ResourceMarket, Universe};
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class ResourceMarketRepository
 {
+    private const ACTIVE_STATUSES = ['outbound', 'returning', 'awaiting_colony'];
+
     public function __construct(private EntityManagerInterface $em)
     {
     }
@@ -21,9 +23,42 @@ final readonly class ResourceMarketRepository
     /** @return list<MarketTrade> */
     public function trades(Universe $universe, int $membershipId): array
     {
-        return $this->em->getRepository(MarketTrade::class)->findBy(
+        $recent = $this->em->getRepository(MarketTrade::class)->findBy(
             ['universe' => $universe, 'membershipId' => $membershipId], ['id' => 'DESC'], 30
         );
+        if (count($recent) < 30) {
+            return $recent;
+        }
+        // Les liens de suivi et les commandes de rappel ou de redirection doivent rester accessibles.
+        $olderActive = $this->em->createQueryBuilder()->select('t')->from(MarketTrade::class, 't')
+            ->where('t.universe = :universe AND t.membershipId = :member AND t.id < :oldest')
+            ->andWhere('t.status IN (:active)')->orderBy('t.id', 'DESC')
+            ->setParameter('universe', $universe)->setParameter('member', $membershipId)
+            ->setParameter('oldest', end($recent)->id)->setParameter('active', self::ACTIVE_STATUSES)
+            ->getQuery()->getResult();
+        return array_merge($recent, $olderActive);
+    }
+
+    /** Convois actifs du seul empire consulté, avec leur colonie de départ ou de retour en une lecture. */
+    public function activeTraffic(PlayerUniverse $member, ?Galaxy $colonyGalaxy): array
+    {
+        $query = $this->em->createQueryBuilder()
+            ->select('t, p.name AS colonyName, IDENTITY(p.owner) AS planetOwner, s.id AS systemId, g.id AS galaxyId')
+            ->from(MarketTrade::class, 't')
+            ->leftJoin(Planet::class, 'p', 'WITH', "p.id = CASE WHEN t.status = 'outbound' THEN t.originId ELSE t.returnPlanetId END")
+            ->leftJoin('p.solarSystem', 's')
+            ->leftJoin('s.galaxy', 'g')
+            ->where('t.membershipId = :member AND t.universe = :universe')
+            ->andWhere('g.universe = :universe OR p.id IS NULL')
+            ->andWhere('t.status IN (:active)')
+            ->setParameter('member', $member->id)
+            ->setParameter('universe', $member->universe)
+            ->setParameter('active', self::ACTIVE_STATUSES)
+            ->orderBy('t.id', 'DESC');
+        if ($colonyGalaxy) {
+            $query->andWhere('g = :galaxy')->setParameter('galaxy', $colonyGalaxy);
+        }
+        return $query->getQuery()->getResult();
     }
 
     /** @return list<MarketMerchantDelivery> */

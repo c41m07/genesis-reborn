@@ -22,6 +22,7 @@ final class ColonyView
         private CatalogAccess $access,
         private CatalogFilters $filters,
         private EmpireDetails $empireDetails,
+        private \App\Service\Market\MarketTraffic $marketTraffic,
         private EconomicUnitCapacity $economicUnits,
         private ClockInterface $clock,
     )
@@ -307,6 +308,7 @@ final class ColonyView
             'combat_events' => $combatEvents,
             'defense_quantities' => $defenseQuantities,
             'active_fleets' => $activeFleets,
+            'market_flights' => $this->marketTraffic->forViewer($membership),
             'membership' => $membership,
             'planet' => $planet,
             'planets' => $this->repo->planets($membership->universe, $membership),

@@ -105,6 +105,15 @@ final class ResourceMarketTest extends WebTestCase
         self::assertSame($beforePoints, self::getContainer()->get(LeaderboardService::class)->forUniverse($member)[0]['fleet_points']);
         self::assertSame(0, (int) $this->em->getConnection()->fetchOne("SELECT COUNT(*) FROM fleet WHERE status = 'traveling'"),
             'Le couloir dédié ne crée pas de cible d’attaque dans les flottes ordinaires.');
+        $this->client->request('GET', '/flottes');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('[data-market-trade="'.$first->id.'"]', 'Aller');
+        $this->client->request('GET', '/flottes/surveillance?galaxy='.$home->solarSystem->galaxy->id);
+        self::assertResponseIsSuccessful();
+        $traffic = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame($first->id, $traffic['marketTraffic'][0]['id']);
+        self::assertSame('Bourse · A:0:0', $traffic['marketTraffic'][0]['to']);
+        self::assertStringContainsString('Convoi de Bourse', $traffic['fleetLog']);
         $message = $this->relay($first->id);
         self::assertSame(1800000, $message['delay']);
         $handler = self::getContainer()->get(MarketConvoyDueHandler::class);
@@ -115,6 +124,9 @@ final class ResourceMarketTest extends WebTestCase
 
         $return = $this->em->find(MarketTrade::class, $first->id);
         self::assertSame('returning', $return->status);
+        $traffic = self::getContainer()->get(\App\Service\Market\MarketTraffic::class)->forViewer($this->em->find(Planet::class, $home->id)->owner);
+        self::assertSame('Bourse · A:0:0', $traffic[0]['from']);
+        self::assertSame('Retour', $traffic[0]['label']);
         self::assertSame(1800, $return->dueAt->getTimestamp() - $return->exchangedAt->getTimestamp());
         $market = $markets->find($return->universe);
         self::assertSame(50000 - $return->receiveQuantity, $market->stock['nano']);
@@ -133,6 +145,9 @@ final class ResourceMarketTest extends WebTestCase
 
         $closed = $this->em->find(MarketTrade::class, $first->id);
         self::assertSame('completed', $closed->status);
+        $this->client->request('GET', '/flottes');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('[data-market-trade]');
         self::assertEqualsWithDelta($beforeDelivery + $closed->receiveQuantity, $this->stock($home->id, 'nano'), .0001);
         self::assertSame(2, $this->em->find(FleetShip::class, $transport->id)->quantity);
     }
@@ -184,6 +199,13 @@ final class ResourceMarketTest extends WebTestCase
         $oldToken = $trade->token;
         $this->clock->sleep(300);
         $convoys->recall($member, $trade->id);
+        $traffic = self::getContainer()->get(\App\Service\Market\MarketTraffic::class);
+        $projection = $traffic->forViewer($member, $planet->solarSystem->galaxy);
+        self::assertSame('Rappel', $projection[0]['label']);
+        self::assertSame('Position du rappel', $projection[0]['from']);
+        self::assertEqualsWithDelta(1 / 6, $projection[0]['returnFraction'], .000001);
+        [$other] = $this->fixture('MarketPrivate');
+        self::assertSame([], $traffic->forViewer($other->currentPlayerUniverse, $planet->solarSystem->galaxy));
         $this->clock->sleep(300);
         $convoys->processDue($trade->id, $oldToken);
         self::assertSame('returning', $trade->status);

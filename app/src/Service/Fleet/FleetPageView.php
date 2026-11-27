@@ -17,6 +17,7 @@ final class FleetPageView
         private EmpireDetails $details,
         private DestinationCatalogue $destinations,
         private OrbitRequestView $orbits,
+        private \App\Service\Market\MarketTraffic $marketTraffic,
         private FleetCompositionService $compositions,
     ) {
     }
@@ -129,6 +130,7 @@ final class FleetPageView
             $data['missions_page'] = $missions['page'];
             $data['missions_pages'] = $missions['pages'];
             if ($page === 'missions') {
+                $data['market_flights'] = $this->marketTraffic->forViewer($member);
                 $data['fleet_details'] = $this->details->fleets($member, $data['active_fleets']);
                 $data['combat_events'] = $this->repo->fleetCombatEvents($member, $data['active_fleets']);
             }

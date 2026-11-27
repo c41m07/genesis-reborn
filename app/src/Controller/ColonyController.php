@@ -11,7 +11,7 @@ use App\Service\Queue\QueueService;
 use App\Service\Player\{FirstStepsView, LeaderboardService, PreferencesService, RelationResolver};
 use App\Service\Catalog\GameCatalog;
 use App\Service\Guild\GuildHallFunding;
-use App\Service\Market\MarketTerms;
+use App\Service\Market\{MarketTerms, MarketTraffic};
 use App\Service\Fleet\{GalaxyGeometry, MovementCalculator};
 use App\Manager\GameManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -31,6 +31,7 @@ final class ColonyController extends AbstractController
         private \App\Service\Fleet\FleetVisibility $visibility,
         private \App\Service\PirateCampaign\PirateCampaignTraffic $campaignTraffic,
         private GameShell $shell,
+        private MarketTraffic $marketTraffic,
         private LiveRegionResponse $liveResponses,
         private GalaxyGeometry $galaxyGeometry,
         private MovementCalculator $movementCalculator,
@@ -517,9 +518,8 @@ final class ColonyController extends AbstractController
         }
         // A est la coordonnée commerciale de la galaxie Alpha, nom utilisé
         // par les cartes livrées. Le repère reste hors des cibles de mission.
-        $galaxyCode = strtolower($selectedGalaxy?->coordinateCode() ?? '');
         $marketCoordinate = $interactive
-            && in_array($galaxyCode, ['a', 'alpha'], true)
+            && $selectedGalaxy && MarketTraffic::containsStation($selectedGalaxy)
             && ($this->markets->find($m->universe)?->enabled ?? false)
             ? MarketTerms::COORDINATE
             : null;
@@ -527,6 +527,7 @@ final class ColonyController extends AbstractController
         $flights = [];
         $guildFlightFilterAvailable = false;
         $campaignTraffic = [];
+        $marketTraffic = [];
         $mapOccupations = [];
         $mapConquerable = [];
         $mapReinforceable = [];
@@ -609,6 +610,7 @@ final class ColonyController extends AbstractController
             $flights = $traffic['flights'];
             $guildFlightFilterAvailable = $traffic['guildFilterAvailable'];
             $campaignTraffic = $this->campaignTraffic->forGalaxy($m, $selectedGalaxy);
+            $marketTraffic = $selectedGalaxy ? $this->marketTraffic->forViewer($m, $selectedGalaxy) : [];
             $galaxyV2Json = json_encode([
                 'geometry' => ['name' => GalaxyGeometry::SPIRAL, 'extent' => GalaxyGeometry::EXTENT, 'unitsToAu' => GalaxyGeometry::UNITS_TO_AU],
                 'systems' => $mapSystems,
@@ -626,6 +628,7 @@ final class ColonyController extends AbstractController
                 'flights' => $flights,
                 'guildFilterAvailable' => $guildFlightFilterAvailable,
                 'campaignTraffic' => $campaignTraffic,
+                'marketTraffic' => $marketTraffic,
                 'serverNow' => $clock->now()->format(\DateTimeInterface::ATOM),
                 'galaxy' => $selectedGalaxy?->coordinateCode(),
                 'universe' => $m->universe->name,
@@ -647,6 +650,7 @@ final class ColonyController extends AbstractController
             'map_planet_relations' => $mapPlanetRelations,
             'galaxy_v2_flights' => $flights,
             'galaxy_campaign_traffic' => $campaignTraffic,
+            'galaxy_market_traffic' => $marketTraffic,
             'map_occupations' => $mapOccupations,
             'map_conquerable' => $mapConquerable,
             'map_reinforceable' => $mapReinforceable,

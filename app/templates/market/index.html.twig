@@ -114,7 +114,7 @@
         {% endif %}
         {% set statusLabels = {'outbound':'Vers la station', 'returning':'Vers la colonie', 'awaiting_colony':'Colonie de retour à choisir', 'completed':'Convoi revenu', 'abandoned':'Convoi abandonné'} %}
         {% for trade in trades %}
-            <article class="market-trip">
+            <article class="market-trip" id="market-trade-{{ trade.id }}">
                 <div>
                     <strong>Convoi n°{{ trade.id }} · {{ statusLabels[trade.status]|default(trade.status) }}</strong>
                     <span>{{ trade.payQuantity|number_format(0, ',', ' ') }} {{ labels[trade.payResource] }} → {{ trade.receiveQuantity|number_format(0, ',', ' ') }} {{ labels[trade.receiveResource] }}{{ trade.recalled ? ' · Rappelé, sans échange' : '' }}</span>

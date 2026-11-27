@@ -49,7 +49,7 @@
             <div class="gv2-minimap" data-galaxy-v2-target="minimapWrap">
                 <span>CARTE LOCALE</span><canvas data-galaxy-v2-target="minimapCanvas" aria-label="Mini-carte interactive ; cliquez pour déplacer la caméra"></canvas>
             </div>
-            {% set hasTraffic = galaxy_v2_flights is not empty or galaxy_campaign_traffic is not empty %}
+            {% set hasTraffic = galaxy_v2_flights is not empty or galaxy_campaign_traffic is not empty or galaxy_market_traffic is not empty %}
             <details class="gv2-flight-log {{ hasTraffic?'':'is-empty' }}" {{ hasTraffic?'open':'' }}>
                 <summary><span class="gv2-live-dot" aria-hidden="true"></span>Journal de flotte<span class="visually-hidden" data-galaxy-v2-empty-label {% if hasTraffic %}hidden{% endif %}> · aucune mission</span></summary>
                 <div id="gv2-fleet-log" data-galaxy-v2-target="fleetLog">

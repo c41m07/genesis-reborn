@@ -1,5 +1,5 @@
 import { test, expect } from './support/isolated-test.mjs';
-import { queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
+import { prepareOwnedColony, queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
 
 test.use({ hasTouch: true, viewport: { width: 1920, height: 1080 } });
 
@@ -22,6 +22,7 @@ test('Station commerciale : le noyau ouvre la Bourse et ne devient pas un systè
     await page.locator('article.universe-card').filter({ has: page.getByRole('heading', { name: /Omega/ }) }).getByRole('button').click();
     await expect(page).toHaveURL(/planetes\/\d+$/);
 
+    const home = Number(new URL(page.url()).pathname.split('/').pop());
     const universe = Number(queryIsolatedSql(project, "SELECT id FROM universe WHERE slug='omega-1'"));
     expect(universe).toBeGreaterThan(0);
     const marker = page.getByRole('link', { name: 'Station commerciale A:0:0 : ouvrir la Bourse' });
@@ -102,7 +103,37 @@ test('Station commerciale : le noyau ouvre la Bourse et ne devient pas un systè
         await plain.close();
     }
 
+    // Départ réel, sur les stocks et les cargos de la colonie de recette.
+    prepareOwnedColony(project, email);
+    runIsolatedSql(project, `UPDATE resource_market SET stock='{"metal":50000,"nano":50000}', targets='{"metal":50000,"nano":50000}' WHERE universe_id=${universe}`);
+    runIsolatedSql(project, `INSERT INTO fleet (player_universe_id,home_planet_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token)
+        SELECT owner_id,id,'idle','idle',1,'{}',0,0,0,0,'' FROM planet WHERE id=${home} AND NOT EXISTS (SELECT id FROM fleet WHERE home_planet_id=${home} AND status='idle')`);
+    runIsolatedSql(project, `INSERT INTO fleet_ship (fleet_id,slug,tier,quantity)
+        SELECT id,'transport','basic',1 FROM fleet WHERE home_planet_id=${home} AND status='idle' LIMIT 1 ON DUPLICATE KEY UPDATE quantity=quantity+1`);
+    await page.goto('/bourse');
+    await page.getByLabel('Quantité à envoyer').fill('100');
+    await page.getByRole('button', { name: 'Calculer le devis' }).click();
+    await page.getByRole('button', { name: 'Confirmer et lancer les cargos' }).click();
+    await expect(page.locator('.market-trip')).toContainText('Vers la station');
+    for (const route of ['/flottes', '/planetes/' + home]) {
+        await page.goto(route);
+        const panel = page.locator('[data-live-region="active-flights"]');
+        await expect(panel.locator('[data-market-trade]')).toContainText('Bourse · A:0:0');
+        await expect(panel.locator('h2 .badge')).toHaveText('1');
+    }
+    // Observer un tracé du convoi sur le vrai canvas, même quand les animations sont réduites.
+    await page.addInitScript(() => {
+        const stroke = CanvasRenderingContext2D.prototype.stroke;
+        CanvasRenderingContext2D.prototype.stroke = function (...args) {
+            if (this.strokeStyle === '#ffd37827' || (typeof this.strokeStyle === 'string' && this.strokeStyle.startsWith('rgba(255, 211, 120,'))) this.canvas.dataset.marketRouteDrawn = 'true';
+            return stroke.apply(this, args);
+        };
+    });
     runIsolatedSql(project, 'UPDATE resource_market SET enabled=0 WHERE universe_id=' + universe);
     await page.goto('/carte-v2');
     await expect(marker).toHaveCount(0);
+    await expect(page.locator('.gv2-flight-entry[data-market-trade]')).toContainText('Aller');
+    await expect(map.locator('canvas[data-market-route-drawn]')).toHaveCount(1);
+    await page.locator('.gv2-flight-entry[data-market-trade] a').click();
+    await expect(page.locator('.market-trip:target')).toContainText('Vers la station');
 });

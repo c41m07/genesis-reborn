@@ -8,7 +8,11 @@ est ouverte, son repère au centre de la galaxie A et le lien dans la légende
 ouvrent directement la Bourse. La page Bourse, aussi accessible depuis le
 menu Opérations, juxtapose le marché et le devis
 (maquette A) ; sur mobile ces deux sections s’empilent. Le suivi est propre à
-l’empire qui a envoyé le convoi.
+l’empire qui a envoyé le convoi. Le panneau **Flottes en vol** compte ses
+convois et donne accès à leur suivi. Dans **Galaxie**, le journal et la
+carte suivent l’aller vers A:0:0, puis le retour vers la colonie. Un rappel
+repart du point déjà atteint. Si la colonie de retour change, la carte
+repère la nouvelle destination. Le suivi continue si la Bourse ferme.
 
 L’administrateur ouvre la station dans **Univers → Gérer → Bourse de ressources**
 et précise la cible de chacun des quatre matériaux. Le stock initial est cette
