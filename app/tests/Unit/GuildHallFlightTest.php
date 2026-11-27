@@ -36,7 +36,7 @@ final class GuildHallFlightTest extends TestCase
 
         $navigation = new FleetNavigation();
         $flight = new GuildHallFlight(new MovementCalculator(), $navigation);
-        $result = $flight->quote($origin, $hall, [[
+        $ships = [[
             'slug' => 'transport',
             'quantity' => 1,
             'speed_system' => 360,
@@ -45,12 +45,21 @@ final class GuildHallFlightTest extends TestCase
             'fuel_travel_galaxy' => 2.0,
             'fuel_orbit' => 0.0,
             'cargo_capacity' => 200,
-        ]], 1.0, 1.0, 'proportional', $hall->placedAt);
+        ]];
+        $result = $flight->quote($origin, $hall, $ships, 1.0, 1.0, 'proportional', $hall->placedAt);
 
         self::assertSame(0, $result['navigation']['target'][4]);
         self::assertEquals(30.0, $result['movement']['one_way_fuel']);
         self::assertEquals(1.5, $navigation->traveled($result['navigation'], .5)['point']['position']);
         self::assertEquals(15.0, $navigation->traveled($result['navigation'], .5)['fuel']);
         self::assertEquals(0.0, $navigation->traveled($result['navigation'], 1.0)['point']['position']);
+
+        $delivery = $flight->quoteDelivery($hall, $origin, $ships, 1.0, 1.0, 'proportional', $hall->placedAt);
+        self::assertSame($result['navigation']['target'], $delivery['navigation']['origin']);
+        self::assertSame($result['navigation']['origin'], $delivery['navigation']['target']);
+        self::assertSame($result['movement']['seconds'], $delivery['movement']['seconds']);
+        self::assertEquals(30.0, $delivery['movement']['one_way_fuel']);
+        self::assertEquals(60.0, $delivery['movement']['total_fuel']);
+        self::assertEquals(3.0, $navigation->traveled($delivery['navigation'], 1.0)['point']['position']);
     }
 }
