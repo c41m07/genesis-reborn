@@ -534,9 +534,24 @@ final class GuildHallTest extends KernelTestCase
             $this->em->flush();
         }
         $handler = $container->get(GuildAtelierShipmentDueHandler::class);
+        $relay = $container->get(OutboxRelay::class);
+        $transport = $container->get('messenger.transport.async');
+        $published = static function () use ($transport, $id): array {
+            $messages = array_map(static fn ($entry) => $entry->getMessage(), $transport->getSent());
+
+            return array_values(array_filter($messages, static fn ($message) => $message instanceof GuildAtelierShipmentDue && $message->shipmentId === $id));
+        };
+        $relay->run();
+        self::assertSame([], $published());
         $handler($due);
         self::assertSame('outbound', $shipment->status);
+
         $clock->sleep($plan->seconds + 1);
+        $relay->run();
+        $relay->run();
+        self::assertCount(1, $published());
+        self::assertSame($due->token, $published()[0]->token);
+        $due = $published()[0];
         $handler($due);
         $this->em->clear();
         $handler($due);
@@ -546,13 +561,21 @@ final class GuildHallTest extends KernelTestCase
         if (!$accept) {
             self::assertSame(0, $this->dockHullCount($owner->id, $targetId, 'transport', 'basic'));
             self::assertNotSame($due->token, $shipment->arrivalToken);
-            $returned = new GuildAtelierShipmentDue($id, $shipment->arrivalToken);
+            $returnToken = $shipment->arrivalToken;
+            $relay->run();
+            self::assertCount(1, $published());
             $clock->sleep($plan->seconds + 1);
+            $relay->run();
+            $relay->run();
+            self::assertCount(2, $published());
+            $returned = $published()[1];
+            self::assertSame($returnToken, $returned->token);
             $handler($returned);
             $this->em->clear();
             $handler($returned);
             self::assertSame('returned', $this->em->find(GuildAtelierShipment::class, $id)->status);
         }
+        self::assertCount($accept ? 1 : 2, $published());
         self::assertSame($before + ($accept ? 1 : 0), $this->dockHullCount($memberId, $targetId, 'transport', 'basic'));
         $stock = $this->em->find(GuildAtelierStock::class, $hallId);
         self::assertSame($accept ? $send : $ships, $stock->ships);
