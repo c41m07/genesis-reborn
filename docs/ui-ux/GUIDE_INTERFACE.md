@@ -341,7 +341,7 @@ de la Vue générale ; [recette et captures](../REFONTE_VISUELLE_INTERFACES.md).
 
 ## Catalogues du cœur de jeu
 
-Les cartes suivent le même ordre que les filtres. Le pictogramme de catégorie accompagne le libellé sur les trois rangs.
+Les cartes suivent le même ordre que les filtres. Le pictogramme de catégorie accompagne le libellé sur les trois rangs. La sélection des vaisseaux pour une mission ou une escorte pirate reprend les pictogrammes du chantier, sur ordinateur et sur mobile.
 
 - Bâtiments : énergie, production, stockage, infrastructures, fortifications.
 - Recherche : économie (coûts), industrie (durées de construction), logistique (soutes et réserves), propulsion (vitesse), combat, défense, colonisation, espionnage.

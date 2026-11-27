@@ -68,6 +68,10 @@ test('Flottes : les trois rangs restent alignés et arrivent ensemble au devis, 
     await expect(absent.getByRole('button', { name: /Intermédiaire/ })).toBeDisabled();
     for (const width of [1440, 390, 360]) {
         await page.setViewportSize({ width, height: 900 });
+        const probeIcon = table.getByRole('rowheader', { name: /Sonde/ }).locator('svg');
+        await expect(probeIcon).toBeVisible();
+        await expect(probeIcon.locator('use')).toHaveAttribute('href', /#probe$/);
+        await expect(table.getByRole('rowheader', { name: /Chasseur de patrouille/ }).locator('use')).toHaveAttribute('href', /#fleet$/);
         const sizes = await table.locator('.fleet-composition-control').evaluateAll(controls => controls.map(control => {
             const field = control.querySelector('input').getBoundingClientRect();
             const arrow = control.querySelector('button').getBoundingClientRect();

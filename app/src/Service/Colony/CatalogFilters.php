@@ -46,6 +46,21 @@ final class CatalogFilters
         };
     }
 
+    // Les sélections de mission reprennent les catégories du chantier, y compris les rôles civils.
+    public function shipIcon(array $definition): string
+    {
+        $category = $this->category('ships', $definition);
+
+        return match ($category) {
+            'light' => 'fleet',
+            'transport' => 'freighter',
+            'colony' => 'colony-ship',
+            'espionage' => 'probe',
+            'utility' => 'satellite',
+            'bomber', 'escort', 'heavy', 'capital' => $category,
+        };
+    }
+
     public function options(string $group,array $definitions): array
     {
         $present=['all'=>true];

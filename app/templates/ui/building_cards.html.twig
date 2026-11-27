@@ -18,7 +18,6 @@
 {% set categoryIcons = {
     buildings: {energy:'electricity', economy:'extraction', storage:'storage', infrastructure:'buildings', defense:'fortification'},
     technologies: {economy:'economy', industry:'industry', logistics:'logistics', propulsion:'propulsion', combat:'target', defense:'shield', expansion:'expansion', espionage:'intelligence', infrastructure:'research'},
-    ships: {light:'fleet', bomber:'bomber', escort:'escort', heavy:'heavy', capital:'capital', transport:'freighter', colony:'colony-ship', espionage:'probe', utility:'satellite'},
 } %}
 {# Les familles conservent l’ordre du catalogue pour les trois rangs, même après filtrage. #}
 {% for slug, ranks in families %}
@@ -26,7 +25,7 @@
     {% set category = (ranks|first).filter_category %}
     {% set accessible = ranks|filter(card => not card.failures or card.maximum) %}
     {% set familyLabel = catalog_filter_options[group][category] %}
-    {% set familyIcon = group == 'defenses' ? 'diplomacy' : categoryIcons[group][category] %}
+    {% set familyIcon = group == 'ships' ? ship_category_icon(definition) : (group == 'defenses' ? 'diplomacy' : categoryIcons[group][category]) %}
     <article class="panel catalog-card card--{{ group }} building-card" data-building-catalog-target="family" data-slug="{{ slug }}" data-catalog-filter-target="card" data-category="{{ category }}" data-catalog-visible="{{ show_locked_items or accessible ? 'true' : 'false' }}" {% if not show_locked_items and not accessible %}hidden{% endif %}>
         <nav class="building-rank-tabs" aria-label="Rangs de {{ definition.label }}">
             {% for card in ranks %}

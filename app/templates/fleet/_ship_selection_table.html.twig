@@ -21,7 +21,7 @@
             {% set definition = catalog[slug] %}
             <tr>
                 <th scope="row">
-                    <span class="fleet-composition-name">{{ ui.icon('fleet') }} {{ definition.label }}</span>
+                    <span class="fleet-composition-name">{{ ui.icon(ship_category_icon(definition)) }} {{ definition.label }}</span>
                     {% if not isEscort and definition.economic_unit is defined %}
                         <span class="fleet-composition-restriction">Stationnement entre vos colonies, sans fret</span>
                     {% endif %}

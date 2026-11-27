@@ -158,6 +158,7 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
 
     // La limite du dossier doit rester distincte du stock affiché.
     setFighterQuantity(5);
+    runIsolatedSql(project, "INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'bomber','basic',1 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle'");
     runIsolatedSql(project, "INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'fighter','intermediate',2 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle' ON DUPLICATE KEY UPDATE quantity=2");
     runIsolatedSql(project, "INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'solar_satellite','basic',1 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle' ON DUPLICATE KEY UPDATE quantity=1");
     runIsolatedSql(project, `UPDATE universe SET game_settings=JSON_MERGE_PATCH(game_settings,'{"limits":{"max_fleet_size":3}}') WHERE id=${universe}`);
@@ -176,6 +177,9 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     const escortTable = dossier.getByRole('table', { name: 'Choisir l’escorte', exact: true });
     await expect(escortTable.getByRole('columnheader')).toHaveText(['Élément', 'Basique', 'Intermédiaire', 'Supérieur']);
     await expect(escortTable.getByText(/Satellite/)).toHaveCount(0);
+    const bomberIcon = escortTable.getByRole('rowheader', { name: /Bombardier/ }).locator('svg');
+    await expect(bomberIcon).toBeVisible();
+    await expect(bomberIcon.locator('use')).toHaveAttribute('href', /#bomber$/);
     const fighter = escortTable.getByRole('row', { name: /^Chasseur de patrouille/ });
     const [basic, intermediate, superior] = await fighter.getByRole('spinbutton').all();
     await expect(fighter.getByRole('button')).toHaveCount(3);
