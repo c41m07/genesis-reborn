@@ -170,8 +170,9 @@ test('Catalogues : filtres actuels par rôle, classe et effet, sans résumé des
   test.setTimeout(180000);const own=await enter(page);const project=process.env.BROWSER_ROUTER;
   runIsolatedSql(project,`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.showLockedItems',true) WHERE id=${own.playerId}`);
   const path=`/planetes/${own.planetId}`;
-  const cases=[['buildings','Production',['power_plant','mine_metal','mine_nano','mine_hydrogen','mine_antimatter']],
-    ['technologies','Propulsion et logistique',['vector_propulsion','cryogenic_reserves','modular_cargo_bays']],['technologies','Colonisation',['colonial_expansion']],
+  const cases=[['buildings','Énergie',['power_plant']],['buildings','Production',['mine_metal','mine_nano','mine_hydrogen','mine_antimatter']],
+    ['technologies','Économie',['naval_engineering','nanomaterial_synthesis']],['technologies','Industrie',['engineering_foundations']],
+    ['technologies','Propulsion',['vector_propulsion']],['technologies','Logistique',['cryogenic_reserves','modular_cargo_bays']],['technologies','Colonisation',['colonial_expansion']],
     ['technologies','Défense',['automated_defense_repair']],['ships','Transport',['transport']],['ships','Colonisation',['colony_ship']],['ships','Espionnage',['probe']],
     ['ships','Légers',['fighter','interceptor','stealth_fighter']],['ships','Capitaux',['capital']],['defenses','Anti-légers',['ground_turret_anti_light']],['defenses','Anti-capitaux',['ground_turret_anti_capital']]];
   for (const [group,label,expected] of cases) {
@@ -183,6 +184,28 @@ test('Catalogues : filtres actuels par rôle, classe et effet, sans résumé des
   }
   for (const group of ['buildings','technologies','ships','defenses']) {
     await page.goto(`${path}?section=${group}`);await page.setViewportSize({width:390,height:900});
+    const expectedCategories = {
+      buildings: ['energy','economy','storage','infrastructure','defense'],
+      technologies: ['economy','industry','logistics','propulsion','combat','defense','expansion','espionage'],
+      ships: ['light','bomber','escort','heavy','capital','transport','colony','espionage','utility'],
+    }[group];
+    if (expectedCategories) {
+      await expect(page.locator('.catalog-filters button')).toHaveCount(expectedCategories.length + 1);
+      expect(await page.locator('.catalog-filters button').evaluateAll(buttons => buttons.map(button => button.dataset.category))).toEqual(['all', ...expectedCategories]);
+      const badges = await page.locator('.building-card').evaluateAll(cards => cards.map(card => ({
+        category: card.dataset.category, icons: [...card.querySelectorAll('.catalogue-family-mark use')].map(icon => icon.getAttribute('href')),
+      })));
+      expect(badges.map(badge => badge.category).filter((value, index, categories) => value !== categories[index - 1])).toEqual(expectedCategories);
+      const icons = new Set();
+      for (const category of expectedCategories) {
+        const typeIcons = new Set(badges.filter(badge => badge.category === category).flatMap(badge => badge.icons));
+        expect(typeIcons.size).toBe(1);
+        icons.add([...typeIcons][0]);
+      }
+      expect(icons.size).toBe(expectedCategories.length);
+      const sprite = await page.evaluate(async () => (await fetch('/art/icons.svg')).text());
+      for (const icon of icons) expect(sprite).toContain('id="' + icon.split('#')[1] + '"');
+    }
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
     expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);
     await page.screenshot({path:testInfo.outputPath(`filters-${group}-390.png`),fullPage:true});

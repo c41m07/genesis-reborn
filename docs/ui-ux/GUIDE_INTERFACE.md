@@ -141,6 +141,10 @@ Les fondations existantes doivent être relevées dans `assets/styles/`, `assets
 
 Couleurs sémantiques; typographies et échelle; espacements/grille/breakpoints; rayons/ombres; icônes; focus, hover, disabled et erreurs; règles de mouvement; boutons, champs, tableaux, filtres, cartes, onglets, menus, modales, notifications, alertes, badges, pagination, progressions, états vides et chargements.
 
+### Pictogrammes du menu joueur
+
+Chaque destination de la barre latérale a un pictogramme distinct à côté de son libellé. La Bourse utilise une balance et l’Inventaire un sac à dos. Les raccourcis de la barre mobile reprennent le pictogramme de leur destination. Les lecteurs d’écran annoncent le libellé du lien.
+
 ### Onglets et filtres en pastilles
 
 La référence visuelle commune est le filtre de catalogue : pastilles arrondies, contour discret, fond transparent et état actif cyan légèrement teinté. Utiliser la classe partagée `ui-tabs` et les règles de `assets/styles/tabs.css` pour les onglets de page, les filtres de catalogue et les familles de l’administration. Les pastilles passent à la ligne sur petit écran ; le focus clavier reste visible. L’état actif s’appuie sur `aria-current`, `aria-selected` ou `aria-pressed` selon le comportement existant. Les thèmes clair et sombre utilisent leurs variables de couleur.
@@ -336,6 +340,12 @@ existantes sont conservés. Styles limités à `.colony-redesign`, sans modifica
 de la Vue générale ; [recette et captures](../REFONTE_VISUELLE_INTERFACES.md).
 
 ## Catalogues du cœur de jeu
+
+Les cartes suivent le même ordre que les filtres. Le pictogramme de catégorie accompagne le libellé sur les trois rangs.
+
+- Bâtiments : énergie, production, stockage, infrastructures, fortifications.
+- Recherche : économie (coûts), industrie (durées de construction), logistique (soutes et réserves), propulsion (vitesse), combat, défense, colonisation, espionnage.
+- Chantier spatial : légers, bombardiers, escorteurs, lourds, capitaux, transport, colonisation, espionnage, utilitaires.
 
 - Dans les quatre catalogues, un badge à côté du rang montre le niveau actuel (bâtiments et recherches) ou le nombre d’unités en réserve ou installées (vaisseaux et défenses). Le badge affiche en rouge les niveaux et effectifs à zéro. La flèche verte reste visible quand la commande est disponible.
 - Les grandes valeurs suivent la notation compacte du jeu ; la description accessible de l’onglet conserve la valeur exacte, même pour un rang verrouillé. Les libellés peuvent s’abréger lorsqu’ils manquent de place, sans changer le nom accessible du rang. Le badge n’ajoute aucun arrêt au clavier. La carte du rang choisi garde son compteur détaillé et ses prérequis.
