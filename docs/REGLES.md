@@ -998,3 +998,9 @@ L’effet combat est figé à l’ouverture du combat et ne s’applique pas aux
 ## Rapports de campagne et fret des convois pirates
 
 Les rapports privés de reconnaissance et de combat de la campagne rejoignent les rubriques Espionnage et Combats. Chaque trajet du convoi produit un rapport de transport dans Économie. À la livraison, une boîte de ressources contient la totalité du fret annoncé, demi-unités comprises. Le joueur choisit une colonie de son univers à l’ouverture. Elle doit pouvoir accueillir tout le contenu. Une livraison déjà créditée avant cette évolution reste acquise et ne donne aucune boîte supplémentaire.
+
+## Notifications des boîtes et des demandes d’orbite
+
+Une boîte de convoi pirate devient nouvelle lors de sa livraison effective. Toute nouvelle boîte suit cette règle de signalement, quelle que soit sa provenance. Un objet reçu lorsque l’inventaire est plein est signalé dans les récompenses en attente. Son éventuelle promotion conserve son état de lecture. Un premier retrait réussi, même partiel pour l’Avent, ou un marquage comme vu retire le signal de la boîte. Les stocks antérieurs conservent leur état de lecture.
+
+Le badge Flottes compte les demandes d’orbite reçues qui attendent encore une réponse sur les colonies du joueur dans son univers. Le lien ouvre la colonie de la demande à l’échéance la plus proche. Les anciennes demandes à traiter après l’arrivée restent accessibles.

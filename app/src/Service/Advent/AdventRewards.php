@@ -73,12 +73,12 @@ final readonly class AdventRewards
         return ['count' => (int) $result['total'], 'through' => $result['newest'] === null ? null : (int) $result['newest']];
     }
 
-    public function acknowledgeGiftNotices(PlayerUniverse $membership, int $through): void
+    public function acknowledgeGiftNotices(PlayerUniverse $membership, int $through, bool $single = false): void
     {
         // Une nouvelle boîte créditée pendant la consultation doit garder son indicateur.
         $this->em->createQuery('UPDATE '.AdventClaim::class.' c SET c.boxUnread = false
             WHERE c.player = :player AND c.boxUniverseId = :universe AND c.boxUnread = true
-            AND c.deliveredAt IS NULL AND c.boxExpiresAt > :now AND c.id <= :through')
+            AND c.deliveredAt IS NULL AND c.boxExpiresAt > :now AND c.id '.($single ? '=' : '<=').' :through')
             ->setParameter('player', $membership->player)->setParameter('universe', $membership->universe->id)
             ->setParameter('now', $this->clock->now()->setTimezone(new \DateTimeZone('UTC')))
             ->setParameter('through', $through)->execute();
@@ -242,6 +242,8 @@ final readonly class AdventRewards
             }
             if ($claim->boxExpiresAt !== null) {
                 $this->resources->creditAdventBox($planet, $portion, $now);
+                // Même un premier versement partiel correspond à une ouverture de la boîte.
+                $claim->boxUnread = false;
             } else {
                 // Les anciens reçus gardent leur délai et leurs règles de dépôt.
                 $deposit = $this->resources->deposit($planet, $portion, allOrNothing: true);

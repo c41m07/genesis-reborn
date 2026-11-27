@@ -21,11 +21,13 @@ final readonly class AdventGiftNoticeSource implements InventoryGiftNoticeSource
 
     public function summary(PlayerUniverse $membership): array
     {
-        return $this->rewards->giftNoticeSummary($membership);
+        $summary = $this->rewards->giftNoticeSummary($membership);
+
+        return $summary + ['boxes' => $summary['count'], 'pending' => 0];
     }
 
-    public function acknowledge(PlayerUniverse $membership, int $through): void
+    public function acknowledge(PlayerUniverse $membership, int $through, bool $single = false): void
     {
-        $this->rewards->acknowledgeGiftNotices($membership, $through);
+        $this->rewards->acknowledgeGiftNotices($membership, $through, $single);
     }
 }

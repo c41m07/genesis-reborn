@@ -73,6 +73,7 @@ test('L3 A : inventaire guidé, confirmations, états vides et vacances dans les
   }
   for (let i = 0; i < 3; i++) rows.push(`(${member},'event','inventory-a-pending-${i}','pending',DATE_SUB(UTC_TIMESTAMP(),INTERVAL ${3 - i} MINUTE),'boost',NULL)`);
   runIsolatedSql(project, `INSERT INTO player_boost(player_universe_id,source_type,source_key,status,earned_at,kind,payload) VALUES ${rows.join(',')}`);
+  runIsolatedSql(project, `UPDATE player_boost SET gift_unread=1 WHERE player_universe_id=${member} AND source_key IN ('inventory-a-box-1-0','inventory-a-pending-0')`);
   for (const [planet, type, slug] of [[home, 'building', 'mine_metal'], [second.id, 'research', 'engineering_foundations']]) {
     runIsolatedSql(project, `INSERT INTO queue_item(planet_id,player_universe_id,queue_type,item_slug,tier,item_level,quantity,duration_seconds,started_at,queued_at,dispatch_token,paid_costs) VALUES (${planet},${member},'${type}','${slug}','basic',1,1,86400,UTC_TIMESTAMP(),UTC_TIMESTAMP(),'${crypto.randomUUID().replaceAll('-', '')}','{}')`);
   }
@@ -93,6 +94,8 @@ test('L3 A : inventaire guidé, confirmations, états vides et vacances dans les
         for (const [href, count] of [['/boosts', '12'], ['/inventaire/boites', '88'], ['/inventaire/recompenses', '3']]) {
           await expect(nav.locator(`a[href="${href}"] .badge`)).toHaveText(count);
         }
+        await expect(nav.locator('[data-page="boxes"]')).toHaveText('1 nouveau');
+        await expect(nav.locator('[data-page="pending"]')).toHaveText('1 nouveau');
         if (key === 'boosts') {
           const picker = page.getByLabel('Opération à accélérer', { exact: true });
           await picker.selectOption('queue-' + research);

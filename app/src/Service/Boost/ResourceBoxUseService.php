@@ -28,6 +28,7 @@ final class ResourceBoxUseService
             $payload=$this->policy->validatePayload($box->payload ?? []);
             $result=$this->resources->deposit($planet,$payload['resources']);
             if (array_sum($result['overflow'])>0) throw new \DomainException('Ouverture refusée : les entrepôts ne peuvent pas accueillir tout le contenu. La boîte reste intacte.');
+            $box->giftUnread = false;
             $box->status='used';$box->usedAt=$this->clock->now();$box->operationType='planet';$box->operationId=$planetId;
             $this->manager->flush();$this->grants->promoteOldestPendingLocked($membership);
             return true;

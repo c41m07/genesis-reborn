@@ -2324,3 +2324,7 @@ Les reçus antérieurs restent valides pour poursuivre le cycle, sans remboursem
 ## 27 novembre 2026 — Rapports de campagne et récompense du convoi
 
 Les rapports privés de reconnaissance et de combat de la campagne rejoignent les rubriques Espionnage et Combats. Chaque trajet du convoi produit un rapport de transport dans Économie. À la livraison, une boîte de ressources contient la totalité du fret annoncé, demi-unités comprises. Le joueur choisit une colonie de son univers à l’ouverture. Elle doit pouvoir accueillir tout le contenu. Une livraison déjà créditée avant cette évolution reste acquise et ne donne aucune boîte supplémentaire.
+
+## Signaux de nouveauté dans les menus — 27 novembre 2026
+
+Le compteur Inventaire signale chaque nouvelle boîte, les bonus quotidiens et les récompenses placées en attente. La consultation du rapport d’un convoi et celle de sa boîte sont indépendantes. Les destinations existantes Boîtes et Récompenses en attente portent leur propre compteur de nouveautés. Le badge rouge de Flottes conduit aux décisions d’orbite en attente.

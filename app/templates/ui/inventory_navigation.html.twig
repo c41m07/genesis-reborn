@@ -6,7 +6,7 @@
     {page:'pending',route:'app_inventory_pending',label:'Récompenses en attente',count:inventory_counts.pending}
 ] %}
 {% set active = inventory_page == destination.page %}
-{% set inventoryDestinations = inventoryDestinations|merge([destination|merge({active:active})]) %}
+{% set inventoryDestinations = inventoryDestinations|merge([destination|merge({active:active, newCount:giftNotices[destination.page], noticePage:destination.page})]) %}
 {% if active %}{% set currentLabel = destination.label ~ ' · ' ~ destination.count %}{% endif %}
 {% endfor %}
 {% include 'ui/space_navigation.html.twig' with {

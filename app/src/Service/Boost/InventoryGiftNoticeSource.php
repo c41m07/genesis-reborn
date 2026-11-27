@@ -12,8 +12,8 @@ interface InventoryGiftNoticeSource
 {
     public function key(): string;
 
-    /** @return array{count: int, through: ?int} Nombre et dernier identifiant visible au rendu. */
+    /** @return array{count: int, through: ?int, boxes: int, pending: int} Nombre et dernier identifiant visible au rendu. */
     public function summary(PlayerUniverse $membership): array;
 
-    public function acknowledge(PlayerUniverse $membership, int $through): void;
+    public function acknowledge(PlayerUniverse $membership, int $through, bool $single = false): void;
 }

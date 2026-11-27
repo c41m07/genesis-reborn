@@ -148,11 +148,11 @@ final class BoostGrantService
         $boost->kind = $timedEffect !== null ? TimedBoostEffects::KIND : ($boxPayload === null ? 'boost' : 'resource_box');
         $boost->payload = $timedEffect !== null ? ['effect' => $timedEffect] : ($boxPayload === null ? null : $this->boxes->validatePayload($boxPayload));
         $boost->earnedAt = $now;
-        // Seul un nouveau bonus quotidien alimente le badge ; les autres attributions gardent leur comportement.
-        $boost->giftUnread = $timedEffect !== null;
         $boost->status = $this->repo->countBoosts($membership, 'available') < $this->inventoryCapacity()
             ? 'available'
             : 'pending';
+        // Une promotion conserve la lecture initiale et ne signale jamais deux fois le même objet.
+        $boost->giftUnread = $boxPayload !== null || $timedEffect !== null || $boost->status === 'pending';
 
         $this->manager->save($boost);
         $this->manager->flush();

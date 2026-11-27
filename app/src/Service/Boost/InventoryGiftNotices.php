@@ -16,30 +16,34 @@ final readonly class InventoryGiftNotices
     ) {
     }
 
-    /** @return array{count: int, through: array<string, int>} */
+    /** @return array{count: int, through: array<string, int>, boxes: int, pending: int, boosts: int} */
     public function summary(PlayerUniverse $membership): array
     {
         $count = 0;
+        $boxes = 0;
+        $pending = 0;
         $through = [];
         foreach ($this->sources as $source) {
             $snapshot = $source->summary($membership);
             $count += $snapshot['count'];
+            $boxes += $snapshot['boxes'];
+            $pending += $snapshot['pending'];
             if ($snapshot['through'] !== null) {
                 $through[$source->key()] = $snapshot['through'];
             }
         }
 
-        return compact('count', 'through');
+        return compact('count', 'through', 'boxes', 'pending') + ['boosts' => $count - $boxes - $pending];
     }
 
     /** @param array<string, int> $through Limites authentifiées tirées du rendu initial. */
-    public function acknowledge(PlayerUniverse $membership, array $through): void
+    public function acknowledge(PlayerUniverse $membership, array $through, bool $single = false): void
     {
         foreach ($this->sources as $source) {
             // Une édition ouverte après l'affichage ne doit pas faire disparaître un nouveau cadeau.
             $last = $through[$source->key()] ?? null;
             if (is_int($last) && $last > 0) {
-                $source->acknowledge($membership, $last);
+                $source->acknowledge($membership, $last, $single);
             }
         }
     }

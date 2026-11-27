@@ -5,7 +5,7 @@
     {% for claim in advent_boxes %}
         <article class="panel" id="advent-box-{{ claim.door }}">
             {% set shipBox = claim.award.kind|default('') == 'ship_pack' %}
-            <h3>{{ shipBox ? 'Boîte de vaisseaux' : 'Boîte de ressources' }} · Avent {{ claim.adventEdition.season }} · Porte {{ claim.door }}</h3>
+            <h3>{{ shipBox ? 'Boîte de vaisseaux' : 'Boîte de ressources' }} · Avent {{ claim.adventEdition.season }} · Porte {{ claim.door }}</h3>{% if claim.boxUnread %}<span class="inventory-new-label">Nouveau</span>{% endif %}
             <p>À ouvrir avant le <time datetime="{{ claim.boxExpiresAt|date('c', 'UTC') }}">{{ claim.boxExpiresAt|date('d/m/Y à H:i', 'Europe/Paris') }}</time>, heure de Paris.</p>
             {% if shipBox %}
                 <p>{% include 'advent/_offer.html.twig' with {offer:claim.award, ships:advent_ships} only %}</p>
@@ -26,6 +26,8 @@
                     <button class="primary">Ouvrir la boîte<span class="visually-hidden"> de la porte {{ claim.door }}</span></button>
                 </form>
             {% endif %}
+
+            {% if claim.boxUnread %}{% include 'boosts/_mark_box_seen.html.twig' with {id:claim.id, source:'advent'} %}{% endif %}
         </article>
     {% endfor %}
 </section>

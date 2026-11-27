@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['badge', 'conversations', 'guildRecruitment', 'guildRecruitmentDescription', 'inventoryGift', 'inventoryGiftDescription', 'inventoryGiftIndicator'];
+    static targets = ['badge', 'conversations', 'guildRecruitment', 'guildRecruitmentDescription', 'inventoryGift', 'inventoryGiftDescription', 'inventoryGiftIndicator', 'inventoryTab', 'orbitCount', 'orbitDescription', 'fleetLink'];
     static values = { url: String };
 
     connect() {
@@ -51,6 +51,23 @@ export default class extends Controller {
                 for (const description of this.guildRecruitmentDescriptionTargets) {
                     const count = data.guildRecruitmentCount;
                     description.textContent = count > 0 ? count + ' ' + (count === 1 ? description.dataset.singular : description.dataset.plural) : '';
+                }
+                const orbits = data.orbitDecisions;
+                if (orbits && this.renderCount(this.orbitCountTargets, orbits.count)) {
+                    for (const link of this.fleetLinkTargets) {
+                        const url = new URL(orbits.count ? link.dataset.orbitsUrl : link.dataset.missionsUrl, window.location.origin);
+                        if (orbits.count) url.searchParams.set('colony', orbits.colony);
+                        link.href = url.href;
+                    }
+                    for (const description of this.orbitDescriptionTargets) {
+                        description.textContent = orbits.count ? orbits.count + (orbits.count === 1 ? ' demande d’orbite à traiter' : ' demandes d’orbite à traiter') : '';
+                    }
+                }
+                for (const tab of this.inventoryTabTargets) {
+                    const count = data.inventoryTabs?.[tab.dataset.page];
+                    if (!Number.isInteger(count)) continue;
+                    tab.textContent = count + (count === 1 ? ' nouveau' : ' nouveaux');
+                    tab.hidden = count === 0;
                 }
                 const gifts = data.inventoryGiftCount;
                 if (this.renderCount(this.inventoryGiftTargets, gifts)) {

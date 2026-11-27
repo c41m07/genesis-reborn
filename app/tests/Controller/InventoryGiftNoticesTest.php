@@ -93,6 +93,57 @@ final class InventoryGiftNoticesTest extends WebTestCase
         self::assertSame(1, $this->giftCount());
     }
 
+    public function testBoxesHaveIndependentReadStateAndFollowTheAvailableSlot(): void
+    {
+        $owner = $this->player('BoxOwner');
+        $member = $owner->currentPlayerUniverse;
+        $grants = self::getContainer()->get(\App\Service\Boost\BoostGrantService::class);
+        $box = ['format' => 'convoy', 'resources' => ['metal' => 1, 'nano' => 0, 'antimatter' => 0, 'hydrogen' => 0]];
+        $grants->awardEvent($member, 'first-box', $box);
+        $grants->awardEvent($member, 'second-box', $box);
+        // Remplir les autres emplacements afin de passer par la vraie mise en attente.
+        for ($slot = 2; $slot < $grants->inventoryCapacity(); ++$slot) {
+            $this->seedBoost($owner, 'slot-'.$slot, kind: 'boost', unread: false);
+        }
+        $grants->awardEvent($member, 'waiting-box', $box);
+
+        $this->browser->loginUser($owner);
+        $page = $this->browser->request('GET', '/inventaire/boites');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.inventory-gift-count', '3');
+        self::assertSelectorTextContains('[data-page="boxes"]', '2 nouveaux');
+        self::assertSelectorTextContains('[data-page="pending"]', '1 nouveau');
+        $this->browser->submit($page->selectButton('Marquer une boîte comme vue')->form());
+        $page = $this->browser->followRedirect();
+        self::assertSelectorTextContains('.resource-box-card .inventory-new-label', 'Nouveau');
+        self::assertSelectorTextContains('.inventory-gift-count', '2');
+
+        $form = $page->filter('.resource-box-form')->form();
+        $planet = $this->entities->getRepository(\App\Entity\Planet::class)->findOneBy(['owner' => $member]);
+        $this->entities->getConnection()->executeStatement(
+            "UPDATE planet_resource SET current_stock = 0, last_updated_at = ? WHERE planet_id = ? AND resource_type = 'metal'",
+            [$this->now->format('Y-m-d H:i:s'), $planet->id],
+        );
+        $form['planet_id'] = (string) $planet->id;
+        $this->browser->submit($form);
+        $afterOpening = $this->browser->followRedirect();
+        self::assertSame([], $afterOpening->filter('.flash.error')->each(static fn ($notice) => $notice->text()));
+        // Le plus ancien exemplaire, déjà vu, est ouvert. La boîte en attente prend sa place.
+        self::assertSelectorTextContains('[data-page="boxes"]', '2 nouveaux');
+        self::assertSelectorExists('[data-page="pending"][hidden]');
+        $form = $afterOpening->filter('.resource-box-form')->form();
+        $form['planet_id'] = (string) $planet->id;
+        $this->browser->submit($form);
+        $this->browser->followRedirect();
+        self::assertSelectorTextContains('[data-page="boxes"]', '1 nouveau');
+        self::assertSame(1, $this->giftCount());
+        $this->browser->request('GET', '/inventaire/boites');
+        $this->browser->submitForm('Marquer les cadeaux comme vus');
+        $this->browser->followRedirect();
+        self::assertSelectorExists('.inventory-gift-count[hidden]');
+        self::assertSelectorNotExists('.resource-box-card .inventory-new-label');
+    }
+
     private function giftCount(): int
     {
         $this->browser->request('GET', '/messages/non-lus');

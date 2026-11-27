@@ -18,13 +18,15 @@ final class InventoryGiftNoticeController extends AbstractController
         $membership = $context->membership();
         $through = $request->request->getString('through');
         $page = $request->request->getString('page');
+        $single = $request->request->getBoolean('single');
+        $tokenPrefix = $single ? 'inventory-gift-single-' : 'inventory-gifts-';
         $returnRoute = match ($page) {
             'boxes' => 'app_inventory_boxes',
             'pending' => 'app_inventory_pending',
             'boosts' => 'app_boosts',
             default => throw $this->createNotFoundException(),
         };
-        if (strlen($through) > 500 || !$this->isCsrfTokenValid('inventory-gifts-'.$membership->id.'-'.$page.'-'.$through, $request->request->getString('_token'))) {
+        if (strlen($through) > 500 || !$this->isCsrfTokenValid($tokenPrefix.$membership->id.'-'.$page.'-'.$through, $request->request->getString('_token'))) {
             throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez l’inventaire.');
         }
 
@@ -37,7 +39,7 @@ final class InventoryGiftNoticeController extends AbstractController
         if (!is_array($limits)) {
             throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez l’inventaire.');
         }
-        $notices->acknowledge($membership, $limits);
+        $notices->acknowledge($membership, $limits, $single);
 
         return $this->redirectToRoute($returnRoute, [], Response::HTTP_SEE_OTHER);
     }

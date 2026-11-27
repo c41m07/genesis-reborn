@@ -852,6 +852,41 @@ final class GameRepository
         return $query->orderBy('f.arrivalAt', 'ASC')->addOrderBy('f.id', 'ASC')->getQuery()->getResult();
     }
 
+    /** @return array{count:int, colony:?int} Demandes reçues et première colonie à ouvrir depuis le menu. */
+    public function orbitDecisionsDue(PlayerUniverse $viewer, \DateTimeImmutable $now): array
+    {
+        if (!$viewer->isPlayerControlled() || $viewer->player->lockedAt !== null) {
+            return ['count' => 0, 'colony' => null];
+        }
+        // Compter dans l’univers du destinataire sans charger les flottes ni les découvertes.
+        // Les anciennes demandes à l’arrivée restent recevables sans date limite.
+        $row = $this->em->getConnection()->fetchAssociative(<<<'SQL'
+            SELECT COUNT(*) OVER () AS total, f.destination_id AS colony
+            FROM fleet f
+            JOIN planet target ON target.id = f.destination_id
+            JOIN solar_system ts ON ts.id = target.solar_system_id
+            JOIN galaxy tg ON tg.id = ts.galaxy_id
+            JOIN planet home ON home.id = f.home_planet_id
+            JOIN solar_system hs ON hs.id = home.solar_system_id
+            JOIN galaxy hg ON hg.id = hs.galaxy_id
+            JOIN player_universe sender ON sender.id = f.player_universe_id
+            WHERE target.owner_id = :viewer AND sender.id <> :viewer
+              AND tg.universe_id = :universe AND hg.universe_id = :universe AND sender.universe_id = :universe
+              AND f.mission = 'orbit' AND (
+                (f.status = 'orbit_pending' AND JSON_EXTRACT(f.navigation, '$.orbit_request.version') IS NULL)
+                OR (f.status = 'traveling' AND f.arrival_at > :now
+                    AND JSON_EXTRACT(f.navigation, '$.orbit_request.version') = 1
+                    AND JSON_VALUE(f.navigation, '$.orbit_request.status') = 'pending'
+                    AND JSON_EXTRACT(f.navigation, '$.orbit_request.recipient_id') = :viewer
+                    AND JSON_EXTRACT(f.navigation, '$.orbit_request.planet_id') = target.id)
+              )
+            ORDER BY f.arrival_at IS NULL, f.arrival_at, f.id LIMIT 1
+            SQL, ['viewer' => $viewer->id, 'universe' => $viewer->universe->id,
+                'now' => $now->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s')]);
+
+        return $row ? ['count' => (int) $row['total'], 'colony' => (int) $row['colony']] : ['count' => 0, 'colony' => null];
+    }
+
     public function activeFleetsInUniverse(Universe $universe): array
     {
         return $this->em->createQueryBuilder()->select(

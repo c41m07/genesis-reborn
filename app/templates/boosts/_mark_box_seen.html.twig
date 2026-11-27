@@ -1,0 +1,8 @@
+{% set through = {(source):id}|json_encode %}
+<form method="post" action="{{ path('app_inventory_gift_notice_consult') }}">
+    <input type="hidden" name="page" value="{{ inventory_page }}">
+    <input type="hidden" name="single" value="1">
+    <input type="hidden" name="through" value="{{ through }}">
+    <input type="hidden" name="_token" value="{{ csrf_token('inventory-gift-single-' ~ membership.id ~ '-' ~ inventory_page ~ '-' ~ through) }}">
+    <button class="text-button">Marquer {{ grouped|default(false) ? 'une boîte' : 'cette boîte' }} comme vue</button>
+</form>

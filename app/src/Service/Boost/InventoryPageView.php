@@ -65,8 +65,12 @@ final class InventoryPageView
             foreach ($this->repo->availableResourceBoxes($membership) as $item) {
                 // Une carte représente un contenu identique et ouvre toujours son plus ancien objet disponible.
                 $key = hash('sha256', json_encode($item->payload));
-                $groups[$key] ??= ['item' => $item, 'quantity' => 0];
+                $groups[$key] ??= ['item' => $item, 'quantity' => 0, 'unread' => 0, 'firstUnread' => null];
                 ++$groups[$key]['quantity'];
+                if ($item->giftUnread) {
+                    ++$groups[$key]['unread'];
+                    $groups[$key]['firstUnread'] ??= $item->id;
+                }
             }
             $adventBoxes = $this->adventRewards->boxes($membership);
             return $data + [

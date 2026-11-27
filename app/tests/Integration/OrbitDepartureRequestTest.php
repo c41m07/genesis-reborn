@@ -2,6 +2,7 @@
 namespace App\Tests\Integration;
 
 use App\Entity\{ActionReceipt,CombatEvent,CombatParticipant,Fleet,FleetShip,Guild,GuildMember,Planet,PlanetResource,Player,PlayerBoost,PlayerDiscovery,PlayerTechnology,PlayerUniverse,SolarSystem,TransportReport,Universe};
+use App\Repository\GameRepository;
 use App\Service\Fleet\{FleetNavigation,FleetRecallService,FleetService};
 use App\Service\Colony\ResourceService;
 use App\Service\Player\RegistrationService;
@@ -72,6 +73,12 @@ final class OrbitDepartureRequestTest extends WebTestCase
     public function testNeutralRequestExistsAtDepartureAndAcceptanceDoesNotTeleportFleet(): void
     {
         $f=$this->send('orbit');$token=$f->dispatchToken;$arrival=$f->arrivalAt;
+        $repo = self::getContainer()->get(GameRepository::class);
+        $host = $this->peer->currentPlayerUniverse;
+        self::assertSame(['count' => 1, 'colony' => $this->target->id], $repo->orbitDecisionsDue($host, $this->clock->now()));
+        self::assertSame(0, $repo->orbitDecisionsDue($this->player->currentPlayerUniverse, $this->clock->now())['count']);
+        // La demande disparaît à son échéance même si le worker n’a pas encore résolu l’arrivée.
+        self::assertSame(0, $repo->orbitDecisionsDue($host, $arrival)['count']);
         self::assertSame('pending',$this->request()['status']);
         self::assertSame($arrival->format(DATE_ATOM),$this->request()['expires_at']);
         self::assertSame(1,(int)$this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM notification WHERE recipient_id=?',[$this->peer->currentPlayerUniverse->id]));
@@ -144,6 +151,7 @@ final class OrbitDepartureRequestTest extends WebTestCase
     public function testAlliedRequestIsAutomaticButLosingAllianceInvalidatesItAtArrival(): void
     {
         $this->ally();$f=$this->send('orbit');self::assertSame('accepted_auto',$this->request()['status']);
+        self::assertSame(0, self::getContainer()->get(GameRepository::class)->orbitDecisionsDue($this->peer->currentPlayerUniverse, $this->clock->now())['count']);
         foreach($this->em->getRepository(GuildMember::class)->findAll() as $member) $this->em->remove($member);$this->em->flush();
         $this->clock->sleep($f->travelSeconds+1);self::getContainer()->get(FleetService::class)->arrive($f->id,$f->dispatchToken);
         self::assertSame('returning',$f->status);self::assertSame('invalid',$f->navigation['orbit_request']['status']);
@@ -175,6 +183,7 @@ final class OrbitDepartureRequestTest extends WebTestCase
     {
         $this->ally();$f=$this->send('orbit');unset($f->navigation['orbit_request']);$this->em->flush();
         $this->clock->sleep($f->travelSeconds+1);self::getContainer()->get(FleetService::class)->arrive($f->id,$f->dispatchToken);
+        self::assertSame(['count' => 1, 'colony' => $this->target->id], self::getContainer()->get(GameRepository::class)->orbitDecisionsDue($this->peer->currentPlayerUniverse, $this->clock->now()));
         self::assertSame('orbit_pending',$f->status);self::assertNull($f->arrivalAt);self::assertArrayNotHasKey('orbit_request',$f->navigation);
         self::getContainer()->get(FleetService::class)->decideOrbit($this->peer->currentPlayerUniverse,$f->id,true);self::assertSame('orbiting',$f->status);
     }

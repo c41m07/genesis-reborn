@@ -80,3 +80,19 @@ body.authenticated .inventory-gift-mobile-indicator .icon { width: 12px; height:
 .guild-action-count[hidden], .inventory-gift-count[hidden], .inventory-gift-mobile-indicator[hidden] { display: none; }
 .inventory-gift-notice { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; }
 .inventory-gift-notice p { margin: 0; }
+
+.inventory-new-label { color: var(--accent); font-size: .85em; font-weight: 700; }
+.mobile-bottom-nav a:has(.orbit-menu-count) { position: relative; }
+.mobile-bottom-nav .orbit-menu-count {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: .15rem;
+    padding: 0 .25rem;
+    font-size: 10px;
+    line-height: 15px;
+}
+
+@media (max-width: 740px) {
+    /* La demande d’orbite peut afficher la carte temps réel au moment où le joueur touche Flottes. */
+    .authenticated .event-toast { bottom: calc(72px + env(safe-area-inset-bottom)); }
+}

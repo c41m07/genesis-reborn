@@ -147,6 +147,15 @@ test('Orbite neutre : demande au départ, accord clavier, suivi et retrait tacti
     await expect(senderPage.getByRole('status')).toContainText('Flotte envoyée');
     const fleetId=Number(queryIsolatedSql(project,"SELECT id FROM fleet WHERE player_universe_id="+senderId+" AND status='traveling' AND mission='orbit'"));
     await senderPage.goto('/flottes/orbites');
+    const fleetMenu = hostPage.locator('.sidebar [data-message-notifications-target="fleetLink"]');
+    await expect(fleetMenu.locator('.orbit-menu-count')).toHaveText('1', {timeout:25000});
+    await expect(fleetMenu).toHaveAttribute('href', new RegExp('/flottes/orbites\\?colony=' + host.planetId + '$'));
+    await hostPage.setViewportSize({width:390,height:844});
+    const mobileFleetMenu = hostPage.locator('.mobile-bottom-nav [data-message-notifications-target="fleetLink"]');
+    await expect(mobileFleetMenu.locator('.orbit-menu-count')).toBeVisible();
+    await mobileFleetMenu.click();
+    await expect(hostPage).toHaveURL(new RegExp('/flottes/orbites\\?colony=' + host.planetId + '$'));
+    await hostPage.setViewportSize({width:1280,height:720});
     const card=hostPage.locator('[data-orbit-request="'+fleetId+'"]');
     await expect(card).toContainText('Demande reçue',{timeout:15000});
     await expect(card).toContainText('système non découvert');
@@ -168,6 +177,7 @@ test('Orbite neutre : demande au départ, accord clavier, suivi et retrait tacti
     expect(await accept.evaluate(e=>e.matches(':focus-visible') && getComputedStyle(e).outlineStyle!=='none')).toBeTruthy();
     await hostPage.keyboard.press('Enter');
     await expect(hostPage.getByRole('status')).toContainText('Demande d’orbite acceptée');
+    await expect(fleetMenu.locator('.orbit-menu-count')).toBeHidden();
     expect(queryIsolatedSql(project,'SELECT status FROM fleet WHERE id='+fleetId)).toBe('traveling');
     await expect(senderPage.locator('[data-orbit-request="'+fleetId+'"]')).toContainText('Accord confirmé',{timeout:15000});
     expect(await senderPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBeTruthy();

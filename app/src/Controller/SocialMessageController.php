@@ -16,7 +16,7 @@ use Symfony\Component\Uid\Uuid;
 final class SocialMessageController extends AbstractController
 {
     #[Route('/messages/non-lus', name: 'app_messages_unread', methods: ['GET'])]
-    public function unread(Request $request, UniverseContext $context, SocialMessageService $messages, GameRepository $repo, JournalService $journal, PreferencesService $preferences, GuildRecruitmentView $recruitment, InventoryGiftNotices $gifts): Response
+    public function unread(Request $request, UniverseContext $context, SocialMessageService $messages, GameRepository $repo, JournalService $journal, PreferencesService $preferences, GuildRecruitmentView $recruitment, InventoryGiftNotices $gifts, \Psr\Clock\ClockInterface $clock): Response
     {
         $membership = $context->membership();
         $unreadGuild = $messages->unreadGuildCount($membership);
@@ -24,10 +24,13 @@ final class SocialMessageController extends AbstractController
         $guild = $guildMember?->guild;
         // Cette actualisation existe déjà dans le menu. Le signal Mercure réveille la lecture,
         // mais ne prouve pas qu’un événement relayé tardivement reste non consulté.
+        $giftSummary = $gifts->summary($membership);
         return $this->json([
             'unread' => $messages->unreadPrivateCount($membership) + $unreadGuild,
             'guildRecruitmentCount' => $recruitment->unread($membership, $guildMember),
-            'inventoryGiftCount' => $gifts->summary($membership)['count'],
+            'inventoryGiftCount' => $giftSummary['count'],
+            'inventoryTabs' => array_intersect_key($giftSummary, array_flip(['boosts', 'boxes', 'pending'])),
+            'orbitDecisions' => $repo->orbitDecisionsDue($membership, $clock->now()),
             'journalUnread' => $journal->unreadCount($membership) > 0,
             'membership' => $membership->id,
             'conversations' => $this->renderView('player/_message_contacts.html.twig', [

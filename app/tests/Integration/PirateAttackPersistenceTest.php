@@ -1437,6 +1437,8 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM transport_report'));
         self::assertNull($service->retryDeposit($ally, $right->id));
 
+        $notices = self::getContainer()->get(\App\Service\Boost\InventoryGiftNotices::class);
+        self::assertSame(0, $notices->summary($owner)['boxes']);
         $this->advanceTo($due->modify('-1 second'));
         self::assertNull($service->processDue($right->id, 'fixture-obsolete'));
         self::assertSame(1000, $service->processDue($right->id, $event['token']));
@@ -1455,6 +1457,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->stampStocks($home->id, ['metal' => $capacity - 41, 'nano' => 0.0, 'antimatter' => 0.0]);
         $service->processDue($right->id, $event['token']);
         $service->processDue($right->id, $event['token']);
+        self::assertSame(1, $notices->summary($owner)['boxes']);
         self::assertSame('settled', $right->timeline()->state());
         self::assertEquals($late, $right->timeline()->chronology()['arrived_at']);
         self::assertSame($capacity - 41, $this->resourceStock($home->id, 'metal'));
