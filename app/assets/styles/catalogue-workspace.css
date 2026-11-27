@@ -302,11 +302,36 @@ body[data-theme=light] .catalog-workspace .catalog-build-action.primary:not(:dis
     border-color:color-mix(in srgb,var(--gold) 33%,var(--line));
     background:color-mix(in srgb,var(--gold) 8%,var(--panel));
 }
-.core-construction-order { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:start; gap:6px 10px; margin-bottom:10px; }
+/* Garder le coût à côté de Quantité tant que ses montants tiennent. Sinon,
+   passer le groupe entier sous la saisie, dans l’ordre de la barre de ressources. */
+.core-construction-order { display:flex; flex-wrap:wrap; align-items:start; gap:6px 10px; margin-bottom:10px; }
+.core-construction-cost { flex:1 1 max-content; min-width:0; max-width:100%; }
 .core-construction-quantity { min-width:0; }
 .core-construction-quantity label { display:block; margin:0 0 6px; font-size:11px; font-weight:700; color:var(--muted); }
 .core-construction-quantity .quantity-input { flex-wrap:nowrap; }
-.core-construction-quantity input { width:5ch; min-width:52px; min-height:44px; }
+/* Garder la saisie numérique et réserver les chiffres au lot, même quand Max remplit le champ. */
+.core-construction-quantity input[type="number"] {
+    appearance: textfield;
+    box-sizing: content-box;
+    flex: none;
+    width: 10ch;
+    min-width: 4ch;
+    min-height: 42px;
+    padding: 0 6px;
+    font-variant-numeric: tabular-nums;
+}
+.core-construction-quantity input::-webkit-inner-spin-button,
+.core-construction-quantity input::-webkit-outer-spin-button {
+    appearance: none;
+    margin: 0;
+}
+@supports (field-sizing: content) {
+    .core-construction-quantity input[type="number"] {
+        field-sizing: content;
+        width: auto;
+        max-width: 11ch;
+    }
+}
 .core-construction-quantity .quantity-max { min-width:44px; min-height:44px; }
 .core-construction-quantity .quantity-status { max-width:16ch; overflow-wrap:anywhere; }
 .catalog-workspace .core-construction-cost :is(.catalog-cost-heading,.building-costs) { margin:0 0 6px; padding:0; border:0; }
@@ -331,7 +356,7 @@ body[data-theme=light] .catalog-workspace .catalog-build-action.primary:not(:dis
 .catalog-workspace .core-unit-details .card-benefits { margin:8px 0 0; }
 .core-unit-price { list-style:none; padding:0; margin:0; }
 .core-unit-price li { margin:4px 0; }
-.catalog-workspace .catalog-condensed .core-construction-order { grid-template-columns:minmax(0,1fr); }
+.catalog-workspace .catalog-condensed .core-construction-order { display:grid; grid-template-columns:minmax(0,1fr); }
 .catalog-workspace .catalog-condensed .core-unit-gain { grid-area:1/2; }
 .catalog-workspace .catalog-condensed .core-unit-details { grid-area:2/2; }
 .catalog-workspace .catalog-condensed .core-unit-details .card-benefits { grid-area:auto; }
@@ -340,13 +365,13 @@ body[data-theme=light] .catalog-workspace .catalog-build-action.primary:not(:dis
     .catalog-workspace .catalog-condensed .core-unit-gain { grid-area:4/1/5/3; }
     .catalog-workspace .catalog-condensed .core-unit-details { grid-area:7/1/8/3; }
 }
-@container(max-width:322px) { .core-construction-order { grid-template-columns:minmax(0,1fr); } }
+@container(max-width:322px) { .core-construction-order { display:grid; grid-template-columns:minmax(0,1fr); } }
 @media(max-width:600px) {
-    .core-construction-order { grid-template-columns:minmax(0,1fr); }
+    .core-construction-order { display:grid; grid-template-columns:minmax(0,1fr); }
     .core-construction-quantity .quantity-status { max-width:none; }
 }
 
-.catalog-workspace .core-construction-cost .building-costs > span > span { min-width:0; max-width:100%; overflow-wrap:anywhere; }
+.catalog-workspace .core-construction-cost .building-costs > span > span { min-width:0; max-width:100%; white-space:normal; overflow-wrap:anywhere; }
 /* Le vert du thème clair seul n’atteint pas 4,5:1 sur le fond teinté du gain acquis. */
 body[data-theme=light] .core-catalogue-gain.is-achieved > strong { color:color-mix(in srgb,var(--green) 76%,var(--text)); }
 
