@@ -42,7 +42,7 @@ final readonly class GuildHallConvoyView
         $rows = [];
         foreach ($catalogue as $slug => $ship) {
             if (isset($available[$slug])) {
-                $rows[] = ['slug' => $slug, 'name' => $ship['name'] ?? $slug, 'ranks' => $available[$slug]];
+                $rows[] = ['slug' => $slug, 'name' => $ship['label'] ?? $slug, 'ranks' => $available[$slug]];
             }
         }
 

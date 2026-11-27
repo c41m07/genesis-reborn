@@ -43,3 +43,32 @@
         {% endfor %}
     </ul>
 </section>
+
+{% if held_hall_convoys %}
+    <section class="panel fleet-hold fleet-hold-waiting" aria-labelledby="hall-convoys-waiting-title">
+        <h2 id="hall-convoys-waiting-title">Convois du Hall en attente · tout l’empire</h2>
+        <ul class="fleet-held-list">
+            {% for fleet in held_hall_convoys %}
+                {% set reached = fleet.returnPlanet ?? fleet.homePlanet %}
+                <li data-held-hall-convoy="{{ fleet.id }}">
+                    <h3>Convoi {{ fleet.id }} · {{ reached.coordinates() }}</h3>
+                    <p>Les vaisseaux et le fret sont conservés à la position atteinte.</p>
+                    {% if reached.owner and reached.owner.id == membership.id and fleet.reservedFuel == 0 %}
+                        <form method="post" action="{{ path('app_fleet_recover_hall_convoy', {id: fleet.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('hall_convoy_recover_' ~ fleet.id) }}">
+                            <input type="hidden" name="request_key" value="{{ request_key() }}">
+                            <button type="submit" class="secondary">Poser le convoi sur cette colonie</button>
+                        </form>
+                    {% else %}
+                        <p>La réserve de retour est épuisée. Vous pouvez poser le convoi ici si cette colonie vous appartient à nouveau.</p>
+                    {% endif %}
+                    <details>
+                        <summary>Composition et fret</summary>
+                        <ul>{% for ship in held_details[fleet.id].ships %}<li>{{ ship.quantity|quantity }} × {{ ship.label }} · {{ ship.tier }}</li>{% endfor %}</ul>
+                        <ul>{% for slug, resource in held_details[fleet.id].resources %}<li>{{ resource.label }} : {{ resource.stock|quantity(2) }}</li>{% endfor %}</ul>
+                    </details>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+{% endif %}
