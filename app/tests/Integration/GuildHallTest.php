@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Integration;
 
 use App\Entity\{Guild, GuildHall, Planet, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
-use App\Entity\{Fleet, FleetShip, GuildDockOrder, GuildHallBuilding, GuildHallConvoy, GuildHallStock, OutboxMessage, PlanetResource};
+use App\Entity\{Fleet, FleetFuelExpense, FleetShip, GuildDockOrder, GuildHallBuilding, GuildHallConvoy, GuildHallStock, OutboxMessage, PlanetResource};
 use App\Message\{FleetArrived, GuildDockOrderDue, GuildHallConstructionDue};
 use App\MessageHandler\{FleetArrivedHandler, GuildDockOrderDueHandler, GuildHallConstructionDueHandler};
 use App\Repository\GuildHallRepository;
@@ -85,6 +85,10 @@ final class GuildHallTest extends KernelTestCase
         self::assertInstanceOf(GuildHallConvoy::class, $convoy);
         $id = $convoy->fleet->id;
         $outboundToken = $convoy->outboundToken;
+        $oneWayFuel = $convoy->fleet->reservedFuel / 2;
+        self::assertGreaterThan(0.0, $oneWayFuel);
+        $fuelExpenses = $this->em->getRepository(FleetFuelExpense::class);
+        self::assertSame(0, $fuelExpenses->count(['fleetId' => $id]));
         self::assertSame($outboundToken, $convoy->fleet->dispatchToken);
         self::assertSame(0, $convoy->fleet->navigation['target'][4]);
 
@@ -111,6 +115,10 @@ final class GuildHallTest extends KernelTestCase
         self::assertSame(['metal' => 15], array_filter($this->em->find(GuildHallStock::class, $hallId)->materials));
         self::assertEqualsWithDelta(25.0, $fleet->cargo['metal'], 0.001);
         self::assertNotSame($outboundToken, $fleet->dispatchToken);
+        self::assertSame(1, $fuelExpenses->count(['fleetId' => $id]));
+        $outboundExpense = $fuelExpenses->findOneBy(['fleetId' => $id, 'phase' => 'outbound']);
+        self::assertNotNull($outboundExpense);
+        self::assertEqualsWithDelta($oneWayFuel, $outboundExpense->hydrogen, 0.000001);
 
         $clock->sleep($fleet->travelSeconds + 1);
         $origin = $this->em->find(Planet::class, $originId);
@@ -135,6 +143,10 @@ final class GuildHallTest extends KernelTestCase
         $origin = $this->em->find(Planet::class, $originId);
         self::assertSame($ownerId, $idle->playerUniverse->id);
         self::assertSame('completed', $this->em->find(Fleet::class, $id)->status);
+        self::assertSame(2, $fuelExpenses->count(['fleetId' => $id]));
+        $returnExpense = $fuelExpenses->findOneBy(['fleetId' => $id, 'phase' => 'return']);
+        self::assertNotNull($returnExpense);
+        self::assertEqualsWithDelta($oneWayFuel, $returnExpense->hydrogen, 0.000001);
         self::assertEqualsWithDelta($capacity, $this->stock($origin, 'metal'), 0.001);
         self::assertEqualsWithDelta(15.0, $idle->cargo['metal'], 0.001);
         self::assertSame(1, $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $idle, 'slug' => 'transport'])->quantity);

@@ -7,7 +7,7 @@ namespace App\Service\Guild;
 use App\Entity\{Fleet, Guild, GuildHall, GuildHallConvoy};
 use App\Manager\GameManager;
 use App\Repository\GameRepository;
-use App\Service\Fleet\{FleetDispatch, FleetNavigation};
+use App\Service\Fleet\{FleetDispatch, FleetFuelExpenseRecorder, FleetNavigation};
 use App\Service\Notification\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
@@ -24,6 +24,7 @@ final readonly class GuildHallConvoyWorker
         private GuildHallConvoyReturn $return,
         private FleetDispatch $dispatch,
         private FleetNavigation $navigation,
+        private FleetFuelExpenseRecorder $fuelExpenses,
         private NotificationService $notifications,
     ) {
     }
@@ -66,8 +67,16 @@ final readonly class GuildHallConvoyWorker
 
         $hall = $this->attachedHall($receipt);
         $schedule = $hall === null ? null : $this->schedules->schedule();
-        $oneWay = $fleet->reservedFuel / 2;
-        $fleet->cargo['hydrogen'] = max(0.0, ($fleet->cargo['hydrogen'] ?? 0) - $oneWay);
+        $reserve = $fleet->reservedFuel;
+        $hydrogen = (float) ($fleet->cargo['hydrogen'] ?? 0);
+        $tolerance = max(1e-9, abs($reserve) * PHP_FLOAT_EPSILON * 64);
+        if (!is_finite($reserve) || !is_finite($hydrogen) || $reserve < 0 || $hydrogen < 0
+            || $reserve > $hydrogen + $tolerance) {
+            throw new \DomainException('Réserve du convoi incohérente. Aucun transfert effectué.');
+        }
+        $oneWay = $reserve / 2;
+        // Départ = réservation ; l’Observatoire ne compte que les consommations réelles.
+        $this->fuelExpenses->burnLocked($fleet, $oneWay, 'outbound');
         $fleet->reservedFuel -= $oneWay;
         if ($schedule === null) {
             // Pas de dépôt si la guilde a disparu, si le membre l’a quittée ou

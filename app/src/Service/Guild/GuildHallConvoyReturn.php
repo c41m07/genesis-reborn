@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace App\Service\Guild;
 
 use App\Entity\Fleet;
-use App\Service\Fleet\FleetHold;
+use App\Service\Fleet\{FleetFuelExpenseRecorder, FleetHold};
 
 /** Restitution des biens personnels d’un convoi de guilde, distincte du transport standard. */
 final readonly class GuildHallConvoyReturn
 {
-    public function __construct(private FleetHold $hold)
-    {
+    public function __construct(
+        private FleetHold $hold,
+        private FleetFuelExpenseRecorder $fuelExpenses,
+    ) {
     }
 
     /**
@@ -52,7 +54,8 @@ final readonly class GuildHallConvoyReturn
             throw new \DomainException('Réserve de retour du convoi incohérente. Aucun transfert effectué.');
         }
 
-        $fleet->cargo['hydrogen'] = max(0.0, $hydrogen - $reserve);
+        // Le journal réutilise le jeton courant, avant que l’arrivée ou l’attente ne le change.
+        $this->fuelExpenses->burnLocked($fleet, $reserve, 'return');
         $fleet->reservedFuel = 0.0;
     }
 }
