@@ -49,7 +49,17 @@ test('Récompense quotidienne : kit T1, retrait au clavier, stockage plein et ac
     await page.getByRole('link', { name: 'Actualiser la récompense' }).click();
     await expect(page.getByText('Votre compte a déjà récupéré son lot du jour.', { exact: false })).toBeVisible();
     expect(receipts()).toBe(1);
+    const giftCount = async () => {
+        const response = await page.request.get('/messages/non-lus');
+        expect(response.ok()).toBe(true);
+        return (await response.json()).inventoryGiftCount;
+    };
+    expect(await giftCount()).toBe(1);
     await page.goto('/boosts');
+    await expect(page.locator('.inventory-gift-notice')).toContainText('1 nouveau cadeau');
+    await page.getByRole('button', { name: 'Marquer les cadeaux comme vus' }).click();
+    await expect(page.locator('.inventory-gift-notice')).toHaveCount(0);
+    expect(await giftCount()).toBe(0);
     await page.getByRole('button', { name: 'Activer Moteurs économes' }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Bonus actif pendant cinq heures' })).toBeVisible();
     await expect(page.getByText('est actif jusqu’au', { exact: false })).toContainText('Moteurs économes');
