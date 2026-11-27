@@ -20,6 +20,7 @@ final readonly class GuildHallWarehouseView
     {
         $stock = $this->repository->one(GuildHallStock::class, ['hall' => $hall]);
         $warehouse = $this->repository->one(GuildHallBuilding::class, ['hall' => $hall, 'slug' => GuildHallBuilding::WAREHOUSE]);
+        $atelier = $this->repository->one(GuildHallBuilding::class, ['hall' => $hall, 'slug' => GuildHallBuilding::ATELIER]);
         $level = $warehouse?->level ?? 0;
         $schedule = $this->schedules->schedule();
         $capacity = $schedule?->capacity($level) ?? [];
@@ -37,6 +38,7 @@ final readonly class GuildHallWarehouseView
 
         return [
             'enabled' => $schedule !== null,
+            'atelier_built' => ($atelier?->level ?? 0) > 0,
             'level' => $level,
             'finishes_at' => $warehouse?->finishesAt,
             'quote' => $quote,

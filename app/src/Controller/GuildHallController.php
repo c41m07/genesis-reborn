@@ -59,9 +59,15 @@ final class GuildHallController extends AbstractController
 
         $convoyData = $mayAct && ($warehouseData['enabled'] ?? false)
             ? $convoy->describe($actor, $request->query->getInt('convoy_origin')) : null;
+        if ($convoyData !== null) {
+            $convoyData['donation_available'] = $warehouseData['atelier_built'];
+            $convoyData['ship_donation'] = $convoyData['donation_available']
+                && $request->query->getString('convoy_purpose') === 'donation';
+        }
         $review = $convoyData !== null ? $request->getSession()->get(self::CONVOY_REVIEW) : null;
         if ($convoyData !== null && is_array($review) && $review['actor'] === $actor->id && $review['hall'] === $hall->id
             && $review['guild'] === $guild->id && $review['origin'] === $convoyData['origin']?->id && $review['expires'] >= $clock->now()->getTimestamp()
+            && ($review['ship_donation'] ?? false) === $convoyData['ship_donation']
             && $review['key'] === $request->query->getString('review')) {
             $convoyData['review'] = $review;
         }
@@ -145,31 +151,39 @@ final class GuildHallController extends AbstractController
     }
 
     #[Route('/guildes/hall/convoi', name: 'app_guild_hall_send_convoy', methods: ['POST'])]
-    public function sendConvoy(Request $request, GuildHallConvoyDeparture $departure, ClockInterface $clock): Response
+    #[Route('/guildes/hall/atelier/don', name: 'app_guild_hall_donate_ships', defaults: ['shipDonation' => true], methods: ['POST'])]
+    public function sendConvoy(Request $request, GuildHallConvoyDeparture $departure, ClockInterface $clock, bool $shipDonation = false): Response
     {
         [$actor, $guild] = $this->contextForHall();
         $hallId = $request->request->getInt('hall_id');
-        if (!$this->isCsrfTokenValid('guild_hall_convoy_'.$guild->id.'_'.$hallId, $request->request->getString('_token'))) {
+        $tokenScope = $shipDonation ? 'guild_hall_atelier_donation_' : 'guild_hall_convoy_';
+        if (!$this->isCsrfTokenValid($tokenScope.$guild->id.'_'.$hallId, $request->request->getString('_token'))) {
             throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le Hall.');
         }
         $origin = $request->request->getInt('origin');
         $session = $request->getSession();
         $redirect = ['convoy_origin' => $origin];
+        if ($shipDonation) {
+            $redirect['convoy_purpose'] = 'donation';
+        }
         try {
             if ($request->request->getString('confirm') === '1') {
                 $review = $session->get(self::CONVOY_REVIEW);
                 if (!is_array($review) || $review['actor'] !== $actor->id || $review['guild'] !== $guild->id
                     || $review['hall'] !== $hallId || $review['origin'] !== $origin
+                    || ($review['ship_donation'] ?? false) !== $shipDonation
                     || $review['key'] !== $request->request->getString('request_key') || $review['expires'] < $clock->now()->getTimestamp()) {
                     throw new \DomainException('Devis expiré ou déjà utilisé. Vérifiez à nouveau le trajet.');
                 }
                 $session->remove(self::CONVOY_REVIEW);
                 $receipt = $departure->send(
                     $actor, $guild->id, $hallId, $origin, $review['ships'], $review['speed'] / 100,
-                    $review['cargo'], $review['key'], $review['quote']['fingerprint'],
+                    $review['cargo'], $review['key'], $review['quote']['fingerprint'], $shipDonation,
                 );
                 $this->addFlash('success', $receipt !== null
-                    ? 'Convoi envoyé. Le carburant aller-retour est réservé.'
+                    ? ($shipDonation
+                        ? 'Don envoyé. Les vaisseaux rejoindront le stock de l’Atelier à l’arrivée si le Hall les accepte.'
+                        : 'Convoi envoyé. Le carburant aller-retour est réservé.')
                     : 'Ce convoi a déjà été envoyé.');
             } else {
                 $ships = [];
@@ -186,12 +200,12 @@ final class GuildHallController extends AbstractController
                     throw new \DomainException('Choisissez une vitesse entre 10 et 100 %.');
                 }
 
-                $quote = $departure->preview($actor, $guild->id, $hallId, $origin, $ships, $speed / 100, $freight);
+                $quote = $departure->preview($actor, $guild->id, $hallId, $origin, $ships, $speed / 100, $freight, $shipDonation);
                 $key = bin2hex(random_bytes(16));
                 $session->set(self::CONVOY_REVIEW, [
                     'key' => $key, 'expires' => $clock->now()->getTimestamp() + 300,
                     'actor' => $actor->id, 'guild' => $guild->id, 'hall' => $hallId, 'origin' => $origin,
-                    'ships' => $ships, 'cargo' => $freight, 'speed' => $speed, 'quote' => $quote,
+                    'ships' => $ships, 'cargo' => $freight, 'speed' => $speed, 'quote' => $quote, 'ship_donation' => $shipDonation,
                 ]);
                 $redirect['review'] = $key;
             }
