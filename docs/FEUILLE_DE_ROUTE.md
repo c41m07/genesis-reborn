@@ -1,5 +1,10 @@
 # Roadmap Genesis Reborn
 
+## Carburant à quai — 27 novembre 2026
+
+Lot proposé pour `dev`. La colonie paie chaque départ et le reliquat de vol est perdu à quai.
+Le fret et le carburant des replis en cours gardent leurs usages. Voir la [décision de gameplay](DECISIONS.md).
+
 ## Recherches et bâtiments par rang — 25 novembre 2026
 
 Lot proposé à la relecture vers `dev`. Les 19 recherches avancent après le niveau 5 du rang précédent. Les devis dépendent des prérequis, les productions et capacités se composent par rang. Les limites numériques des dépôts et le traitement des commandes antérieures figurent dans les [décisions](DECISIONS.md). La fusion et la publication restent à décider. [PR de rééquilibrage](https://github.com/c41m07/genesis-reborn/pull/166).

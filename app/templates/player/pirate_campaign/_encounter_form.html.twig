@@ -31,12 +31,10 @@
             <h4 class="core-fleet-quote-title">Estimation du trajet</h4>
             <dl>
                 <div><dt>Durée du trajet aller</dt><dd>{{ duration_label(form.quote.seconds) }}</dd></div>
-                <div><dt>Hydrogène réservé</dt><dd>{{ form.quote.hydrogen|replace({'.': ','}) }} H</dd></div>
+                <div><dt>Hydrogène prélevé sur la colonie</dt><dd>{{ form.quote.hydrogen|replace({'.': ','}) }} H</dd></div>
                 {% if form.quote.orbit is defined %}
                     <div><dt>Dont réserve d’orbite</dt><dd>{{ form.quote.orbit|replace({'.': ','}) }} H</dd></div>
                 {% endif %}
-                <div><dt>Pris dans la réserve embarquée</dt><dd>{{ form.quote.hold|replace({'.': ','}) }} H</dd></div>
-                <div><dt>Pris dans le stock de la colonie</dt><dd>{{ form.quote.planet|replace({'.': ','}) }} H</dd></div>
             </dl>
         </div>
         <form method="post" action="{{ path(form.action == 'reconnaissance' ? 'app_pirate_campaign_scout' : 'app_pirate_campaign_attack', {missionNumber: mission}) }}">

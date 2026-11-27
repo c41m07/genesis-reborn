@@ -220,6 +220,8 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     // Les maxima choisis dans les deux rangs arrivent ensemble au devis, sans départ.
     await assault.click();
     await expect(dossier.getByRole('heading', { name: 'Confirmer l’attaque', exact: true })).toBeVisible();
+    await expect(dossier.getByText('Hydrogène prélevé sur la colonie', { exact: true })).toBeVisible();
+    await expect(dossier.getByText('Pris dans la réserve embarquée', { exact: true })).toHaveCount(0);
     await expect(dossier.getByRole('list', { name: 'Escorte choisie' }).getByRole('listitem')).toHaveText([
       'Chasseur de patrouille : 1',
       'Chasseur multirôle : 2',

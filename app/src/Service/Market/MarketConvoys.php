@@ -59,7 +59,7 @@ final readonly class MarketConvoys
             $cost = [$quote['pay'] => $quote['quantity']];
             $cost['hydrogen'] = ($cost['hydrogen'] ?? 0) + $quote['planetFuel'];
             $this->resources->consume($planet, $cost, lockStocks: true);
-            $idle->storedFuel -= $quote['storedFuel'];
+            $idle->storedFuel = 0;
             $stock = $this->repo->one(FleetShip::class, ['fleet' => $idle, 'slug' => 'transport', 'tier' => $quote['rank']]);
             $stock->quantity -= $quote['cargos'];
 
@@ -243,10 +243,7 @@ final readonly class MarketConvoys
         if (($overflow = $deposit['overflow'][$resource] ?? 0) > 0) {
             $this->grants->grantMarketOverflowLocked($member, $trade->id, $resource, $overflow);
         }
-        if ($trade->recalled) {
-            $usedOutbound = 2 * $trade->oneWayFuel - $trade->reservedFuel;
-            $idle->storedFuel += max(0.0, $trade->reservedFuel - $usedOutbound);
-        }
+        $idle->storedFuel = 0;
         $trade->reservedFuel = 0;
         $this->finish($trade, 'completed');
     }

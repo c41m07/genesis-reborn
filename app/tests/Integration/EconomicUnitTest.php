@@ -303,12 +303,14 @@ final class EconomicUnitTest extends KernelTestCase
         $member = $this->player->currentPlayerUniverse;$member->universe->gameSettings['multipliers']['travel_time'] = .001;$this->em->flush();
         $service = self::getContainer()->get(FleetService::class);
         $service->send($member,$this->target,'station',$this->home->id,['hydrogen_collector'=>1,'fighter'=>1],1,[],str_repeat('a',32));
-        $fleet = $this->em->getRepository(Fleet::class)->findOneBy(['playerUniverse'=>$member,'status'=>'traveling']);$oneWay = $fleet->navigation['station']['leg_fuel'];
+        $fleet = $this->em->getRepository(Fleet::class)->findOneBy(['playerUniverse'=>$member,'status'=>'traveling']);
         $this->clock->sleep($fleet->travelSeconds);$service->arrive($fleet->id,$fleet->dispatchToken);
         self::assertSame('completed',$fleet->status);
-        $locals = $this->em->getRepository(Fleet::class)->findBy(['homePlanet'=>$this->home,'playerUniverse'=>$member,'status'=>'defending']);
-        $reinforcement = array_values(array_filter($locals,fn(Fleet $local) => $local->storedFuel > 0))[0] ?? null;
-        self::assertNotNull($reinforcement);self::assertEqualsWithDelta($oneWay,$reinforcement->storedFuel,1e-8);self::assertNull($reinforcement->departureAt);
+        $localCollector = $this->em->getRepository(FleetShip::class)->findOneBy(['slug'=>'hydrogen_collector','quantity'=>1], ['id'=>'DESC']);
+        $reinforcement = $localCollector?->fleet;
+        self::assertSame('defending', $reinforcement?->status);
+        self::assertSame($this->home, $reinforcement->homePlanet);
+        self::assertNotNull($reinforcement);self::assertEqualsWithDelta(0,$reinforcement->storedFuel,1e-8);self::assertNull($reinforcement->departureAt);
         $participant = $this->em->getRepository(\App\Entity\CombatParticipant::class)->findOneBy(['combatEvent'=>$event,'fleet'=>$reinforcement]);
         self::assertSame(1,$participant->arrivalRound);self::assertSame(1,$this->state($this->home)['hydrogen_collector']['basic']['active']);
         self::assertSame(0,$this->state($this->home)['hydrogen_collector']['basic']['reserved']);

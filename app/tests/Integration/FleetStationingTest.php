@@ -77,7 +77,7 @@ final class FleetStationingTest extends WebTestCase
         $this->clock->sleep(TimedBoostEffects::ACTIVE_SECONDS);
         self::assertEqualsWithDelta($baseline['total_fuel'], $preview()['total_fuel'], 1e-8);
         $this->arrive($fleet);
-        self::assertEqualsWithDelta($discount['one_way_fuel'], $this->stock($this->target)->storedFuel, 1e-8);
+        self::assertEqualsWithDelta(0, $this->stock($this->target)->storedFuel, 1e-8);
     }
 
     public function testTimedCivilFreightIsLoadedAndUnloadedWithoutAffectingFuel(): void
@@ -119,37 +119,56 @@ final class FleetStationingTest extends WebTestCase
         self::getContainer()->get(TimedBoostUseService::class)->activate($item->playerUniverse, $item->id, str_repeat('f', 32));
     }
 
-    public function testArrivalMovesBaseOnceAndKeepsFuelAndFreightOverflow(): void
+    public function testArrivalMovesBaseOnceAndKeepsOnlyFreightOverflow(): void
     {
-        $fleet=$this->send(['metal'=>100,'hydrogen'=>50]);$token=$fleet->dispatchToken;$oneWay=$fleet->reservedFuel/2;
+        $fleet=$this->send(['metal'=>100,'hydrogen'=>50]);$token=$fleet->dispatchToken;
         foreach($this->em->getRepository(PlanetResource::class)->findBy(['planet'=>$this->target]) as $row) {$row->currentStock=1e8;$row->lastUpdatedAt=$this->clock->now();}
         $this->em->flush();self::assertNull($this->stock($this->target));$this->arrive($fleet);
         self::assertSame('completed',$fleet->status);self::assertNull($fleet->arrivalAt);$idle=$this->stock($this->target);
-        self::assertNotNull($idle);self::assertEqualsWithDelta($oneWay,$idle->storedFuel,1e-8);
+        self::assertNotNull($idle);self::assertEqualsWithDelta(0,$idle->storedFuel,1e-8);
         self::assertEqualsWithDelta(100,$idle->cargo['metal'],1e-8);self::assertEqualsWithDelta(50,$idle->cargo['hydrogen'],1e-8);
         self::assertSame(2,$this->em->getRepository(FleetShip::class)->findOneBy(['fleet'=>$idle,'slug'=>'transport'])->quantity);
         self::getContainer()->get(FleetService::class)->arrive($fleet->id,$token);
-        self::assertEqualsWithDelta($oneWay,$idle->storedFuel,1e-8);self::assertSame(4,(int)$this->em->getConnection()->fetchOne('SELECT SUM(quantity) FROM fleet_ship'));
+        self::assertEqualsWithDelta(0,$idle->storedFuel,1e-8);self::assertSame(4,(int)$this->em->getConnection()->fetchOne('SELECT SUM(quantity) FROM fleet_ship'));
         self::assertSame(0,(int)$this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM transport_report'));
         self::assertSame(0,(int)$this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM player_boost'));
     }
 
-    public function testStoredFuelHasPriorityAndPhysicalCargoIncludesIt(): void
+    public function testLegacyFuelCannotReducePlanetaryDepartureCost(): void
     {
         $this->idle->storedFuel=10;$this->em->flush();$service=self::getContainer()->get(FleetService::class);
         $q=$service->quote($this->player->currentPlayerUniverse,$this->home,'station',$this->target->id,['transport'=>2],1);
-        self::assertEqualsWithDelta(min(10,$q['total_fuel']),$q['stored_fuel_used'],1e-8);
-        self::assertEqualsWithDelta($q['total_fuel']-$q['stored_fuel_used'],$q['planet_fuel'],1e-8);
+        self::assertEqualsWithDelta(0,$q['stored_fuel_used'],1e-8);
+        self::assertEqualsWithDelta($q['total_fuel'],$q['planet_fuel'],1e-8);
         $fleet=$this->send();self::assertEqualsWithDelta($q['total_fuel'],$fleet->cargo['hydrogen'],1e-8);
-        self::assertEqualsWithDelta(10-$q['stored_fuel_used'],$this->idle->storedFuel,1e-8);
+        self::assertEqualsWithDelta(0,$this->idle->storedFuel,1e-8);
+    }
+
+    public function testStationedFleetPaysAgainOnItsNewColony(): void
+    {
+        $member = $this->player->currentPlayerUniverse;
+        $fleets = self::getContainer()->get(FleetService::class);
+        $fleet = $this->send(['hydrogen' => 50]);
+        $this->arrive($fleet);
+
+        $stock = $this->em->getRepository(PlanetResource::class)->findOneBy([
+            'planet' => $this->target, 'resourceType' => 'hydrogen',
+        ]);
+        $composition = ['transport' => 2];
+        $quote = $fleets->preview($member, $this->target, 'station', $this->home->id, $composition, 1);
+        $before = $stock->currentStock;
+        self::assertGreaterThan(0, $quote['total_fuel']);
+        self::assertSame($quote['total_fuel'], $quote['planet_fuel']);
+        $fleets->send($member, $this->target, 'station', $this->home->id, $composition, 1, [], str_repeat('d',32));
+        self::assertEqualsWithDelta($before - $quote['total_fuel'], $stock->currentStock, 1e-8);
     }
 
     public function testArrivalRoundingCannotCreateOnboardFuel(): void
     {
-        $fleet=$this->send();$hydrogen=$fleet->cargo['hydrogen'];$leg=$fleet->navigation['station']['leg_fuel'];
+        $fleet=$this->send();$hydrogen=$fleet->cargo['hydrogen'];
         $fleet->reservedFuel=$hydrogen+5e-10;$this->em->flush();$this->arrive($fleet);
         self::assertSame('completed',$fleet->status);
-        self::assertEqualsWithDelta($hydrogen-$leg,$this->stock($this->target)->storedFuel,1e-12);
+        self::assertEqualsWithDelta(0,$this->stock($this->target)->storedFuel,1e-12);
     }
 
     public function testRepeatedWaitingMessagesCannotNotifyOrConsumeAgain(): void
@@ -173,7 +192,7 @@ final class FleetStationingTest extends WebTestCase
         $service->recall($member,$fleet->id,null,$q['version'],str_repeat('b',32));
         self::assertEqualsWithDelta($original-$q['spent_now'],$fleet->reservedFuel,1e-8);$this->arrive($fleet);
         self::assertNull($this->stock($this->target));self::assertSame('completed',$fleet->status);
-        self::assertEqualsWithDelta($q['unused_fuel'],$this->idle->storedFuel,1e-8);
+        self::assertEqualsWithDelta(0,$this->idle->storedFuel,1e-8);
     }
 
     public function testLostTargetFallsBackToOriginalHomeAndRechecksOwnershipOnReturn(): void
@@ -259,22 +278,33 @@ final class FleetStationingTest extends WebTestCase
 
     public function testWaitingCanResumeOnceWithoutLosingOrUsingFreightFuel(): void
     {
-        $fleet=$this->wait();$fuel=$fleet->reservedFuel;$cargo=$fleet->cargo;
+        $fleet=$this->wait();$cargo=$fleet->cargo;
         $this->target->owner=$this->player->currentPlayerUniverse;$this->em->flush();$service=self::getContainer()->get(FleetStationing::class);$member=$this->player->currentPlayerUniverse;
         $q=$service->preview($member,$fleet->id,$this->target->id);self::assertSame(0,$q['seconds']);
         $service->resume($member,$fleet->id,$this->target->id,$q['version'],str_repeat('b',32));
-        self::assertSame('completed',$fleet->status);self::assertEqualsWithDelta($fuel,$this->stock($this->target)->storedFuel,1e-8);
+        self::assertSame('completed',$fleet->status);self::assertEqualsWithDelta(0,$this->stock($this->target)->storedFuel,1e-8);
         $service->resume($member,$fleet->id,$this->target->id,$q['version'],str_repeat('b',32));
-        self::assertEqualsWithDelta($fuel,$this->stock($this->target)->storedFuel,1e-8);
+        self::assertEqualsWithDelta(0,$this->stock($this->target)->storedFuel,1e-8);
         self::assertGreaterThanOrEqual(100,$cargo['hydrogen']);
     }
 
     public function testManualUnloadingPreservesOverflowAndIsIdempotent(): void
     {
         $this->idle->storedFuel=100;$this->idle->cargo=['metal'=>500];$this->em->flush();$service=self::getContainer()->get(FleetHold::class);$member=$this->player->currentPlayerUniverse;
-        $before=$this->idle->storedFuel;$delivered=$service->unload($member,$this->home->id,'fuel',str_repeat('b',32));
-        self::assertEqualsWithDelta($before,($delivered['hydrogen']??0)+$this->idle->storedFuel,1e-8);self::assertSame(['metal'=>500],$this->idle->cargo);
-        self::assertSame([],$service->unload($member,$this->home->id,'fuel',str_repeat('b',32)));
+        $delivered=$service->unload($member,$this->home->id,'cargo',str_repeat('c',32));
+        self::assertEqualsWithDelta(500,($delivered['metal']??0)+($this->idle->cargo['metal']??0),1e-8);
+        self::assertSame([],$service->unload($member,$this->home->id,'cargo',str_repeat('c',32)));
+    }
+
+    public function testLegacyFuelCannotBeUnloaded(): void
+    {
+        $this->idle->storedFuel = 100;
+        $this->em->flush();
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Déchargement invalide.');
+        self::getContainer()->get(FleetHold::class)->unload(
+            $this->player->currentPlayerUniverse, $this->home->id, 'fuel', str_repeat('b',32)
+        );
     }
 
     public function testDepartureCannotStrandFreightWithoutShips(): void

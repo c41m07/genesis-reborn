@@ -21,7 +21,7 @@ final readonly class PirateRecoveryHangar
 
     /**
      * Le worker verrouille déjà l'agrégat et la planète ; false ne modifie aucun inventaire.
-     * Les réservoirs sont dédiés, le fret existant garde sa place en soute, comme FleetHold::departure.
+     * Le fret existant garde sa place en soute lors de la remise des survivants.
      */
     public function install(PlayerUniverse $owner, Planet $target, array $incoming, float $remainder): bool
     {
@@ -52,11 +52,6 @@ final readonly class PirateRecoveryHangar
             }
         }
 
-        $oldReserve = $idle?->storedFuel ?? 0.0;
-        $fuel = $oldReserve + $remainder;
-        if (!is_finite($oldReserve) || $oldReserve < 0.0 || !is_finite($fuel) || ($remainder > 0.0 && $fuel <= $oldReserve)) {
-            return false;
-        }
         $freight = 0.0;
         foreach ($idle?->cargo ?? [] as $value) {
             if ((!is_int($value) && !is_float($value)) || !is_finite($value) || $value < 0.0) {
@@ -70,19 +65,15 @@ final readonly class PirateRecoveryHangar
         } catch (\DomainException) {
             return false;
         }
-        $tanks = $bays = 0.0;
+        $bays = 0.0;
         foreach ($profiles as $ship) {
-            $tank = $ship['fuel_capacity'] ?? 0;
             $bay = $ship['cargo_capacity'] ?? null;
-            if ((!is_int($tank) && !is_float($tank)) || (!is_int($bay) && !is_float($bay))
-                || !is_finite($tank) || !is_finite($bay) || $tank < 0 || $bay < 0) {
+            if ((!is_int($bay) && !is_float($bay)) || !is_finite($bay) || $bay < 0) {
                 return false;
             }
-            $tanks += $tank * $ship['quantity'];
             $bays += $bay * $ship['quantity'];
         }
-        if (!is_finite($freight) || !is_finite($tanks + $bays)
-            || $fuel > $tanks + $bays || $freight > $bays - max(0.0, $fuel - $tanks)) {
+        if (!is_finite($freight) || !is_finite($bays) || $freight > $bays) {
             return false;
         }
 
@@ -92,7 +83,7 @@ final readonly class PirateRecoveryHangar
             $idle->playerUniverse = $owner;
             $this->manager->save($idle);
         }
-        $idle->storedFuel = $fuel;
+        $idle->storedFuel = 0;
         foreach ($incoming as $slug => $tiers) {
             foreach ($tiers as $tier => $quantity) {
                 $row = $stock[$slug][$tier] ?? new FleetShip();

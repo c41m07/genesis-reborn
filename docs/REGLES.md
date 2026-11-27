@@ -717,7 +717,7 @@ aucun prélèvement dans le fret d’hydrogène ni à distance dans les stocks d
 Le refus est sans effet si le carburant ou une destination autorisée manque.
 
 Le rappel n’exécute pas la mission initiale et préserve les vaisseaux, le fret
-et le carburant inutilisé. Une nouvelle programmation invalide les anciens messages ;
+jusqu’au retour. Le carburant inutilisé est perdu à quai. Une nouvelle programmation invalide les anciens messages ;
 une double confirmation ne crée aucun double retour. L’origine historique reste
 conservée ; propriété et univers de la colonie de retour sont revérifiés à l’arrivée.
 Le dépôt applique les capacités de stockage habituelles, avec débordement tracé.
@@ -948,18 +948,14 @@ et découverte du même univers. La nouvelle base devient effective uniquement
 après l’arrivée réussie ; aucune mission de retour ni récompense n’est créée.
 Les prochains départs utilisent la nouvelle base et les formules habituelles.
 
-Le départ réserve deux fois le carburant aller. À chaque arrivée, seul le coût
-du trajet effectivement programmé est consommé. Un rappel avant arrivée utilise
-le devis habituel et conserve aussi le carburant inutilisé. Le carburant restant
-à l’installation devient un stock embarqué de la flotte inactive de la colonie,
-séparé du fret d’hydrogène. Les départs suivants utilisent d’abord ce carburant,
-puis l’hydrogène de la planète. Le fret est chargé depuis les stocks planétaires ;
-le surplus déjà embarqué n’est pas rechargé automatiquement.
+Le stationnement réserve au départ deux fois le carburant aller, intégralement payé
+par la colonie de départ. La flotte utilise cette réserve pour le trajet, un rappel
+ou un repli. Dès l’installation à quai, le carburant restant est définitivement perdu.
+Chaque nouveau départ prélève tout le carburant du devis sur sa colonie.
 
-Le fret est déposé dans les capacités disponibles. Le surplus reste embarqué,
-sans perte automatique ; des commandes distinctes déchargent le carburant ou
-le fret, toujours selon la place disponible. Un départ est refusé si les
-vaisseaux laissés à quai ne peuvent plus porter les stocks conservés.
+L’hydrogène chargé comme fret suit les mêmes règles de dépôt que les autres
+ressources. Le surplus du stationnement reste en soute et peut être déchargé dans
+la limite du stockage disponible. Les vaisseaux laissés à quai doivent pouvoir porter ce fret.
 
 Si la destination est perdue, repli vers l’origine si elle reste possédée et
 atteignable avec la réserve, sinon vers la colonie possédée atteignable au trajet
