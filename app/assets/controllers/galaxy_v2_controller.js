@@ -1935,7 +1935,9 @@ export default class extends Controller {
             if (link.getAttribute('href') !== available.profileUrl) link.setAttribute('href', available.profileUrl);
             const label = available.tag ? 'Hall de guilde [' + available.tag + ']' : 'Hall de guilde';
             if (link.getAttribute('aria-label') !== label) {
+                // Le même repère sert aux différents systèmes visités.
                 link.setAttribute('aria-label', label);
+                link.querySelector('.gv2-station-label').textContent = label;
             }
         }
     }

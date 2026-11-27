@@ -213,7 +213,14 @@ test('Pilote Hall : don natif, confirmation du commandant et présentation depui
     await expect(label).toBeHidden();
     await station.hover();
     await expect(label).toBeVisible();
-    await expect(label).toHaveText('Hall de guilde');
+    await expect(label).toHaveText('Hall de guilde [HAL]');
+    await page.mouse.move(0, 0);
+    await expect(label).toBeHidden();
+    await station.press('Tab');
+    await page.keyboard.press('Shift+Tab');
+    await expect(station).toBeFocused();
+    await expect(label).toBeVisible();
+    await expect(label).toHaveText('Hall de guilde [HAL]');
     await station.press('Enter');
     await expect(page).toHaveURL(new RegExp('/guildes/' + guild + '$'));
 });
