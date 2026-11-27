@@ -176,7 +176,7 @@ final class PirateReconnaissanceService
                 if (!$membership->universe->isAccessible($departedAt)) {
                     throw new \DomainException('L’univers s’est fermé avant le départ de la sonde.');
                 }
-                $idle->storedFuel -= $fuelReceipt->fromHold;
+                $idle->storedFuel = 0;
             }
             $dueAt = $departedAt->modify('+'.$seconds.' seconds');
 

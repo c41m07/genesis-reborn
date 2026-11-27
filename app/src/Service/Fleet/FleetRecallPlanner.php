@@ -63,10 +63,9 @@ final class FleetRecallPlanner
         $spent=min($spent,$hydrogen,$fleet->reservedFuel);
         $available=max(0.0,min($hydrogen,$fleet->reservedFuel)-$spent);
         $fuel=min($fuel,$available);
-        $freight=$fleet->cargo;$freight['hydrogen']=max(0.0,($freight['hydrogen']??0)-$fleet->reservedFuel);
         return ['at'=>$now,'navigation'=>$state,'progress'=>$progress,'position'=>$position,'spent_now'=>$spent,
             'return_fuel'=>$fuel,'unused_fuel'=>$available-$fuel,'seconds'=>$seconds,'arrival_at'=>$now->modify('+'.$seconds.' seconds'),
-            'return_planet'=>$returnPlanet,'origin_lost'=>$originLost,'freight'=>$freight,
+            'return_planet'=>$returnPlanet,'origin_lost'=>$originLost,'freight'=>$fleet->freight(),
             'version'=>hash('sha256',$fleet->dispatchToken)];
     }
 

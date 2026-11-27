@@ -133,11 +133,7 @@ test('L2B A : contextes, confidentialité, actualisation des demandes et stocks 
       const plain = await plainContext.newPage();
       await plain.goto('/flottes/quai');
       await expect(plain.getByRole('navigation', { name: 'Navigation des flottes' })).toBeVisible();
-      await plain.getByRole('button', { name: 'Décharger le carburant', exact: true }).click();
-      await expect(plain.getByText(/Déchargement effectué/)).toBeVisible();
-      const fuel = Number(queryIsolatedSql(project, `SELECT stored_fuel FROM fleet WHERE id=${idle}`));
-      expect(fuel).toBeGreaterThan(0);
-      expect(fuel).toBeLessThan(1400);
+      await expect(plain.getByRole('button', { name: 'Décharger le carburant' })).toHaveCount(0);
       await plain.getByRole('button', { name: 'Décharger le fret', exact: true }).click();
       const metal = Number(queryIsolatedSql(project, `SELECT JSON_EXTRACT(cargo,'$.metal') FROM fleet WHERE id=${idle}`));
       expect(metal).toBeGreaterThan(0);

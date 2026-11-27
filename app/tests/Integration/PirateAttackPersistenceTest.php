@@ -293,8 +293,8 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame($native['orbit_fuel'], $receipt->budget->orbitHydrogen);
         self::assertSame($native['total_fuel'], $receipt->budget->initialHydrogen);
         self::assertSame($native['seconds'], $campaign->arrivalAt->getTimestamp() - $campaign->departedAt->getTimestamp());
-        self::assertEqualsWithDelta(100.0 - ($native['total_fuel'] - 0.5), $this->resourceStock($home->id, 'hydrogen'), 1e-9);
-        self::assertSame(0.5, $receipt->fromHold);
+        self::assertEqualsWithDelta(100.0 - $native['total_fuel'], $this->resourceStock($home->id, 'hydrogen'), 1e-9);
+        self::assertSame(0.0, $receipt->fromHold);
         self::assertSame(0.0, $idle->storedFuel);
         self::assertSame(['hydrogen' => 0.25], $idle->cargo);
         self::assertSame(1, $this->stock($fighter->id));
@@ -520,7 +520,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame(1, $this->stock($stock->id));
     }
 
-    public function testPrivateRecoveryRequotesAndDeliversTheLotAndOnlyItsNativeRemainder(): void
+    public function testPrivateRecoveryRequotesAndDeliversShipsWithoutStoringFuel(): void
     {
         [$owner, $target, $other, $campaign, $recovery] = $this->recoverableFundedSurvivors();
         $id = $campaign->id;
@@ -577,7 +577,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame([], $campaign->reservedShips);
         self::assertFalse($campaign->returnBlocked);
         $idle = $db->fetchAssociative('SELECT id, stored_fuel, cargo FROM fleet WHERE home_planet_id = ?', [$target->id]);
-        self::assertEqualsWithDelta($current['remaining'], (float) $idle['stored_fuel'], 1e-9);
+        self::assertEqualsWithDelta(0, (float) $idle['stored_fuel'], 1e-9);
         self::assertSame([], json_decode($idle['cargo'], true, flags: JSON_THROW_ON_ERROR));
         self::assertSame($survivors, (int) $db->fetchOne("SELECT quantity FROM fleet_ship WHERE fleet_id = ? AND slug = 'fighter'", [(int) $idle['id']]));
         self::assertSame(0.0, $this->resourceStock($target->id, 'hydrogen'));
@@ -618,7 +618,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame(0.0, $this->resourceStock($target->id, 'hydrogen'));
     }
 
-    public function testPrivateRecoveryAtReducedCapacityCannotDepositShipsOrFuelSeparately(): void
+    public function testPrivateRecoveryDoesNotRequireTankCapacityForDiscardedFuel(): void
     {
         [$owner, $target, , $campaign, $recovery] = $this->recoverableFundedSurvivors();
         $id = $campaign->id;
@@ -630,10 +630,9 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->em->flush();
         $this->advanceTo(new \DateTimeImmutable($job['due']));
         $recovery->processDue($id, $job['token']);
-        self::assertSame('capacity_blocked', $campaign->timeline['pilot_recovery']['state']);
-        self::assertNotSame([], $campaign->reservedShips);
-        self::assertTrue($campaign->returnBlocked);
-        self::assertSame(0, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM fleet WHERE home_planet_id = ?', [$target->id]));
+        self::assertSame('delivered', $campaign->timeline['pilot_recovery']['state']);
+        self::assertSame([], $campaign->reservedShips);
+        self::assertEquals(0, $this->em->getConnection()->fetchOne('SELECT stored_fuel FROM fleet WHERE home_planet_id = ?', [$target->id]));
         self::assertSame(0.0, $this->resourceStock($target->id, 'hydrogen'));
     }
 

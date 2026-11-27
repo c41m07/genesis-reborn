@@ -390,7 +390,7 @@ final class PirateReconnaissanceTest extends KernelTestCase
     }
 
     #[DataProvider('outcomes')]
-    public function testOmegaPilotConsumesNativeRoundTripFromHoldThenGroundWithoutRefund(bool $detected): void
+    public function testOmegaPilotConsumesNativeRoundTripFromGroundWithoutRefund(bool $detected): void
     {
         [$member, $home, , $stock, $ally] = $this->fixture(omega: true);
         $this->preparePilotFuel($home, $stock, 10.0);
@@ -470,6 +470,8 @@ final class PirateReconnaissanceTest extends KernelTestCase
         if ($pilot) {
             $this->preparePilotFuel($home, $stock, 10.0);
             $system = $home->solarSystem;
+            $quote = self::getContainer()->get(FleetService::class)
+                ->quote($member, $home, 'explore', $system->id, ['probe' => ['basic' => 1]], 1.0);
         }
         $db = $this->em->getConnection();
         $directory = sys_get_temp_dir().'/genesis-pirate-race-'.bin2hex(random_bytes(8));
@@ -525,7 +527,7 @@ final class PirateReconnaissanceTest extends KernelTestCase
             self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_reconnaissance'));
             self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM outbox_message'));
             if ($pilot) {
-                self::assertEqualsWithDelta(9.2, $this->pilotGroundStock($home->id), 1e-10);
+                self::assertEqualsWithDelta(10.0 - $quote['total_fuel'], $this->pilotGroundStock($home->id), 1e-10);
                 self::assertSame(0.0, (float) $db->fetchOne('SELECT stored_fuel FROM fleet WHERE id = ?', [$stock->fleet->id]));
             }
         } finally {

@@ -284,7 +284,7 @@ final class PirateAttackService
                 if (!$membership->universe->isAccessible($now)) {
                     throw new \DomainException('L’univers s’est fermé avant le départ de l’attaque.');
                 }
-                $idle->storedFuel -= $fuelReceipt->fromHold;
+                $idle->storedFuel = 0;
             }
             $arrivalAt = $now->modify('+'.$seconds.' seconds');
             // Pour le flux V2, cette borne est indépendante du résultat ; seule l’arrivée est ordonnée au départ.

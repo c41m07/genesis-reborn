@@ -82,7 +82,7 @@ final class ColonyAbandonmentService
         foreach($this->repo->all(Fleet::class,['homePlanet'=>$planet,'status'=>'idle']) as $fleet) {
             if($fleet->playerUniverse->id===$member->id) continue;
             $quantity=array_sum(array_map(static fn(FleetShip $s):int=>$s->quantity,$this->repo->all(FleetShip::class,['fleet'=>$fleet])));
-            if($quantity>0 || $fleet->reservedFuel>0 || $fleet->storedFuel>0 || array_sum($fleet->cargo)>0) {
+            if($quantity>0 || $fleet->reservedFuel>0 || array_sum($fleet->cargo)>0) {
                 $blockers[]='Une opération en cours empêche actuellement l’abandon de cette colonie.';break;
             }
         }
@@ -122,7 +122,7 @@ final class ColonyAbandonmentService
                 $losses['ships'][]=['id'=>$ship->id,'fleet_id'=>$fleet->id,'slug'=>$ship->slug,'tier'=>$ship->tier,
                     'label'=>$this->label($member,'ships',$ship->slug,$ship->tier),'quantity'=>$ship->quantity];
             }
-            $cargo=$fleet->cargo;if($fleet->storedFuel>0) $cargo['hydrogen']=($cargo['hydrogen']??0)+$fleet->storedFuel;
+            $cargo=$fleet->cargo;
             if($cargo!==[]) $losses['fleet_cargo'][]=['fleet_id'=>$fleet->id,'cargo'=>$cargo];
         }
         return $losses;

@@ -55,8 +55,7 @@ final class TransportService
         $recipient = $report?->recipient ?? $fleet->playerUniverse;
         if ($target?->owner?->player!==null) $this->manager->lock($target->owner->player);
         $allowed = $target?->owner?->id === $recipient->id && $this->canReceive($fleet->playerUniverse, $target);
-        $freight = $fleet->cargo;
-        $freight['hydrogen'] = max(0, ($freight['hydrogen'] ?? 0) - $fleet->reservedFuel);
+        $freight = $fleet->freight();
         $result = $allowed ? $this->resources->deposit($target, $freight) : ['delivered' => [], 'overflow' => $freight];
         foreach ($result['delivered'] as $slug => $amount) $fleet->cargo[$slug] -= $amount;
         if ($recipient->id === $fleet->playerUniverse->id && array_sum($result['delivered']) > 0) {
@@ -89,8 +88,8 @@ final class TransportService
         $report=$this->repo->one(TransportReport::class,['fleet'=>$fleet]);
         if($report===null || $report->status!=='traveling') return;
         $report->status='refused';$report->resolvedAt=$this->clock->now();
-        $freight=$fleet->cargo;$freight['hydrogen']=max(0,($freight['hydrogen']??0)-$fleet->reservedFuel);
-        $report->snapshot['delivered']=[];$report->snapshot['returned']=$freight;
+        $report->snapshot['delivered']=[];
+        $report->snapshot['returned']=$fleet->freight();
         $report->snapshot['refusal_reason']=$reason;
     }
 }

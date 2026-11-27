@@ -38,7 +38,7 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
   const navigation = page.getByRole('navigation', { name: 'Navigation principale', exact: true });
   const campaign = navigation.getByRole('link', { name: 'Campagne pirate', exact: true });
   await expect(campaign).toHaveAttribute('href', campaignPath);
-  expect(await campaign.evaluate(link => link.previousElementSibling?.textContent.trim())).toBe('Flottes');
+  await expect(campaign.locator('xpath=preceding-sibling::*[1]')).toHaveAccessibleName('Flottes');
 
   // La lecture, même avec le shell complet et JavaScript, ne réarme pas la présence.
   await page.goto(campaignPath);
@@ -220,6 +220,8 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
     // Les maxima choisis dans les deux rangs arrivent ensemble au devis, sans départ.
     await assault.click();
     await expect(dossier.getByRole('heading', { name: 'Confirmer l’attaque', exact: true })).toBeVisible();
+    await expect(dossier.getByText('Hydrogène prélevé sur la colonie', { exact: true })).toBeVisible();
+    await expect(dossier.getByText('Pris dans la réserve embarquée', { exact: true })).toHaveCount(0);
     await expect(dossier.getByRole('list', { name: 'Escorte choisie' }).getByRole('listitem')).toHaveText([
       'Chasseur de patrouille : 1',
       'Chasseur multirôle : 2',
