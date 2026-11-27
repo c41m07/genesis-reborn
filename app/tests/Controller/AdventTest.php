@@ -214,6 +214,46 @@ final class AdventTest extends WebTestCase
         self::assertEqualsWithDelta($preBox + 10000, $stock(), .01);
     }
 
+    public function testInventoryBadgeCountsAdventAndDailyWithoutConsumingEither(): void
+    {
+        $admin = $this->player('MixedGiftAdmin', admin: true);
+        $player = $this->player('MixedGiftMember');
+        $editionId = $this->publish($admin);
+        $this->clock->modify('2026-12-01T10:00:00Z');
+        $this->client->loginUser($this->em->find(Player::class, $player->id));
+
+        // Récupérer les deux cadeaux depuis leurs pages, avec les vrais formulaires et jetons.
+        $url = '/evenements/avent/'.$editionId;
+        $calendar = $this->client->request('GET', $url);
+        $this->client->submit($calendar->filter('#advent-door-1 form')->form(['choice' => '0']));
+        self::assertResponseRedirects($url.'#advent-door-1', 303);
+        $this->client->request('GET', '/recompense-quotidienne');
+        $this->client->submitForm('Récupérer');
+        self::assertResponseStatusCodeSame(303);
+
+        $count = function (): int {
+            $this->client->request('GET', '/messages/non-lus');
+            self::assertResponseIsSuccessful();
+            $body = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+
+            return $body['inventoryGiftCount'];
+        };
+        self::assertSame(2, $count());
+        $this->client->request('GET', '/inventaire/boites');
+        self::assertSelectorTextContains('.inventory-gift-notice', '2 nouveaux cadeaux');
+        $this->client->submitForm('Marquer les cadeaux comme vus');
+        self::assertResponseRedirects('/inventaire/boites', 303);
+        self::assertSame(0, $count());
+
+        $this->client->request('GET', '/inventaire/boites');
+        self::assertSelectorExists('#advent-box-1');
+        $this->client->request('GET', '/boosts');
+        self::assertSelectorTextContains('main', 'Moteurs économes');
+        $db = $this->em->getConnection();
+        self::assertNull($db->fetchOne('SELECT delivered_at FROM advent_claim WHERE advent_edition_id = ? AND door = 1', [$editionId]));
+        self::assertSame('available', $db->fetchOne("SELECT status FROM player_boost WHERE source_type = 'daily_reward'"));
+    }
+
     public function testActivationMidMonthAndIndependentWindowsForTheSameSeason(): void
     {
         $admin = $this->player('AdventWindowAdmin', admin: true);
