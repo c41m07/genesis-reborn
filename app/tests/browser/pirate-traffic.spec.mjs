@@ -63,15 +63,41 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
     await expect(scout).toContainText('Sonde de reconnaissance');
     await expect(scout.locator('time')).toHaveAttribute('datetime', /T/);
     await expect(scout.getByRole('progressbar')).toBeVisible();
-    await scout.getByText('Composition', { exact: true }).click();
-    await expect(scout.getByText(/1 × .*sonde/i)).toBeVisible();
+    const details = scout.getByRole('region', { name: 'Composition et fret' });
+    const trigger = scout.getByRole('button', { name: /Composition et fret/ });
+    await scout.hover();
+    await expect(details).toBeVisible();
+    await expect(details.getByText(/sonde/i)).toBeVisible();
+    await expect(details.locator('dd')).toHaveText(['1']);
+    await page.keyboard.press('Escape');
+    await expect(details).toBeHidden();
+    await trigger.focus();
+    await expect(details).toBeVisible();
+    await trigger.press('Escape');
+    await expect(details).toBeHidden();
+    await trigger.click();
+    await expect(details).toBeVisible();
     const countdown = scout.locator('[data-progress-target="remaining"]');
     const previous = await countdown.textContent();
     await expect(countdown).not.toHaveText(previous);
-    await expect(scout.getByRole('button')).toHaveCount(0);
+    await expect(scout.getByRole('button')).toHaveCount(1);
     await expect(scout.getByRole('link', { name: 'Consulter le dossier de campagne' })).toHaveAttribute('href', '/evenements/campagne-pirate/1');
     await expect(flights.locator('[data-active-fleet]')).toHaveCount(0);
     await expect(page.locator('[data-campaign-kind="pirates"],[data-campaign-kind="convoy"]')).toHaveCount(0);
+  }
+
+  const nativeMobile = await browser.newContext({
+    javaScriptEnabled: false, hasTouch: true, viewport: { width: 390, height: 844 },
+    storageState: await page.context().storageState(),
+  });
+  try {
+    const phone = await nativeMobile.newPage();
+    await phone.goto(new URL('/flottes', page.url()).href);
+    const scout = phone.locator('[data-campaign-kind="scout"]');
+    await scout.getByRole('button', { name: /Composition et fret/ }).tap();
+    await expect(scout.getByRole('region', { name: 'Composition et fret' }).getByText(/sonde/i)).toBeVisible();
+  } finally {
+    await nativeMobile.close();
   }
 
   const metric = page.locator('[data-live-region="overview-flight-metric"]');
