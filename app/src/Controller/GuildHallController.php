@@ -6,7 +6,7 @@ namespace App\Controller;
 
 use App\Entity\{Guild, GuildMember, GuildHallBuilding, PlayerUniverse};
 use App\Repository\{GameRepository, GuildHallRepository};
-use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildAtelierDeliveryView,GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyView, GuildHallFunding, GuildHallService, GuildHallWarehouseView};
+use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildAtelierDeliveryView, GuildDockService, GuildDockView, GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyView, GuildHallFunding, GuildHallService, GuildHallWarehouseView};
 use App\Service\Player\{DiplomacyAccessPolicy, RelationResolver, VacationCalendar};
 use App\Service\Universe\UniverseContext;
 use Psr\Clock\ClockInterface;
@@ -25,6 +25,7 @@ final class GuildHallController extends AbstractController
     }
 
     private const CONVOY_REVIEW = 'guild_hall_convoy_review';
+    private const DOCK_REVIEW = 'guild_dock_review';
     private const DELIVERY_REVIEW = 'guild_atelier_delivery_review';
 
     #[Route('/guildes/hall', name: 'app_guild_hall', methods: ['GET'])]
@@ -37,6 +38,7 @@ final class GuildHallController extends AbstractController
         GuildHallConvoyView $convoy,
         ClockInterface $clock,
         GuildAtelierDeliveryView $delivery,
+        GuildDockView $dock,
     ): Response
     {
         [$actor, $guild, $target] = $this->contextForHall();
@@ -86,11 +88,24 @@ final class GuildHallController extends AbstractController
             }
         }
 
+        $dockData = null;
+        if ($mayAct && ($warehouseData['enabled'] ?? false) && ($warehouseData['dock_built'] ?? false)) {
+            $dockData = $dock->describe($actor, $request->query->getInt('dock_origin'));
+            $saved = $request->getSession()->get(self::DOCK_REVIEW);
+            if (is_array($saved) && $saved['actor'] === $actor->id && $saved['guild'] === $guild->id
+                && $saved['hall'] === $hall->id && $saved['origin'] === $dockData['origin']?->id
+                && $saved['expires'] >= $clock->now()->getTimestamp()
+                && hash_equals($saved['key'], $request->query->getString('dock_review'))) {
+                $dockData['review'] = $saved;
+            }
+        }
+
         return $this->render('player/guild_hall.html.twig', [
             'guild' => $guild,
             'warehouse' => $warehouseData,
             'convoy' => $convoyData,
             'atelier_delivery' => $deliveryData,
+            'dock' => $dockData,
             'received_donations' => $hall?->placedAt !== null ? $convoy->receivedDonations($actor, $hall) : [],
             'may_build_at_hall' => $mayAct && $policy->canCommand($actor, $guild),
             'hall' => $hall,
@@ -307,6 +322,55 @@ final class GuildHallController extends AbstractController
                     'fuel' => $plan->fuel, 'fingerprint' => $plan->fingerprint(),
                 ]);
                 $redirect['delivery_review'] = $key;
+            }
+        } catch (\DomainException $error) {
+            $this->addFlash('error', $error->getMessage());
+        }
+
+        return $this->redirectToRoute('app_guild_hall', $redirect, Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/guildes/hall/dock/moderniser', name: 'app_guild_hall_dock', methods: ['POST'])]
+    public function modernize(Request $request, GuildDockService $dock, ClockInterface $clock): Response
+    {
+        [$actor, $guild] = $this->contextForHall();
+        $input = $request->request;
+        $hallId = $input->getInt('hall_id');
+        if (!$this->isCsrfTokenValid('guild_hall_dock_'.$guild->id.'_'.$hallId, $input->getString('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le Hall.');
+        }
+        $session = $request->getSession();
+        $redirect = ['_fragment' => 'hall-dock'];
+        try {
+            if ($input->getString('confirm') === '1') {
+                $review = $session->get(self::DOCK_REVIEW);
+                if (!is_array($review) || $review['actor'] !== $actor->id || $review['guild'] !== $guild->id
+                    || $review['hall'] !== $hallId || $review['expires'] < $clock->now()->getTimestamp()
+                    || !hash_equals($review['key'], $input->getString('request_key'))) {
+                    throw new \DomainException('Devis expiré ou déjà utilisé. Recalculez la modernisation.');
+                }
+                $session->remove(self::DOCK_REVIEW);
+                $redirect['dock_origin'] = $review['origin'];
+                $quote = $review['quote'];
+                $dock->reserve(
+                    $actor, $guild->id, $hallId, $review['origin'], $review['key'],
+                    $quote['ship'], $quote['source_tier'], $quote['quantity'],
+                    ['duration' => $quote['duration'], 'costs' => $quote['costs']],
+                );
+                $this->addFlash('success', 'Modernisation lancée. Le lot reste votre propriété pendant les travaux.');
+            } else {
+                $origin = $input->getInt('origin');
+                $redirect['dock_origin'] = $origin;
+                [$ship, $tier] = array_pad(explode(':', $input->getString('hull'), 2), 2, '');
+                $quantity = self::convoyQuantity($input->getString('quantity'));
+                $quote = $dock->preview($actor, $guild->id, $hallId, $origin, $ship, $tier, $quantity);
+                $key = bin2hex(random_bytes(16));
+                $session->set(self::DOCK_REVIEW, [
+                    'key' => $key, 'expires' => $clock->now()->getTimestamp() + 300,
+                    'actor' => $actor->id, 'guild' => $guild->id, 'hall' => $hallId,
+                    'origin' => $origin, 'quote' => $quote,
+                ]);
+                $redirect['dock_review'] = $key;
             }
         } catch (\DomainException $error) {
             $this->addFlash('error', $error->getMessage());
