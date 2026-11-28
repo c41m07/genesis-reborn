@@ -11,6 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 final class GuildHallBuilding
 {
     public const ATELIER = 'atelier';
+    public const COMMAND = 'command';
     public const DOCK = 'dock';
     public const RELAY = 'relay';
     public const WAREHOUSE = 'warehouse';

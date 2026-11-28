@@ -187,7 +187,7 @@ final class GuildHallController extends AbstractController
         return $this->redirectToRoute('app_guild_hall', status: Response::HTTP_SEE_OTHER);
     }
 
-    #[Route('/guildes/hall/installations/{slug}/construire', name: 'app_guild_hall_build_structure', requirements: ['slug' => 'atelier|dock|relay'], methods: ['POST'])]
+    #[Route('/guildes/hall/installations/{slug}/construire', name: 'app_guild_hall_build_structure', requirements: ['slug' => 'atelier|dock|relay|command'], methods: ['POST'])]
     public function buildStructure(Request $request, string $slug, GuildHallBuildingOrders $orders): Response
     {
         [$actor, $guild] = $this->contextForHall();

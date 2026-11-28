@@ -13,6 +13,7 @@ final readonly class GuildHallWarehouseView
         GuildHallBuilding::ATELIER => 'Atelier d’assemblage',
         GuildHallBuilding::DOCK => 'Dock de modernisation',
         GuildHallBuilding::RELAY => 'Relais de surveillance',
+        GuildHallBuilding::COMMAND => 'Centre de commandement',
     ];
 
     private const MATERIALS = ['metal' => 'Métal', 'nano' => 'Nano', 'antimatter' => 'Antimatière', 'hydrogen' => 'Hydrogène'];

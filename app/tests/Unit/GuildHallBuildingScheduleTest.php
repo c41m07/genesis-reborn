@@ -61,6 +61,18 @@ final class GuildHallBuildingScheduleTest extends TestCase
         new GuildHallBuildingSchedule($levels, [1 => ['metal' => 60, 'nano' => 9]]);
     }
 
+    public function testCommandCenterUsesAConfiguredQuoteAndDoesNotExistInOldSchedules(): void
+    {
+        $warehouse = [GuildHallBuilding::WAREHOUSE => [1 => ['cost' => ['metal' => 25], 'duration' => 60]]];
+        $capacity = [1 => ['metal' => 150, 'antimatter' => 20]];
+        $legacy = new GuildHallBuildingSchedule($warehouse, $capacity);
+        self::assertSame(0, $legacy->maximumLevel(GuildHallBuilding::COMMAND));
+
+        $command = ['cost' => ['metal' => 120, 'antimatter' => 20], 'duration' => 600];
+        $configured = new GuildHallBuildingSchedule($warehouse + [GuildHallBuilding::COMMAND => [1 => $command]], $capacity);
+        self::assertSame($command + ['maxLevel' => 1], $configured->quote(GuildHallBuilding::COMMAND, 0));
+    }
+
     public function testCatalogueRejectsAnUnreachableWarehouseUpgrade(): void
     {
         $this->expectException(\DomainException::class);
