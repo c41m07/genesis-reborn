@@ -15,6 +15,16 @@ final readonly class GuildJumpLink
     {
     }
 
+    public function originEquipped(PlayerUniverse $actor, Planet $origin): bool
+    {
+        if ($actor->id === null || $origin->id === null || $origin->owner?->id !== $actor->id) {
+            return false;
+        }
+        $point = $this->em->getRepository(GuildJumpPoint::class)->findOneBy(['planet' => $origin]);
+
+        return $point instanceof GuildJumpPoint && $point->isUsableAt($this->clock->now());
+    }
+
     public function available(PlayerUniverse $actor, Planet $origin, Planet $target): bool
     {
         if ($actor->id === null || $origin->id === null || $target->id === null || $origin->id === $target->id

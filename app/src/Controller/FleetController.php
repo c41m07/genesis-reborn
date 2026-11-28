@@ -8,6 +8,7 @@ use App\Service\Universe\UniverseContext;
 use App\Service\Fleet\{FleetService, DestinationCatalogue};
 use App\Service\Player\{FirstStepRewardPolicy, PreferencesService};
 use App\Service\Catalog\GameCatalog;
+use App\Service\Guild\GuildJumpLink;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
 use Symfony\Component\Routing\Attribute\Route;
@@ -25,6 +26,7 @@ final class FleetController extends AbstractController
         \App\Service\Fleet\FleetPageView $view,
         \App\Service\Colony\GameShell $shell,
         \App\Service\Colony\LiveRegionResponse $liveResponses,
+        GuildJumpLink $jumps,
     ): Response
     {
         $member = $context->membership();
@@ -53,6 +55,13 @@ final class FleetController extends AbstractController
         if (isset($data['composition_review'])) {
             $this->addFlash('error', 'Les disponibilités ou la composition ont changé. Vérifiez les quantités avant de charger.');
             return $this->redirectToRoute('app_fleet_composition_load', $data['composition_review']);
+        }
+        $data['jump_origins'] = [];
+        if ($page === 'prepare' && !$parameters['tutorial_spy']) {
+            foreach ($data['idle'] as $entry) {
+                $origin = $entry['fleet']->homePlanet;
+                $data['jump_origins'][$origin->id] = $jumps->originEquipped($member, $origin);
+            }
         }
         if ($request->headers->get('X-Genesis-Live') === '1' && $request->getPreferredFormat() === 'json') {
             $data['chrome'] = $shell->get($this->getUser(), $data['fleet_planet'], rememberSelection: false);
@@ -213,21 +222,34 @@ final class FleetController extends AbstractController
                 (string) $request->request->get('coordinates', ''),
                 $request->request->get($mode . '_destination')
             );
+            $jump = !$request->request->getBoolean('tutorial_spy') && $request->request->getBoolean('jump_point');
+            $ships = $request->request->all('ships');
+            $cargo = $request->request->all('cargo');
             $result = $service->preview(
                 $m,
                 $origin,
                 $mission,
                 (int) $destination->id,
-                $request->request->all('ships'),
+                $ships,
                 $ratio,
-                $request->request->all('cargo'),
+                $cargo,
                 $orbitHours,
+                jumpPoint: $jump,
             );
             if ($request->request->getBoolean('tutorial_spy')) {
                 FirstStepRewardPolicy::assertSpyQuote($mission, $destination, $result['composition'], $result['ship_adjusted']);
             }
             if ($request->request->getBoolean('require_exact_composition') && $result['ship_adjusted']) {
                 throw new \DomainException('La composition n’est plus disponible exactement. Modifiez vos quantités ou vérifiez à nouveau la composition enregistrée.');
+            }
+            if ($jump) {
+                // Le trajet normal reste une estimation ; seul le mode choisi est envoyé.
+                try {
+                    $ordinary = $service->preview($m, $origin, $mission, (int) $destination->id, $ships, $ratio, $cargo, $orbitHours);
+                    $result['ordinary_route'] = array_intersect_key($ordinary, array_flip(['seconds', 'total_fuel', 'freight_capacity']));
+                } catch (\DomainException) {
+                    $result['ordinary_route'] = null;
+                }
             }
             return $this->json($result, 200, ['Cache-Control' => 'private, no-store']);
         } catch (\DomainException $e) {
@@ -308,6 +330,7 @@ final class FleetController extends AbstractController
                 $orbitHours,
                 $request->request->getBoolean('require_exact_composition'),
                 tutorialSpy: $request->request->getBoolean('tutorial_spy'),
+                jumpPoint: !$request->request->getBoolean('tutorial_spy') && $request->request->getBoolean('jump_point'),
             );
             $this->addFlash('success', 'Flotte envoyée. Carburant aller-retour réservé.' . ($adjusted ? ' Quantités ajustées aux stocks et capacités disponibles.' : ''));
         } catch (\DomainException $e) {
