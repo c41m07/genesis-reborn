@@ -1,5 +1,7 @@
 # Campagne pirate : socle isolé et intégration à venir
 
+Ce cadrage conserve les compositions et recettes historiques du pilote. Les [règles des campagnes pirates](REGLES.md#campagnes-pirates) décrivent les formations et les titres actuels.
+
 ## Portée et complexité
 
 - Socle local, 2–3/5 : identité du poste et données d’un adversaire figées par valeur. Aucun état, rapport, migration, route, bouton, outbox, récompense ou déblocage effectif. Rien n’est déclenché au chargement d’une page ou d’un ancien univers.

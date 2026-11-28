@@ -99,7 +99,7 @@ final class PirateCampaignSequenceTest extends TestCase
         self::assertNull($order->choose($viewer, [$first], 3, $this->at(21)));
     }
 
-    public function testTwentiethVictoryEndsCommandsButDoesNotEraseTheHistory(): void
+    public function testTwentiethVictoryOpensOnlyTheNextCampaign(): void
     {
         [$viewer, $site, $catalogue, $sequence] = $this->fixture();
         $order = new PiratePilotCampaignOrder($catalogue, $sequence);
@@ -109,7 +109,9 @@ final class PirateCampaignSequenceTest extends TestCase
         self::assertSame($catalogue->keys()[19], $last['key']);
         self::assertTrue($last['isNew']);
         self::assertNull($order->choose($viewer, $all, 20, $this->at(23)));
-        self::assertNull($order->choose($viewer, $all, 21, $this->at(23)));
+        self::assertSame('t2_balise_17', $order->choose($viewer, $all, 200000001, $this->at(23))['key']);
+        self::assertNull($order->choose($viewer, $notYet, 200000001, $this->at(23)));
+        self::assertNull($order->choose($viewer, $all, 300000001, $this->at(23)));
         self::assertCount(20, $sequence->forViewer($viewer, $all, $this->at(23))['consultable']);
     }
 

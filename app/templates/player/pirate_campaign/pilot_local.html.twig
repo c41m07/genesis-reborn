@@ -5,7 +5,9 @@
 {% block body %}
 {% set briefing = dossier.briefing %}
 {% set narrative = dossier.signal_copy ?? briefing.narrative %}
-{% set defeatedCount = dossier.history|filter(entry => entry.won)|length %}
+{% set offset = dossier.mission_offset %}
+{% set campaignHistory = dossier.history|filter(entry => entry.number > offset and entry.number <= offset + dossier.mission_count) %}
+{% set defeatedCount = campaignHistory|filter(entry => entry.won)|length %}
 {% set canDeposit = deposit_token and dossier.convoy.selected_reward.state|default('') == 'full_pending' %}
 {% set hasIntel = briefing and (briefing.formation is not null or (briefing.quote is not null and not dossier.convoy.selected_reward)) %}
 
@@ -18,8 +20,8 @@
 <div class="page-refinement pirate-campaign player-campaign-board" data-page-sections="disabled">
     <header class="page-heading">
         <div>
-            <p class="campaign-eyebrow">Opérations · dossier {{ dossier.selected }}</p>
-            <h1>Campagne pirate</h1>
+            <p class="campaign-eyebrow">Opérations · dossier {{ dossier.selected - offset }}</p>
+            <h1>Campagne pirate{% if dossier.campaign_tier == 0 %} · Missions de l’univers{% elseif dossier.campaign_tier > 1 %} · T{{ dossier.campaign_tier }}{% endif %}</h1>
             <p>Répondez aux signaux civils et rouvrez les routes de votre secteur.</p>
         </div>
         {% if dossier.current and dossier.current != dossier.selected %}
@@ -45,12 +47,12 @@
                 <progress class="visually-hidden" value="{{ defeatedCount }}" max="{{ dossier.mission_count }}" aria-label="Missions réussies">{{ defeatedCount }} / {{ dossier.mission_count }}</progress>
                 <span class="pirate-campaign-markers" aria-hidden="true">
                     {% for number in 1..dossier.mission_count %}
-                        <i class="{{ number <= defeatedCount ? 'is-cleared' : (number == dossier.current ? 'is-current' : '') }}"></i>
+                        <i class="{{ number <= defeatedCount ? 'is-cleared' : (number + offset == dossier.current ? 'is-current' : '') }}"></i>
                     {% endfor %}
                 </span>
                 <small>{{ defeatedCount }} {{ defeatedCount == 1 ? 'mission réussie' : 'missions réussies' }}</small>
             </div>
-            <strong>Mission {{ dossier.selected }} / {{ dossier.mission_count }}</strong>
+            <strong>Mission {{ dossier.selected - offset }} / {{ dossier.mission_count }}</strong>
         </div>
     </section>
 
@@ -118,11 +120,11 @@
                 {% for mission in dossier.chapter.missions %}
                     {% set chosen = mission.number == dossier.selected %}
                     <li class="pirate-campaign-mission-row pirate-campaign-mission-row--{{ mission.state }}{{ chosen ? ' is-selected' : '' }}">
-                        <span class="pirate-campaign-mission-number" aria-hidden="true">{{ mission.number }}</span>
+                        <span class="pirate-campaign-mission-number" aria-hidden="true">{{ mission.number - offset }}</span>
                         {% if chosen %}
                             <span class="pirate-campaign-mission-title" aria-current="page">{{ mission.title }}</span>
                         {% elseif mission.state == 'locked' %}
-                            <span class="pirate-campaign-mission-title">Mission {{ mission.number }}</span>
+                            <span class="pirate-campaign-mission-title">Mission {{ mission.number - offset }}</span>
                         {% else %}
                             <a class="pirate-campaign-mission-title" href="{{ path('app_pirate_campaign', {missionNumber: mission.number}) }}">{{ mission.title }}</a>
                         {% endif %}
@@ -133,16 +135,31 @@
             {% if dossier.chapter.missions|filter(mission => mission.state == 'locked') is not empty %}
                 <p class="pirate-campaign-lock-hint">Terminez les dossiers précédents pour débloquer les missions suivantes.</p>
             {% endif %}
-            {% set previousChapters = dossier.history|filter(entry => entry.number not in chapterMissions) %}
+            {% set previousChapters = campaignHistory|filter(entry => entry.number not in chapterMissions) %}
             {% if previousChapters is not empty %}
                 <details class="pirate-campaign-archives">
                     <summary>Autres dossiers consultables</summary>
                     <ul>
                         {% for entry in previousChapters %}
-                            <li><a href="{{ path('app_pirate_campaign', {missionNumber: entry.number}) }}">Mission {{ entry.number }}</a>{% if entry.won %} · Terminée{% endif %}</li>
+                            <li><a href="{{ path('app_pirate_campaign', {missionNumber: entry.number}) }}">Mission {{ entry.number - offset }}</a>{% if entry.won %} · Terminée{% endif %}</li>
                         {% endfor %}
                     </ul>
                 </details>
+            {% endif %}
+            {% if dossier.campaign_tier > 1 %}
+                <details class="pirate-campaign-archives">
+                    <summary>Campagnes précédentes</summary>
+                    <ul>
+                        {% for archive in dossier.archive_links %}
+                            <li><a href="{{ path('app_pirate_campaign', {missionNumber: archive}) }}">Dossiers T{{ loop.index }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </details>
+            {% endif %}
+            {% if dossier.editorial_mission and dossier.campaign_tier != 0 %}
+                <a href="{{ path('app_pirate_campaign', {missionNumber: dossier.editorial_mission}) }}">Missions de l’univers</a>
+            {% elseif dossier.campaign_tier == 0 %}
+                <a href="{{ path('app_pirate_campaign') }}">Campagne en cours</a>
             {% endif %}
         </nav>
     </section>

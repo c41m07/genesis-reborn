@@ -19,12 +19,12 @@ final readonly class PiratePilotCampaignOrder
      */
     public function choose(PlayerUniverse $owner, array $ownedRows, int $ordinal, \DateTimeImmutable $at): ?array
     {
-        $keys = $this->catalogue->keys($owner->universe);
+        $keys = $this->catalogue->routeKeys($owner->universe);
         if ($ordinal < 1 || !isset($keys[$ordinal - 1])) {
             return null;
         }
         $key = $keys[$ordinal - 1];
-        $sequence = $this->sequence->forViewer($owner, $ownedRows, $at);
+        $sequence = $this->sequence->forViewer($owner, $ownedRows, $at, editorial: $this->catalogue->campaignTier($key) === 0);
         if ($sequence === null || $sequence['current_mission'] !== $key) {
             // Y compris catalogue terminé, mission future et dossier historique.
             return null;
@@ -33,7 +33,7 @@ final readonly class PiratePilotCampaignOrder
         $previous = null;
         $previousState = null;
         if ($ordinal > 1) {
-            $priorKeys = array_intersect(array_slice($keys,0,$ordinal-1),$sequence['consultable']);
+            $priorKeys = array_values(array_diff($sequence['consultable'], [$key]));
             $priorKey = end($priorKeys);
             foreach ($ownedRows as $row) {
                 $recon = $row['reconnaissance'];

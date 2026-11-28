@@ -31,7 +31,7 @@ final readonly class PirateCampaignWorkspace
         \DateTimeImmutable $at,
         ?int $requested = null,
     ): ?array {
-        $keys = $this->catalogue->keys($viewer->universe);
+        $keys = $this->catalogue->routeKeys($viewer->universe);
         if (count($rows) > count($keys) || ($requested !== null && ($requested < 1 || !isset($keys[$requested - 1])))) {
             return null;
         }
@@ -39,6 +39,25 @@ final readonly class PirateCampaignWorkspace
         $order = $this->sequence->forViewer($viewer, $rows, $at);
         if ($order === null) {
             return null;
+        }
+        $extra = null;
+        if (!empty($viewer->universe->gameSettings['pirate_missions'])) {
+            $extra = $this->sequence->forViewer($viewer, $rows, $at, editorial: true);
+        }
+        $editorialLink = null;
+        if ($extra !== null) {
+            foreach (array_filter([$extra['current_mission'], ...$extra['consultable']]) as $key) {
+                if ($this->catalogue->campaignTier($key) === 0) {
+                    $editorialLink = $key;
+                    break;
+                }
+            }
+        }
+        if ($requested !== null && $this->catalogue->campaignTier($keys[$requested - 1]) === 0) {
+            if ($extra === null) {
+                return null;
+            }
+            $order = $extra;
         }
         $current = $order['current_mission'];
         $consultable = $order['consultable'];
@@ -54,6 +73,9 @@ final readonly class PirateCampaignWorkspace
             return null;
         }
         $positions = array_flip($keys);
+        $tier = $this->catalogue->campaignTier($selected);
+        $chapters = $this->catalogue->chapters($viewer->universe, $tier);
+        $campaignKeys = array_merge(...array_column($chapters, 'keys'));
         $history = [];
         foreach ($consultable as $key) {
             $history[] = ['number' => $positions[$key] + 1, 'won' => $key !== $current];
@@ -61,7 +83,11 @@ final readonly class PirateCampaignWorkspace
 
         return [
             'art' => $viewer->universe->gameSettings['pirate_missions'][$selected]['art'] ?? 'art/genesis-reborn-planet.webp',
-            'mission_count' => count($keys),
+            'editorial_mission' => $editorialLink === null ? null : $positions[$editorialLink] + 1,
+            'archive_links' => $tier > 1 ? array_map(fn (int $prior): int => $positions[$this->catalogue->campaignKeys($prior)[0]] + 1, range(1, $tier - 1)) : [],
+            'campaign_tier' => $tier,
+            'mission_offset' => $positions[$campaignKeys[0]],
+            'mission_count' => count($campaignKeys),
             'current' => $current === null ? null : $positions[$current] + 1,
             'selected' => $positions[$selected] + 1,
             'history' => $history,
@@ -69,7 +95,7 @@ final readonly class PirateCampaignWorkspace
             'signal_pending' => $signalPending,
             'signal_copy' => $signalPending ? $this->catalogue->signalCopy($selected,$viewer->universe) : null,
             'briefing' => $briefing,
-            'chapter' => $this->chapterForDossier($viewer,$selected, $current, $consultable, $positions, $briefing),
+            'chapter' => $this->chapterForDossier($viewer, $selected, $current, $consultable, $positions, $briefing, $chapters),
         ];
     }
 
@@ -77,10 +103,10 @@ final readonly class PirateCampaignWorkspace
      * Le sommaire indique la progression, pas le contenu des dossiers verrouillés.
      * Un titre révélateur n’est montré que dans le dossier autorisé qui l’a reçu.
      */
-    private function chapterForDossier(PlayerUniverse $viewer, string $selected, ?string $current, array $consultable, array $positions, ?array $briefing): array
+    private function chapterForDossier(PlayerUniverse $viewer, string $selected, ?string $current, array $consultable, array $positions, ?array $briefing, array $chapters): array
     {
         $readable = array_fill_keys($consultable, true);
-        foreach ($this->catalogue->chapters($viewer->universe) as $chapterIndex => $chapter) {
+        foreach ($chapters as $chapterIndex => $chapter) {
             if (!in_array($selected, $chapter['keys'], true)) {
                 continue;
             }

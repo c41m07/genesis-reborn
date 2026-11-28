@@ -33,7 +33,7 @@
 {% for movement in campaignTraffic %}
     <article class="gv2-flight-entry" data-campaign-kind="{{ movement.kind }}">
         <strong><span aria-hidden="true">{{ movement.kind == 'pirates' ? 'P' : '◇' }}</span> {{ movement.label }}</strong>
-        <small>Campagne pirate · Mission {{ movement.mission }}</small>
+        <small>Campagne pirate · {{ pirate_dossier_label(movement.mission) }}</small>
         {% if movement.eta %}
             <small>{{ movement.overdue ? 'Arrivée à confirmer · prévue le' : 'Arrivée prévue le' }}
                 <time datetime="{{ movement.eta }}">{{ movement.eta|date('d/m/Y à H:i:s', preferences.timezone|default(app.user.preferences.timezone|default('Europe/Paris'))) }}</time>

@@ -19,7 +19,7 @@ final class PirateCampaignPresenterTest extends TestCase
         [$player, $site, $catalogue, , , $presenter] = $this->fixture();
         foreach ($catalogue->keys() as $index => $key) {
             $signal = $presenter->forSignal($player, $site, $key, $this->at(1));
-            self::assertSame($index + 1, $signal['mission_number']);
+            self::assertSame($index % 20 + 1, $signal['mission_number']);
             self::assertSame([3, 5, 5, 3, 4], array_column($signal['chapters'], 'count'));
             self::assertCount(1, array_filter(array_column($signal['chapters'], 'current')));
             self::assertNull($signal['formation']);
@@ -54,14 +54,14 @@ final class PirateCampaignPresenterTest extends TestCase
         self::assertNull($presenter->forProgress($player, $recon, null, $this->at(35))['quote']);
 
         $reported = $presenter->forProgress($player, $recon, null, $this->at(36));
-        self::assertSame([1, 1], array_column($reported['formation'], 'quantity'));
-        self::assertSame(['17 071,5', '6 539,5', '1 482,5', '11 484'], array_column($reported['quote'], 'amount'));
+        self::assertSame([60, 8, 9, 120, 15, 100, 80], array_column($reported['formation'], 'quantity'));
+        self::assertSame(['661 894,5', '297 234,5', '43 737', '527 023'], array_column($reported['quote'], 'amount'));
         $html = $this->render($reported);
         self::assertStringContainsString('Flotte pirate révélée', $html);
-        self::assertStringContainsString('Un destroyer menace particulièrement un croiseur', $html);
+        self::assertStringContainsString('Prévoyez de quoi affronter les frégates', $html);
         self::assertStringContainsString('50 % du coût catalogue', $html);
         self::assertStringContainsString('Ce montant n’a pas été versé', $html);
-        self::assertStringContainsString('+17 071,5', $html);
+        self::assertStringContainsString('+661 894,5', $html);
         self::assertStringContainsString('des vaisseaux en réserve', $html);
         self::assertStringContainsString('de l’électricité', $html);
         self::assertStringContainsString('vous recevrez une boîte de ressources dans votre inventaire', $html);
@@ -96,7 +96,7 @@ final class PirateCampaignPresenterTest extends TestCase
             $view = $presenter->forProgress($player, $recon, $attack, $this->at(82));
             self::assertSame($status, $view['status']);
             self::assertSame([2], array_column($view['losses'], 'quantity'));
-            self::assertSame([1, 1], array_column($view['formation'], 'quantity'));
+            self::assertSame([60, 8, 9, 120, 15, 100, 80], array_column($view['formation'], 'quantity'));
             self::assertStringContainsString('Ces pertes sont définitives', $this->render($view));
             self::assertContains('Retour prévu des survivants', array_column($view['dates'], 'label'));
             if ($outcome !== 'attacker_wins') {

@@ -1,5 +1,9 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Trois campagnes pirates successives — 28 novembre 2026
+
+Le propriétaire valide des campagnes successives de vingt formations cumulatives. La victoire finale attribue le titre de la campagne et ouvre la suivante dans le dossier de cette participation. Les formations, rangs et titres validés sont consignés dans le [catalogue de campagne](CAMPAGNE_PIRATE_PILOTE_LOCAL.md#campagnes-successives). Les clés historiques et les preuves déjà figées sont conservées.
+
 ## Visibilité de l’inactivité au classement — 28 novembre 2026
 
 Le classement rend public le statut « Inactif » à partir du seuil existant de 14 jours dans l’univers. Le classement ne publie ni la date de dernière visite ni celle de conversion. La reprise d’activité retire le badge. Les pactes actifs et les vacances sont identifiables dans le classement.

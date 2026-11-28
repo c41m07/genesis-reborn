@@ -38,7 +38,10 @@ final class AdminPirateMissionController extends AbstractController
             } catch (\DomainException $e) { $this->addFlash('error',$e->getMessage()); }
         }
         $models = [];
-        foreach ($keys as $code) $models[$code] = $campaign->definition($code,$universe)['title'];
+        foreach ($keys as $code) {
+            $tier = $campaign->campaignTier($code);
+            $models[$code] = ($tier > 0 ? 'T'.$tier.' · ' : '').$campaign->definition($code, $universe)['title'];
+        }
         return $this->render('admin/pirate_editor.html.twig',['world'=>$universe,'models'=>$models,'key'=>$key,'m'=>$fields,'version'=>$revision,
             'art'=>$editor->illustrations($universe),'ships'=>$catalog->all('ships'),'tiers'=>$catalog->tiers()]);
     }

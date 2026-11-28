@@ -270,6 +270,8 @@ test('Flotte de l’empire : effectifs cumulés par famille et par rang en lectu
     await expect(page).toHaveURL(/\/planetes\?view=table$/);
     await page.setViewportSize({ width: 1920, height: 1080 });
     await link.click();
+    await expect(page).toHaveURL(/\/planetes\/flotte$/);
+    await expect(page.locator('body')).toHaveClass(/\bnav-ready\b/);
     await page.getByLabel('Choisir une colonie').selectOption(String(second));
     await expect(page).toHaveURL(new RegExp('/planetes/flotte\\?colony=' + second + '$'));
     await expect(page.getByLabel('Choisir une colonie')).toHaveValue(String(second));

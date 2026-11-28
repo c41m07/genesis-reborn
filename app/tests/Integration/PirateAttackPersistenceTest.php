@@ -54,7 +54,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
 
     public function testPrivateTrafficKeepsAttestedTripsAndPreviousConvoyWithoutPublishingARealFleet(): void
     {
-        [$owner, $origin, , , $neighbor] = $this->fixture(omega: true, scoutPaid: true, missionKey: 'balise_17');
+        [$owner, $origin, $stock, , $neighbor] = $this->fixture(omega: true, scoutPaid: true, missionKey: 'balise_17');
         $owner->player->currentPlayerUniverse = $owner;
         $neighbor->player->currentPlayerUniverse = $neighbor;
         $world = new Universe();
@@ -93,15 +93,16 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame([], $traffic->forGalaxy($neighbor, $ownGalaxy));
 
         $this->finishRecon();
+        $this->supplyPatrolEscort($stock, $origin);
         self::assertSame([], $traffic->forViewer($owner)['outbound']);
         self::assertSame(['pirates'], array_column($traffic->forViewer($owner)['presence'], 'kind'));
-        self::assertTrue($this->service->launchWithPilotFuel($owner, $origin, 'balise_17', 0, ['fighter' => ['basic' => 2]], $gate));
+        self::assertTrue($this->service->launchWithPilotFuel($owner, $origin, 'balise_17', 0, ['fighter' => ['basic' => 120]], $gate));
         $attack = $this->campaign();
         $escort = $traffic->forViewer($owner)['outbound'];
         self::assertSame(['escort'], array_column($escort, 'kind'));
         self::assertSame($attack->arrivalAt->format(DATE_ATOM), $escort[0]['eta']);
         self::assertSame($attack->departedAt->format(DATE_ATOM), $escort[0]['departure']);
-        self::assertSame(2, $escort[0]['ships'][0]['quantity']);
+        self::assertSame(120, $escort[0]['ships'][0]['quantity']);
 
         $proof = $attack->reconnaissance->battleProofFor($owner, $this->clock->now());
         $attack->timeline['seed'] = $this->seedWithVictory($attack, $proof['prepared']->battleForServer());
@@ -160,13 +161,30 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame([], $traffic->forViewer($owner)['outbound']);
     }
 
-    public function testOnlyVictoryOfFinalMissionGrantsAnUnequippedTitleOnce(): void
+    public static function campaignFinales(): iterable
     {
-        $mission = PirateCampaignCatalogue::FINAL_MISSION;
-        [$member, $home] = $this->fixture(omega: true, scoutPaid: true, missionKey: $mission);
+        yield ['la_nuit_se_brise', 'amateur_pirate_hunter', 'Chasseur de Pirate amateur'];
+        yield ['t2_la_nuit_se_brise', 'confirmed_pirate_hunter', 'Chasseur de pirate confirmé'];
+        yield ['t3_la_nuit_se_brise', 'senior_pirate_hunter', 'Chasseur de pirate sénior'];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('campaignFinales')]
+    public function testOnlyVictoryOfFinalMissionGrantsAnUnequippedTitleOnce(string $mission, string $title, string $label): void
+    {
+        [$member, $home, $stock] = $this->fixture(omega: true, definition: $mission, scoutPaid: true, missionKey: $mission);
         $this->finishRecon();
         $gate = new PiratePilotGate('dev');
-        self::assertTrue($this->service->launchWithPilotFuel($member, $home, $mission, 0, ['fighter' => ['basic' => 2]], $gate));
+        $fleet = [];
+        $encounter = self::getContainer()->get(PirateCampaignCatalogue::class)->prepareForServer($mission, $member->universe);
+        foreach ($encounter->encounterForServer()->composition() as $slug => $ranks) {
+            $quantity = 3 * array_sum($ranks);
+            $ship = $this->addShips($stock->fleet, $slug, $quantity);
+            $ship->tier = 'superior';
+            $fleet[$slug] = ['superior' => $quantity];
+        }
+        $this->stampStocks($home->id, ['hydrogen' => 100000.0]);
+        $this->em->flush();
+        self::assertTrue($this->service->launchWithPilotFuel($member, $home, $mission, 0, $fleet, $gate));
         $attack = $this->campaign();
         $proof = $attack->reconnaissance->battleProofFor($member, $this->clock->now());
         $attack->timeline['seed'] = $this->seedWithVictory($attack, $proof['prepared']->battleForServer());
@@ -182,8 +200,8 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $this->service->processDue($attack->id, $token);
         self::assertSame(1, (int) $db->fetchOne('SELECT COUNT(*) FROM profile_cosmetic'));
         $cosmetics = self::getContainer()->get(\App\Service\Player\ProfileCosmetics::class);
-        self::assertSame(['slot' => 'title', 'label' => 'Chasseur de Pirate amateur', 'equipped' => false],
-            $cosmetics->owned($member->player)[\App\Service\Player\ProfileCosmetics::PIRATE_HUNTER_TITLE]);
+        self::assertSame(['slot' => 'title', 'label' => $label, 'equipped' => false],
+            $cosmetics->owned($member->player)[$title]);
     }
 
     public function testNoPersistentAttackBeforeReport(): void
@@ -665,7 +683,8 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $owner->player->currentPlayerUniverse = $owner;
         $this->em->flush();
         $this->finishRecon();
-        self::assertTrue($this->service->launchWithPilotFuel($owner, $home, 'balise_17', 0, ['fighter' => ['basic' => 2]], new \App\Service\PirateCampaign\PiratePilotGate('dev')));
+        $this->supplyPatrolEscort($stock, $home);
+        self::assertTrue($this->service->launchWithPilotFuel($owner, $home, 'balise_17', 0, ['fighter' => ['basic' => 120]], new \App\Service\PirateCampaign\PiratePilotGate('dev')));
         $first = $this->campaign();
         $proof = $first->reconnaissance->battleProofFor($owner, $this->clock->now());
         $first->timeline['seed'] = $this->seedWithVictory($first, $proof['prepared']->battleForServer());
@@ -949,11 +968,19 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         return [$owner, $origin, $fighter, $probe, $campaign];
     }
 
+    private function supplyPatrolEscort(FleetShip $stock, Planet $origin): void
+    {
+        $stock->quantity = 121;
+        $this->em->flush();
+        $this->stampStocks($origin->id, ['hydrogen' => 10000.0]);
+    }
+
     private function startFundedVictory(): array
     {
         [$owner, $origin, $stock, , $other] = $this->fixture(omega: true, scoutPaid: true);
         $this->finishRecon();
-        self::assertTrue($this->service->launchWithPilotFuel($owner, $origin, 'signal', 0, ['fighter' => ['basic' => 2]], new \App\Service\PirateCampaign\PiratePilotGate('dev')));
+        $this->supplyPatrolEscort($stock, $origin);
+        self::assertTrue($this->service->launchWithPilotFuel($owner, $origin, 'signal', 0, ['fighter' => ['basic' => 120]], new \App\Service\PirateCampaign\PiratePilotGate('dev')));
         $campaign = $this->campaign();
         $reported = $campaign->reconnaissance->battleProofFor($owner, $this->clock->now());
         $campaign->timeline['seed'] = $this->seedWithVictory($campaign, $reported['prepared']->battleForServer());
@@ -972,7 +999,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         $db = $this->em->getConnection();
         $row = $db->fetchAssociative('SELECT prepared_encounter, build_costs FROM pirate_reconnaissance');
         $preparedAtLaunch = json_decode($row['prepared_encounter'], true, flags: JSON_THROW_ON_ERROR);
-        self::assertSame(1440, json_decode($row['build_costs'], true, flags: JSON_THROW_ON_ERROR)['metal']);
+        self::assertSame(66880, json_decode($row['build_costs'], true, flags: JSON_THROW_ON_ERROR)['metal']);
 
         // Modifier le catalogue en vigueur pendant le vol de la sonde, puis relire toutes les preuves.
         $member->universe->gameSettings['catalog_overrides']['ships']['fighter'] = [
@@ -981,7 +1008,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         ];
         $this->em->flush();
         $future = self::getContainer()->get(PirateCampaignCatalogue::class)->prepareForServer('balise_17', $member->universe);
-        self::assertSame(2345, $future->encounterForServer()->buildCosts()['metal']);
+        self::assertSame(77740, $future->encounterForServer()->buildCosts()['metal']);
         self::assertNotSame($preparedAtLaunch['scenario']['units'][0]['base_attack'], $future->battleForServer()->snapshot()['units'][0]['base_attack']);
         $this->finishRecon();
 
@@ -997,7 +1024,7 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertNull($progress->forViewer($ally, $recon, null, $this->clock->now()));
         $report = $progress->forViewer($member, $recon, null, $this->clock->now());
         self::assertSame('RenseignementRecu', $report['phase']);
-        self::assertSame(['fighter' => ['basic' => 1]], $report['composition']);
+        self::assertSame(['fighter' => ['basic' => 12], 'interceptor' => ['basic' => 10], 'stealth_fighter' => ['basic' => 8]], $report['composition']);
         self::assertArrayNotHasKey('cost', $report);
 
         self::assertTrue($this->service->launch($member, $home, 'signal', 0, ['fighter' => ['basic' => 2]], 3));

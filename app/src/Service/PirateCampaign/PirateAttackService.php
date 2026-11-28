@@ -415,10 +415,15 @@ final class PirateAttackService
         // ouvrirait un instantané MariaDB avant le verrou commun et ferait échouer un worker concurrent.
         $membership = $campaign->reconnaissance->membership();
 
-        $isFinalMission = $campaign->reconnaissance->reportedMissionKeyFor($membership, $this->now()) === PirateCampaignCatalogue::FINAL_MISSION;
+        $title = match ($campaign->reconnaissance->reportedMissionKeyFor($membership, $this->now())) {
+            PirateCampaignCatalogue::FINAL_MISSION => ProfileCosmetics::PIRATE_HUNTER_TITLE,
+            't2_'.PirateCampaignCatalogue::FINAL_MISSION => ProfileCosmetics::CONFIRMED_PIRATE_HUNTER_TITLE,
+            't3_'.PirateCampaignCatalogue::FINAL_MISSION => ProfileCosmetics::SENIOR_PIRATE_HUNTER_TITLE,
+            default => null,
+        };
 
-        return $this->manager->transaction(function () use ($campaignId, $membership, $dispatchToken, $isFinalMission): ?int {
-            $player = $isFinalMission ? $membership->player : null;
+        return $this->manager->transaction(function () use ($campaignId, $membership, $dispatchToken, $title): ?int {
+            $player = $title !== null ? $membership->player : null;
             // Le cosmétique est un droit du compte. Le verrouiller avant sa participation
             // respecte l’ordre des changements d’univers et évite une attribution liée à un effacement.
             if ($player !== null) {
@@ -458,7 +463,7 @@ final class PirateAttackService
             if ($wasScheduled && $player !== null && $player->lockedAt === null
                 && ($campaign->report['outcome'] ?? null) === 'attacker_wins') {
                 // Le rapport, le titre et le retour (ou le convoi) sont validés ensemble.
-                $this->cosmetics->grantLocked($player, [ProfileCosmetics::PIRATE_HUNTER_TITLE], $now);
+                $this->cosmetics->grantLocked($player, [$title], $now);
             }
 
             return null;

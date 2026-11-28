@@ -24,6 +24,7 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Retrouver la revue, la fusion et les validations du chantier guildes | [Suivi guildes et alliances](GESTION_GUILDES_ALLIANCES.md) |
 | Préparer la refonte de la console et ses récompenses | [Cadrage de l’administration, brouillon](REFONTE_ADMINISTRATION.md) |
 | Suivre les évolutions des interfaces et flottes | [Lots et décisions ouvertes](EVOLUTIONS_INTERFACES_FLOTTES.md) |
+| Suivre les campagnes pirates et leurs récompenses | [Dossier, progression et titres](CAMPAGNE_PIRATE_PILOTE_LOCAL.md) |
 | Comprendre les arrivées étrangères et leur visibilité | [Flottes entrantes](FLOTTES_ENTRANTES.md) |
 | Consulter le lot parcours UI/UX et ses validations locales | [Suivi des parcours](PARCOURS_UI_UX.md) |
 | Choisir une destination, déplacer une base et reprendre un stationnement | [Destinations et Stationnement](DESTINATIONS_STATIONNEMENT.md) |

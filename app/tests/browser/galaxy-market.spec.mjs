@@ -126,6 +126,7 @@ test('Station commerciale : le noyau ouvre la Bourse et ne devient pas un systè
     await page.getByRole('button', {name:'Vérifier la taxe et le produit de la vente'}).click();
     await expect(page.getByText(/Taxe à payer maintenant/)).toContainText('7,00 crédits');
     await expect(stationArt).toHaveAttribute('src', /art\/marche-joueurs\.webp$/);
+    await page.waitForLoadState('load');
     await expect.poll(() => stationArt.evaluate(img => img.naturalWidth)).toBe(1536);
     for (const width of [1920, 768, 390, 320]) {
         await page.setViewportSize({width, height:900});

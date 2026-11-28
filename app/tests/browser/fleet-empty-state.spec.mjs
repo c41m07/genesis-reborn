@@ -24,9 +24,11 @@ test('L’état Espionnage sans flotte conduit au chantier réel', async ({ page
 
   for(const width of [1440,390]) {
     await page.setViewportSize({width,height:844});
-    const heading=await page.locator('[data-live-region="mission-summary"] > .section-heading').boundingBox();
-    const empty=await page.locator('[data-live-region="mission-summary"] > ul').boundingBox();
-    expect(empty.y).toBeGreaterThanOrEqual(heading.y+heading.height);
+    await expect.poll(() => page.locator('[data-live-region="mission-summary"]').evaluate(summary => {
+      const heading = summary.querySelector('.section-heading').getBoundingClientRect();
+      const missions = summary.querySelector('ul').getBoundingClientRect();
+      return missions.top - heading.bottom;
+    })).toBeGreaterThanOrEqual(0);
     await expect(page.locator('[data-live-region="mission-summary"] > ul')).toContainText('cette colonie');
   }
   await page.setViewportSize({ width: 390, height: 844 });

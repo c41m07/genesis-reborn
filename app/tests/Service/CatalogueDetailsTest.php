@@ -82,7 +82,7 @@ final class CatalogueDetailsTest extends KernelTestCase
         $rows=array_column($insights->benefits($reactor,'buildings',1,$this->planet,[],[]),null,'label');
         self::assertEqualsWithDelta(204.525,$rows['Production de antimatière']['after']-$rows['Production de antimatière']['before'],1e-8);
         self::assertEqualsWithDelta(818.1,$rows['Consommation d’hydrogène']['after']-$rows['Consommation d’hydrogène']['before'],1e-8);
-        self::assertEqualsWithDelta(202.5,$rows['Consommation électrique']['after']-$rows['Consommation électrique']['before'],1e-8);
+        self::assertEqualsWithDelta(202.5 * 1.0003125,$rows['Consommation électrique']['after']-$rows['Consommation électrique']['before'],1e-8);
     }
 
     public function testFactoryBenefitsExcludeLevelsAlreadyQueued():void
@@ -96,12 +96,14 @@ final class CatalogueDetailsTest extends KernelTestCase
             $rows=array_column($insights->benefits($definition,'buildings',$levels['mine_metal'][$tier]+3,$this->planet,$levels,[]),null,'label');
             $output=$rows['Production de métal'];$use=$rows['Consommation électrique'];
             $growth = ['basic'=>1.0025, 'intermediate'=>1.005, 'superior'=>1.01][$tier];
+            $electricGrowth = ['basic'=>1.00125, 'intermediate'=>1.000625, 'superior'=>1.0003125][$tier];
             $target = $levels['mine_metal'][$tier] + 3;
             $production *= $target * $growth ** $target - ($target - 1) * $growth ** ($target - 1);
+            $consumption *= $target * $electricGrowth ** $target - ($target - 1) * $electricGrowth ** ($target - 1);
             self::assertEqualsWithDelta($production,$output['after']-$output['before'],1e-8,$tier);
             self::assertEqualsWithDelta($consumption,$use['after']-$use['before'],1e-8,$tier);
             self::assertSame('+'.number_format($production, 2, ',', ' ').' / h',trim($twig->render('ui/catalogue_benefit_value.html.twig',['benefit'=>$output])));
-            self::assertSame('−'.$consumption.' / h',trim($twig->render('ui/catalogue_benefit_value.html.twig',['benefit'=>$use])));
+            self::assertSame('−'.rtrim(rtrim(number_format($consumption, 2, ',', ' '), '0'), ',').' / h',trim($twig->render('ui/catalogue_benefit_value.html.twig',['benefit'=>$use])));
         }
         self::assertSame(['mine_metal'=>['basic'=>10,'intermediate'=>4,'superior'=>2]],$levels);
     }

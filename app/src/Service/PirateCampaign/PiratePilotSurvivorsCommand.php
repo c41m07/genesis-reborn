@@ -86,7 +86,7 @@ final readonly class PiratePilotSurvivorsCommand
 
     private function context(PlayerUniverse $member, \DateTimeImmutable $at, int $mission): ?array
     {
-        $key = $this->catalogue->keys($member->universe)[$mission - 1] ?? null;
+        $key = $this->catalogue->routeKeys($member->universe)[$mission - 1] ?? null;
         $rows = $key === null ? [] : $this->campaigns->ownedRows($member, [$key], $at);
         $attack = count($rows) === 1 ? $rows[0]['attack'] : null;
         if (!$attack instanceof PirateAttackCampaign || isset($attack->timeline['pilot_recovery'])) {

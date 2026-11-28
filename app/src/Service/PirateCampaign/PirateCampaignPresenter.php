@@ -157,7 +157,7 @@ final readonly class PirateCampaignPresenter
         $chapters = [];
         $offset = 0;
         $missionNumber = null;
-        foreach ($this->catalogue->chapters($viewer->universe) as $chapter) {
+        foreach ($this->catalogue->chapters($viewer->universe, $this->catalogue->campaignTier($key)) as $chapter) {
             $index = array_search($key, $chapter['keys'], true);
             if ($index !== false) {
                 $missionNumber = $offset + $index + 1;

@@ -7,7 +7,7 @@
 <article class="flight-operation campaign-traffic-row" data-campaign-kind="{{ movement.kind }}"{% if incoming|default(false) %} data-campaign-incoming="{{ movement.mission }}"{% endif %}{% if ships or cargo %} data-controller="hover-details" data-action="pointerenter->hover-details#enter pointerleave->hover-details#leave focusout->hover-details#blur keydown->hover-details#escape click->hover-details#card"{% endif %}>
     <div class="operation-heading">
         <strong>{{ movement.label }}</strong>
-        <span class="badge">Mission {{ movement.mission }}</span>
+        <span class="badge">{{ pirate_dossier_label(movement.mission) }}</span>
     </div>
     {% if movement.destination is defined %}<p>Destination : {{ movement.destination }}</p>{% endif %}
     {% if movement.eta %}

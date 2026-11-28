@@ -141,7 +141,7 @@ test('Maquette admin : cinq entrées, cartes de rubrique, fil d’Ariane et acc�
   const sections = [
     ['players', 'Joueurs et modération', ['Guildes actives', 'Joueurs', 'Signalements', 'Feedbacks', 'Dossiers']],
     ['universe', 'Univers et activité', ['Univers', 'Alertes', 'Flottes et transports']],
-    ['events', 'Animation', ['Événements', 'Projets de guilde', 'Défis collectifs', 'Rotations hebdomadaires', 'Patchnotes']],
+    ['events', 'Animation', ['Contenus du jeu', 'Événements', 'Projets de guilde', 'Défis collectifs', 'Rotations hebdomadaires', 'Patchnotes']],
     ['ops', 'Exploitation', ['Sécurité', 'Permissions', 'État des traitements', 'Journal des actions', 'Brouillons juridiques']],
   ];
   for (const [group, label, modules] of sections) {

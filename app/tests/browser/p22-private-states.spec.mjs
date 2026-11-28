@@ -96,6 +96,19 @@ test('P22 : états privés de campagne en lecture seule', async ({ page, browser
     await expect(tab.getByRole('region',{name:'Gain potentiel',exact:true})).toHaveCount(0);
     return convoy;
   });
+  expect((await page.goto(path + '/200000001')).status()).toBe(404);
+  for (const [tier, state] of [[2, 'finish-first'], [3, 'finish-second']]) {
+    prepare(owner.origin, state);
+    await page.goto(path);
+    await expect(page.getByRole('heading', {name: 'Campagne pirate · T' + tier, exact: true})).toBeVisible();
+    await expect(page.getByText('Mission 1 / 20', {exact: true})).toBeVisible();
+    await expect(page.getByRole('progressbar', {name: 'Missions réussies'})).toHaveAttribute('value', '0');
+    if (tier === 2) {
+      expect((await page.goto(path + '/300000001')).status()).toBe(404);
+    }
+  }
+  await page.goto(path + '/1');
+  await expect(page.getByRole('region', {name: 'Convoi de remerciement', exact: true})).toBeVisible();
   expect(stockFor(owner.origin)).toBe(before);
 
   const isolated = await browser.newContext({baseURL});

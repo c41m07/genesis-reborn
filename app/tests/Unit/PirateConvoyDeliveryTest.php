@@ -22,7 +22,7 @@ final class PirateConvoyDeliveryTest extends TestCase
         self::assertSame(33, $right->universeId);
         $first = $right->timeline();
         self::assertSame('eligible', $first->state());
-        self::assertSame(720.0, $first->quote->depositAmounts()['metal']);
+        self::assertSame(33440.0, $first->quote->depositAmounts()['metal']);
 
         $origin = $first->attestedPositionForDeparture();
         self::assertSame([41, 39, 1, 1, null], $origin);
