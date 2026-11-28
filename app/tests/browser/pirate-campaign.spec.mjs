@@ -144,6 +144,7 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
       await intelPage.setViewportSize({ width: 390, height: 844 });
       await expect.poll(() => intelPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
       await intelPage.getByRole('link', { name: 'Reprendre ces renseignements dans le simulateur' }).click();
+      await expect(intelPage.locator('#simulation-ships .simulation-wizard-camp').last().locator('li use').first()).toHaveAttribute('href', /icons\.svg#.+$/);
       await expect(intelPage).toHaveURL(new RegExp('/simulateur\\?pirate_report=' + reportId + '$'));
       await expect(intelPage.getByText(/Camp pirate verrouillé/)).toBeVisible();
       await expect(intelPage.locator('[name^="forces[defender]"]')).toHaveCount(0);

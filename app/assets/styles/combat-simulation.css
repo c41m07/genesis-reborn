@@ -291,6 +291,12 @@ body[data-theme=light] .player-simulation-board .simulation-outcome--defender_wi
 .player-simulation-board .simulation-wizard-camp .data-table td:last-child {
     min-width: 0;
 }
+.player-simulation-board .simulation-unit-icon {
+    width: 15px;
+    height: 15px;
+    color: var(--accent);
+    vertical-align: -.18em;
+}
 .simulation-wizard-camp .simulation-category {
     background: color-mix(in srgb, var(--accent) 7%, var(--panel));
     color: var(--text);

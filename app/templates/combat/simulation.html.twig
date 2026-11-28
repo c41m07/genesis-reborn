@@ -68,7 +68,7 @@
                                     <p>Vaisseaux figés par le rapport. Ce camp entre au round 1.</p>
                                     <ul>
                                         {% for ship in pirate_intel.formation %}
-                                            <li>{{ ship.quantity|quantity(0) }} × {{ ship.label }} · {{ {basic:'Basique', intermediate:'Intermédiaire', superior:'Supérieur'}[ship.tier] }}</li>
+                                            <li>{{ icon(choices.ships[ship.slug] is defined ? ship_category_icon(choices.ships[ship.slug]) : 'fleet', 'simulation-unit-icon') }} {{ ship.quantity|quantity(0) }} × {{ ship.label }} · {{ {basic:'Basique', intermediate:'Intermédiaire', superior:'Supérieur'}[ship.tier] }}</li>
                                         {% endfor %}
                                     </ul>
                                 {% elseif key == 'defenses' %}
@@ -92,7 +92,7 @@
                                     </div>
                                 {% elseif key == 'defenses' %}
                                     <details class="simulation-wizard-fortress"><summary>Forteresse{% if intel and camp == intel_camp and 'fortress' not in intel.known %} · non révélée{% endif %}</summary>
-                                        {% include 'combat/_wizard_table.html.twig' with {group: 'fortress', definitions: {fortress: {label: 'Forteresse', max_level: 25}}, heading: 'Forteresse'} %}
+                                        {% include 'combat/_wizard_table.html.twig' with {group: 'fortress', definitions: {fortress: {slug: 'fortress', label: 'Forteresse', max_level: 25}}, heading: 'Forteresse'} %}
                                     </details>
                                 {% endif %}
                             {% endif %}
@@ -170,6 +170,7 @@
 </section>
 {% endif %}
 {% if result %}
+{% set unit_icons = choices.ships|map(definition => ship_category_icon(definition))|merge(choices.defenses|map(definition => catalog_family_icon('defenses', definition))) %}
 <section class="panel" id="simulation-result" tabindex="-1" aria-labelledby="simulation-result-title">
 <header class="simulation-result-heading">
     <p class="simulation-board-eyebrow">Opérations · résultats privés{{ simulation_job ? " · disponibles jusqu’à 24 heures" : "" }}</p>
@@ -214,7 +215,7 @@
 {% for trial in result.trials %}
 <details class="simulation-trial" data-simulation-seed="{{ trial.seed }}">
 <summary id="simulation-trial-{{ loop.index }}">Combat {{ loop.index }} · {{ outcome_labels[trial.outcome]|default(trial.outcome) }} · graine {{ trial.seed }}</summary>
-{% include 'combat/_simulation_trial.html.twig' with {trial:trial,unit_labels:unit_labels,tier_labels:tier_labels} only %}
+{% include 'combat/_simulation_trial.html.twig' with {trial:trial,unit_labels:unit_labels,unit_icons:unit_icons,tier_labels:tier_labels} only %}
 </details>
 {% endfor %}
 </section>

@@ -66,6 +66,35 @@ final class CatalogFilters
         };
     }
 
+    public function familyIcon(string $group, array $definition, ?string $category = null): string
+    {
+        if ($group === 'ships') {
+            return $this->shipIcon($definition);
+        }
+        if ($group === 'defenses') {
+            return 'diplomacy';
+        }
+
+        $category ??= $this->category($group, $definition);
+        if ($group === 'buildings') {
+            return match ($category) {
+                'energy' => 'electricity',
+                'economy' => 'extraction',
+                'storage' => 'storage',
+                'defense' => 'fortification',
+                default => 'buildings',
+            };
+        }
+
+        return match ($category) {
+            'combat' => 'target',
+            'defense' => 'shield',
+            'espionage' => 'intelligence',
+            'infrastructure' => 'research',
+            default => $category,
+        };
+    }
+
     // Les sélections de mission reprennent les catégories du chantier, y compris les rôles civils.
     public function shipIcon(array $definition): string
     {

@@ -73,6 +73,7 @@ final readonly class PirateReconReportReader
                     // Les noms n'ont qu'une fonction de présentation. Les quantités restent celles de la sonde.
                     $unit = $units[$slug][$tier] ?? [];
                     $formation[] = [
+                        'slug' => $slug,
                         'label' => $ships[$slug]['tier_labels'][$tier] ?? $ships[$slug]['label'] ?? $slug,
                         'tier' => $tier, 'quantity' => $tiers[$tier],
                         'hp' => $unit['hp'] ?? null, 'shield' => $unit['shield'] ?? null, 'attack' => $unit['base_attack'] ?? null,

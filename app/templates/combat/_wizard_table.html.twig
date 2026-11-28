@@ -1,3 +1,4 @@
+{% from 'ui/macros.html.twig' import icon %}
 {% set tiers = {basic: 'Basique', intermediate: 'Intermédiaire', superior: 'Supérieur'} %}
 {% set unknown = camp == intel_camp and intel and group not in intel.known %}
 {% set title = camp == 'attacker' ? 'Attaquant' : 'Défenseur' %}
@@ -20,12 +21,13 @@
     {% endfor %}
     </tr></thead>
     {% set available = definitions|filter(definition => camp == 'defender' or definition.economic_unit is not defined) %}
-    {% set groups = group == 'fortress' ? {'': available} : catalog_table_groups(group == 'research' ? 'technologies' : group, available) %}
+    {% set catalogGroup = {research: 'technologies', fortress: 'buildings'}[group]|default(group) %}
+    {% set groups = group == 'fortress' ? {'': available} : catalog_table_groups(catalogGroup, available) %}
     {% for category, families in groups %}
     <tbody>
         {% if category %}<tr><th class="simulation-category" scope="rowgroup" colspan="4">{{ category }}</th></tr>{% endif %}
         {% for slug, definition in families %}
-            <tr><th scope="row">{{ definition.label }}</th>
+            <tr><th scope="row">{{ icon(catalog_family_icon(catalogGroup, definition), 'simulation-unit-icon') }} {{ definition.label }}</th>
             {% for tier, label in tiers %}
                 {% set inputId = 'sim-' ~ camp ~ '-' ~ group ~ '-' ~ slug ~ '-' ~ tier %}
                 {% set name = group == 'fortress' ? 'forces[defender][fortress][' ~ tier ~ ']' : 'forces[' ~ camp ~ '][' ~ group ~ '][' ~ slug ~ '][' ~ tier ~ ']' %}

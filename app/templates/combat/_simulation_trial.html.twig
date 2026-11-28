@@ -1,3 +1,4 @@
+{% from 'ui/macros.html.twig' import icon %}
 <p>{{ trial.rounds_played }} rounds joués · pertes fictives, aucune unité réellement détruite.</p>
 <div class="simulation-versus">
     {% for camp,title in {attacker:'Camp attaquant',defender:'Camp défenseur'} %}
@@ -11,7 +12,7 @@
                     <tbody>
                     {% for row in report.rows %}
                         <tr data-simulation-unit="{{ row.slug }}" data-simulation-tier="{{ row.tier }}">
-                            <th scope="row">{{ row.label }}<small>{{ tier_labels[row.tier] }} · arrivée R{{ row.arrival }}</small></th>
+                            <th scope="row">{{ icon(unit_icons[row.slug]|default('fleet'), 'simulation-unit-icon') }} {{ row.label }}<small>{{ tier_labels[row.tier] }} · arrivée R{{ row.arrival }}</small></th>
                             <td data-label="Engagés">{{ row.initial|quantity(0) }}</td>
                             <td data-label="Survivants" class="{{ row.remaining ? 'simulation-survivors' : '' }}">{{ row.remaining|quantity(0) }}</td>
                             <td data-label="Pertes" class="{{ row.lost ? 'report-loss' : '' }}">{{ row.lost ? '−' : '' }}{{ row.lost|quantity(0) }}</td>
@@ -32,7 +33,7 @@
 </details>
 <details><summary>{{ trial.grouped_survivors|default(false) ? "Structure restante par groupe de survivants" : "Structure détaillée des survivants" }}</summary>
     <ul>{% for unit in trial.survivors %}
-        <li>{{ unit.camp == 'attacker' ? 'Attaque' : 'Défense' }} · {{ unit_labels[unit.slug].label|default(unit.slug) }} · {{ tier_labels[unit.tier] }}
+        <li>{{ unit.camp == 'attacker' ? 'Attaque' : 'Défense' }} · {{ icon(unit_icons[unit.slug]|default('fleet'), 'simulation-unit-icon') }} {{ unit_labels[unit.slug].label|default(unit.slug) }} · {{ tier_labels[unit.tier] }}
             {% if trial.grouped_survivors|default(false) %}
                 · {{ unit.quantity|quantity(0) }} survivants
                 {% if unit.hp_min is not null and unit.hp_max is not null %}· structure restante : {{ unit.hp_min|quantity(0) }}{% if unit.hp_min != unit.hp_max %} à {{ unit.hp_max|quantity(0) }}{% endif %}{% endif %}

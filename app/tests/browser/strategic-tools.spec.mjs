@@ -45,6 +45,11 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
    const nav=page.getByRole('navigation',{name:'Étapes du simulateur'});
    await expect(nav.getByRole('link')).toHaveText(['01Vaisseaux','02Défenses','03Recherches','04Simulation']);
    await expect(nav.getByRole('link',{name:'Vaisseaux',exact:true})).toHaveAttribute('aria-current','step');
+   const symbolFor = input => page.locator(`tr:has(#${input}) th[scope="row"] svg[aria-hidden="true"] use`);
+   for (const side of ['attacker','defender']) {
+    await expect(symbolFor(`sim-${side}-ships-fighter-basic`)).toHaveAttribute('href', /#fleet$/);
+    await expect(symbolFor(`sim-${side}-ships-probe-basic`)).toHaveAttribute('href', /#probe$/);
+   }
    const attacker=page.locator('#sim-attacker-ships-fighter-basic');
    const defender=page.locator('#sim-defender-ships-fighter-basic');
    await attacker.fill('24');
@@ -109,8 +114,15 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
    await expect(page.locator('[name^="forces[attacker][defenses]"]')).toHaveCount(0);
    await expect(page.locator('[name^="forces[defender][defenses]"]').first()).toBeVisible();
    await expect(page.getByRole('region', { name: 'Défenses', exact: true }).locator('th[scope="rowgroup"]')).toHaveText(['Anti-légers', 'Anti-escorteurs', 'Anti-lourds', 'Anti-capitaux']);
+   await expect(symbolFor('sim-defender-defenses-ground_turret_anti_light-basic')).toHaveAttribute('href', /#diplomacy$/);
+   await expect(symbolFor('sim-defender-fortress-fortress-basic')).toHaveAttribute('href', /#fortification$/);
    await page.getByRole('link',{name:'Continuer : recherches'}).click();
    await expect(page.getByRole('heading',{name:'Recherches',exact:true})).toBeFocused();
+   for (const side of ['attacker','defender']) {
+    await expect(symbolFor(`sim-${side}-research-vector_propulsion-basic`)).toHaveAttribute('href', /#propulsion$/);
+    await expect(symbolFor(`sim-${side}-research-weapon_calibration-basic`)).toHaveAttribute('href', /#target$/);
+    await expect.poll(() => symbolFor(`sim-${side}-research-vector_propulsion-basic`).evaluate(use => use.getBBox().width)).toBeGreaterThan(0);
+   }
    for (const table of await page.getByRole('region', { name: 'Recherches', exact: true }).getByRole('table').all()) {
     await expect(table.locator('th[scope="rowgroup"]')).toHaveText(['Logistique', 'Propulsion', 'Combat']);
    }
@@ -313,6 +325,7 @@ test('Simulateur : dix combats reproductibles, détails accessibles et aucune mu
  const campTables=trial.locator('.simulation-losses');
  await expect(campTables).toHaveCount(2);
  for(const table of await campTables.all()){
+  await expect(table.locator('[data-simulation-unit="fighter"] th use')).toHaveAttribute('href', /#fleet$/);
   await expect(table.getByRole('columnheader')).toHaveText(['Unité','Engagés','Survivants','Pertes']);
   const unitTotals=await table.locator('tbody tr').evaluateAll(rows=>rows.map(row=>[...row.querySelectorAll('td')].map(cell=>Number(cell.textContent.replace('−','-')))));
   expect(unitTotals.length).toBeGreaterThan(0);
