@@ -77,7 +77,7 @@ test('Station commerciale : le noyau ouvre la Bourse et ne devient pas un systè
     await expect(page).toHaveURL(/\/bourse$/);
     const hero = page.locator('.market-hero');
     const stationArt = hero.locator('img[alt=""]');
-    await expect(stationArt).toHaveAttribute('src', /images\/map\/bourse\.png$/);
+    await expect(stationArt).toHaveAttribute('src', /art\/bourse-station\.webp$/);
     await expect.poll(() => stationArt.evaluate(img => img.naturalWidth)).toBeGreaterThan(0);
     await expect(page.getByRole('heading', { name: 'Cours et stock disponible' })).toBeVisible();
 
@@ -125,11 +125,18 @@ test('Station commerciale : le noyau ouvre la Bourse et ne devient pas un systè
     await page.getByLabel('Prix par unité en crédits').fill('3.50');
     await page.getByRole('button', {name:'Vérifier la taxe et le produit de la vente'}).click();
     await expect(page.getByText(/Taxe à payer maintenant/)).toContainText('7,00 crédits');
+    await expect(stationArt).toHaveAttribute('src', /art\/marche-joueurs\.webp$/);
+    await expect.poll(() => stationArt.evaluate(img => img.naturalWidth)).toBe(1536);
     for (const width of [1920, 768, 390, 320]) {
         await page.setViewportSize({width, height:900});
         await expect(stationArt).toBeVisible();
         const [title, illustration] = await Promise.all([hero.getByRole('heading').boundingBox(), stationArt.boundingBox()]);
-        expect(illustration.x).toBeGreaterThanOrEqual(title.x + title.width);
+        expect(title.x).toBeGreaterThanOrEqual(illustration.x);
+        expect(title.x + title.width).toBeLessThanOrEqual(illustration.x + illustration.width);
+        if (width <= 600) {
+            expect(illustration.y).toBeGreaterThanOrEqual(title.y + title.height);
+            expect(illustration.width / illustration.height).toBeCloseTo(3, 1);
+        }
         expect(illustration.x + illustration.width).toBeLessThanOrEqual(width);
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     }

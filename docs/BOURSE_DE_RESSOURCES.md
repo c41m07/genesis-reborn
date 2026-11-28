@@ -6,7 +6,7 @@ La station commerciale A:0:0 appartient à l’univers, pas à un joueur. Elle
 n’ajoute ni système explorable, ni planète, ni position attaquable. Lorsqu’elle
 est ouverte, son repère au centre de la galaxie A et le lien dans la légende
 ouvrent directement la Bourse. La page Bourse, aussi accessible depuis le
-menu Opérations, affiche les cours puis le formulaire de convoi. Le comptoir et le marché des joueurs reprennent dans leur bandeau la station illustrée sur la carte. Le récapitulatif se place à côté de la saisie sur grand écran et en dessous sur mobile. Le suivi est propre à
+menu Opérations, affiche les cours puis le formulaire de convoi. Le bandeau du comptoir montre les cargos aux quais de la station. Celui du marché des joueurs montre deux commandants devant la baie vitrée. Le récapitulatif se place à côté de la saisie sur grand écran et en dessous sur mobile. Le suivi est propre à
 l’empire qui a envoyé le convoi. Le panneau **Flottes en vol** compte ses
 convois et donne accès à leur suivi. Dans **Galaxie**, le journal et la
 carte suivent l’aller vers A:0:0, puis le retour vers la colonie. Un rappel

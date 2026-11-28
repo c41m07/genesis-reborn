@@ -9,7 +9,7 @@
             <p>Vos cargos relient votre colonie à la station.</p>
             <ul aria-label="Conditions du trajet"><li>Convoi protégé</li><li>30 min aller · 30 min retour</li></ul>
         </div>
-        <img class="market-station-art" src="{{ asset('images/map/bourse.png') }}" width="192" height="192" alt="">
+        <img class="market-hero-art" src="{{ asset('art/bourse-station.webp') }}" width="1536" height="512" alt="">
     </header>
     {% include 'market/_navigation.html.twig' %}
     <p class="panel">Votre solde : <strong>{{ (account.cents|default(0) / 100)|number_format(2, ',', ' ') }} crédits</strong></p>

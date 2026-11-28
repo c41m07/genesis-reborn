@@ -1,18 +1,46 @@
 .market-space { display: grid; gap: 1rem; min-width: 0; }
 .market-space .panel { min-width: 0; }
-.market-hero {
+.market-space .market-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) clamp(64px, 13vw, 148px);
-    align-items: center;
-    gap: clamp(.5rem, 2vw, 2rem);
-    background: radial-gradient(ellipse at 84% 30%, color-mix(in srgb, var(--accent) 17%, var(--panel)), var(--panel) 65%);
+    align-content: center;
+    min-height: clamp(12rem, 19vw, 18rem);
+    padding: 0;
+    background: #031421;
+    color: #f2f7fa;
 }
-.market-station-art { display: block; width: 100%; height: auto; }
+.market-hero-art {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 46%;
+}
+.market-hero > div {
+    box-sizing: border-box;
+    align-self: stretch;
+    align-content: center;
+    padding: clamp(1rem, 2vw, 2rem);
+    width: fit-content;
+    max-width: 100%;
+    background: linear-gradient(90deg, #031421f5, #031421db 86%, transparent);
+    padding-inline-end: clamp(2rem, 5vw, 5rem);
+}
+.market-hero :is(h1, p, strong) { color: inherit; }
+.market-hero .market-kicker { color: #9ee9ff; }
+@media (max-width: 600px) {
+    .market-hero-art { position: static; width: 100%; height: auto; }
+    .market-hero > div { padding: 1rem; background: none; }
+}
 .market-kicker { color: var(--accent); font-size: .875rem; font-weight: 700; letter-spacing: .075em; text-transform: uppercase; margin: 0 0 .45rem; }
 .market-hero h1, .market-space h2 { margin-top: 0; }
 .market-hero ul, .market-timeline { list-style: none; margin: 0; padding: 0; }
 .market-hero ul { display: flex; flex-wrap: wrap; gap: .5rem; }
-.market-hero li { border: 1px solid var(--line); border-radius: 2rem; padding: .35rem .65rem; color: var(--text); }
+.market-hero li { border: 1px solid var(--line); border-radius: 2rem; padding: .35rem .65rem; color: inherit; }
 .market-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: 1rem; }
 .market-table-wrap { overflow-x: auto; }
 .market-table { width: 100%; }
