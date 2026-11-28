@@ -6,7 +6,7 @@ namespace App\Controller;
 
 use App\Entity\{Guild, GuildMember, GuildHallBuilding, PlayerUniverse};
 use App\Repository\{GameRepository, GuildHallRepository};
-use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildAtelierDeliveryView, GuildDockService, GuildDockView, GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyView, GuildHallFunding, GuildHallService, GuildHallWarehouseView, GuildJumpConstruction, GuildJumpView};
+use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildAtelierDeliveryView, GuildDockService, GuildDockView, GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyView, GuildHallFunding, GuildHallService, GuildHallWarehouseView, GuildJumpConstruction, GuildJumpView, GuildRelayTraffic};
 use App\Service\Player\{DiplomacyAccessPolicy, RelationResolver, VacationCalendar};
 use App\Service\Universe\UniverseContext;
 use Psr\Clock\ClockInterface;
@@ -40,6 +40,7 @@ final class GuildHallController extends AbstractController
         GuildAtelierDeliveryView $delivery,
         GuildDockView $dock,
         GuildJumpView $jumps,
+        GuildRelayTraffic $relay,
     ): Response
     {
         [$actor, $guild, $target] = $this->contextForHall();
@@ -112,6 +113,7 @@ final class GuildHallController extends AbstractController
             'received_donations' => $hall?->placedAt !== null ? $convoy->receivedDonations($actor, $hall) : [],
             'may_build_at_hall' => $mayBuild,
             'jumps' => $hall?->placedAt !== null ? $jumps->describe($hall, $mayBuild) : null,
+            'relay' => $hall?->placedAt !== null ? $relay->observe($actor) : null,
             'hall' => $hall,
             'required' => $target,
             'remaining' => $remaining,

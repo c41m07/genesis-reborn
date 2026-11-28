@@ -61,6 +61,9 @@
         {% if jumps is not null and (jumps.quote or jumps.points is not empty) %}
             {% include 'player/_guild_jump_points.html.twig' with {hall: hall, guild: guild, jumps: jumps} only %}
         {% endif %}
+        {% if relay|default(null) is not null %}
+            {% include 'player/_guild_hall_relay.html.twig' with {hall: hall, relay: relay} only %}
+        {% endif %}
         {% if received_donations|default([]) is not empty %}
             <section class="panel" aria-labelledby="hall-received-donations-title">
                 <h2 id="hall-received-donations-title">Mes derniers dons reçus par l’Atelier</h2>

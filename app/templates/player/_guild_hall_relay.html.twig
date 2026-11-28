@@ -1,0 +1,18 @@
+{% set directions = {inbound:'Entrée', outbound:'Sortie', local:'Trajet local'} %}
+<section class="panel" id="hall-relay" aria-labelledby="hall-relay-title">
+    <h2 id="hall-relay-title">Relais de surveillance</h2>
+    <p>Contacts en cours dans le système du Hall. Les sondes, le fret et la composition ne sont pas affichés.</p>
+    <p><a href="{{ path('app_map_v2', {galaxy: hall.solarSystem.galaxy.id, system: relay.systemId}) }}">Voir les mouvements dans Galaxie</a></p>
+    {% if relay.contacts is empty %}
+        <p class="muted">Aucun mouvement local détecté pour le moment.</p>
+    {% else %}
+        <ul>
+            {% for contact in relay.contacts %}
+                <li><strong>{{ directions[contact.direction] }}</strong>
+                    · suivi jusqu’à <time datetime="{{ contact.until|date('c', 'UTC') }}">{{ contact.until|date('H:i:s', 'UTC') }} UTC</time></li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% if relay.limited %}<p class="muted">Trafic dense : la liste n’est pas exhaustive.</p>{% endif %}
+    <a href="{{ path('app_guild_hall', {_fragment:'hall-relay'}) }}">Actualiser les contacts</a>
+</section>
