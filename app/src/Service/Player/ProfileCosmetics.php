@@ -12,6 +12,8 @@ final readonly class ProfileCosmetics
 {
     public const PIRATE_HUNTER_TITLE = 'amateur_pirate_hunter';
 
+    public const MAX_TITLES = 2;
+
     public const DEFINITIONS = [
         self::PIRATE_HUNTER_TITLE => ['slot' => 'title', 'label' => 'Chasseur de Pirate amateur'],
         'guardian_of_stars' => ['slot' => 'title', 'label' => 'Gardien des étoiles'],
@@ -50,30 +52,24 @@ final readonly class ProfileCosmetics
         return $cosmetics;
     }
 
-    /** @return array<string,string> Uniquement ce que le commandant a choisi d’équiper. */
+    /** @return array{titles?:list<string>,banner?:string} Uniquement ce que le commandant a choisi d’équiper. */
     public function display(Player $player): array
     {
-        $result = [];
-        foreach ($this->owned($player) as $cosmetic) {
-            if ($cosmetic['equipped']) {
-                $result[$cosmetic['slot']] = $cosmetic['label'];
-            }
-        }
+        $equipped = array_filter($this->owned($player), static fn(array $item): bool => $item['equipped']);
 
-        return $result;
+        return self::publicLabels(array_keys($equipped));
     }
 
     /**
      * @param list<int> $membershipIds
-     * @return array<int,string> Titres publics des empires visibles sur la page.
+     * @return array<int,array{titles?:list<string>,banner?:string}> Apparences publiques des empires visibles sur la page.
      */
-    public function equippedTitles(Universe $universe, array $membershipIds): array
+    public function forLeaderboard(Universe $universe, array $membershipIds): array
     {
         if ($membershipIds === []) {
             return [];
         }
 
-        $codes = array_keys(array_filter(self::DEFINITIONS, static fn(array $item): bool => $item['slot'] === 'title'));
         $rows = $this->em->createQueryBuilder()
             ->select('m.id AS membershipId', 'c.code')
             ->from(PlayerUniverse::class, 'm')
@@ -82,16 +78,35 @@ final readonly class ProfileCosmetics
             ->andWhere('c.equipped = true AND c.code IN (:codes)')
             ->setParameter('universe', $universe)
             ->setParameter('ids', $membershipIds)
-            ->setParameter('codes', $codes)
+            ->setParameter('codes', array_keys(self::DEFINITIONS))
             ->orderBy('c.id', 'ASC')
             ->getQuery()->getArrayResult();
 
-        $titles = [];
+        $codesByMember = [];
         foreach ($rows as $row) {
-            $titles[$row['membershipId']] = self::DEFINITIONS[$row['code']]['label'];
+            $codesByMember[$row['membershipId']][] = $row['code'];
         }
 
-        return $titles;
+        return array_map(self::publicLabels(...), $codesByMember);
+    }
+
+    /**
+     * @param list<string> $codes
+     * @return array{titles?:list<string>,banner?:string}
+     */
+    private static function publicLabels(array $codes): array
+    {
+        $result = [];
+        foreach ($codes as $code) {
+            $item = self::DEFINITIONS[$code];
+            if ($item['slot'] === 'title') {
+                $result['titles'][] = $item['label'];
+            } else {
+                $result['banner'] = $item['label'];
+            }
+        }
+
+        return $result;
     }
 
     /** @param list<string> $codes */
@@ -103,16 +118,21 @@ final readonly class ProfileCosmetics
                 throw new \DomainException('Ce compte ne peut pas être personnalisé.');
             }
             $owned = $this->owned($player);
-            $slots = [];
+            $selected = [];
+            $slotCounts = ['title' => 0, 'banner' => 0];
             foreach ($codes as $code) {
-                if (!is_string($code) || !isset($owned[$code]) || isset($slots[$owned[$code]['slot']])) {
+                if (!is_string($code) || !isset($owned[$code]) || isset($selected[$code])) {
                     throw new \DomainException('Cet élément n’est pas disponible pour votre profil.');
                 }
-                $slots[$owned[$code]['slot']] = $code;
+                $selected[$code] = true;
+                ++$slotCounts[$owned[$code]['slot']];
+            }
+            if ($slotCounts['title'] > self::MAX_TITLES || $slotCounts['banner'] > 1) {
+                throw new \DomainException(sprintf('Choisissez au maximum %d titres et une bannière.', self::MAX_TITLES));
             }
             foreach ($this->em->getRepository(ProfileCosmetic::class)->findBy(['player' => $player]) as $row) {
                 if (isset($owned[$row->code])) {
-                    $row->equipped = in_array($row->code, $slots, true);
+                    $row->equipped = isset($selected[$row->code]);
                 }
             }
         });

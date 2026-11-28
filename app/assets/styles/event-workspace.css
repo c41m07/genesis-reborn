@@ -305,15 +305,17 @@ body.authenticated .event-redesign > .inline-link {
     margin-block-start: 1rem;
 }
 
+.profile-polar-night,
+.ranking-banner--polar-night {
+    --polar-night-art: url("/art/genesis-avent-panorama-720.webp");
+}
+
 .profile-polar-night {
     min-block-size: 4.5rem;
     margin-block: .75rem;
     border: 1px solid var(--line);
     border-radius: .4rem;
-    background:
-        radial-gradient(ellipse at 32% 94%, #a2d6ed 0%, #516ca5 14%, transparent 43%),
-        radial-gradient(ellipse at 70% 82%, #4daeba 0%, #263051 25%, transparent 51%),
-        linear-gradient(160deg, #0e1529, #182337 70%, #101725);
+    background: #101725 var(--polar-night-art) center 55% / cover no-repeat;
 }
 
 .advent-universe {

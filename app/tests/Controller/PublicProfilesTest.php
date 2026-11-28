@@ -107,13 +107,13 @@ final class PublicProfilesTest extends WebTestCase
         }
         $profile = self::getContainer()->get(SocialProfileView::class)->player($this->leader->currentPlayerUniverse, $target->id);
         self::assertSame(['id', 'username', 'scores', 'updated_at', 'guild', 'cosmetics'], array_keys($profile));
-        self::assertSame(['title' => 'Gardien des étoiles'], $profile['cosmetics']);
+        self::assertSame(['titles' => ['Gardien des étoiles']], $profile['cosmetics']);
 
         $route = '/joueurs/'.$target->id;
         $this->client->request('GET', $route);
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('.page-heading .badge', 'Gardien des étoiles');
-        self::assertSelectorNotExists('.profile-polar-night');
+        self::assertSelectorNotExists('.commander-profile-art');
         $html = $this->client->getResponse()->getContent();
         foreach (['guardian_of_stars', 'polar_night', 'unknown_fixture_cosmetic', 'Nuit polaire', '2003-02-01'] as $private) {
             self::assertStringNotContainsString($private, $html);
@@ -122,12 +122,12 @@ final class PublicProfilesTest extends WebTestCase
         $db->executeStatement('UPDATE profile_cosmetic SET equipped = (code = ?) WHERE player_id = ?', ['polar_night', $this->member->id]);
         $this->client->request('GET', $route);
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists('[role="img"][aria-label="Bannière Nuit polaire"]');
+        self::assertSelectorExists('header.commander-profile-identity > img[alt="Bannière Nuit polaire"]');
         self::assertSelectorNotExists('.page-heading .badge');
         $this->client->loginUser($this->foreign);
         $this->client->request('GET', $route);
         self::assertResponseStatusCodeSame(404);
-        self::assertSelectorNotExists('.public-player-profile, .profile-polar-night');
+        self::assertSelectorNotExists('.public-player-profile, .commander-profile-art');
     }
 
     public function testProfilesRequireAuthenticationAndTheSameUniverse(): void

@@ -1,5 +1,9 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Deux titres sur le profil — 28 novembre 2026
+
+Un commandant peut afficher ensemble deux titres acquis, chacun dans son badge doré, sous son pseudo au classement et sur son profil public. La bannière dispose de son propre emplacement. « Nuit polaire » reprend le panorama de Noël dans l’en-tête du profil et en fond de ligne du classement lorsque le joueur l’équipe.
+
 ## Espionnage depuis Galaxie — 28 novembre 2026
 
 La fiche de la cible reprend le choix des quantités par rang de Flottes, limité aux sondes présentes sur la colonie active. Un envoi peut réunir plusieurs rangs dans le plafond existant de 100 sondes. [Règles d’espionnage](REGLES.md#espionnage).

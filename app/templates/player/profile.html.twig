@@ -45,7 +45,7 @@
 {% if cosmetics %}
 <section class="panel account-panel profile-cosmetics" aria-labelledby="profile-cosmetics">
     <h2 id="profile-cosmetics" tabindex="-1">Apparence du profil</h2>
-    <p>Le titre et la bannière sont décoratifs. Ils ne modifient ni vos statistiques ni votre progression.</p>
+    <p>Vous pouvez afficher jusqu’à {{ constant('App\\Service\\Player\\ProfileCosmetics::MAX_TITLES') }} titres et une bannière.</p>
     {% if cosmetics.polar_night is defined %}<div class="profile-polar-night" aria-hidden="true"></div>{% endif %}
     <form method="post" action="{{ path('app_profile_cosmetics') }}">
         <input type="hidden" name="_token" value="{{ csrf_token('profile_cosmetics') }}">

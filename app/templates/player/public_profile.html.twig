@@ -10,21 +10,27 @@
     </nav>
 
     <header class="panel page-heading commander-profile-identity">
+        {% if profile.cosmetics.banner is defined %}
+            <img class="commander-profile-art" src="{{ asset('art/genesis-avent-panorama-720.webp') }}"
+                 srcset="{{ asset('art/genesis-avent-panorama-720.webp') }} 720w, {{ asset('art/genesis-avent-panorama-1536.webp') }} 1536w"
+                 sizes="(max-width: 760px) 100vw, 85vw" alt="Bannière {{ profile.cosmetics.banner }}">
+        {% endif %}
         <div>
             <p class="eyebrow">Profil du commandant</p>
             <h1>{{ profile.username }}</h1>
-            <p>Univers {{ membership.universe.name }}</p>
-            {% if profile.cosmetics.title is defined %}
-                <p class="badge commander-profile-title">{{ profile.cosmetics.title }}</p>
+            {% if profile.cosmetics.titles is defined %}
+                <div class="ranking-badges">
+                    {% for title in profile.cosmetics.titles %}
+                        <span class="badge ranking-label ranking-label--title">{{ title }}</span>
+                    {% endfor %}
+                </div>
             {% endif %}
+            <p>Univers {{ membership.universe.name }}</p>
         </div>
         {% if profile.id != membership.id %}
             <a class="primary commander-profile-write" href="{{ path('app_messages', {with: profile.id}) }}">Écrire à {{ profile.username }}</a>
         {% endif %}
     </header>
-    {% if profile.cosmetics.banner is defined %}
-        <div class="profile-polar-night" role="img" aria-label="Bannière {{ profile.cosmetics.banner }}"></div>
-    {% endif %}
 
     <div class="commander-profile-details">
         <section class="panel" aria-labelledby="player-public-scores">

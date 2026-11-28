@@ -216,6 +216,16 @@ body.authenticated .social-workspace .ranking-table tbody tr[aria-current=true] 
     background: color-mix(in srgb,var(--accent) 12%,var(--panel));
 }
 
+body.authenticated .social-workspace .ranking-table tbody tr.ranking-banner--polar-night {
+    background-image: linear-gradient(var(--banner-veil, rgb(9 15 27 / 78%)), var(--banner-veil, rgb(9 15 27 / 78%))), var(--polar-night-art);
+    background-size: cover;
+    background-position: center 55%;
+}
+
+body.authenticated[data-theme=light] .ranking-table .ranking-banner--polar-night {
+    --banner-veil: rgb(255 255 255 / 84%);
+}
+
 body.authenticated .social-workspace .ranking-table tbody td:last-child {
     white-space: nowrap;
 }
@@ -239,7 +249,7 @@ body.authenticated .social-workspace .ranking-table--guilds {
     display: none;
 }
 
-.leaderboard-workspace .ranking-badges {
+.social-workspace .ranking-badges {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -247,7 +257,7 @@ body.authenticated .social-workspace .ranking-table--guilds {
     margin-top: .2rem;
 }
 
-.leaderboard-workspace .ranking-label {
+.social-workspace .ranking-label {
     display: inline-flex;
     align-items: center;
     gap: .2rem;
@@ -264,13 +274,13 @@ body.authenticated .social-workspace .ranking-table--guilds {
     overflow-wrap: anywhere;
 }
 
-.leaderboard-workspace .ranking-label--title { --badge-dark: #ffda79; --badge-light: #755000; }
+.social-workspace .ranking-label--title { --badge-dark: #ffda79; --badge-light: #755000; }
 .leaderboard-workspace .ranking-label--enemy { --badge-dark: #ffaaa4; --badge-light: #962e28; }
 .leaderboard-workspace .ranking-label--guild { --badge-dark: #a4d0ff; --badge-light: #25578e; }
 .leaderboard-workspace .ranking-label--commander { --badge-dark: #98e5b2; --badge-light: #22633a; }
 .leaderboard-workspace .ranking-label--protection { --badge-dark: #debdff; --badge-light: #6e4391; }
 
-body.authenticated[data-theme=light] .leaderboard-workspace .ranking-label {
+body.authenticated[data-theme=light] .social-workspace .ranking-label {
     background: #fff;
     color: var(--badge-light);
 }
@@ -359,9 +369,29 @@ body.authenticated .social-workspace .social-profile-scores dt {
 }
 
 .public-player-profile .commander-profile-identity {
+    position: relative;
+    isolation: isolate;
     align-items: end;
     gap: 20px;
     padding: clamp(16px, 2vw, 28px);
+}
+
+.public-player-profile .commander-profile-art {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 55%;
+    border-radius: inherit;
+    mask-image: linear-gradient(90deg, rgb(0 0 0 / 16%), rgb(0 0 0 / 85%));
+}
+
+@media (max-width: 760px) {
+    .public-player-profile .commander-profile-art {
+        mask-image: linear-gradient(90deg, rgb(0 0 0 / 12%), rgb(0 0 0 / 45%));
+    }
 }
 
 .public-player-profile .commander-profile-identity > div {
@@ -381,15 +411,6 @@ body.authenticated .social-workspace .social-profile-scores dt {
 .public-player-profile .commander-profile-identity > div > p:not(.eyebrow) {
     font-size: 14px;
     margin-block-start: 6px;
-}
-
-.public-player-profile .commander-profile-identity .commander-profile-title {
-    color: var(--gold);
-    background: color-mix(in srgb, var(--gold) 12%, var(--panel));
-    border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
-    white-space: normal;
-    font-size: 12px;
-    margin-block-end: 0;
 }
 
 .public-player-profile .commander-profile-write {

@@ -125,7 +125,8 @@ test('L7E A : tableaux complets, protection au clavier et colonnes des guildes s
     const owner = await register(page, 'Ranking', 'Omega');
     const context = await browser.newContext({ baseURL });
     try {
-        const peer = await register(await context.newPage(), 'Ranking-Peer', 'Omega');
+        const peerPage = await context.newPage();
+        const peer = await register(peerPage, 'Ranking-Peer', 'Omega');
         await page.goto('/guildes/creer');
         await expect(page.getByLabel('Nom de votre nouvelle guilde')).toBeVisible();
         await page.getByLabel('Nom de votre nouvelle guilde').fill('La confrérie des explorateurs des mondes lointains');
@@ -134,7 +135,15 @@ test('L7E A : tableaux complets, protection au clavier et colonnes des guildes s
         runIsolatedSql(process.env.BROWSER_ROUTER,
             `INSERT INTO profile_cosmetic(player_id,code,awarded_at,equipped)
              SELECT player_id,'amateur_pirate_hunter',UTC_TIMESTAMP(),1 FROM player_universe WHERE id=${owner.member}
+             UNION ALL SELECT player_id,'polar_night',UTC_TIMESTAMP(),0 FROM player_universe WHERE id IN (${owner.member},${peer.member})
+             UNION ALL SELECT player_id,'guardian_of_stars',UTC_TIMESTAMP(),0 FROM player_universe WHERE id=${owner.member}
              UNION ALL SELECT player_id,'guardian_of_stars',UTC_TIMESTAMP(),0 FROM player_universe WHERE id=${peer.member}`);
+        await page.goto('/profil#profile-cosmetics');
+        await expect(page.getByRole('checkbox', { name: /Chasseur de Pirate amateur/ })).toBeChecked();
+        await page.getByRole('checkbox', { name: /Gardien des étoiles/ }).check();
+        await page.getByRole('checkbox', { name: /Nuit polaire/ }).check();
+        await page.getByRole('button', { name: 'Enregistrer l’apparence' }).click();
+        await expect(page.getByRole('checkbox', { name: /Gardien des étoiles/ })).toBeChecked();
         // Deux calculs avec les mêmes joueurs garantissent une variation visible « (=) ».
         // Sans cet état, la première lecture peut ne montrer que « (—) » et masquer un débordement.
         const expireRanking = () => runIsolatedSql(process.env.BROWSER_ROUTER, 'UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(),INTERVAL 2 DAY)');
@@ -149,10 +158,12 @@ test('L7E A : tableaux complets, protection au clavier et colonnes des guildes s
             await expect(ownRow.locator('td').first().locator('.ranking-change')).toHaveText('(=)');
             await expect(ownRow.locator('.leaderboard-contact,.leaderboard-report')).toHaveCount(0);
             const peerRow = page.getByRole('row').filter({ hasText: peer.name });
-            await expect(ownRow.locator('th .ranking-label--title')).toHaveText('Chasseur de Pirate amateur');
+            await expect(ownRow.locator('th .ranking-label--title')).toHaveText(['Chasseur de Pirate amateur', 'Gardien des étoiles']);
             await expect(ownRow.getByText('Vous', { exact: true })).toHaveCount(0);
             await expect(peerRow.locator('.ranking-label--title')).toHaveCount(0);
             await expect(peerRow.locator('.ranking-label--protection')).toHaveText('Protégé');
+            await expect(ownRow).toHaveCSS('background-image', /genesis-avent-panorama-720/);
+            await expect(peerRow).not.toHaveClass(/ranking-banner--polar-night/);
             const protection = peerRow.locator('.ranking-protection summary');
             await protection.focus();
             await page.keyboard.press('Enter');
@@ -217,6 +228,23 @@ test('L7E A : tableaux complets, protection au clavier et colonnes des guildes s
                 }
             }
         }
+        await page.goto('/classement');
+        await page.getByRole('link', { name: owner.name, exact: true }).click();
+        await expect(page.locator('.commander-profile-identity .ranking-label--title')).toHaveText(['Chasseur de Pirate amateur', 'Gardien des étoiles']);
+        await peerPage.goto(page.url());
+        const heading = peerPage.locator('header.commander-profile-identity');
+        const banner = heading.getByRole('img', { name: 'Bannière Nuit polaire' });
+        for (const [theme, width] of [['dark', 1920], ['light', 390]]) {
+            await setTheme(peerPage, peer.name, theme);
+            await peerPage.setViewportSize({ width, height: 1080 });
+            await peerPage.reload();
+            await expect(banner).toBeVisible();
+            await expect.poll(() => banner.evaluate(node => node.naturalWidth)).toBeGreaterThan(0);
+            await expect(heading.getByRole('link', { name: 'Écrire à ' + owner.name })).toBeVisible();
+            await expect(heading.locator('.ranking-label--title')).toHaveCount(2);
+            expect((await new AxeBuilder({ page: peerPage }).include('.commander-profile-identity').analyze()).violations).toEqual([]);
+            await heading.screenshot({ path: info.outputPath(`profil-banniere-${theme}-${width}.png`), animations: 'disabled' });
+        }
         const project = process.env.BROWSER_ROUTER;
         const peerBadges = page.getByRole('row').filter({ hasText: peer.name }).locator('.ranking-badges');
         runIsolatedSql(project, `INSERT INTO alliance_contract (player_a_id,player_b_id,proposer_id,status)
@@ -231,6 +259,16 @@ test('L7E A : tableaux complets, protection au clavier et colonnes des guildes s
         await page.reload();
         await expect(peerBadges.locator('.ranking-label--guild')).toHaveText('Allié de guilde');
         await expect(peerBadges.locator('.ranking-label--enemy')).toHaveCount(0);
+        runIsolatedSql(project, `UPDATE profile_cosmetic c JOIN player_universe m ON m.player_id=c.player_id
+            SET c.equipped=1 WHERE m.id=${peer.member} AND c.code='guardian_of_stars';
+            INSERT INTO profile_cosmetic(player_id,code,awarded_at,equipped)
+            SELECT player_id,'amateur_pirate_hunter',UTC_TIMESTAMP(),1 FROM player_universe WHERE id=${peer.member}`);
+        await page.reload();
+        await expect(peerBadges.locator('.ranking-label')).toHaveText(['Gardien des étoiles', 'Chasseur de Pirate amateur', 'Allié de guilde', 'Protégé']);
+        for (const width of [390, 320]) {
+            await page.setViewportSize({ width, height: 844 });
+            expect(await peerBadges.evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
+        }
         const plainContext = await browser.newContext({ baseURL, javaScriptEnabled: false, storageState: await page.context().storageState(), viewport: { width: 390, height: 1000 } });
         try {
             const plain = await plainContext.newPage();
