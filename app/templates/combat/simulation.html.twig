@@ -1,4 +1,5 @@
 {% extends 'base.html.twig' %}
+{% from 'ui/macros.html.twig' import icon %}
 {% from 'ui/espionage_report_title.html.twig' import title as espionageTitle %}
 {% block title %}Simulateur de combat · Genesis Reborn{% endblock %}
 {% block body %}
@@ -37,14 +38,23 @@
            Ce premier bouton neutralise uniquement la soumission implicite du navigateur. #}
         <button type="submit" hidden disabled></button>
         {% include 'combat/_wizard_sources.html.twig' %}
-        {% if not pirate_intel %}<button type="submit" class="secondary" name="wizard_action" value="swap" formnovalidate formaction="{{ path('app_combat_simulation') }}">Inverser l’attaquant et le défenseur</button>{% endif %}
         {% for key, item in steps %}
             <section class="simulation-wizard-stage" id="simulation-{{ key }}" data-step="{{ key }}"
                      data-simulation-wizard-target="stage" aria-labelledby="simulation-{{ key }}-title">
                 <header class="simulation-wizard-heading">
-                    <p class="simulation-board-eyebrow">Étape 0{{ loop.index }} / 04</p>
-                    <h2 id="simulation-{{ key }}-title" tabindex="-1">{{ item.title }}</h2>
-                    <p>{{ item.help }}</p>
+                    <div>
+                        <p class="simulation-board-eyebrow">Étape 0{{ loop.index }} / 04</p>
+                        <h2 id="simulation-{{ key }}-title" tabindex="-1">{{ item.title }}</h2>
+                        <p>{{ item.help }}</p>
+                    </div>
+                    {% if key == step and not pirate_intel %}
+                        {% set swapLabel = 'Inverser l’attaquant et le défenseur' %}
+                        <button type="submit" id="simulation-swap" class="secondary simulation-swap" name="wizard_action" value="swap"
+                                aria-label="{{ swapLabel }}" title="{{ swapLabel }}" data-simulation-wizard-target="swap"
+                                formnovalidate formaction="{{ path('app_combat_simulation', {_fragment: 'simulation-swap'}) }}">
+                            {{ icon('swap-camps') }}
+                        </button>
+                    {% endif %}
                 </header>
                 {% if key != 'simulation' %}
                     <div class="simulation-wizard-camps">

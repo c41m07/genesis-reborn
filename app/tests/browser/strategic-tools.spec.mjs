@@ -61,6 +61,15 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
    }
    // Lire les deux rectangles au même instant même si le navigateur vient de défiler.
    const [left,right]=await cards.evaluateAll(elements=>elements.map(el=>el.getBoundingClientRect().toJSON()));
+   const swap=page.getByRole('button',{name:'Inverser l’attaquant et le défenseur',exact:true});
+   await expect(swap).toBeVisible();
+   await expect(swap.locator('use')).toHaveAttribute('href', /#swap-camps$/);
+   const button=await swap.boundingBox();
+   const header=await shipsStep.locator('header').boundingBox();
+   expect(button.width).toBeGreaterThanOrEqual(44);
+   expect(button.height).toBeGreaterThanOrEqual(44);
+   expect(Math.abs(button.x+button.width/2-header.x-header.width/2)).toBeLessThan(2);
+   expect(button.y+button.height).toBeLessThanOrEqual(left.top);
    if (viewport.width===1920) {
     expect(right.left).toBeGreaterThanOrEqual(left.right);
     expect(Math.abs(left.top-right.top)).toBeLessThanOrEqual(2);
@@ -80,6 +89,8 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
    await next.focus();
    await page.keyboard.press('Enter');
    await expect(page.getByRole('heading',{name:'Défenses',exact:true})).toBeFocused();
+   await expect(page.locator('#simulation-defenses header')).toContainText('Défenses');
+   await expect(page.locator('#simulation-defenses header #simulation-swap')).toBeVisible();
    await expect(page.getByText('Non applicable',{exact:true})).toBeVisible();
    await expect(page.locator('[name^="forces[attacker][defenses]"]')).toHaveCount(0);
    await expect(page.locator('[name^="forces[defender][defenses]"]').first()).toBeVisible();
@@ -112,6 +123,10 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
    await nav.getByRole('link',{name:'Vaisseaux',exact:true}).click();
    await expect(attacker).toHaveValue('24');
    await expect(defender).toHaveValue('18');
+   await swap.focus();
+   await page.keyboard.press('Enter');
+   await expect(attacker).toHaveValue('18');
+   await expect(defender).toHaveValue('24');
    await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
   }
  }

@@ -244,6 +244,26 @@ body[data-theme=light] .player-simulation-board .simulation-outcome--defender_wi
 .simulation-wizard-heading {
     margin-block: .9rem .7rem;
 }
+.simulation-wizard-heading:has(.simulation-swap) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: end;
+    column-gap: .75rem;
+}
+.simulation-wizard-heading .simulation-swap {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 50%;
+    scroll-margin-block-start: 195px;
+}
+.simulation-swap .icon { width: 23px; height: 23px; }
+@media (prefers-reduced-motion: no-preference) {
+    .simulation-swap .icon { transition: transform .24s ease-out; }
+    .simulation-swap:is(:hover, :focus-visible) .icon { transform: rotate(180deg); }
+}
 .simulation-wizard-heading h2 {
     margin: 0 0 .25rem;
     scroll-margin-top: 195px;
@@ -390,6 +410,11 @@ body[data-theme="light"] .player-simulation-board :is(
     .simulation-wizard-camps {
         grid-template-columns: minmax(0, 1fr);
     }
+    .simulation-wizard-heading:has(.simulation-swap) {
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: .35rem;
+    }
+    .simulation-wizard-heading .simulation-swap { justify-self: center; }
     .player-simulation-board .simulation-wizard-camp .data-table :is(th, td) {
         padding: .3rem .24rem;
     }

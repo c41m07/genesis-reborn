@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['stage', 'link', 'current', 'sources'];
+    static targets = ['stage', 'link', 'current', 'sources', 'swap'];
     static values = { step: String };
 
     connect() {
@@ -32,6 +32,9 @@ export default class extends Controller {
     show(step, focus = false) {
         const active = this.stageTargets.find(stage => stage.dataset.step === step) ?? this.stageTargets[0];
         this.currentTarget.value = active.dataset.step;
+        if (this.hasSwapTarget && !active.contains(this.swapTarget)) {
+            active.querySelector('.simulation-wizard-heading').append(this.swapTarget);
+        }
         for (const stage of this.stageTargets) stage.hidden = stage !== active;
         for (const link of this.linkTargets) {
             if (link.dataset.step === active.dataset.step) link.setAttribute('aria-current', 'step');
