@@ -239,8 +239,40 @@ body.authenticated .social-workspace .ranking-table--guilds {
     display: none;
 }
 
+.leaderboard-workspace .ranking-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .2rem .35rem;
+    margin-top: .2rem;
+}
+
+.leaderboard-workspace .ranking-label {
+    display: inline-flex;
+    align-items: center;
+    gap: .2rem;
+    max-width: 100%;
+    padding: .2rem .45rem;
+    border: 1px solid currentColor;
+    border-radius: 1rem;
+    background: #18212e;
+    color: var(--badge-dark);
+    font-size: .75rem;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.leaderboard-workspace .ranking-label--title { --badge-dark: #ffda79; --badge-light: #755000; }
+.leaderboard-workspace .ranking-label--enemy { --badge-dark: #ffaaa4; --badge-light: #962e28; }
+.leaderboard-workspace .ranking-label--guild { --badge-dark: #a4d0ff; --badge-light: #25578e; }
+.leaderboard-workspace .ranking-label--commander { --badge-dark: #98e5b2; --badge-light: #22633a; }
+.leaderboard-workspace .ranking-label--protection { --badge-dark: #debdff; --badge-light: #6e4391; }
+
 body.authenticated[data-theme=light] .leaderboard-workspace .ranking-label {
-    color: var(--text);
+    background: #fff;
+    color: var(--badge-light);
 }
 
 .leaderboard-workspace > nav:last-child {

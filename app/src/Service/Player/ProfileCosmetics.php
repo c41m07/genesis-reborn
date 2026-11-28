@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Player;
 
-use App\Entity\{Player, ProfileCosmetic};
+use App\Entity\{Player, PlayerUniverse, ProfileCosmetic, Universe};
 use App\Manager\GameManager;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -61,6 +61,37 @@ final readonly class ProfileCosmetics
         }
 
         return $result;
+    }
+
+    /**
+     * @param list<int> $membershipIds
+     * @return array<int,string> Titres publics des empires visibles sur la page.
+     */
+    public function equippedTitles(Universe $universe, array $membershipIds): array
+    {
+        if ($membershipIds === []) {
+            return [];
+        }
+
+        $codes = array_keys(array_filter(self::DEFINITIONS, static fn(array $item): bool => $item['slot'] === 'title'));
+        $rows = $this->em->createQueryBuilder()
+            ->select('m.id AS membershipId', 'c.code')
+            ->from(PlayerUniverse::class, 'm')
+            ->innerJoin(ProfileCosmetic::class, 'c', 'WITH', 'c.player = m.player')
+            ->where('m.universe = :universe AND m.forgottenAt IS NULL AND m.id IN (:ids)')
+            ->andWhere('c.equipped = true AND c.code IN (:codes)')
+            ->setParameter('universe', $universe)
+            ->setParameter('ids', $membershipIds)
+            ->setParameter('codes', $codes)
+            ->orderBy('c.id', 'ASC')
+            ->getQuery()->getArrayResult();
+
+        $titles = [];
+        foreach ($rows as $row) {
+            $titles[$row['membershipId']] = self::DEFINITIONS[$row['code']]['label'];
+        }
+
+        return $titles;
     }
 
     /** @param list<string> $codes */

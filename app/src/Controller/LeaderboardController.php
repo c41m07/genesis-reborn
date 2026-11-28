@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Service\Player\{DailyLeaderboard, PlayerReportService, RelationResolver};
+use App\Service\Player\{DailyLeaderboard, PlayerReportService, ProfileCosmetics, RelationResolver};
 use App\Service\Universe\UniverseContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{JsonResponse, Request, Response};
@@ -16,6 +16,7 @@ final class LeaderboardController extends AbstractController
         UniverseContext $context,
         DailyLeaderboard $leaderboard,
         RelationResolver $relations,
+        ProfileCosmetics $cosmetics,
     ): Response
     {
         $membership = $context->membership();
@@ -43,9 +44,11 @@ final class LeaderboardController extends AbstractController
         $pages = max(1, (int) ceil(count($rows) / $pageSize));
         $page = max(1, min($pages, $request->query->getInt('page', 1)));
         $rows = array_slice($rows, ($page - 1) * $pageSize, $pageSize);
+        $titles = $cosmetics->equippedTitles($membership->universe, array_column($rows, 'membership_id'));
         // Les relations restent actuelles ; seuls les joueurs de cette page ont besoin de cet enrichissement.
         foreach ($rows as &$row) {
             $peer = $row['membership'];
+            $row['title'] = $titles[$peer->id] ?? null;
             $guild = $relations->guild($peer);
             $row['guild_tag'] = $guild?->tag;
             $guildStatus = $relations->guildStatus($ownGuild, $guild);

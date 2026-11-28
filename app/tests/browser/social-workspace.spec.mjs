@@ -131,6 +131,10 @@ test('L7E A : tableaux complets, protection au clavier et colonnes des guildes s
         await page.getByLabel('Nom de votre nouvelle guilde').fill('La confrérie des explorateurs des mondes lointains');
         await page.getByLabel('Tag de la guilde', { exact: true }).fill('L7E');
         await page.getByRole('button', { name: 'Fonder une guilde' }).click();
+        runIsolatedSql(process.env.BROWSER_ROUTER,
+            `INSERT INTO profile_cosmetic(player_id,code,awarded_at,equipped)
+             SELECT player_id,'amateur_pirate_hunter',UTC_TIMESTAMP(),1 FROM player_universe WHERE id=${owner.member}
+             UNION ALL SELECT player_id,'guardian_of_stars',UTC_TIMESTAMP(),0 FROM player_universe WHERE id=${peer.member}`);
         // Deux calculs avec les mêmes joueurs garantissent une variation visible « (=) ».
         // Sans cet état, la première lecture peut ne montrer que « (—) » et masquer un débordement.
         const expireRanking = () => runIsolatedSql(process.env.BROWSER_ROUTER, 'UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(),INTERVAL 2 DAY)');
@@ -145,6 +149,10 @@ test('L7E A : tableaux complets, protection au clavier et colonnes des guildes s
             await expect(ownRow.locator('td').first().locator('.ranking-change')).toHaveText('(=)');
             await expect(ownRow.locator('.leaderboard-contact,.leaderboard-report')).toHaveCount(0);
             const peerRow = page.getByRole('row').filter({ hasText: peer.name });
+            await expect(ownRow.locator('th .ranking-label--title')).toHaveText('Chasseur de Pirate amateur');
+            await expect(ownRow.getByText('Vous', { exact: true })).toHaveCount(0);
+            await expect(peerRow.locator('.ranking-label--title')).toHaveCount(0);
+            await expect(peerRow.locator('.ranking-label--protection')).toHaveText('Protégé');
             const protection = peerRow.locator('.ranking-protection summary');
             await protection.focus();
             await page.keyboard.press('Enter');
@@ -163,7 +171,8 @@ test('L7E A : tableaux complets, protection au clavier et colonnes des guildes s
                 expect(overflowingCells).toEqual([]);
                 if (width <= 390) {
                     await peerRow.locator('.ranking-extra summary').click();
-                    await expect(peerRow.locator('.ranking-extra dl dt')).toHaveCount(4);
+                    await expect(peerRow.locator('.ranking-extra dl dt')).toHaveCount(5);
+                    await expect(peerRow.locator('.ranking-extra dt').last()).toHaveText('Crédits');
                     await expect(peerRow.locator('.ranking-extra dl')).toBeVisible();
                     await peerRow.locator('.ranking-extra summary').click();
                 }
@@ -208,6 +217,20 @@ test('L7E A : tableaux complets, protection au clavier et colonnes des guildes s
                 }
             }
         }
+        const project = process.env.BROWSER_ROUTER;
+        const peerBadges = page.getByRole('row').filter({ hasText: peer.name }).locator('.ranking-badges');
+        runIsolatedSql(project, `INSERT INTO alliance_contract (player_a_id,player_b_id,proposer_id,status)
+            VALUES (${owner.member},${peer.member},${owner.member},'accepted')`);
+        await page.goto('/classement');
+        await expect(peerBadges.locator('.ranking-label--commander')).toHaveText('Allié commandant');
+        runIsolatedSql(project, `UPDATE alliance_contract SET status='enemies' WHERE player_a_id=${owner.member} AND player_b_id=${peer.member}`);
+        await page.reload();
+        await expect(peerBadges.locator('.ranking-label--enemy')).toHaveText('Ennemi');
+        runIsolatedSql(project, `INSERT INTO guild_member (guild_id,player_universe_id)
+            SELECT id,${peer.member} FROM guild WHERE leader_id=${owner.member}`);
+        await page.reload();
+        await expect(peerBadges.locator('.ranking-label--guild')).toHaveText('Allié de guilde');
+        await expect(peerBadges.locator('.ranking-label--enemy')).toHaveCount(0);
         const plainContext = await browser.newContext({ baseURL, javaScriptEnabled: false, storageState: await page.context().storageState(), viewport: { width: 390, height: 1000 } });
         try {
             const plain = await plainContext.newPage();
