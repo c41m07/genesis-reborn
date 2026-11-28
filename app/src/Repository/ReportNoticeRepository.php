@@ -35,8 +35,9 @@ final readonly class ReportNoticeRepository
             )
             SQL,
         'espionage' => <<<'SQL'
-            EXISTS (SELECT 1 FROM espionage_report report WHERE report.id = n.espionage_report_id
-                AND report.sender_id = n.player_universe_id)
+            EXISTS (SELECT 1 FROM espionage_report report JOIN player_universe sender ON sender.id = report.sender_id
+                WHERE report.id = n.espionage_report_id AND sender.universe_id = :universe
+                AND (report.sender_id = n.player_universe_id OR (report.detected_by_id = n.player_universe_id AND report.result = 'detected')))
             SQL,
         'diplomatic' => <<<'SQL'
             EXISTS (SELECT 1 FROM diplomatic_report report WHERE report.id = n.diplomatic_report_id
@@ -92,6 +93,50 @@ final readonly class ReportNoticeRepository
      */
     public function unreadKeys(PlayerUniverse $membership, array $keys): array
     {
+        [$where, $columnAliases, $parameters, $types] = $this->selection($membership, $keys);
+        if ($where === []) {
+            return [];
+        }
+
+        // Une seule lecture des marqueurs de la page, y compris en archive, sans chercher une fiche par ligne.
+        $rows = $this->em->getConnection()->fetchAllAssociative(
+            'SELECT n.'.implode(', n.', array_keys($columnAliases)).' FROM report_notice n
+             WHERE n.consulted_at IS NULL AND '.self::ACTIVE.' AND ('.implode(' OR ', $where).')',
+            $parameters,
+            $types,
+        );
+        $result = [];
+        foreach ($rows as $row) {
+            foreach ($columnAliases as $column => $kind) {
+                if ($row[$column] !== null) {
+                    $result[$kind.':'.$row[$column]] = true;
+                }
+            }
+        }
+        return $result;
+    }
+
+    /** Marque uniquement les rapports encore accessibles au moment de l’écriture. */
+    public function consultSelection(PlayerUniverse $membership, array $keys, \DateTimeImmutable $now): void
+    {
+        if (!$keys || count($keys) > 50) throw new \DomainException('Sélectionnez entre 1 et 50 rapports.');
+        foreach ($keys as $key) {
+            if (!is_string($key) || !preg_match('/^(campaign|combat|espionage|economy|diplomatic):[1-9][0-9]{0,9}$/D', $key)) {
+                throw new \DomainException('Sélection de rapports invalide.');
+            }
+        }
+        [$where, , $parameters, $types] = $this->selection($membership, $keys);
+        if ($where === []) return;
+        $this->em->getConnection()->executeStatement(
+            'UPDATE report_notice n SET n.consulted_at = :now WHERE n.consulted_at IS NULL AND '
+                .self::ACTIVE.' AND ('.implode(' OR ', $where).')',
+            $parameters + ['now' => $now->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d H:i:s')],
+            $types,
+        );
+    }
+
+    private function selection(PlayerUniverse $membership, array $keys): array
+    {
         $requests = [];
         foreach ($keys as $key) {
             [$listKind, $id] = explode(':', $key, 2);
@@ -116,26 +161,7 @@ final readonly class ReportNoticeRepository
             $types[$parameter] = ArrayParameterType::INTEGER;
             $columnAliases[$column] = $listKind;
         }
-        if ($where === []) {
-            return [];
-        }
-
-        // Une seule lecture des marqueurs de la page, y compris en archive, sans chercher une fiche par ligne.
-        $rows = $this->em->getConnection()->fetchAllAssociative(
-            'SELECT n.'.implode(', n.', array_keys($columnAliases)).' FROM report_notice n
-             WHERE n.consulted_at IS NULL AND '.self::ACTIVE.' AND ('.implode(' OR ', $where).')',
-            $parameters,
-            $types,
-        );
-        $result = [];
-        foreach ($rows as $row) {
-            foreach ($columnAliases as $column => $kind) {
-                if ($row[$column] !== null) {
-                    $result[$kind.':'.$row[$column]] = true;
-                }
-            }
-        }
-        return $result;
+        return [$where, $columnAliases, $parameters, $types];
     }
 
     public function unread(PlayerUniverse $membership, string $kind, int $id): bool

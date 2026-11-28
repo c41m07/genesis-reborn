@@ -37,9 +37,14 @@
                 <p class="muted">Indice indicatif : le devis donne ce que vous recevrez pour le lot, frais de {{ fee }} % inclus. Les lots réservés ne sont plus disponibles.</p>
                 <p>Les marchands reviennent le vendredi à 9 h (heure de Paris) et ravitaillent la station sans changer le cours.</p>
             </section>
-            <section class="panel" aria-labelledby="market-quote">
+            <section class="panel" aria-labelledby="market-quote" data-controller="market-wizard">
                 <p class="market-kicker">Préparer un échange</p>
                 <h2 id="market-quote">Votre devis</h2>
+                <div class="fleet-wizard-steps" role="group" aria-label="Étapes du devis">
+                    {% for label in ['Fret', 'Cargos', 'Confirmation'] %}
+                        <span data-market-wizard-target="indicator" {% if quote and loop.last %}class="active" aria-current="step"{% endif %}><i>{{ loop.index }}</i>{{ label }}</span>
+                    {% endfor %}
+                </div>
                 {% if quote %}
                     {% set q = quote.details %}
                     <div class="market-volumes">
@@ -62,7 +67,7 @@
                         <button class="secondary" type="submit" name="action" value="clear">Modifier l’échange</button>
                     </form>
                 {% elseif planet %}
-                    <form method="get" class="market-choose-origin">
+                    <form method="get" class="market-choose-origin" data-market-wizard-target="origin">
                         <label for="market-origin">Colonie de départ</label>
                         <select name="planet" id="market-origin">
                             {% for colony in colonies %}<option value="{{ colony.id }}" {{ colony.id == planet.id ? 'selected' : '' }}>{{ colony.name }} · {{ colony.coordinates }}</option>{% endfor %}
@@ -72,29 +77,37 @@
                     <form method="post" class="market-options">
                         <input type="hidden" name="_token" value="{{ csrf_token('market_' ~ member.id) }}">
                         <input type="hidden" name="planet" value="{{ planet.id }}">
+                        <fieldset data-market-wizard-target="step"><legend tabindex="-1">Fret à échanger</legend>
                         <div class="market-field">
                             <label for="market-pay">J’envoie</label>
-                            <select id="market-pay" name="pay">{% for key, label in labels %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select>
+                            <select id="market-pay" name="pay">{% for key, label in labels %}<option value="{{ key }}" {{ key == draft.pay|default('metal') ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select>
                         </div>
                         <div class="market-field">
                             <label for="market-receive">Je souhaite recevoir</label>
-                            <select id="market-receive" name="receive">{% for key, label in labels %}<option value="{{ key }}" {{ key == 'nano' ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select>
+                            <select id="market-receive" name="receive">{% for key, label in labels %}<option value="{{ key }}" {{ key == draft.receive|default('nano') ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select>
                         </div>
                         <div class="market-field">
                             <label for="market-quantity">Quantité à envoyer</label>
-                            <input id="market-quantity" name="quantity" type="number" min="1" max="{{ maxLot }}" step="1" required>
+                            <input id="market-quantity" name="quantity" type="number" min="1" max="{{ maxLot }}" step="1" value="{{ draft.quantity|default('') }}" required>
                         </div>
+                        <button type="button" class="secondary" hidden data-market-wizard-target="control" data-action="market-wizard#next">Continuer vers les cargos</button>
+                        </fieldset>
+                        <fieldset data-market-wizard-target="step"><legend tabindex="-1">Cargos de la colonie</legend>
                         <div class="market-field">
                             <label for="market-rank">Rang des cargos</label>
                             <select id="market-rank" name="rank">
-                                {% for key, label in ranks %}<option value="{{ key }}">{{ label }} · {{ cargoStocks[key]|default(0)|number_format(0, ',', ' ') }} disponibles</option>{% endfor %}
+                                {% for key, label in ranks %}<option value="{{ key }}" {{ key == draft.rank|default('basic') ? 'selected' : '' }}>{{ label }} · {{ cargoStocks[key]|default(0)|number_format(0, ',', ' ') }} disponibles</option>{% endfor %}
                             </select>
                         </div>
                         <div class="market-field">
                             <label for="market-cargos">Nombre de cargos</label>
-                            <input id="market-cargos" name="cargos" type="number" min="1" step="1" value="1" required>
+                            <input id="market-cargos" name="cargos" type="number" min="1" step="1" value="{{ draft.cargos|default(1) }}" required>
                         </div>
-                        <button type="submit" class="primary" name="action" value="quote">Calculer le devis</button>
+                        <div class="market-actions">
+                            <button type="button" class="secondary" hidden data-market-wizard-target="control" data-action="market-wizard#back">Revenir au fret</button>
+                            <button type="submit" class="primary" name="action" value="quote">Calculer le devis</button>
+                        </div>
+                        </fieldset>
                     </form>
                 {% else %}
                     <p>Il vous faut une colonie et au moins un cargo pour commercer.</p>

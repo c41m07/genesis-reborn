@@ -56,7 +56,7 @@ final class ReportSummaryRepository
         if ($ids === []) {
             return [];
         }
-        $rows = $this->em->createQueryBuilder()->select('r.id', 'r.createdAt', 'r.result', 'r.intelCategories', 'IDENTITY(r.target) AS planetId')->from(\App\Entity\EspionageReport::class, 'r')->join('r.sender', 'sender')->where('r.id IN (:ids)')->andWhere('sender = :viewer')->andWhere('sender.universe = :universe')->setParameter('ids', $ids)->setParameter('viewer', $viewer)->setParameter('universe', $viewer->universe)->getQuery()->getArrayResult();
+        $rows = $this->em->createQueryBuilder()->select('r.id', 'r.createdAt', 'r.result', 'r.intelCategories', 'IDENTITY(r.detectedBy) AS detectorId', 'IDENTITY(r.target) AS planetId')->from(\App\Entity\EspionageReport::class, 'r')->join('r.sender', 'sender')->where('r.id IN (:ids)')->andWhere("(sender = :viewer OR (r.detectedBy = :viewer AND r.result = 'detected'))")->andWhere('sender.universe = :universe')->setParameter('ids', $ids)->setParameter('viewer', $viewer)->setParameter('universe', $viewer->universe)->getQuery()->getArrayResult();
         if ($rows === []) {
             return [];
         }

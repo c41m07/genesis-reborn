@@ -30,14 +30,14 @@ final class PlayerCombatSimulationQueue
      * @param array $prepared Statistiques calculées avec le catalogue au moment de la demande.
      * @param array $rows Libellés et effectifs d’origine figés pour le bilan.
      */
-    public function enqueue(PlayerUniverse $owner, array $prepared, array $rows, int $seed, int $report = 0, int $ownSource = 0, int $pirateReport = 0): PlayerCombatSimulationJob
+    public function enqueue(PlayerUniverse $owner, array $prepared, array $rows, int $seed, int $report = 0, int $ownSource = 0, int $pirateReport = 0, string $ownCamp = 'attacker'): PlayerCombatSimulationJob
     {
         $player = $owner->player;
         if ($player === null || !$owner->isPlayerControlled()) {
             throw new \DomainException('Simulation inaccessible.');
         }
 
-        $accepted = $this->manager->transaction(function () use ($player, $owner, $prepared, $rows, $seed, $report, $ownSource, $pirateReport): ?PlayerCombatSimulationJob {
+        $accepted = $this->manager->transaction(function () use ($player, $owner, $prepared, $rows, $seed, $report, $ownSource, $pirateReport, $ownCamp): ?PlayerCombatSimulationJob {
             // Le verrou du joueur existe avant le premier calcul et couvre toutes ses appartenances.
             // Limiter une demande lourde en cours par compte empêche de remplir la file en changeant d’univers.
             $this->manager->lockCurrent($player);
@@ -53,7 +53,7 @@ final class PlayerCombatSimulationQueue
                     ? $job->scenario['prepared'] == $prepared
                     : $job->scenario['prepared']['forces'] == $prepared['forces'];
                 if ($job->membership->id === $owner->id && $job->scenario['seed'] === $seed
-                    && $existingPirateReport === $pirateReport && $sameScenario) {
+                    && ($job->scenario['own_camp'] ?? 'attacker') === $ownCamp && $existingPirateReport === $pirateReport && $sameScenario) {
                     return $job;
                 }
 
@@ -66,7 +66,7 @@ final class PlayerCombatSimulationQueue
             $job->publicKey = Uuid::v4()->toRfc4122();
             $job->dispatchToken = Uuid::v4()->toRfc4122();
             $job->status = 'pending';
-            $job->scenario = ['prepared' => $prepared, 'seed' => $seed, 'rows' => $rows, 'report' => $report, 'own_source' => $ownSource];
+            $job->scenario = ['prepared' => $prepared, 'seed' => $seed, 'rows' => $rows, 'report' => $report, 'own_source' => $ownSource, 'own_camp' => $ownCamp];
             if ($pirateReport > 0) {
                 // Ajouter la référence sans changer le format des jobs historiques.
                 $job->scenario['pirate_report'] = $pirateReport;

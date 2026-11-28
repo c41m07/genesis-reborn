@@ -1386,7 +1386,11 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertSame('detected',$report->result);
         $unread = self::getContainer()->get(\App\Repository\ReportNoticeRepository::class);
         self::assertSame(1, $unread->count($sender->currentPlayerUniverse));
-        self::assertSame(0, $unread->count($targetOwner->currentPlayerUniverse), 'L’alerte détectée ne crée pas un rapport pour la cible.');
+        self::assertSame(1, $unread->count($targetOwner->currentPlayerUniverse));
+        $reader = self::getContainer()->get(\App\Service\Fleet\EspionageReportReader::class);
+        self::assertSame($report, $reader->findVisible($targetOwner->currentPlayerUniverse, $report->id));
+        $service->arrive($spyFleet->id, $spyFleet->dispatchToken);
+        self::assertSame(1, $unread->count($targetOwner->currentPlayerUniverse));
         self::assertSame(95, $report->detectionChance);
         self::assertSame(2, $report->probesSent);
         if ($report->result === 'detected') {

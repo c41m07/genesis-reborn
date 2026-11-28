@@ -27,8 +27,7 @@ final readonly class ReportNoticeWriter
 
     public function espionageCreated(EspionageReport $report): void
     {
-        // La cible détectant les sondes reçoit éventuellement une alerte, pas ce rapport.
-        $this->record($report, $report->sender->universe->id, [$report->sender]);
+        $this->record($report, $report->sender->universe->id, [$report->sender, $report->detectedBy]);
     }
 
     public function transportCreated(TransportReport $report): void

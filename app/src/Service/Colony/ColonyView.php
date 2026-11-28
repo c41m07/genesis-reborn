@@ -243,14 +243,15 @@ final class ColonyView
                     $benefits = $this->insights->benefits($definition, $group, $maximum ? null : $target, $planet, $buildings, $technologies, $productionContext);
                     // Le résultat acquis reste celui du rang réellement installé. Un dernier niveau dans la
                     // file se présente comme une projection, jamais comme un bonus déjà actif.
-                    $queuedBenefit = $maximum && $queued !== null && $level < $maxLevel
-                        ? ($this->insights->benefits($definition, $group, $target - 1, $planet, $buildings, $technologies, $productionContext)[0] ?? null)
-                        : null;
+                    $queuedBenefits = $maximum && $queued !== null && $level < $maxLevel
+                        ? $this->insights->benefits($definition, $group, $target - 1, $planet, $buildings, $technologies, $productionContext)
+                        : [];
                     $cards[$group][] = [
                         'filter_category' => $this->filters->category($group, $base),
                         'details' => $this->details->describe($definition, $group, $target, $planet, $buildings, $technologies, $productionContext),
                         'benefits' => $benefits,
-                        'queued_benefit' => $queuedBenefit,
+                        'queued_benefit' => $queuedBenefits[0] ?? null,
+                        'queued_benefits' => $queuedBenefits,
                         'unlocks' => $this->insights->unlocks($group, $slug, $target, $tier, $membership->universe),
                         'definition' => $definition,
                         'tier' => $tier,

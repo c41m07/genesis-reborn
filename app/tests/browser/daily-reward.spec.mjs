@@ -72,6 +72,7 @@ test('Récompense quotidienne : kit T1, retrait au clavier, stockage plein et ac
         await page.setViewportSize({ width, height: 900 });
         const guide = await page.locator('.header-technology-goal').boundingBox();
         const frame = await bonus.boundingBox();
+        expect(Math.abs(frame.height - guide.height), `Bonus ${frame.height}px, guide ${guide.height}px à ${width}px`).toBeLessThanOrEqual(1);
         expect(frame.x).toBeGreaterThanOrEqual(guide.x + guide.width - 1);
         expect(frame.y).toBeLessThan(guide.y + guide.height);
         expect(frame.y + frame.height).toBeGreaterThan(guide.y);
@@ -90,6 +91,7 @@ test('Récompense quotidienne : kit T1, retrait au clavier, stockage plein et ac
         expect(fraction).toBeCloseTo(50, 0);
         const guide = await page.locator('.header-technology-goal').boundingBox();
         const frame = await bonus.boundingBox();
+        expect(Math.abs(frame.height - guide.height), `Bonus ${frame.height}px, guide ${guide.height}px à ${width}px`).toBeLessThanOrEqual(1);
         const top = Math.max(0, Math.min(guide.y, frame.y) - 4);
         await page.screenshot({ path: testInfo.outputPath('bonus-' + theme + '.png'), clip: {
             x: guide.x - 4, y: top, width: frame.x + frame.width - guide.x + 8,

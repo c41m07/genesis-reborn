@@ -1,13 +1,13 @@
 {% set tiers = {basic: 'Basique', intermediate: 'Intermédiaire', superior: 'Supérieur'} %}
-{% set unknown = camp == 'defender' and intel and group not in intel.known %}
+{% set unknown = camp == intel_camp and intel and group not in intel.known %}
 {% set title = camp == 'attacker' ? 'Attaquant' : 'Défenseur' %}
 {% set infoId = 'simulation-' ~ camp ~ '-' ~ group ~ '-source' %}
-{% if unknown or (camp == 'defender' and intel) or (camp == 'attacker' and own_source) %}
+{% if unknown or (camp == intel_camp and intel) or (camp == own_camp and own_source) %}
     <p class="simulation-wizard-source-status"
        id="{{ infoId }}"
        data-simulation-wizard-source-status
-       data-wizard-status="{{ unknown ? 'unknown' : (camp == 'attacker' ? 'own' : 'report') }}">
-        {{ camp == 'defender' ? sources[group] : (group == 'research' ? 'Niveaux repris de vos recherches dans cet univers.' : 'Quantités reprises des vaisseaux disponibles de votre colonie.') }}
+       data-wizard-status="{{ unknown ? 'unknown' : (camp == own_camp ? 'own' : 'report') }}">
+        {{ camp == intel_camp ? sources[group] : (group == 'research' ? 'Niveaux repris de vos recherches dans cet univers.' : 'Valeurs reprises de votre colonie.') }}
     </p>
 {% endif %}
 <table class="data-table">
@@ -31,7 +31,7 @@
                 <input id="{{ inputId }}" name="{{ name }}" type="number" min="0"
                        max="{{ group in ['research', 'fortress'] ? definition.max_level|default(25) : (group == 'defenses' ? defense_limit : fleet_limit) }}"
                        value="{{ value }}" {% if unknown %}placeholder="?"{% else %}required{% endif %}
-                       {% if intel and camp == 'defender' or camp == 'attacker' and own_source %}aria-describedby="{{ infoId }}"{% endif %}>
+                       {% if intel and camp == intel_camp or camp == own_camp and own_source %}aria-describedby="{{ infoId }}"{% endif %}>
             </td>
         {% endfor %}
         </tr>

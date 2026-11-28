@@ -26,18 +26,18 @@ final class DailyLeaderboard
     public function tick(): int
     {
         $now = $this->clock->now();
-        // Une ancienne formule est recalculée une fois, même si minuit n’est pas encore passé.
+        // Une ancienne formule est recalculée une fois, même pendant le créneau courant.
         $universes = $this->em->createQueryBuilder()
             ->select('u')->from(Universe::class, 'u')
             ->leftJoin(LeaderboardSnapshot::class, 's', 'WITH', 's.universe = u')
             ->where('u.status = :active')
             ->andWhere('(u.startsAt IS NULL OR u.startsAt <= :now)')
             ->andWhere('(u.endsAt IS NULL OR u.endsAt > :now)')
-            ->andWhere('(s.id IS NULL OR s.updatedAt < :midnight OR s.scoreVersion != :scoreVersion)')
+            ->andWhere('(s.id IS NULL OR s.updatedAt < :periodStart OR s.scoreVersion != :scoreVersion)')
             ->andWhere('EXISTS (SELECT m.id FROM App\Entity\PlayerUniverse m WHERE m.universe = u AND m.player IS NOT NULL AND m.forgottenAt IS NULL)')
             ->setParameter('active', 'active')
             ->setParameter('now', $now)
-            ->setParameter('midnight', self::midnight($now)->setTimezone(new \DateTimeZone('UTC')))
+            ->setParameter('periodStart', self::periodStart($now)->setTimezone(new \DateTimeZone('UTC')))
             ->setParameter('scoreVersion', LeaderboardService::SCORE_VERSION)
             ->getQuery()->getResult();
         foreach ($universes as $universe) {
@@ -90,7 +90,7 @@ final class DailyLeaderboard
             'guilds' => $guilds,
             'updated_at' => $snapshot->updatedAt,
             'comparison_at' => $snapshot->comparisonAt,
-            'next_update' => self::midnight($this->clock->now())->modify('+1 day'),
+            'next_update' => self::periodStart($this->clock->now())->modify('+12 hours'),
         ];
     }
 
@@ -120,9 +120,9 @@ final class DailyLeaderboard
 
     private function refresh(Universe $universe): LeaderboardSnapshot
     {
-        $midnight = self::midnight($this->clock->now());
+        $periodStart = self::periodStart($this->clock->now());
         $snapshot = $this->repo->one(LeaderboardSnapshot::class, ['universe' => $universe]);
-        if ($this->isCurrent($snapshot, $midnight)) {
+        if ($this->isCurrent($snapshot, $periodStart)) {
             return $snapshot;
         }
         // Rattraper les constructions terminées, même si le consommateur vient de redémarrer.
@@ -139,7 +139,7 @@ final class DailyLeaderboard
                 $this->manager->lock($snapshot);
             }
             $now = $this->clock->now();
-            if ($this->isCurrent($snapshot, self::midnight($now))) {
+            if ($this->isCurrent($snapshot, self::periodStart($now))) {
                 return $snapshot;
             }
             // En Alpha, le premier recalcul pondéré se compare aussi au dernier relevé brut.
@@ -192,15 +192,16 @@ final class DailyLeaderboard
         });
     }
 
-    private function isCurrent(?LeaderboardSnapshot $snapshot, \DateTimeImmutable $midnight): bool
+    private function isCurrent(?LeaderboardSnapshot $snapshot, \DateTimeImmutable $periodStart): bool
     {
         return $snapshot !== null
             && $snapshot->scoreVersion === LeaderboardService::SCORE_VERSION
-            && $snapshot->updatedAt >= $midnight;
+            && $snapshot->updatedAt >= $periodStart;
     }
 
-    private static function midnight(\DateTimeImmutable $at): \DateTimeImmutable
+    private static function periodStart(\DateTimeImmutable $at): \DateTimeImmutable
     {
-        return $at->setTimezone(new \DateTimeZone(self::TIMEZONE))->setTime(0, 0);
+        $local = $at->setTimezone(new \DateTimeZone(self::TIMEZONE));
+        return $local->setTime((int) $local->format('G') >= 12 ? 12 : 0, 0);
     }
 }

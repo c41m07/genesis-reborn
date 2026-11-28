@@ -1,5 +1,11 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Protection, détection, inventaire et classement — 28 novembre 2026
+
+Le propriétaire d’une colonie vaincue bénéficie de la protection de 24 h si ses pertes atteignent 70 % des vaisseaux militaires engagés. Le délai de sept jours entre activations subsiste. Envoyer une attaque contre un autre joueur met fin à la protection après pertes au départ, même si la flotte est rappelée. Chaque attaque ouvre à la cible une fenêtre de riposte de 24 h contre cet agresseur, indépendamment du rapport de points. Les autres conditions d’attaque s’appliquent.
+
+Une sonde détectée donne au propriétaire espionné un rapport privé. Une boîte de ressources ordinaire peut être consommée après acceptation du détail des pertes par ressource. Les boîtes de l’Avent conservent leur règle de dépassement de capacité. Le classement des joueurs et guildes se recalcule à minuit et midi, heure de Paris.
+
 ## Construction du laboratoire — 28 novembre 2026
 
 Le premier laboratoire Basique coûte 4 800 métal et 2 600 nano. Sa durée de base passe de 4 à 30 minutes pour suivre celle du chantier spatial à rang et niveau égaux. Les profils avancés continuent de privilégier les instruments en nano et introduisent l’antimatière. Ces paramètres s’appliquent aux nouveaux devis du catalogue par défaut ; les commandes déjà payées gardent leur coût et leur durée enregistrés.

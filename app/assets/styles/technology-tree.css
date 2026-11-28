@@ -161,6 +161,10 @@ body[data-theme=light] .technology-tree{--tech-met:#376647;--tech-missing:#79562
     .topbar .advent-shortcut { font-size: 11px; }
 }
 
+.topbar :is(.header-technology-goal, .advent-shortcut, .header-timed-boost) {
+    box-sizing: border-box;
+    block-size: 44px;
+}
 .topbar > .header-timed-boost {
     --boost-ink: #eedfff;
     --boost-muted: #d2bce9;
@@ -174,7 +178,7 @@ body[data-theme=light] .technology-tree{--tech-met:#376647;--tech-missing:#79562
     gap: 2px 8px;
     min-width: 0;
     max-width: 15rem;
-    min-height: 40px;
+    min-height: 44px;
     padding: 3px 9px;
     border: 1px solid #9676c5;
     border-radius: 7px;
@@ -196,6 +200,9 @@ body[data-theme=light] .technology-tree{--tech-met:#376647;--tech-missing:#79562
 }
 .boost-dial .icon { width: 15px; height: 15px; }
 .header-timed-boost strong { font-size: inherit; line-height: 1.1; }
+@media (max-width: 1400px) {
+    .header-timed-boost strong { font-size: 11px; }
+}
 .header-timed-boost .boost-time {
     display: flex;
     align-items: center;
@@ -206,7 +213,10 @@ body[data-theme=light] .technology-tree{--tech-met:#376647;--tech-missing:#79562
     white-space: nowrap;
 }
 .boost-time .icon { width: 11px; height: 11px; }
-.header-timed-boost noscript { grid-column: 1 / -1; }
+.header-timed-boost noscript { grid-column: 2; }
+@media (scripting: none) {
+    .header-timed-boost .boost-time { display: none; }
+}
 .topbar > .header-timed-boost[hidden] { display: none; }
 [data-theme="light"] .header-timed-boost {
     --boost-ink: #502578;

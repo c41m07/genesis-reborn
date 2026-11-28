@@ -55,7 +55,7 @@
                         <div><dt>{{ label }}</dt><dd>{{ empire_points[key]|quantity(0) }} <small>pts</small></dd></div>
                     {% endfor %}
                 </dl>
-                <p class="overview-points-change">Évolution : {{ evolution.value(ranking_changes is defined ? ranking_changes.score_changes.points : null, 'Points') }} points · Classement quotidien à 00 h (Europe/Paris)</p>
+                <p class="overview-points-change">Évolution : {{ evolution.value(ranking_changes is defined ? ranking_changes.score_changes.points : null, 'Points') }} points · Classement à 00 h et 12 h (Europe/Paris)</p>
             </div>
         </details>
     </div>

@@ -121,6 +121,10 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
   expect(new URLSearchParams((await request).postData()).get('wizard_action')).toBe('load_own');
   await expect(tab.locator('#sim-attacker-ships-fighter-basic')).toHaveValue('2');
   await expect(tab.locator('#sim-defender-ships-fighter-basic')).toHaveValue('18');
+  await tab.getByRole('button', {name:'Inverser l’attaquant et le défenseur'}).click();
+  await expect(tab.locator('#sim-attacker-ships-fighter-basic')).toHaveValue('18');
+  await expect(tab.locator('#sim-defender-ships-fighter-basic')).toHaveValue('2');
+  await expect(tab.locator('#simulation-source-own-title')).toContainText('Défenseur');
   await expect(tab.locator('#simulation-research')).toBeVisible();
   await expect(tab.locator('#simulation-defenses')).toBeVisible();
   await expect(tab.locator('#simulation-result')).toHaveCount(0);

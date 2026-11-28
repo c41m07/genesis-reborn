@@ -365,10 +365,10 @@ final class ResourceService
      * Dépose les ressources dans la capacité existante. Pour un dépôt indivisible, overflow
      * indique la place manquante et aucune ressource du lot n’est créditée si elle est insuffisante.
      */
-    public function deposit(Planet $planet, array $cargo, bool $allOrNothing = false): array
+    public function deposit(Planet $planet, array $cargo, bool $allOrNothing = false, ?array $acceptedOverflow = null): array
     {
         // Le retrait indivisible est transactionnel et doit s’appuyer sur les stocks courants.
-        $rows = $this->materialize($planet, lockStocks: $allOrNothing);
+        $rows = $this->materialize($planet, lockStocks: $allOrNothing || $acceptedOverflow !== null);
         $levels = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]);
         $delivered = [];
         $overflow = [];
@@ -380,8 +380,13 @@ final class ResourceService
             $delivered[$slug] = min((float) $amount, $room);
             $overflow[$slug] = max(0.0, (float) $amount - $delivered[$slug]);
         }
-        if ($allOrNothing && max([0.0, ...array_values($overflow)]) > 0.0) {
-            return ['delivered' => array_fill_keys(array_keys($delivered), 0.0), 'overflow' => $overflow];
+        if ($allOrNothing || $acceptedOverflow !== null) {
+            foreach ($overflow as $slug => $amount) {
+                $limit = $allOrNothing ? 0.0 : ($acceptedOverflow[$slug] ?? 0.0);
+                if ($amount > $limit) {
+                    return ['delivered' => array_fill_keys(array_keys($delivered), 0.0), 'overflow' => $overflow];
+                }
+            }
         }
         foreach ($delivered as $slug => $amount) {
             $rows[$slug]->currentStock += $amount;

@@ -44,3 +44,7 @@
     .market-options { grid-template-columns: minmax(0, 1fr); }
     .market-table { min-width: 20rem; }
 }
+
+.market-options fieldset { grid-column: 1 / -1; display: grid; gap: .75rem; min-width: 0; }
+.market-options [hidden], .market-choose-origin[hidden] { display: none; }
+.market-options legend { font-weight: 700; }

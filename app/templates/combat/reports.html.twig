@@ -28,6 +28,7 @@
     <label hidden data-report-selection-target="allLabel"><input type="checkbox" data-report-selection-target="all" data-action="change->report-selection#toggleAll">Tout sélectionner sur cette page</label>
     <p class="core-report-selection-count" role="status" data-report-selection-target="count"></p>
     <button type="submit" class="secondary" data-report-selection-target="submit">{{ archived ? 'Restaurer la sélection' : 'Archiver la sélection' }}</button>
+    <button type="submit" class="secondary" name="read" value="selection" data-report-selection-target="submit">Marquer la sélection comme lue</button>
     {% if archived %}
         <button type="submit" class="secondary report-remove-action" name="remove" value="selection" data-report-selection-target="submit"
                 data-controller="confirmation" data-action="confirmation#confirm"
@@ -62,7 +63,7 @@
     {% set title = espionageTitle(report.target.name) %}
     {% set location = report.target.coordinates() %}
     {% set occurredAt = report.createdAt %}
-    {% set state = report.result == 'detected' ? 'Sondes détectées' : report.intelCategories~' catégorie(s)' %}
+    {% set state = report.detectorId == membership.id ? 'Sonde adverse aperçue' : (report.result == 'detected' ? 'Sondes détectées' : report.intelCategories~' catégorie(s)') %}
     {% set stateClass = report.result == 'detected' ? 'is-risk' : '' %}
     {% set extra = '' %}
 {% elseif entry.kind == 'diplomatic' %}
