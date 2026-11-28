@@ -1,5 +1,9 @@
 # Roadmap Genesis Reborn
 
+## Reconnaissance pirate — 28 novembre 2026
+
+Le dossier de campagne indique le rang de la sonde avant son envoi et Flottes affiche le rang engagé. La recette couvre la priorité des trois rangs, le hangar vide et la confirmation après changement du stock. [Règle de départ](REGLES.md#rapports-de-campagne-et-fret-des-convois-pirates).
+
 ## Consommation électrique des extracteurs — 28 novembre 2026
 
 Le bilan de colonie et le calcul des stocks appliquent les [taux électriques par rang](REGLES.md#progression-économique-par-rang). La vérification compare la consommation affichée d’une mine de métal à 25/25/25 au débit du stock après une minute à plein rendement.

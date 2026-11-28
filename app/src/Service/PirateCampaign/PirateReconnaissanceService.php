@@ -73,7 +73,7 @@ final class PirateReconnaissanceService
     /**
      * Devis interne sans effet, appelé sous les mêmes verrous que le futur départ.
      * Les chiffres viennent du moteur, pas d'une requête ou du jeton d'interface.
-     * @return array{seconds:int,hydrogen:float,hold:float,planet:float}|null
+     * @return array{tier:string,seconds:int,hydrogen:float,hold:float,planet:float}|null
      */
     public function pilotScoutQuoteLocked(PlayerUniverse $membership, Planet $origin, SolarSystem $system, PiratePilotGate $admission): ?array
     {
@@ -83,8 +83,8 @@ final class PirateReconnaissanceService
         try {
             $this->vacations->assertCanSendFleet($membership);
             $probe = $this->lockProbe($membership, $origin);
-            $fuel = PirateCampaignFuel::scout($this->flightQuote($membership, $origin, $system));
-            $paid = $this->hold->departure($probe->fleet, ['probe' => ['basic' => 1]], $fuel->amountForDeparture());
+            $fuel = PirateCampaignFuel::scout($this->flightQuote($membership, $origin, $system, $probe->tier));
+            $paid = $this->hold->departure($probe->fleet, ['probe' => [$probe->tier => 1]], $fuel->amountForDeparture());
         } catch (\DomainException) {
             return null;
         }
@@ -96,7 +96,7 @@ final class PirateReconnaissanceService
             }
         }
 
-        return ['seconds' => $fuel->legSeconds, 'hydrogen' => $fuel->amountForDeparture(),
+        return ['tier' => $probe->tier, 'seconds' => $fuel->legSeconds, 'hydrogen' => $fuel->amountForDeparture(),
             'hold' => $paid['stored_fuel_used'], 'planet' => $paid['planet_fuel']];
     }
 
@@ -149,11 +149,10 @@ final class PirateReconnaissanceService
 
             $probe = $this->lockProbe($membership, $origin);
             $idle = $probe->fleet;
-            $flight = $this->flightQuote($membership, $origin, $system);
+            $flight = $this->flightQuote($membership, $origin, $system, $probe->tier);
             $budget = $admission !== null ? PirateCampaignFuel::scout($flight) : null;
-            // Comme un départ courant : au besoin prendre la réserve du hangar, jamais son fret,
-            // et vérifier que les coques restantes portent ce qui reste à quai.
-            $paid = $this->hold->departure($idle, ['probe' => ['basic' => 1]], $budget?->amountForDeparture() ?? 0.0);
+            // Le hangar doit encore pouvoir porter son fret après le retrait de cette sonde.
+            $paid = $this->hold->departure($idle, ['probe' => [$probe->tier => 1]], $budget?->amountForDeparture() ?? 0.0);
             $now = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
             // Doctrine et le relais travaillent à la seconde ; ne pas créer deux échéances différentes.
             $departedAt = $now->setTimestamp($now->getTimestamp());
@@ -165,7 +164,7 @@ final class PirateReconnaissanceService
             $encounter = $capture();
             $fuelReceipt = null;
             if ($budget !== null) {
-                $fuelReceipt = PirateScoutFuelReceipt::forDeparture($origin->id, $budget, $paid['stored_fuel_used'], $paid['planet_fuel']);
+                $fuelReceipt = PirateScoutFuelReceipt::forDeparture($origin->id, $budget, $paid['stored_fuel_used'], $paid['planet_fuel'], $probe->tier);
                 if ($fuelReceipt->fromPlanet > 0.0) {
                     $this->repository->lockedPlanetResources($origin);
                     $this->resources->consume($origin, ['hydrogen' => $fuelReceipt->fromPlanet]);
@@ -203,29 +202,29 @@ final class PirateReconnaissanceService
     private function lockProbe(PlayerUniverse $membership, Planet $origin): FleetShip
     {
         $idle = $this->repository->one(Fleet::class, ['playerUniverse' => $membership, 'homePlanet' => $origin, 'status' => 'idle']);
-        if ($idle === null) {
-            throw new \DomainException('Une Sonde de reconnaissance basique disponible est requise.');
-        }
-        $this->manager->lockCurrent($idle);
-        $probe = $this->repository->one(FleetShip::class, ['fleet' => $idle, 'slug' => 'probe', 'tier' => 'basic']);
-        if ($probe === null) {
-            throw new \DomainException('Une Sonde de reconnaissance basique disponible est requise.');
-        }
-        $this->manager->lockCurrent($probe);
-        if ($probe->quantity < 1) {
-            throw new \DomainException('Une Sonde de reconnaissance basique disponible est requise.');
+        if ($idle !== null) {
+            $this->manager->lockCurrent($idle);
+            foreach (GameCatalog::TIERS as $tier) {
+                $probe = $this->repository->one(FleetShip::class, ['fleet' => $idle, 'slug' => 'probe', 'tier' => $tier]);
+                if ($probe !== null) {
+                    $this->manager->lockCurrent($probe);
+                    if ($probe->quantity > 0) {
+                        return $probe;
+                    }
+                }
+            }
         }
 
-        return $probe;
+        throw new \DomainException('Une sonde disponible dans la colonie de départ est requise.');
     }
 
-    private function flightQuote(PlayerUniverse $membership, Planet $origin, SolarSystem $system): array
+    private function flightQuote(PlayerUniverse $membership, Planet $origin, SolarSystem $system, string $tier): array
     {
         $universe = $membership->universe;
         $config = $this->catalog->forUniverse($universe);
-        $ship = $this->catalog->getTierForUniverse($universe, 'ships', 'probe', 'basic');
+        $ship = $this->catalog->getTierForUniverse($universe, 'ships', 'probe', $tier);
         $ship['quantity'] = 1;
-        $ship['tier'] = 'basic';
+        $ship['tier'] = $tier;
         $levels = $this->repository->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $membership]);
         $ships = $this->technologyEffects->applyToShips([$ship], $levels, $universe);
 

@@ -373,20 +373,49 @@ final class PirateReconnaissanceTest extends KernelTestCase
         self::assertNull($this->service->statusFor($member, 'test-seconde')['composition']);
     }
 
-    public function testMissingBasicProbeDoesNotBorrowAnotherTier(): void
+    public function testScoutConfirmsTheLowestAvailableTierAndChargesItsOwnFlight(): void
     {
-        [$member, $home, $system, $stock] = $this->fixture();
-        $db = $this->em->getConnection();
-        $stock->tier = 'intermediate';
-        $this->em->flush();
-        try {
-            $this->service->launch($member, $home, $system, PirateDistressSite::inExistingSystem($member, $system), 'test-rang', $this->encounter());
-            self::fail('Une sonde d’un autre rang ne doit pas être utilisée.');
-        } catch (\DomainException $error) {
-            self::assertStringContainsString('basique', $error->getMessage());
+        [$member, $home, , $basic] = $this->fixture(omega: true);
+        $this->preparePilotFuel($home, $basic, 100.0);
+        $stocks = ['basic' => $basic];
+        foreach (['intermediate', 'superior'] as $tier) {
+            $probe = new FleetShip();
+            $probe->fleet = $basic->fleet;
+            $probe->slug = 'probe';
+            $probe->tier = $tier;
+            $probe->quantity = 1;
+            $stocks[$tier] = $probe;
+            $this->em->persist($probe);
         }
-        self::assertSame(3, (int) $db->fetchOne('SELECT quantity FROM fleet_ship WHERE id = ?', [$stock->id]));
-        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM pirate_reconnaissance'));
+        $this->em->flush();
+        [$command, $csrf] = $this->pilotScoutCommand($member);
+        foreach ($stocks as $tier => $stock) {
+            $plan = $command->preview($home, 1);
+            self::assertSame($tier, $plan['quote']['tier']);
+            $native = self::getContainer()->get(FleetService::class)->quote(
+                $member, $home, 'explore', $home->solarSystem->id, ['probe' => [$tier => 1]], 1.0,
+            );
+            self::assertSame($native['seconds'], $plan['quote']['seconds']);
+            self::assertSame($native['planet_fuel'], $plan['quote']['planet']);
+            $token = $csrf->getToken($plan['intent']->csrfId())->getValue();
+            $stock->quantity = 0;
+            $this->em->flush();
+            self::assertFalse($command->execute($home, 1, [], $token));
+            self::assertSame(100.0, $this->pilotGroundStock($home->id));
+        }
+        self::assertNull($command->preview($home, 1));
+        $stocks['superior']->quantity = 1;
+        $this->em->flush();
+        $plan = $command->preview($home, 1);
+        $token = $csrf->getToken($plan['intent']->csrfId())->getValue();
+        self::assertTrue($command->execute($home, 1, [], $token));
+        self::assertFalse($command->execute($home, 1, [], $token));
+        self::assertEqualsWithDelta(100.0 - $plan['quote']['planet'], $this->pilotGroundStock($home->id), 1e-9);
+        $this->em->refresh($stocks['superior']);
+        self::assertSame(0, $stocks['superior']->quantity);
+        $mission = $this->em->getRepository(PirateReconnaissance::class)->findOneBy(['membership' => $member]);
+        $this->em->refresh($mission);
+        self::assertSame(['origin' => $home->id, 'tier' => 'superior'], $mission->pilotScoutDepartureFor($member, $this->clock->now()));
     }
 
     #[DataProvider('outcomes')]

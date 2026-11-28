@@ -46,7 +46,7 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
   const galaxy = Number(queryIsolatedSql(project, 'SELECT galaxy_id FROM solar_system WHERE id=' + system));
   expect(Math.min(origin, member, system, galaxy)).toBeGreaterThan(0);
   runIsolatedSql(project, "INSERT INTO fleet (player_universe_id,home_planet_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token) SELECT owner_id,id,'idle','idle',1,'{}',0,0,0,0,'' FROM planet WHERE id=" + origin + " AND NOT EXISTS (SELECT 1 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle')");
-  runIsolatedSql(project, "INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'probe','basic',1 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle' ON DUPLICATE KEY UPDATE quantity=1");
+  runIsolatedSql(project, "INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'probe','superior',1 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle' ON DUPLICATE KEY UPDATE quantity=1");
   runIsolatedSql(project, "UPDATE planet_resource SET current_stock=5000 WHERE planet_id=" + origin + " AND resource_type='hydrogen'");
 
   await page.goto('/evenements/campagne-pirate');
@@ -67,7 +67,7 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
     const trigger = scout.getByRole('button', { name: /Composition et fret/ });
     await scout.hover();
     await expect(details).toBeVisible();
-    await expect(details.getByText(/sonde/i)).toBeVisible();
+    await expect(details.getByText(/Sonde d’exploration lointaine/)).toBeVisible();
     await expect(details.locator('dd')).toHaveText(['1']);
     await page.keyboard.press('Escape');
     await expect(details).toBeHidden();
@@ -95,7 +95,7 @@ test('Trafic de campagne : sonde privée dans Flottes, Vue générale et Galaxie
     await phone.goto(new URL('/flottes', page.url()).href);
     const scout = phone.locator('[data-campaign-kind="scout"]');
     await scout.getByRole('button', { name: /Composition et fret/ }).tap();
-    await expect(scout.getByRole('region', { name: 'Composition et fret' }).getByText(/sonde/i)).toBeVisible();
+    await expect(scout.getByRole('region', { name: 'Composition et fret' }).getByText(/Sonde d’exploration lointaine/)).toBeVisible();
   } finally {
     await nativeMobile.close();
   }

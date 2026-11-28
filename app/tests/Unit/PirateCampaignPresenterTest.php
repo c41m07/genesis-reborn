@@ -30,7 +30,7 @@ final class PirateCampaignPresenterTest extends TestCase
 
         $finale = $this->render($signal);
         self::assertStringContainsString($signal['narrative']['title'], $finale);
-        self::assertStringContainsString('une seule sonde basique', $finale);
+        self::assertStringContainsString('une seule sonde', $finale);
         self::assertStringContainsString('Elle sera perdue', $finale);
         self::assertStringNotContainsString('Flotte pirate révélée', $finale);
         self::assertStringNotContainsString('Estimation', $finale);

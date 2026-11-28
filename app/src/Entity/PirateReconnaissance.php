@@ -116,6 +116,12 @@ class PirateReconnaissance
      */
     public function pilotScoutOriginFor(PlayerUniverse $viewer, \DateTimeImmutable $at): ?int
     {
+        return $this->pilotScoutDepartureFor($viewer, $at)['origin'] ?? null;
+    }
+
+    /** @return array{origin:int,tier:string}|null */
+    public function pilotScoutDepartureFor(PlayerUniverse $viewer, \DateTimeImmutable $at): ?array
+    {
         if (!$this->belongsTo($viewer, $at) || $this->departedAt > $at
             || !is_array($this->preparedEncounter['pilot_scout_fuel'] ?? null)) {
             return null;
@@ -127,7 +133,7 @@ class PirateReconnaissance
         }
 
         return $this->dueAt->getTimestamp() - $this->departedAt->getTimestamp() === $receipt->seconds
-            ? $receipt->originId : null;
+            ? ['origin' => $receipt->originId, 'tier' => $receipt->tier] : null;
     }
 
     /** Preuve serveur, utile au prochain départ pilote, jamais incluse dans la projection de renseignement. */

@@ -1003,6 +1003,8 @@ L’effet combat est figé à l’ouverture du combat et ne s’applique pas aux
 
 ## Rapports de campagne et fret des convois pirates
 
+La reconnaissance pirate envoie une seule sonde de la colonie de départ, du premier rang disponible dans l’ordre Basique, Intermédiaire, Supérieur. Le devis indique le rang qui sera perdu. La durée et le carburant aller-retour dépendent de la sonde retenue. Sans sonde à quai, le départ est indisponible.
+
 Les rapports privés de reconnaissance et de combat de la campagne rejoignent les rubriques Espionnage et Combats. Chaque trajet du convoi produit un rapport de transport dans Économie. À la livraison, une boîte de ressources contient la totalité du fret annoncé, demi-unités comprises. Le joueur choisit une colonie de son univers à l’ouverture. Le joueur peut confirmer la perte du surplus si les entrepôts manquent de place. Une livraison déjà créditée avant cette évolution reste acquise et ne donne aucune boîte supplémentaire.
 
 ## Notifications des boîtes et des demandes d’orbite

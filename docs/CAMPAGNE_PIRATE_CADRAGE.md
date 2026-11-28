@@ -123,6 +123,8 @@ automatique depuis une page, une connexion ou un ancien univers.
   avec la participation et l'univers. Le poste est dans un système
   préexistant, découvert par cet empire ; la lecture n'expose pas sa
   destination, ses coordonnées, le jeton, les coûts ni l'ennemi en vol.
+Le comportement ci-dessous décrit la fondation initiale. Pour le choix de la sonde et son carburant dans la campagne ouverte aux joueurs, voir le [fonctionnement actuel](CAMPAGNE_PIRATE_PILOTE_LOCAL.md#renseignement-et-simulation).
+
 - Le départ explicite verrouille participation → univers → planète →
   hangar → stock précis, refuse une sonde d'un autre rang, et retire une
   seule sonde disponible en échange d'un vol privé. Un second départ de

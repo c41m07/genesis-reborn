@@ -1,5 +1,9 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Choix de la sonde de campagne pirate — 28 novembre 2026
+
+Le propriétaire valide l’envoi d’une sonde de rang supérieur en l’absence de rang inférieur dans la colonie active. La reconnaissance utilise dans l’ordre T1, T2 puis T3. Le devis et le vol reprennent le rang choisi, sa durée et son coût en hydrogène. Les départs antérieurs utilisaient une sonde Basique.
+
 ## Consommation électrique des extracteurs — 28 novembre 2026
 
 Le propriétaire valide une croissance électrique composée de 0,125 % par niveau Basique, 0,0625 % par niveau Intermédiaire et 0,03125 % par niveau Supérieur. Elle concerne les extracteurs de métal, de nano, d’hydrogène et d’antimatière. Les rangs avancés gagnent ainsi en rendement par unité produite. Le piège conserve son coût de 4 hydrogènes par antimatière produite. La règle s’applique aux niveaux installés lors du prochain calcul, y compris pour la période écoulée depuis la dernière synchronisation.

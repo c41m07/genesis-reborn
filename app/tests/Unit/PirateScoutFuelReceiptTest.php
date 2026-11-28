@@ -17,6 +17,9 @@ final class PirateScoutFuelReceiptTest extends TestCase
         ]);
         $receipt = PirateScoutFuelReceipt::forDeparture(17, $native, 0.4, 1.2 - 0.4);
         $decoded = json_decode(json_encode($receipt->checkpoint(), JSON_THROW_ON_ERROR), true, flags: JSON_THROW_ON_ERROR);
+        $historical = $decoded;
+        unset($historical['tier']);
+        self::assertSame('basic', PirateScoutFuelReceipt::read($historical)->tier);
         self::assertSame(17, $receipt->originId);
         self::assertSame(45, $receipt->seconds);
         self::assertSame(1.2, $receipt->reserved);
