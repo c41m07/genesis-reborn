@@ -73,8 +73,16 @@ final class WikiManual
     public function reference(string $source): ?array
     {
         // L’identifiant public ne devient jamais un chemin de fichier fourni par le visiteur.
-        $file = match ($source) { 'regles'=>'REGLES.md', 'decisions'=>'DECISIONS.md', default=>null };
-        if ($file === null) return null;
+        $reference = match ($source) {
+            'regles' => ['REGLES.md', 'Règles de référence'],
+            'decisions' => ['DECISIONS.md', 'Décisions du projet'],
+            'editeurs' => ['EDITEURS_ADMIN.md', 'Guide des éditeurs'],
+            default => null,
+        };
+        if ($reference === null) {
+            return null;
+        }
+        [$file, $title] = $reference;
         $parts = preg_split('/^(## .+)$/m', $this->read($file), -1, PREG_SPLIT_DELIM_CAPTURE);
         $intro = array_shift($parts);
         $blocks = [];
@@ -82,7 +90,7 @@ final class WikiManual
             $blocks[] = ['title'=>substr($parts[$index], 3), 'text'=>$parts[$index + 1] ?? ''];
         }
         return [
-            'referenceTitle'=>$source === 'regles' ? 'Règles de référence' : 'Décisions du projet',
+            'referenceTitle'=>$title,
             'referenceIntro'=>$intro, 'referenceBlocks'=>$blocks,
         ];
     }

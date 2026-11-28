@@ -152,8 +152,8 @@ résultats avec extraits et liens de lecture. Chaque destination est rendue par 
 serveur, avec un titre propre et le même sommaire. Aucune section de manuel n’est
 masquée pour simuler une page. La recherche reste utilisable sans JavaScript.
 
-`WikiManual` lit les sources uniques `docs/wiki.json`, `docs/REGLES.md` et
-`docs/DECISIONS.md`. Le JSON fini du manuel est décodé une fois par préparation ;
+`WikiManual` lit les sources uniques `docs/wiki.json`, `docs/REGLES.md`,
+`docs/DECISIONS.md` et `docs/EDITEURS_ADMIN.md`. La référence `/wiki/references/editeurs` exige le rôle administrateur, y compris en accès direct. Le JSON fini du manuel est décodé une fois par préparation ;
 seules les métadonnées du sommaire et le contenu demandé vont au template.
 L’accueil ne transmet aucun corps complet : `chapters(true)` ajoute seulement
 un aperçu du premier paragraphe, borné à 160 caractères plus une éventuelle

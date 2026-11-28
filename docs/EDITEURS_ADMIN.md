@@ -1,5 +1,7 @@
 # Éditer le jeu depuis la console
 
+Dans le jeu, ouvrez Wiki → Guide des éditeurs. Le même guide est accessible depuis Animation → Contenus du jeu avec un compte administrateur.
+
 ## Animation → Contenus du jeu
 
 Choisir **Titre de commandant**, **Bannière de profil**, **Bandeau de page** ou **Étape du guide**. Enregistrer le brouillon pour voir son aperçu. **Publier cette version** la rend disponible immédiatement, ou à la date UTC saisie. L’historique donne l’auteur et la portée de chaque version. Ouvrir une ancienne version, la reprendre en brouillon puis la publier pour restaurer un texte ou une illustration.

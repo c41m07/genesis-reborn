@@ -15,6 +15,7 @@ docs/**
 !docs/REGLES.md
 !docs/DECISIONS.md
 !docs/wiki.json
+!docs/EDITEURS_ADMIN.md
 .demo-credentials
 *.tar
 *.sql

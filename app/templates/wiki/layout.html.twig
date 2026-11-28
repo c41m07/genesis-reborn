@@ -11,6 +11,7 @@
     <a href="{{ path('app_wiki_search',query ? {q:query} : {}) }}"{% if app.request.attributes.get('_route')=='app_wiki_search' %} aria-current="page"{% endif %}>Recherche globale</a>
     <a href="{{ path('app_wiki_reference',{source:'regles'}) }}"{% if source=='regles' %} aria-current="page"{% endif %}>Règles de référence</a>
     <a href="{{ path('app_wiki_reference',{source:'decisions'}) }}"{% if source=='decisions' %} aria-current="page"{% endif %}>Décisions du projet</a>
+    {% if is_granted('ROLE_ADMIN') %}<a href="{{ path('app_wiki_reference',{source:'editeurs'}) }}"{% if source=='editeurs' %} aria-current="page"{% endif %}>Guide des éditeurs</a>{% endif %}
   </nav>
   <div class="wiki-layout">
     <aside id="wiki-summary" class="wiki-navigation" aria-label="Navigation des chapitres" tabindex="-1">
