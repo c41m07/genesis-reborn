@@ -8,7 +8,8 @@ use App\Entity\{Fleet, GuildCommandConsent, GuildCommandPlan, GuildHall, GuildHa
 use App\Manager\GameManager;
 use App\Repository\GameRepository;
 use App\Service\Colony\ActionGuard;
-use App\Service\Player\RelationResolver;
+use App\Service\Combat\CombatEventService;
+use App\Service\Player\{RelationResolver, VacationCalendar};
 use Psr\Clock\ClockInterface;
 
 /** Planifier ne dépense ni carburant ni vaisseaux. Le départ doit revérifier les accords. */
@@ -20,6 +21,8 @@ final readonly class GuildCommandPlanning
         private GuildHallAccess $access,
         private ActionGuard $guard,
         private RelationResolver $relations,
+        private VacationCalendar $vacations,
+        private CombatEventService $combat,
         private ClockInterface $clock,
     ) {
     }
@@ -59,12 +62,8 @@ final readonly class GuildCommandPlanning
                 return false;
             }
             $plan = $this->lockOpenPlan($hall, $planId);
-            [$target, $enemyGuildId] = $this->lockEnemyTarget($hall, $plan->targetColonyId);
-            if ($plan->enemyGuildId !== $enemyGuildId || $plan->targetOwnerId !== $target->owner->id) {
-                throw new \DomainException('La cible du plan a changé. Un nouveau plan est nécessaire.');
-            }
-
-            $fleet = $this->lockPrivateBerth($actor, $hall, $fleetId);
+            $this->lockPlanTarget($hall, $plan);
+            $fleet = $this->lockPrivateBerth($actor->id, $hall, $fleetId);
             $existing = $this->repository->one(GuildCommandConsent::class, ['plan' => $plan, 'fleetId' => $fleetId]);
             if ($existing instanceof GuildCommandConsent) {
                 if ($existing->matchesBerth($fleet)) {
@@ -97,6 +96,79 @@ final readonly class GuildCommandPlanning
 
             return $consent->withdraw($actor->id, $this->clock->now());
         });
+    }
+
+
+    /**
+     * Prépare le départ sous la transaction de l’appelant. Aucun ordre n’est
+     * lancé ici : les devis, les réserves, l’état et l’outbox doivent être
+     * écrits par l’appelant avant de rendre les verrous.
+     *
+     * @param list<int> $fleetIds
+     * @return array{plan:GuildCommandPlan,hall:GuildHall,target:Planet,fleets:list<Fleet>}|null
+     */
+    public function lockLaunch(PlayerUniverse $actor, int $guildId, int $hallId, int $planId, array $fleetIds, string $key): ?array
+    {
+        if ($fleetIds === [] || !array_is_list($fleetIds)) {
+            throw new \DomainException('Sélectionnez les flottes engagées qui doivent partir.');
+        }
+        foreach ($fleetIds as $id) {
+            if (!is_int($id) || $id < 1) {
+                throw new \DomainException('Sélection de flottes invalide.');
+            }
+        }
+        sort($fleetIds, SORT_NUMERIC);
+        if ($fleetIds !== array_values(array_unique($fleetIds))) {
+            throw new \DomainException('La même flotte ne peut pas partir deux fois.');
+        }
+        $hall = $this->access->lockCommandSortie($actor, $guildId, $hallId);
+        $this->assertBuilt($hall);
+        if (!$this->guard->receipt($actor, $key)) {
+            return null;
+        }
+        $plan = $this->lockOpenPlan($hall, $planId);
+        $target = $this->lockPlanTarget($hall, $plan);
+        $at = $this->clock->now();
+        $owners = [];
+        $fleets = [];
+        foreach ($fleetIds as $fleetId) {
+            $consent = $this->repository->one(GuildCommandConsent::class, ['plan' => $plan, 'fleetId' => $fleetId]);
+            if (!$consent instanceof GuildCommandConsent) {
+                throw new \DomainException('Une flotte sélectionnée n’a pas été engagée pour cette sortie.');
+            }
+            $fleet = $this->lockPrivateBerth($consent->ownerId, $hall, $fleetId);
+            $this->manager->lockCurrent($consent);
+            if (!$consent->matchesBerth($fleet)) {
+                throw new \DomainException('Un accord a changé. Vérifiez la sélection avant de lancer la sortie.');
+            }
+
+            // L’univers déjà verrouillé sérialise les changements de guilde.
+            // Ne pas verrouiller une autre participation après ce verrou.
+            if (!isset($owners[$consent->ownerId])) {
+                $owner = $fleet->playerUniverse;
+                if (!$owner->isPlayerControlled() || $this->relations->guild($owner)?->id !== $guildId) {
+                    throw new \DomainException('Un propriétaire n’est plus membre de cette guilde.');
+                }
+                $this->vacations->assertCanSendFleet($owner);
+                if (!$this->combat->canAttack($owner, $target, $at)) {
+                    throw new \DomainException('La protection de la cible empêche au moins une flotte de participer.');
+                }
+                $owners[$consent->ownerId] = true;
+            }
+            $fleets[] = $fleet;
+        }
+
+        return ['plan' => $plan, 'hall' => $hall, 'target' => $target, 'fleets' => $fleets];
+    }
+
+    private function lockPlanTarget(GuildHall $hall, GuildCommandPlan $plan): Planet
+    {
+        [$target, $enemyGuildId] = $this->lockEnemyTarget($hall, $plan->targetColonyId);
+        if ($plan->enemyGuildId !== $enemyGuildId || $plan->targetOwnerId !== $target->owner->id) {
+            throw new \DomainException('La cible du plan a changé. Un nouveau plan est nécessaire.');
+        }
+
+        return $target;
     }
 
     private function assertBuilt(GuildHall $hall): void
@@ -140,15 +212,15 @@ final readonly class GuildCommandPlanning
         return [$target, $enemy->id];
     }
 
-    private function lockPrivateBerth(PlayerUniverse $actor, GuildHall $hall, int $id): Fleet
+    private function lockPrivateBerth(int $ownerId, GuildHall $hall, int $id): Fleet
     {
         $fleet = $this->repository->find(Fleet::class, $id);
-        if (!$fleet instanceof Fleet || $fleet->playerUniverse->id !== $actor->id) {
+        if (!$fleet instanceof Fleet || $fleet->playerUniverse->id !== $ownerId) {
             throw new \DomainException('Flotte du Centre inaccessible.');
         }
         $this->manager->lockCurrent($fleet);
         $receipt = $this->repository->one(GuildHallConvoy::class, ['fleet' => $fleet]);
-        if ($fleet->playerUniverse->id !== $actor->id || $fleet->homePlanet->id === null
+        if ($fleet->playerUniverse->id !== $ownerId || $fleet->homePlanet->id === null
             || $fleet->status !== GuildCommandBerth::DOCKED || $fleet->mission !== GuildHallConvoy::MISSION
             || $fleet->destinationSystem?->id !== $hall->solarSystem?->id || $fleet->dispatchToken === ''
             || !$receipt instanceof GuildHallConvoy || !$receipt->commandStation || $receipt->shipDonation
