@@ -61,5 +61,32 @@ final class GuildHallFlightTest extends TestCase
         self::assertEquals(30.0, $delivery['movement']['one_way_fuel']);
         self::assertEquals(60.0, $delivery['movement']['total_fuel']);
         self::assertEquals(3.0, $navigation->traveled($delivery['navigation'], 1.0)['point']['position']);
+
+        // Le même hall sert à un aller depuis 0, mais la colonie privée
+        // n'est ni ce point 0 ni le système cible du retour standard.
+        $origin->id = 11;
+        $otherSystem = clone $system;
+        $otherSystem->id = 6;
+        $otherSystem->coordX = 6;
+        $target = new Planet();
+        $target->id = 12;
+        $target->solarSystem = $otherSystem;
+        $target->position = 6;
+        $routes = $flight->quoteCommandSortie($hall, $origin, $target, $ships, 1.0, 1.0, 'proportional', $hall->placedAt);
+        self::assertSame([5, 1, 3, 3, 0], $routes['outbound']['navigation']['origin']);
+        self::assertSame([6, 1, 6, 3, 6], $routes['outbound']['navigation']['target']);
+        self::assertSame($routes['outbound']['navigation']['target'], $routes['hall_return']['navigation']['origin']);
+        self::assertSame($routes['outbound']['navigation']['target'], $routes['colony_return']['navigation']['origin']);
+        self::assertSame([5, 1, 3, 3, 0], $routes['hall_return']['navigation']['target']);
+        self::assertSame([5, 1, 3, 3, 3], $routes['colony_return']['navigation']['target']);
+        self::assertEqualsWithDelta(
+            $routes['hall_return']['movement']['one_way_fuel'] - 30.0,
+            $routes['colony_return']['movement']['one_way_fuel'],
+            1.0e-8,
+        );
+        self::assertEquals(3.0, $navigation->traveled($routes['colony_return']['navigation'], 1.0)['point']['position']);
+
+        $this->expectException(\DomainException::class);
+        $flight->quoteCommandSortie($hall, $origin, $origin, $ships, 1.0, 1.0, 'proportional', $hall->placedAt);
     }
 }

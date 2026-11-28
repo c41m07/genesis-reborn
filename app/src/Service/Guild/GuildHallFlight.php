@@ -60,6 +60,43 @@ final readonly class GuildHallFlight
         return $this->quoteBetween($hallPoint, $colonyPoint, $ships, $ratio, $timeMultiplier, $fuelPolicy, $now);
     }
 
+    /**
+     * Les routes sont orientées dans le sens réel du vol. Le retour de combat
+     * au Hall et le repli direct vers la colonie d’origine ne sont pas le
+     * même trajet. La colonie de rattachement de la flotte reste inchangée.
+     *
+     * @param list<array<string,mixed>> $ships
+     * @return array{
+     *     outbound:array{movement:array<string,mixed>,navigation:array<string,mixed>},
+     *     hall_return:array{movement:array<string,mixed>,navigation:array<string,mixed>},
+     *     colony_return:array{movement:array<string,mixed>,navigation:array<string,mixed>}
+     * }
+     */
+    public function quoteCommandSortie(
+        GuildHall $hall,
+        Planet $home,
+        Planet $target,
+        array $ships,
+        float $ratio,
+        float $timeMultiplier,
+        string $fuelPolicy,
+        \DateTimeImmutable $now,
+    ): array {
+        [$homePoint, $hallPoint] = $this->endpoints($home, $hall);
+        [$targetPoint] = $this->endpoints($target, $hall);
+        if ($target->id === null || $home->id === null || $target->id === $home->id) {
+            throw new \DomainException('Choisissez une autre colonie pour la sortie du Centre.');
+        }
+
+        // Les trois devis restent distincts : le carburant dû ne doit jamais
+        // être calculé en redoublant l’aller lorsqu’un repli direct est retenu.
+        return [
+            'outbound' => $this->quoteBetween($hallPoint, $targetPoint, $ships, $ratio, $timeMultiplier, $fuelPolicy, $now),
+            'hall_return' => $this->quoteBetween($targetPoint, $hallPoint, $ships, $ratio, $timeMultiplier, $fuelPolicy, $now),
+            'colony_return' => $this->quoteBetween($targetPoint, $homePoint, $ships, $ratio, $timeMultiplier, $fuelPolicy, $now),
+        ];
+    }
+
     /** @return array{array{int,int,int,int,int},array{int,int,int,int,int}} */
     private function endpoints(Planet $colony, GuildHall $hall): array
     {
