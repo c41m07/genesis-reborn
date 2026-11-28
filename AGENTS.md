@@ -93,6 +93,9 @@ Partir des cibles du [Makefile](Makefile). Choisir les lignes qui correspondent 
 
 ## Organisation des pages et de la navigation
 
+- Pour planifier une tâche courante, viser 4 à 5 clics maximum depuis l’écran où le joueur commence jusqu’à la validation, sur ordinateur comme sur mobile. Au-delà de 5, chercher d’abord les détours à supprimer. Conserver les confirmations nécessaires, notamment pour les actions irréversibles.
+- Dans tous les menus du jeu, permettre de changer de planète en 2 à 3 clics maximum, sélecteur compris. Garder la rubrique et l’onglet actifs en affichant les données de la nouvelle colonie, sans redirection automatique vers la vue générale. Si une fiche est propre à l’ancienne planète, ouvrir la liste correspondante de la même rubrique.
+
 - Pour tout ajout ou changement d’interface, choisir explicitement entre page dédiée, onglet, filtre, ancre et contenu dépliable selon l’objectif du joueur, le volume de contenu, la fréquence d’utilisation et les besoins sur mobile. Expliquer brièvement les choix structurants dans le suivi du lot.
 - Privilégier une page dédiée pour une tâche autonome, une gestion comportant ses propres formulaires ou un contenu conséquent consulté indépendamment. Lui donner une URL stable, un titre précis et une navigation cohérente ; vérifier l’accès direct, le rechargement et le retour arrière. Ne pas simuler cette séparation en masquant simplement les sections d’une grande page avec JavaScript.
 - Réserver les onglets aux vues proches d’un même sujet, et les filtres à la sélection ou à la présentation d’un même ensemble de données. Un lien présenté comme un onglet peut mener à une vraie page ; son apparence ne détermine pas l’organisation du contenu.
