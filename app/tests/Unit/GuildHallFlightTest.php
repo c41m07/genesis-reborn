@@ -86,6 +86,28 @@ final class GuildHallFlightTest extends TestCase
         );
         self::assertEquals(3.0, $navigation->traveled($routes['colony_return']['navigation'], 1.0)['point']['position']);
 
+        self::assertEqualsWithDelta(
+            $routes['outbound']['navigation']['one_way_fuel'] + $routes['hall_return']['navigation']['one_way_fuel'],
+            $routes['reserved_hall_fuel'],
+            1.0e-8,
+        );
+
+        // Une origine privée dans un autre système peut produire un repli
+        // plus cher que le retour au Hall : le devis doit le couvrir aussi.
+        $origin->solarSystem = clone $system;
+        $origin->solarSystem->id = 7;
+        $origin->solarSystem->coordX = 20;
+        $routes = $flight->quoteCommandSortie($hall, $origin, $target, $ships, 1.0, 1.0, 'proportional', $hall->placedAt);
+        self::assertGreaterThan(
+            $routes['hall_return']['navigation']['one_way_fuel'],
+            $routes['colony_return']['navigation']['one_way_fuel'],
+        );
+        self::assertEqualsWithDelta(
+            $routes['outbound']['navigation']['one_way_fuel'] + $routes['colony_return']['navigation']['one_way_fuel'],
+            $routes['reserved_hall_fuel'],
+            1.0e-8,
+        );
+
         $this->expectException(\DomainException::class);
         $flight->quoteCommandSortie($hall, $origin, $origin, $ships, 1.0, 1.0, 'proportional', $hall->placedAt);
     }

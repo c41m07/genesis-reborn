@@ -69,7 +69,8 @@ final readonly class GuildHallFlight
      * @return array{
      *     outbound:array{movement:array<string,mixed>,navigation:array<string,mixed>},
      *     hall_return:array{movement:array<string,mixed>,navigation:array<string,mixed>},
-     *     colony_return:array{movement:array<string,mixed>,navigation:array<string,mixed>}
+     *     colony_return:array{movement:array<string,mixed>,navigation:array<string,mixed>},
+     *     reserved_hall_fuel:float
      * }
      */
     public function quoteCommandSortie(
@@ -90,10 +91,20 @@ final readonly class GuildHallFlight
 
         // Les trois devis restent distincts : le carburant dû ne doit jamais
         // être calculé en redoublant l’aller lorsqu’un repli direct est retenu.
+        $outbound = $this->quoteBetween($hallPoint, $targetPoint, $ships, $ratio, $timeMultiplier, $fuelPolicy, $now);
+        $hallReturn = $this->quoteBetween($targetPoint, $hallPoint, $ships, $ratio, $timeMultiplier, $fuelPolicy, $now);
+        $colonyReturn = $this->quoteBetween($targetPoint, $homePoint, $ships, $ratio, $timeMultiplier, $fuelPolicy, $now);
+
         return [
-            'outbound' => $this->quoteBetween($hallPoint, $targetPoint, $ships, $ratio, $timeMultiplier, $fuelPolicy, $now),
-            'hall_return' => $this->quoteBetween($targetPoint, $hallPoint, $ships, $ratio, $timeMultiplier, $fuelPolicy, $now),
-            'colony_return' => $this->quoteBetween($targetPoint, $homePoint, $ships, $ratio, $timeMultiplier, $fuelPolicy, $now),
+            'outbound' => $outbound,
+            'hall_return' => $hallReturn,
+            'colony_return' => $colonyReturn,
+            // Le Hall finance un seul retour. Ce devis ne puise jamais dans
+            // la réserve privée déjà embarquée pour le rappel depuis le Hall.
+            'reserved_hall_fuel' => $outbound['navigation']['one_way_fuel'] + max(
+                $hallReturn['navigation']['one_way_fuel'],
+                $colonyReturn['navigation']['one_way_fuel'],
+            ),
         ];
     }
 
