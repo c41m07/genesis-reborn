@@ -249,7 +249,7 @@ body.authenticated.ui-refined .colony-redesign .planet-index-shortcuts a {
 body.authenticated.ui-refined .colony-redesign .colony-comparison {
     width: 100%;
     min-width: 0;
-    table-layout: fixed;
+    table-layout: auto;
 }
 
 .colony-redesign .colony-comparison caption {
@@ -502,7 +502,7 @@ body.authenticated.ui-refined .colony-redesign.player-planets-board .empty-state
     body.authenticated.ui-refined .colony-redesign.player-planets-board .planet-index-grid { grid-template-columns:minmax(0,1fr); }
 }
 .player-planets-board .colony-storage-percent { display:block; margin-top:.25rem; color:var(--text); }
-.player-planets-board .colony-storage-estimate { display:block; color:var(--muted); }
+.player-planets-board .colony-storage-estimate { display:block; color:var(--muted); white-space:nowrap; }
 .player-planets-board .colony-comparison-rate[data-trend="1"] { color:var(--green); }
 .player-planets-board .colony-comparison-rate[data-trend="-1"] { color:#ffabab; }
 body[data-theme="light"] .player-planets-board .colony-comparison-rate[data-trend="-1"] { color:#9b2839; }

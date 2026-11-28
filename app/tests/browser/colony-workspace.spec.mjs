@@ -281,6 +281,18 @@ test('Stocks des colonies : remplissage, solde net et décompte au rythme actuel
   await expect(cell('antimatter').getByRole('timer')).toHaveText('Stock stable');
   const timer = cell('metal').getByRole('timer');
   await expect(timer).toContainText('Plein dans');
+  for (const width of [1920, 1617, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    const fits = await page.locator('.colony-storage-estimate').evaluateAll(timers => timers.every(timer => {
+      const range = document.createRange();
+      range.selectNodeContents(timer);
+      const lines = range.getClientRects();
+      const cell = timer.closest('td').getBoundingClientRect();
+      return lines.length === 1 && lines[0].left >= cell.left && lines[0].right <= cell.right;
+    }));
+    expect(fits).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
   const initial = await timer.textContent();
   await expect(timer).not.toHaveText(initial);
   const capacity = Number(await cell('metal').getAttribute('data-resource-cap-value'));
