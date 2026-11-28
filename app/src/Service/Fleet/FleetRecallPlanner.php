@@ -1,10 +1,11 @@
 <?php
 namespace App\Service\Fleet;
 
-use App\Entity\{AdminAuditLog,CombatParticipant,Fleet,FleetShip,Planet,PlayerBoost,PlayerTechnology,PlayerUniverse};
+use App\Entity\{AdminAuditLog,CombatParticipant,Fleet,FleetShip,GuildHallConvoy,Planet,PlayerBoost,PlayerTechnology,PlayerUniverse};
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Combat\TechnologyEffectCalculator;
+use App\Service\Guild\GuildHallFlight;
 
 final class FleetRecallPlanner
 {
@@ -27,7 +28,21 @@ final class FleetRecallPlanner
     public function plan(PlayerUniverse $member,Fleet $fleet,?int $returnPlanetId,\DateTimeImmutable $now): array
     {
         if(!in_array($fleet->status,['traveling','orbiting','orbit_pending'],true)) throw new \DomainException('Rappel indisponible pour un retour, un combat ou une occupation.');
-        if(!in_array($fleet->mission,DestinationCatalogue::MISSIONS,true)) throw new \DomainException('Mission non rappelable.');
+        $hallConvoy = $fleet->mission === GuildHallConvoy::MISSION;
+        if ($hallConvoy) {
+            $receipt = $this->repo->one(GuildHallConvoy::class, ['fleet' => $fleet]);
+            $target = $fleet->navigation['target'] ?? null;
+            // N’ouvrir le rappel qu’au départ attesté. Une opération interne n’entre
+            // pas dans le catalogue des missions publiques ; ne pas reconstruire sa route à 10.
+            if ($fleet->status !== 'traveling' || !$receipt instanceof GuildHallConvoy
+                || !$receipt->canSettle($fleet->dispatchToken) || $fleet->destinationSystem === null || !is_array($target)
+                || ($target[0] ?? null) !== $fleet->destinationSystem->id
+                || ($target[4] ?? null) !== GuildHallFlight::DOCK_POSITION) {
+                throw new \DomainException('Le trajet documenté ne permet pas de rappeler ce convoi.');
+            }
+        } elseif (!in_array($fleet->mission, DestinationCatalogue::MISSIONS, true)) {
+            throw new \DomainException('Mission non rappelable.');
+        }
         if($fleet->arrivalAt && $fleet->arrivalAt<=$now) throw new \DomainException('L’échéance est atteinte : l’arrivée doit être résolue avant toute autre action.');
         if($fleet->status!=='orbit_pending' && (!$fleet->arrivalAt || !$fleet->departureAt)) throw new \DomainException('Chronologie insuffisante pour un rappel fiable.');
         foreach($this->repo->all(CombatParticipant::class,['fleet'=>$fleet]) as $participant)

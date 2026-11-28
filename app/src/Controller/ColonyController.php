@@ -10,7 +10,7 @@ use App\Service\Colony\{CatalogueInsights, CatalogueItemLink, ColonyComparisonAc
 use App\Service\Queue\QueueService;
 use App\Service\Player\{FirstStepsView, LeaderboardService, PreferencesService, RelationResolver};
 use App\Service\Catalog\GameCatalog;
-use App\Service\Guild\GuildHallFunding;
+use App\Service\Guild\{GuildHallFunding, GuildRelayTraffic};
 use App\Service\Market\{MarketTerms, MarketTraffic};
 use App\Service\Fleet\{GalaxyGeometry, MovementCalculator};
 use App\Manager\GameManager;
@@ -37,6 +37,7 @@ final class ColonyController extends AbstractController
         private MovementCalculator $movementCalculator,
         private GuildHallRepository $guildHalls,
         private GuildHallFunding $hallFunding,
+        private GuildRelayTraffic $guildRelay,
         private ResourceMarketRepository $markets,
     )
     {
@@ -643,6 +644,7 @@ final class ColonyController extends AbstractController
                 'guildFilterAvailable' => $guildFlightFilterAvailable,
                 'campaignTraffic' => $campaignTraffic,
                 'marketTraffic' => $marketTraffic,
+                'relayTraffic' => $selectedGalaxy ? $this->guildRelay->observe($m, $selectedGalaxy) : null,
                 'serverNow' => $clock->now()->format(\DateTimeInterface::ATOM),
                 'galaxy' => $selectedGalaxy?->coordinateCode(),
                 'universe' => $m->universe->name,

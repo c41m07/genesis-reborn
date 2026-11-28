@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace App\Service\Guild;
 
-use App\Entity\{Guild, GuildHall, GuildHallContribution, Planet, PlayerUniverse, SolarSystem};
+use App\Entity\{GuildHall, GuildHallContribution, Planet, PlayerUniverse, SolarSystem};
 use App\Manager\GameManager;
 use App\Repository\GuildHallRepository;
 use App\Service\Colony\{ActionGuard, ResourceService};
-use App\Service\Player\{DiplomacyAccessPolicy, VacationCalendar};
-use Doctrine\DBAL\Exception\LockWaitTimeoutException;
+use App\Service\Player\DiplomacyAccessPolicy;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 
@@ -20,7 +19,7 @@ final readonly class GuildHallService
         private EntityManagerInterface $em,
         private ActionGuard $guard,
         private ResourceService $resources,
-        private VacationCalendar $vacations,
+        private GuildHallAccess $hallAccess,
         private DiplomacyAccessPolicy $access,
         private GuildHallFunding $funding,
         private GuildHallRepository $halls,
@@ -32,7 +31,7 @@ final readonly class GuildHallService
     public function contribute(PlayerUniverse $actor, int $guildId, int $planetId, int $revision, array $amounts): GuildHall
     {
         return $this->manager->transaction(function () use ($actor, $guildId, $planetId, $revision, $amounts): GuildHall {
-            $guild = $this->lockGuild($actor, $guildId);
+            $guild = $this->hallAccess->lockGuild($actor, $guildId);
             $hall = $this->halls->lockForGuild($guild);
             $this->assertRevision($hall, $revision);
             if ($hall !== null && $hall->strength === $hall->requiredStrength) {
@@ -86,7 +85,7 @@ final readonly class GuildHallService
     public function place(PlayerUniverse $actor, int $guildId, int $systemId, int $revision): GuildHall
     {
         return $this->manager->transaction(function () use ($actor, $guildId, $systemId, $revision): GuildHall {
-            $guild = $this->lockGuild($actor, $guildId);
+            $guild = $this->hallAccess->lockGuild($actor, $guildId);
             if (!$this->access->canCommand($actor, $guild)) {
                 throw new \DomainException('Seul le commandant actuel peut installer le Hall.');
             }
@@ -131,47 +130,6 @@ final readonly class GuildHallService
 
             return $hall;
         });
-    }
-
-    private function lockGuild(PlayerUniverse $actor, int $guildId): Guild
-    {
-        if ($this->funding->target() === null) {
-            throw new \DomainException('La construction du Hall n’est pas ouverte.');
-        }
-
-        // Partager les verrous participation → univers avec les départs de guilde,
-        // le changement de commandant et les actions économiques sur une colonie.
-        $this->guard->lockMembership($actor, currentReads: true);
-        if ($this->vacations->isActive($actor) || !$this->funding->availableIn($actor->universe)) {
-            throw new \DomainException('Le Hall est indisponible dans ce contexte.');
-        }
-        $conn = $this->em->getConnection();
-        try {
-            // Comme pour les quotidiennes, ne pas attendre le compte si une sélection
-            // d'univers le tient déjà dans son propre ordre de verrouillage.
-            $participation = $conn->fetchOne('SELECT current_player_universe_id FROM player
-                WHERE id = ? AND locked_at IS NULL AND email_verified_at <= ? FOR UPDATE NOWAIT',
-                [$actor->player?->id, $this->clock->now()->format('Y-m-d H:i:s')]);
-        } catch (LockWaitTimeoutException) {
-            throw new \DomainException('Le compte est occupé. Rechargez la page avant de réessayer.');
-        }
-        if ((int) $participation !== $actor->id) {
-            throw new \DomainException('Cette participation n’est plus active. Rechargez la page.');
-        }
-        $memberGuild = $conn->fetchOne('SELECT guild_id FROM guild_member WHERE player_universe_id = ? FOR UPDATE', [$actor->id]);
-        if ($guildId <= 0 || $guildId !== (int) $memberGuild) {
-            throw new \DomainException('Guilde inaccessible.');
-        }
-        $guild = $this->em->find(Guild::class, $guildId);
-        if (!$guild instanceof Guild) {
-            throw new \DomainException('Guilde inaccessible.');
-        }
-        $this->manager->lockCurrent($guild);
-        if ($guild->archivedAt !== null || $guild->universe->id !== $actor->universe->id) {
-            throw new \DomainException('Guilde inaccessible.');
-        }
-
-        return $guild;
     }
 
     private function assertRevision(?GuildHall $hall, int $revision): void

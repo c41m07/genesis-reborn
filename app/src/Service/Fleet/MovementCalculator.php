@@ -7,7 +7,7 @@ final class MovementCalculator
     }
 
     /** Coordonnées : [système, galaxie, x de grille, y de grille, position] ; null cible l’entrée du système. */
-    public function quote(array $origin,array $target,array $ships,float $ratio,float $timeMultiplier,string $fuelPolicy,float $orbitHours=0): array
+    public function quote(array $origin,array $target,array $ships,float $ratio,float $timeMultiplier,string $fuelPolicy,float $orbitHours=0, float $travelFuelMultiplier=1.0): array
     {
         if(!is_finite($ratio) || $ratio<.1 || $ratio>1 || !is_finite($timeMultiplier) || $timeMultiplier<=0 || !is_finite($orbitHours) || $orbitHours<0) throw new \DomainException('Vitesse ou durée invalide.');
         if(!$ships) throw new \DomainException('Sélectionnez au moins un vaisseau.');
@@ -15,8 +15,11 @@ final class MovementCalculator
         if(!in_array($fuelPolicy,['proportional','inverse'],true)) throw new \DomainException('Départs en attente du choix de la règle de carburant.');
         foreach([$origin[4],$target[4]] as $pos) if($pos!==null && ($pos<1 || $pos>9)) throw new \DomainException('Position invalide.');
         $distances = $this->distances($origin, $target);
-        $quote = $this->quoteDistances($distances['normal'], $distances['hyper'], $distances['same'], $ships, $ratio, $timeMultiplier, $fuelPolicy, $orbitHours);
+        $quote = $this->quoteDistances($distances['normal'], $distances['hyper'], $distances['same'], $ships, $ratio, $timeMultiplier, $fuelPolicy, $orbitHours, $travelFuelMultiplier);
         $quote['distance_geometry'] = GalaxyGeometry::SPIRAL;
+        if ($travelFuelMultiplier !== 1.0) {
+            $quote['travel_fuel_multiplier'] = $travelFuelMultiplier;
+        }
 
         return $quote;
     }
@@ -36,7 +39,7 @@ final class MovementCalculator
         return ['normal' => $normal, 'hyper' => $hyper, 'same' => $same];
     }
 
-    public function quoteDistances(int|float $normal,int|float $hyper,bool $same,array $ships,float $ratio,float $timeMultiplier,string $fuelPolicy,float $orbitHours=0): array
+    public function quoteDistances(int|float $normal,int|float $hyper,bool $same,array $ships,float $ratio,float $timeMultiplier,string $fuelPolicy,float $orbitHours=0, float $travelFuelMultiplier=1.0): array
     {
         if(!is_finite($normal) || !is_finite($hyper) || $normal<0 || $hyper<0) throw new \DomainException('Distance invalide.');
         if(!is_finite($ratio) || $ratio<.1 || $ratio>1 || !is_finite($timeMultiplier) || $timeMultiplier<=0 || !is_finite($orbitHours) || $orbitHours<0) throw new \DomainException('Vitesse ou durée invalide.');
@@ -53,7 +56,10 @@ final class MovementCalculator
             $fuelCapacity+=($ship['fuel_capacity']??0)*$n;
         }
         $factor=$fuelPolicy==='proportional'?$ratio:1/$ratio;
-        $oneWay=($normal*$fuelNormal+$hyper*$fuelHyper)*$factor;
+        if (!is_finite($travelFuelMultiplier) || $travelFuelMultiplier <= 0) {
+            throw new \DomainException('Tarif de carburant invalide.');
+        }
+        $oneWay=($normal*$fuelNormal+$hyper*$fuelHyper)*$factor*$travelFuelMultiplier;
         $fuel=$oneWay*2+$orbit;
         // Les minimums restent valables après les recherches, le réglage de départ et la vitesse de l’univers.
         $minimumSeconds=$same&&$probeOnly?30:60;

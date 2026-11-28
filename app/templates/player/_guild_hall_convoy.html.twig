@@ -1,0 +1,126 @@
+{% set donation = convoy.ship_donation|default(false) %}
+{% set station = convoy.command_station|default(false) %}
+{% set purpose = station ? 'station' : (donation ? 'donation' : 'materials') %}
+{% set submit_route = station ? 'app_guild_hall_station_fleet' : (donation ? 'app_guild_hall_donate_ships' : 'app_guild_hall_send_convoy') %}
+{% set token_scope = station ? 'guild_hall_station_' : (donation ? 'guild_hall_atelier_donation_' : 'guild_hall_convoy_') %}
+<section class="panel" aria-labelledby="hall-convoy-title">
+    <h2 id="hall-convoy-title">{{ station ? 'Stationner des vaisseaux au Centre' : (donation ? 'Donner des vaisseaux à l’Atelier' : 'Ravitailler le Hall') }}</h2>
+    {% if convoy.donation_available or convoy.station_available %}
+        <nav aria-label="Type de convoi">
+            <a href="{{ path('app_guild_hall', {convoy_origin: convoy.origin.id|default(0)}) }}#hall-convoy-title"{% if not donation and not station %} aria-current="page"{% endif %}>Livrer des matériaux</a>
+            {% if convoy.donation_available %}
+                <a href="{{ path('app_guild_hall', {convoy_origin: convoy.origin.id|default(0), convoy_purpose: 'donation'}) }}#hall-convoy-title"{% if donation %} aria-current="page"{% endif %}>Donner des vaisseaux</a>
+            {% endif %}
+            {% if convoy.station_available %}
+                <a href="{{ path('app_guild_hall', {convoy_origin: convoy.origin.id|default(0), convoy_purpose: 'station'}) }}#hall-convoy-title"{% if station %} aria-current="page"{% endif %}>Stationner au Centre</a>
+            {% endif %}
+        </nav>
+    {% endif %}
+    {% if station %}
+        <p>Vous gardez vos vaisseaux. Aucun fret n’est embarqué. Une fois au Centre, retrouvez la flotte et son rappel dans <a href="{{ path('app_fleet_holds') }}">Flottes → À quai</a>.</p>
+    {% elseif donation %}
+        <p>Le don est définitif à l’arrivée : les vaisseaux deviennent propriété de la guilde. Si le Hall refuse le don, ils repartent vers votre colonie. Aucun fret n’est embarqué.</p>
+    {% else %}
+        <p>Les matériaux sont livrés au Hall par vos vaisseaux. Tout ce que l’entrepôt ne peut pas accepter revient avec la flotte.</p>
+    {% endif %}
+    {% if convoy.origin is null %}
+        <p>Aucune colonie disponible.</p>
+    {% else %}
+        <form method="get" action="{{ path('app_guild_hall') }}#hall-convoy-title">
+            <input type="hidden" name="convoy_purpose" value="{{ purpose }}">
+            <label for="hall-convoy-origin">Colonie de départ</label>
+            <select name="convoy_origin" id="hall-convoy-origin">
+                {% for colony in convoy.colonies %}
+                    <option value="{{ colony.id }}"{% if colony.id == convoy.origin.id %} selected{% endif %}>{{ colony.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="secondary">Voir les vaisseaux disponibles</button>
+        </form>
+        {% set ranks = {basic:'Basique', intermediate:'Intermédiaire', superior:'Supérieur'} %}
+        {% if convoy.review is defined %}
+            {% set review = convoy.review %}
+            <div aria-labelledby="hall-convoy-review">
+                <h3 id="hall-convoy-review">Vérifier le convoi</h3>
+                <p>Départ : {{ convoy.origin.name }} · Vitesse : {{ review.speed }} %</p>
+                {% set hours = review.quote.seconds // 3600 %}
+                {% set minutes = (review.quote.seconds % 3600) // 60 %}
+                <p>Trajet aller : {% if hours %}{{ hours }} h {% endif %}{{ minutes }} min {{ review.quote.seconds % 60 }} s.</p>
+                <p>Hydrogène aller-retour : {{ review.quote.total_fuel|number_format(2, ',', ' ') }} H,
+                    dont {{ review.quote.planet_fuel|number_format(2, ',', ' ') }} H prélevés sur la colonie{% if not donation and not station %} en plus du fret{% endif %}.</p>
+                <ul>
+                    {% for ship in convoy.ships %}
+                        {% for rank, quantity in review.ships[ship.slug]|default({}) %}
+                            <li>{{ quantity|number_format(0, ',', ' ') }} × {{ ship.name }} · {{ ranks[rank] }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for slug, label in convoy.materials %}
+                        {% if review.cargo[slug] is defined %}<li>{{ label }} : {{ review.cargo[slug]|number_format(0, ',', ' ') }}</li>{% endif %}
+                    {% endfor %}
+                </ul>
+                <form method="post" action="{{ path(submit_route) }}">
+                    <input type="hidden" name="hall_id" value="{{ hall.id }}">
+                    <input type="hidden" name="origin" value="{{ convoy.origin.id }}">
+                    <input type="hidden" name="request_key" value="{{ review.key }}">
+                    <input type="hidden" name="confirm" value="1">
+                    <input type="hidden" name="_token" value="{{ csrf_token(token_scope ~ guild.id ~ '_' ~ hall.id) }}">
+                    <button type="submit" class="primary">{{ station ? 'Confirmer le stationnement au Centre' : (donation ? 'Confirmer le don de vaisseaux' : 'Confirmer et envoyer le convoi') }}</button>
+                    <a href="{{ path('app_guild_hall', {convoy_origin: convoy.origin.id, convoy_purpose: purpose}) }}#hall-convoy-title">Revenir au formulaire</a>
+                </form>
+            </div>
+        {% elseif convoy.ships is empty %}
+            <p>Aucun vaisseau disponible depuis {{ convoy.origin.name }}.</p>
+        {% else %}
+            <form method="post" action="{{ path(submit_route) }}">
+                <input type="hidden" name="hall_id" value="{{ hall.id }}">
+                <input type="hidden" name="origin" value="{{ convoy.origin.id }}">
+                <input type="hidden" name="_token" value="{{ csrf_token(token_scope ~ guild.id ~ '_' ~ hall.id) }}">
+                <fieldset>
+                    <legend>Vaisseaux au sol · {{ convoy.origin.name }}</legend>
+                    <table>
+                        <thead><tr><th scope="col">Vaisseau</th>{% for label in ranks %}<th scope="col">{{ label }}</th>{% endfor %}</tr></thead>
+                        <tbody>
+                            {% for ship in convoy.ships %}
+                                <tr>
+                                    <th scope="row">{{ ship.name }}</th>
+                                    {% for rank, label in ranks %}
+                                        {% set available = ship.ranks[rank]|default(0) %}
+                                        <td>
+                                            {% if available > 0 %}
+                                                <label>
+                                                    <span>({{ available|number_format(0, ',', ' ') }})</span>
+                                                    <input type="number" inputmode="numeric" min="0" max="{{ available }}" step="1" value="0"
+                                                        name="ships[{{ ship.slug }}][{{ rank }}]" aria-label="{{ ship.name }} · {{ label }}">
+                                                </label>
+                                            {% else %}
+                                                <span aria-label="Aucun vaisseau disponible">0</span>
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </fieldset>
+                {% if not donation and not station %}
+                    <fieldset>
+                        <legend>Matériaux à livrer</legend>
+                        <div class="hall-resource-fields">
+                            {% for slug, label in convoy.materials %}
+                                <label>{{ label }}
+                                    <input type="number" inputmode="numeric" name="cargo[{{ slug }}]" min="0" max="100000000" step="1" value="0">
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </fieldset>
+                {% endif %}
+                <label>Vitesse
+                    <select name="speed">
+                        {% for speed in range(100, 10, -10) %}<option value="{{ speed }}">{{ speed }} %</option>{% endfor %}
+                    </select>
+                </label>
+                <p>{{ station ? 'Le carburant du retour est mis de côté dès le départ.' : (donation ? 'Votre colonie paie le carburant aller-retour au départ, même si les vaisseaux restent au Hall.' : 'L’hydrogène du trajet aller-retour est réservé au départ, en plus du fret.') }}</p>
+                <button type="submit" class="primary">Vérifier le trajet et le carburant</button>
+            </form>
+        {% endif %}
+    {% endif %}
+</section>

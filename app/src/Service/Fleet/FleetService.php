@@ -1,7 +1,8 @@
 <?php
 namespace App\Service\Fleet;
 use App\Service\Report\DiplomaticReportWriter;
-use App\Entity\{Fleet,FleetShip,Planet,PlayerUniverse,SolarSystem,PlayerDiscovery,PlayerTechnology};
+use App\Service\Guild\{GuildHallConvoyWorker, GuildJumpLink};
+use App\Entity\{Fleet,FleetShip,GuildHallConvoy,Planet,PlayerUniverse,SolarSystem,PlayerDiscovery,PlayerTechnology};
 use App\Repository\GameRepository;
 use App\Manager\GameManager;
 use App\Service\Colony\{ActionGuard,ResourceService};
@@ -19,9 +20,9 @@ final class FleetService
 {
     public const QUICK_SPY_LIMIT = 100;
 
-    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment, private FirstSteps $firstSteps, private DiplomaticReportWriter $diplomaticReports, private FleetFuelExpenseRecorder $fuelExpenses, private TimedBoostEffects $timedBoosts) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment, private FirstSteps $firstSteps, private DiplomaticReportWriter $diplomaticReports, private FleetFuelExpenseRecorder $fuelExpenses, private TimedBoostEffects $timedBoosts, private GuildHallConvoyWorker $hallConvoys, private GuildJumpLink $jumps) {}
     private function coords(SolarSystem $s,?int $position): array { return [$s->id,$s->galaxy->id,$s->coordX,$s->coordY,$position]; }
-    public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0, bool $requireUnexplored = false): array
+    public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0, bool $requireUnexplored = false, bool $jumpPoint = false): array
     {
         if($origin->owner?->id!==$m->id || $origin->solarSystem->galaxy->universe->id!==$m->universe->id) throw new \DomainException('Planète inaccessible.');
         $this->vacations->assertCanSendFleet($m);
@@ -89,7 +90,13 @@ final class FleetService
                 $freightFactor = TimedBoostEffects::definition($effect)['factor'];
             }
         }
-        $quote=$this->calculator->quote($this->coords($origin->solarSystem,$origin->position),$this->coords($system,$target instanceof Planet?$target->position:null),$ships,$ratio,$config['multipliers']['travel_time'],$this->catalog->rules()['fuel_ratio_policy'],$windowHours);
+        if ($jumpPoint && (!$target instanceof Planet || !$this->jumps->available($m, $origin, $target))) {
+            throw new \DomainException('Le lien Jump Point n’est plus disponible. Préparez le trajet normal ou vérifiez les colonies équipées.');
+        }
+        $quote=$this->calculator->quote($this->coords($origin->solarSystem,$origin->position),$this->coords($system,$target instanceof Planet?$target->position:null),$ships,$ratio,$config['multipliers']['travel_time']*($jumpPoint ? 0.5 : 1.0),$this->catalog->rules()['fuel_ratio_policy'],$windowHours,$jumpPoint ? 2.0 : 1.0);
+        if ($jumpPoint) {
+            $quote['jump_point'] = true;
+        }
         if ($freightFactor > 1.0) {
             // L’ajout concerne seulement le fret ; sans bonus, le devis conserve
             // exactement son contrat d’origine (dont le zéro entier des sondes).
@@ -131,19 +138,19 @@ final class FleetService
         return max(0,GameCatalog::colonyLimit($ranks,$effect,(int)$config['limits']['max_planets'])-$this->occupations->reservedSlots($membership));
     }
 
-    public function preview(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0): array
+    public function preview(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0, bool $jumpPoint = false): array
     {
-        return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours){
-            $this->guard->lock($m,$origin);$this->queues->synchronize($m);
-            $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours, requireUnexplored: true);
-            return ['arrival_at'=>$this->clock->now()->modify('+'.$q['seconds'].' seconds')->format(DATE_ATOM)]+array_intersect_key($q,array_flip(['distance','normal_distance','hyper_distance','seconds','one_way_fuel','orbit_fuel','total_fuel','stored_fuel_used','planet_fuel','fuel_capacity','cargo_capacity','freight_capacity','composition','freight','cargo_available','cargo_maximum','ship_available','ship_adjusted','adjusted']));
+        return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours,$jumpPoint){
+            $this->guard->lock($m,$origin,currentReads: $jumpPoint);$this->queues->synchronize($m);
+            $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours, requireUnexplored: true, jumpPoint: $jumpPoint);
+            return ['arrival_at'=>$this->clock->now()->modify('+'.$q['seconds'].' seconds')->format(DATE_ATOM)]+array_intersect_key($q,array_flip(['distance','normal_distance','hyper_distance','seconds','one_way_fuel','orbit_fuel','total_fuel','stored_fuel_used','planet_fuel','fuel_capacity','cargo_capacity','freight_capacity','composition','freight','cargo_available','cargo_maximum','ship_available','ship_adjusted','adjusted','jump_point']));
         });
     }
-    public function send(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo,string $key,float $orbitHours=0,bool $requireExactComposition=false, bool $tutorialSpy=false): bool
+    public function send(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo,string $key,float $orbitHours=0,bool $requireExactComposition=false, bool $tutorialSpy=false, bool $jumpPoint = false): bool
     {
-        return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$key,$orbitHours,$requireExactComposition,$tutorialSpy){
-            $this->guard->lock($m,$origin);$this->queues->synchronize($m);if(!$this->guard->receipt($m,$key)) return false;
-            $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours, requireUnexplored: true);
+        return $this->manager->transaction(function()use($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$key,$orbitHours,$requireExactComposition,$tutorialSpy,$jumpPoint){
+            $this->guard->lock($m,$origin,currentReads: $jumpPoint);$this->queues->synchronize($m);if(!$this->guard->receipt($m,$key)) return false;
+            $q=$this->quote($m,$origin,$mission,$targetId,$composition,$ratio,$cargo,$orbitHours, requireUnexplored: true, jumpPoint: $jumpPoint);
             if($requireExactComposition && $q['ship_adjusted']) throw new \DomainException('La composition n’est plus disponible exactement. Vérifiez à nouveau les quantités avant envoi.');
             if($q['target'] instanceof Planet) $this->manager->lock($q['target']);
             if ($tutorialSpy) {
@@ -163,6 +170,9 @@ final class FleetService
                 $m->recoveryProtectedUntil = null;
             }
             $f->firstStepsSpy = $tutorialSpy;
+            if ($jumpPoint) {
+                $f->navigation['jump_point'] = true;
+            }
             if($mission==='station') $f->navigation['station']=['leg_fuel'=>$q['one_way_fuel']];
             foreach($q['composition'] as $slug=>$tiers)foreach($tiers as $tier=>$quantity) {
                 $stock=$this->repo->one(FleetShip::class,['fleet'=>$q['idle'],'slug'=>$slug,'tier'=>$tier]);$stock->quantity-=$quantity;
@@ -274,6 +284,11 @@ final class FleetService
             $f=$this->repo->find(Fleet::class,$id);if(!$f) return;
             $m=$f->playerUniverse;$this->guard->lockMembershipForProcessing($m);$this->manager->lock($f);
             if(!in_array($f->status,['traveling','returning','defending','orbiting'],true) || !hash_equals($f->dispatchToken,$token) || !$f->arrivalAt || $f->arrivalAt>$this->clock->now()) return;
+            if ($f->mission === GuildHallConvoy::MISSION) {
+                $this->hallConvoys->processLocked($f, $token, $this->clock->now());
+
+                return;
+            }
             if($f->mission==='station') { $this->queues->synchronize($m);$this->stationing->arriveLocked($f);return; }
             $processingPlanet=$f->status==='returning'?($f->returnPlanet??$f->homePlanet):$f->homePlanet;
             $this->guard->lockForCompletion($m,$processingPlanet);$this->queues->synchronize($m);

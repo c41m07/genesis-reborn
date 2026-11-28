@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Entity\{Galaxy,Planet};
 use App\Repository\GameRepository;
 use App\Service\Fleet\FleetVisibility;
+use App\Service\Guild\GuildRelayTraffic;
 use App\Service\PirateCampaign\PirateCampaignTraffic;
 use App\Service\Universe\UniverseContext;
 use Psr\Clock\ClockInterface;
@@ -14,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class FleetSurveillanceController extends AbstractController
 {
     #[Route('/flottes/surveillance',name:'app_fleet_surveillance',methods:['GET'])]
-    public function surveillance(Request $request,UniverseContext $context,GameRepository $repo,FleetVisibility $visibility,ClockInterface $clock,\App\Service\Fleet\OrbitRequestView $orbits, PirateCampaignTraffic $campaign, \App\Service\Market\MarketTraffic $marketTraffic): Response
+    public function surveillance(Request $request,UniverseContext $context,GameRepository $repo,FleetVisibility $visibility,ClockInterface $clock,\App\Service\Fleet\OrbitRequestView $orbits, PirateCampaignTraffic $campaign, \App\Service\Market\MarketTraffic $marketTraffic, GuildRelayTraffic $guildRelay): Response
     {
         $member=$context->membership();
         $payload=['membership'=>$member->id,'serverNow'=>$clock->now()->format(DATE_ATOM),
@@ -39,7 +40,7 @@ final class FleetSurveillanceController extends AbstractController
             $flights = $map['flights'];
             $traffic = $campaign->forGalaxy($member, $galaxy);
             $commercial = $marketTraffic->forViewer($member, $galaxy);
-            $payload+=['marketTraffic'=>$commercial,'galaxy'=>$galaxy->id,'flights'=>$flights,'guildFilterAvailable'=>$map['guildFilterAvailable'],'campaignTraffic'=>$traffic,
+            $payload+=['relayTraffic'=>$guildRelay->observe($member, $galaxy),'marketTraffic'=>$commercial,'galaxy'=>$galaxy->id,'flights'=>$flights,'guildFilterAvailable'=>$map['guildFilterAvailable'],'campaignTraffic'=>$traffic,
                 'fleetLog'=>$this->renderView('universe/_fleet_log.html.twig', [
                     'galaxy_market_traffic' => $commercial, 'galaxy_v2_flights' => $flights, 'galaxy_campaign_traffic' => $traffic,
                 ])];

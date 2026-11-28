@@ -1,0 +1,96 @@
+{% set ranks = {basic: 'Basique', intermediate: 'Intermédiaire', superior: 'Supérieur'} %}
+{% set submit = path('app_guild_hall_atelier_delivery') %}
+{% set scope = 'guild_hall_atelier_delivery_' ~ guild.id ~ '_' ~ hall.id %}
+<section class="panel" aria-labelledby="hall-atelier-delivery">
+    <h2 id="hall-atelier-delivery">Livrer des vaisseaux de l’Atelier</h2>
+    <p>Le stock commun fournit les vaisseaux et l’hydrogène du trajet. Si la colonie ne peut plus recevoir le lot à l’arrivée, les vaisseaux repartent vers le Hall.</p>
+    {% if delivery.review is defined %}
+        {% set review = delivery.review %}
+        <h3>Vérifier la livraison</h3>
+        <p>Destination : {{ review.destination_name }} · {{ review.recipient }} · Vitesse : {{ review.speed }} %</p>
+        <p>Trajet aller : {{ review.seconds // 3600 }} h {{ (review.seconds % 3600) // 60 }} min {{ review.seconds % 60 }} s.
+            Hydrogène réservé : {{ review.fuel|number_format(2, ',', ' ') }} H sur le stock du Hall.</p>
+        <ul>
+            {% for slug, selected in review.ships %}
+                {% set name = slug %}
+                {% for ship in delivery.ships %}{% if ship.slug == slug %}{% set name = ship.name %}{% endif %}{% endfor %}
+                {% for rank, quantity in selected %}
+                    <li>{{ quantity|number_format(0, ',', ' ') }} × {{ name }} · {{ ranks[rank] }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+        <form method="post" action="{{ submit }}">
+            <input type="hidden" name="hall_id" value="{{ hall.id }}">
+            <input type="hidden" name="_token" value="{{ csrf_token(scope) }}">
+            <input type="hidden" name="request_key" value="{{ review.key }}">
+            <button type="submit" name="confirm" value="1" class="primary">Confirmer et envoyer la livraison</button>
+            <a href="{{ path('app_guild_hall') }}#hall-atelier-delivery">Revenir au formulaire</a>
+        </form>
+    {% elseif delivery.destinations is empty or delivery.ships is empty %}
+        {% if delivery.destinations is empty %}<p>Aucune colonie d’un autre membre ne peut être sélectionnée.</p>{% endif %}
+        {% if delivery.ships is empty %}<p>Aucun vaisseau donné et livré n’est disponible dans l’Atelier.</p>{% endif %}
+    {% else %}
+        <form method="post" action="{{ submit }}">
+            <input type="hidden" name="hall_id" value="{{ hall.id }}">
+            <input type="hidden" name="_token" value="{{ csrf_token(scope) }}">
+            <label for="hall-atelier-destination">Colonie destinataire</label>
+            <select name="destination" id="hall-atelier-destination" required>
+                <option value="">Choisir une colonie d’un membre</option>
+                {% for destination in delivery.destinations %}
+                    <option value="{{ destination.id }}">{{ destination.recipient }} · {{ destination.name }}</option>
+                {% endfor %}
+            </select>
+            <fieldset>
+                <legend>Vaisseaux disponibles dans le stock commun</legend>
+                <table>
+                    <thead><tr><th scope="col">Vaisseau</th>{% for label in ranks %}<th scope="col">{{ label }}</th>{% endfor %}</tr></thead>
+                    <tbody>
+                        {% for ship in delivery.ships %}
+                            <tr>
+                                <th scope="row">{{ ship.name }}</th>
+                                {% for rank, label in ranks %}
+                                    {% set available = ship.ranks[rank]|default(0) %}
+                                    <td>
+                                        {% if available > 0 %}
+                                            <label>
+                                                <span>({{ available|number_format(0, ',', ' ') }})</span>
+                                                <input type="number" inputmode="numeric" min="0" max="{{ min(available, 100000000) }}" step="1" value="0"
+                                                    name="ships[{{ ship.slug }}][{{ rank }}]" aria-label="{{ ship.name }} · {{ label }}">
+                                            </label>
+                                        {% else %}
+                                            <span aria-label="Aucun vaisseau disponible">0</span>
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </fieldset>
+            <label>Vitesse
+                <select name="speed">
+                    {% for speed in range(100, 10, -10) %}<option value="{{ speed }}">{{ speed }} %</option>{% endfor %}
+                </select>
+            </label>
+            <button type="submit" class="primary">Calculer le trajet et le carburant</button>
+        </form>
+    {% endif %}
+    <h3>Dernières livraisons de l’Atelier</h3>
+    {% if delivery.history is empty %}
+        <p>Aucune livraison envoyée depuis ce Hall.</p>
+    {% else %}
+        {% set states = {outbound: 'En route', returning: 'De retour vers le Hall', delivered: 'Livrée', returned: 'Rentrée au Hall', lost: 'Hall d’origine indisponible'} %}
+        <ul>
+            {% for shipment in delivery.history %}
+                <li>
+                    Livraison #{{ shipment.id }} : {{ shipment.unit_count|number_format(0, ',', ' ') }} {{ shipment.unit_count == 1 ? 'vaisseau' : 'vaisseaux' }}
+                    {% if shipment.recipient is not null %} · {{ shipment.recipient }}{% endif %}
+                    · {{ states[shipment.status]|default('État indisponible') }}
+                    {% if shipment.status in ['outbound', 'returning'] %}
+                        · Arrivée prévue le <time datetime="{{ shipment.arrival_at|date('c', 'UTC') }}">{{ shipment.arrival_at|date('d/m/Y à H:i', 'UTC') }} UTC</time>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</section>

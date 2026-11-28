@@ -1,0 +1,44 @@
+{% set materials = {metal: 'Métal', nano: 'Nano', hydrogen: 'Hydrogène', antimatter: 'Antimatière'} %}
+<section class="panel" aria-labelledby="hall-jump-points">
+    <h2 id="hall-jump-points">Jump Points</h2>
+    <p>Un point appartient à une colonie précise. Les deux colonies du trajet doivent être équipées et appartenir à la même guilde.</p>
+    {% if jumps.points is empty %}
+        <p>Aucun point installé ou en construction.</p>
+    {% else %}
+        <ul>
+            {% for point in jumps.points %}
+                <li>{{ point.owner }} · {{ point.colony }} ·
+                    {% if point.ready %}Actif{% else %}En construction jusqu’au
+                        <time datetime="{{ point.ready_at|date('c', 'UTC') }}">{{ point.ready_at|date('d/m/Y H:i:s', 'UTC') }} UTC</time>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% if jumps.quote %}
+        <h3>Installer sur une colonie</h3>
+        {% if jumps.candidates is empty %}
+            <p>Aucune autre colonie de la guilde n’est disponible.</p>
+        {% else %}
+            <p>Durée : {{ jumps.quote.duration // 3600 }} h {{ (jumps.quote.duration % 3600) // 60 }} min {{ jumps.quote.duration % 60 }} s.</p>
+            <ul>
+                {% for slug, label in materials %}
+                    {% set price = jumps.quote.cost[slug]|default(0) %}
+                    {% if price > 0 %}<li>{{ label }} : {{ price|number_format(0, ',', ' ') }}</li>{% endif %}
+                {% endfor %}
+            </ul>
+            <form method="post" action="{{ path('app_guild_hall_install_jump') }}">
+                <input type="hidden" name="hall_id" value="{{ hall.id }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('guild_hall_jump_' ~ guild.id ~ '_' ~ hall.id) }}">
+                <input type="hidden" name="review" value="{{ jumps.fingerprint }}">
+                <label for="hall-jump-colony">Colonie à équiper</label>
+                <select name="colony" id="hall-jump-colony" required>
+                    <option value="">Choisir une colonie</option>
+                    {% for colony in jumps.candidates %}<option value="{{ colony.id }}">{{ colony.owner }} · {{ colony.colony }}</option>{% endfor %}
+                </select>
+                <label><input type="checkbox" name="confirm" value="1" required> Je confirme le coût payé par le Hall.</label>
+                <button type="submit" class="primary">Lancer l’installation</button>
+            </form>
+        {% endif %}
+    {% endif %}
+</section>

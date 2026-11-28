@@ -1,0 +1,9 @@
+<div data-live-region="fleet-jump-instability">
+    {% if jump_instability is not null %}
+        <aside class="panel" aria-labelledby="fleet-jump-unstable-title">
+            <h2 id="fleet-jump-unstable-title">Jump Point instable</h2>
+            <p>Le départ de la guilde a désactivé le point de cette colonie. Les vols déjà lancés conservent leur trajet.</p>
+            <p>Disparition prévue le <time datetime="{{ jump_instability.expires|date('c', 'UTC') }}">{{ jump_instability.expires|date('d/m/Y H:i:s', 'UTC') }} UTC</time>.</p>
+        </aside>
+    {% endif %}
+</div>

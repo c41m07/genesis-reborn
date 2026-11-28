@@ -3,7 +3,7 @@
 namespace App\Service\Fleet;
 
 use App\Service\Player\FirstStepRewardPolicy;
-use App\Entity\{Fleet, FleetShip, Planet, PlayerUniverse, SolarSystem};
+use App\Entity\{Fleet, FleetShip, GuildHallConvoy, Planet, PlayerUniverse, SolarSystem};
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Colony\EmpireDetails;
@@ -50,7 +50,7 @@ final class FleetPageView
         $data = [
             'tutorial_spy' => $tutorialSpy,
             'membership' => $member, 'fleet_page' => $page, 'fleet_planet' => $selectedPlanet,
-            'fleet_colony_scope' => $page !== 'missions', 'idle' => [], 'holds' => [], 'held_fleets' => [], 'held_details' => [],
+            'fleet_colony_scope' => $page !== 'missions', 'idle' => [], 'holds' => [], 'held_fleets' => [], 'held_details' => [], 'held_hall_convoys' => [], 'command_berthed' => [],
             'active_fleets' => [], 'fleet_details' => [], 'combat_events' => [], 'orbit_requests' => [],
             'active_fleet_count' => 0, 'missions_page' => 1, 'missions_pages' => 1,
             'catalog' => [], 'resources' => [], 'systems' => [], 'destination_choices' => [],
@@ -144,7 +144,13 @@ final class FleetPageView
         if ($page === 'holds') {
             // Une origine perdue ne doit pas faire disparaître les stationnements en attente de l’empire.
             $data['held_fleets'] = $this->repo->all(Fleet::class, ['playerUniverse' => $member, 'mission' => 'station', 'status' => 'station_waiting'], ['id' => 'ASC']);
-            $data['held_details'] = $this->details->fleets($member, $data['held_fleets']);
+            $data['held_hall_convoys'] = $this->repo->all(Fleet::class, [
+                'playerUniverse' => $member, 'mission' => GuildHallConvoy::MISSION, 'status' => 'hall_wait',
+            ], ['id' => 'ASC']);
+            $data['command_berthed'] = $this->repo->all(Fleet::class, [
+                'playerUniverse' => $member, 'mission' => GuildHallConvoy::MISSION, 'status' => \App\Service\Guild\GuildCommandBerth::DOCKED,
+            ], ['id' => 'ASC']);
+            $data['held_details'] = $this->details->fleets($member, [...$data['held_fleets'], ...$data['held_hall_convoys'], ...$data['command_berthed']]);
         }
         return $data;
     }

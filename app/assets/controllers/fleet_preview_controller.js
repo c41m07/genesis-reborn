@@ -73,7 +73,8 @@ export default class extends Controller {
             const format = value => compactNumber(Math.ceil(value));
             const timezone = document.body.dataset.timezone || 'Europe/Paris';
             const arrival = preview.arrival_at ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'short', timeStyle: 'medium', timeZone: timezone }).format(new Date(preview.arrival_at)) + ' · ' + timezone : 'À confirmer';
-            const duration = `${Math.floor(preview.seconds / 3600)} h ${Math.floor(preview.seconds % 3600 / 60)} min ${preview.seconds % 60} s`;
+            const formatDuration = seconds => `${Math.floor(seconds / 3600)} h ${Math.floor(seconds % 3600 / 60)} min ${seconds % 60} s`;
+            const duration = formatDuration(preview.seconds);
             const list = document.createElement('dl');
             for (const [label, value] of [['Distance', exactNumber(Math.ceil(preview.distance)) + ' UA'], ['Durée', duration], ['Arrivée estimée', arrival], ['Carburant aller-retour', format(preview.total_fuel) + ' H'], ['Capacité de fret disponible', format(preview.freight_capacity)]]) {
                 const entry = document.createElement('div'), term = document.createElement('dt'), description = document.createElement('dd');
@@ -82,6 +83,17 @@ export default class extends Controller {
             this.durationTarget.textContent = duration;
             this.arrivalTarget.textContent = arrival;
             this.resultTarget.replaceChildren(list);
+            if (preview.jump_point) {
+                const title = document.createElement('p');
+                title.textContent = 'Itinéraire choisi : Jump Points.';
+                this.resultTarget.prepend(title);
+                const comparison = document.createElement('p');
+                const ordinary = preview.ordinary_route;
+                comparison.textContent = ordinary
+                    ? `Trajet normal : ${formatDuration(ordinary.seconds)} · ${format(ordinary.total_fuel)} H aller-retour · fret disponible : ${format(ordinary.freight_capacity)}.`
+                    : 'Le trajet normal ne peut pas être estimé avec ces paramètres.';
+                this.resultTarget.append(comparison);
+            }
             this.resultTarget.classList.remove('error');
             this.dispatch('quoted', { detail: preview });
             if (this.submitButton) {

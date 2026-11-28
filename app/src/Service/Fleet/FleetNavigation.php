@@ -14,7 +14,9 @@ final class FleetNavigation
         $systemSpeed=min(array_column($ships,'speed_system'));$galaxySpeed=min(array_column($ships,'speed_galaxy'));
         $fuelNormal=$fuelHyper=0.0;
         foreach($ships as $ship) { $fuelNormal+=$ship['fuel_travel_system']*$ship['quantity'];$fuelHyper+=$ship['fuel_travel_galaxy']*$ship['quantity']; }
-        $factor=$fuelPolicy==='proportional'?$ratio:1/$ratio;
+        // Les segments conservent le surcoût accepté ; le profil unitaire
+        // reste réutilisable sans Jump pour un repli vers une autre colonie.
+        $factor=($fuelPolicy==='proportional'?$ratio:1/$ratio)*($quote['travel_fuel_multiplier']??1.0);
         $legs=[];$same=$origin[0]===$target[0];
         if($same) $legs[]=$this->leg($origin,$target,(float)$quote['normal_distance'],$systemSpeed,$fuelNormal*$factor);
         else {

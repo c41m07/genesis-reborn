@@ -28,7 +28,7 @@
             {% if installed %}
                 <a class="primary guild-hall-site-link" href="{{ path('app_map_v2', {galaxy:system.galaxy.id, system:system.id}) }}">{{ ui.icon('galaxy') }} Voir le système dans Galaxie</a>
                 <aside class="guild-hall-closed">
-                    <h3>Dons clos</h3>
+                    <h3>Dons d’installation clos</h3>
                     <p>Le Hall est installé : il n’est plus possible de contribuer ou de choisir un autre emplacement.</p>
                 </aside>
             {% elseif remaining == 0 %}
@@ -43,6 +43,47 @@
             {% endif %}
             <p class="muted">Le Hall revendique le système. Il ne remplace aucune planète et ne donne ni bonus ni nouveau pouvoir.</p>
         </section>
+        {% if installed and warehouse is not null %}
+            {% include 'player/_guild_hall_warehouse.html.twig' with {hall:hall, guild:guild, warehouse:warehouse, may_build:may_build_at_hall} only %}
+            {% if convoy is not null %}
+                {% include 'player/_guild_hall_convoy.html.twig' with {hall:hall, guild:guild, convoy:convoy} only %}
+            {% endif %}
+        {% endif %}
+        {% if warehouse.structures|default([]) is not empty %}
+            {% include 'player/_guild_hall_structures.html.twig' with {hall: hall, guild: guild, structures: warehouse.structures, may_build: may_build_at_hall} only %}
+        {% endif %}
+        {% if atelier_delivery is not null %}
+            {% include 'player/_guild_atelier_delivery.html.twig' with {hall: hall, guild: guild, delivery: atelier_delivery} only %}
+        {% endif %}
+        {% if atelier_manufacturing is not null %}
+            {% include 'player/_guild_atelier_manufacturing.html.twig' with {hall: hall, guild: guild, manufacturing: atelier_manufacturing} only %}
+        {% endif %}
+        {% if dock is not null %}
+            {% include 'player/_guild_dock.html.twig' with {hall: hall, guild: guild, dock: dock} only %}
+        {% endif %}
+        {% if jumps is not null and (jumps.quote or jumps.points is not empty) %}
+            {% include 'player/_guild_jump_points.html.twig' with {hall: hall, guild: guild, jumps: jumps} only %}
+        {% endif %}
+        {% if relay|default(null) is not null %}
+            {% include 'player/_guild_hall_relay.html.twig' with {hall: hall, relay: relay} only %}
+        {% endif %}
+        {% if received_donations|default([]) is not empty %}
+            <section class="panel" aria-labelledby="hall-received-donations-title">
+                <h2 id="hall-received-donations-title">Mes derniers dons reçus par l’Atelier</h2>
+                <ul>
+                    {% for donation in received_donations %}
+                        <li>
+                            <span>Reçu au Hall</span>
+                            <ul>
+                                {% for ship in donation.ships %}
+                                    <li>{{ ship.quantity|number_format(0, ',', ' ') }} × {{ ship.name }} · {{ ship.rank }}</li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
         {% if not may_act %}
             <p class="panel">Vous pouvez consulter le Hall, mais pas contribuer ni le placer pendant les vacances.</p>
         {% elseif remaining > 0 %}

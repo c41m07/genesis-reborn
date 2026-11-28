@@ -1,0 +1,65 @@
+{% set ranks = {basic: 'Basique', intermediate: 'Intermédiaire', superior: 'Supérieur'} %}
+{% set materials = {metal: 'Métal', nano: 'Nano', hydrogen: 'Hydrogène', antimatter: 'Antimatière', electricity: 'Électricité'} %}
+{% set scope = 'guild_hall_dock_' ~ guild.id ~ '_' ~ hall.id %}
+<section class="panel" aria-labelledby="hall-dock">
+    <h2 id="hall-dock">Dock de modernisation</h2>
+    <a href="{{ path('app_dock_orders') }}">Voir mes modernisations</a>
+    <p>Modernisez vos vaisseaux à quai d’un rang. Les coques restent à vous et le devis est calculé sur la colonie sélectionnée.</p>
+    {% if dock.review is defined %}
+        {% set review = dock.review %}
+        {% set quote = review.quote %}
+        {% set name = quote.ship %}
+        {% for choice in dock.choices %}{% if choice.slug == quote.ship %}{% set name = choice.name %}{% endif %}{% endfor %}
+        <h3>{{ quote.quantity|number_format(0, ',', ' ') }} × {{ name }} · {{ ranks[quote.source_tier] }} → {{ ranks[quote.target_tier] }}</h3>
+        <p>Colonie : {{ dock.origin.name }}. Les durées ne comprennent pas l’attente en file.</p>
+        {% set combined_costs = {} %}
+        {% for slug, material in materials %}
+            {% set combined_costs = combined_costs|merge({(slug): quote.source_costs[slug]|default(0) + quote.costs[slug]|default(0)}) %}
+        {% endfor %}
+        <dl>
+            {% for label, plan in {
+                'Moderniser le lot existant' : {costs: quote.costs, duration: quote.duration},
+                'Construire directement au rang cible' : {costs: quote.target_costs, duration: quote.target_duration},
+                'Construire au rang de départ puis moderniser' : {costs: combined_costs, duration: quote.source_duration + quote.duration}
+            } %}
+                <dt>{{ label }}</dt>
+                <dd>{{ plan.duration // 3600 }} h {{ (plan.duration % 3600) // 60 }} min {{ plan.duration % 60 }} s
+                    <ul>{% for slug, material in materials %}{% if plan.costs[slug]|default(0) > 0 %}<li>{{ material }} : {{ plan.costs[slug]|number_format(0, ',', ' ') }}</li>{% endif %}{% endfor %}</ul>
+                </dd>
+            {% endfor %}
+        </dl>
+        <form method="post" action="{{ path('app_guild_hall_dock') }}">
+            <input type="hidden" name="hall_id" value="{{ hall.id }}">
+            <input type="hidden" name="_token" value="{{ csrf_token(scope) }}">
+            <input type="hidden" name="request_key" value="{{ review.key }}">
+            <button type="submit" name="confirm" value="1" class="primary">Confirmer et moderniser</button>
+            <a href="{{ path('app_guild_hall', {dock_origin: dock.origin.id}) }}#hall-dock">Revenir au formulaire</a>
+        </form>
+    {% elseif dock.origin is null %}
+        <p>Aucune colonie disponible.</p>
+    {% else %}
+        <form method="get" action="{{ path('app_guild_hall') }}#hall-dock">
+            <label for="dock-origin">Colonie</label>
+            <select id="dock-origin" name="dock_origin">
+                {% for colony in dock.colonies %}<option value="{{ colony.id }}"{% if colony.id == dock.origin.id %} selected{% endif %}>{{ colony.name }}</option>{% endfor %}
+            </select>
+            <button type="submit">Afficher les vaisseaux à quai</button>
+        </form>
+        {% if dock.choices is empty %}
+            <p>Aucune coque modernisable à quai sur cette colonie.</p>
+        {% else %}
+            <form method="post" action="{{ path('app_guild_hall_dock') }}">
+                <input type="hidden" name="hall_id" value="{{ hall.id }}">
+                <input type="hidden" name="_token" value="{{ csrf_token(scope) }}">
+                <input type="hidden" name="origin" value="{{ dock.origin.id }}">
+                <label for="dock-hull">Vaisseau et rang de départ</label>
+                <select id="dock-hull" name="hull" required>
+                    {% for choice in dock.choices %}<option value="{{ choice.slug }}:{{ choice.tier }}">{{ choice.name }} · {{ ranks[choice.tier] }} ({{ choice.quantity|number_format(0, ',', ' ') }})</option>{% endfor %}
+                </select>
+                <label for="dock-quantity">Quantité</label>
+                <input id="dock-quantity" type="number" inputmode="numeric" name="quantity" min="1" max="100000000" step="1" value="1" required>
+                <button type="submit" class="primary">Comparer les coûts et les durées</button>
+            </form>
+        {% endif %}
+    {% endif %}
+</section>
