@@ -37,6 +37,7 @@ framework:
             'App\Message\GuildDockOrderDue': async
             'App\Message\GuildAtelierShipmentDue': async
             'App\Message\GuildHallConstructionDue': async
+            'App\Message\GuildAtelierManufacturingDue': async
             'App\Message\OccupationDue': async
             'App\Message\EmpireReconstructionDue': async
             'App\Message\UniverseClosureDue': async

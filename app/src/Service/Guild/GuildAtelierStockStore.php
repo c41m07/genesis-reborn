@@ -61,6 +61,7 @@ final readonly class GuildAtelierStockStore
     /**
      * Sous le verrou du Hall et du reçu, le retour consomme sa propre place ;
      * une livraison terminée libère cette place sans recréditer les vaisseaux.
+     * Une fabrication terminée consomme de la même façon sa capacité réservée.
      *
      * @param array<string,array<string,int>> $composition
      */
@@ -75,6 +76,24 @@ final readonly class GuildAtelierStockStore
             $stock->ships = GuildAtelierInventory::receive($stock->ships, $composition);
         }
         $stock->returnCapacity = $remaining;
+    }
+
+    /** Garde la place des coques payées mais non terminées sans les rendre livrables.
+     * Le verrou du Hall est détenu jusqu’à l’écriture de la commande et de son outbox.
+     *
+     * @param array<string,array<string,int>> $composition
+     */
+    public function reserveProductionCapacityLocked(GuildHall $hall, array $composition): void
+    {
+        $stock = $this->existingLocked($hall);
+        $reserved = GuildAtelierInventory::receive($stock?->returnCapacity ?? [], $composition);
+        GuildAtelierInventory::receive($stock?->ships ?? [], $reserved);
+        if ($stock === null) {
+            $stock = new GuildAtelierStock();
+            $stock->hall = $hall;
+            $this->manager->save($stock);
+        }
+        $stock->returnCapacity = $reserved;
     }
 
     /** @param array<string,array<string,int>> $composition */

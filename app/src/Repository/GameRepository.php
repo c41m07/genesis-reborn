@@ -1255,12 +1255,13 @@ final class GameRepository
             \App\Message\GuildDockOrderDue::KIND,
             \App\Message\GuildAtelierShipmentDue::KIND,
             \App\Message\GuildHallConstructionDue::KIND,
+            \App\Message\GuildAtelierManufacturingDue::KIND,
         ]);
         if (!$notifications) {
             // La programmation annuelle et les gros lots du Dock peuvent précéder l’échéance de plusieurs mois.
             // L’outbox conserve les échéances longues jusqu’à leur heure, sans délai AMQP de longue durée.
             $query->andWhere('o.kind NOT IN (:holdUntilDue) OR o.dueAt <= :now')
-                ->setParameter('holdUntilDue', [\App\Message\AdventCaptureDue::KIND, \App\Message\PlayerCombatSimulationDue::EXPIRY, \App\Message\GuildDockOrderDue::KIND, \App\Message\GuildAtelierShipmentDue::KIND, \App\Message\GuildHallConstructionDue::KIND])
+                ->setParameter('holdUntilDue', [\App\Message\AdventCaptureDue::KIND, \App\Message\PlayerCombatSimulationDue::EXPIRY, \App\Message\GuildDockOrderDue::KIND, \App\Message\GuildAtelierShipmentDue::KIND, \App\Message\GuildHallConstructionDue::KIND, \App\Message\GuildAtelierManufacturingDue::KIND])
                 ->setParameter('now', $now->setTimezone(new \DateTimeZone('UTC')));
         }
 
