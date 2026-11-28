@@ -66,7 +66,7 @@ final class WeeklyMerchantDelivery
             $delivery->universe = $universe;
             $delivery->occurrence = $window['occurrence'];
             $delivery->appliedAt = $now->setTimezone(new \DateTimeZone('UTC'));
-            $delivery->quantities = $this->calculator->quantities($market->stock, $market->targets, $sold);
+            $delivery->quantities = $this->calculator->quantities($market->stock, $market->targets, $sold, StationPolicy::read($universe)['merchant']);
             foreach ($delivery->quantities as $resource => $amount) {
                 $market->stock[$resource] = ($market->stock[$resource] ?? 0) + $amount;
             }
@@ -76,7 +76,7 @@ final class WeeklyMerchantDelivery
     }
 
     /** Première ouverture : matérialiser la réserve administrée, une seule fois. */
-    public function configure(Player $admin, Universe $universe, bool $enabled, array $targets): void
+    public function configure(Player $admin, Universe $universe, bool $enabled, array $targets, ?array $policy = null): void
     {
         foreach (array_keys(MarketPricing::WEIGHTS) as $resource) {
             if (!isset($targets[$resource]) || !is_int($targets[$resource]) || $targets[$resource] < 0 || $targets[$resource] > MarketPricing::MAX_TARGET) {
@@ -88,9 +88,14 @@ final class WeeklyMerchantDelivery
         }
         $targets = array_intersect_key($targets, MarketPricing::WEIGHTS);
 
-        $this->manager->transaction(function () use ($admin, $universe, $enabled, $targets): void {
+        $this->manager->transaction(function () use ($admin, $universe, $enabled, $targets, $policy): void {
             $now = $this->clock->now();
             $this->manager->lockCurrent($universe);
+            if ($policy !== null) {
+                $this->manager->lockCurrent($admin);
+                if ($admin->lockedAt || !in_array('ROLE_ADMIN',$admin->getRoles(),true)) throw new \DomainException('Administrateur actif requis.');
+                $universe->gameSettings['station_policy'] = StationPolicy::validate($policy);
+            }
             if ($enabled && !$universe->isAccessible($now)) {
                 throw new \DomainException('L’univers doit être ouvert pour activer la station.');
             }
@@ -119,7 +124,7 @@ final class WeeklyMerchantDelivery
             $log->action = 'market_settings';
             $log->targetType = 'universe';
             $log->targetId = $universe->id;
-            $log->details = ['enabled' => $enabled, 'targets' => $targets];
+            $log->details = ['enabled' => $enabled, 'targets' => $targets,'policy'=>StationPolicy::read($universe)];
             $log->createdAt = $now->setTimezone(new \DateTimeZone('UTC'));
             $this->manager->save($log);
         });

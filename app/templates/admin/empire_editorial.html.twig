@@ -1,0 +1,21 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}{{ player.username }} · Intervention{% endblock %}
+{% block body %}
+<a href="{{ path('app_admin_player',{id:player.id}) }}">← Fiche de {{ player.username }}</a>
+{% if items is defined %}
+<section class="panel"><h1>Titres et bannières de {{ player.username }}</h1>
+<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('grant_'~player.id) }}">
+<fieldset><legend>Éléments du compte</legend>{% for code,item in items %}<label><input type="checkbox" name="codes[]" value="{{ code }}"> {{ item.label }} · {{ owned[code] is defined ? 'acquis' : 'non acquis' }}</label>{% endfor %}</fieldset>
+<button name="operation" value="grant">Attribuer la sélection</button> <button name="operation" value="remove">Retirer la sélection</button></form></section>
+{% else %}
+<section class="panel"><h1>{{ player.username }} · {{ member.universe.name }}</h1>
+<p>Dernière visite : {{ member.lastActivityAt ? member.lastActivityAt|date('d/m/Y H:i',preferences.timezone) : 'Inconnue' }} · {{ preview.days }} jours d’absence hors vacances · {{ preview.state.status == 'vacation' ? 'En vacances' : (member.manualInactiveAt or preview.state.status == 'inactive' ? 'Inactif' : 'Actif') }}.</p>
+<p>Le badge automatique apparaît après 14 jours. Le marquage manuel applique le statut Inactif et suspend les protections liées à l’activité jusqu’à la prochaine visite. Il ne rapproche pas l’échéance automatique de conversion.</p>
+{% set labels = {colonies:'Colonies',deployed_fleets:'Flottes déployées',incoming_or_stationed_fleets:'Flottes entrantes ou stationnées',queued_orders:'Commandes en file',technologies:'Technologies',open_combats:'Combats en cours',alliances:'Accords diplomatiques',guild_memberships:'Appartenances aux guildes',led_guilds:'Guildes dirigées'} %}
+<h2>Conséquences de la conversion</h2><dl class="report-facts">{% for k,n in preview.inventory %}<div><dt>{{ labels[k] }}</dt><dd>{{ n }}</dd></div>{% endfor %}</dl>
+<p>Le joueur perd définitivement le contrôle de cet empire. Ses flottes sont rappelées, les liens diplomatiques prennent fin et la direction de sa guilde est transmise ou la guilde archivée.</p>
+<form method="post"><input type="hidden" name="signature" value="{{ preview.signature }}"><input type="hidden" name="_token" value="{{ csrf_token('state_'~player.id~'_'~member.id~'_'~preview.signature) }}">
+<label>Motif <input name="reason" maxlength="500" required></label><button name="action" value="inactive">Marquer inactif</button> <button name="action" value="clear">Retirer le marquage manuel</button>
+<fieldset><legend>Empire oublié</legend><label><input type="checkbox" name="confirmConversion"> Je confirme le détachement définitif de cet empire.</label><button name="action" value="convert">Convertir en empire oublié</button></fieldset></form></section>
+{% endif %}
+{% endblock %}

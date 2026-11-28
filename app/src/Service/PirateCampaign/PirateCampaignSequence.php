@@ -29,7 +29,7 @@ final readonly class PirateCampaignSequence
             return null;
         }
 
-        $keys = $this->catalogue->keys();
+        $keys = $this->catalogue->keys($viewer->universe);
         $known = array_fill_keys($keys, true);
         $proofs = [];
         foreach ($rows as $row) {
@@ -46,8 +46,19 @@ final readonly class PirateCampaignSequence
             $proofs[$key] = $proof['won'];
         }
 
+        // Un créneau ouvert après le départ d'une rencontre suivante ne redirige pas un dossier engagé.
+        $lastStarted = -1;
+        foreach ($keys as $index=>$key) {
+            if (isset($proofs[$key])) $lastStarted = $index;
+        }
         $consultable = [];
-        foreach ($keys as $key) {
+        foreach ($keys as $index=>$key) {
+            $mission = $viewer->universe->gameSettings['pirate_missions'][$key] ?? null;
+            if ($mission && !isset($proofs[$key])) {
+                if ($index < $lastStarted) continue;
+                if ($mission['ends'] && $at >= new \DateTimeImmutable($mission['ends'])) continue;
+                if ($mission['starts'] && $at < new \DateTimeImmutable($mission['starts'])) continue;
+            }
             if (isset($proofs[$key])) {
                 $consultable[] = $key;
                 if ($proofs[$key]) {

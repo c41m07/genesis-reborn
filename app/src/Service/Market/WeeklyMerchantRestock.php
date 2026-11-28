@@ -42,7 +42,7 @@ final class WeeklyMerchantRestock
      * @param array<string, int> $executedStationSales
      * @return array<string, int> Quantités positives à inscrire au journal PNJ.
      */
-    public function quantities(array $physical, array $targets, array $executedStationSales): array
+    public function quantities(array $physical, array $targets, array $executedStationSales, int $percent = 50): array
     {
         $result = [];
         foreach (['metal', 'nano', 'hydrogen', 'antimatter'] as $resource) {
@@ -52,7 +52,8 @@ final class WeeklyMerchantRestock
             if ($stock < 0 || $target < 0 || $sold < 0) {
                 throw new \DomainException('Une quantité de marché ne peut pas être négative.');
             }
-            $amount = min(intdiv($sold, 2), max(0, $target - $stock));
+            $share = intdiv($sold,100) * $percent + intdiv(($sold % 100) * $percent,100);
+            $amount = min($share, max(0, $target - $stock));
             if ($amount > 0) {
                 $result[$resource] = $amount;
             }

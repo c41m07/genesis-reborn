@@ -8,6 +8,7 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 
 | Besoin | Référence |
 | --- | --- |
+| Éditer les titres, bannières, guides, missions et récompenses ou gérer un empire | [Éditeurs du panneau admin](EDITEURS_ADMIN.md) |
 | Suivre la fiabilité, les devis et l’historique du catalogue admin | [Catalogue administratif](ADMIN_CATALOGUE_FIABILITE.md) |
 | Suivre le diagnostic complémentaire des relais admin | [Exploitation administrative](ADMIN_EXPLOITATION_DIAGNOSTIC.md) |
 | Consulter les guildes depuis l’administration | [Consultation des guildes](ADMIN_GUILDES_CONSULTATION.md) |

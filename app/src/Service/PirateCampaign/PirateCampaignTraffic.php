@@ -77,7 +77,7 @@ final readonly class PirateCampaignTraffic
 
     private function read(PlayerUniverse $viewer, \DateTimeImmutable $at): array
     {
-        $keys = $this->catalogue->keys();
+        $keys = $this->catalogue->keys($viewer->universe);
         $rows = $this->campaigns->ownedRows($viewer, $keys, $at);
         $order = $this->sequence->forViewer($viewer, $rows, $at);
         if ($rows === [] || $order === null || $order['consultable'] === []) {

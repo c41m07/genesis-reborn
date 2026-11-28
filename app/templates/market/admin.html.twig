@@ -14,16 +14,19 @@
             {% for resource, label in labels %}
                 <div class="market-field">
                     <label for="market-target-{{ resource }}">Cible · {{ label }}</label>
-                    <input id="market-target-{{ resource }}" name="{{ resource }}" type="number" required step="1" min="0" max="{{ maxTarget }}" value="{{ rows[resource].target|default(0) }}">
+                    <input id="market-target-{{ resource }}" name="{{ resource }}" type="number" required step="1" min="0" max="{{ maxTarget }}" value="{{ draftTargets[resource]|default(rows[resource].target|default(0)) }}">
                 </div>
             {% endfor %}
-            <label for="market-enable"><input id="market-enable" name="enabled" type="checkbox" value="1" {{ market and market.enabled ? 'checked' : '' }}> Autoriser les échanges et les réassorts hebdomadaires</label>
+            <label for="market-enable"><input id="market-enable" name="enabled" type="checkbox" value="1" {{ enabled ? 'checked' : '' }}> Autoriser les échanges et les réassorts hebdomadaires</label>
+            {% for key,label in policyLabels %}<label>{{ label }}<input type="number" name="policy[{{ key }}]" min="{{ key == 'days' ? 1 : 0 }}" max="{{ bounds[key] }}" value="{{ policy[key] }}" required></label>{% endfor %}
+            <button name="action" value="preview">Simuler les réglages</button>
+            {% if example is not null %}<p>Pour un lot de 100 crédits, le vendeur paie {{ example }} crédits à la publication. Les invendus repartent après {{ policy.days }} jours. Pour 100 unités vendues, le marchand apporte jusqu’à {{ policy.merchant }} unités.</p>{% endif %}
             <button class="primary" type="submit">Enregistrer la configuration</button>
         </form>
     </section>
     <section class="panel" aria-labelledby="market-admin-stock">
         <h2 id="market-admin-stock">Stock et dernières livraisons</h2>
-        <p>Vendredi à 9 h, Paris : jusqu’à 50 % des ventes réelles de la station, limité par la cible et avec révision du cours selon la réserve.</p>
+        <p>Vendredi à 9 h, Paris : jusqu’à {{ market ? (universe.gameSettings.station_policy.merchant|default(50)) : 50 }} % des ventes réelles de la station, limité par la cible et avec révision du cours selon la réserve.</p>
         {% if rows %}
             <div class="market-table-wrap" tabindex="0" role="region" aria-labelledby="market-admin-stock">
                 <table class="data-table market-table">

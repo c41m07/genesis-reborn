@@ -9,8 +9,10 @@
 </div>
 <p class="admin-monitor-note">La présence et le temps de jeu sont des estimations de l’activité observée. Le suivi commence à la première visite enregistrée ; aucun historique antérieur n’est reconstitué. Les compteurs sont suspendus après cinq minutes sans activité. Les journées sont comptées en UTC.</p>
 {% include 'admin/_account_diagnostic.html.twig' %}
+<a class="secondary" href="{{ path('app_admin_cosmetic_grant',{id:player.id}) }}">Gérer les titres et bannières</a>
 {% for row in memberships %}{% set activity = row.activity %}
 <section class="panel admin-player-membership" aria-labelledby="membership-{{ row.membership.id }}"><h2 id="membership-{{ row.membership.id }}">{{ row.membership.universe.name }}</h2>
+<a class="secondary" href="{{ path('app_admin_empire_state',{id:player.id,memberId:row.membership.id}) }}">Activité et conversion de l’empire</a>
 <dl class="report-facts admin-player-activity"><div><dt>Présence estimée</dt><dd>{{ activity.online ? 'En ligne' : (activity.last_seen ? 'Hors ligne' : 'Non mesurée') }}</dd></div>
 <div><dt>Dernière activité observée</dt><dd>{{ activity.last_seen ? activity.last_seen|date('d/m/Y H:i:s', preferences.timezone) : 'Aucune activité enregistrée' }}</dd></div>
 <div><dt>Début du suivi</dt><dd>{{ activity.tracked_since ? activity.tracked_since|date('d/m/Y H:i', preferences.timezone) : 'À la prochaine visite du joueur' }}</dd></div>

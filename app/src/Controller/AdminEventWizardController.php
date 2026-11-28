@@ -16,7 +16,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class AdminEventWizardController extends AbstractController
 {
     #[Route('/admin/events/assistant',name:'app_admin_event_wizard',methods:['GET','POST'])]
-    public function index(Request $request,EntityManagerInterface $em,AdminEventPlanner $planner,ClockInterface $clock): Response
+    public function index(Request $request,EntityManagerInterface $em,AdminEventPlanner $planner,ClockInterface $clock, \App\Service\Player\ProfileCosmetics $cosmetics): Response
     {
         $model=(string)$request->query->get('model','');$draft=[];
         if ($model!=='' && !isset(AdminEventPlanner::MODELS[$model])) throw $this->createNotFoundException();
@@ -33,7 +33,7 @@ final class AdminEventWizardController extends AbstractController
                 return $this->redirectToRoute('app_admin_event_preview',['key'=>$key]);
             } catch (\DomainException $error) { $this->addFlash('error',$error->getMessage()); }
         }
-        return $this->render('admin/event_wizard.html.twig',['models'=>AdminEventPlanner::MODELS,'model'=>$model,'draft'=>$draft,
+        return $this->render('admin/event_wizard.html.twig',['cosmetics'=>$model === 'challenge' ? $cosmetics->definitions() : [],'models'=>AdminEventPlanner::MODELS,'model'=>$model,'draft'=>$draft,
             'universes'=>$em->getRepository(Universe::class)->findBy([],['name'=>'ASC']),'objectives'=>AdminEventPlanner::OBJECTIVES,'formats'=>ResourceBoxPolicy::FORMATS,
             'default_start'=>$clock->now()->modify('+1 hour')->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i'),
             'default_end'=>$clock->now()->modify('+1 day')->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i')],new Response(status:$request->isMethod('POST')?422:200));

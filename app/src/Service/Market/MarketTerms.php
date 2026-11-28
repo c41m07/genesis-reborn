@@ -94,6 +94,7 @@ final readonly class MarketTerms
                 || $creditCents > ($this->players->account($member)?->cents ?? 0))) {
                 throw new \DomainException('Réserve de la station ou solde de crédits insuffisant.');
             }
+            if ($operation === 'deposit' && !$compositionOnly) $this->players->assertRoom($member,$quantity);
             if ($operation === 'collect' && $quantity > ($this->players->account($member)?->goods[$resource] ?? 0)) {
                 throw new \DomainException('Quantité indisponible dans votre dépôt à la station.');
             }

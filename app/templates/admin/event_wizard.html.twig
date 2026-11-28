@@ -46,7 +46,8 @@
                 </div>
                 <p class="admin-event-wide">Zéro signifie toute contribution positive. Les récompenses sont attribuées à la clôture si l’objectif collectif est atteint.</p>
                 <div class="admin-event-field">
-                    <label for="guided-reward">Un objet par participant éligible</label><select id="guided-reward" name="reward_kind"><option value="boost" {{ draft.reward_kind|default('boost') == 'boost' ? 'selected' : '' }}>Un boost</option><option value="resource_box" {{ draft.reward_kind|default('boost') == 'resource_box' ? 'selected' : '' }}>Une boîte de ressources</option></select>
+                    <label for="guided-reward">Un objet par participant éligible</label><select id="guided-reward" name="reward_kind"><option value="boost" {{ draft.reward_kind|default('boost') == 'boost' ? 'selected' : '' }}>Un boost</option><option value="resource_box" {{ draft.reward_kind|default('boost') == 'resource_box' ? 'selected' : '' }}>Une boîte de ressources</option><option value="cosmetics" {{ draft.reward_kind|default('') == 'cosmetics' ? 'selected' }}>Titres et bannières</option></select>
+                    <fieldset><legend>Lot pour la récompense « Titres et bannières »</legend>{% for code,item in cosmetics %}<label><input type="checkbox" name="cosmetics[]" value="{{ code }}" {{ code in draft.cosmetics|default([]) ? 'checked' }}> {{ item.label }}</label>{% endfor %}</fieldset>
                 </div>
                 <div class="admin-event-field">
                     <label for="guided-box">Format si la récompense est une boîte</label><select id="guided-box" name="box_format">{% for value, label in formats %}<option value="{{ value }}" {{ draft.box_format|default('small') == value ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select>

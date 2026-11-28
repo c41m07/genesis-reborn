@@ -52,7 +52,7 @@
         <fieldset class="account-section">
             <legend>Éléments équipés</legend>
             {% for code, cosmetic in cosmetics %}
-                <p><label><input type="checkbox" name="equipped[]" value="{{ code }}"{{ cosmetic.equipped ? ' checked' }}> {{ cosmetic.slot == 'title' ? 'Titre' : 'Bannière' }} : {{ cosmetic.label }}</label></p>
+                <p><label><input type="checkbox" name="equipped[]" value="{{ code }}"{{ cosmetic.equipped ? ' checked' }}> {{ cosmetic.slot == 'title' ? 'Titre' : 'Bannière' }} : {{ cosmetic.label }}</label>{% if cosmetic.description|default('') %} · {{ cosmetic.description }}{% endif %}{% if cosmetic.art is defined %}<img class="editorial-preview" src="{{ asset(cosmetic.art) }}" alt="{{ cosmetic.label }}">{% endif %}</p>
             {% endfor %}
         </fieldset>
         <button class="secondary">Enregistrer l’apparence</button>

@@ -31,7 +31,7 @@ final readonly class PirateCampaignWorkspace
         \DateTimeImmutable $at,
         ?int $requested = null,
     ): ?array {
-        $keys = $this->catalogue->keys();
+        $keys = $this->catalogue->keys($viewer->universe);
         if (count($rows) > count($keys) || ($requested !== null && ($requested < 1 || !isset($keys[$requested - 1])))) {
             return null;
         }
@@ -60,15 +60,16 @@ final readonly class PirateCampaignWorkspace
         }
 
         return [
+            'art' => $viewer->universe->gameSettings['pirate_missions'][$selected]['art'] ?? 'art/genesis-reborn-planet.webp',
             'mission_count' => count($keys),
             'current' => $current === null ? null : $positions[$current] + 1,
             'selected' => $positions[$selected] + 1,
             'history' => $history,
             // L'ordre est admissible à la lecture, pas un départ disponible : aucun site n'a été sélectionné.
             'signal_pending' => $signalPending,
-            'signal_copy' => $signalPending ? $this->catalogue->signalCopy($selected) : null,
+            'signal_copy' => $signalPending ? $this->catalogue->signalCopy($selected,$viewer->universe) : null,
             'briefing' => $briefing,
-            'chapter' => $this->chapterForDossier($selected, $current, $consultable, $positions, $briefing),
+            'chapter' => $this->chapterForDossier($viewer,$selected, $current, $consultable, $positions, $briefing),
         ];
     }
 
@@ -76,10 +77,10 @@ final readonly class PirateCampaignWorkspace
      * Le sommaire indique la progression, pas le contenu des dossiers verrouillés.
      * Un titre révélateur n’est montré que dans le dossier autorisé qui l’a reçu.
      */
-    private function chapterForDossier(string $selected, ?string $current, array $consultable, array $positions, ?array $briefing): array
+    private function chapterForDossier(PlayerUniverse $viewer, string $selected, ?string $current, array $consultable, array $positions, ?array $briefing): array
     {
         $readable = array_fill_keys($consultable, true);
-        foreach ($this->catalogue->chapters() as $chapterIndex => $chapter) {
+        foreach ($this->catalogue->chapters($viewer->universe) as $chapterIndex => $chapter) {
             if (!in_array($selected, $chapter['keys'], true)) {
                 continue;
             }
@@ -90,7 +91,7 @@ final readonly class PirateCampaignWorkspace
                 $title = match (true) {
                     $state === 'locked' => null,
                     $key === $selected && $briefing !== null => $briefing['narrative']['title'],
-                    default => $this->catalogue->signalCopy($key)['title'],
+                    default => $this->catalogue->signalCopy($key,$viewer->universe)['title'],
                 };
                 $missions[] = ['number' => $positions[$key] + 1, 'title' => $title, 'state' => $state];
             }

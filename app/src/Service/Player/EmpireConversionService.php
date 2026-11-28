@@ -28,22 +28,30 @@ final class EmpireConversionService
         return $this->convertMembership($membership,true);
     }
 
-    private function convertMembership(PlayerUniverse $membership,bool $accountDeletion): array
+    public function convertManually(PlayerUniverse $membership): array
     {
-        return $this->manager->transaction(function()use($membership,$accountDeletion): array {
+        if (!$this->enabled) throw new \DomainException('Les conversions sont désactivées.');
+        return $this->convertMembership($membership,false,true);
+    }
+
+    private function convertMembership(PlayerUniverse $membership,bool $accountDeletion,bool $manual = false): array
+    {
+        return $this->manager->transaction(function()use($membership,$accountDeletion,$manual): array {
             if ($accountDeletion) { $this->manager->lock($membership);$this->manager->lock($membership->universe); }
             else $this->guard->lockMembershipForProcessing($membership);
             if($membership->isForgotten()) return ['status'=>'already_converted'];
             $now=$this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
             $state=$this->activity->snapshot($membership,$now);
-            if(!$membership->isPlayerControlled() || (!$accountDeletion && !$state['conversion_due'])) return ['status'=>'not_due'];
+            if(!$membership->isPlayerControlled() || (!$accountDeletion && !$manual && !$state['conversion_due'])) return ['status'=>'not_due'];
+            if ($manual && $state['status'] === 'vacation') return ['status'=>'vacation'];
             $inventory=$this->repo->forgottenEmpirePreviewInventory($membership);
             if($inventory['open_combats']>0) return ['status'=>'deferred_combat'];
             $this->manager->lock($membership->player);
             $log=new EmpireConversion();$log->membership=$membership;$log->activityAt=$membership->lastActivityAt??$membership->joinedAt;
-            $log->dueAt=$accountDeletion?$now:new \DateTimeImmutable($state['conversion_due_at']);$log->convertedAt=$now;
+            $log->dueAt=($accountDeletion || $manual)?$now:new \DateTimeImmutable($state['conversion_due_at']);$log->convertedAt=$now;
             $log->effects['inventory_before']=$inventory;
             if ($accountDeletion) $log->effects['reason']='account_deletion';
+            if ($manual) $log->effects['reason']='admin_conversion';
             $supportReturns=[];
             foreach($this->repo->all(\App\Entity\PlanetOccupation::class,['occupant'=>$membership,'status'=>'active']) as $occupation) {
                 $this->manager->lock($occupation->planet);$this->manager->lock($occupation);

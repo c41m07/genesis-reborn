@@ -247,6 +247,21 @@ final class PirateCampaignCatalogueTest extends TestCase
         self::assertArrayNotHasKey('arrival_at', $victory);
     }
 
+    public function testCustomMissionKeepsItsUniverseAndFrozenReward(): void
+    {
+        $world = $this->universe();
+        $other = clone $world;
+        $entry = $this->campaign->definition('balise_17');
+        $entry['reward'] = ['metal'=>1000,'nano'=>50,'hydrogen'=>0,'antimatter'=>0];
+        $world->gameSettings['pirate_missions']['custom_dock'] = $entry;
+        self::assertNotContains('custom_dock',$this->campaign->keys($other));
+        self::assertContains('custom_dock',$this->campaign->keys($world));
+        $prepared = $this->campaign->prepareForServer('custom_dock',$world);
+        $world->gameSettings['pirate_missions']['custom_dock']['reward']['metal'] = 999;
+        $restored = PiratePreparedEncounter::restore($prepared->encounterForServer(),$prepared->checkpoint());
+        self::assertSame(1000,$restored->checkpoint()['reward']['metal']['whole']);
+    }
+
     public function testUnknownDefinitionDoesNotFallbackToASurpriseEncounter(): void
     {
         $this->expectException(\DomainException::class);

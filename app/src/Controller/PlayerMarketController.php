@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Repository\ResourceMarketRepository;
-use App\Service\Market\{MarketPresentation, MarketPricing, PlayerMarket};
+use App\Service\Market\{MarketPresentation, MarketPricing, PlayerMarket, StationPolicy};
 use App\Service\Universe\UniverseContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
@@ -15,10 +15,12 @@ final class PlayerMarketController extends AbstractController
 {
     #[Route('/bourse/joueurs', name: 'app_player_market', methods: ['GET', 'POST'])]
     public function page(Request $request, UniverseContext $context, ResourceMarketRepository $markets,
-        PlayerMarket $players, MarketPresentation $presentation): Response
+        PlayerMarket $players, MarketPresentation $presentation, \App\Repository\GameRepository $repo): Response
     {
         $member = $context->membership();
         $market = $markets->find($member->universe);
+        $planets = $repo->planets($member->universe,$member);
+        $policy = StationPolicy::read($member->universe);
         $resource = $request->query->getString('resource', 'metal');
         if (!isset(MarketPricing::WEIGHTS[$resource])) {
             throw $this->createNotFoundException();
@@ -34,7 +36,10 @@ final class PlayerMarketController extends AbstractController
             try {
                 $action = $fields->getString('action');
                 if ($action === 'preview' && $market?->enabled) {
-                    $terms = PlayerMarket::listingTerms($fields->getInt('quantity'), $fields->getString('price'));
+                    $terms = PlayerMarket::listingTerms($fields->getInt('quantity'), $fields->getString('price'),$policy['fee']);
+                    $destination = $fields->getInt('destination',$planets[0]->id ?? 0);
+                    if (!in_array($destination,array_column($planets,'id'),true)) throw new \DomainException('Choisissez une de vos colonies.');
+                    $terms += ['destination'=>$destination,'days'=>$policy['days']];
                     $session->set($draftKey, $terms + ['price' => $fields->getString('price'), 'key' => bin2hex(random_bytes(16))]);
                 } elseif ($action === 'discard') {
                     $session->remove($draftKey);
@@ -43,7 +48,7 @@ final class PlayerMarketController extends AbstractController
                     if (!$draft || !hash_equals($draft['key'], $key)) {
                         throw new \DomainException('Vérifiez les conditions de mise en vente.');
                     }
-                    $players->order($member, $key, 'list', $resource, $draft['quantity'], $draft['price'], 0);
+                    $players->order($member, $key, 'list', $resource, $draft['quantity'], $draft['price'], 0, $draft);
                     $session->remove($draftKey);
                     $this->addFlash('success', 'Offre publiée. La taxe de mise en vente a été prélevée.');
                 } else {
@@ -69,7 +74,7 @@ final class PlayerMarketController extends AbstractController
             'labels' => MarketPresentation::LABELS, 'resource' => $resource, 'page' => $page,
             'offers' => $visibleOffers, 'offerKeys' => $offerKeys, 'more' => count($offers) > 20,
             'draft' => $session->get($draftKey), 'rows' => $market?->enabled ? $presentation->rows($market) : [], 'key' => bin2hex(random_bytes(16)),
-            'fee' => MarketPricing::FEE_PERCENT, 'maxLot' => MarketPricing::MAX_LOT,
+            'planets'=>$planets,'policy'=>$policy,'fee' => $policy['fee'], 'maxLot' => MarketPricing::MAX_LOT,
         ]);
     }
 }

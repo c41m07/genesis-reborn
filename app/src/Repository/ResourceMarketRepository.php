@@ -11,7 +11,7 @@ final readonly class ResourceMarketRepository
 {
     public const ACTIVE_STATUSES = ['outbound', 'returning', 'awaiting_colony'];
 
-    public function __construct(private EntityManagerInterface $em)
+    public function __construct(private EntityManagerInterface $em, private \Psr\Clock\ClockInterface $clock)
     {
     }
 
@@ -25,6 +25,8 @@ final readonly class ResourceMarketRepository
     {
         return $this->em->createQueryBuilder()->select('o')->from(MarketOffer::class, 'o')
             ->join('o.seller', 's')->where('o.universe = :world AND s.universe = :world')
+            ->andWhere('o.expiresAt IS NULL OR o.expiresAt > :now')
+            ->setParameter('now',$this->clock->now()->setTimezone(new \DateTimeZone('UTC')))
             ->andWhere('s.player IS NOT NULL AND s.forgottenAt IS NULL AND o.resource = :resource')
             ->setParameter('world', $member->universe)->setParameter('resource', $resource)
             ->orderBy('o.unitCents', 'ASC')->addOrderBy('o.id', 'ASC')

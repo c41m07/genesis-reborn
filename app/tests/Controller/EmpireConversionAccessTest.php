@@ -44,6 +44,54 @@ final class EmpireConversionAccessTest extends WebTestCase
         }
         putenv($this->environment[2]===false?$name:$name.'='.$this->environment[2]);
     }
+    public function testManualInactivityDoesNotAdvanceConversionAndEndsOnVisit(): void
+    {
+        $this->membership->lastActivityAt = $this->clock->now()->modify('-1 hour');
+        $this->membership->manualInactiveAt = $this->clock->now();
+        $this->em->flush();
+        $activity = static::getContainer()->get(\App\Service\Player\EmpireActivityService::class);
+        $state = $activity->snapshot($this->membership);
+        self::assertSame('inactive',$state['status']);
+        self::assertFalse($state['conversion_due']);
+        self::assertTrue(static::getContainer()->get(\App\Service\Player\PlayerProtection::class)->suspendedForInactivity($this->membership));
+        $activity->recordVisit($this->membership);
+        self::assertNull($this->membership->manualInactiveAt);
+        self::assertSame('active',$activity->snapshot($this->membership)['status']);
+    }
+
+    public function testAdministratorCanConvertAnActiveEmpireOnlyAfterReview(): void
+    {
+        $targetId = $this->player->id;
+        $memberId = $this->membership->id;
+        $url = '/admin/joueurs/'.$targetId.'/empires/'.$memberId.'/statut';
+        $this->client->request('GET',$url);
+        self::assertResponseRedirects('/acces-refuse');
+        $data = new RegistrationData();
+        $data->username = 'AdminEdition';
+        $data->email = 'empire-editor@example.test';
+        $data->plainPassword = 'A-test-password-2026';
+        $actor = static::getContainer()->get(RegistrationService::class)->register($data);
+        $actor->roles = ['ROLE_ADMIN'];
+        $actor->emailVerifiedAt = $this->clock->now();
+        $this->membership = $this->em->find(PlayerUniverse::class,$memberId);
+        $this->membership->lastActivityAt = $this->clock->now();
+        $this->em->flush();
+        $this->client->loginUser($actor);
+        $preview = $this->client->request('GET',$url);
+        $button = 'Convertir en empire oublié';
+        $this->client->submit($preview->selectButton($button)->form(['reason'=>'Recette']));
+        self::assertResponseRedirects($url);
+        self::assertTrue($this->em->find(PlayerUniverse::class,$memberId)->isPlayerControlled());
+        $preview = $this->client->followRedirect();
+        $form = $preview->selectButton($button)->form(['reason'=>'Recette','confirmConversion'=>true]);
+        $this->client->submit($form);
+        self::assertResponseRedirects('/admin/joueurs/'.$targetId);
+        self::assertTrue($this->em->find(PlayerUniverse::class,$memberId)->isForgotten());
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(404);
+        self::assertSame(1,$this->em->getRepository(\App\Entity\EmpireConversion::class)->count(['membership'=>$memberId]));
+    }
+
     public function testVisitBeforeMidnightKeepsAccessAndRestartsInactivity(): void
     {
         $this->client->request('GET','/planetes');self::assertResponseIsSuccessful();$this->em->refresh($this->membership);

@@ -89,3 +89,17 @@
     .market-space .fleet-composition-control { flex-direction: column; height: auto; gap: 2px; }
     .market-space .fleet-composition-control > :is(input,button) { width: 100%; min-height: 44px; flex: auto; }
 }
+
+.editorial-preview { display:block; width:min(100%,65rem); height:clamp(8rem,18vw,16rem); object-fit:cover; }
+.editorial-preview, .editorial-art, .market-hero-art { object-position:center var(--art-crop,46%); }
+body.authenticated .social-workspace .ranking-table tbody tr.ranking-banner--polar-night { background-position:center var(--art-crop,55%); }
+.ranking-label.editorial-cyan { background:#10353f; color:#baf5ff; border-color:#70dced; }
+.ranking-label.editorial-silver { background:#343942; color:#f0f3fa; border-color:#c2cbd8; }
+@media(max-width:600px) {
+    .editorial-preview, .editorial-art, .market-hero-art { object-position:center var(--art-mobile,50%); }
+    .market-hero[style] .market-hero-art { height:8rem; }
+    body.authenticated .social-workspace .ranking-table tbody tr.ranking-banner--polar-night { background-position:center var(--art-mobile,55%); }
+}
+.admin-pirate-editor { min-width:0; }
+.admin-pirate-editor .table-scroll { max-width:100%; overflow-x:auto; }
+.admin-pirate-editor td input { width:7ch; min-width:5ch; }

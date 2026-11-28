@@ -19,7 +19,7 @@ final readonly class PiratePilotCampaignOrder
      */
     public function choose(PlayerUniverse $owner, array $ownedRows, int $ordinal, \DateTimeImmutable $at): ?array
     {
-        $keys = $this->catalogue->keys();
+        $keys = $this->catalogue->keys($owner->universe);
         if ($ordinal < 1 || !isset($keys[$ordinal - 1])) {
             return null;
         }
@@ -33,7 +33,8 @@ final readonly class PiratePilotCampaignOrder
         $previous = null;
         $previousState = null;
         if ($ordinal > 1) {
-            $priorKey = $keys[$ordinal - 2];
+            $priorKeys = array_intersect(array_slice($keys,0,$ordinal-1),$sequence['consultable']);
+            $priorKey = end($priorKeys);
             foreach ($ownedRows as $row) {
                 $recon = $row['reconnaissance'];
                 $attack = $row['attack'];

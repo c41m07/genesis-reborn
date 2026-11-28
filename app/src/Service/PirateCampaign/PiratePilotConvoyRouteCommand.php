@@ -83,7 +83,7 @@ final readonly class PiratePilotConvoyRouteCommand
 
     private function context(PlayerUniverse $member, \DateTimeImmutable $at, int $mission): ?array
     {
-        $key = $this->catalogue->keys()[$mission - 1] ?? null;
+        $key = $this->catalogue->keys($member->universe)[$mission - 1] ?? null;
         $right = $key === null ? null : $this->rights->forOwnedMission($member, $key, $at);
         if ($right === null) {
             return null;

@@ -51,7 +51,7 @@ final readonly class PiratePilotConvoyDepositCommand
     /** @return array{PirateConvoyDelivery,string}|null */
     private function pending(PlayerUniverse $member, \DateTimeImmutable $at, int $mission): ?array
     {
-        $key = $this->catalogue->keys()[$mission - 1] ?? null;
+        $key = $this->catalogue->keys($member->universe)[$mission - 1] ?? null;
         if ($key === null) {
             return null;
         }

@@ -1,0 +1,16 @@
+{% set exchange = destination == 'exchange' %}
+{% set heading = banner.label|default(exchange ? 'Marché des joueurs' : 'Bourse de ressources') %}
+<header class="panel market-hero"{% if banner %} style="--art-crop:{{ banner.desktop }}%;--art-mobile:{{ banner.mobile }}%"{% endif %}>
+    <div>
+        <p class="market-kicker">{{ exchange ? 'Station A:0:0 · '~world.name : 'Station commerciale · A:0:0' }}</p>
+        {% if preview|default(false) %}<h3>{{ heading }}</h3>{% else %}<h1>{{ heading }}</h1>{% endif %}
+        {% if exchange %}
+            {% if banner.description|default('') %}<p>{{ banner.description }}</p>{% endif %}
+            <p>Votre solde : <strong>{{ (cents / 100)|number_format(2, ',', ' ') }} crédits</strong></p>
+        {% else %}
+            <p>{{ banner.description|default('Vos cargos relient votre colonie à la station.') }}</p>
+            <ul aria-label="Conditions du trajet"><li>Convoi protégé</li><li>30 min aller · 30 min retour</li></ul>
+        {% endif %}
+    </div>
+    <img class="market-hero-art" src="{{ asset(banner.art|default(exchange ? 'art/marche-joueurs.webp' : 'art/bourse-station.webp')) }}" width="1536" height="512" alt="">
+</header>

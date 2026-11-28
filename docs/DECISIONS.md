@@ -2396,3 +2396,7 @@ attribuées sans date limite.
 ## 27 novembre 2026 — Consultation des boîtes
 
 Visiter l’onglet Boîtes acquitte les notifications des boîtes affichées dans l’univers actif. Le joueur peut choisir plus tard quand ouvrir ses boîtes. Les cadeaux en attente et les boosts gardent leur propre état de lecture.
+
+## Éditeurs administratifs du jeu
+
+Le propriétaire valide les dix outils de contenu, d’animation et d’intervention et choisit la colonie de retour des invendus à la mise en vente avec perte de l’excédent à l’expiration. La portée des cosmétiques reste le compte, celle des contenus de jeu reste l’univers. Les règles détaillées figurent dans le [guide des éditeurs](EDITEURS_ADMIN.md).

@@ -1,0 +1,30 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Contenus du jeu · Administration{% endblock %}
+{% block body %}
+<h1>Contenus du jeu</h1>
+<nav class="ui-tabs" aria-label="Créer un contenu">{% for key,label in kinds %}<a href="{{ path('app_admin_editorial',{type:key}) }}" {% if key == kind %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+{% if source %}
+<section class="panel"><h2>Aperçu · {{ source.content.label }}</h2>
+{% if kind == 'page' %}<div class="market-space">{% include 'market/_banner.html.twig' with {destination:source.code,world:source.universe,cents:0,banner:source.content,preview:true} only %}</div>
+{% elseif source.content.art is defined %}<img class="editorial-preview" src="{{ asset(source.content.art) }}" style="--art-crop:{{ source.content.desktop }}%;--art-mobile:{{ source.content.mobile }}%" alt="">{% endif %}
+{% if kind == 'title' %}<strong>Commandant</strong><div class="ranking-badges"><span class="ranking-label ranking-label--title editorial-{{ source.content.color }}">{{ source.content.label }}</span><span class="ranking-label ranking-label--title">Gardien des étoiles</span><span class="ranking-label ranking-label--guild">Même guilde</span></div>{% endif %}
+{% if kind != 'page' %}<p>{{ source.content.description }}</p>{% endif %}
+{% if source.publishAt %}<p>Publication le {{ source.publishAt|date('d/m/Y H:i','UTC') }} UTC.</p>{% else %}
+<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('editorial_'~kind~'_'~source.id) }}"><label>Publication différée (UTC) <input type="datetime-local" name="when"></label><button class="primary" name="action" value="publish">Publier cette version</button></form>{% endif %}
+</section>{% endif %}
+<section class="panel"><h2>{{ source ? 'Préparer une nouvelle version' : 'Créer un brouillon' }}</h2>
+<form method="post" enctype="multipart/form-data" class="stack-list"><input type="hidden" name="_token" value="{{ csrf_token('editorial_'~kind~'_'~(source.id|default(0))) }}">
+{% if kind in ['guide','page'] %}<label>Univers <select name="universe" required>{% for u in universes %}<option value="{{ u.id }}" {{ (fields.universe|default(source.universe.id|default(0))) == u.id ? 'selected' }}>{{ u.name }}</option>{% endfor %}</select></label>
+{% set targets = kind == 'page' ? pages : steps %}<label>Destination <select name="{{ kind == 'page' ? 'target' : 'step' }}">{% for k,v in targets %}<option value="{{ k }}" {{ k == source.code|default('') ? 'selected' }}>{{ kind == 'page' ? v : v.title }}</option>{% endfor %}</select></label>{% endif %}
+<label>Nom affiché <input name="label" maxlength="100" value="{{ fields.label|default('') }}" required></label>
+<label>{{ kind in ['title','banner'] ? 'Conditions d’obtention' : 'Texte affiché' }} <textarea name="description" maxlength="1500">{{ fields.description|default('') }}</textarea></label>
+{% if kind == 'title' %}<label>Couleur du badge <select name="color">{% for k,v in colors %}<option value="{{ k }}" {{ k == fields.color|default('gold') ? 'selected' }}>{{ v }}</option>{% endfor %}</select></label>{% endif %}
+{% if kind in ['page','banner'] %}
+<label>Illustration <select name="art">{% if source %}<option value="previous">Conserver l’image de cette version</option>{% endif %}{% for k,v in art %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></label>
+<label>Importer une illustration (PNG, JPEG ou WebP) <input type="file" name="image" accept="image/png,image/jpeg,image/webp"></label>
+{% for device,label in {desktop:'ordinateur',mobile:'mobile'} %}<label>Position verticale sur {{ label }} (%) <input name="{{ device }}" type="number" min="0" max="100" value="{{ attribute(fields,device)|default(50) }}" required></label>{% endfor %}
+{% endif %}
+<button class="primary" name="action" value="draft">{{ source and source.publishAt ? 'Restaurer cette version en brouillon' : 'Enregistrer et prévisualiser' }}</button></form></section>
+<section class="panel"><h2>Historique des versions</h2><ul>{% for v in history %}<li><a href="{{ (v.kind == 'pirate' ? path('app_admin_pirate_missions',{id:v.universe.id,version:v.id}) : path('app_admin_editorial',{version:v.id})) }}">{{ v.content.label }} · version {{ v.id }}</a> · {{ v.universe.name|default('Tous les comptes') }} · {{ v.author.username|default('Ancien administrateur') }} · {{ v.publishAt ? v.publishAt|date('d/m/Y H:i','UTC')~' UTC' : 'Brouillon' }}</li>{% else %}<li>Aucune version.</li>{% endfor %}</ul>
+{% if page>1 %}<a href="{{ path('app_admin_editorial',{page:page-1}) }}">Précédent</a>{% endif %} {% if more %}<a href="{{ path('app_admin_editorial',{page:page+1}) }}">Suivant</a>{% endif %}</section>
+{% endblock %}

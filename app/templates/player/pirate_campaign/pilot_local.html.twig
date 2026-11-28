@@ -32,7 +32,7 @@
         <a href="#pirate-dossier-title">Dossier actif</a>
     </nav>
     <section class="pirate-campaign-banner" aria-label="Progression de la campagne">
-        <img class="pirate-campaign-art" src="{{ asset('art/genesis-reborn-planet.webp') }}" width="1448" height="1086" alt="" decoding="async">
+        <img class="pirate-campaign-art" src="{{ asset(dossier.art|default('art/genesis-reborn-planet.webp')) }}" width="1448" height="1086" alt="" decoding="async">
         <div class="campaign-board-banner-text">
             {% include 'player/pirate_campaign/_mission_heading.html.twig' with {narrative: narrative, status: dossier.signal_pending ? 'Signal de détresse' : briefing.status, compact: true} only %}
         </div>

@@ -18,7 +18,8 @@ final class PlayerProtection
 
     public function suspendedForInactivity(PlayerUniverse $membership): bool
     {
-        return $this->forgottenEmpiresEnabled && $this->activity->snapshot($membership)['status'] === 'inactive';
+        return ($membership->manualInactiveAt !== null || $this->forgottenEmpiresEnabled)
+            && $this->activity->snapshot($membership)['status'] === 'inactive';
     }
 
     public function status(PlayerUniverse $membership, int $points): array

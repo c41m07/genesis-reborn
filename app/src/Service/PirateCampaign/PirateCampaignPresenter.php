@@ -52,6 +52,7 @@ final readonly class PirateCampaignPresenter
         }
 
         return $this->view(
+            $viewer,
             $key,
             'Signal de détresse',
             $narrative,
@@ -117,6 +118,7 @@ final readonly class PirateCampaignPresenter
         }
 
         return $this->view(
+            $viewer,
             $progress['key'],
             $status,
             $narrative,
@@ -141,6 +143,7 @@ final readonly class PirateCampaignPresenter
      *   formation: ?array, losses: ?array, return: ?string, tactical_guidance: ?string, quote: ?array}
      */
     private function view(
+        PlayerUniverse $viewer,
         string $key,
         string $status,
         array $narrative,
@@ -154,7 +157,7 @@ final readonly class PirateCampaignPresenter
         $chapters = [];
         $offset = 0;
         $missionNumber = null;
-        foreach ($this->catalogue->chapters() as $chapter) {
+        foreach ($this->catalogue->chapters($viewer->universe) as $chapter) {
             $index = array_search($key, $chapter['keys'], true);
             if ($index !== false) {
                 $missionNumber = $offset + $index + 1;

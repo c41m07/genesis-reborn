@@ -2294,3 +2294,7 @@ Déploiement local futur : appliquer normalement en base dédiée la migration
 additive `Version20261120000830` (drapeaux à faux pour les actions existantes,
 registre des droits vide). Ne pas annuler une migration pour supprimer les
 preuves de crédits, même déjà consommés.
+
+## Éditeurs administratifs du jeu
+
+Lot de complexité 5/5 couvrant les parcours de contenu, d’animation, de conversion et de station. L’historique et les brouillons disposent d’une page dédiée ; les interventions partent de la fiche du joueur, les missions et la Bourse de l’univers concerné. Le [guide des éditeurs](EDITEURS_ADMIN.md) décrit les fonctions et la migration.

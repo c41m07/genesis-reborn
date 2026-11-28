@@ -20,13 +20,30 @@ final readonly class ProfileCosmetics
         'polar_night' => ['slot' => 'banner', 'label' => 'Nuit polaire'],
     ];
 
-    public function __construct(private GameManager $manager, private EntityManagerInterface $em) {}
+    public function __construct(private GameManager $manager, private EntityManagerInterface $em, private \App\Repository\EditorialRepository $library) {}
+
+    public function definitions(): array
+    {
+        $definitions = self::DEFINITIONS;
+        foreach (['title','banner'] as $slot) {
+            foreach ($this->library->published($slot, null) as $code => $content) {
+                $definitions[$code] = ['slot'=>$slot] + $content;
+            }
+        }
+        return $definitions;
+    }
+
+    private function forCodes(array $codes): array
+    {
+        return array_diff($codes,array_keys(self::DEFINITIONS)) ? $this->definitions() : self::DEFINITIONS;
+    }
 
     /** @param list<string> $codes Le compte est déjà verrouillé par l’appelant. */
     public function grantLocked(Player $player, array $codes, \DateTimeImmutable $at): void
     {
+        $definitions = $this->forCodes($codes);
         foreach (array_unique($codes) as $code) {
-            if (!isset(self::DEFINITIONS[$code])) {
+            if (!isset($definitions[$code])) {
                 throw new \DomainException('Cosmétique inconnu.');
             }
             // Même verrou compte que la sélection et l’effacement : une autre
@@ -43,9 +60,11 @@ final readonly class ProfileCosmetics
     public function owned(Player $player): array
     {
         $cosmetics = [];
-        foreach ($this->em->getRepository(ProfileCosmetic::class)->findBy(['player' => $player], ['id' => 'ASC']) as $row) {
-            if (isset(self::DEFINITIONS[$row->code])) {
-                $cosmetics[$row->code] = self::DEFINITIONS[$row->code] + ['equipped' => $row->equipped];
+        $rows = $this->em->getRepository(ProfileCosmetic::class)->findBy(['player' => $player], ['id' => 'ASC']);
+        $definitions = $this->forCodes(array_column($rows,'code'));
+        foreach ($rows as $row) {
+            if (isset($definitions[$row->code])) {
+                $cosmetics[$row->code] = $definitions[$row->code] + ['equipped' => $row->equipped];
             }
         }
 
@@ -57,7 +76,7 @@ final readonly class ProfileCosmetics
     {
         $equipped = array_filter($this->owned($player), static fn(array $item): bool => $item['equipped']);
 
-        return self::publicLabels(array_keys($equipped));
+        return self::publicLabels(array_keys($equipped), $equipped);
     }
 
     /**
@@ -75,10 +94,9 @@ final readonly class ProfileCosmetics
             ->from(PlayerUniverse::class, 'm')
             ->innerJoin(ProfileCosmetic::class, 'c', 'WITH', 'c.player = m.player')
             ->where('m.universe = :universe AND m.forgottenAt IS NULL AND m.id IN (:ids)')
-            ->andWhere('c.equipped = true AND c.code IN (:codes)')
+            ->andWhere('c.equipped = true')
             ->setParameter('universe', $universe)
             ->setParameter('ids', $membershipIds)
-            ->setParameter('codes', array_keys(self::DEFINITIONS))
             ->orderBy('c.id', 'ASC')
             ->getQuery()->getArrayResult();
 
@@ -87,22 +105,26 @@ final readonly class ProfileCosmetics
             $codesByMember[$row['membershipId']][] = $row['code'];
         }
 
-        return array_map(self::publicLabels(...), $codesByMember);
+        $definitions = $this->forCodes(array_column($rows, 'code'));
+        return array_map(static fn(array $codes): array => self::publicLabels($codes,$definitions), $codesByMember);
     }
 
     /**
      * @param list<string> $codes
      * @return array{titles?:list<string>,banner?:string}
      */
-    private static function publicLabels(array $codes): array
+    private static function publicLabels(array $codes, array $definitions): array
     {
         $result = [];
         foreach ($codes as $code) {
-            $item = self::DEFINITIONS[$code];
+            $item = $definitions[$code] ?? null;
+            if (!$item) continue;
             if ($item['slot'] === 'title') {
+                if (isset($item['color'])) $result['colors'][count($result['titles'] ?? [])] = $item['color'];
                 $result['titles'][] = $item['label'];
             } else {
                 $result['banner'] = $item['label'];
+                if (isset($item['art'])) $result['bannerArt'] = $item;
             }
         }
 

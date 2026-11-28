@@ -26,6 +26,7 @@ final class OutboxRelayCommand extends Command
         private ManagerRegistry $doctrine,
         private InfrastructurePerformance $performance,
         private WeeklyMerchantDelivery $merchants,
+        private \App\Service\Market\MarketOfferExpiry $offers,
     ) {
         parent::__construct();
     }
@@ -52,7 +53,8 @@ final class OutboxRelayCommand extends Command
                 $boostOk = $this->runCycle('boost', $this->boostEvents->tick(...), $output);
                 $leaderboardOk = $this->runCycle('classement', $this->leaderboard->tick(...), $output);
                 $marketOk = $this->runCycle('marchands de la Bourse', $this->merchants->tick(...), $output);
-                $cyclesOk = $boostOk && $leaderboardOk && $marketOk;
+                $offersOk = $this->runCycle('expiration des offres', $this->offers->tick(...), $output);
+                $cyclesOk = $boostOk && $leaderboardOk && $marketOk && $offersOk;
                 // Le relais des événements est le seul processus à entretenir les agrégats.
                 $this->performance->pruneIfDue();
             }

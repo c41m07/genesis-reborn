@@ -10,7 +10,7 @@ use App\Service\Colony\ResourceService;
 /** Conseils du guide, distincts des validations du catalogue et des actions. */
 final class FirstStepsView
 {
-    private const HINTS = [
+    public const HINTS = [
         'metal_mine' => [
             'title' => 'Mine à ciel ouvert',
             'explanation' => 'Le métal paie vos premières installations. Vous pouvez lancer cette mine avant la centrale.',
@@ -236,8 +236,21 @@ final class FirstStepsView
         ],
     ];
 
-    public function __construct(private FirstSteps $firstSteps, private ResourceService $resources)
+    public function __construct(private FirstSteps $firstSteps, private ResourceService $resources, private \App\Repository\EditorialRepository $editorial)
     {
+    }
+
+    private function hints(?\App\Entity\Universe $universe): array
+    {
+        $hints = self::HINTS;
+        if ($universe !== null) {
+            foreach ($this->editorial->published('guide',$universe) as $key=>$content) {
+                if (!isset($hints[$key])) continue;
+                $hints[$key]['title'] = $content['label'];
+                $hints[$key]['explanation'] = $content['description'];
+            }
+        }
+        return $hints;
     }
 
     public function hasPending(PlayerUniverse $membership, bool $exerciseInResponse = false): bool
@@ -256,7 +269,7 @@ final class FirstStepsView
             if (!isset($done[$step->value])) {
                 return [
                     'next' => $step->value,
-                    'guide' => self::HINTS[$step->value],
+                    'guide' => $this->hints($membership->universe)[$step->value],
                     'count' => count($done),
                     'total' => count(FirstStep::cases()),
                     'validation' => self::EXAMPLES[$step->value][2],
@@ -303,7 +316,7 @@ final class FirstStepsView
         }
 
         return [
-            'hints' => self::HINTS,
+            'hints' => $this->hints($membership->universe),
             'examples' => self::EXAMPLES,
             'completed' => $done,
             'existing' => $existing,
@@ -315,7 +328,7 @@ final class FirstStepsView
     /** @param array<string, array<string, int>> $buildings */
     public function catalogHint(string $slug, string $section, Planet $planet, array $buildings, array $snapshot): ?array
     {
-        foreach (self::HINTS as $hint) {
+        foreach ($this->hints($planet->owner?->universe) as $hint) {
             if (($hint['item'] ?? null) !== $slug || ($hint['section'] ?? null) !== $section) {
                 continue;
             }

@@ -35,7 +35,7 @@ final readonly class PirateCampaignWorkspaceReader
         if ($viewer === null) {
             return null;
         }
-        $rows = $this->repository->ownedRows($viewer, $this->catalogue->keys(), $at);
+        $rows = $this->repository->ownedRows($viewer, $this->catalogue->keys($viewer->universe), $at);
 
         return $this->workspace->forViewer($viewer, $rows, $at, $missionNumber);
     }

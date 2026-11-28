@@ -28,8 +28,8 @@ final class ChallengeQueryService
         return ['event'=>$event,'guided'=>$guided,'weekly'=>str_starts_with($event->eventKey,'weekly-'),'rank'=>$rank,'name'=>$event->configuration['name'] ?? 'Rotation hebdomadaire · '.$objective['label'],
             'description'=>$event->configuration['description'] ?? '', 'objective'=>$objective,'status_label'=>$status,
             'goal'=>$event->globalGoal,'minimum'=>(float)($event->configuration['minimum_contribution'] ?? 0),'score'=>$score,
-            'reward'=>$reward,'reward_label'=>($reward['kind'] ?? 'boost')==='resource_box' ? $reward['box']['label'] : 'Un boost de réduction de durée',
-            'earned'=>$membership ? $this->em->getRepository(PlayerBoost::class)->findOneBy(['sourceKey'=>'event-'.$event->eventKey.'-player-'.$membership->id]) : null,
+            'reward'=>$reward,'reward_label'=>$reward['label'] ?? (($reward['kind'] ?? 'boost')==='resource_box' ? $reward['box']['label'] : 'Un boost de réduction de durée'),
+            'earned'=>$membership && ($reward['kind'] ?? '') === 'cosmetics' ? $this->em->find(\App\Entity\ChallengeCosmeticAward::class,['event'=>$event,'membership'=>$membership]) : ($membership ? $this->em->getRepository(PlayerBoost::class)->findOneBy(['sourceKey'=>'event-'.$event->eventKey.'-player-'.$membership->id]) : null),
             'goal_reached'=>$event->globalGoal!==null && $event->totalContribution >= $event->globalGoal,
             'progress'=>$event->globalGoal>0 ? min(100,100*$event->totalContribution/$event->globalGoal) : 0,
             'expected_end'=>$event->endsAt ?? $event->scheduledAt->modify('+'.$event->durationSeconds.' seconds')];
@@ -160,6 +160,11 @@ final class ChallengeQueryService
         $rows=$connection->fetchAllAssociative("SELECT m.id AS membership_id,COALESCE(p.username,former.username,'Empire oublié') AS player_name,SUM(c.value) AS contribution FROM boost_event_contribution c INNER JOIN player_universe m ON m.id=c.player_universe_id LEFT JOIN player p ON p.id=m.player_id LEFT JOIN player former ON former.id=m.former_player_id WHERE c.event_id=:event GROUP BY m.id,p.username,former.username ORDER BY contribution DESC,m.id ASC LIMIT 50 OFFSET $offset",['event'=>$event->id]);
         $rewards=[];$keys=array_map(static fn(array $row):string=>'event-'.$event->eventKey.'-player-'.$row['membership_id'],$rows);
         if ($keys) foreach ($this->em->getRepository(PlayerBoost::class)->findBy(['sourceKey'=>$keys]) as $item) $rewards[$item->playerUniverse->id]=$item;
+        if ($rows && ($event->configuration['reward']['kind'] ?? '') === 'cosmetics') {
+            foreach ($this->em->getRepository(\App\Entity\ChallengeCosmeticAward::class)->findBy(['event'=>$event,'membership'=>array_column($rows,'membership_id')]) as $receipt) {
+                $rewards[$receipt->membership->id] = $receipt;
+            }
+        }
         foreach ($rows as &$row) $row['reward']=$rewards[$row['membership_id']] ?? null;
         return ['rows'=>$rows,'total'=>$total,'page'=>$page,'pages'=>$pages];
     }

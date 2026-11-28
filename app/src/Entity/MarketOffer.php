@@ -7,6 +7,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
+#[ORM\Index(name: 'market_offer_expiry', columns: ['expires_at','id'])]
 #[ORM\Index(name: 'market_offer_book', columns: ['universe_id', 'resource', 'unit_cents', 'id'])]
 final class MarketOffer
 {
@@ -27,4 +28,10 @@ final class MarketOffer
 
     #[ORM\Column]
     public int $unitCents;
+
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $expiresAt = null;
+
+    #[ORM\Column(nullable: true)]
+    public ?int $returnPlanetId = null;
 }

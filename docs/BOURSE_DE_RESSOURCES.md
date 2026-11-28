@@ -6,7 +6,7 @@ La station commerciale A:0:0 appartient à l’univers, pas à un joueur. Elle
 n’ajoute ni système explorable, ni planète, ni position attaquable. Lorsqu’elle
 est ouverte, son repère au centre de la galaxie A et le lien dans la légende
 ouvrent directement la Bourse. La page Bourse, aussi accessible depuis le
-menu Opérations, affiche les cours puis le formulaire de convoi. Le bandeau du comptoir montre les cargos aux quais de la station. Celui du marché des joueurs montre deux commandants devant la baie vitrée. Le récapitulatif se place à côté de la saisie sur grand écran et en dessous sur mobile. Le suivi est propre à
+menu Opérations, affiche les cours puis le formulaire de convoi. Par défaut, le bandeau du comptoir montre les cargos aux quais de la station. Celui du marché des joueurs montre deux commandants devant la baie vitrée. Le récapitulatif se place à côté de la saisie sur grand écran et en dessous sur mobile. Le suivi est propre à
 l’empire qui a envoyé le convoi. Le panneau **Flottes en vol** compte ses
 convois et donne accès à leur suivi. Dans **Galaxie**, le journal et la
 carte suivent l’aller vers A:0:0, puis le retour vers la colonie. Un rappel
@@ -61,7 +61,7 @@ deuxième jambe commence après l’échange constaté.
 
 Depuis le comptoir, choisir **Déposer à la station** pour y acheminer des ressources. Le dépôt privé est crédité à l’arrivée. Pour **Rapatrier du dépôt**, les marchandises sont réservées au départ des cargos vides et livrées sur la colonie au retour. Un rappel rend les marchandises réservées au dépôt. Lors d’un achat à la station, les crédits sont débités au départ et restitués en cas de rappel. Une vente à la station crédite le vendeur à l’arrivée du fret. Les marchandises publiques vendues contre crédits comptent pour le réassort hebdomadaire.
 
-L’onglet **Marché des joueurs** filtre les offres de l’univers par matériau, puis les présente du prix le plus bas au plus élevé. Il affiche le prix conseillé (indice du comptoir), le dernier prix payé entre joueurs et le dépôt personnel. Le prix se saisit au centime. Une offre porte sur 1 à 1 000 000 unités déjà déposées. Avant de confirmer, le vendeur voit le produit potentiel de la vente et la taxe immédiatement exigible. Pour 100 unités à 3,50 crédits, il doit avancer 7 crédits. Un achat de 30 unités lui rapporte ensuite exactement 105 crédits. Retirer le reste rend 70 unités à son dépôt. Les 7 crédits sont définitivement retirés de la circulation.
+L’onglet **Marché des joueurs** filtre les offres de l’univers par matériau, puis les présente du prix le plus bas au plus élevé. Il affiche le prix conseillé (indice du comptoir), le dernier prix payé entre joueurs et le dépôt personnel. Le prix se saisit au centime. Une offre porte sur 1 à 1 000 000 unités déjà déposées. Avant de confirmer, le vendeur voit le produit potentiel de la vente et la taxe immédiatement exigible. Au taux par défaut de 2 %, pour 100 unités à 3,50 crédits, il doit avancer 7 crédits. Un achat de 30 unités lui rapporte ensuite exactement 105 crédits. Retirer le reste rend 70 unités à son dépôt. Les 7 crédits sont définitivement retirés de la circulation.
 
 Les échanges entre joueurs déplacent des crédits déjà émis. La station crée des crédits lorsqu’elle rachète un lot et retire de la circulation les crédits utilisés pour acheter ses ressources. Les taxes de publication constituent une destruction supplémentaire. Un nouveau compte démarre à zéro et peut financer sa première annonce en vendant au comptoir. Le classement « Crédits » suit le solde disponible aux relevés de minuit et midi, heure de Paris.
 
@@ -70,10 +70,10 @@ Les échanges entre joueurs déplacent des crédits déjà émis. La station cr�
 Vendredi à 9 h en Europe/Paris, le relais recalcule pour chaque univers
 ouvert et chaque matériau :
 
-> apport = min(⌊unités réellement vendues par la station aux joueurs / 2⌋,
+> apport = min(⌊unités réellement vendues par la station aux joueurs × pourcentage de réassort / 100⌋,
 > max(0, cible − stock physique))
 
-La semaine est fermée à 9 h : la borne de début est incluse, la borne de
+Le pourcentage de réassort est de 50 % par défaut. La semaine est fermée à 9 h : la borne de début est incluse, la borne de
 fin exclue. Le stock physique comprend les lots réservés qui n’ont pas
 encore quitté la station. Un devis, un lancement ou un rappel ne compte
 pas. Aucune distribution en l’absence de vente, aucun retrait au-dessus
@@ -97,3 +97,5 @@ retour, y compris après rejeu. Un autre joueur ne peut pas prendre un lot
 déjà réservé. Chaque apport du vendredi augmente le stock physique une seule fois et rapproche son cours du cours de référence.
 
 La migration `Version20261128160000` conserve les convois existants comme trocs avec leurs montants réservés et ajoute les comptes et offres. Les devis antérieurs encore en session sont à renouveler. Pour une base existante, vérifier la sauvegarde et obtenir l’autorisation d’application. Une fois les échanges commencés, un retour à l’ancienne version nécessite de préserver ou solder les engagements commerciaux et les comptes.
+
+Les conditions administrables, les réservations de place et le retour des offres échues vers la colonie choisie sont détaillés dans le [guide des éditeurs](EDITEURS_ADMIN.md).

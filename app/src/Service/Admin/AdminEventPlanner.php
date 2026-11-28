@@ -16,7 +16,7 @@ final class AdminEventPlanner
         'combat'=>['label'=>'Infliger des dégâts en combat','metric'=>'damage_dealt','help'=>'Les dégâts réellement enregistrés par les combats pendant le défi sont comptés.'],
         'transport'=>['label'=>'Livrer des ressources entre ses colonies','metric'=>'freight_delivered','help'=>'Les quantités effectivement livrées entre ses propres colonies sont comptées. Les dons entre joueurs sont exclus.'],
     ];
-    public function __construct(private EntityManagerInterface $em,private GameManager $manager,private ResourceBoxPolicy $boxes,private GameEventService $events,private ClockInterface $clock) {}
+    public function __construct(private EntityManagerInterface $em,private GameManager $manager,private ResourceBoxPolicy $boxes,private GameEventService $events,private ClockInterface $clock, private \App\Service\Player\ProfileCosmetics $cosmetics) {}
 
     public function prepare(string $model,array $input): array
     {
@@ -40,8 +40,20 @@ final class AdminEventPlanner
                 'minimum_contribution'=>$this->number($input['minimum_contribution'] ?? 0,0,1e12,'Contribution minimale')];
             if ($objective==='exploration' && (floor($draft['goal'])!==$draft['goal'] || floor($draft['minimum_contribution'])!==$draft['minimum_contribution'])) throw new \DomainException('Les objectifs de découverte de systèmes utilisent des nombres entiers.');
             $kind=(string)($input['reward_kind'] ?? 'boost');
-            if (!in_array($kind,['boost','resource_box'],true)) throw new \DomainException('Choisissez un boost ou une boîte.');
+            if (!in_array($kind,['boost','resource_box','cosmetics'],true)) throw new \DomainException('Choisissez un boost ou une boîte.');
             $draft['reward_kind']=$kind;$draft['reward']=['kind'=>$kind];
+            if ($kind==='cosmetics') {
+                $definitions = $this->cosmetics->definitions();
+                $codes = $input['cosmetics'] ?? [];
+                if (!is_array($codes) || !$codes || count($codes)>12) throw new \DomainException('Sélectionnez entre un et douze éléments.');
+                $labels = [];
+                foreach ($codes as $code) {
+                    if (!is_string($code) || !isset($definitions[$code])) throw new \DomainException('Cosmétique indisponible.');
+                    $labels[$code] = $definitions[$code]['label'];
+                }
+                $draft['cosmetics'] = array_keys($labels);
+                $draft['reward'] = ['kind'=>$kind,'codes'=>array_keys($labels),'label'=>implode(', ',$labels)];
+            }
             if ($kind==='resource_box') {
                 $format=(string)($input['box_format'] ?? '');$draft['box_format']=$format;$draft['reward']['box']=$this->boxes->snapshot($universe,$format);
                 $draft['box_signature']=hash('sha256',json_encode($this->boxes->settings($universe)));
@@ -63,6 +75,7 @@ final class AdminEventPlanner
             if ($universe) $this->manager->lock($universe);
             $prepared=$this->prepare((string)($draft['model'] ?? ''),$draft);
             if (($prepared['box_signature'] ?? null)!==($draft['box_signature'] ?? null)) throw new \DomainException('Les modèles de boîtes ont changé. Recréez un aperçu avant de planifier.');
+            if (($draft['reward_kind'] ?? null) === 'cosmetics' && $prepared['reward'] !== $draft['reward']) throw new \DomainException('Le lot cosmétique a changé. Vérifiez un nouvel aperçu.');
             if ($prepared['model']!=='challenge') {
                 $event=$this->events->save($actor,null,['name'=>$prepared['name'],'description'=>$prepared['description'],'type'=>$prepared['model']==='bonus'?'production_bonus':'announcement','status'=>'planned',
                     'starts_at'=>$prepared['starts_at'],'ends_at'=>$prepared['ends_at'],'universe_id'=>$prepared['universe_id'],'visible'=>true,'parameters'=>['guided_key'=>$key]+($prepared['model']==='bonus'?['percentage'=>$prepared['percentage']]:[])]);
@@ -73,7 +86,7 @@ final class AdminEventPlanner
             $event->scheduledAt=$this->date($prepared['starts_at']);$event->endsAt=$this->date($prepared['ends_at']);$event->durationSeconds=$event->endsAt->getTimestamp()-$event->scheduledAt->getTimestamp();$event->globalGoal=$prepared['goal'];
             $event->configuration=['guided'=>true,'name'=>$prepared['name'],'description'=>$prepared['description'],'reward'=>$prepared['reward'],'minimum_contribution'=>$prepared['minimum_contribution']];
             $this->em->persist($event);$this->em->flush();
-            $reward=$prepared['reward_kind']==='boost' ? 'un boost' : $prepared['reward']['box']['label'];
+            $reward=$prepared['reward_kind']==='boost' ? 'un boost' : ($prepared['reward']['label'] ?? $prepared['reward']['box']['label']);
             $this->events->save($actor,null,['name'=>$prepared['name'],'description'=>$prepared['description']."\nDéfi collectif : ".self::OBJECTIVES[$prepared['objective']]['label'].'. Récompense par participant éligible : '.$reward.'.',
                 'type'=>'announcement','status'=>'planned','starts_at'=>$this->clock->now()->format(DATE_ATOM),'ends_at'=>$prepared['ends_at'],'universe_id'=>$universe->id,'visible'=>true,'parameters'=>['guided_key'=>$key,'challenge_id'=>$event->id]]);
             $this->audit($actor,'guided_challenge_created',$event,['goal'=>$event->globalGoal,'reward'=>$prepared['reward_kind']]);

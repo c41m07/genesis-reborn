@@ -568,6 +568,65 @@ final class ResourceMarketTest extends WebTestCase
         }
     }
 
+    public function testEscrowReservesSpaceAndAChangedFeeRequiresANewPreview(): void
+    {
+        [$seller,$home] = $this->fixture('PolicySeller',true);
+        $member = $seller->currentPlayerUniverse;
+        $policy = ['fee'=>4,'days'=>3,'capacity'=>100,'merchant'=>75];
+        $station = self::getContainer()->get(WeeklyMerchantDelivery::class);
+        $station->configure($seller,$member->universe,true,$this->targets(),$policy);
+        $account = $this->fundMarketAccount($member,2000,100);
+        $players = self::getContainer()->get(PlayerMarket::class);
+        $draft = ['fee'=>400,'days'=>3,'destination'=>$home->id];
+        $players->order($member,bin2hex(random_bytes(16)),'list','metal',100,'1',0,$draft);
+        try {
+            $players->assertRoom($member,1);
+            self::fail('Un lot en vente occupe encore de la place.');
+        } catch (\DomainException $e) {
+            self::assertStringContainsString('Capacité',$e->getMessage());
+        }
+        $policy['fee'] = 5;
+        $station->configure($seller,$member->universe,true,$this->targets(),$policy);
+        try {
+            $players->order($member,bin2hex(random_bytes(16)),'list','metal',100,'1',0,$draft);
+            self::fail('Le tarif affiché doit être confirmé à nouveau.');
+        } catch (\DomainException $e) {
+            self::assertStringContainsString('conditions ont changé',$e->getMessage());
+        }
+        self::assertSame(1600,$account->cents);
+        self::assertSame(1,$this->em->getRepository(MarketOffer::class)->count(['seller'=>$member]));
+    }
+
+    public function testOfferExpiresIntoChosenColonyOnceAndExcessIsLost(): void
+    {
+        [$seller,$planet] = $this->fixture('ExpirySeller',true);
+        $member = $seller->currentPlayerUniverse;
+        $world = $member->universe;
+        self::getContainer()->get(WeeklyMerchantDelivery::class)->configure($seller,$world,true,$this->targets(),['fee'=>4,'days'=>1,'capacity'=>200,'merchant'=>75]);
+        $account = $this->fundMarketAccount($member,2000,100);
+        $players = self::getContainer()->get(PlayerMarket::class);
+        $draft = ['destination'=>$planet->id,'fee'=>400,'days'=>1];
+        $players->order($member,bin2hex(random_bytes(16)),'list','metal',100,'1',0,$draft);
+        self::assertSame(1600,$account->cents);
+        $repo = self::getContainer()->get(ResourceMarketRepository::class);
+        self::assertCount(1,$repo->offers($member,'metal',1));
+        $this->clock->sleep(86401);
+        $stock = $this->em->getRepository(PlanetResource::class)->findOneBy(['planet'=>$planet,'resourceType'=>'metal']);
+        $capacity = self::getContainer()->get(ResourceService::class)->snapshot($planet)['metal']['capacity'];
+        $stock->currentStock = $capacity - 30;
+        $stock->lastUpdatedAt = $this->clock->now();
+        $this->em->flush();
+        self::assertCount(0,$repo->offers($member,'metal',1));
+        $expiry = self::getContainer()->get(\App\Service\Market\MarketOfferExpiry::class);
+        $expiry->tick();
+        $expiry->tick();
+        $this->em->refresh($stock);
+        self::assertEquals($capacity,$stock->currentStock);
+        self::assertSame(0,$account->goods['metal']);
+        self::assertSame(1600,$account->cents);
+        self::assertSame(0,$this->em->getRepository(MarketOffer::class)->count(['seller'=>$member]));
+    }
+
     public function testPublicListingChargesBeforePublicationThenPaysEveryPurchasedUnitInFull(): void
     {
         [$seller] = $this->fixture('MarketListingSeller');

@@ -10,7 +10,10 @@
     </nav>
 
     <header class="panel page-heading commander-profile-identity">
-        {% if profile.cosmetics.banner is defined %}
+        {% if profile.cosmetics.bannerArt is defined %}
+            {% set art = profile.cosmetics.bannerArt %}
+            <img class="commander-profile-art editorial-art" src="{{ asset(art.art) }}" style="--art-crop:{{ art.desktop }}%;--art-mobile:{{ art.mobile }}%" alt="Bannière {{ art.label }}">
+        {% elseif profile.cosmetics.banner is defined %}
             <img class="commander-profile-art" src="{{ asset('art/genesis-avent-panorama-720.webp') }}"
                  srcset="{{ asset('art/genesis-avent-panorama-720.webp') }} 720w, {{ asset('art/genesis-avent-panorama-1536.webp') }} 1536w"
                  sizes="(max-width: 760px) 100vw, 85vw" alt="Bannière {{ profile.cosmetics.banner }}">
@@ -21,7 +24,7 @@
             {% if profile.cosmetics.titles is defined %}
                 <div class="ranking-badges">
                     {% for title in profile.cosmetics.titles %}
-                        <span class="badge ranking-label ranking-label--title">{{ title }}</span>
+                        <span class="badge ranking-label ranking-label--title editorial-{{ profile.cosmetics.colors[loop.index0]|default('gold') }}">{{ title }}</span>
                     {% endfor %}
                 </div>
             {% endif %}

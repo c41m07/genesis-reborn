@@ -22,6 +22,8 @@ class PlayerUniverse
     #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $lastActivityAt = null;
     #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $manualInactiveAt = null;
+    #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $forgottenAt = null;
     #[ORM\Column(nullable: true)]
     public ?\DateTimeImmutable $recoveryProtectedUntil = null;

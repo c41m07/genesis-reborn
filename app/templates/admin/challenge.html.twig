@@ -1,7 +1,7 @@
 {% extends 'admin/layout.html.twig' %}
 {% block title %}{{ challenge.name }} · Défi{% endblock %}
 {% import _self as display %}
-{% macro rewardLabel(reward) %}{% if reward %}{{ reward.kind == 'resource_box' ? 'Boîte' : 'Boost' }} · {{ {available: 'Disponible', pending: 'En attente', used: 'Utilisé'}[reward.status]|default(reward.status) }}{% else %}Non attribuée{% endif %}{% endmacro %}
+{% macro rewardLabel(reward) %}{% if reward %}{{ reward.kind == 'resource_box' ? 'Boîte' : (reward.kind == 'cosmetics' ? 'Titres et bannières' : 'Boost') }} · {{ {awarded:'Attribués',available: 'Disponible', pending: 'En attente', used: 'Utilisé'}[reward.status]|default(reward.status) }}{% else %}Non attribuée{% endif %}{% endmacro %}
 {% block body %}
 <div class="page-heading"><h1>{{ challenge.name }}</h1></div><p class="admin-challenge-actions"><a class="secondary" href="{{ path('app_admin_challenges') }}">← Défis et contributions</a></p>
 <section class="panel"><h2>Suivi du défi</h2>{% include 'events/_challenge_summary.html.twig' %}{% if not challenge.guided %}<p>Les règles de cette occurrence restent figées. Vous pouvez annuler son exécution ci-dessous ; son historique et les récompenses acquises sont conservés.</p>{% endif %}</section>

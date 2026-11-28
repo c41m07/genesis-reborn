@@ -1,0 +1,20 @@
+{% extends 'admin/layout.html.twig' %}
+{% block title %}Campagne pirate · {{ world.name }}{% endblock %}
+{% block body %}
+<a href="{{ path('app_admin_universe_manage',{id:world.id}) }}">← {{ world.name }}</a><h1>Missions pirates · {{ world.name }}</h1>
+{% if version %}<section class="panel"><h2>Aperçu · {{ version.content.label }}</h2>
+{% for wave in version.content.waves %}<article><img class="editorial-preview" alt="" src="{{ asset(wave.art) }}"><h3>{{ wave.title }}</h3><p>{{ wave.signal }}</p><p>{{ wave.victory }}</p>
+<ul>{% for slug,formation in wave.ships %}{% for tier,n in formation %}<li>{{ ships[slug].label }} · {{ tiers[tier].label|default(tier) }} × {{ n }}</li>{% endfor %}{% endfor %}</ul>
+<p>Récompense du convoi : {% for res,n in wave.reward|default([]) %}{{ n }} {{ {metal:'métal',nano:'nano',hydrogen:'hydrogène',antimatter:'antimatière'}[res] }} {% else %}moitié du coût de la formation{% endfor %}.</p>
+<p>{{ wave.starts ? wave.starts|date('d/m/Y H:i','UTC')~' UTC' : 'Dès la publication' }} · {{ wave.ends ? wave.ends|date('d/m/Y H:i','UTC')~' UTC' : 'Sans échéance' }}</p></article>{% endfor %}
+{% if not version.publishAt %}<form method="post"><input type="hidden" name="_token" value="{{ csrf_token('pirate_editor_'~world.id~'_'~version.id) }}"><button class="primary" name="action" value="publish">Publier dans {{ world.name }}</button></form>{% else %}<p>Mission publiée.</p>{% endif %}</section>{% endif %}
+<section class="panel admin-pirate-editor"><h2>Dupliquer une mission</h2><form method="get"><label>Modèle <select name="model">{% for code,label in models %}<option value="{{ code }}" {{ code == key ? 'selected' }}>{{ label }}</option>{% endfor %}</select></label><button>Charger le modèle</button></form>
+<form method="post" class="stack-list"><input type="hidden" name="_token" value="{{ csrf_token('pirate_editor_'~world.id~'_'~version.id|default(0)) }}">
+<label>Titre <input required name="title" maxlength="90" value="{{ m.title }}"></label><label>Signal de détresse <textarea name="signal" required>{{ m.signal }}</textarea></label><label>Message de victoire <textarea required name="victory">{{ m.victory }}</textarea></label>
+<label>Illustration <select name="art">{% for path,label in art %}<option value="{{ path }}" {{ path==m.art|default('') ? 'selected' }}>{{ label }}</option>{% endfor %}</select></label>
+<label>Ouverture (UTC) <input name="starts" type="datetime-local" value="{{ m.starts|default('') ? m.starts|date('Y-m-d\\TH:i','UTC') }}"></label><label>Fin des nouveaux départs (UTC) <input name="ends" type="datetime-local" value="{{ m.ends|default('') ? m.ends|date('Y-m-d\\TH:i','UTC') }}"></label>
+{% for i in 0..2 %}<details {{ i == 0 ? 'open' }}><summary>Formation · vague {{ i+1 }}</summary><div class="table-scroll" tabindex="0" role="region" aria-label="Formation de la vague {{ i+1 }}"><table class="data-table"><thead><tr><th>Vaisseau</th>{% for tier,t in tiers %}<th>{{ t.label|default(tier) }}</th>{% endfor %}</tr></thead><tbody>
+{% for slug,ship in ships %}<tr><th>{{ ship.label }}</th>{% for tier,t in tiers %}<td><input type="number" min="0" name="waves[{{ i }}][{{ slug }}][{{ tier }}]" aria-label="{{ ship.label }} {{ t.label|default(tier) }} vague {{ i+1 }}" value="{{ m.waves[i][slug][tier]|default(i==0 ? m.ships[slug][tier]|default('') : '') }}"></td>{% endfor %}</tr>{% endfor %}</tbody></table></div></details>{% endfor %}
+<fieldset><legend>Récompense de chaque vague</legend><label><input type="checkbox" name="customReward" {{ m.customReward|default(false) or m.reward|default([]) ? 'checked' }}> Fixer le contenu du convoi</label>{% for res,label in {metal:'Métal',nano:'Nano',hydrogen:'Hydrogène',antimatter:'Antimatière'} %}<label>{{ label }} <input type="number" min="0" max="1000000000" name="reward[{{ res }}]" value="{{ m.reward[res]|default(0) }}"></label>{% endfor %}</fieldset>
+<button class="primary">Tester la formation et enregistrer le brouillon</button></form></section>
+{% endblock %}

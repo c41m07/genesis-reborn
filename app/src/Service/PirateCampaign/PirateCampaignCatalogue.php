@@ -194,13 +194,13 @@ final class PirateCampaignCatalogue
     }
 
     /** @return list<string> Ordre narratif, pas liste des missions accessibles au joueur. */
-    public function keys(): array
+    public function keys(?Universe $universe = null): array
     {
-        return array_keys(self::DEFINITIONS);
+        return array_keys(self::DEFINITIONS + ($universe?->gameSettings['pirate_missions'] ?? []));
     }
 
     /** @return list<array{title: string, keys: list<string>}> Sommaire narratif interne, pas un état de déblocage. */
-    public function chapters(): array
+    public function chapters(?Universe $universe = null): array
     {
         $chapters = [];
         foreach (self::CHAPTER_TITLES as $number => $title) {
@@ -210,6 +210,8 @@ final class PirateCampaignCatalogue
             $chapters[$entry['chapter']]['keys'][] = $key;
         }
 
+        $custom = array_keys($universe?->gameSettings['pirate_missions'] ?? []);
+        if ($custom) $chapters[] = ['title'=>'Missions de l’univers','keys'=>$custom];
         return array_values($chapters);
     }
 
@@ -218,9 +220,9 @@ final class PirateCampaignCatalogue
      *
      * @return array{title: string, message: string, guidance: string}
      */
-    public function signalCopy(string $key): array
+    public function signalCopy(string $key, ?Universe $universe = null): array
     {
-        $content = $this->definition($key);
+        $content = $this->definition($key,$universe);
 
         return [
             'title' => $content['title'],
@@ -235,7 +237,8 @@ final class PirateCampaignCatalogue
      */
     public function prepareForServer(string $key, Universe $universe): PiratePreparedEncounter
     {
-        $composition = $this->definition($key)['ships'];
+        $entry = $this->definition($key,$universe);
+        $composition = $entry['ships'];
         $encounter = PirateConvoyQuote::captureCatalogue($this->catalog, $universe, $composition);
         $rules = $this->catalog->rules();
         $battle = PirateBattleScenario::freeze(
@@ -247,7 +250,13 @@ final class PirateCampaignCatalogue
             $rules['shield_recharge_percent_per_round'],
         );
 
-        return new PiratePreparedEncounter($key, $encounter, $battle);
+        $reward = null;
+        if (isset($entry['reward'])) {
+            $parts = [];
+            foreach ($entry['reward'] as $resource=>$amount) $parts[$resource] = ['whole'=>$amount,'extra_half'=>false];
+            $reward = PirateConvoyQuote::fromFrozenParts($parts);
+        }
+        return new PiratePreparedEncounter($key,$encounter,$battle,$reward);
     }
 
     /**
@@ -263,10 +272,10 @@ final class PirateCampaignCatalogue
         }
 
         if ($moment === PirateCampaignMoment::Signal) {
-            return $this->signalCopy($key);
+            return $this->signalCopy($key,$viewer->universe);
         }
 
-        $content = $this->definition($key);
+        $content = $this->definition($key,$viewer->universe);
         [$message, $guidance] = match ($moment) {
             PirateCampaignMoment::ReconnaissanceEnRoute => ['La sonde est en route vers le poste civil.', 'Le renseignement sera disponible après son arrivée.'],
             PirateCampaignMoment::RenseignementRecu => ['La sonde a cessé d’émettre, mais son relevé est complet.', $content['intel_tip'] ?? 'Consultez le rapport pour préparer votre escorte.'],
@@ -285,8 +294,8 @@ final class PirateCampaignCatalogue
         return ['title' => $title, 'message' => $message, 'guidance' => $guidance];
     }
 
-    private function definition(string $key): array
+    public function definition(string $key, ?Universe $universe = null): array
     {
-        return self::DEFINITIONS[$key] ?? throw new \DomainException('Rencontre pirate inconnue.');
+        return self::DEFINITIONS[$key] ?? $universe?->gameSettings['pirate_missions'][$key] ?? throw new \DomainException('Rencontre pirate inconnue.');
     }
 }

@@ -38,6 +38,9 @@ final class EmpireActivityService
             // Une requête plus ancienne ne doit pas effacer une visite concurrente.
             if ($membership->lastActivityAt === null || $membership->lastActivityAt < $visitedAt) {
                 $membership->lastActivityAt = $visitedAt;
+                if ($membership->manualInactiveAt !== null && $visitedAt >= $membership->manualInactiveAt) {
+                    $membership->manualInactiveAt = null;
+                }
             }
         });
     }
@@ -50,7 +53,7 @@ final class EmpireActivityService
         $periods = $this->vacations->periods($membership);
         $onVacation = $this->vacations->activeAt($periods, $now);
         if ($membership->lastActivityAt === null) {
-            return ['status' => $onVacation ? 'vacation' : 'untracked', 'inactive_at' => null, 'conversion_due_at' => null, 'conversion_due' => false];
+            return ['status' => $onVacation ? 'vacation' : ($membership->manualInactiveAt ? 'inactive' : 'untracked'), 'inactive_at' => null, 'conversion_due_at' => null, 'conversion_due' => false];
         }
 
         $lastActivityAt = $membership->lastActivityAt->setTimezone(new \DateTimeZone('UTC'));
@@ -58,7 +61,7 @@ final class EmpireActivityService
         $conversionAt = EmpireConversionSchedule::atOrAfter($this->vacationPolicy->deadlineAfterActiveSeconds($periods, $lastActivityAt, self::CONVERSION_AFTER_SECONDS));
 
         return [
-            'status' => $onVacation ? 'vacation' : ($now >= $inactiveAt ? 'inactive' : 'active'),
+            'status' => $onVacation ? 'vacation' : ($membership->manualInactiveAt !== null || $now >= $inactiveAt ? 'inactive' : 'active'),
             'inactive_at' => $inactiveAt->format(DATE_ATOM),
             'conversion_due_at' => $conversionAt->format(DATE_ATOM),
             'conversion_due' => !$onVacation && $now >= $conversionAt,

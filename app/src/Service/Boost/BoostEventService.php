@@ -20,6 +20,7 @@ final class BoostEventService
         private BoostGrantService $grants,
         private ClockInterface $clock,
         private WeeklyRotationService $rotations,
+        private \App\Service\Player\ProfileCosmetics $cosmetics,
     ) {}
 
     public function tick(): array
@@ -188,6 +189,19 @@ final class BoostEventService
         }
         foreach ($winners as $winner) {
             $reward=$event->configuration['reward'] ?? ['kind'=>'boost'];
+            if (($reward['kind'] ?? '') === 'cosmetics') {
+                $member = $winner['membership'];
+                $this->manager->lockCurrent($member);
+                if ($member->isPlayerControlled() && $member->universe->id === $event->universe->id) {
+                    $this->manager->lockCurrent($member->player);
+                    $this->cosmetics->grantLocked($member->player,$reward['codes'],$closedAt);
+                    $receipt = new \App\Entity\ChallengeCosmeticAward();
+                    $receipt->event = $event;
+                    $receipt->membership = $member;
+                    $this->manager->save($receipt);
+                }
+                continue;
+            }
             $this->grants->awardEvent($winner['membership'], $event->eventKey, ($reward['kind'] ?? 'boost') === 'resource_box' ? $reward['box'] : null);
         }
     }

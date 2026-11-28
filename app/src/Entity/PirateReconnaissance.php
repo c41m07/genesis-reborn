@@ -158,6 +158,7 @@ class PirateReconnaissance
             return null;
         }
 
+        if (isset($this->preparedEncounter['reward'])) return PirateConvoyQuote::fromFrozenParts($this->preparedEncounter['reward']);
         return PirateConvoyQuote::halfOfFrozenCatalogue(PirateEncounterSnapshot::freeze($this->composition, $this->buildCosts));
     }
 

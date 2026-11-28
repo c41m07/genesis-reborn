@@ -51,7 +51,7 @@ final readonly class PirateReconReportReader
             return null;
         }
         $key = $scout->reportedMissionKeyFor($viewer, $at);
-        $position = array_search($key, $this->campaign->keys(), true);
+        $position = array_search($key, $this->campaign->keys($viewer->universe), true);
         if ($position === false) {
             return null;
         }

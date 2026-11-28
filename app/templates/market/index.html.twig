@@ -2,15 +2,7 @@
 {% block title %}Bourse de ressources · Genesis Reborn{% endblock %}
 {% block body %}
 <div class="market-space">
-    <header class="panel market-hero">
-        <div>
-            <p class="market-kicker">Station commerciale · A:0:0</p>
-            <h1>Bourse de ressources</h1>
-            <p>Vos cargos relient votre colonie à la station.</p>
-            <ul aria-label="Conditions du trajet"><li>Convoi protégé</li><li>30 min aller · 30 min retour</li></ul>
-        </div>
-        <img class="market-hero-art" src="{{ asset('art/bourse-station.webp') }}" width="1536" height="512" alt="">
-    </header>
+    {% include 'market/_banner.html.twig' with {destination:'station',world:member.universe,cents:account.cents|default(0),banner:editorial_page(member.universe,'station')} only %}
     {% include 'market/_navigation.html.twig' %}
     <p class="panel">Votre solde : <strong>{{ (account.cents|default(0) / 100)|number_format(2, ',', ' ') }} crédits</strong></p>
     {% set mode = draft.operation|default('barter') %}

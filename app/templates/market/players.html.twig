@@ -7,14 +7,7 @@
 {% endmacro %}
 {% block body %}
 <div class="market-space">
-    <header class="panel market-hero">
-        <div>
-            <p class="market-kicker">Station A:0:0 · {{ member.universe.name }}</p>
-            <h1>Marché des joueurs</h1>
-            <p>Votre solde : <strong>{{ ((account.cents|default(0)) / 100)|number_format(2, ',', ' ') }} crédits</strong></p>
-        </div>
-        <img class="market-hero-art" src="{{ asset('art/marche-joueurs.webp') }}" width="1536" height="512" alt="">
-    </header>
+    {% include 'market/_banner.html.twig' with {destination:'exchange',world:member.universe,cents:account.cents|default(0),banner:editorial_page(member.universe,'exchange')} only %}
     {% include 'market/_navigation.html.twig' %}
     {% if not market or not market.enabled %}
         <p class="panel">La station est fermée dans cet univers.</p>
@@ -36,6 +29,7 @@
                     Si tout le lot se vend, vous recevrez {{ (draft.gross / 100)|number_format(2, ',', ' ') }} crédits.</p>
                 <p>Taxe à payer maintenant : <strong>{{ (draft.fee / 100)|number_format(2, ',', ' ') }} crédits</strong>.
                     Elle reste acquise à la station si vous retirez vos invendus.</p>
+                <p>Retour des invendus après {{ draft.days|default(policy.days) }} jours{% for planet in planets %}{% if planet.id == draft.destination|default(0) %} sur {{ planet.name }}{% endif %}{% endfor %}. Le surplus sera perdu.</p>
                 {% if account.cents|default(0) < draft.fee %}
                     <p>Votre solde ne couvre pas la taxe. <a href="{{ path('app_market', {operation:'sell', resource:resource}) }}">Vendre à la station pour obtenir des crédits</a></p>
                 {% elseif account.goods[resource]|default(0) < draft.quantity %}
@@ -48,6 +42,8 @@
                 <form method="post" class="market-options">{{ _self.order(member, key, 'preview') }}
                     <label>Quantité à mettre en vente <input type="number" name="quantity" min="1" max="{{ min(maxLot, account.goods[resource]) }}" required></label>
                     <label>Prix par unité en crédits <input type="number" name="price" min="0.01" step="0.01" max="21474836.47" value="{{ rows[resource].index|number_format(2, '.', '') }}" required></label>
+                    <label>Colonie de retour des invendus <select name="destination">{% for planet in planets %}<option value="{{ planet.id }}">{{ planet.name }} · {{ planet.coordinates }}</option>{% endfor %}</select></label>
+                    <p>Après {{ policy.days }} jours, les invendus reviennent sur cette colonie. Le surplus est perdu si elle est pleine.</p>
                     <p>La mise en vente coûte {{ fee }} % de la valeur totale du lot. Chaque unité vendue vous rapporte son prix intégral.</p>
                     <button type="submit" class="primary">Vérifier la taxe et le produit de la vente</button>
                 </form>

@@ -26,13 +26,13 @@
 <div class="panel table-scroll" role="region" tabindex="0" aria-label="Classement défilant horizontalement">
 <table class="data-table ranking-table ranking-table--players"><caption>Classement de l’univers {{ membership.universe.name }} · {{ categories[category] }}</caption>
 <thead><tr><th scope="col">Rang</th><th scope="col">Commandant</th>{% for key,label in {points:categories.points}|merge(categories|filter((label,key) => key != "points")) %}<th scope="col" class="ranking-sort-heading {{ key!='points' ? 'ranking-secondary' : '' }}" aria-sort="{{ category==key ? (direction=='asc' ? 'ascending' : 'descending') : 'none' }}"><a class="ranking-sort" href="{{ path('app_leaderboard',{tab:'players',category:key,direction:category==key and direction=='desc' ? 'asc' : 'desc'}) }}" aria-label="Classer par {{ label }}" title="Afficher par {{ label }}, ordre {{ category==key and direction=='desc' ? 'croissant' : 'décroissant' }}"{% if category==key %} aria-current="page"{% endif %}>{{ label }} <span aria-hidden="true">{{ category==key ? (direction=='asc' ? '↑' : '↓') : '↕' }}</span></a></th>{% endfor %}<th scope="col">Actions</th></tr></thead>
-<tbody>{% for row in rows %}<tr class="ranking-row--{{ row.relation }}{% if row.cosmetics.banner is defined %} ranking-banner--polar-night{% endif %}" {% if row.membership.id==membership.id %}aria-current="true"{% endif %}>
+<tbody>{% for row in rows %}<tr class="ranking-row--{{ row.relation }}{% if row.cosmetics.banner is defined %} ranking-banner--polar-night{% endif %}" {% if row.cosmetics.bannerArt is defined %}style="--polar-night-art:url('{{ asset(row.cosmetics.bannerArt.art) }}');--art-crop:{{ row.cosmetics.bannerArt.desktop }}%;--art-mobile:{{ row.cosmetics.bannerArt.mobile }}%"{% endif %} {% if row.membership.id==membership.id %}aria-current="true"{% endif %}>
 <td>#{{ row.ranks[category] }} {{ evolution.inline(row.rank_changes[category], "Places") }}</td><th scope="row">{% if row.guild_tag %}[{{ row.guild_tag }}] {% endif %}<a class="public-profile-link" href="{{ path('app_player_public_profile',{id:row.membership.id}) }}">{{ row.membership.player.username }}</a>
 {% if row.cosmetics.banner is defined %}<span class="visually-hidden">Bannière {{ row.cosmetics.banner }}</span>{% endif %}
 {% set status = row.protection.status|default('') %}
 {% if row.cosmetics.titles is defined or row.badges or row.protection.active or status == 'inactive' %}
     <div class="ranking-badges">
-        {% for title in row.cosmetics.titles|default([]) %}<span class="ranking-label ranking-label--title">{{ title }}</span>{% endfor %}
+        {% for title in row.cosmetics.titles|default([]) %}<span class="ranking-label ranking-label--title editorial-{{ row.cosmetics.colors[loop.index0]|default('gold') }}">{{ title }}</span>{% endfor %}
         {% for badge in row.badges %}
             <span class="ranking-label ranking-label--{{ badge }}">{{ diplomaticLabels[badge] }}</span>
         {% endfor %}
