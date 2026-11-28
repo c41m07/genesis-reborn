@@ -1,0 +1,34 @@
+<section class="panel" aria-labelledby="hall-structures-title">
+    <h2 id="hall-structures-title">Installations du Hall</h2>
+    <p>Ces chantiers utilisent les matériaux reçus dans l’entrepôt de guilde.</p>
+    {% for structure in structures %}
+        <section aria-labelledby="hall-structure-{{ structure.slug }}">
+            <h3 id="hall-structure-{{ structure.slug }}">{{ structure.name }}</h3>
+            {% if structure.level == 0 %}<p>Non construit.</p>{% else %}<p>Niveau {{ structure.level }}.</p>{% endif %}
+            {% if structure.finishes_at %}
+                <p>Niveau {{ structure.level + 1 }} en construction.
+                    Fin prévue le <time datetime="{{ structure.finishes_at|date('c', 'UTC') }}">{{ structure.finishes_at|date('d/m/Y à H:i', 'UTC') }} UTC</time>.
+                </p>
+            {% elseif structure.duration is not null %}
+                <p>Coût du niveau {{ structure.level + 1 }} :</p>
+                <ul>{% for entry in structure.costs %}<li>{{ entry.label }} : {{ entry.cost|number_format(0, ',', ' ') }}</li>{% endfor %}</ul>
+                <p>Durée : {{ structure.duration|number_format(0, ',', ' ') }} s.</p>
+                {% if not may_build %}
+                    <p>Seul le commandant peut lancer ce chantier, hors mode vacances.</p>
+                {% elseif not structure.can_start %}
+                    <p>Le stock de guilde ne suffit pas pour lancer ce chantier.</p>
+                {% else %}
+                    <form method="post" action="{{ path('app_guild_hall_build_structure', {slug: structure.slug}) }}">
+                        <input type="hidden" name="hall_id" value="{{ hall.id }}">
+                        <input type="hidden" name="level" value="{{ structure.level }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('guild_hall_build_' ~ structure.slug ~ '_' ~ guild.id ~ '_' ~ hall.id) }}">
+                        <label><input type="checkbox" name="confirm" value="1" required> Confirmer la dépense du stock de guilde</label>
+                        <button type="submit" class="primary">Construire le niveau {{ structure.level + 1 }}</button>
+                    </form>
+                {% endif %}
+            {% else %}
+                <p>Niveau maximal atteint.</p>
+            {% endif %}
+        </section>
+    {% endfor %}
+</section>

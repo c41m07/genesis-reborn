@@ -166,6 +166,27 @@ final class GuildHallController extends AbstractController
         return $this->redirectToRoute('app_guild_hall', status: Response::HTTP_SEE_OTHER);
     }
 
+    #[Route('/guildes/hall/installations/{slug}/construire', name: 'app_guild_hall_build_structure', requirements: ['slug' => 'atelier|dock'], methods: ['POST'])]
+    public function buildStructure(Request $request, string $slug, GuildHallBuildingOrders $orders): Response
+    {
+        [$actor, $guild] = $this->contextForHall();
+        $hallId = $request->request->getInt('hall_id');
+        if (!$this->isCsrfTokenValid('guild_hall_build_'.$slug.'_'.$guild->id.'_'.$hallId, $request->request->getString('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le Hall.');
+        }
+        try {
+            if ($request->request->getString('confirm') !== '1') {
+                throw new \DomainException('Confirmez la dépense des matériaux de guilde.');
+            }
+            $orders->start($actor, $guild->id, $hallId, $slug, $request->request->getInt('level', -1));
+            $this->addFlash('success', 'Chantier lancé : '.GuildHallWarehouseView::STRUCTURES[$slug].'.');
+        } catch (\DomainException $error) {
+            $this->addFlash('error', $error->getMessage());
+        }
+
+        return $this->redirectToRoute('app_guild_hall', ['_fragment' => 'hall-structure-'.$slug], Response::HTTP_SEE_OTHER);
+    }
+
     #[Route('/guildes/hall/convoi', name: 'app_guild_hall_send_convoy', methods: ['POST'])]
     #[Route('/guildes/hall/atelier/don', name: 'app_guild_hall_donate_ships', defaults: ['shipDonation' => true], methods: ['POST'])]
     public function sendConvoy(Request $request, GuildHallConvoyDeparture $departure, ClockInterface $clock, bool $shipDonation = false): Response

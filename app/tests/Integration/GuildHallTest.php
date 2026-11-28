@@ -490,10 +490,6 @@ final class GuildHallTest extends KernelTestCase
         $hall = $hallService->contribute($owner, $guild->id, $origin->id, 0, ['hydrogen' => 32]);
         $hall = $hallService->place($owner, $guild->id, $origin->solarSystem->id, $hall->revision);
         $hallId = $hall->id;
-        $atelier = new GuildHallBuilding();
-        $atelier->hall = $hall;
-        $atelier->slug = GuildHallBuilding::ATELIER;
-        $atelier->level = 1;
         $ships = ['transport' => ['basic' => 2]];
         $send = ['transport' => ['basic' => 1]];
         $stock = new GuildAtelierStock();
@@ -501,11 +497,18 @@ final class GuildHallTest extends KernelTestCase
         $stock->ships = $ships;
         $fuel = new GuildHallStock();
         $fuel->hall = $hall;
-        $fuel->materials = ['hydrogen' => 900000];
-        foreach ([$atelier, $stock, $fuel] as $fixture) {
+        $fuel->materials = ['hydrogen' => 900000, 'metal' => 25];
+        foreach ([$stock, $fuel] as $fixture) {
             $this->em->persist($fixture);
         }
         $this->em->flush();
+
+        $atelier = $container->get(GuildHallBuildingOrders::class)->start($owner, $guild->id, $hallId, GuildHallBuilding::ATELIER, 0);
+        self::assertSame(0, $atelier->level);
+        self::assertSame(0, $fuel->materials['metal'] ?? 0);
+        $clock->sleep(61);
+        ($container->get(GuildHallConstructionDueHandler::class))(new GuildHallConstructionDue($atelier->id, $atelier->dispatchToken));
+        self::assertSame(1, $atelier->level);
 
         $plan = $container->get(GuildAtelierDeliveryPlanning::class)->preview($owner, $guild->id, $hallId, $target->id, $send, 1.0);
         self::assertSame($ships, $stock->ships);
