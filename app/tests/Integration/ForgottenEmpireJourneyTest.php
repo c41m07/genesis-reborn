@@ -49,6 +49,28 @@ final class ForgottenEmpireJourneyTest extends WebTestCase
         putenv($this->environment[2]===false?$name:$name.'='.$this->environment[2]);
     }
 
+    public function testRankingShowsInactivityAtFourteenDaysUntilThePlayerReturns(): void
+    {
+        $viewer = $this->player('Observer');
+        $this->client->loginUser($viewer);
+        $this->clock->sleep(14 * 86400 - 1);
+        $this->client->request('GET', '/classement');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('.ranking-label--inactive');
+
+        $this->clock->sleep(1);
+        $page = $this->client->request('GET', '/classement');
+        $row = $page->filter('.ranking-table--players tbody tr')->reduce(fn($row) => $row->filter('.public-profile-link')->text() === $this->player->username);
+        self::assertSame('Inactif', $row->filter('.ranking-label--inactive')->text());
+        self::assertCount(0, $row->filter('time, .ranking-protection'));
+
+        $this->client->loginUser($this->player);
+        $this->client->request('GET', '/classement');
+        $this->client->loginUser($viewer);
+        $this->client->request('GET', '/classement');
+        self::assertSelectorNotExists('.ranking-label--inactive');
+    }
+
     public function testWarningsConversionRestartAndConquestOfTheOriginalEmpire(): void
     {
         $former=$this->player->currentPlayerUniverse;$universe=$former->universe;

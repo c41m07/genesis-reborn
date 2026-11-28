@@ -1,5 +1,9 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Visibilité de l’inactivité au classement — 28 novembre 2026
+
+Le classement rend public le statut « Inactif » à partir du seuil existant de 14 jours dans l’univers. Le classement ne publie ni la date de dernière visite ni celle de conversion. La reprise d’activité retire le badge. Les pactes actifs et les vacances sont identifiables dans le classement.
+
 ## Deux titres sur le profil — 28 novembre 2026
 
 Un commandant peut afficher ensemble deux titres acquis, chacun dans son badge doré, sous son pseudo au classement et sur son profil public. La bannière dispose de son propre emplacement. « Nuit polaire » reprend le panorama de Noël dans l’en-tête du profil et en fond de ligne du classement lorsque le joueur l’équipe.

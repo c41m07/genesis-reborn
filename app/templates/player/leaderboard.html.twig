@@ -17,10 +17,11 @@
     </div>
 </details>
 <nav class="alliance-tabs ui-tabs" aria-label="Classements">{% for key,label in {players:'Joueurs',guilds:'Guildes'} %}<a href="{{ path('app_leaderboard',{tab:key,category:category,direction:direction}) }}" {% if tab==key %}class="active" aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+{% set treatyLabels = {'allied-guild':'Guilde alliée','non-aggression':'Pacte de non-agression',defense:'Pacte de défense'} %}
 <div class="panel ranking-board-main">
 {% if tab == 'players' %}
 <h2 class="ranking-board-main-title">Classement des joueurs</h2>
-{% set diplomaticLabels = {enemy:'Ennemi',guild:'Allié de guilde',commander:'Allié commandant'} %}
+{% set diplomaticLabels = {enemy:'Ennemi',guild:'Même guilde',commander:'Allié commandant'}|merge(treatyLabels) %}
 <p class="ranking-legend">{% for key, label in diplomaticLabels %}<span class="ranking-label ranking-label--{{ key }}">{{ label }}</span>{% endfor %}</p>
 <div class="panel table-scroll" role="region" tabindex="0" aria-label="Classement défilant horizontalement">
 <table class="data-table ranking-table ranking-table--players"><caption>Classement de l’univers {{ membership.universe.name }} · {{ categories[category] }}</caption>
@@ -28,15 +29,17 @@
 <tbody>{% for row in rows %}<tr class="ranking-row--{{ row.relation }}{% if row.cosmetics.banner is defined %} ranking-banner--polar-night{% endif %}" {% if row.membership.id==membership.id %}aria-current="true"{% endif %}>
 <td>#{{ row.ranks[category] }} {{ evolution.inline(row.rank_changes[category], "Places") }}</td><th scope="row">{% if row.guild_tag %}[{{ row.guild_tag }}] {% endif %}<a class="public-profile-link" href="{{ path('app_player_public_profile',{id:row.membership.id}) }}">{{ row.membership.player.username }}</a>
 {% if row.cosmetics.banner is defined %}<span class="visually-hidden">Bannière {{ row.cosmetics.banner }}</span>{% endif %}
-{% if row.cosmetics.titles is defined or diplomaticLabels[row.relation] is defined or row.protection.active %}
+{% set status = row.protection.status|default('') %}
+{% if row.cosmetics.titles is defined or row.badges or row.protection.active or status == 'inactive' %}
     <div class="ranking-badges">
         {% for title in row.cosmetics.titles|default([]) %}<span class="ranking-label ranking-label--title">{{ title }}</span>{% endfor %}
-        {% if diplomaticLabels[row.relation] is defined %}
-            <span class="ranking-label ranking-label--{{ row.relation }}">{{ diplomaticLabels[row.relation] }}</span>
-        {% endif %}
+        {% for badge in row.badges %}
+            <span class="ranking-label ranking-label--{{ badge }}">{{ diplomaticLabels[badge] }}</span>
+        {% endfor %}
+        {% if status == 'inactive' %}<span class="ranking-label ranking-label--inactive">Inactif</span>{% endif %}
         {% if row.protection.active %}
             <details class="ranking-protection">
-                <summary class="player-protection-shield"><span class="ranking-label ranking-label--protection"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M12 2 3 6v6c0 5 9 10 9 10s9-5 9-10V6L12 2z"/></svg>Protégé</span></summary>
+                <summary class="player-protection-shield"><span class="ranking-label ranking-label--protection"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M12 2 3 6v6c0 5 9 10 9 10s9-5 9-10V6L12 2z"/></svg>{{ status == 'vacation' ? 'En vacances' : 'Protégé' }}</span></summary>
                 <p>{{ row.protection.reason }} · jusqu’au {{ row.protection.until|date('d/m/Y H:i',preferences.timezone) }} ({{ preferences.timezone }}).</p>
             </details>
         {% endif %}
@@ -53,10 +56,11 @@
 </div></dl>
 <nav aria-label="Pages du classement">{% if page > 1 %}<a class="secondary" href="{{ path('app_leaderboard',{category:category,direction:direction,page:page-1}) }}">Page précédente</a>{% endif %}<span>Page {{ page }} / {{ pages }}</span>{% if page < pages %}<a class="secondary" href="{{ path('app_leaderboard',{category:category,direction:direction,page:page+1}) }}">Page suivante</a>{% endif %}</nav>
 {% else %}
-<p class="ranking-legend"><span class="ranking-label ranking-label--guild">Guilde alliée</span><span class="ranking-label ranking-label--enemy">Guilde ennemie</span></p>
+{% set guildLabels = treatyLabels|merge({enemy:'Guilde ennemie'}) %}
+<p class="ranking-legend">{% for key, label in guildLabels %}<span class="ranking-label ranking-label--{{ key }}">{{ label }}</span>{% endfor %}</p>
 <p class="social-scroll-hint" id="guild-ranking-scroll-help">Défilez horizontalement pour lire toutes les colonnes.</p>
 <div class="panel table-scroll" role="region" tabindex="0" aria-label="Classement des guildes défilant horizontalement" aria-describedby="guild-ranking-scroll-help"><table class="data-table ranking-table ranking-table--guilds"><caption>Classement des guildes de l’univers {{ membership.universe.name }}</caption><thead><tr><th scope="col">Rang</th><th scope="col">Guilde</th><th scope="col">Joueurs</th><th scope="col">Points bâtiments</th><th scope="col">Points recherches</th><th scope="col">Points flotte</th><th scope="col">Points totaux</th><th scope="col">Médiane des points joueurs</th></tr></thead><tbody>
-{% for row in guildRows %}<tr class="ranking-row--{{ row.relation }}" {% if ownGuild and ownGuild.id==row.guild.id %}aria-current="true"{% endif %}><td>#{{ row.rank }}<small class="ranking-relation">Places : {{ evolution.value(row.rank_change, "Places") }}</small></td><th scope="row"><a class="public-profile-link" href="{{ path('app_guild_public_profile',{id:row.guild.id}) }}">{{ row.guild.name }}</a>{% if row.relation in ['guild','enemy'] and (not ownGuild or ownGuild.id!=row.guild.id) %}<small class="ranking-relation">{{ row.relation=='guild' ? 'Guilde alliée' : 'Guilde ennemie' }}</small>{% endif %}{% if ownGuild and ownGuild.id==row.guild.id %} <span class="badge">Votre guilde</span>{% endif %}</th><td>{{ row.members }}</td>{% for key in ['building_points','research_points','fleet_points','total_points'] %}<td>{{ row[key]|quantity(0) }}{% if key=="total_points" %}<small class="ranking-relation">Points : {{ evolution.value(row.points_change, "Points") }}</small>{% endif %}</td>{% endfor %}<td>{{ row.median_points|quantity(row.median_points != row.median_points|round(0,'floor') ? 1 : 0) }}</td></tr>{% else %}<tr><td colspan="8">Aucune guilde dans cet univers.</td></tr>{% endfor %}
+{% for row in guildRows %}<tr class="ranking-row--{{ row.relation }}" {% if ownGuild and ownGuild.id==row.guild.id %}aria-current="true"{% endif %}><td>#{{ row.rank }}<small class="ranking-relation">Places : {{ evolution.value(row.rank_change, "Places") }}</small></td><th scope="row"><a class="public-profile-link" href="{{ path('app_guild_public_profile',{id:row.guild.id}) }}">{{ row.guild.name }}</a>{% if guildLabels[row.relation] is defined %}<div class="ranking-badges"><span class="ranking-label ranking-label--{{ row.relation }}">{{ guildLabels[row.relation] }}</span></div>{% endif %}{% if ownGuild and ownGuild.id==row.guild.id %} <span class="badge">Votre guilde</span>{% endif %}</th><td>{{ row.members }}</td>{% for key in ['building_points','research_points','fleet_points','total_points'] %}<td>{{ row[key]|quantity(0) }}{% if key=="total_points" %}<small class="ranking-relation">Points : {{ evolution.value(row.points_change, "Points") }}</small>{% endif %}</td>{% endfor %}<td>{{ row.median_points|quantity(row.median_points != row.median_points|round(0,'floor') ? 1 : 0) }}</td></tr>{% else %}<tr><td colspan="8">Aucune guilde dans cet univers.</td></tr>{% endfor %}
 </tbody></table></div>
 {% endif %}
 </div>

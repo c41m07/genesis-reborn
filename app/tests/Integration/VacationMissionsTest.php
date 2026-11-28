@@ -84,6 +84,7 @@ final class VacationMissionsTest extends KernelTestCase
         $status = self::getContainer()->get(PlayerProtection::class)->status($this->host->currentPlayerUniverse, 1000000);
         self::assertTrue($status['active']);
         self::assertSame('Mode vacances', $status['reason']);
+        self::assertSame('vacation', $status['status']);
         self::assertSame($period->scheduledEndAt->format(DATE_ATOM), $status['until']);
         self::assertFalse($combat->canAttack($this->visitor->currentPlayerUniverse, $this->target));
         self::assertFalse($combat->canDefend($this->visitor->currentPlayerUniverse, $this->target));

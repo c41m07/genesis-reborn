@@ -277,6 +277,10 @@ body.authenticated .social-workspace .ranking-table--guilds {
 .social-workspace .ranking-label--title { --badge-dark: #ffda79; --badge-light: #755000; }
 .leaderboard-workspace .ranking-label--enemy { --badge-dark: #ffaaa4; --badge-light: #962e28; }
 .leaderboard-workspace .ranking-label--guild { --badge-dark: #a4d0ff; --badge-light: #25578e; }
+.leaderboard-workspace .ranking-label--allied-guild { --badge-dark: #bfc5ff; --badge-light: #444b95; }
+.leaderboard-workspace .ranking-label--non-aggression { --badge-dark: #ffbd82; --badge-light: #81410d; }
+.leaderboard-workspace .ranking-label--defense { --badge-dark: #84e0df; --badge-light: #096363; }
+.leaderboard-workspace .ranking-label--inactive { --badge-dark: #c3cbd7; --badge-light: #495361; }
 .leaderboard-workspace .ranking-label--commander { --badge-dark: #98e5b2; --badge-light: #22633a; }
 .leaderboard-workspace .ranking-label--protection { --badge-dark: #debdff; --badge-light: #6e4391; }
 

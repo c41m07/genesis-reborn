@@ -28,10 +28,10 @@ final class PlayerProtection
         $vacation=$this->vacations->currentPeriod($membership,$now);
         if($vacation!==null) {
             $until=$vacation->effectiveEndAt();
-            return ['active'=>true,'until'=>$until->format(DATE_ATOM),'remaining'=>$until->getTimestamp()-$now->getTimestamp(),'reason'=>'Mode vacances'];
+            return ['active'=>true,'until'=>$until->format(DATE_ATOM),'remaining'=>$until->getTimestamp()-$now->getTimestamp(),'reason'=>'Mode vacances','status'=>'vacation'];
         }
         if ($this->suspendedForInactivity($membership)) {
-            return ['active'=>false,'until'=>null,'remaining'=>0,'reason'=>null];
+            return ['active'=>false,'until'=>null,'remaining'=>0,'reason'=>null,'status'=>'inactive'];
         }
         $rules=$this->catalog->rules()['new_player_protection']??[];
         $duration=max(0,(int)($rules['duration_seconds']??0));

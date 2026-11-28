@@ -51,14 +51,14 @@ final class LeaderboardController extends AbstractController
             $row['cosmetics'] = $appearance[$peer->id] ?? [];
             $guild = $relations->guild($peer);
             $row['guild_tag'] = $guild?->tag;
-            $guildStatus = $relations->guildStatus($ownGuild, $guild);
-            $row['relation'] = $peer->id === $membership->id ? 'self' : ($relations->enemy($membership, $peer) ? 'enemy' : ($guildStatus === 'allies' ? 'guild' : ($relations->contract($membership, $peer)?->status === 'accepted' ? 'commander' : 'neutral')));
+            $guildBadge = $relations->rankingGuildBadge($ownGuild, $guild);
+            $row['badges'] = $relations->rankingPlayerBadges($membership, $peer, $guildBadge);
+            $row['relation'] = $peer->id === $membership->id ? 'self' : ($row['badges'][0] ?? 'neutral');
         }
         unset($row);
         $guildRows = $tab === 'guilds' ? $daily['guilds'] : [];
         foreach ($guildRows as &$row) {
-            $status = $relations->guildStatus($ownGuild, $row['guild']);
-            $row['relation'] = $status === 'enemies' ? 'enemy' : ($status === 'allies' ? 'guild' : 'neutral');
+            $row['relation'] = $relations->rankingGuildBadge($ownGuild, $row['guild']) ?? 'neutral';
         }
         unset($row);
         return $this->render('player/leaderboard.html.twig', [

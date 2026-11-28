@@ -257,17 +257,43 @@ test('L7E A : tableaux complets, protection au clavier et colonnes des guildes s
         runIsolatedSql(project, `INSERT INTO guild_member (guild_id,player_universe_id)
             SELECT id,${peer.member} FROM guild WHERE leader_id=${owner.member}`);
         await page.reload();
-        await expect(peerBadges.locator('.ranking-label--guild')).toHaveText('Allié de guilde');
+        await expect(peerBadges.locator('.ranking-label--guild')).toHaveText('Même guilde');
         await expect(peerBadges.locator('.ranking-label--enemy')).toHaveCount(0);
         runIsolatedSql(project, `UPDATE profile_cosmetic c JOIN player_universe m ON m.player_id=c.player_id
             SET c.equipped=1 WHERE m.id=${peer.member} AND c.code='guardian_of_stars';
             INSERT INTO profile_cosmetic(player_id,code,awarded_at,equipped)
             SELECT player_id,'amateur_pirate_hunter',UTC_TIMESTAMP(),1 FROM player_universe WHERE id=${peer.member}`);
         await page.reload();
-        await expect(peerBadges.locator('.ranking-label')).toHaveText(['Gardien des étoiles', 'Chasseur de Pirate amateur', 'Allié de guilde', 'Protégé']);
+        await expect(peerBadges.locator('.ranking-label')).toHaveText(['Gardien des étoiles', 'Chasseur de Pirate amateur', 'Même guilde', 'Protégé']);
         for (const width of [390, 320]) {
             await page.setViewportSize({ width, height: 844 });
             expect(await peerBadges.evaluate(node => node.scrollWidth <= node.clientWidth)).toBe(true);
+        }
+        runIsolatedSql(project, `INSERT INTO guild (universe_id,leader_id,name,tag)
+            SELECT universe_id,id,'Veilleurs du Nord','VN' FROM player_universe WHERE id=${peer.member};
+            UPDATE guild_member SET guild_id=(SELECT id FROM guild WHERE leader_id=${peer.member}) WHERE player_universe_id=${peer.member};
+            INSERT INTO guild_relation (guild_a_id,guild_b_id,proposer_id,status,version)
+            SELECT a.id,b.id,a.id,'pending',1 FROM guild a JOIN guild b ON a.leader_id=${owner.member} AND b.leader_id=${peer.member};
+            INSERT INTO vacation_period (membership_id,started_at,scheduled_end_at) VALUES (${peer.member},UTC_TIMESTAMP(),DATE_ADD(UTC_TIMESTAMP(),INTERVAL 2 DAY))`);
+        await page.reload();
+        await expect(peerBadges.locator('.ranking-label--allied-guild')).toHaveCount(0);
+        expireRanking();
+        await expect(peerBadges.locator('summary')).toHaveText('En vacances');
+        await peerBadges.locator('summary').click();
+        await expect(peerBadges.locator('details p')).toContainText('jusqu’au');
+        for (const [status, label, badge] of [
+            ['non_aggression', 'Pacte de non-agression', 'non-aggression'],
+            ['defense', 'Pacte de défense', 'defense'],
+            ['allies', 'Guilde alliée', 'allied-guild'],
+        ]) {
+            runIsolatedSql(project, `UPDATE guild_relation SET status='${status}' WHERE guild_b_id=(SELECT id FROM guild WHERE leader_id=${peer.member})`);
+            await page.reload();
+            await expect(peerBadges.locator('.ranking-label--' + badge)).toHaveText(label);
+            await expect(peerBadges.locator('.ranking-label--enemy')).toHaveCount(status === 'allies' ? 0 : 1);
+            await page.getByRole('navigation', { name: 'Classements', exact: true }).getByRole('link', { name: 'Guildes' }).click();
+            const guildRow = page.getByRole('row').filter({ hasText: 'Veilleurs du Nord' });
+            await expect(guildRow.locator('.ranking-label--' + badge)).toHaveText(label);
+            await page.getByRole('navigation', { name: 'Classements', exact: true }).getByRole('link', { name: 'Joueurs' }).click();
         }
         const plainContext = await browser.newContext({ baseURL, javaScriptEnabled: false, storageState: await page.context().storageState(), viewport: { width: 390, height: 1000 } });
         try {

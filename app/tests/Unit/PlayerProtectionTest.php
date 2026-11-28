@@ -21,9 +21,10 @@ final class PlayerProtectionTest extends TestCase
         $protection = $this->protection($clock, true);
 
         self::assertTrue($protection->status($membership, 0)['active']);
+        self::assertArrayNotHasKey('status', $protection->status($membership, 0));
         $clock->sleep(1);
         self::assertTrue($protection->suspendedForInactivity($membership));
-        self::assertSame(['active'=>false,'until'=>null,'remaining'=>0,'reason'=>null], $protection->status($membership, 0));
+        self::assertSame(['active'=>false,'until'=>null,'remaining'=>0,'reason'=>null,'status'=>'inactive'], $protection->status($membership, 0));
         self::assertEquals($deadline, $membership->recoveryProtectedUntil);
         self::assertEquals($cooldown, $membership->lastRecoveryProtectionAt);
     }
