@@ -93,6 +93,7 @@ Partir des cibles du [Makefile](Makefile). Choisir les lignes qui correspondent 
 
 ## Organisation des pages et de la navigation
 
+- **Références visuelles de Genesis Reborn.** Avant de créer une image, une bannière ou une icône, choisir et examiner un visuel du jeu proche du sujet dans [les illustrations du jeu](app/public/art/) ou [les images du catalogue, de la carte et des événements](app/public/images/). S’appuyer sur sa palette, son éclairage et ses silhouettes. Si le sujet existe déjà dans le jeu, en conserver les traits reconnaissables en adaptant le cadrage au support. Pour le catalogue, suivre aussi la [direction artistique documentée](docs/ILLUSTRATIONS.md).
 - Pour planifier une tâche courante, viser 4 à 5 clics maximum depuis l’écran où le joueur commence jusqu’à la validation, sur ordinateur comme sur mobile. Au-delà de 5, chercher d’abord les détours à supprimer. Conserver les confirmations nécessaires, notamment pour les actions irréversibles.
 - Dans tous les menus du jeu, permettre de changer de planète en 2 à 3 clics maximum, sélecteur compris. Garder la rubrique et l’onglet actifs en affichant les données de la nouvelle colonie, sans redirection automatique vers la vue générale. Si une fiche est propre à l’ancienne planète, ouvrir la liste correspondante de la même rubrique.
 
