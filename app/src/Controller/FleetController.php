@@ -8,7 +8,7 @@ use App\Service\Universe\UniverseContext;
 use App\Service\Fleet\{FleetService, DestinationCatalogue};
 use App\Service\Player\{FirstStepRewardPolicy, PreferencesService};
 use App\Service\Catalog\GameCatalog;
-use App\Service\Guild\GuildJumpLink;
+use App\Service\Guild\{GuildJumpLink, GuildJumpView};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{Request, Response};
 use Symfony\Component\Routing\Attribute\Route;
@@ -27,6 +27,7 @@ final class FleetController extends AbstractController
         \App\Service\Colony\GameShell $shell,
         \App\Service\Colony\LiveRegionResponse $liveResponses,
         GuildJumpLink $jumps,
+        GuildJumpView $jumpView,
     ): Response
     {
         $member = $context->membership();
@@ -63,6 +64,10 @@ final class FleetController extends AbstractController
                 $data['jump_origins'][$origin->id] = $jumps->originEquipped($member, $origin);
             }
         }
+        if ($page === 'holds') {
+            $data['jump_instability'] = $data['fleet_planet'] instanceof Planet
+                ? $jumpView->personalInstability($member, $data['fleet_planet']) : null;
+        }
         if ($request->headers->get('X-Genesis-Live') === '1' && $request->getPreferredFormat() === 'json') {
             $data['chrome'] = $shell->get($this->getUser(), $data['fleet_planet'], rememberSelection: false);
             $data['section'] = 'overview';
@@ -76,7 +81,7 @@ final class FleetController extends AbstractController
                 'prepare' => ['available-fleets' => 'fleet/_available.html.twig', 'mission-summary' => 'fleet/_mission_summary.html.twig'],
                 'missions' => ['active-flights' => 'ui/flights.html.twig', 'mission-pagination' => 'fleet/_pagination.html.twig'],
                 'orbits' => ['orbit-requests' => 'ui/orbit_requests.html.twig'],
-                'holds' => ['fleet-holds' => 'fleet/_dock.html.twig'],
+                'holds' => ['fleet-holds' => 'fleet/_dock.html.twig', 'fleet-jump-instability' => 'fleet/_jump_instability.html.twig'],
                 default => [],
             };
             $regions = [];

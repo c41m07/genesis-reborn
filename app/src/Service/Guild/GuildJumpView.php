@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Guild;
 
-use App\Entity\{GuildHall, GuildJumpPoint, GuildMember, Planet};
+use App\Entity\{GuildHall, GuildJumpPoint, GuildMember, Planet, PlayerUniverse};
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 
@@ -16,6 +16,21 @@ final readonly class GuildJumpView
         private GuildJumpConstruction $construction,
         private ClockInterface $clock,
     ) {
+    }
+
+    /** @return array{expires:\DateTimeImmutable}|null Aucun nom de guilde ni coordonnée tierce ne sort de cette vue. */
+    public function personalInstability(PlayerUniverse $actor, Planet $colony): ?array
+    {
+        if ($actor->id === null || $colony->id === null || $colony->owner?->id !== $actor->id
+            || $colony->solarSystem->galaxy->universe->id !== $actor->universe->id) {
+            return null;
+        }
+        $point = $this->em->getRepository(GuildJumpPoint::class)->findOneBy(['planet' => $colony, 'originalOwnerId' => $actor->id]);
+        if (!$point instanceof GuildJumpPoint || !$point->isUnstableAt($this->clock->now())) {
+            return null;
+        }
+
+        return ['expires' => $point->unstableUntil];
     }
 
     public function describe(GuildHall $hall, bool $mayBuild): array

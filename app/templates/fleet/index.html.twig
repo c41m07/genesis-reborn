@@ -23,6 +23,7 @@
 {% elseif fleet_page=='orbits' %}
 {% include 'ui/orbit_requests.html.twig' %}{% include 'ui/incoming_attacks.html.twig' with {incoming_panel:false} %}
 {% elseif fleet_page=='holds' %}
+{% include 'fleet/_jump_instability.html.twig' with {jump_instability: jump_instability|default(null)} only %}
 <p><a href="{{ path('app_dock_orders') }}">Mes modernisations</a></p>
 {% include 'fleet/_dock.html.twig' %}{% include 'ui/incoming_attacks.html.twig' with {incoming_panel:false} %}
 {% endif %}
