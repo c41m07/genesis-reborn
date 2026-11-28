@@ -101,11 +101,11 @@ final class ResourceBalanceTest extends KernelTestCase
         self::assertEqualsWithDelta(370.9,$active['metal']['potentialGross']*3600,1e-7);
         self::assertEqualsWithDelta(370.9,$active['metal']['gross']*3600,1e-7);
         self::assertEqualsWithDelta(90.225,$active['antimatter']['potentialGross']*3600,1e-7);
-        self::assertEqualsWithDelta(90,$active['antimatter']['productionInputs']['electricity']['gross']*3600,1e-7);
+        self::assertEqualsWithDelta(90.1125,$active['antimatter']['productionInputs']['electricity']['gross']*3600,1e-7);
         self::assertEqualsWithDelta(360.9,$active['antimatter']['productionInputs']['hydrogen']['gross']*3600,1e-7);
         foreach($active['antimatter']['productionInputs'] as $input) self::assertSame($input['gross'],$input['actual']);
         self::assertNotNull($active['metal']['estimateSeconds']);
-        self::assertEqualsWithDelta(270,$active['electricity']['consumptionPotential']*3600,1e-7);
+        self::assertEqualsWithDelta(270.3375,$active['electricity']['consumptionPotential']*3600,1e-7);
         self::assertEqualsWithDelta(360.9,$active['hydrogen']['consumptionPotential']*3600,1e-7);
         self::assertArrayHasKey('mine_antimatter',$active['hydrogen']['consumerSources']);
         self::assertArrayHasKey('mine_metal',$active['electricity']['consumerSources']);
@@ -137,7 +137,8 @@ final class ResourceBalanceTest extends KernelTestCase
             $growth = ['basic' => 1.0025, 'intermediate' => 1.005, 'superior' => 1.01][$tier];
             $levels = ['mine_nano' => [$tier => 1]];
             self::assertEqualsWithDelta($rate * $growth + 10, $resources->rate($planet, 'nano', 0, $levels) * 3600, 1e-7);
-            self::assertEqualsWithDelta($rate, $resources->factoryConsumption($planet, 'mine_nano', $levels)['electricity'] * 3600, 1e-7);
+            $electricityGrowth = ['basic' => 1.00125, 'intermediate' => 1.000625, 'superior' => 1.0003125][$tier];
+            self::assertEqualsWithDelta($rate * $electricityGrowth, $resources->factoryConsumption($planet, 'mine_nano', $levels)['electricity'] * 3600, 1e-7);
         }
     }
 
@@ -155,7 +156,8 @@ final class ResourceBalanceTest extends KernelTestCase
             $refineryConsumption = $resources->factoryConsumption($planet, 'mine_hydrogen', $levels);
 
             self::assertEqualsWithDelta($hourlyAntimatter * $growth, $antimatterProduction * 3600, 1e-7, $tier);
-            self::assertEqualsWithDelta($hourlyAntimatter, $reactorConsumption['electricity'] * 3600, 1e-7, $tier);
+            $electricityGrowth = ['basic' => 1.00125, 'intermediate' => 1.000625, 'superior' => 1.0003125][$tier];
+            self::assertEqualsWithDelta($hourlyAntimatter * $electricityGrowth, $reactorConsumption['electricity'] * 3600, 1e-7, $tier);
             self::assertEqualsWithDelta(4 * $hourlyAntimatter * $growth, $reactorConsumption['hydrogen'] * 3600, 1e-7, $tier);
 
             // L’électricité de la raffinerie est imputée à l’hydrogène utilisé par le piège.
@@ -163,6 +165,34 @@ final class ResourceBalanceTest extends KernelTestCase
             $totalElectricity = $reactorConsumption['electricity'] + $reactorConsumption['hydrogen'] * $electricityPerHydrogen;
             self::assertEqualsWithDelta(8 * $electricityPerHydrogen, $totalElectricity / $antimatterProduction, 1e-7, $tier);
         }
+    }
+
+    public function testMixedRankMineDebitsTheElectricityShownForItsInstalledLevels(): void
+    {
+        $planet = $this->planet();
+        $resources = self::getContainer()->get(ResourceService::class);
+        $rows = $this->rows($planet);
+        $rows['metal']->currentStock = 0;
+        $rows['electricity']->currentStock = 5000;
+        foreach (GameCatalog::TIERS as $tier) {
+            $building = new PlanetBuilding();
+            $building->planet = $planet;
+            $building->slug = 'mine_metal';
+            $building->tier = $tier;
+            $building->level = 25;
+            $this->em->persist($building);
+        }
+        $this->em->flush();
+
+        $hourlyElectricity = 4642.75472955 + 6856.26356897 + 10204.39890526;
+        $snapshot = $resources->snapshot($planet, true);
+        self::assertEqualsWithDelta($hourlyElectricity, $snapshot['electricity']['consumption'] * 3600, 1e-7);
+
+        $this->clock->sleep(60);
+        $resources->materialize($planet);
+        $this->em->flush();
+        $this->em->refresh($rows['electricity']);
+        self::assertEqualsWithDelta(5000 - $hourlyElectricity / 60, $rows['electricity']->currentStock, 1e-7);
     }
 
     public function testOfflinePeriodUsesCurrentRatesWithoutAnActivationDate(): void

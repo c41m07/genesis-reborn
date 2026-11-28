@@ -146,12 +146,12 @@ final class ResourceService
                 $level = $this->tierLevel($levels[$building['slug']] ?? 0, $tier);
                 $factor = $this->catalog->productionTierFactor($tier);
                 $outputLevels += GameCatalog::compoundedLevels($level, $tier, $rules['building_level_growth'] ?? []) * $factor;
-                $powerLevels += $level * $factor;
+                $powerLevels += GameCatalog::compoundedLevels($level, $tier, $rules['extractor_electricity_level_growth'] ?? []) * $factor;
             }
             if ($outputLevels <= 0) {
                 continue;
             }
-            // La consommation électrique dépend des niveaux installés, l’hydrogène du débit produit.
+            // L’électricité dépend des niveaux de chaque rang. Le réacteur prélève son hydrogène selon le débit produit.
             $location = $this->positionFactor($planet, $resource) * $mult;
             $rate = $outputLevels * ($building['production_per_level'] ?? $rules['mine_production_per_level']) * $location * $eventMultiplier;
             $electricity = $resource === 'electricity' ? 0.0 : $powerLevels * ($building['electricity_use_per_level'] ?? $rules['factory_electricity_use_per_level']) * $location;

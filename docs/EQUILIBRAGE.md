@@ -268,6 +268,8 @@ La transposition de R14 est contrôlée ; la branche complète ne peut pas être
 
 ### Production et progression des bâtiments — 18 novembre 2026
 
+Les valeurs ci-dessous sont les bases du 18 novembre. Les débits actuels incluent la croissance composée de la production et, depuis le 28 novembre, celle de la consommation électrique. [Formules par rang](REGLES.md#progression-économique-par-rang).
+
 Le doublement initial de la production de nano et de sa consommation électrique
 nominale a été annulé. À position 5 dans un univers ×1, les deux débits sont
 de 180, 270 et 405 par niveau et par heure, à plein rendement. La production

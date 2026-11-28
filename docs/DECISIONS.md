@@ -1,5 +1,9 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Consommation électrique des extracteurs — 28 novembre 2026
+
+Le propriétaire valide une croissance électrique composée de 0,125 % par niveau Basique, 0,0625 % par niveau Intermédiaire et 0,03125 % par niveau Supérieur. Elle concerne les extracteurs de métal, de nano, d’hydrogène et d’antimatière. Les rangs avancés gagnent ainsi en rendement par unité produite. Le piège conserve son coût de 4 hydrogènes par antimatière produite. La règle s’applique aux niveaux installés lors du prochain calcul, y compris pour la période écoulée depuis la dernière synchronisation.
+
 ## Protection, détection, inventaire et classement — 28 novembre 2026
 
 Le propriétaire d’une colonie vaincue bénéficie de la protection de 24 h si ses pertes atteignent 70 % des vaisseaux militaires engagés. Le délai de sept jours entre activations subsiste. Envoyer une attaque contre un autre joueur met fin à la protection après pertes au départ, même si la flotte est rappelée. Chaque attaque ouvre à la cible une fenêtre de riposte de 24 h contre cet agresseur, indépendamment du rapport de points. Les autres conditions d’attaque s’appliquent.
