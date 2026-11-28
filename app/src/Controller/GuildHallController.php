@@ -6,7 +6,7 @@ namespace App\Controller;
 
 use App\Entity\{Guild, GuildMember, GuildHallBuilding, PlayerUniverse};
 use App\Repository\{GameRepository, GuildHallRepository};
-use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildAtelierDeliveryView, GuildDockService, GuildDockView, GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyView, GuildHallFunding, GuildHallService, GuildHallWarehouseView};
+use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildAtelierDeliveryView, GuildDockService, GuildDockView, GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyView, GuildHallFunding, GuildHallService, GuildHallWarehouseView, GuildJumpConstruction, GuildJumpView};
 use App\Service\Player\{DiplomacyAccessPolicy, RelationResolver, VacationCalendar};
 use App\Service\Universe\UniverseContext;
 use Psr\Clock\ClockInterface;
@@ -39,6 +39,7 @@ final class GuildHallController extends AbstractController
         ClockInterface $clock,
         GuildAtelierDeliveryView $delivery,
         GuildDockView $dock,
+        GuildJumpView $jumps,
     ): Response
     {
         [$actor, $guild, $target] = $this->contextForHall();
@@ -100,6 +101,8 @@ final class GuildHallController extends AbstractController
             }
         }
 
+        $mayBuild = $mayAct && $policy->canCommand($actor, $guild);
+
         return $this->render('player/guild_hall.html.twig', [
             'guild' => $guild,
             'warehouse' => $warehouseData,
@@ -107,7 +110,8 @@ final class GuildHallController extends AbstractController
             'atelier_delivery' => $deliveryData,
             'dock' => $dockData,
             'received_donations' => $hall?->placedAt !== null ? $convoy->receivedDonations($actor, $hall) : [],
-            'may_build_at_hall' => $mayAct && $policy->canCommand($actor, $guild),
+            'may_build_at_hall' => $mayBuild,
+            'jumps' => $hall?->placedAt !== null ? $jumps->describe($hall, $mayBuild) : null,
             'hall' => $hall,
             'required' => $target,
             'remaining' => $remaining,
@@ -377,6 +381,29 @@ final class GuildHallController extends AbstractController
         }
 
         return $this->redirectToRoute('app_guild_hall', $redirect, Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/guildes/hall/jump-points/installer', name: 'app_guild_hall_install_jump', methods: ['POST'])]
+    public function installJump(Request $request, GuildJumpConstruction $projects): Response
+    {
+        [$actor, $guild] = $this->contextForHall();
+        $input = $request->request;
+        $hallId = $input->getInt('hall_id');
+        if (!$this->isCsrfTokenValid('guild_hall_jump_'.$guild->id.'_'.$hallId, $input->getString('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le Hall.');
+        }
+
+        try {
+            if ($input->getString('confirm') !== '1') {
+                throw new \DomainException('Confirmez la dépense des matériaux de guilde.');
+            }
+            $projects->start($actor, $guild->id, $hallId, $input->getInt('colony'), $input->getString('review'));
+            $this->addFlash('success', 'Installation lancée. Le Jump Point sera actif à son échéance.');
+        } catch (\DomainException $error) {
+            $this->addFlash('error', $error->getMessage());
+        }
+
+        return $this->redirectToRoute('app_guild_hall', ['_fragment' => 'hall-jump-points'], Response::HTTP_SEE_OTHER);
     }
 
     /** Une saisie non entière ou hors bornes n’est jamais arrondie ni tronquée. */

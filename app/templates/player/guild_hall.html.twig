@@ -58,6 +58,9 @@
         {% if dock is not null %}
             {% include 'player/_guild_dock.html.twig' with {hall: hall, guild: guild, dock: dock} only %}
         {% endif %}
+        {% if jumps is not null and (jumps.quote or jumps.points is not empty) %}
+            {% include 'player/_guild_jump_points.html.twig' with {hall: hall, guild: guild, jumps: jumps} only %}
+        {% endif %}
         {% if received_donations|default([]) is not empty %}
             <section class="panel" aria-labelledby="hall-received-donations-title">
                 <h2 id="hall-received-donations-title">Mes derniers dons reçus par l’Atelier</h2>
