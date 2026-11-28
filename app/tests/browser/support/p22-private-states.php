@@ -77,6 +77,23 @@ if ($mode === 'report' && $recon === null) {
         $delivery->replaceState($timeline);
     }
     $em->persist($delivery);
+} elseif (in_array($mode, ['finish-first', 'finish-second'], true) && $recon !== null) {
+    // Le navigateur exerce la bascule des dossiers ; le test du worker joue les trois finales.
+    $sample = $em->getRepository(PirateAttackCampaign::class)->findOneBy(['reconnaissance' => $recon]);
+    $catalog = new GameCatalog('/app/config/game');
+    $campaign = new PirateCampaignCatalogue($catalog, new CombatUnitFactory($catalog, new TechnologyEffectCalculator($catalog)));
+    $keys = array_slice($campaign->keys(), $mode === 'finish-first' ? 1 : 20, $mode === 'finish-first' ? 19 : 20);
+    foreach ($keys as $mission) {
+        $prepared = $campaign->prepareForServer($mission, $member->universe);
+        $scout = new PirateReconnaissance($member, $member->player, $origin->solarSystem, $mission,
+            $sample->departedAt->modify('-2 minutes'), $sample->departedAt->modify('-1 minute'), $token, false, $prepared);
+        $scout->reportWhenDue($member, $token, $sample->departedAt);
+        $em->persist($scout);
+        $won = clone $sample;
+        $won->id = null;
+        $won->reconnaissance = $scout;
+        $em->persist($won);
+    }
 } elseif ($mode === 'combat' && $recon !== null) {
     // Le test navigateur part d’une victoire attestée. Le test de persistance exerce les phases du worker.
     $attack = $em->getRepository(PirateAttackCampaign::class)->findOneBy(['reconnaissance' => $recon]);

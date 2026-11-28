@@ -1,5 +1,9 @@
 # Roadmap Genesis Reborn
 
+## Progression des campagnes pirates — 28 novembre 2026
+
+Le dossier existant suit les trois campagnes par participation. Le passage au rang suivant réutilise la même page et remet son compteur de missions à zéro. Les liens historiques permettent de reprendre une livraison ou un repli. [Règles des campagnes](REGLES.md#campagnes-pirates).
+
 ## Galaxie — colonie active et sondes par rang
 
 La fiche planète regroupe la sélection des sondes et leur envoi dans un tableau, utilisable également depuis la liste des systèmes. Le raccourci « Ma colonie » retrouve la planète active depuis la galaxie consultée. La recette couvre deux colonies, la saisie et Max, les rangs mélangés et le refus du départ si le stock a changé.

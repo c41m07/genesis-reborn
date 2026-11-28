@@ -1013,6 +1013,12 @@ Un retrait quotidien par **compte**, tous univers confondus. Le jour change à m
 
 L’effet combat est figé à l’ouverture du combat et ne s’applique pas aux combats PNJ. Les trajets spécifiques de la Bourse, de la campagne pirate et des convois du Hall ne prennent pas le bonus de vol.
 
+## Campagnes pirates
+
+La progression est propre à la participation dans l’univers. Chaque victoire ouvre la mission suivante. À la fin des vingt missions, le dossier passe à la campagne suivante. Les vingt victoires précédentes restent acquises. Le titre de chaque finale est attribué une seule fois par compte et s’équipe dans le profil.
+
+La flotte de chaque nouvelle rencontre reprend les classes déjà rencontrées et ajoute celle du chapitre en cours. Le rapport de reconnaissance révèle les rangs et les effectifs. Le fret dépend de leur coût catalogue dans l’univers et reste figé dès le départ de la sonde. Les dossiers déjà engagés gardent leurs conditions.
+
 ## Rapports de campagne et fret des convois pirates
 
 La reconnaissance pirate envoie une seule sonde de la colonie de départ, du premier rang disponible dans l’ordre Basique, Intermédiaire, Supérieur. Le devis indique le rang qui sera perdu. La durée et le carburant aller-retour dépendent de la sonde retenue. Sans sonde à quai, le départ est indisponible.

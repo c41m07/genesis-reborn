@@ -94,14 +94,14 @@ final class PirateCampaignWorkspaceReaderTest extends KernelTestCase
         self::assertSame('Victoire', $first['briefing']['status']);
 
         $seat = $this->em->find(PlayerUniverse::class, $seat->id);
-        for ($index = 1; $index < 20; ++$index) {
-            $this->addAttackResult($seat, $index, pending: $index === 19);
+        for ($index = 1; $index < 60; ++$index) {
+            $this->addAttackResult($seat, $index, pending: $index === 59);
         }
         $this->em->flush();
 
-        [$last, $large] = $this->measure($id, 20);
-        self::assertCount(20, $last['history']);
-        self::assertSame(20, $last['current']);
+        [$last, $large] = $this->measure($id, 300000020);
+        self::assertCount(60, $last['history']);
+        self::assertSame(300000020, $last['current']);
         self::assertSame('Combat en cours', $last['briefing']['status']);
         self::assertNull($last['briefing']['losses']);
         self::assertNull($last['briefing']['return']);

@@ -77,10 +77,10 @@ final readonly class PirateCampaignTraffic
 
     private function read(PlayerUniverse $viewer, \DateTimeImmutable $at): array
     {
-        $keys = $this->catalogue->keys($viewer->universe);
+        $keys = $this->catalogue->routeKeys($viewer->universe);
         $rows = $this->campaigns->ownedRows($viewer, $keys, $at);
         $order = $this->sequence->forViewer($viewer, $rows, $at);
-        if ($rows === [] || $order === null || $order['consultable'] === []) {
+        if ($rows === [] || $order === null) {
             return self::EMPTY;
         }
 
@@ -96,7 +96,9 @@ final readonly class PirateCampaignTraffic
             $known[$discovery->solarSystem->id] = true;
         }
 
-        $visible = array_fill_keys($order['consultable'], true);
+        $additional = empty($viewer->universe->gameSettings['pirate_missions']) ? null
+            : $this->sequence->forViewer($viewer, $rows, $at, editorial: true);
+        $visible = array_fill_keys(array_merge($order['consultable'], $additional['consultable'] ?? []), true);
         $ordinals = array_flip($keys);
         $shipDefinitions = $this->gameCatalog->forUniverse($viewer->universe)['catalog']['ships'];
         $snapshot = self::EMPTY;
@@ -129,7 +131,7 @@ final readonly class PirateCampaignTraffic
             if ($site !== null) {
                 $ownedAnchors[$site->id] = $site;
             }
-            if ($phase !== PirateCampaignMoment::Victoire->name && $progress['key'] === $order['current_mission']) {
+            if ($phase !== PirateCampaignMoment::Victoire->name && in_array($progress['key'], [$order['current_mission'], $additional['current_mission'] ?? null], true)) {
                 $systems = $this->systems($known, $site);
                 if ($systems !== []) {
                     $snapshot['presence'][] = $this->movement('pirates', $number, 'Pirates repérés · en station', null, $at, $systems, ships: $this->shipDetails($shipDefinitions, $progress['composition'] ?? []));

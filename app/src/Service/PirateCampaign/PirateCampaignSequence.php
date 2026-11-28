@@ -22,14 +22,18 @@ final readonly class PirateCampaignSequence
      * @param iterable<array{reconnaissance:PirateReconnaissance, attack:?PirateAttackCampaign}> $rows
      * @return array{current_mission:?string, next_signal:?string, consultable:list<string>}|null
      */
-    public function forViewer(PlayerUniverse $viewer, iterable $rows, \DateTimeImmutable $at): ?array
+    public function forViewer(PlayerUniverse $viewer, iterable $rows, \DateTimeImmutable $at, bool $editorial = false): ?array
     {
         if ($viewer->id === null || $viewer->player?->id === null
             || !$viewer->isPlayerControlled() || !$viewer->universe->isAccessible($at)) {
             return null;
         }
 
-        $keys = $this->catalogue->keys($viewer->universe);
+        $keys = $this->catalogue->keys();
+        if ($editorial) {
+            // Les missions publiées gardent leur propre suite après la première finale.
+            $keys = array_merge($this->catalogue->campaignKeys(1), array_keys($viewer->universe->gameSettings['pirate_missions'] ?? []));
+        }
         $known = array_fill_keys($keys, true);
         $proofs = [];
         foreach ($rows as $row) {

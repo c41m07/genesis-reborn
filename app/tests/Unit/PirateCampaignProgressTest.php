@@ -28,7 +28,7 @@ final class PirateCampaignProgressTest extends TestCase
 
         $scout = $progress->forViewer($owner, $recon, $attack, $this->at(32));
         self::assertSame('RenseignementRecu', $scout['phase']);
-        self::assertSame(['fighter' => ['basic' => 1]], $scout['composition']);
+        self::assertSame(['fighter' => ['basic' => 12], 'interceptor' => ['basic' => 10], 'stealth_fighter' => ['basic' => 8]], $scout['composition']);
         self::assertSame('AttaqueEngagee', $progress->forViewer($owner, $recon, $attack, $this->at(74))['phase']);
         $victory = $progress->forViewer($owner, $recon, $attack, $this->at(75));
         self::assertSame('Victoire', $victory['phase']);

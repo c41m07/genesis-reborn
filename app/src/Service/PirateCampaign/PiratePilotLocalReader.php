@@ -46,7 +46,7 @@ final readonly class PiratePilotLocalReader
         }
 
         // Les requêtes de détail revérifient la possession, la sélection et l'univers frais.
-        $keys = $this->catalogue->keys($viewer->universe);
+        $keys = $this->catalogue->routeKeys($viewer->universe);
         $rows = $this->repository->ownedRows($viewer, $keys, $at);
         $dossier = $this->workspace->forViewer($viewer, $rows, $at, $missionNumber);
         if ($dossier === null) {

@@ -93,10 +93,27 @@ final class PirateCampaignWorkspaceTest extends TestCase
     {
         [$viewer, $site, $catalogue, $workspace] = $this->fixture();
         $rows = array_map(fn (int $i): array => $this->row($viewer, $site, $catalogue, $i), range(0, 19));
+        $second = $workspace->forViewer($viewer, $rows, $this->at(10));
+        self::assertSame(2, $second['campaign_tier']);
+        self::assertSame(200000001, $second['current']);
+        self::assertSame(200000000, $second['mission_offset']);
+        self::assertNull($workspace->forViewer($viewer, $rows, $this->at(10), 300000001));
+        $custom = 'mission_legacy';
+        $viewer->universe->gameSettings['pirate_missions'][$custom] =
+            ['starts' => null, 'ends' => null] + $catalogue->definition('balise_17');
+        $customDossier = $workspace->forViewer($viewer, $rows, $this->at(10), 21);
+        self::assertSame(0, $customDossier['campaign_tier']);
+        self::assertSame(21, $customDossier['current']);
+        $main = $workspace->forViewer($viewer, $rows, $this->at(10));
+        self::assertSame(21, $main['editorial_mission']);
+        self::assertSame($second['current'], $main['current']);
+        for ($index = 20; $index < 60; ++$index) {
+            $rows[] = $this->row($viewer, $site, $catalogue, $index);
+        }
         $ending = $workspace->forViewer($viewer, $rows, $this->at(10));
         self::assertNull($ending['current']);
-        self::assertSame(20, $ending['selected']);
-        self::assertCount(20, $ending['history']);
+        self::assertSame(300000020, $ending['selected']);
+        self::assertCount(60, $ending['history']);
         self::assertSame(5, $ending['chapter']['number']);
         self::assertSame(['won'], array_values(array_unique(array_column($ending['chapter']['missions'], 'state'))));
         self::assertSame(1, $workspace->forViewer($viewer, $rows, $this->at(10), 1)['selected']);

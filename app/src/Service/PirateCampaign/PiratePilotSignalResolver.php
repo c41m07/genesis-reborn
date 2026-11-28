@@ -26,7 +26,7 @@ final readonly class PiratePilotSignalResolver
      */
     public function resolveLocked(PlayerUniverse $owner, Planet $active, \DateTimeImmutable $at, int $ordinal = 1): ?PiratePilotSignal
     {
-        $keys = $this->catalogue->keys($owner->universe);
+        $keys = $this->catalogue->routeKeys($owner->universe);
         if ($ordinal < 1 || !isset($keys[$ordinal - 1])) {
             return null;
         }

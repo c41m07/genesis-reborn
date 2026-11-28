@@ -12,10 +12,15 @@ final readonly class ProfileCosmetics
 {
     public const PIRATE_HUNTER_TITLE = 'amateur_pirate_hunter';
 
+    public const CONFIRMED_PIRATE_HUNTER_TITLE = 'confirmed_pirate_hunter';
+    public const SENIOR_PIRATE_HUNTER_TITLE = 'senior_pirate_hunter';
+
     public const MAX_TITLES = 2;
 
     public const DEFINITIONS = [
         self::PIRATE_HUNTER_TITLE => ['slot' => 'title', 'label' => 'Chasseur de Pirate amateur'],
+        self::CONFIRMED_PIRATE_HUNTER_TITLE => ['slot' => 'title', 'label' => 'Chasseur de pirate confirmé'],
+        self::SENIOR_PIRATE_HUNTER_TITLE => ['slot' => 'title', 'label' => 'Chasseur de pirate sénior'],
         'guardian_of_stars' => ['slot' => 'title', 'label' => 'Gardien des étoiles'],
         'polar_night' => ['slot' => 'banner', 'label' => 'Nuit polaire'],
     ];

@@ -18,6 +18,20 @@
   les mêmes valeurs par défaut dans leur propre base. Ne pas confondre le mode Symfony et la cible
   de déploiement.
 
+## Campagnes successives
+
+Le dossier s’ouvre sur la mission courante de l’empire. Chaque campagne compte vingt missions. La victoire à la vingtième ouvre le signal suivant, même si un convoi ou des survivants sont encore en vol. Les archives, les rapports et les anciens liens restent consultables. Une reconnaissance déjà lancée conserve ses effectifs, ses rangs, son scénario et son devis. Les compositions validées sont les suivantes.
+
+| Chapitre | Nouvelle classe et rang dans la première campagne | Effectifs successifs de cette classe |
+| --- | --- | --- |
+| 1 · Missions 1–3 | Légers T1 (chasseur de patrouille, intercepteur, chasseur furtif) | 12/10/8 → 24/20/16 → 120/100/80 |
+| 2 · Missions 4–8 | Bombardiers T1 | 20 → 30 → 40 → 50 → 60 |
+| 3 · Missions 9–13 | Escortes T2 (corvette, frégate, destroyer) | 5/10/6 → 8/15/9 → 10/20/12 → 13/25/15 → 15/30/18 |
+| 4 · Missions 14–16 | Lourds T2 (chasseur lourd, croiseur, cuirassé) | 20/4/3 → 40/8/6 → 60/12/9 |
+| 5 · Missions 17–20 | Capitaux T3 | 2 → 6 → 10 → 20 |
+
+Chaque chapitre garde les effectifs atteints dans les chapitres précédents. La deuxième campagne reprend ces compositions entièrement en T2 et la troisième entièrement en T3. Chaque finale réunit 524 vaisseaux. Les titres respectifs sont « Chasseur de Pirate amateur », « Chasseur de pirate confirmé » et « Chasseur de pirate sénior ». Le fret des nouvelles rencontres suit le coût catalogue des vaisseaux au rang rencontré. Les reconnaissances déjà engagées conservent leur composition et leur prix figés.
+
 ## Renseignement et simulation
 
 - La reconnaissance propose la sonde de plus bas rang disponible sur la colonie active (T1, puis T2, puis T3). Si ce rang change avant confirmation, le joueur doit confirmer le devis actualisé.
@@ -60,9 +74,7 @@
   lorsqu’ils sont connus du propriétaire. Si elle ne dispose que d’une ancre (notamment la
   sonde avant son rapport), elle marque cette ancre sans révéler de direction. Ni la guilde
   ni les autres commandants ne reçoivent ces trajets. L’échéance dépassée ne prouve pas l’arrivée.
-- La victoire de la mission 20, **La nuit se brise**, débloque le titre
-  **Chasseur de Pirate amateur** une fois par compte. Le titre est à équiper dans le profil ;
-  aucun réglage ni titre existant n’est remplacé. Ce lot ne réattribue pas les victoires antérieures.
+- La victoire de **La nuit se brise** attribue le titre de la campagne terminée une fois par compte. Le joueur choisit de l’équiper dans son profil. Les titres sont **Chasseur de Pirate amateur**, **Chasseur de pirate confirmé** et **Chasseur de pirate sénior**, dans l’ordre des campagnes.
 
 ## Pour l'exploitation lors d'un déploiement décidé par l'opérateur
 

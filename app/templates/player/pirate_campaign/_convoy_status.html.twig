@@ -2,7 +2,7 @@
 {% set reward = convoy.selected_reward %}
 {% if oldest and oldest.mission != selected %}
     <p><a href="{{ path('app_pirate_campaign', {missionNumber: oldest.mission}) }}">
-        Consulter le plus ancien convoi en attente : mission {{ oldest.mission }}
+        Consulter le plus ancien convoi en attente : {{ pirate_dossier_label(oldest.mission) }}
     </a></p>
 {% endif %}
 {% if reward %}

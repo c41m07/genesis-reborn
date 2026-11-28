@@ -2,7 +2,7 @@
 namespace App\Twig;
 use App\Service\Colony\{CatalogFilters, CatalogueItemLink, GameShell};
 use App\Entity\{Player, PlayerUniverse};
-use App\Service\PirateCampaign\{PirateCampaignTraffic, PiratePilotGate};
+use App\Service\PirateCampaign\{PirateCampaignCatalogue, PirateCampaignTraffic, PiratePilotGate};
 use Psr\Clock\ClockInterface;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -17,6 +17,7 @@ final class GameUiExtension extends AbstractExtension
             new TwigFunction('catalog_table_groups', $this->filters->groupedDefinitions(...)),
             new TwigFunction('catalog_family_icon', $this->filters->familyIcon(...)),
             new TwigFunction('ship_category_icon', $this->filters->shipIcon(...)),
+            new TwigFunction('pirate_dossier_label', PirateCampaignCatalogue::dossierLabel(...)),
             new TwigFunction('active_timed_bonus', $this->timedBoosts->activeBonus(...)),
             new TwigFunction('universe_closing', [$this->closingClock, 'snapshot']),new TwigFunction('game_shell',[$this->shell,'get']),new TwigFunction('pirate_campaign_available', $this->pirateCampaignAvailable(...)),new TwigFunction('pirate_campaign_traffic', [$this->pirateTraffic,'forViewer']),new TwigFunction('catalogue_item_url',[$this->catalogueLinks,'focus']),new TwigFunction('duration_label',fn(int $s)=>($s>=3600?intdiv($s,3600).' h ':'').($s>=60?intdiv($s%3600,60).' min ': '').($s%60).' s')];
     }
