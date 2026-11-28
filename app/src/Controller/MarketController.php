@@ -7,7 +7,7 @@ namespace App\Controller;
 use App\Entity\Planet;
 use App\Repository\{GameRepository, ResourceMarketRepository};
 use App\Service\Catalog\GameCatalog;
-use App\Service\Market\{MarketConvoys, MarketPresentation, MarketPricing, MarketTerms};
+use App\Service\Market\{MarketConvoys, MarketPresentation, MarketPricing, MarketTerms, PlayerMarket};
 use App\Service\Universe\UniverseContext;
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,7 +19,7 @@ final class MarketController extends AbstractController
     #[Route('/bourse', name: 'app_market', methods: ['GET', 'POST'])]
     public function page(
         Request $request, UniverseContext $context, GameRepository $repo, ResourceMarketRepository $markets,
-        MarketTerms $terms, MarketConvoys $convoys, MarketPresentation $presentation, ClockInterface $clock,
+        PlayerMarket $players, MarketTerms $terms, MarketConvoys $convoys, MarketPresentation $presentation, ClockInterface $clock,
     ): Response {
         $member = $context->membership();
         $universe = $member->universe;
@@ -29,7 +29,7 @@ final class MarketController extends AbstractController
         $draftKey = 'market_draft_'.$member->id;
         $draft = $session->get($draftKey, []);
         $quote = $session->get($sessionKey);
-        if ($quote && $quote['expires'] <= $clock->now()->getTimestamp()) {
+        if ($quote && (!isset($quote['details']['operation']) || $quote['expires'] <= $clock->now()->getTimestamp())) {
             $session->remove($sessionKey);
             $quote = null;
         }
@@ -60,7 +60,8 @@ final class MarketController extends AbstractController
                 } elseif ($action === 'quote') {
                     $planet = $byId[$fields->getInt('planet')] ?? throw new \DomainException('Choisissez une colonie de votre empire.');
                     $draft = [
-                        'pay' => $fields->getString('pay'), 'receive' => $fields->getString('receive'),
+                        'operation' => $fields->getString('operation', 'barter'),
+                        'pay' => $fields->getString('pay'), 'receive' => $fields->getString('receive', $fields->getString('pay')),
                         'quantity' => $fields->getInt('quantity'), 'rank' => $fields->getString('rank'), 'cargos' => $fields->getInt('cargos'),
                     ];
                     $session->set($draftKey, $draft + ['planet' => $planet->id]);
@@ -76,7 +77,7 @@ final class MarketController extends AbstractController
                     $convoys->depart($member, $planet, $quote['details'], $quote['key']);
                     $session->remove($draftKey);
                     $session->remove($sessionKey);
-                    $this->addFlash('success', 'Convoi lancé. L’échange se fera à la station dans 30 minutes.');
+                    $this->addFlash('success', 'Convoi lancé. Arrivée à la station dans 30 minutes.');
                 }
             } catch (\DomainException $error) {
                 if (in_array($action, ['quote', 'send'], true)) {
@@ -88,9 +89,19 @@ final class MarketController extends AbstractController
             return $this->redirectToRoute('app_market', [], Response::HTTP_SEE_OTHER);
         }
 
+        $operations = ['barter' => 'Troc direct', 'sell' => 'Vendre à la station', 'buy' => 'Acheter à la station',
+            'deposit' => 'Déposer à la station', 'collect' => 'Rapatrier du dépôt'];
+        if ($request->query->has('operation') && isset($operations[$request->query->getString('operation')])) {
+            $draft['operation'] = $request->query->getString('operation');
+            $resource = $request->query->getString('resource');
+            if (isset(MarketPricing::WEIGHTS[$resource])) {
+                $draft['pay'] = $resource;
+            }
+            $quote = null;
+        }
         $planet = $byId[$request->query->getInt('planet', $quote['details']['planet'] ?? $draft['planet'] ?? 0)] ?? ($colonies[0] ?? null);
         return $this->render('market/index.html.twig', [
-            'draft' => $draft, 'member' => $member, 'market' => $market, 'rows' => $market ? $presentation->rows($market) : [],
+            'account' => $players->account($member), 'operations' => $operations, 'draft' => $draft, 'member' => $member, 'market' => $market, 'rows' => $market ? $presentation->rows($market) : [],
             'colonies' => $colonies, 'planet' => $planet, 'trades' => $markets->trades($universe, $member->id),
             'quote' => $quote && isset($byId[$quote['details']['planet']]) ? $quote : null,
             'cargoStocks' => $planet ? $terms->cargos($member, $planet) : [], 'fee' => MarketPricing::FEE_PERCENT,

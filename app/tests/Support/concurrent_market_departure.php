@@ -20,7 +20,7 @@ if (($params['host'] ?? '') !== 'database-test' || ($params['dbname'] ?? '') !==
     throw new RuntimeException('Base de recette non isolée.');
 }
 $actor = $em->find(PlayerUniverse::class, $input['member']);
-$planet = $em->find(Planet::class, $input['planet']);
+$planet = isset($input['planet']) ? $em->find(Planet::class, $input['planet']) : null;
 $convoys = $container->get(MarketConvoys::class);
 file_put_contents($input['ready'], (string) $connection->fetchOne('SELECT CONNECTION_ID()'));
 $deadline = microtime(true) + 15;
@@ -31,7 +31,11 @@ while (!is_file($input['barrier'])) {
     usleep(10000);
 }
 try {
-    $convoys->depart($actor, $planet, $input['quote'], $input['key']);
+    if (isset($input['offer'])) {
+        $container->get(\App\Service\Market\PlayerMarket::class)->order($actor, $input['key'], 'purchase', 'metal', 5, '', $input['offer']);
+    } else {
+        $convoys->depart($actor, $planet, $input['quote'], $input['key']);
+    }
     echo "accepted\n";
 } catch (DomainException $error) {
     echo $error->getMessage()."\n";

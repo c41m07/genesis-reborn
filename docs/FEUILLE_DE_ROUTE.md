@@ -1,5 +1,9 @@
 # Roadmap Genesis Reborn
 
+## Marché en crédits — 28 novembre 2026
+
+Deux pages sous la même station séparent le devis et les vols du comptoir des offres entre joueurs. Le nouveau marché utilise un dépôt privé en station et les convois du troc pour les apports et rapatriements. La recette couvre la taxe préalable, le refus pour solde insuffisant, l’achat partiel, le retrait, le rejeu et deux achats concurrents des dernières unités. La migration `Version20261128160000` doit être appliquée avec sauvegarde vérifiée et accord d’exploitation avant activation sur une base existante. [Parcours et exploitation](BOURSE_DE_RESSOURCES.md).
+
 ## Reconnaissance pirate — 28 novembre 2026
 
 Le dossier de campagne indique le rang de la sonde avant son envoi et Flottes affiche le rang engagé. La recette couvre la priorité des trois rangs, le hangar vide et la confirmation après changement du stock. [Règle de départ](REGLES.md#rapports-de-campagne-et-fret-des-convois-pirates).

@@ -23,6 +23,7 @@ final readonly class MarketConvoys
         private ActionGuard $guard,
         private ResourceService $resources,
         private MarketTerms $terms,
+        private PlayerMarket $players,
         private BoostGrantService $grants,
         private VacationCalendar $vacations,
         private ClockInterface $clock,
@@ -56,7 +57,12 @@ final readonly class MarketConvoys
                 throw new \DomainException('Le devis a changé. Vérifiez un nouveau devis avant de partir.');
             }
 
-            $cost = [$quote['pay'] => $quote['quantity']];
+            if ($quote['operation'] === 'buy') {
+                $this->players->accountLocked($member)->moveCredits(-$quote['creditCents']);
+            } elseif ($quote['operation'] === 'collect') {
+                $this->players->accountLocked($member)->moveGoods($quote['pay'], -$quote['quantity']);
+            }
+            $cost = [$quote['pay'] => $quote['out']];
             $cost['hydrogen'] = ($cost['hydrogen'] ?? 0) + $quote['planetFuel'];
             $this->resources->consume($planet, $cost, lockStocks: true);
             $idle->storedFuel = 0;
@@ -69,7 +75,9 @@ final readonly class MarketConvoys
             $trade->originId = $trade->returnPlanetId = $planet->id;
             $trade->requestKey = $key;
             $trade->payResource = $quote['pay'];
-            $trade->payQuantity = $quote['quantity'];
+            $trade->operation = $quote['operation'];
+            $trade->creditCents = $quote['creditCents'];
+            $trade->payQuantity = $quote['out'];
             $trade->receiveResource = $quote['receive'];
             $trade->receiveQuantity = $quote['received'];
             $trade->ships = [$quote['rank'] => $quote['cargos']];
@@ -92,6 +100,11 @@ final readonly class MarketConvoys
                 throw new \DomainException('Le rappel est possible avant l’arrivée à la station seulement.');
             }
             $elapsed = min(MarketTerms::LEG_SECONDS, max(1, $now->getTimestamp() - $trade->departedAt->getTimestamp()));
+            if ($trade->operation === 'collect') {
+                $this->players->accountLocked($member)->moveGoods($trade->receiveResource, $trade->receiveQuantity);
+            } elseif ($trade->operation === 'buy') {
+                $this->players->accountLocked($member)->moveCredits($trade->creditCents);
+            }
             $trade->recalled = true;
             // Le statut libère la réservation station immédiatement ; le fret initial revient en soute.
             $trade->status = 'returning';
@@ -147,15 +160,21 @@ final readonly class MarketConvoys
             if ($trade->status === 'outbound') {
                 $market = $this->markets->find($trade->universe) ?? throw new \LogicException('Station historique introuvable.');
                 $this->manager->lockCurrent($market);
-                if (($market->stock[$trade->receiveResource] ?? 0) < $trade->receiveQuantity) {
-                    throw new \LogicException('Le stock réservé de la station est incohérent.');
+                if ($trade->operation === 'deposit') {
+                    $this->players->accountLocked($member)->moveGoods($trade->payResource, $trade->payQuantity);
+                } elseif ($trade->operation !== 'collect') {
+                    if (($market->stock[$trade->receiveResource] ?? 0) < $trade->receiveQuantity) {
+                        throw new \LogicException('Le stock réservé de la station est incohérent.');
+                    }
+                    $market->stock[$trade->payResource] = ($market->stock[$trade->payResource] ?? 0) + $trade->payQuantity;
+                    $market->stock[$trade->receiveResource] -= $trade->receiveQuantity;
+                    $market->pressure[$trade->payResource] = ($market->pressure[$trade->payResource] ?? 0) - $trade->payQuantity;
+                    $market->pressure[$trade->receiveResource] = ($market->pressure[$trade->receiveResource] ?? 0) + $trade->receiveQuantity;
+                    if ($trade->operation === 'sell') {
+                        $this->players->accountLocked($member)->moveCredits($trade->creditCents);
+                    }
                 }
-                $market->stock[$trade->payResource] = ($market->stock[$trade->payResource] ?? 0) + $trade->payQuantity;
-                $market->stock[$trade->receiveResource] -= $trade->receiveQuantity;
-                $market->pressure[$trade->payResource] = ($market->pressure[$trade->payResource] ?? 0) - $trade->payQuantity;
-                $market->pressure[$trade->receiveResource] = ($market->pressure[$trade->receiveResource] ?? 0) + $trade->receiveQuantity;
-                // Seul ce reçu participe aux volumes du vendredi. Aucun crédit
-                // à la planète avant la deuxième arrivée réelle.
+                // Le vendredi comptabilise les marchandises sorties du stock public à cet instant.
                 $trade->exchangedAt = $now;
                 $trade->reservedFuel -= $trade->oneWayFuel;
                 $trade->status = 'returning';
@@ -179,7 +198,7 @@ final readonly class MarketConvoys
     private function calculate(PlayerUniverse $member, Planet $planet, \App\Entity\ResourceMarket $market, array $input): array
     {
         return $this->terms->quote($member, $planet, $market, $this->markets->reserved($member->universe),
-            $input['pay'], $input['receive'], $input['quantity'], $input['rank'], $input['cargos']);
+            $input['pay'], $input['receive'], $input['quantity'], $input['rank'], $input['cargos'], $input['operation'] ?? 'barter');
     }
 
     private function ownedTrade(PlayerUniverse $member, int $id): MarketTrade

@@ -9,7 +9,7 @@ use Psr\Clock\ClockInterface;
 final class PlayerReportService
 {
     public const REASONS = ['name'=>'Pseudonyme inapproprié', 'harassment'=>'Harcèlement', 'cheating'=>'Suspicion de triche', 'other'=>'Autre'];
-    public const CATEGORIES = ['points'=>'Points totaux', 'buildings'=>'Points de bâtiments', 'research'=>'Points de recherche', 'fleet'=>'Points de flotte', 'planets'=>'Nombre de planètes'];
+    public const CATEGORIES = ['points'=>'Points totaux', 'buildings'=>'Points de bâtiments', 'research'=>'Points de recherche', 'fleet'=>'Points de flotte', 'planets'=>'Nombre de planètes', 'credits'=>'Crédits'];
 
     public function __construct(private GameRepository $repo, private GameManager $manager, private ClockInterface $clock) {}
 

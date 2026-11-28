@@ -24,6 +24,10 @@ final class ResourceMarket
     #[ORM\Column(type: 'json')]
     public array $targets = [];
 
+    /** Dernier prix réellement payé entre joueurs, en centièmes de crédit. */
+    #[ORM\Column(type: 'json', nullable: true)]
+    public ?array $lastPlayerPrices = null;
+
     /** Demande nette des transactions réellement exécutées, hors marchands. */
     #[ORM\Column(type: 'json')]
     public array $pressure = [];

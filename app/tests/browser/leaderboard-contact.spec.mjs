@@ -54,10 +54,10 @@ test('Classement : tris, contact direct et échange de messages privés', async 
   await expect(page.getByText('Lire le classement',{exact:true})).toBeVisible();
   const recipientRow = page.getByRole('row').filter({ hasText: recipientName });
   await expect(recipientRow.getByRole('link', { name: 'Contacter ' + recipientName })).toBeVisible();
-  await expect(page.getByRole('columnheader')).toHaveText(['Rang', 'Commandant', 'Points totaux ↓', 'Points de bâtiments ↕', 'Points de recherche ↕', 'Points de flotte ↕', 'Nombre de planètes ↕', 'Actions']);
+  await expect(page.getByRole('columnheader')).toHaveText(['Rang', 'Commandant', 'Points totaux ↓', 'Points de bâtiments ↕', 'Points de recherche ↕', 'Points de flotte ↕', 'Nombre de planètes ↕', 'Crédits ↕', 'Actions']);
   await expect(page.getByRole('columnheader', { name: 'Classer par Points totaux' })).toHaveAttribute('aria-sort', 'descending');
 
-  for (const [category, label] of [['buildings', 'Points de bâtiments'], ['research', 'Points de recherche'], ['fleet', 'Points de flotte'], ['planets', 'Nombre de planètes'], ['points', 'Points totaux']]) {
+  for (const [category, label] of [['buildings', 'Points de bâtiments'], ['research', 'Points de recherche'], ['fleet', 'Points de flotte'], ['planets', 'Nombre de planètes'], ['credits', 'Crédits'], ['points', 'Points totaux']]) {
     const sort = page.getByRole('link', { name: 'Classer par ' + label, exact: true });
     await sort.focus();
     await page.keyboard.press('Enter');

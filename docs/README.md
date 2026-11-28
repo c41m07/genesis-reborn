@@ -15,6 +15,7 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Choisir les propositions Figcraft et suivre la nouvelle refonte visuelle | [Refonte visuelle des interfaces](REFONTE_VISUELLE_INTERFACES.md) |
 | Retrouver toutes les routes, gabarits, interactions et variantes à examiner | [Inventaire des interfaces](INVENTAIRE_INTERFACES.md) |
 | Suivre le nettoyage progressif et reprendre le chantier | [Rework V1](REWORK_V1.md) |
+| Utiliser les crédits, le dépôt et les offres entre joueurs | [Bourse de ressources](BOURSE_DE_RESSOURCES.md) |
 | Comprendre les règles actuelles | [REGLES](REGLES.md) |
 | Comprendre la détection des sondes et les essais Alpha | [Espionnage](REGLES.md#espionnage) |
 | Retrouver un arbitrage produit | [DECISIONS](DECISIONS.md) |

@@ -23,6 +23,7 @@ final readonly class MarketTerms
         private ResourceService $resources,
         private FleetHold $hold,
         private MovementCalculator $movement,
+        private PlayerMarket $players,
     ) {
     }
 
@@ -45,7 +46,7 @@ final readonly class MarketTerms
     /** @param array{incoming: array<string,int>, outgoing: array<string,int>} $reserved */
     public function quote(
         PlayerUniverse $member, Planet $planet, ResourceMarket $market, array $reserved,
-        string $pay, string $receive, int $quantity, string $rank, int $cargos,
+        string $pay, string $receive, int $quantity, string $rank, int $cargos, string $operation = 'barter',
     ): array {
         if (!$market->enabled || $market->universe->id !== $member->universe->id || $planet->owner?->id !== $member->id) {
             throw new \DomainException('La Bourse ou la colonie est inaccessible.');
@@ -56,13 +57,47 @@ final readonly class MarketTerms
         }
 
         // Une réservation décale le prochain devis sans modifier le cours public ni créer de ressources.
-        $projected = [];
-        foreach (MarketPricing::WEIGHTS as $resource => $weight) {
-            $projected[$resource] = ($market->pressure[$resource] ?? 0)
-                + ($reserved['outgoing'][$resource] ?? 0) - ($reserved['incoming'][$resource] ?? 0);
+        if (!isset(MarketPricing::WEIGHTS[$pay], MarketPricing::WEIGHTS[$receive])
+            || $quantity < 1 || $quantity > MarketPricing::MAX_LOT
+            || !in_array($operation, ['barter', 'buy', 'sell', 'deposit', 'collect'], true)) {
+            throw new \DomainException('Opération ou lot invalide.');
         }
-        $fill = MarketPricing::exchange($pay, $receive, $quantity, $projected, $market->targets,
-            ($market->stock[$receive] ?? 0) - ($reserved['outgoing'][$receive] ?? 0));
+        $current = MarketPricing::scarcity($market->targets, $market->stock);
+        // Un convoi peut encore être rappelé. Les lots réservés du même côté comptent pour le prix,
+        // mais une promesse inverse ne doit pas améliorer un devis avant la livraison physique.
+        $projected = $current;
+        $projected[$pay] -= $reserved['incoming'][$pay] ?? 0;
+        if ($operation === 'barter') {
+            $projected[$receive] += $reserved['outgoing'][$receive] ?? 0;
+        } elseif ($operation === 'buy') {
+            $projected[$pay] = $current[$pay] + ($reserved['outgoing'][$pay] ?? 0);
+        }
+        $resource = $pay;
+        $creditCents = 0;
+        $out = $quantity;
+        $back = $quantity;
+        if ($operation === 'barter') {
+            $fill = MarketPricing::exchange($pay, $receive, $quantity, $projected, $market->targets,
+                ($market->stock[$receive] ?? 0) - ($reserved['outgoing'][$receive] ?? 0));
+            $back = $fill['received'];
+        } else {
+            $receive = $resource;
+            $takesFromStation = in_array($operation, ['buy', 'collect'], true);
+            $out = $takesFromStation ? 0 : $quantity;
+            $back = $takesFromStation ? $quantity : 0;
+            $fill = ['received' => $back, 'before_fee' => $back];
+            if ($operation === 'sell' || $operation === 'buy') {
+                $creditCents = MarketPricing::creditPrice($resource, $quantity, $projected[$resource],
+                    $market->targets[$resource] ?? 0, $operation === 'buy');
+            }
+            if ($operation === 'buy' && ($quantity > ($market->stock[$resource] ?? 0) - ($reserved['outgoing'][$resource] ?? 0)
+                || $creditCents > ($this->players->account($member)?->cents ?? 0))) {
+                throw new \DomainException('Réserve de la station ou solde de crédits insuffisant.');
+            }
+            if ($operation === 'collect' && $quantity > ($this->players->account($member)?->goods[$resource] ?? 0)) {
+                throw new \DomainException('Quantité indisponible dans votre dépôt à la station.');
+            }
+        }
 
         $definition = $this->catalog->getTierForUniverse($member->universe, 'ships', 'transport', $rank);
         $definition['quantity'] = $cargos;
@@ -72,12 +107,12 @@ final readonly class MarketTerms
         // indépendante du calcul de vitesse, de recherche ou de multiplicateur du jeu.
         $route = $this->movement->quoteDistances(100, 0, true, $ships, 1.0, 1.0, $this->catalog->rules()['fuel_ratio_policy']);
         $returnCapacity = max(0.0, $route['cargo_capacity'] - max(0.0, $route['one_way_fuel'] - $route['fuel_capacity']));
-        if ($quantity > floor($route['freight_capacity']) || $fill['received'] > floor($returnCapacity)) {
+        if ($out > floor($route['freight_capacity']) || $back > floor($returnCapacity)) {
             throw new \DomainException('Les cargos ne peuvent pas transporter le lot et le carburant sur les deux trajets.');
         }
         $fuel = $this->hold->departure($this->idle($member, $planet), ['transport' => [$rank => $cargos]], $route['total_fuel']);
         $snapshot = $this->resources->snapshot($planet);
-        $needed = [$pay => $quantity];
+        $needed = [$pay => $out];
         $needed['hydrogen'] = ($needed['hydrogen'] ?? 0) + $fuel['planet_fuel'];
         foreach ($needed as $resource => $amount) {
             if (($snapshot[$resource]['stock'] ?? 0) + 1e-6 < $amount) {
@@ -86,6 +121,7 @@ final readonly class MarketTerms
         }
 
         return [
+            'operation' => $operation, 'out' => $out, 'creditCents' => $creditCents,
             'planet' => $planet->id, 'pay' => $pay, 'receive' => $receive, 'quantity' => $quantity, 'rank' => $rank,
             'cargos' => $cargos, 'oneWayFuel' => $route['one_way_fuel'], 'planetFuel' => $fuel['planet_fuel'],
             'storedFuel' => $fuel['stored_fuel_used'], 'outCapacity' => (int) floor($route['freight_capacity']),

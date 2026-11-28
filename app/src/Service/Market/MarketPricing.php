@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Market;
 
-/** Indice en unités d’hydrogène, sans monnaie intermédiaire ni crédit virtuel. */
+/** Indice en dix-millièmes de crédit. Les paiements sont comptabilisés en centimes. */
 final class MarketPricing
 {
     public const WEIGHTS = ['metal' => 2, 'nano' => 4, 'hydrogen' => 1, 'antimatter' => 8];
@@ -15,7 +15,7 @@ final class MarketPricing
 
     /**
      * Prix marginal variable de 50 à 150 % de l’étalon. La profondeur de la
-     * courbe suit la cible ; les apports marchands n'affectent pas la pression.
+     * courbe suit la cible. Une livraison marchande réduit la rareté du matériau.
      */
     public static function index(string $resource, int $pressure, int $depth): int
     {
@@ -65,6 +65,27 @@ final class MarketPricing
         return ['received' => $received, 'before_fee' => $fill($proceeds)];
     }
 
+    /** Écart entre la réserve cible et le stock physique de la station. */
+    public static function scarcity(array $targets, array $stock): array
+    {
+        $result = [];
+        foreach (self::WEIGHTS as $resource => $weight) {
+            $result[$resource] = ($targets[$resource] ?? 0) - ($stock[$resource] ?? 0);
+        }
+        return $result;
+    }
+
+    /** Prix de tout le lot, en centièmes de crédit ; arrondi en faveur de la station. */
+    public static function creditPrice(string $resource, int $quantity, int $position, int $target, bool $buy): int
+    {
+        $value = $buy
+            ? self::value($resource, $position, $position + $quantity, $target)
+            : self::value($resource, $position - $quantity, $position, $target);
+        return $buy
+            ? intdiv($value * (100 + self::FEE_PERCENT) + self::SCALE - 1, self::SCALE)
+            : intdiv($value * (100 - self::FEE_PERCENT), self::SCALE);
+    }
+
     private static function depth(int $target): int
     {
         return max(100, min(self::MAX_LOT, $target));
@@ -74,6 +95,9 @@ final class MarketPricing
     {
         $weight = self::WEIGHTS[$resource] * self::SCALE;
         $depth = self::depth($target);
+        if ($from >= $depth || $until <= -$depth) {
+            return ($until - $from) * intdiv($weight * ($from >= $depth ? 3 : 1), 2);
+        }
         return self::primitive($until, $depth, $weight) - self::primitive($from, $depth, $weight);
     }
 

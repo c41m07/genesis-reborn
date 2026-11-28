@@ -111,6 +111,24 @@ test('Station commerciale : le noyau ouvre la Bourse et ne devient pas un systè
     runIsolatedSql(project, `INSERT INTO fleet_ship (fleet_id,slug,tier,quantity)
         SELECT id,'transport','basic',1 FROM fleet WHERE home_planet_id=${home} AND status='idle' LIMIT 1 ON DUPLICATE KEY UPDATE quantity=quantity+1`);
     await page.goto('/bourse');
+    // Les frais du lot sont annoncés avant toute écriture, même sur un petit écran.
+    runIsolatedSql(project, `INSERT INTO market_account (membership_id,cents,goods)
+        SELECT owner_id,2000,'{"metal":100}' FROM planet WHERE id=${home}`);
+    await page.getByRole('link', {name:'Marché des joueurs', exact:true}).click();
+    await page.getByLabel('Quantité à mettre en vente').fill('100');
+    await page.getByLabel('Prix par unité en crédits').fill('3.50');
+    await page.getByRole('button', {name:'Vérifier la taxe et le produit de la vente'}).click();
+    await expect(page.getByText(/Taxe à payer maintenant/)).toContainText('7,00 crédits');
+    for (const width of [1920, 768, 390, 320]) {
+        await page.setViewportSize({width, height:900});
+        await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    }
+    await page.getByRole('button', {name:'Payer la taxe et publier'}).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByText(/Votre solde/)).toContainText('13,00 crédits');
+    await page.getByRole('button', {name:'Retirer les invendus'}).click();
+    await expect(page.getByText(/Votre solde/)).toContainText('13,00 crédits');
+    await page.getByRole('link', {name:'Comptoir de la station'}).click();
     await page.getByLabel('Quantité à envoyer').fill('100');
     await page.getByRole('button', { name: 'Continuer vers les cargos' }).click();
     await page.getByRole('button', { name: 'Calculer le devis' }).click();

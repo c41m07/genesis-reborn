@@ -1,5 +1,9 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Comptoir en crédits et marché des joueurs — 28 novembre 2026
+
+Le propriétaire valide deux comptoirs à la station unique de chaque univers, le cours selon la rareté de la réserve publique, le crédit fractionnable et l’affichage de la richesse disponible dans le classement. Les frais de 2 % du marché entre joueurs sont dus à la mise en vente sur la valeur totale au prix choisi. Le vendeur doit déjà posséder ces crédits. Sa rémunération ultérieure est intégrale, y compris pour une vente partielle. Les invendus donnent droit à la restitution des marchandises. La taxe reste détruite. Le troc, les délais, les protections des convois et les anciens lots déjà réservés suivent leurs conditions enregistrées. [Règles de la Bourse](REGLES.md#bourse-de-ressources).
+
 ## Choix de la sonde de campagne pirate — 28 novembre 2026
 
 Le propriétaire valide l’envoi d’une sonde de rang supérieur en l’absence de rang inférieur dans la colonie active. La reconnaissance utilise dans l’ordre T1, T2 puis T3. Le devis et le vol reprennent le rang choisi, sa durée et son coût en hydrogène. Les départs antérieurs utilisaient une sonde Basique.
@@ -2345,7 +2349,7 @@ Le rang Intermédiaire vaut 125 % du Basique et le rang Supérieur 125 % de l’
 
 ## Bourse de ressources et convoi des marchands — 26 novembre 2026
 
-Kévin valide la maquette A, la station A:0:0 et le voyage protégé de 30 minutes par trajet. L’étalon initial est 8 H = 4 M = 2 N = 1 AM, avec des frais d’essai de 2 %. Le carburant ne dépend pas de la position de départ à flotte égale ; le rappel n’est possible qu’avant l’échange. La réserve initiale est administrée par univers. Le convoi marchand du vendredi 9 h Europe/Paris apporte jusqu’à 50 % de ce que la station a vendu aux joueurs, dans la place disponible sous la cible, sans toucher au cours. [Architecture et cas limites](BOURSE_DE_RESSOURCES.md).
+Kévin valide la maquette A, la station A:0:0 et le voyage protégé de 30 minutes par trajet. L’étalon initial est 8 H = 4 M = 2 N = 1 AM, avec des frais d’essai de 2 %. Le carburant ne dépend pas de la position de départ à flotte égale ; le rappel n’est possible qu’avant l’échange. La réserve initiale est administrée par univers. Le convoi marchand du vendredi 9 h Europe/Paris apporte jusqu’à 50 % de ce que la station a vendu aux joueurs, dans la place disponible sous la cible. Dans la version initiale, cette livraison ne touchait pas au cours. Depuis la décision du 28 novembre, le cours tient compte du stock livré. [Architecture et cas limites](BOURSE_DE_RESSOURCES.md).
 
 ## Bonus quotidiens : phase temporaire plutôt que versement en ressources
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\{Galaxy, Planet, PlayerUniverse, MarketMerchantDelivery, MarketTrade, ResourceMarket, Universe};
+use App\Entity\{Galaxy, Planet, PlayerUniverse, MarketMerchantDelivery, MarketOffer, MarketTrade, ResourceMarket, Universe};
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class ResourceMarketRepository
@@ -18,6 +18,17 @@ final readonly class ResourceMarketRepository
     public function find(Universe $universe): ?ResourceMarket
     {
         return $this->em->find(ResourceMarket::class, $universe->id);
+    }
+
+    /** @return list<MarketOffer> */
+    public function offers(PlayerUniverse $member, string $resource, int $page): array
+    {
+        return $this->em->createQueryBuilder()->select('o')->from(MarketOffer::class, 'o')
+            ->join('o.seller', 's')->where('o.universe = :world AND s.universe = :world')
+            ->andWhere('s.player IS NOT NULL AND s.forgottenAt IS NULL AND o.resource = :resource')
+            ->setParameter('world', $member->universe)->setParameter('resource', $resource)
+            ->orderBy('o.unitCents', 'ASC')->addOrderBy('o.id', 'ASC')
+            ->setFirstResult(($page - 1) * 20)->setMaxResults(21)->getQuery()->getResult();
     }
 
     /** @return list<MarketTrade> */
@@ -83,7 +94,7 @@ final readonly class ResourceMarketRepository
     {
         $rows = $this->em->getConnection()->fetchAllAssociative(
             'SELECT pay_resource, receive_resource, SUM(pay_quantity) AS paid, SUM(receive_quantity) AS received
-             FROM market_trade WHERE universe_id = ? AND status = ? GROUP BY pay_resource, receive_resource',
+             FROM market_trade WHERE universe_id = ? AND operation IN (\'barter\', \'buy\', \'sell\') AND status = ? GROUP BY pay_resource, receive_resource',
             [$universe->id, 'outbound']
         );
         $incoming = $outgoing = [];
@@ -100,13 +111,22 @@ final readonly class ResourceMarketRepository
     {
         $rows = $this->em->getConnection()->fetchAllAssociative(
             'SELECT pay_resource, receive_resource, SUM(pay_quantity) AS paid, SUM(receive_quantity) AS received
-             FROM market_trade WHERE universe_id = ? AND exchanged_at >= ? GROUP BY pay_resource, receive_resource',
+             FROM market_trade WHERE universe_id = ? AND operation IN (\'barter\', \'buy\', \'sell\') AND exchanged_at >= ? GROUP BY pay_resource, receive_resource',
             [$universe->id, $since->format('Y-m-d H:i:s')]
         );
         $pressure = [];
         foreach ($rows as $row) {
             $pressure[$row['pay_resource']] = ($pressure[$row['pay_resource']] ?? 0) - (int) $row['paid'];
             $pressure[$row['receive_resource']] = ($pressure[$row['receive_resource']] ?? 0) + (int) $row['received'];
+        }
+        // Un réassort réduit la rareté, même en l’absence de vente joueur depuis sa livraison.
+        $deliveries = $this->em->createQueryBuilder()->select('d.quantities')->from(MarketMerchantDelivery::class, 'd')
+            ->where('d.universe = :world AND d.appliedAt >= :since')
+            ->setParameter('world', $universe)->setParameter('since', $since)->getQuery()->getArrayResult();
+        foreach ($deliveries as $delivery) {
+            foreach ($delivery['quantities'] as $resource => $quantity) {
+                $pressure[$resource] = ($pressure[$resource] ?? 0) - $quantity;
+            }
         }
         return $pressure;
     }
@@ -116,7 +136,7 @@ final readonly class ResourceMarketRepository
     {
         $rows = $this->em->getConnection()->fetchAllKeyValue(
             'SELECT receive_resource, SUM(receive_quantity) FROM market_trade
-             WHERE universe_id = ? AND exchanged_at >= ? AND exchanged_at < ? GROUP BY receive_resource',
+             WHERE universe_id = ? AND operation IN (\'barter\', \'buy\', \'sell\') AND exchanged_at >= ? AND exchanged_at < ? GROUP BY receive_resource',
             [$universe->id, $from->format('Y-m-d H:i:s'), $until->format('Y-m-d H:i:s')]
         );
 

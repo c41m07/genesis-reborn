@@ -58,10 +58,10 @@ final class DailyLeaderboard
         foreach ($snapshot->players as $row) {
             $current = $live[$row['membership_id']] ?? null;
             if ($current !== null) {
-                $players[] = $row + ['membership' => $current['membership'], 'protection' => $current['protection']];
+                $players[] = $row + ['credit_cents' => 0, 'membership' => $current['membership'], 'protection' => $current['protection']];
             }
         }
-        foreach (['buildings' => 'building_points', 'research' => 'research_points'] as $category => $field) {
+        foreach (['buildings' => 'building_points', 'research' => 'research_points', 'credits' => 'credit_cents'] as $category => $field) {
             if (!array_filter($players, static fn(array $row): bool => !isset($row['ranks'][$category]))) {
                 continue;
             }
@@ -105,7 +105,7 @@ final class DailyLeaderboard
             if ($row['membership_id'] !== $target->id) {
                 continue;
             }
-            if (!isset($row['ranks']['buildings'], $row['ranks']['research'])) {
+            if (!isset($row['ranks']['buildings'], $row['ranks']['research'], $row['ranks']['credits'])) {
                 // Les anciens snapshots complètent ces rangs avec le départage actuel par pseudo.
                 foreach ($this->forUniverse($viewer)['players'] as $legacyRow) {
                     if ($legacyRow['membership_id'] === $target->id) {
@@ -154,9 +154,27 @@ final class DailyLeaderboard
             }
             $rows = $viewer === null ? [] : $this->scores->forUniverse($viewer);
             $guildRows = $viewer === null ? [] : $this->scores->guildsForUniverse($viewer, $rows);
+            // Les crédits sont relevés avec le classement, sous le même verrou que les échanges.
+            $credits = $this->em->getConnection()->fetchAllKeyValue(
+                'SELECT a.membership_id, a.cents FROM market_account a
+                 JOIN player_universe m ON m.id = a.membership_id
+                 WHERE m.universe_id = ? AND m.player_id IS NOT NULL AND m.forgotten_at IS NULL',
+                [$universe->id],
+            );
+            $byWealth = $rows;
+            usort($byWealth, static fn (array $a, array $b): int =>
+                ($credits[$b['membership']->id] ?? 0) <=> ($credits[$a['membership']->id] ?? 0)
+                ?: strcasecmp($a['membership']->player->username, $b['membership']->player->username)
+            );
+            $wealthRanks = [];
+            foreach ($byWealth as $index => $entry) {
+                $wealthRanks[$entry['membership']->id] = $index + 1;
+            }
             $players = [];
             foreach ($rows as $row) {
                 $id = $row['membership']->id;
+                $row['credit_cents'] = (int) ($credits[$id] ?? 0);
+                $row['ranks']['credits'] = $wealthRanks[$id];
                 unset($row['membership'], $row['protection']);
                 $old = $previousPlayers[$id] ?? null;
                 foreach ([
@@ -165,8 +183,9 @@ final class DailyLeaderboard
                     'research' => 'research_points',
                     'fleet' => 'fleet_points',
                     'planets' => 'planets',
+                    'credits' => 'credit_cents',
                 ] as $sort => $field) {
-                    $row['score_changes'][$sort] = $old === null ? null : $row[$field] - $old[$field];
+                    $row['score_changes'][$sort] = !isset($old[$field]) ? null : $row[$field] - $old[$field];
                     $row['rank_changes'][$sort] = !isset($old['ranks'][$sort]) ? null : $old['ranks'][$sort] - $row['ranks'][$sort];
                 }
                 $players[] = $row + ['membership_id' => $id];
