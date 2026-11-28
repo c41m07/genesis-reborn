@@ -672,6 +672,12 @@ final class GuildHallTest extends KernelTestCase
         } elseif ($trigger === 'disband') {
             $diplomacy->disband($this->em->find(PlayerUniverse::class, $leaderId));
             self::assertNull($this->em->find(Guild::class, $guildId));
+        } elseif ($trigger === 'conversion') {
+            $owner = $this->em->find(PlayerUniverse::class, $ownerId);
+            $result = $container->get(\App\Service\Player\EmpireConversionService::class)->convertForAccountDeletion($owner);
+            self::assertSame('converted', $result['status']);
+            self::assertTrue($owner->isForgotten());
+            self::assertNotNull($this->em->find(Guild::class, $guildId));
         } else {
             $recall = $container->get(\App\Service\Guild\GuildCommandReturn::class);
             $owner = $this->em->find(PlayerUniverse::class, $ownerId);
@@ -702,6 +708,7 @@ final class GuildHallTest extends KernelTestCase
         yield 'rappel propriétaire' => ['manual'];
         yield 'départ de la guilde' => ['leave'];
         yield 'dissolution' => ['disband'];
+        yield 'conversion du propriétaire' => ['conversion'];
     }
 
     public function testAtelierChargesOnlyTheVoluntaryColonysElectricityAndCreditsTheHallOnce(): void

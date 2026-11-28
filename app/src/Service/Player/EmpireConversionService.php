@@ -6,6 +6,7 @@ use App\Manager\GameManager;
 use App\Repository\{GameRepository,GuildHallRepository};
 use App\Service\Colony\ActionGuard;
 use App\Service\Fleet\FleetService;
+use App\Service\Guild\GuildCommandReturn;
 use App\Service\Queue\QueueService;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -15,7 +16,8 @@ final class EmpireConversionService
 {
     public function __construct(private GameManager $manager,private GameRepository $repo,private ActionGuard $guard,
         private EmpireActivityService $activity,private FleetService $fleets,private QueueService $queues,private ClockInterface $clock,private \App\Service\Combat\OccupationService $occupations,
-        #[Autowire('%env(bool:FORGOTTEN_EMPIRES_ENABLED)%')] private bool $enabled, private GuildProjectService $projects,private EmpireReconstructionScheduler $reconstruction,private GuildHallRepository $guildHalls) {}
+        #[Autowire('%env(bool:FORGOTTEN_EMPIRES_ENABLED)%')] private bool $enabled, private GuildProjectService $projects,private EmpireReconstructionScheduler $reconstruction,private GuildHallRepository $guildHalls,
+        private GuildCommandReturn $hallReturns) {}
 
     public function convert(PlayerUniverse $membership): array
     {
@@ -79,6 +81,7 @@ final class EmpireConversionService
             $contract->status='ended';$allianceIds[]=$contract->id;
         }
         $result=['ended_alliance_ids'=>$allianceIds,'guilds'=>[]];
+        $evacuatedGuilds = [];
         foreach($this->repo->all(Guild::class,['leader'=>$membership,'archivedAt'=>null]) as $guild) {
             $this->manager->lock($guild);
             $members=$this->repo->all(GuildMember::class,['guild'=>$guild],['id'=>'ASC']);
@@ -93,6 +96,13 @@ final class EmpireConversionService
                 $guild->leader=$successor;
                 $result['guilds'][]=['id'=>$guild->id,'successor_id'=>$successor->id,'archived'=>false];
             } else {
+                // Le Hall cesse d'exister comme destination : faire partir tous les biens privés
+                // avant de libérer la position, sans débiter la réserve une seconde fois.
+                $result['returned_hall_fleet_ids'] = [
+                    ...($result['returned_hall_fleet_ids'] ?? []),
+                    ...$this->hallReturns->evacuateLocked($guild, null, $now),
+                ];
+                $evacuatedGuilds[$guild->id] = true;
                 $guild->archivedAt=$now;
                 $this->projects->abandonForGuild($guild);
                 $roster=array_map(static fn(GuildMember $row): array=>['member_id'=>$row->id,'membership_id'=>$row->playerUniverse->id],$members);
@@ -106,7 +116,14 @@ final class EmpireConversionService
             }
         }
         $member=$this->repo->one(GuildMember::class,['playerUniverse'=>$membership]);
-        if($member!==null) { $result['left_guild_id']=$member->guild->id;$this->manager->remove($member); }
+        if ($member !== null) {
+            $result['left_guild_id'] = $member->guild->id;
+            if (!isset($evacuatedGuilds[$member->guild->id])) {
+                // Si la guilde subsiste, seules les flottes de l'empire converti repartent.
+                $result['returned_hall_fleet_ids'] = $this->hallReturns->evacuateLocked($member->guild, $membership, $now);
+                $this->manager->remove($member);
+            }
+        }
         return $result;
     }
 }
