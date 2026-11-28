@@ -70,6 +70,20 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
    expect(button.height).toBeGreaterThanOrEqual(44);
    expect(Math.abs(button.x+button.width/2-header.x-header.width/2)).toBeLessThan(2);
    expect(button.y+button.height).toBeLessThanOrEqual(left.top);
+   const arrowOffset = () => swap.evaluate(element => {
+    const button = element.getBoundingClientRect();
+    const arrows = element.querySelector('use').getBoundingClientRect();
+    return Math.max(
+     Math.abs(arrows.x + arrows.width / 2 - button.x - button.width / 2),
+     Math.abs(arrows.y + arrows.height / 2 - button.y - button.height / 2),
+    );
+   });
+   expect(await arrowOffset()).toBeLessThan(0.6);
+   await swap.hover();
+   await swap.locator('svg').evaluate(async icon => {
+    await Promise.all(icon.getAnimations().map(animation => animation.finished));
+   });
+   expect(await arrowOffset()).toBeLessThan(0.6);
    if (viewport.width===1920) {
     expect(right.left).toBeGreaterThanOrEqual(left.right);
     expect(Math.abs(left.top-right.top)).toBeLessThanOrEqual(2);

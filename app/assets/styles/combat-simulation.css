@@ -253,6 +253,7 @@ body[data-theme=light] .player-simulation-board .simulation-outcome--defender_wi
 .simulation-wizard-heading .simulation-swap {
     display: inline-grid;
     place-items: center;
+    justify-content: center;
     width: 44px;
     height: 44px;
     padding: 0;
