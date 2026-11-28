@@ -62,6 +62,13 @@ final class ResourceMarketTest extends WebTestCase
     public function testAdminOpeningAndPlayerRoundTripThroughOutboxAndHandler(): void
     {
         [$admin, $home, $transport] = $this->fixture('MarketAdmin', true);
+        $advanced = new FleetShip();
+        $advanced->fleet = $transport->fleet;
+        $advanced->slug = 'transport';
+        $advanced->tier = 'intermediate';
+        $advanced->quantity = 1;
+        $this->em->persist($advanced);
+        $this->em->flush();
         $member = $admin->currentPlayerUniverse;
         $universe = $member->universe;
         $this->client->loginUser($admin);
@@ -78,10 +85,27 @@ final class ResourceMarketTest extends WebTestCase
 
         $crawler = $this->client->request('GET', '/bourse?planet='.$home->id);
         self::assertResponseIsSuccessful();
-        $quote = $crawler->selectButton('Calculer le devis')->form(['quantity' => '2000']);
+        $quote = $crawler->selectButton('Calculer le devis')->form([
+            'quantity' => '2000', 'ships[transport][basic]' => 1, 'ships[transport][intermediate]' => 1,
+        ]);
         $beforeMetal = $this->stock($home->id, 'metal');
         $beforePoints = self::getContainer()->get(LeaderboardService::class)->forUniverse($member)[0]['fleet_points'];
         $beforeNano = $this->stock($home->id, 'nano');
+        $estimate = $quote->getPhpValues();
+        $estimate['action'] = 'estimate';
+        foreach ([
+            ['planet' => -1], ['ships' => ['fighter' => ['basic' => 1]]],
+            ['ships' => ['transport' => ['superior' => 1]]], ['ships' => ['transport' => ['basic' => -1]]],
+        ] as $invalid) {
+            $this->client->request('POST', '/bourse', $invalid + $estimate);
+            self::assertResponseStatusCodeSame(422);
+        }
+        $this->client->request('POST', '/bourse', $estimate);
+        self::assertResponseIsSuccessful();
+        $live = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(['basic' => 1, 'intermediate' => 1], $live['composition']);
+        self::assertGreaterThan(0, $live['planetFuel']);
+        self::assertSame(0, $this->em->getRepository(MarketTrade::class)->count([]));
         $this->client->submit($quote);
         self::assertResponseRedirects('/bourse', 303);
         $crawler = $this->client->followRedirect();
@@ -94,6 +118,8 @@ final class ResourceMarketTest extends WebTestCase
         $this->client->followRedirect();
         self::assertSelectorTextContains('.market-trip', 'Vers la station');
         $first = $this->em->getRepository(MarketTrade::class)->findOneBy(['membershipId' => $member->id]);
+        self::assertSame($live['composition'], $first->ships);
+        self::assertEqualsWithDelta($live['planetFuel'], $first->reservedFuel, 0.00001);
         $this->client->request('GET', '/flottes/empire');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextSame('.fleet-composition-table td', '2');
@@ -154,6 +180,7 @@ final class ResourceMarketTest extends WebTestCase
         self::assertSelectorNotExists('[data-market-trade]');
         self::assertEqualsWithDelta($beforeDelivery + $closed->receiveQuantity, $this->stock($home->id, 'nano'), .0001);
         self::assertSame(2, $this->em->find(FleetShip::class, $transport->id)->quantity);
+        self::assertSame(1, $this->em->find(FleetShip::class, $advanced->id)->quantity);
     }
 
     public function testTradeCanIncreaseStationStockPastTheMaximumMerchantTarget(): void

@@ -30,11 +30,11 @@ final readonly class MarketConvoys
     ) {
     }
 
-    public function preview(PlayerUniverse $member, Planet $planet, array $input): array
+    public function preview(PlayerUniverse $member, Planet $planet, array $input, bool $compositionOnly = false): array
     {
         $this->vacations->assertCanSendFleet($member);
         $market = $this->markets->find($member->universe) ?? throw new \DomainException('La station n’est pas ouverte.');
-        return $this->calculate($member, $planet, $market, $input);
+        return $this->calculate($member, $planet, $market, $input, $compositionOnly);
     }
 
     /** Les montants proviennent du devis conservé par le serveur, jamais d’un champ de confirmation. */
@@ -66,8 +66,10 @@ final readonly class MarketConvoys
             $cost['hydrogen'] = ($cost['hydrogen'] ?? 0) + $quote['planetFuel'];
             $this->resources->consume($planet, $cost, lockStocks: true);
             $idle->storedFuel = 0;
-            $stock = $this->repo->one(FleetShip::class, ['fleet' => $idle, 'slug' => 'transport', 'tier' => $quote['rank']]);
-            $stock->quantity -= $quote['cargos'];
+            foreach ($quote['composition'] as $tier => $count) {
+                $stock = $this->repo->one(FleetShip::class, ['fleet' => $idle, 'slug' => 'transport', 'tier' => $tier]);
+                $stock->quantity -= $count;
+            }
 
             $trade = new MarketTrade();
             $trade->universe = $member->universe;
@@ -80,7 +82,7 @@ final readonly class MarketConvoys
             $trade->payQuantity = $quote['out'];
             $trade->receiveResource = $quote['receive'];
             $trade->receiveQuantity = $quote['received'];
-            $trade->ships = [$quote['rank'] => $quote['cargos']];
+            $trade->ships = $quote['composition'];
             $trade->oneWayFuel = $quote['oneWayFuel'];
             $trade->reservedFuel = $trade->oneWayFuel * 2;
             $trade->departedAt = $this->now();
@@ -195,10 +197,12 @@ final readonly class MarketConvoys
         });
     }
 
-    private function calculate(PlayerUniverse $member, Planet $planet, \App\Entity\ResourceMarket $market, array $input): array
+    private function calculate(PlayerUniverse $member, Planet $planet, \App\Entity\ResourceMarket $market, array $input, bool $compositionOnly = false): array
     {
-        return $this->terms->quote($member, $planet, $market, $this->markets->reserved($member->universe),
-            $input['pay'], $input['receive'], $input['quantity'], $input['rank'], $input['cargos'], $input['operation'] ?? 'barter');
+        $reserved = $compositionOnly ? ['incoming' => [], 'outgoing' => []] : $this->markets->reserved($member->universe);
+        return $this->terms->quote($member, $planet, $market, $reserved,
+            $input['pay'], $input['receive'], $input['quantity'], $input['composition'] ?? [$input['rank'] => $input['cargos']],
+            $input['operation'] ?? 'barter', $compositionOnly);
     }
 
     private function ownedTrade(PlayerUniverse $member, int $id): MarketTrade

@@ -1,0 +1,73 @@
+{% import 'ui/macros.html.twig' as ui %}
+{% set selected = draft.composition|default(draft.rank is defined ? {(draft.rank): draft.cargos} : {}) %}
+{% if colonies|length > 1 %}
+    <form method="get" class="market-choose-origin" data-market-wizard-target="origin">
+        <input type="hidden" name="operation" value="{{ mode }}">
+        <input type="hidden" name="resource" value="{{ draft.pay|default('metal') }}">
+        <label for="market-origin">Colonie de départ</label>
+        <select name="planet" id="market-origin">{% for colony in colonies %}
+            <option value="{{ colony.id }}" {{ colony.id == planet.id ? 'selected' : '' }}>{{ colony.name }} · {{ colony.coordinates }}</option>
+        {% endfor %}</select>
+        <button class="secondary">Choisir la colonie</button>
+    </form>
+{% endif %}
+<form method="post" action="{{ path('app_market') }}" class="core-fleet-composition-layout"
+      data-controller="fleet-quantity" data-fleet-quantity-limit-value="{{ fleetLimit }}"
+      data-market-wizard-target="form" data-action="input->market-wizard#update change->market-wizard#update keydown.enter->market-wizard#enter">
+    <input type="hidden" name="_token" value="{{ csrf_token('market_' ~ member.id) }}">
+    <input type="hidden" name="planet" value="{{ planet.id }}">
+    <div class="core-fleet-steps market-options">
+        <fieldset data-market-wizard-target="step">
+            <legend id="market-composition" tabindex="-1">Composez votre convoi</legend>
+            <p>Départ de {{ planet.name }} · {{ planet.coordinates }}</p>
+            {% include 'fleet/_ship_selection_table.html.twig' with {
+                ships: cargoShips, catalog: cargoCatalog, fleetId: 'market-' ~ planet.id, fleetLimit: fleetLimit,
+                headingId: 'market-composition', loaded: true, loadedComposition: {transport:selected}, progressiveMax: true
+            } only %}
+            <span role="status" data-fleet-quantity-target="status" data-market-wizard-target="notice"></span>
+            <button type="button" class="primary" hidden data-market-wizard-target="control" data-action="market-wizard#next">Choisir la mission</button>
+        </fieldset>
+        <fieldset data-market-wizard-target="step">
+            <legend tabindex="-1">Mission commerciale</legend>
+            <div class="market-field"><label for="market-operation">Opération</label>
+                <select id="market-operation" name="operation">{% for slug, name in operations %}<option value="{{ slug }}" {{ mode == slug ? 'selected' : '' }}>{{ name }}</option>{% endfor %}</select></div>
+            <div class="market-field"><label for="market-pay">Ressource du lot</label>
+                <select id="market-pay" name="pay">{% for key, label in labels %}<option value="{{ key }}" {{ key == draft.pay|default('metal') ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select></div>
+            <div class="market-field" data-market-wizard-target="barter"><label for="market-receive">Ressource à recevoir en troc</label>
+                <select id="market-receive" name="receive">{% for key, label in labels %}<option value="{{ key }}" {{ key == draft.receive|default('nano') ? 'selected' : '' }}>{{ label }}</option>{% endfor %}</select></div>
+            <p data-market-wizard-target="deposit">Disponible dans votre dépôt pour un rapatriement : {% for slug, label in labels %}{{ label }} {{ account.goods[slug]|default(0)|quantity(0) }}{{ loop.last ? '.' : ' · ' }}{% endfor %}</p>
+            <div class="market-field"><label for="market-quantity">Quantité du lot</label>
+                <input id="market-quantity" name="quantity" type="number" min="1" max="{{ maxLot }}" step="1" value="{{ draft.quantity|default('') }}" required></div>
+            <div class="market-actions">
+                <button type="button" class="secondary" hidden data-market-wizard-target="control" data-action="market-wizard#back">Retour à la composition</button>
+                <button type="button" class="primary" hidden data-market-wizard-target="control" data-action="market-wizard#next">Vérifier la destination</button>
+            </div>
+        </fieldset>
+        <fieldset data-market-wizard-target="step">
+            <legend tabindex="-1">Destination du convoi</legend>
+            <dl class="market-data">
+                <div><dt>Aller · 30 min</dt><dd>Station commerciale A:0:0</dd></div>
+                <div><dt>Retour · 30 min</dt><dd>{{ planet.name }} · {{ planet.coordinates }}</dd></div>
+            </dl>
+            <div class="market-actions">
+                <button type="button" class="secondary" hidden data-market-wizard-target="control" data-action="market-wizard#back">Modifier la mission</button>
+                <button class="primary" type="submit" name="action" value="quote">Calculer le devis</button>
+            </div>
+        </fieldset>
+    </div>
+    <aside class="core-fleet-recap panel" aria-labelledby="market-recap-title" data-market-wizard-target="recap" data-timezone="{{ zone }}" hidden>
+        <h3 id="market-recap-title">{{ ui.icon('overview') }} Récapitulatif du convoi</h3>
+        <p class="core-fleet-recap-total"><strong data-market-wizard-target="count">0</strong> cargos sélectionnés</p>
+        <p class="core-fleet-recap-ranks" data-market-wizard-target="ranks"></p>
+        <dl class="core-fleet-recap-facts">
+            <div><dt>Départ et retour</dt><dd>{{ planet.name }} · {{ planet.coordinates }}</dd></div>
+            <div><dt>Destination</dt><dd>Station A:0:0 · 30 min par trajet</dd></div>
+            <div><dt>Arrivée à la station</dt><dd data-market-wizard-target="arrival">—</dd></div>
+            <div><dt>Mission</dt><dd data-market-wizard-target="mission"></dd></div>
+            <div><dt>Lot</dt><dd data-market-wizard-target="lot"></dd></div>
+            <div><dt>Soute aller / retour</dt><dd data-market-wizard-target="capacity">—</dd></div>
+            <div><dt>Carburant aller-retour</dt><dd data-market-wizard-target="fuel">—</dd></div>
+        </dl>
+        <p role="status" data-market-wizard-target="estimate"></p>
+    </aside>
+</form>

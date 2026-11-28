@@ -46,14 +46,14 @@ final readonly class MarketTerms
     /** @param array{incoming: array<string,int>, outgoing: array<string,int>} $reserved */
     public function quote(
         PlayerUniverse $member, Planet $planet, ResourceMarket $market, array $reserved,
-        string $pay, string $receive, int $quantity, string $rank, int $cargos, string $operation = 'barter',
+        string $pay, string $receive, int $quantity, array $composition, string $operation, bool $compositionOnly = false,
     ): array {
         if (!$market->enabled || $market->universe->id !== $member->universe->id || $planet->owner?->id !== $member->id) {
             throw new \DomainException('La Bourse ou la colonie est inaccessible.');
         }
-        $limit = $this->catalog->forUniverse($member->universe)['limits']['max_fleet_size'];
-        if (!in_array($rank, GameCatalog::TIERS, true) || $cargos < 1 || $cargos > $limit || ($this->cargos($member, $planet)[$rank] ?? 0) < $cargos) {
-            throw new \DomainException('Les cargos sélectionnés ne sont pas disponibles.');
+        $transport = $this->transportTerms($member, $planet, $composition);
+        if ($compositionOnly) {
+            return $transport;
         }
 
         // Une réservation décale le prochain devis sans modifier le cours public ni créer de ressources.
@@ -99,21 +99,12 @@ final readonly class MarketTerms
             }
         }
 
-        $definition = $this->catalog->getTierForUniverse($member->universe, 'ships', 'transport', $rank);
-        $definition['quantity'] = $cargos;
-        $levels = $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $member]);
-        $ships = $this->effects->applyToShips([$definition], $levels, $member->universe);
-        // Un même couloir de référence sert au tarif H dans tout l’univers. La durée est
-        // indépendante du calcul de vitesse, de recherche ou de multiplicateur du jeu.
-        $route = $this->movement->quoteDistances(100, 0, true, $ships, 1.0, 1.0, $this->catalog->rules()['fuel_ratio_policy']);
-        $returnCapacity = max(0.0, $route['cargo_capacity'] - max(0.0, $route['one_way_fuel'] - $route['fuel_capacity']));
-        if ($out > floor($route['freight_capacity']) || $back > floor($returnCapacity)) {
+        if ($out > $transport['outCapacity'] || $back > $transport['returnCapacity']) {
             throw new \DomainException('Les cargos ne peuvent pas transporter le lot et le carburant sur les deux trajets.');
         }
-        $fuel = $this->hold->departure($this->idle($member, $planet), ['transport' => [$rank => $cargos]], $route['total_fuel']);
         $snapshot = $this->resources->snapshot($planet);
         $needed = [$pay => $out];
-        $needed['hydrogen'] = ($needed['hydrogen'] ?? 0) + $fuel['planet_fuel'];
+        $needed['hydrogen'] = ($needed['hydrogen'] ?? 0) + $transport['planetFuel'];
         foreach ($needed as $resource => $amount) {
             if (($snapshot[$resource]['stock'] ?? 0) + 1e-6 < $amount) {
                 throw new \DomainException('Les ressources ou le carburant sont insuffisants sur cette colonie.');
@@ -122,10 +113,42 @@ final readonly class MarketTerms
 
         return [
             'operation' => $operation, 'out' => $out, 'creditCents' => $creditCents,
-            'planet' => $planet->id, 'pay' => $pay, 'receive' => $receive, 'quantity' => $quantity, 'rank' => $rank,
-            'cargos' => $cargos, 'oneWayFuel' => $route['one_way_fuel'], 'planetFuel' => $fuel['planet_fuel'],
-            'storedFuel' => $fuel['stored_fuel_used'], 'outCapacity' => (int) floor($route['freight_capacity']),
-            'returnCapacity' => (int) floor($returnCapacity),
-        ] + $fill;
+            'planet' => $planet->id, 'pay' => $pay, 'receive' => $receive, 'quantity' => $quantity,
+        ] + $transport + $fill;
+    }
+
+    private function transportTerms(PlayerUniverse $member, Planet $planet, array $composition): array
+    {
+        $limit = $this->catalog->forUniverse($member->universe)['limits']['max_fleet_size'];
+        $stock = $this->cargos($member, $planet);
+        $selected = [];
+        $definitions = [];
+        foreach ($composition as $tier => $raw) {
+            $count = filter_var($raw === '' ? 0 : $raw, FILTER_VALIDATE_INT);
+            if (!in_array($tier, GameCatalog::TIERS, true) || $count === false || $count < 0 || $count > ($stock[$tier] ?? 0)) {
+                throw new \DomainException('Les cargos sélectionnés ne sont pas disponibles.');
+            }
+            if ($count > 0) {
+                $selected[$tier] = $count;
+                $definition = $this->catalog->getTierForUniverse($member->universe, 'ships', 'transport', $tier);
+                $definition['quantity'] = $count;
+                $definitions[] = $definition;
+            }
+        }
+        if (!$selected || array_sum($selected) > $limit) {
+            throw new \DomainException('Sélectionnez au moins un cargo dans la limite de flotte.');
+        }
+        $levels = $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $member]);
+        $ships = $this->effects->applyToShips($definitions, $levels, $member->universe);
+        // Un même couloir de référence sert au tarif H dans tout l’univers. La durée est
+        // indépendante du calcul de vitesse, de recherche ou de multiplicateur du jeu.
+        $route = $this->movement->quoteDistances(100, 0, true, $ships, 1.0, 1.0, $this->catalog->rules()['fuel_ratio_policy']);
+        $returnCapacity = max(0.0, $route['cargo_capacity'] - max(0.0, $route['one_way_fuel'] - $route['fuel_capacity']));
+        $fuel = $this->hold->departure($this->idle($member, $planet), ['transport' => $selected], $route['total_fuel']);
+        return [
+            'composition' => $selected, 'cargos' => array_sum($selected),
+            'oneWayFuel' => $route['one_way_fuel'], 'planetFuel' => $fuel['planet_fuel'], 'storedFuel' => $fuel['stored_fuel_used'],
+            'outCapacity' => (int) floor($route['freight_capacity']), 'returnCapacity' => (int) floor($returnCapacity),
+        ];
     }
 }

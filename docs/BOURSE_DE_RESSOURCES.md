@@ -6,8 +6,7 @@ La station commerciale A:0:0 appartient à l’univers, pas à un joueur. Elle
 n’ajoute ni système explorable, ni planète, ni position attaquable. Lorsqu’elle
 est ouverte, son repère au centre de la galaxie A et le lien dans la légende
 ouvrent directement la Bourse. La page Bourse, aussi accessible depuis le
-menu Opérations, juxtapose le marché et le devis
-(maquette A) ; sur mobile ces deux sections s’empilent. Le suivi est propre à
+menu Opérations, affiche les cours puis le formulaire de convoi. Le récapitulatif se place à côté de la saisie sur grand écran et en dessous sur mobile. Le suivi est propre à
 l’empire qui a envoyé le convoi. Le panneau **Flottes en vol** compte ses
 convois et donne accès à leur suivi. Dans **Galaxie**, le journal et la
 carte suivent l’aller vers A:0:0, puis le retour vers la colonie. Un rappel
@@ -30,6 +29,8 @@ reprend le calendrier sans distribuer rétrospectivement les semaines fermées.
 Le comptoir échange métal, nano, hydrogène et antimatière par troc ou en crédits. Les cours initiaux sont 2, 4, 1 et 8 crédits par unité. Le cours marginal dépend de l’écart entre réserve cible et stock physique de la station. La courbe est bornée à 50–150 % de l’étalon à une distance de la cible égale à la profondeur (la cible bornée entre 100 et 1 000 000 unités). À cible inchangée, le réassort du vendredi compte dans la variation sur 24 heures. Le dépôt privé et les offres des joueurs sont séparés du stock public.
 
 Le devis intègre la courbe sur tout le lot. Les réservations du même côté réduisent les conditions encore disponibles ; une livraison promise et rappelable ne peut améliorer un prix avant son arrivée. Le troc déduit 2 % de la valeur cédée. L’achat en crédits coûte la valeur du lot majorée de 2 %, arrondie au centime supérieur. La vente rapporte la valeur du lot diminuée de 2 %, arrondie au centime inférieur. Les transactions en crédits utilisent des centimes entiers.
+
+Dans **Composition**, choisissez la colonie de départ et indiquez le nombre de cargos de chaque rang. Le bouton **Max** tient compte du stock local et de la place restante dans la limite de flotte. Dans **Mission**, choisissez le troc, la vente, l’achat, le dépôt ou le rapatriement, puis renseignez les ressources et la quantité. **Destination** indique la station A:0:0 et la colonie de retour. Le récapitulatif actualise la composition, le lot, les capacités des deux trajets et le carburant. La confirmation présente le devis complet avant le départ. Sans JavaScript, les trois étapes du formulaire sont affichées ensemble.
 
 Le devis ne réserve rien et expire en deux minutes. À la confirmation, le
 serveur compare les conditions recalculées, débite le fret et le carburant,

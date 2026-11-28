@@ -50,7 +50,7 @@ L’orientation confirmée est une stratégie au rythme modéré ; les durées d
 ## État du projet
 
 - Les [règles de protection et de riposte](docs/REGLES.md#protection-après-pertes-et-riposte) s’appliquent aux combats entre joueurs. Le centre de rapports permet de marquer la sélection comme lue et présente les détections de sondes. Le simulateur permet de charger une colonie en défense et d’inverser les camps hors scénario pirate.
-- La Bourse prépare le fret, les cargos puis le départ sur devis. Les quatre catalogues mémorisent le rang consulté de chaque carte dans le navigateur. Analyse tactique présente les trois effets de son niveau sur chaque rang.
+- À la Bourse, composez le convoi par rang comme dans Flottes, choisissez la mission et vérifiez la destination avant de confirmer le devis. Le récapitulatif actualise le fret, la soute et le carburant. Les quatre catalogues mémorisent le rang consulté de chaque carte dans le navigateur. Analyse tactique présente les trois effets de son niveau sur chaque rang.
 
 - Administration : [fiabilité du catalogue](docs/ADMIN_CATALOGUE_FIABILITE.md), avec source des valeurs, motif, confirmation, rejet des formulaires périmés, journal avant/après et comparaison de devis sans publication.
 

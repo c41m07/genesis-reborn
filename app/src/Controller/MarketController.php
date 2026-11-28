@@ -19,7 +19,7 @@ final class MarketController extends AbstractController
     #[Route('/bourse', name: 'app_market', methods: ['GET', 'POST'])]
     public function page(
         Request $request, UniverseContext $context, GameRepository $repo, ResourceMarketRepository $markets,
-        PlayerMarket $players, MarketTerms $terms, MarketConvoys $convoys, MarketPresentation $presentation, ClockInterface $clock,
+        PlayerMarket $players, MarketTerms $terms, MarketConvoys $convoys, MarketPresentation $presentation, ClockInterface $clock, GameCatalog $catalog,
     ): Response {
         $member = $context->membership();
         $universe = $member->universe;
@@ -29,7 +29,7 @@ final class MarketController extends AbstractController
         $draftKey = 'market_draft_'.$member->id;
         $draft = $session->get($draftKey, []);
         $quote = $session->get($sessionKey);
-        if ($quote && (!isset($quote['details']['operation']) || $quote['expires'] <= $clock->now()->getTimestamp())) {
+        if ($quote && (!isset($quote['details']['composition']) || $quote['expires'] <= $clock->now()->getTimestamp())) {
             $session->remove($sessionKey);
             $quote = null;
         }
@@ -57,13 +57,32 @@ final class MarketController extends AbstractController
                 } elseif ($action === 'clear') {
                     if ($quote) $session->set($draftKey, $quote['details']);
                     $session->remove($sessionKey);
-                } elseif ($action === 'quote') {
+                } elseif (in_array($action, ['quote', 'estimate'], true)) {
                     $planet = $byId[$fields->getInt('planet')] ?? throw new \DomainException('Choisissez une colonie de votre empire.');
+                    $ships = $fields->all('ships');
+                    if (array_diff_key($ships, ['transport' => true])) {
+                        throw new \DomainException('Seuls les cargos peuvent rejoindre la station.');
+                    }
+                    $composition = $ships['transport'] ?? [];
+                    if (!is_array($composition)) {
+                        $composition = ['basic' => $composition];
+                    }
+                    if (array_filter($composition, 'is_array')) {
+                        throw new \DomainException('Indiquez un nombre de cargos par rang.');
+                    }
+                    if (!$ships && $fields->has('rank')) {
+                        $composition = [$fields->getString('rank') => $fields->getInt('cargos')];
+                    }
                     $draft = [
                         'operation' => $fields->getString('operation', 'barter'),
                         'pay' => $fields->getString('pay'), 'receive' => $fields->getString('receive', $fields->getString('pay')),
-                        'quantity' => $fields->getInt('quantity'), 'rank' => $fields->getString('rank'), 'cargos' => $fields->getInt('cargos'),
+                        'quantity' => $fields->getInt('quantity'), 'composition' => $composition,
                     ];
+                    if ($action === 'estimate') {
+                        $estimate = $convoys->preview($member, $planet, $draft, $draft['quantity'] === 0);
+                        $arrival = $clock->now()->modify('+'.MarketTerms::LEG_SECONDS.' seconds');
+                        return $this->json($estimate + ['arrival' => $arrival->format(\DateTimeInterface::ATOM)]);
+                    }
                     $session->set($draftKey, $draft + ['planet' => $planet->id]);
                     $details = $convoys->preview($member, $planet, $draft);
                     $session->set($sessionKey, [
@@ -80,6 +99,9 @@ final class MarketController extends AbstractController
                     $this->addFlash('success', 'Convoi lancé. Arrivée à la station dans 30 minutes.');
                 }
             } catch (\DomainException $error) {
+                if ($action === 'estimate') {
+                    return $this->json(['error' => $error->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+                }
                 if (in_array($action, ['quote', 'send'], true)) {
                     $session->remove($sessionKey);
                 }
@@ -97,14 +119,29 @@ final class MarketController extends AbstractController
             if (isset(MarketPricing::WEIGHTS[$resource])) {
                 $draft['pay'] = $resource;
             }
+            if ($draft['operation'] === 'barter' && isset($draft['receive']) && $draft['receive'] === ($draft['pay'] ?? 'metal')) {
+                $draft['receive'] = $draft['receive'] === 'nano' ? 'metal' : 'nano';
+            }
+            $quote = null;
+        }
+        if ($quote && !isset($byId[$quote['details']['planet']])) {
+            $session->remove($sessionKey);
             $quote = null;
         }
         $planet = $byId[$request->query->getInt('planet', $quote['details']['planet'] ?? $draft['planet'] ?? 0)] ?? ($colonies[0] ?? null);
+        $ships = [];
+        if ($market?->enabled && $planet && !$quote) {
+            $stock = $terms->cargos($member, $planet);
+            foreach (GameCatalog::TIERS as $tier) {
+                $ships[] = ['slug' => 'transport', 'tier' => $tier, 'quantity' => $stock[$tier] ?? 0];
+            }
+        }
         return $this->render('market/index.html.twig', [
             'account' => $players->account($member), 'operations' => $operations, 'draft' => $draft, 'member' => $member, 'market' => $market, 'rows' => $market ? $presentation->rows($market) : [],
             'colonies' => $colonies, 'planet' => $planet, 'trades' => $markets->trades($universe, $member->id),
-            'quote' => $quote && isset($byId[$quote['details']['planet']]) ? $quote : null,
-            'cargoStocks' => $planet ? $terms->cargos($member, $planet) : [], 'fee' => MarketPricing::FEE_PERCENT,
+            'quote' => $quote,
+            'cargoShips' => $ships, 'cargoCatalog' => $ships ? ['transport' => $catalog->getForUniverse($universe, 'ships', 'transport')] : [],
+            'fleetLimit' => $ships ? $catalog->forUniverse($universe)['limits']['max_fleet_size'] : 0, 'fee' => MarketPricing::FEE_PERCENT,
             'labels' => MarketPresentation::LABELS, 'ranks' => array_combine(GameCatalog::TIERS, ['Basique', 'Intermédiaire', 'Supérieur']),
             'maxLot' => MarketPricing::MAX_LOT, 'utcNow' => $clock->now(),
         ]);

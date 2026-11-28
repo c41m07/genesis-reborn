@@ -42,6 +42,7 @@ test('Station commerciale : le noyau ouvre la Bourse et ne devient pas un systè
     await expect(marker).toHaveCount(0);
 
     await page.goto('/carte-v2');
+    await page.getByRole('button', {name: 'Vue entière'}).click();
     await expect(marker).toBeVisible();
     const map = page.locator('.galaxy-v2');
     const data = JSON.parse(await map.getAttribute('data-galaxy-v2-map-value'));
@@ -84,6 +85,7 @@ test('Station commerciale : le noyau ouvre la Bourse et ne devient pas un systè
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/carte-v2');
+    await page.getByRole('button', {name: 'Vue entière'}).click();
     await expect(marker).toBeVisible();
     const target = await marker.boundingBox();
     expect(target.width).toBeGreaterThanOrEqual(44);
@@ -109,7 +111,7 @@ test('Station commerciale : le noyau ouvre la Bourse et ne devient pas un systè
     runIsolatedSql(project, `INSERT INTO fleet (player_universe_id,home_planet_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token)
         SELECT owner_id,id,'idle','idle',1,'{}',0,0,0,0,'' FROM planet WHERE id=${home} AND NOT EXISTS (SELECT id FROM fleet WHERE home_planet_id=${home} AND status='idle')`);
     runIsolatedSql(project, `INSERT INTO fleet_ship (fleet_id,slug,tier,quantity)
-        SELECT id,'transport','basic',1 FROM fleet WHERE home_planet_id=${home} AND status='idle' LIMIT 1 ON DUPLICATE KEY UPDATE quantity=quantity+1`);
+        SELECT id,'transport','basic',300 FROM fleet WHERE home_planet_id=${home} AND status='idle' LIMIT 1 ON DUPLICATE KEY UPDATE quantity=quantity+300`);
     await page.goto('/bourse');
     // Les frais du lot sont annoncés avant toute écriture, même sur un petit écran.
     runIsolatedSql(project, `INSERT INTO market_account (membership_id,cents,goods)
@@ -129,8 +131,58 @@ test('Station commerciale : le noyau ouvre la Bourse et ne devient pas un systè
     await page.getByRole('button', {name:'Retirer les invendus'}).click();
     await expect(page.getByText(/Votre solde/)).toContainText('13,00 crédits');
     await page.getByRole('link', {name:'Comptoir de la station'}).click();
-    await page.getByLabel('Quantité à envoyer').fill('100');
-    await page.getByRole('button', { name: 'Continuer vers les cargos' }).click();
+    const withoutScripts = await browser.newContext({ javaScriptEnabled: false, storageState: await page.context().storageState() });
+    try {
+        const native = await withoutScripts.newPage();
+        await native.goto('/bourse?operation=deposit');
+        await native.getByRole('spinbutton', {name:/Basique/}).fill('1');
+        await native.getByLabel('Quantité du lot').fill('100');
+        await native.getByRole('button', {name:'Calculer le devis'}).click();
+        await expect(native.getByRole('heading', {name:'Déposer à la station'})).toBeVisible();
+        await native.getByRole('button', {name:'Modifier l’échange'}).click();
+        await expect(native.getByLabel('Quantité du lot')).toHaveValue('100');
+    } finally {
+        await withoutScripts.close();
+    }
+    const table = page.getByRole('table', { name: 'Composez votre convoi' });
+    const recap = page.getByRole('complementary', { name: 'Récapitulatif du convoi' });
+    const basic = table.getByRole('spinbutton', { name: /Basique/ });
+    for (const theme of ['light', 'dark']) {
+        runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
+        await page.goto('/bourse?operation=barter');
+        await expect(page.locator('body')).toHaveAttribute('data-theme', theme);
+        for (const width of [1920, 768, 390, 320]) {
+            await page.setViewportSize({width, height: 900});
+            await expect(table).toBeVisible();
+            await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+        }
+    }
+    await basic.fill('0');
+    await page.getByRole('button', {name:'Choisir la mission'}).click();
+    await expect(page.getByText('Sélectionnez au moins un cargo disponible.')).toBeVisible();
+    await basic.fill('291');
+    await expect(recap.getByText('291', {exact:true})).toBeVisible();
+    await table.getByRole('button', {name:/Max.*Basique/}).click();
+    await expect(basic).toHaveValue(await basic.getAttribute('max'));
+    const estimation = page.waitForResponse(r => r.url().endsWith('/bourse') && r.request().method() === 'POST');
+    await basic.fill('1');
+    const preview = await estimation;
+    expect(preview.status()).toBe(200);
+    await expect(recap.locator('[data-market-wizard-target="fuel"]')).toHaveText(/\d.* H/);
+    await basic.press('Enter');
+    await expect(page.getByRole('button', {name:'Vérifier la destination'})).toBeVisible();
+    await page.getByLabel('Opération').selectOption('deposit');
+    await expect(recap).toContainText('Déposer à la station');
+    await expect(page.getByLabel('Ressource à recevoir en troc')).toBeHidden();
+    await page.getByLabel('Opération').selectOption('barter');
+    await page.getByLabel('Ressource à recevoir en troc').selectOption('nano');
+    await page.getByLabel('Quantité du lot').fill('100');
+    await expect(recap.getByRole('status')).toContainText(/À recevoir.*Nano/);
+    await page.getByRole('button', {name:'Vérifier la destination'}).click();
+    await expect(page.getByText('Destination du convoi', {exact:true})).toBeFocused();
+    await page.getByRole('button', {name:'Modifier la mission'}).click();
+    await expect(page.getByLabel('Quantité du lot')).toHaveValue('100');
+    await page.getByRole('button', {name:'Vérifier la destination'}).click();
     await page.getByRole('button', { name: 'Calculer le devis' }).click();
     await page.getByRole('button', { name: 'Confirmer et lancer les cargos' }).click();
     await expect(page.locator('.market-trip')).toContainText('Vers la station');

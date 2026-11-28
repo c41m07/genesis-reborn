@@ -1,5 +1,9 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Composition des convois de Bourse — 28 novembre 2026
+
+Le comptoir reprend la composition de Flottes demandée par le propriétaire. Les cargos disponibles se sélectionnent par quantité et par rang dans un même convoi. Le récapitulatif suit la préparation, puis le joueur valide la mission commerciale et le trajet vers la station avant de confirmer son devis. [Parcours du convoi](BOURSE_DE_RESSOURCES.md#cours-devis-et-trajet).
+
 ## Comptoir en crédits et marché des joueurs — 28 novembre 2026
 
 Le propriétaire valide deux comptoirs à la station unique de chaque univers, le cours selon la rareté de la réserve publique, le crédit fractionnable et l’affichage de la richesse disponible dans le classement. Les frais de 2 % du marché entre joueurs sont dus à la mise en vente sur la valeur totale au prix choisi. Le vendeur doit déjà posséder ces crédits. Sa rémunération ultérieure est intégrale, y compris pour une vente partielle. Les invendus donnent droit à la restitution des marchandises. La taxe reste détruite. Le troc, les délais, les protections des convois et les anciens lots déjà réservés suivent leurs conditions enregistrées. [Règles de la Bourse](REGLES.md#bourse-de-ressources).
