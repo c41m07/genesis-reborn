@@ -1,5 +1,9 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Construction du laboratoire — 28 novembre 2026
+
+Le premier laboratoire Basique coûte 4 800 métal et 2 600 nano. Sa durée de base passe de 4 à 30 minutes pour suivre celle du chantier spatial à rang et niveau égaux. Les profils avancés continuent de privilégier les instruments en nano et introduisent l’antimatière. Ces paramètres s’appliquent aux nouveaux devis du catalogue par défaut ; les commandes déjà payées gardent leur coût et leur durée enregistrés.
+
 ## Carburant perdu à quai — 27 novembre 2026
 
 Décision du propriétaire. Chaque nouveau départ paie la totalité de son devis
@@ -294,7 +298,7 @@ L’intégration et ses vérifications sont détaillées dans [BUILDING_BALANCE_
 ### Messagerie et panneaux d’alliances — 5 novembre 2026
 
 - La recherche de destinataires porte sur les pseudos des joueurs du même univers, à partir de deux caractères. La liste privée ne présente que les joueurs avec lesquels au moins un message a été échangé.
-- Le canal de guilde reste en tête. Les conversations privées comportant des messages non lus précèdent les autres, puis suivent l’ordre du dernier message. Une pastille rouge signale les non-lus dans les conversations et sur l’entrée « Messages » de la navigation. Les indicateurs sont actualisés à réception d’une notification et toutes les quinze secondes.
+- Le canal de guilde reste en tête. Les conversations privées comportant des messages non lus précèdent les autres, puis suivent l’ordre du dernier message. Une pastille rouge signale les conversations non lues. Dans le menu, « Messages » affiche leur nombre de messages non lus dans un badge rouge, plafonné visuellement à 99+ et masqué à zéro. Les indicateurs sont actualisés à réception d’une notification et toutes les quinze secondes.
 - L’ouverture d’une conversation marque les messages affichés comme lus. La lecture du canal de guilde est suivie séparément pour chaque joueur et chaque guilde.
 - La page Alliances s’ouvre sur « Guildes ». Les liens sont ordonnés « Guildes », « Diplomatie », « Relation » et seul le panneau sélectionné est affiché. « Diplomatie » regroupe les relations entre guildes, « Relation » les contrats entre commandants.
 

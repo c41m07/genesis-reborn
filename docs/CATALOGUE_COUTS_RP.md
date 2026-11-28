@@ -9,7 +9,7 @@ Tests mécaniques : profils et poids gelés contre la [sauvegarde](SAUVEGARDE_CA
 ### Bâtiments
 
 - **Bunker de défense** : M : murs et blindage ; N : amortisseurs ; A dès l’Intermédiaire : champ de confinement des impacts lourds.
-- **Laboratoire colonial** : M : enceinte des bancs ; N : microscopes/analyseurs ; A dans les rangs avancés : étalonnage des instruments en chambre de confinement.
+- **Laboratoire colonial** (budget Basique porté à 20 000 le 28 novembre, soit 4 800 métal et 2 600 nano) : M : enceinte des bancs ; N : microscopes/analyseurs ; A dans les rangs avancés : étalonnage des instruments en chambre de confinement.
 - **Piège à antimatière** : M : cryostat ; N : piège et pilotage du champ ; H : débit de mise en service. Jamais d’A pour construire le piège.
 - **Raffinerie d’hydrogène** : M : conduites et séparateurs ; N : membranes ; A aux rangs avancés : alimentation de l’étage magnétique, jamais d’H pour débloquer la raffinerie.
 - **Mine à ciel ouvert** : M : galeries et rails ; N : têtes de forage ; A aux rangs avancés : essais du plasma qui fracture la roche profonde.

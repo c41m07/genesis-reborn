@@ -4,7 +4,7 @@ import { exactNumber } from '../quantity.js';
 const rankLabels = { basic: 'Basique', intermediate: 'Intermédiaire', superior: 'Supérieur' };
 
 export default class extends Controller {
-    static targets = ['step', 'indicator', 'counter', 'quantity', 'error', 'summary', 'recap', 'recapCount', 'recapRanks', 'recapShips', 'recapDestination', 'recapCargo', 'recapQuote', 'recapActions', 'recapNotice', 'stageActions', 'quotePanel', 'recapQuoteSlot'];
+    static targets = ['step', 'indicator', 'counter', 'quantity', 'error', 'summary', 'recap', 'recapCount', 'recapRanks', 'recapShips', 'recapDestination', 'recapCargo', 'recapActions', 'recapNotice', 'stageActions', 'quotePanel', 'recapQuoteSlot'];
 
     static values = { origin: String };
 
@@ -118,10 +118,9 @@ export default class extends Controller {
         }
     }
 
-    updateRecap(event = null) {
+    updateRecap() {
         if (!this.hasRecapTarget) return;
-        // Le résumé est déduit des seuls champs actifs du formulaire. Un nouveau
-        // choix invalide la mention du devis avant même sa prochaine réponse.
+        // Le résumé de la composition ne compte que les champs actifs du formulaire.
         const selected = this.quantityTargets.filter(input => !input.disabled && Number(input.value) > 0);
         const ranks = { basic: 0, intermediate: 0, superior: 0 };
         let ships = 0;
@@ -162,13 +161,11 @@ export default class extends Controller {
             const total = cargo.reduce((sum, input) => sum + Math.max(0, Number(input.value) || 0), 0);
             this.recapCargoTarget.textContent = this.currentStep === 1 ? 'Selon la mission' : (total ? exactNumber(total) + ' ressources' : 'Aucun');
         }
-        if (event) this.recapQuoteTarget.textContent = 'Après le devis du trajet';
     }
 
     quote() {
         this.updateSummary();
         this.updateRecap();
-        if (this.hasRecapTarget) this.recapQuoteTarget.textContent = 'Voir l’estimation du trajet';
     }
 
     showError(message) {

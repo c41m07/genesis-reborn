@@ -61,6 +61,41 @@ final class CatalogFilters
         };
     }
 
+    /** Regroupe uniquement les choix présents et conserve les ordinaux des escortes. */
+    public function shipTableGroups(array $ships, array $catalog): array
+    {
+        $families = [];
+        foreach ($ships as $ship) {
+            $slug = $ship instanceof \App\Entity\FleetShip ? $ship->slug : $ship['slug'];
+            $tier = $ship instanceof \App\Entity\FleetShip ? $ship->tier : $ship['tier'];
+            $families[$slug][$tier] = $ship;
+        }
+
+        $groups = [];
+        foreach ($families as $slug => $tiers) {
+            $definition = $catalog[$slug] ?? ['slug' => $slug, 'label' => $slug];
+            $category = $this->category('ships', $definition);
+            $salvo = ($definition['base_attack'] ?? 0) * (($definition['shots_min'] ?? 0) + ($definition['shots_max'] ?? 0)) / 2;
+            $groups[$category][$slug] = [
+                'definition' => $definition,
+                'tiers' => $tiers,
+                'strength' => ($salvo + ($definition['shield'] ?? 0) + ($definition['hp'] ?? 0)) / 3,
+            ];
+        }
+
+        $ordered = [];
+        foreach (self::LABELS['ships'] as $category => $label) {
+            if (!isset($groups[$category])) {
+                continue;
+            }
+            $rows = $groups[$category];
+            uasort($rows, static fn(array $a, array $b): int => $a['strength'] <=> $b['strength']
+                ?: strcmp($a['definition']['slug'], $b['definition']['slug']));
+            $ordered[$label] = $rows;
+        }
+        return $ordered;
+    }
+
     public function options(string $group,array $definitions): array
     {
         $present=['all'=>true];

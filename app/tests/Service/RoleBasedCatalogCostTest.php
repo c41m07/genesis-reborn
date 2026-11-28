@@ -28,6 +28,10 @@ final class RoleBasedCatalogCostTest extends TestCase
                 $previous->gameSettings['catalog_overrides'][$group][$slug]['cost_profiles'] = $ranks;
             }
         }
+        // La comparaison des recettes RP utilise le même budget de base pour le laboratoire des deux univers.
+        $previous->gameSettings['catalog_overrides']['buildings']['lab']['cost_profiles']['basic'] = [
+            'metal' => 4800, 'nano' => 2600, 'antimatter' => 0, 'hydrogen' => 0,
+        ];
         $oldConfiguration = $catalog->forUniverse($previous);
         $newConfiguration = $catalog->forUniverse($actual);
         $defenseBudgets = [

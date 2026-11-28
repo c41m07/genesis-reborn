@@ -256,6 +256,8 @@ final class PirateAttackPersistenceTest extends KernelTestCase
         self::assertSame(['fighter' => ['basic' => 2]], $this->campaign()->reservedShips);
         self::assertSame(1, $this->stock($fighter->id));
         self::assertSame(3, $this->stock($second->id));
+        $ships = self::getContainer()->get(\App\Repository\EmpireFleetRepository::class)->ships($owner);
+        self::assertContains(['slug' => 'fighter', 'tier' => 'basic', 'quantity' => 3], $ships);
         self::assertEqualsWithDelta($hydrogen - $a['quote']['planet'], $this->resourceStock($home->id, 'hydrogen'), 1e-9);
         self::assertSame(1, (int) $db->fetchOne("SELECT COUNT(*) FROM outbox_message WHERE kind = 'pirate_attack'"));
         self::assertSame(0, (int) $db->fetchOne("SELECT COUNT(*) FROM fleet WHERE status <> 'idle'"));

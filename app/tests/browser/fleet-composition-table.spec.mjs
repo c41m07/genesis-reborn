@@ -43,7 +43,8 @@ test('Flottes : les trois rangs restent alignés et arrivent ensemble au devis, 
     const form = page.locator('.fleet-form form');
     const table = form.getByRole('table', { name: 'Composez votre flotte', exact: true });
     await expect(table.getByRole('columnheader')).toHaveText(['Élément', 'Basique', 'Intermédiaire', 'Supérieur']);
-    await expect(table.getByRole('rowheader')).toHaveCount(2);
+    await expect(table.locator('th[scope=row]')).toHaveCount(2);
+    await expect(table.locator('th[scope=rowgroup]')).toHaveText(['Légers', 'Espionnage']);
     const background = locator => locator.evaluate(el => getComputedStyle(el).backgroundColor);
     for (const theme of ['light', 'dark']) {
         runIsolatedSql(project, `UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
@@ -115,6 +116,20 @@ test('Flottes : les trois rangs restent alignés et arrivent ensemble au devis, 
     const quoted = await (await quoteFromJs).json();
     expect(quoted.composition).toEqual({ fighter: { basic: 2, intermediate: 2, superior: 3 } });
     expect(quoted.ship_adjusted).toBe(false);
+    const duration = recap.locator('[data-fleet-preview-target="duration"]');
+    const arrival = recap.locator('[data-fleet-preview-target="arrival"]');
+    await expect(recap.getByRole('heading', { name: 'Estimation du trajet' })).toBeHidden();
+    const timezone = await page.locator('body').getAttribute('data-timezone');
+    const formatArrival = instant => new Intl.DateTimeFormat('fr-FR', {
+        dateStyle: 'short', timeStyle: 'medium', timeZone: timezone,
+    }).format(new Date(instant)) + ' · ' + timezone;
+    await expect(duration).toHaveText(`${Math.floor(quoted.seconds / 3600)} h ${Math.floor(quoted.seconds % 3600 / 60)} min ${quoted.seconds % 60} s`);
+    await expect(arrival).toHaveText(formatArrival(quoted.arrival_at));
+    await form.locator('[name="coordinates"]').fill('');
+    await expect(duration).toHaveText('—');
+    await expect(arrival).toHaveText('—');
+    await form.locator('[name="coordinates"]').fill(coordinates);
+    await expect(duration).not.toHaveText('—');
     await form.getByRole('button', { name: /Vérifier la mission/ }).click();
     await expect(form.getByRole('heading', { name: 'Confirmez votre mission' })).toBeFocused();
     const reviewTable = form.locator('[data-fleet-wizard-target="summary"]').getByRole('table', { name: 'Composition', exact: true });
@@ -222,4 +237,31 @@ test('Flottes : les trois rangs restent alignés et arrivent ensemble au devis, 
     expect(payload['ships[probe]']).toBe('1');
     expect(Object.hasOwn(payload, 'ships[probe][intermediate]')).toBe(false);
     expect(Number(queryIsolatedSql(project, 'SELECT COUNT(*) FROM fleet WHERE player_universe_id=' + owner + " AND status<>'idle'"))).toBe(0);
+});
+
+test('Flotte de l’empire : effectifs cumulés par famille et par rang en lecture seule', async ({ page }) => {
+    const { fleet, project, owner } = await seed(page);
+    const second = Number(queryIsolatedSql(project, 'SELECT id FROM planet WHERE owner_id=' + owner + ' AND id<>(SELECT home_planet_id FROM fleet WHERE id=' + fleet + ') LIMIT 1'));
+    runIsolatedSql(project, `INSERT INTO fleet (player_universe_id,home_planet_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token) VALUES (${owner},${second},'returning','transport',1,'{}',0,0,0,60,'recap')`);
+    const returning = Number(queryIsolatedSql(project, "SELECT id FROM fleet WHERE dispatch_token='recap'"));
+    runIsolatedSql(project, `INSERT INTO fleet_ship(fleet_id,slug,tier,quantity) VALUES (${returning},'stealth_fighter','basic',1),(${returning},'interceptor','basic',1),(${returning},'fighter','basic',9)`);
+    await page.goto('/planetes?view=table');
+    const link = page.getByRole('link', { name: 'Flotte de l’empire', exact: true });
+    await link.focus();
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/\/flottes\/empire$/);
+    const table = page.getByRole('table', { name: 'Effectifs par rang' });
+    for (const width of [1920, 768, 390, 320]) {
+        await page.setViewportSize({ width, height: 900 });
+        await expect(table).toBeVisible();
+        await expect(table.locator('th[scope=rowgroup]')).toHaveText(['Légers', 'Espionnage']);
+        await expect(table.locator('th[scope=row]')).toHaveText(['Chasseur de patrouille', 'Intercepteur atmosphérique', 'Chasseur furtif', 'Sonde de reconnaissance']);
+        await expect(table.getByRole('row', { name: /Chasseur de patrouille/ }).getByRole('cell')).toHaveText(['21', '6', '4']);
+        await expect(table.locator('input, button')).toHaveCount(0);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    }
+    await page.reload();
+    await expect(page.getByText('36 unités au total')).toBeVisible();
+    await page.goBack();
+    await expect(page).toHaveURL(/\/planetes\?view=table$/);
 });

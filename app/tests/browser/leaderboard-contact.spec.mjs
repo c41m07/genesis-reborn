@@ -133,6 +133,15 @@ test('Conversations : dernier message, bulles distinctes et témoin mobile', asy
   await page.setViewportSize({ width: 768, height: 900 });
   await page.goto('/classement');
   await expect(page.locator('.mobile-menu .menu-unread-dot')).toBeVisible();
+  await page.locator('.mobile-menu').focus();
+  await page.keyboard.press('Enter');
+  const messagesLink = page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link', { name: 'Messages', exact: true });
+  await messagesLink.focus();
+  const unreadBadge = messagesLink.locator('.message-unread-count');
+  await expect(unreadBadge).toBeInViewport();
+  await expect(unreadBadge).toHaveText('15');
+  await expect(unreadBadge).toHaveCSS('background-color', 'rgb(169, 31, 53)');
+  await page.keyboard.press('Escape');
   await page.setViewportSize({ width: 390, height: 900 });
   await expect(page.locator('.mobile-bottom-nav .menu-unread-dot')).toBeVisible();
   for (const theme of ['dark', 'light']) {
@@ -242,8 +251,12 @@ test('Hub de guilde : création, équipage et discussion commune', async ({ page
   await memberPage.getByRole('button', { name: 'Envoyer', exact: true }).click();
   await page.goto('/guildes/creer');
   await expect(page.locator('.guild-message-preview')).toContainText('Préparons notre prochaine expédition.');
-  await expect(page.getByRole('link', { name: 'Messages', exact: false }).filter({ has: page.locator('.message-unread-dot') })).toHaveCount(1);
+  const messagesLink = page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link', { name: 'Messages', exact: true });
+  await expect(messagesLink).toHaveAccessibleDescription('1 message non lu');
+  await expect(messagesLink.locator('.message-unread-count')).toBeVisible();
+  await expect(messagesLink.locator('.message-unread-count')).toHaveText('1');
   await page.getByRole('link', { name: 'Ouvrir le canal de guilde' }).click();
+  await expect(messagesLink.locator('.message-unread-count')).toBeHidden();
   await expect(page.getByRole('navigation', { name: 'Conversations' }).getByRole('link').nth(0)).toContainText('Global');
   await expect(page.getByRole('navigation', { name: 'Conversations' }).getByRole('link').nth(1)).toContainText(guildName);
   runIsolatedSql(process.env.BROWSER_ROUTER, "UPDATE leaderboard_snapshot SET updated_at=DATE_SUB(UTC_TIMESTAMP(), INTERVAL 2 DAY)");

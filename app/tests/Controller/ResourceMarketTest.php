@@ -94,6 +94,9 @@ final class ResourceMarketTest extends WebTestCase
         $this->client->followRedirect();
         self::assertSelectorTextContains('.market-trip', 'Vers la station');
         $first = $this->em->getRepository(MarketTrade::class)->findOneBy(['membershipId' => $member->id]);
+        $this->client->request('GET', '/flottes/empire');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextSame('.fleet-composition-table td', '2');
         self::assertSame(1800, $first->dueAt->getTimestamp() - $first->departedAt->getTimestamp());
         self::assertSame($beforeMetal - 2000, $this->stock($home->id, 'metal'));
         self::assertSame($beforeNano, $this->stock($home->id, 'nano'));

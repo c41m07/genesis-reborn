@@ -9,7 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class ResourceMarketRepository
 {
-    private const ACTIVE_STATUSES = ['outbound', 'returning', 'awaiting_colony'];
+    public const ACTIVE_STATUSES = ['outbound', 'returning', 'awaiting_colony'];
 
     public function __construct(private EntityManagerInterface $em)
     {

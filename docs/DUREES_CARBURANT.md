@@ -26,7 +26,7 @@ historiques à 70 % ci-dessous ne sont pas des devis actuels.
 | Famille | Durée du niveau 1 Basique |
 | --- | --- |
 | Bunker de défense | 6 min |
-| Laboratoire colonial | 4 min |
+| Laboratoire colonial | 30 min depuis le 28 novembre (4 min auparavant) |
 | Piège à antimatière | 2 min |
 | Raffinerie d’hydrogène | 1 min |
 | Mine à ciel ouvert | 1 min |

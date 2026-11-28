@@ -13,6 +13,7 @@
         <nav class="ui-tabs" aria-label="Présentation des colonies">
             <a href="{{ path('app_planets') }}" {% if not table_view %}class="active" aria-current="page"{% endif %}>Mes colonies</a>
             <a href="{{ path('app_planets',{view:'table'}) }}" {% if table_view %}class="active" aria-current="page"{% endif %}>Comparer les colonies</a>
+            <a href="{{ path('app_fleet_empire') }}">Flotte de l’empire</a>
         </nav>
     </div>
     {% if table_view %}
