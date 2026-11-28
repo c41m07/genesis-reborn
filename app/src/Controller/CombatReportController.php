@@ -33,7 +33,7 @@ final class CombatReportController extends AbstractController
     }
 
     #[Route('/rapports/archives', name: 'app_report_archive_change', methods: ['POST'])]
-    public function archive(Request $request, UniverseContext $context, \App\Service\Combat\ReportArchiveService $archives): Response
+    public function archive(Request $request, UniverseContext $context, \App\Service\Combat\ReportArchiveService $archives, ReportNoticeRepository $notices, \Psr\Clock\ClockInterface $clock): Response
     {
         if (!$this->isCsrfTokenValid('report_archive', $request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
         $member = $context->membership();
@@ -43,7 +43,10 @@ final class CombatReportController extends AbstractController
         try {
             $operation = $request->request->getString('operation');
             $removal = $request->request->getString('remove');
-            if ($removal !== '') {
+            if ($request->request->has('read')) {
+                $notices->consultSelection($member, $request->request->all('selected'), $clock->now());
+                $this->addFlash('success', 'Les rapports sélectionnés sont marqués comme lus.');
+            } elseif ($removal !== '') {
                 $keys = $removal === 'selection' ? $request->request->all('selected') : [$removal];
                 // Le service exige l’archivage pour chaque clé ; le filtre visible n’est pas une autorisation.
                 $archives->removeFromArchives($member, $keys);

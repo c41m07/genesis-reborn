@@ -286,8 +286,10 @@ final class DailyLeaderboardTest extends KernelTestCase
         $a = $this->join('Summer');
         $service = self::getContainer()->get(DailyLeaderboard::class);
         foreach ([
-            ['2027-03-27T23:00:00Z', '2027-03-28T22:00:00+00:00'],
-            ['2027-10-30T22:00:00Z', '2027-10-31T23:00:00+00:00'],
+            ['2027-03-27T23:00:00Z', '2027-03-28T10:00:00+00:00'],
+            ['2027-03-28T10:00:00Z', '2027-03-28T22:00:00+00:00'],
+            ['2027-10-30T22:00:00Z', '2027-10-31T11:00:00+00:00'],
+            ['2027-10-31T11:00:00Z', '2027-10-31T23:00:00+00:00'],
         ] as [$now, $expected]) {
             $this->clock->modify($now);
             self::assertSame($expected, $service->forUniverse($a)['next_update']->setTimezone(new \DateTimeZone('UTC'))->format(DATE_ATOM));

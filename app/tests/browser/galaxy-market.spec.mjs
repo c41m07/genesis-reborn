@@ -112,6 +112,7 @@ test('Station commerciale : le noyau ouvre la Bourse et ne devient pas un systè
         SELECT id,'transport','basic',1 FROM fleet WHERE home_planet_id=${home} AND status='idle' LIMIT 1 ON DUPLICATE KEY UPDATE quantity=quantity+1`);
     await page.goto('/bourse');
     await page.getByLabel('Quantité à envoyer').fill('100');
+    await page.getByRole('button', { name: 'Continuer vers les cargos' }).click();
     await page.getByRole('button', { name: 'Calculer le devis' }).click();
     await page.getByRole('button', { name: 'Confirmer et lancer les cargos' }).click();
     await expect(page.locator('.market-trip')).toContainText('Vers la station');

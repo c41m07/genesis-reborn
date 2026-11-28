@@ -104,7 +104,7 @@
 <section class="panel" id="metrics-recovery" aria-labelledby="recovery-title">
 <h2 id="recovery-title">Récupération après des pertes</h2>
 <dl><dt>Participations actuellement protégées après fortes pertes</dt><dd>{{ metrics.recovery.protected }}</dd><dt>Participations ayant une dernière activation conservée</dt><dd>{{ metrics.recovery.membersWithRecordedProtection }}</dd></dl>
-<p>La protection est liée aux pertes militaires, même dans une bataille gagnée. Ce n’est ni un compteur de défaites ni le nombre total d’activations.</p>
+<p>Depuis le 28 novembre 2026, seule une défaite du propriétaire en défense peut déclencher la protection. Les chiffres incluent les activations antérieures.</p>
 <h3>Verdicts des rapports de combat conservés</h3>
 {% set outcomeLabels = {'attacker_wins': 'Victoire des attaquants', 'defender_wins': 'Victoire de la défense', 'draw': 'Égalité'} %}
 <ul>{% for outcome, count in metrics.recovery.outcomes %}<li>{{ outcomeLabels[outcome]|default('Verdict non reconnu') }} : {{ count }}</li>{% else %}<li>Aucun rapport de combat enregistré dans cet univers.</li>{% endfor %}</ul>

@@ -35,6 +35,13 @@ final class CatalogCardsControllerTest extends WebTestCase
         foreach(['buildings'=>'mine_metal','technologies'=>'engineering_foundations','ships'=>'probe','defenses'=>'ground_turret_anti_light'] as $group=>$slug) {
             $crawler=$client->request('GET','/planetes/'.$planetId.'?section='.$group);
             self::assertResponseIsSuccessful();
+            if ($group === 'technologies') {
+                foreach (['basic', 'intermediate', 'superior'] as $tier) {
+                    $effects = $crawler->filter('#item-tactical_intelligence-'.$tier.' [data-catalogue-main-gain]');
+                    self::assertStringContainsString('Score de renseignement des sondes adverses', $effects->text());
+                    self::assertStringContainsString('Préavis théorique des attaques entrantes', $effects->text());
+                }
+            }
             $card = $crawler->filter('#item-'.$slug.'-basic .card-body');
             $paymentPanel = $card->filter('form[method="post"] > .catalog-payment');
             self::assertCount(1, $paymentPanel);

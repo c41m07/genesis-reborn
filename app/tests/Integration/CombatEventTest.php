@@ -748,6 +748,48 @@ final class CombatEventTest extends KernelTestCase
         self::assertFalse($combat->canAttack($attacker->currentPlayerUniverse, $target));
     }
 
+    public function testPlayerAttackEndsRecoveryAndAllowsOnlyTheRecipientToCounterattackForOneDay(): void
+    {
+        $clock = $this->clock();
+        $attacker = $this->player('CounterOrigin');
+        $origin = $this->join($attacker);
+        $defender = $this->player('CounterTarget');
+        $target = $this->join($defender);
+        $sender = $attacker->currentPlayerUniverse;
+        $recipient = $defender->currentPlayerUniverse;
+        $sender->recoveryProtectedUntil = $clock->now()->modify('+24 hours');
+        foreach ([[$sender, $origin, 'fighter', 1], [$recipient, $target, 'capital', 25]] as [$member, $planet, $slug, $quantity]) {
+            $fleet = $this->em->getRepository(Fleet::class)->findOneBy(['playerUniverse' => $member, 'homePlanet' => $planet, 'status' => 'idle']) ?? new Fleet();
+            $fleet->playerUniverse = $member;
+            $fleet->homePlanet = $planet;
+            $this->em->persist($fleet);
+            $ship = $fleet->id ? $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $fleet, 'slug' => $slug]) : null;
+            $ship ??= new FleetShip();
+            $ship->fleet = $fleet;
+            $ship->slug = $slug;
+            $ship->quantity = $quantity;
+            $this->em->persist($ship);
+        }
+        if (!$this->em->getRepository(\App\Entity\PlayerDiscovery::class)->findOneBy(['playerUniverse' => $sender, 'solarSystem' => $target->solarSystem])) {
+            $discovery = new \App\Entity\PlayerDiscovery();
+            $discovery->playerUniverse = $sender;
+            $discovery->solarSystem = $target->solarSystem;
+            $this->em->persist($discovery);
+        }
+        $this->em->flush();
+        $combat = self::getContainer()->get(CombatEventService::class);
+        $fleets = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
+        $fleets->quote($sender, $origin, 'attack', $target->id, ['fighter' => 1], 1);
+        self::assertNotNull($sender->recoveryProtectedUntil);
+        $fleets->send($sender, $origin, 'attack', $target->id, ['fighter' => 1], 1, [], str_repeat('9', 32));
+        self::assertNull($sender->recoveryProtectedUntil);
+        self::assertTrue($combat->canAttack($recipient, $origin));
+        $clock->sleep(86399);
+        self::assertTrue($combat->canAttack($recipient, $origin));
+        $clock->sleep(1);
+        self::assertFalse($combat->canAttack($recipient, $origin));
+    }
+
     public function testHeavyLossesDoNotGrantANewProtectionWhileInactive(): void
     {
         [$membership, $log] = $this->resolveHeavyLosses(true);
@@ -756,12 +798,36 @@ final class CombatEventTest extends KernelTestCase
         self::assertNotContains($membership->id, $log->snapshot['recovery_protection']);
     }
 
-    public function testHeavyLossesStillGrantProtectionToAnActivePlayer(): void
+    public function testDefeatedColonyOwnerReceivesOneDayOfProtection(): void
+    {
+        $clock = $this->clock();
+        $defender = $this->player('LossOwner');
+        $target = $this->join($defender);
+        $attacker = $this->player('LossVisitor');
+        $origin = $this->join($attacker);
+        $fleet = $this->attackFleet($attacker, $origin, $target, 'winning');
+        $combat = self::getContainer()->get(CombatEventService::class);
+        $manager = self::getContainer()->get(GameManager::class);
+        self::assertTrue($manager->transaction(fn () => $combat->joinAttack($fleet)));
+        $reinforcement = $this->defenseFleet($defender, $target, $target, 'defeated', $clock->now());
+        self::assertTrue($manager->transaction(fn () => $combat->arriveDefender($reinforcement)));
+        $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $fleet])->quantity = 100;
+        $this->em->flush();
+        $event = $this->em->getRepository(CombatEvent::class)->findOneBy(['planet' => $target]);
+        $clock->sleep(600);
+        $token = $event->dispatchToken;
+        $combat->resolve($event->id, $token);
+        $combat->resolve($event->id, $token);
+        self::assertEquals($clock->now()->modify('+24 hours'), $defender->currentPlayerUniverse->recoveryProtectedUntil);
+        self::assertNull($attacker->currentPlayerUniverse->recoveryProtectedUntil);
+    }
+
+    public function testDefeatedAttackerNeverReceivesRecoveryProtection(): void
     {
         [$membership, $log] = $this->resolveHeavyLosses(false);
-        self::assertNotNull($membership->recoveryProtectedUntil);
-        self::assertNotNull($membership->lastRecoveryProtectionAt);
-        self::assertContains($membership->id, $log->snapshot['recovery_protection']);
+        self::assertNull($membership->recoveryProtectedUntil);
+        self::assertNull($membership->lastRecoveryProtectionAt);
+        self::assertNotContains($membership->id, $log->snapshot['recovery_protection']);
     }
 
     private function resolveHeavyLosses(bool $inactive): array

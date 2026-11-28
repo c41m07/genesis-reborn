@@ -79,9 +79,14 @@ test('Les rangs bâtiments partagent une carte accessible et conservent les filt
     await expect(panel('intermediate').locator('img')).toHaveAttribute('src', /power_plant__intermediate.webp$/);
     await expect(panel('intermediate').locator('.catalog-card-heading > h3')).toHaveText('Complexe énergétique à antimatière');
     await expect(panel('intermediate').locator('form [name="tier"]')).toHaveValue('intermediate');
+    // Recharger sans ancre : le rang doit provenir du stockage du navigateur.
+    await page.evaluate(() => history.replaceState(null, '', location.pathname + location.search));
+    await page.reload();
+    await expect(panel('intermediate')).toBeVisible();
     const intermediateMetal = panel('intermediate').locator('.costs > [data-resource=metal]');
     await expect(intermediateMetal).toHaveAttribute('aria-label', 'Métal : 13 354');
     await expect(intermediateMetal.locator('[data-cost-amount]')).toHaveText('13,35 k');
+    await tab('intermediate').focus();
     await page.keyboard.press('ArrowRight');
     await expect(tab('superior')).toBeFocused();
     await expect(panel('superior')).toBeVisible();

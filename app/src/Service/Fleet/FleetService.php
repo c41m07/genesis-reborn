@@ -154,6 +154,12 @@ final class FleetService
             if($q['idle']) $q['idle']->storedFuel = 0;
             $cargo=$q['freight'];$cargo['hydrogen']=($cargo['hydrogen']??0)+$q['total_fuel'];
             $f=new Fleet();$f->playerUniverse=$m;$f->homePlanet=$origin;$f->destination=$q['target'] instanceof Planet?$q['target']:null;$f->destinationSystem=$q['system'];$f->status='traveling';$f->mission=$mission;$f->speedRatio=$ratio;$f->cargo=$cargo;$f->reservedFuel=$q['total_fuel'];$f->orbitFuel=$q['orbit_fuel'];$f->orbitDurationSeconds=$mission==='defend' && $q['target'] instanceof Planet && $this->occupations->activeFor($q['target'])!==null?(int)round($this->occupations->reinforcementHours($q['target'])*3600):($mission==='conquer' && $this->occupations->isEnabled()?\App\Service\Combat\OccupationPolicy::DURATION_SECONDS:(int)round($orbitHours*3600));$f->travelSeconds=$q['seconds'];$f->departureAt=$this->clock->now();$f->arrivalAt=$this->clock->now()->modify('+'.$f->travelSeconds.' seconds');$f->navigation=$this->navigation->freeze($this->coords($origin->solarSystem,$origin->position),$this->coords($q['system'],$q['target'] instanceof Planet?$q['target']->position:null),$q['movement_ships'],$ratio,$this->catalog->rules()['fuel_ratio_policy'],$q,$f->departureAt);$this->manager->save($f);$this->manager->flush();
+            if ($mission === 'attack' && $f->destination?->owner?->isPlayerControlled()) {
+                if (!$this->combats->canAttack($m, $f->destination)) {
+                    throw new \DomainException('Cette planète ne peut plus être attaquée.');
+                }
+                $m->recoveryProtectedUntil = null;
+            }
             $f->firstStepsSpy = $tutorialSpy;
             if($mission==='station') $f->navigation['station']=['leg_fuel'=>$q['one_way_fuel']];
             foreach($q['composition'] as $slug=>$tiers)foreach($tiers as $tier=>$quantity) {

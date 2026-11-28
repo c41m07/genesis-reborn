@@ -29,12 +29,15 @@
         <input type="hidden" name="_token" value="{{ csrf_token('combat_simulation') }}">
         <input type="hidden" name="report" value="{{ intel.id|default(0) }}">
         {% if pirate_intel %}<input type="hidden" name="pirate_report" value="{{ pirate_intel.id }}">{% endif %}
+        <input type="hidden" name="own_camp" value="{{ own_camp }}">
+        <input type="hidden" name="garrison" value="{{ garrison|json_encode }}">
         <input type="hidden" name="own_source" value="{{ own_source }}">
         <input type="hidden" name="wizard_step" value="{{ step }}" data-simulation-wizard-target="current">
         {# Entrée dans un champ numérique ne doit ni remplacer des données ni lancer un calcul.
            Ce premier bouton neutralise uniquement la soumission implicite du navigateur. #}
         <button type="submit" hidden disabled></button>
         {% include 'combat/_wizard_sources.html.twig' %}
+        {% if not pirate_intel %}<button type="submit" class="secondary" name="wizard_action" value="swap" formnovalidate formaction="{{ path('app_combat_simulation') }}">Inverser l’attaquant et le défenseur</button>{% endif %}
         {% for key, item in steps %}
             <section class="simulation-wizard-stage" id="simulation-{{ key }}" data-step="{{ key }}"
                      data-simulation-wizard-target="stage" aria-labelledby="simulation-{{ key }}-title">
@@ -77,7 +80,7 @@
                                         <input id="arrival-{{ camp }}" name="forces[{{ camp }}][arrival]" type="number" min="1" max="10" value="{{ forces[camp].arrival|default(1) }}" required>
                                     </div>
                                 {% elseif key == 'defenses' %}
-                                    <details class="simulation-wizard-fortress"><summary>Forteresse{% if intel and 'fortress' not in intel.known %} · non révélée{% endif %}</summary>
+                                    <details class="simulation-wizard-fortress"><summary>Forteresse{% if intel and camp == intel_camp and 'fortress' not in intel.known %} · non révélée{% endif %}</summary>
                                         {% include 'combat/_wizard_table.html.twig' with {group: 'fortress', definitions: {fortress: {label: 'Forteresse', max_level: 25}}, heading: 'Forteresse'} %}
                                     </details>
                                 {% endif %}
@@ -89,8 +92,8 @@
                     <section class="panel simulation-wizard-recap" aria-labelledby="simulation-recap-title">
                         <h3 id="simulation-recap-title">Récapitulatif des deux camps</h3>
                         <div class="simulation-wizard-camps">
-                            <div><strong>Attaquant</strong><p>{{ own_source ? 'Vaisseaux et recherches repris de votre empire, avec vos ajustements.' : 'Vaisseaux et recherches saisis manuellement.' }} Les défenses fixes ne s’appliquent pas.</p></div>
-                            <div><strong>Défenseur</strong><p>{% if pirate_intel %}Camp pirate figé par le rapport · {{ pirate_intel.rounds }} rounds au maximum · Recharge des boucliers : {{ pirate_intel.recharge }} % par round.{% elseif intel %}{{ espionageTitle(intel.targetName) }} ; les données non révélées et vos ajustements restent des hypothèses.{% else %}Vaisseaux, défenses et recherches saisis manuellement.{% endif %}</p></div>
+                            <div><strong>{{ own_camp == 'attacker' ? 'Attaquant' : 'Défenseur' }}</strong><p>{{ own_source ? 'Vaisseaux et recherches repris de votre empire, avec vos ajustements.' : 'Vaisseaux et recherches saisis manuellement.' }} {{ own_camp == 'attacker' ? 'Les défenses fixes ne s’appliquent pas.' : 'Les défenses de votre colonie participent au combat.' }}</p></div>
+                            <div><strong>{{ intel_camp == 'defender' ? 'Défenseur' : 'Attaquant' }}</strong><p>{% if pirate_intel %}Camp pirate figé par le rapport · {{ pirate_intel.rounds }} rounds au maximum · Recharge des boucliers : {{ pirate_intel.recharge }} % par round.{% elseif intel %}{{ espionageTitle(intel.targetName) }} ; les données non révélées et vos ajustements restent des hypothèses.{% else %}Vaisseaux, défenses et recherches saisis manuellement.{% endif %}</p></div>
                         </div>
                     </section>
                     <div class="simulation-board-options simulation-wizard-options">

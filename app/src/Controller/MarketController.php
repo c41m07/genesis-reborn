@@ -26,6 +26,8 @@ final class MarketController extends AbstractController
         $market = $markets->find($universe);
         $session = $request->getSession();
         $sessionKey = 'market_quote_'.$member->id;
+        $draftKey = 'market_draft_'.$member->id;
+        $draft = $session->get($draftKey, []);
         $quote = $session->get($sessionKey);
         if ($quote && $quote['expires'] <= $clock->now()->getTimestamp()) {
             $session->remove($sessionKey);
@@ -53,13 +55,16 @@ final class MarketController extends AbstractController
                     $convoys->reroute($member, $fields->getInt('trade'), $target);
                     $this->addFlash('success', 'Nouvelle destination enregistrée. Le convoi reprend son trajet.');
                 } elseif ($action === 'clear') {
+                    if ($quote) $session->set($draftKey, $quote['details']);
                     $session->remove($sessionKey);
                 } elseif ($action === 'quote') {
                     $planet = $byId[$fields->getInt('planet')] ?? throw new \DomainException('Choisissez une colonie de votre empire.');
-                    $details = $convoys->preview($member, $planet, [
+                    $draft = [
                         'pay' => $fields->getString('pay'), 'receive' => $fields->getString('receive'),
                         'quantity' => $fields->getInt('quantity'), 'rank' => $fields->getString('rank'), 'cargos' => $fields->getInt('cargos'),
-                    ]);
+                    ];
+                    $session->set($draftKey, $draft + ['planet' => $planet->id]);
+                    $details = $convoys->preview($member, $planet, $draft);
                     $session->set($sessionKey, [
                         'key' => bin2hex(random_bytes(16)), 'expires' => $clock->now()->getTimestamp() + 120, 'details' => $details,
                     ]);
@@ -69,6 +74,7 @@ final class MarketController extends AbstractController
                         throw new \DomainException('Le devis a expiré. Recalculez-le avant de lancer les cargos.');
                     }
                     $convoys->depart($member, $planet, $quote['details'], $quote['key']);
+                    $session->remove($draftKey);
                     $session->remove($sessionKey);
                     $this->addFlash('success', 'Convoi lancé. L’échange se fera à la station dans 30 minutes.');
                 }
@@ -82,9 +88,9 @@ final class MarketController extends AbstractController
             return $this->redirectToRoute('app_market', [], Response::HTTP_SEE_OTHER);
         }
 
-        $planet = $byId[$request->query->getInt('planet', $quote['details']['planet'] ?? 0)] ?? ($colonies[0] ?? null);
+        $planet = $byId[$request->query->getInt('planet', $quote['details']['planet'] ?? $draft['planet'] ?? 0)] ?? ($colonies[0] ?? null);
         return $this->render('market/index.html.twig', [
-            'member' => $member, 'market' => $market, 'rows' => $market ? $presentation->rows($market) : [],
+            'draft' => $draft, 'member' => $member, 'market' => $market, 'rows' => $market ? $presentation->rows($market) : [],
             'colonies' => $colonies, 'planet' => $planet, 'trades' => $markets->trades($universe, $member->id),
             'quote' => $quote && isset($byId[$quote['details']['planet']]) ? $quote : null,
             'cargoStocks' => $planet ? $terms->cargos($member, $planet) : [], 'fee' => MarketPricing::FEE_PERCENT,

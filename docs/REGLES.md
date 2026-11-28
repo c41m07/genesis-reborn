@@ -1,5 +1,11 @@
 # Synthèse de conception
 
+## Protection après pertes et riposte
+
+Lorsque l’attaque gagne, le propriétaire de la colonie défendue reçoit 24 h de protection s’il perd au moins 70 % de ses vaisseaux militaires engagés. Le délai entre deux activations est de sept jours et la suspension pour inactivité s’applique. La protection prend fin dès le départ d’une attaque contre un autre joueur. Un devis, une mission d’espionnage ou une attaque de PNJ la préserve.
+
+Chaque départ d’attaque entre joueurs ouvre à sa cible un droit de riposte contre cet agresseur pendant 24 h dans le même univers. Le rapport de points est levé pour un départ de riposte dans ce délai. Diplomatie, vacances et protections de la cible restent vérifiées. Une sonde détectée donne également un rapport d’observation privé au propriétaire espionné. Ce rapport ne révèle aucune composition ennemie.
+
 ## Répartition des prix courante
 
 Les 156 profils par défaut utilisent des recettes propres à chaque fiche et à chaque rang, sans parts de valeur imposées par rang. Voir [les raisons des recettes RP](CATALOGUE_COUTS_RP.md) et [les anciens prix](SAUVEGARDE_CATALOGUE_COUTS_AVANT_RP.md).
@@ -178,7 +184,7 @@ Guildes : candidature depuis la recherche ou la présentation, à accepter par l
 
 PNJ : les planètes PNJ découvertes du même univers peuvent être combattues par la mission Attaque, sans capture ni butin de ressources PNJ. Leur capture reste réservée à Conquête JcE, avec vaisseau colonie survivant, place disponible et règles d’occupation existantes (24 heures lorsque ce mécanisme est activé). Les bâtiments et stocks suivent les règles de conservation de la capture. Les planètes vierges restent colonisables ; les joueurs actifs ou simplement inactifs ne sont pas conquérables. Les empires déjà oubliés suivent les règles spécifiques détaillées ci-dessous.
 
-Espionnage : une mission cible une planète connue du même univers autre que celles de l’émetteur. Elle transporte uniquement des sondes, détruites à l’arrivée. La détection avertit le propriétaire et bloque le rapport; les règles de détection actuelles sont décrites dans la section [Espionnage](#espionnage), les archives conservant les décisions initiales.
+Espionnage : une mission cible une planète connue du même univers autre que celles de l’émetteur. Elle transporte uniquement des sondes, détruites à l’arrivée. La détection avertit le propriétaire, lui donne un rapport d’observation et empêche la collecte de renseignements ; les règles de détection actuelles sont décrites dans la section [Espionnage](#espionnage), les archives conservant les décisions initiales.
 
 Les classements, l’administration, les combats, les missions avancées et l’espionnage sont livrés. Les choix chiffrés de base figurent dans docs/archives/CHOIX_EQUILIBRAGE_2026-11-02.md; leur effet sur le rythme et la difficulté sera mesuré avec les joueurs Alpha.
 
@@ -352,9 +358,11 @@ initiales :
 
 Les plafonds initiaux par boîte correspondent au grand format. Le joueur ouvre
 manuellement la boîte sur une colonie lui appartenant dans le même univers.
-L’ouverture est refusée pendant les vacances ou si un seul des entrepôts manque
-de place ; aucune ressource n’est déposée et la boîte est conservée intacte.
-Une même ouverture ne peut pas être appliquée deux fois.
+Les vacances bloquent l’ouverture. Si un entrepôt manque de place, le joueur voit
+les pertes maximales par ressource et peut changer de colonie ou confirmer. Après
+confirmation, chaque stock reçoit ce qui tient et le surplus est perdu. Une perte
+supérieure à l’avertissement demande une nouvelle validation.
+La confirmation indique la perte estimée à l’ouverture de l’avertissement et, si la production la fait évoluer, le plafond calculé une minute plus tard. Ce plafond reste opposable à la confirmation. Une même ouverture ne peut pas être appliquée deux fois.
 
 Un événement attribue au maximum un objet par participant éligible : un boost
 ou une boîte. Le plafond quotidien des boosts de missions à risque est conservé.
@@ -460,7 +468,7 @@ Les recherches historiquement actives en parallèle terminent leur travail sans 
 
 ## Classements quotidiens — 10 novembre 2026
 
-Tous les classements (points totaux des joueurs, bâtiments, recherche, flotte, nombre de colonies et guildes) sont figés entre deux calculs quotidiens, à 00 h en Europe/Paris, en tenant compte des changements d’heure. Les points affichés dans l’aperçu de colonie et l’API utilisent le même instantané. Les points sont la valeur des biens actuellement possédés aux prix catalogue courants : (H + 2 M + 4 N + 8 A) / 200, hors électricité, arrondie à l’inférieur séparément pour bâtiments, recherches et militaire (vaisseaux et défenses). En Alpha, le premier calcul pondéré se compare au dernier classement disponible, même établi avec l’ancienne formule. Les scores utilisés pour les protections et combats restent en temps réel : ratio d’attaque 5:1 inchangé ; protection débutant tant que les 7 jours ne sont pas écoulés et que le score reste inférieur à 7 500.
+Tous les classements (points totaux des joueurs, bâtiments, recherche, flotte, nombre de colonies et guildes) sont figés entre deux calculs quotidiens, à 00 h et 12 h en Europe/Paris, en tenant compte des changements d’heure. Les points affichés dans l’aperçu de colonie et l’API utilisent le même instantané. Les points sont la valeur des biens actuellement possédés aux prix catalogue courants : (H + 2 M + 4 N + 8 A) / 200, hors électricité, arrondie à l’inférieur séparément pour bâtiments, recherches et militaire (vaisseaux et défenses). En Alpha, le premier calcul pondéré se compare au dernier classement disponible, même établi avec l’ancienne formule. Les scores utilisés pour les protections et combats restent en temps réel : ratio d’attaque 5:1 inchangé ; protection débutant tant que les 7 jours ne sont pas écoulés et que le score reste inférieur à 7 500.
 
 Les évolutions comparent les deux derniers calculs persistés : points actuels moins points précédents ; rang précédent moins rang actuel (une place gagnée est positive). Dans le tableau joueur, gains et pertes sont signés et entre parenthèses sur la même ligne que la valeur ; une valeur inchangée s’affiche « (=) ». Sans référence précédente, l’évolution s’affiche « (—) ». La présentation des guildes et de l’aperçu conserve ses marqueurs existants. Les nouveaux inscrits et guildes entrent au prochain calcul. Les noms, relations diplomatiques et protections restent actuels ; les joueurs supprimés ou devenus empires oubliés et les guildes archivées ne sont plus affichés, sans renuméroter les rangs avant l’échéance suivante.
 
@@ -995,7 +1003,7 @@ L’effet combat est figé à l’ouverture du combat et ne s’applique pas aux
 
 ## Rapports de campagne et fret des convois pirates
 
-Les rapports privés de reconnaissance et de combat de la campagne rejoignent les rubriques Espionnage et Combats. Chaque trajet du convoi produit un rapport de transport dans Économie. À la livraison, une boîte de ressources contient la totalité du fret annoncé, demi-unités comprises. Le joueur choisit une colonie de son univers à l’ouverture. Elle doit pouvoir accueillir tout le contenu. Une livraison déjà créditée avant cette évolution reste acquise et ne donne aucune boîte supplémentaire.
+Les rapports privés de reconnaissance et de combat de la campagne rejoignent les rubriques Espionnage et Combats. Chaque trajet du convoi produit un rapport de transport dans Économie. À la livraison, une boîte de ressources contient la totalité du fret annoncé, demi-unités comprises. Le joueur choisit une colonie de son univers à l’ouverture. Le joueur peut confirmer la perte du surplus si les entrepôts manquent de place. Une livraison déjà créditée avant cette évolution reste acquise et ne donne aucune boîte supplémentaire.
 
 ## Notifications des boîtes et des demandes d’orbite
 

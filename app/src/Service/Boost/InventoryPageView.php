@@ -2,7 +2,7 @@
 
 namespace App\Service\Boost;
 
-use App\Entity\{Planet, PlayerUniverse};
+use App\Entity\PlayerUniverse;
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Player\VacationCalendar;
@@ -84,7 +84,7 @@ final class InventoryPageView
                 'advent_ships' => $adventBoxes ? $this->catalog->all('ships') : [],
                 'advent_resources' => \App\Service\Advent\AdventGifts::RESOURCES,
                 'resource_boxes' => array_values($groups), 'box_resources' => $this->catalog->rules()['resources'],
-                'available_colonies' => $this->repo->all(Planet::class, ['owner' => $membership], ['id' => 'ASC']),
+                'available_colonies' => $this->repo->planets($membership->universe, $membership),
             ];
         }
         $data['active_timed_boost'] = $this->timedEffects->activeBonus($membership);

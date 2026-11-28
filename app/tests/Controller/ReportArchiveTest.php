@@ -215,6 +215,31 @@ final class ReportArchiveTest extends WebTestCase
         self::assertSame(50,$service->page($member,'economy',true,1)['report_count']);
     }
 
+    public function testDetectedProbeAppearsInVictimsReportsAndSelectionIsPrivate(): void
+    {
+        $id = (int) explode(':', $this->keys[1])[1];
+        $report = $this->em->find(EspionageReport::class, $id);
+        $report->result = 'detected';
+        $report->detectedBy = $this->recipient->currentPlayerUniverse;
+        self::getContainer()->get(\App\Service\Report\ReportNoticeWriter::class)->espionageCreated($report);
+        $this->em->flush();
+        $this->client->loginUser($this->recipient);
+        $page = $this->client->request('GET', '/rapports?type=espionage');
+        self::assertSelectorTextContains('.report-row', 'Sonde adverse aperçue');
+        $form = $page->selectButton('Marquer la sélection comme lue')->form();
+        $this->client->submit($form, ['selected' => [$this->keys[1]]]);
+        self::assertResponseRedirects();
+        $notices = self::getContainer()->get(\App\Repository\ReportNoticeRepository::class);
+        self::assertSame(0, $notices->count($this->recipient->currentPlayerUniverse));
+        self::assertSame(1, $notices->count($this->player->currentPlayerUniverse));
+        $this->client->request('GET', '/rapports/espionnage/'.$id);
+        self::assertSelectorTextContains('.report-summary', 'Sonde adverse aperçue');
+        self::assertSelectorNotExists('a[href^="/simulateur?report="]');
+        $this->client->loginUser($this->outsider);
+        $this->client->request('GET', '/rapports/espionnage/'.$id);
+        self::assertResponseStatusCodeSame(404);
+    }
+
     public function testHttpArchiveRestoreCsrfAndArchivedReportAccess(): void
     {
         $crawler=$this->client->request('GET','/rapports');self::assertResponseIsSuccessful();

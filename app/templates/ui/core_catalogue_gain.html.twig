@@ -1,10 +1,11 @@
 {# Projection et valeur acquise viennent du catalogue ; ici on ne recompose ni taux net ni production. #}
-{% set benefit = maximumPending ? card.queued_benefit : (card.benefits|first) %}
+{% set effects = maximumPending ? card.queued_benefits : card.benefits %}
+{% set effects = d.slug == 'tactical_intelligence' ? effects : effects|slice(0, 1) %}
 {% set achieved = card.maximum and not maximumPending %}
 <div class="core-catalogue-effects">
     <div class="core-catalogue-gain{{ achieved ? ' is-achieved' : '' }}" data-catalogue-main-gain>
         <p class="core-catalogue-gain-caption">{{ achieved ? 'Effet acquis · niveau ' ~ card.level : (maximumPending ? 'Niveau ' ~ card.max_level ~ ' en file' : 'Gain du niveau ' ~ card.target) }}</p>
-        {% if benefit %}
+        {% for benefit in effects %}
             {% if benefit.label is defined %}<span>{{ benefit.label }}{{ d.production_resource is defined ? ' · nominale de la colonie' : '' }}</span>{% endif %}
             <strong>
                 {% if benefit.text is defined %}{{ benefit.text }}
@@ -23,6 +24,6 @@
             {% endif %}
         {% else %}
             <span>{{ achieved ? 'Rang terminé' : 'Consulter la fiche pour les conditions et les déblocages.' }}</span>
-        {% endif %}
+        {% endfor %}
     </div>
 </div>

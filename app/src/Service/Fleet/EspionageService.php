@@ -45,6 +45,7 @@ final class EspionageService
         $report->targetCounterEspionageLevel = $targetCounter;
         $report->result = $detected ? 'detected' : 'success';
         if ($detected) {
+            $report->detectedBy = $target->owner?->isPlayerControlled() ? $target->owner : null;
             if ($target->owner) $this->notifyTarget($fleet, $target);
             $this->notifications->enqueue($fleet->playerUniverse, 'Vos sondes ont été détectées sur ' . $target->name . '. Aucun renseignement n’a été obtenu.',journalKind:'spy');
         } else {

@@ -1,5 +1,9 @@
 # Roadmap Genesis Reborn
 
+## Retours joueurs du 28 novembre 2026
+
+Lot préparé pour relecture vers `dev`. Les protections et la riposte, les rapports de détection, les boîtes et les deux relevés quotidiens suivent les [décisions du lot](DECISIONS.md). Le devis de Bourse et l’inversion des camps prolongent les pages existantes. La migration `Version20261128120000` conserve le propriétaire espionné au moment de la détection ; les anciens rapports gardent leur audience. Avant déploiement sur une base existante, vérifier la sauvegarde et obtenir l’accord d’application.
+
 ## Carburant à quai — 27 novembre 2026
 
 Lot proposé pour `dev`. La colonie paie chaque départ et le reliquat de vol est perdu à quai.
