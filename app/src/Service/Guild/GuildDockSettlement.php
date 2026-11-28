@@ -12,7 +12,7 @@ use App\Service\Combat\LocalGarrison;
 use App\Service\PirateCampaign\PirateRecoveryHangar;
 use Psr\Clock\ClockInterface;
 
-/** Remet les coques personnelles immobilisées. La planification des reprises reste à raccorder. */
+/** Remet les coques personnelles immobilisées. Les reprises manuelles restent réservées au propriétaire du reçu. */
 final readonly class GuildDockSettlement
 {
     public function __construct(
@@ -59,16 +59,46 @@ final readonly class GuildDockSettlement
                 return 'waiting';
             }
 
-            $ships = [$order->shipSlug => [$order->targetTier => $order->quantity]];
-            if (!$this->hangar->install($membership, $planet, $ships, 0.0)) {
-                return 'waiting';
-            }
-            // Le stock et l'acquittement partagent la transaction. Un rejeu ne peut pas recréditer le stock.
-            $order->completedAt = $now->setTimezone(new \DateTimeZone('UTC'));
-            $this->manager->flush();
-            $this->garrison->enlist($planet, $now);
-
-            return 'completed';
+            return $this->deposit($order, $membership, $planet, $now) ? 'completed' : 'waiting';
         });
+    }
+
+    /** Reprise volontaire après échéance, sans paiement supplémentaire ni condition d’adhésion. */
+    public function recover(PlayerUniverse $membership, int $orderId, int $planetId): bool
+    {
+        return $this->manager->transaction(function () use ($membership, $orderId, $planetId): bool {
+            $this->guard->lockMembershipForProcessing($membership, currentReads: true);
+            $order = $this->repository->find(GuildDockOrder::class, $orderId);
+            $planet = $this->repository->find(Planet::class, $planetId);
+            if (!$order instanceof GuildDockOrder || !$planet instanceof Planet
+                || $order->membershipId !== $membership->id || $order->universe->id !== $membership->universe->id
+                || $planet->owner?->id !== $membership->id || $planet->solarSystem->galaxy->universe->id !== $membership->universe->id) {
+                return false;
+            }
+
+            // Même ordre de verrous que le traitement automatique, y compris si le joueur choisit la colonie d’origine.
+            $this->manager->lockCurrent($planet);
+            $this->manager->lockCurrent($order);
+            $now = $this->clock->now();
+            if ($planet->owner?->id !== $membership->id || !$order->isDue($order->dispatchToken, $now)) {
+                return false;
+            }
+
+            return $this->deposit($order, $membership, $planet, $now);
+        });
+    }
+
+    private function deposit(GuildDockOrder $order, PlayerUniverse $membership, Planet $planet, \DateTimeImmutable $now): bool
+    {
+        $ships = [$order->shipSlug => [$order->targetTier => $order->quantity]];
+        if (!$this->hangar->install($membership, $planet, $ships, 0.0)) {
+            return false;
+        }
+        // Le stock et l’acquittement partagent la transaction. Un rejeu ne peut pas recréditer le stock.
+        $order->completedAt = $now->setTimezone(new \DateTimeZone('UTC'));
+        $this->manager->flush();
+        $this->garrison->enlist($planet, $now);
+
+        return true;
     }
 }

@@ -12,7 +12,7 @@ use App\Repository\{GuildHallConvoyRepository, GuildHallRepository};
 use App\Service\Notification\OutboxRelay;
 use App\Service\Colony\ResourceService;
 use App\Service\Fleet\FleetRecallService;
-use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyRecovery, GuildHallFunding, GuildHallScheduleProvider, GuildHallService};
+use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildDockSettlement, GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyRecovery, GuildHallFunding, GuildHallScheduleProvider, GuildHallService};
 use App\Service\Player\{DiplomacyService, RegistrationService, RelationResolver};
 use App\Service\Universe\{UniverseImporter, UniverseService};
 use App\Tests\Support\GuildHallFixture;
@@ -691,12 +691,22 @@ final class GuildHallTest extends KernelTestCase
         $clock = new MockClock('now');
         self::getContainer()->set('clock', $clock);
         [$owner, $origin, $guild] = $this->guild('DockBefore', 'DKB');
-        [$newOwner] = $this->player('DockAfter');
+        [$newOwner, $foreignColony] = $this->player('DockAfter');
+        $alternate = $this->em->getRepository(Planet::class)->findOneBy(['owner' => null, 'solarSystem' => $origin->solarSystem]);
+        self::assertInstanceOf(Planet::class, $alternate);
+        $alternate->owner = $owner;
+        self::getContainer()->get(ResourceService::class)->initialize($alternate, colony: true);
         $order = $this->fixtureDockOrder($owner, $origin, $guild, $clock);
         $id = $order->id;
         $originId = $origin->id;
+        $ownerId = $owner->id;
         $newOwnerId = $newOwner->id;
+        $alternateId = $alternate->id;
+        $foreignId = $foreignColony->id;
         $due = new GuildDockOrderDue($id, $order->dispatchToken);
+        $settlement = self::getContainer()->get(GuildDockSettlement::class);
+        self::assertFalse($settlement->recover($owner, $id, $alternateId));
+
         $origin->owner = $newOwner;
         $this->em->flush();
         $this->em->clear();
@@ -709,8 +719,19 @@ final class GuildHallTest extends KernelTestCase
         self::assertSame(0, $this->dockHullCount($newOwnerId, $originId));
         $remaining = $this->em->find(GuildDockOrder::class, $id);
         self::assertNull($remaining->completedAt);
-        self::assertSame($owner->id, $remaining->membershipId);
+        self::assertSame($ownerId, $remaining->membershipId);
         self::assertSame(7, $remaining->quantity);
+
+        $owner = $this->em->find(PlayerUniverse::class, $ownerId);
+        $newOwner = $this->em->find(PlayerUniverse::class, $newOwnerId);
+        self::assertFalse($settlement->recover($newOwner, $id, $foreignId));
+        self::assertFalse($settlement->recover($owner, $id, $originId));
+        $before = $this->dockHullCount($ownerId, $alternateId);
+        self::assertTrue($settlement->recover($owner, $id, $alternateId));
+        $this->em->clear();
+        $handler($due);
+        self::assertFalse($settlement->recover($this->em->find(PlayerUniverse::class, $ownerId), $id, $alternateId));
+        self::assertSame($before + 7, $this->dockHullCount($ownerId, $alternateId));
     }
 
     private function fixtureDockOrder(PlayerUniverse $owner, Planet $origin, Guild $guild, MockClock $clock): GuildDockOrder
