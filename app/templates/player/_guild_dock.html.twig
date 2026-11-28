@@ -1,5 +1,5 @@
 {% set ranks = {basic: 'Basique', intermediate: 'Intermédiaire', superior: 'Supérieur'} %}
-{% set materials = {metal: 'Métal', nano: 'Nano', antimatter: 'Antimatière', hydrogen: 'Hydrogène', electricity: 'Électricité'} %}
+{% set materials = {metal: 'Métal', nano: 'Nano', hydrogen: 'Hydrogène', antimatter: 'Antimatière', electricity: 'Électricité'} %}
 {% set scope = 'guild_hall_dock_' ~ guild.id ~ '_' ~ hall.id %}
 <section class="panel" aria-labelledby="hall-dock">
     <h2 id="hall-dock">Dock de modernisation</h2>
@@ -12,11 +12,15 @@
         {% for choice in dock.choices %}{% if choice.slug == quote.ship %}{% set name = choice.name %}{% endif %}{% endfor %}
         <h3>{{ quote.quantity|number_format(0, ',', ' ') }} × {{ name }} · {{ ranks[quote.source_tier] }} → {{ ranks[quote.target_tier] }}</h3>
         <p>Colonie : {{ dock.origin.name }}. Les durées ne comprennent pas l’attente en file.</p>
+        {% set combined_costs = {} %}
+        {% for slug, material in materials %}
+            {% set combined_costs = combined_costs|merge({(slug): quote.source_costs[slug]|default(0) + quote.costs[slug]|default(0)}) %}
+        {% endfor %}
         <dl>
             {% for label, plan in {
                 'Moderniser le lot existant' : {costs: quote.costs, duration: quote.duration},
                 'Construire directement au rang cible' : {costs: quote.target_costs, duration: quote.target_duration},
-                'Construire au rang de départ' : {costs: quote.source_costs, duration: quote.source_duration}
+                'Construire au rang de départ puis moderniser' : {costs: combined_costs, duration: quote.source_duration + quote.duration}
             } %}
                 <dt>{{ label }}</dt>
                 <dd>{{ plan.duration // 3600 }} h {{ (plan.duration % 3600) // 60 }} min {{ plan.duration % 60 }} s
