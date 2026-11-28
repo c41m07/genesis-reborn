@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\Guild;
 
-use App\Entity\GuildHallBuilding;
+use App\Entity\{GuildHallBuilding, GuildJumpPoint};
 use App\Service\Catalog\GameCatalog;
 use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
@@ -22,8 +22,9 @@ final readonly class GuildHallBuildingSchedule
     public function __construct(private array $levels, private array $capacities)
     {
         foreach ($levels as $slug => $rows) {
-            if (!in_array($slug, [GuildHallBuilding::WAREHOUSE, GuildHallBuilding::DOCK, GuildHallBuilding::ATELIER], true)
-                || $rows === [] || array_keys($rows) !== range(1, count($rows))) {
+            if (!in_array($slug, [GuildHallBuilding::WAREHOUSE, GuildHallBuilding::DOCK, GuildHallBuilding::ATELIER, GuildJumpPoint::SCHEDULE_SLUG], true)
+                || $rows === [] || array_keys($rows) !== range(1, count($rows))
+                || ($slug === GuildJumpPoint::SCHEDULE_SLUG && count($rows) !== 1)) {
                 throw new \DomainException('Les niveaux du barème du Hall sont invalides.');
             }
 
@@ -47,7 +48,7 @@ final readonly class GuildHallBuildingSchedule
             $this->assertFits($warehouses[$level]['cost'], $prior);
             $this->assertFits($prior, $capacity);
         }
-        foreach ([GuildHallBuilding::DOCK, GuildHallBuilding::ATELIER] as $slug) {
+        foreach ([GuildHallBuilding::DOCK, GuildHallBuilding::ATELIER, GuildJumpPoint::SCHEDULE_SLUG] as $slug) {
             foreach ($levels[$slug] ?? [] as $row) {
                 $this->assertFits($row['cost'], $capacities[count($capacities)]);
             }

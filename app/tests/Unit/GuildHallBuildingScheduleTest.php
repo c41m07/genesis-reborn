@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit;
 
-use App\Entity\GuildHallBuilding;
+use App\Entity\{GuildHallBuilding, GuildJumpPoint};
 use App\Service\Guild\GuildHallBuildingSchedule;
 use PHPUnit\Framework\TestCase;
 
@@ -26,6 +26,24 @@ final class GuildHallBuildingScheduleTest extends TestCase
         self::assertSame(120, $catalogue->capacity(1)['metal']);
         self::assertSame(['cost' => ['metal' => 60], 'duration' => 300, 'maxLevel' => 2], $catalogue->quote(GuildHallBuilding::WAREHOUSE, 0));
         self::assertSame(['metal' => 100], $catalogue->quote(GuildHallBuilding::WAREHOUSE, 1)['cost']);
+    }
+
+    public function testAJumpPointHasOneInstallationPriceWithoutASecondRank(): void
+    {
+        $warehouse = [1 => ['cost' => ['metal' => 25], 'duration' => 300]];
+        $jump = ['cost' => ['metal' => 45, 'hydrogen' => 15], 'duration' => 600];
+        $capacity = [1 => ['metal' => 90, 'hydrogen' => 50]];
+        $catalogue = new GuildHallBuildingSchedule([
+            GuildHallBuilding::WAREHOUSE => $warehouse,
+            GuildJumpPoint::SCHEDULE_SLUG => [1 => $jump],
+        ], $capacity);
+        self::assertSame($jump + ['maxLevel' => 1], $catalogue->quote(GuildJumpPoint::SCHEDULE_SLUG, 0));
+
+        $this->expectException(\DomainException::class);
+        new GuildHallBuildingSchedule([
+            GuildHallBuilding::WAREHOUSE => $warehouse,
+            GuildJumpPoint::SCHEDULE_SLUG => [1 => $jump, 2 => $jump],
+        ], $capacity);
     }
 
     public function testCatalogueRejectsAnUnreachableWarehouseUpgrade(): void

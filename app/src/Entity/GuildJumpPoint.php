@@ -13,6 +13,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'guild_jump_colony', columns: ['planet_id'])]
 final class GuildJumpPoint
 {
+    public const SCHEDULE_SLUG = 'jump_point';
+
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]
     public ?int $id = null;
 
