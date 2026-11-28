@@ -21,7 +21,7 @@ final readonly class GuildDockQuote
     ) {
     }
 
-    /** @return array{ship:string,source_tier:string,target_tier:string,quantity:int,costs:array<string,int>,duration:int,source_duration:int,target_duration:int} */
+    /** @return array{ship:string,source_tier:string,target_tier:string,quantity:int,costs:array<string,int>,duration:int,source_duration:int,target_duration:int,source_costs:array<string,int>,target_costs:array<string,int>} */
     public function forColony(PlayerUniverse $membership, Planet $colony, string $ship, string $sourceTier, int $quantity): array
     {
         if ($membership->id === null || $colony->id === null || $colony->owner?->id !== $membership->id) {
@@ -54,6 +54,7 @@ final readonly class GuildDockQuote
         $targetQuote = $this->operations->calculateQueuePlan($target, 'ships', 1, $quantity, $buildings, $config, $technology);
 
         return ['ship' => $ship, 'source_tier' => $sourceTier, 'target_tier' => $targetTier, 'quantity' => $quantity]
-            + GuildDockPricing::fromConstructionQuotes($sourceQuote, $targetQuote);
+            + GuildDockPricing::fromConstructionQuotes($sourceQuote, $targetQuote)
+            + ['source_costs' => $sourceQuote['costs'], 'target_costs' => $targetQuote['costs']];
     }
 }
