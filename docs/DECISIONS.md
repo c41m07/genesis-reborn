@@ -1,5 +1,31 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Espionnage depuis Galaxie — 28 novembre 2026
+
+La fiche de la cible reprend le choix des quantités par rang de Flottes, limité aux sondes présentes sur la colonie active. Un envoi peut réunir plusieurs rangs dans le plafond existant de 100 sondes. [Règles d’espionnage](REGLES.md#espionnage).
+
+## Composition des convois de Bourse — 28 novembre 2026
+
+Le comptoir reprend la composition de Flottes demandée par le propriétaire. Les cargos disponibles se sélectionnent par quantité et par rang dans un même convoi. Le récapitulatif suit la préparation, puis le joueur valide la mission commerciale et le trajet vers la station avant de confirmer son devis. [Parcours du convoi](BOURSE_DE_RESSOURCES.md#cours-devis-et-trajet).
+
+## Comptoir en crédits et marché des joueurs — 28 novembre 2026
+
+Le propriétaire valide deux comptoirs à la station unique de chaque univers, le cours selon la rareté de la réserve publique, le crédit fractionnable et l’affichage de la richesse disponible dans le classement. Les frais de 2 % du marché entre joueurs sont dus à la mise en vente sur la valeur totale au prix choisi. Le vendeur doit déjà posséder ces crédits. Sa rémunération ultérieure est intégrale, y compris pour une vente partielle. Les invendus donnent droit à la restitution des marchandises. La taxe reste détruite. Le troc, les délais, les protections des convois et les anciens lots déjà réservés suivent leurs conditions enregistrées. [Règles de la Bourse](REGLES.md#bourse-de-ressources).
+
+## Choix de la sonde de campagne pirate — 28 novembre 2026
+
+Le propriétaire valide l’envoi d’une sonde de rang supérieur en l’absence de rang inférieur dans la colonie active. La reconnaissance utilise dans l’ordre T1, T2 puis T3. Le devis et le vol reprennent le rang choisi, sa durée et son coût en hydrogène. Les départs antérieurs utilisaient une sonde Basique.
+
+## Consommation électrique des extracteurs — 28 novembre 2026
+
+Le propriétaire valide une croissance électrique composée de 0,125 % par niveau Basique, 0,0625 % par niveau Intermédiaire et 0,03125 % par niveau Supérieur. Elle concerne les extracteurs de métal, de nano, d’hydrogène et d’antimatière. Les rangs avancés gagnent ainsi en rendement par unité produite. Le piège conserve son coût de 4 hydrogènes par antimatière produite. La règle s’applique aux niveaux installés lors du prochain calcul, y compris pour la période écoulée depuis la dernière synchronisation.
+
+## Protection, détection, inventaire et classement — 28 novembre 2026
+
+Le propriétaire d’une colonie vaincue bénéficie de la protection de 24 h si ses pertes atteignent 70 % des vaisseaux militaires engagés. Le délai de sept jours entre activations subsiste. Envoyer une attaque contre un autre joueur met fin à la protection après pertes au départ, même si la flotte est rappelée. Chaque attaque ouvre à la cible une fenêtre de riposte de 24 h contre cet agresseur, indépendamment du rapport de points. Les autres conditions d’attaque s’appliquent.
+
+Une sonde détectée donne au propriétaire espionné un rapport privé. Une boîte de ressources ordinaire peut être consommée après acceptation du détail des pertes par ressource. Les boîtes de l’Avent conservent leur règle de dépassement de capacité. Le classement des joueurs et guildes se recalcule à minuit et midi, heure de Paris.
+
 ## Construction du laboratoire — 28 novembre 2026
 
 Le premier laboratoire Basique coûte 4 800 métal et 2 600 nano. Sa durée de base passe de 4 à 30 minutes pour suivre celle du chantier spatial à rang et niveau égaux. Les profils avancés continuent de privilégier les instruments en nano et introduisent l’antimatière. Ces paramètres s’appliquent aux nouveaux devis du catalogue par défaut ; les commandes déjà payées gardent leur coût et leur durée enregistrés.
@@ -2331,7 +2357,7 @@ Le rang Intermédiaire vaut 125 % du Basique et le rang Supérieur 125 % de l’
 
 ## Bourse de ressources et convoi des marchands — 26 novembre 2026
 
-Kévin valide la maquette A, la station A:0:0 et le voyage protégé de 30 minutes par trajet. L’étalon initial est 8 H = 4 M = 2 N = 1 AM, avec des frais d’essai de 2 %. Le carburant ne dépend pas de la position de départ à flotte égale ; le rappel n’est possible qu’avant l’échange. La réserve initiale est administrée par univers. Le convoi marchand du vendredi 9 h Europe/Paris apporte jusqu’à 50 % de ce que la station a vendu aux joueurs, dans la place disponible sous la cible, sans toucher au cours. [Architecture et cas limites](BOURSE_DE_RESSOURCES.md).
+Kévin valide la maquette A, la station A:0:0 et le voyage protégé de 30 minutes par trajet. L’étalon initial est 8 H = 4 M = 2 N = 1 AM, avec des frais d’essai de 2 %. Le carburant ne dépend pas de la position de départ à flotte égale ; le rappel n’est possible qu’avant l’échange. La réserve initiale est administrée par univers. Le convoi marchand du vendredi 9 h Europe/Paris apporte jusqu’à 50 % de ce que la station a vendu aux joueurs, dans la place disponible sous la cible. Dans la version initiale, cette livraison ne touchait pas au cours. Depuis la décision du 28 novembre, le cours tient compte du stock livré. [Architecture et cas limites](BOURSE_DE_RESSOURCES.md).
 
 ## Bonus quotidiens : phase temporaire plutôt que versement en ressources
 

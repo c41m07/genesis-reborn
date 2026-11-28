@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Service\Player\{DailyLeaderboard, RelationResolver};
+use App\Service\Player\{DailyLeaderboard, PlayerReportService, RelationResolver};
 use App\Service\Universe\UniverseContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\{JsonResponse, Request, Response};
@@ -22,13 +22,7 @@ final class LeaderboardController extends AbstractController
         $tab = $request->query->getString('tab') === 'guilds' ? 'guilds' : 'players';
         $ownGuild = $relations->guild($membership);
         $daily = $leaderboard->forUniverse($membership);
-        $categories = [
-            'points' => 'Points totaux',
-            'buildings' => 'Points de bâtiments',
-            'research' => 'Points de recherche',
-            'fleet' => 'Points de flotte',
-            'planets' => 'Nombre de planètes',
-        ];
+        $categories = PlayerReportService::CATEGORIES;
         $category = $request->query->getString('category', 'points');
         if (!isset($categories[$category])) {
             $category = 'points';
@@ -40,6 +34,7 @@ final class LeaderboardController extends AbstractController
             'research' => 'research_points',
             'fleet' => 'fleet_points',
             'planets' => 'planets',
+            'credits' => 'credit_cents',
         ][$category];
         $rows = $tab === 'players' ? $daily['players'] : [];
         // Trier avant de paginer conserve les rangs globaux et le départage des égalités.
@@ -86,6 +81,7 @@ final class LeaderboardController extends AbstractController
             'ranks' => $row['ranks'],
             'score_changes' => $row['score_changes'],
             'rank_changes' => $row['rank_changes'],
+            'credit_cents' => $row['credit_cents'],
             'username' => $row['membership']->player->username,
             'total_points' => $row['total_points'],
             'research_points' => $row['research_points'],

@@ -56,11 +56,11 @@ final class ReportSummaryRepository
         if ($ids === []) {
             return [];
         }
-        $rows = $this->em->createQueryBuilder()->select('r.id', 'r.createdAt', 'r.result', 'r.intelCategories', 'IDENTITY(r.target) AS planetId')->from(\App\Entity\EspionageReport::class, 'r')->join('r.sender', 'sender')->where('r.id IN (:ids)')->andWhere('sender = :viewer')->andWhere('sender.universe = :universe')->setParameter('ids', $ids)->setParameter('viewer', $viewer)->setParameter('universe', $viewer->universe)->getQuery()->getArrayResult();
+        $rows = $this->em->createQueryBuilder()->select('r.id', 'r.createdAt', 'r.result', 'r.intelCategories', 'r.targetOwnerName', 'r.identifiedSenderName', 'IDENTITY(r.detectedBy) AS detectorId', 'IDENTITY(r.target) AS planetId')->from(\App\Entity\EspionageReport::class, 'r')->join('r.sender', 'sender')->where('r.id IN (:ids)')->andWhere("(sender = :viewer OR (r.detectedBy = :viewer AND r.result = 'detected'))")->andWhere('sender.universe = :universe')->setParameter('ids', $ids)->setParameter('viewer', $viewer)->setParameter('universe', $viewer->universe)->getQuery()->getArrayResult();
         if ($rows === []) {
             return [];
         }
-        $byPlanet = $this->planets($viewer, array_column($rows, 'planetId'));
+        $byPlanet = $this->planets($viewer, array_column($rows, 'planetId'), withOwners: in_array(null, array_column($rows, 'targetOwnerName'), true));
         $summaries = [];
         foreach ($rows as $row) {
             if (isset($byPlanet[$row['planetId']])) {
@@ -113,9 +113,13 @@ final class ReportSummaryRepository
             ->setParameter('universe', $viewer->universe)->getQuery()->getResult();
     }
 
-    private function planets(PlayerUniverse $viewer, array $ids): array
+    private function planets(PlayerUniverse $viewer, array $ids, bool $withOwners = false): array
     {
-        $planets = $this->em->createQueryBuilder()->select('planet', 'system', 'galaxy')->from(Planet::class, 'planet')->join('planet.solarSystem', 'system')->join('system.galaxy', 'galaxy')->where('planet.id IN (:ids)')->andWhere('galaxy.universe = :universe')->setParameter('ids', array_unique($ids))->setParameter('universe', $viewer->universe)->getQuery()->getResult();
+        $query = $this->em->createQueryBuilder()->select('planet', 'system', 'galaxy')->from(Planet::class, 'planet')->join('planet.solarSystem', 'system')->join('system.galaxy', 'galaxy')->where('planet.id IN (:ids)')->andWhere('galaxy.universe = :universe')->setParameter('ids', array_unique($ids))->setParameter('universe', $viewer->universe);
+        if ($withOwners) {
+            $query->leftJoin('planet.owner', 'owner')->leftJoin('owner.player', 'account')->addSelect('owner', 'account');
+        }
+        $planets = $query->getQuery()->getResult();
         $byId = [];
         foreach ($planets as $planet) {
             $byId[$planet->id] = $planet;

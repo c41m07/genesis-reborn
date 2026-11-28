@@ -26,18 +26,18 @@ final class DailyLeaderboard
     public function tick(): int
     {
         $now = $this->clock->now();
-        // Une ancienne formule est recalculée une fois, même si minuit n’est pas encore passé.
+        // Une ancienne formule est recalculée une fois, même pendant le créneau courant.
         $universes = $this->em->createQueryBuilder()
             ->select('u')->from(Universe::class, 'u')
             ->leftJoin(LeaderboardSnapshot::class, 's', 'WITH', 's.universe = u')
             ->where('u.status = :active')
             ->andWhere('(u.startsAt IS NULL OR u.startsAt <= :now)')
             ->andWhere('(u.endsAt IS NULL OR u.endsAt > :now)')
-            ->andWhere('(s.id IS NULL OR s.updatedAt < :midnight OR s.scoreVersion != :scoreVersion)')
+            ->andWhere('(s.id IS NULL OR s.updatedAt < :periodStart OR s.scoreVersion != :scoreVersion)')
             ->andWhere('EXISTS (SELECT m.id FROM App\Entity\PlayerUniverse m WHERE m.universe = u AND m.player IS NOT NULL AND m.forgottenAt IS NULL)')
             ->setParameter('active', 'active')
             ->setParameter('now', $now)
-            ->setParameter('midnight', self::midnight($now)->setTimezone(new \DateTimeZone('UTC')))
+            ->setParameter('periodStart', self::periodStart($now)->setTimezone(new \DateTimeZone('UTC')))
             ->setParameter('scoreVersion', LeaderboardService::SCORE_VERSION)
             ->getQuery()->getResult();
         foreach ($universes as $universe) {
@@ -58,10 +58,10 @@ final class DailyLeaderboard
         foreach ($snapshot->players as $row) {
             $current = $live[$row['membership_id']] ?? null;
             if ($current !== null) {
-                $players[] = $row + ['membership' => $current['membership'], 'protection' => $current['protection']];
+                $players[] = $row + ['credit_cents' => 0, 'membership' => $current['membership'], 'protection' => $current['protection']];
             }
         }
-        foreach (['buildings' => 'building_points', 'research' => 'research_points'] as $category => $field) {
+        foreach (['buildings' => 'building_points', 'research' => 'research_points', 'credits' => 'credit_cents'] as $category => $field) {
             if (!array_filter($players, static fn(array $row): bool => !isset($row['ranks'][$category]))) {
                 continue;
             }
@@ -90,7 +90,7 @@ final class DailyLeaderboard
             'guilds' => $guilds,
             'updated_at' => $snapshot->updatedAt,
             'comparison_at' => $snapshot->comparisonAt,
-            'next_update' => self::midnight($this->clock->now())->modify('+1 day'),
+            'next_update' => self::periodStart($this->clock->now())->modify('+12 hours'),
         ];
     }
 
@@ -105,7 +105,7 @@ final class DailyLeaderboard
             if ($row['membership_id'] !== $target->id) {
                 continue;
             }
-            if (!isset($row['ranks']['buildings'], $row['ranks']['research'])) {
+            if (!isset($row['ranks']['buildings'], $row['ranks']['research'], $row['ranks']['credits'])) {
                 // Les anciens snapshots complètent ces rangs avec le départage actuel par pseudo.
                 foreach ($this->forUniverse($viewer)['players'] as $legacyRow) {
                     if ($legacyRow['membership_id'] === $target->id) {
@@ -120,9 +120,9 @@ final class DailyLeaderboard
 
     private function refresh(Universe $universe): LeaderboardSnapshot
     {
-        $midnight = self::midnight($this->clock->now());
+        $periodStart = self::periodStart($this->clock->now());
         $snapshot = $this->repo->one(LeaderboardSnapshot::class, ['universe' => $universe]);
-        if ($this->isCurrent($snapshot, $midnight)) {
+        if ($this->isCurrent($snapshot, $periodStart)) {
             return $snapshot;
         }
         // Rattraper les constructions terminées, même si le consommateur vient de redémarrer.
@@ -139,7 +139,7 @@ final class DailyLeaderboard
                 $this->manager->lock($snapshot);
             }
             $now = $this->clock->now();
-            if ($this->isCurrent($snapshot, self::midnight($now))) {
+            if ($this->isCurrent($snapshot, self::periodStart($now))) {
                 return $snapshot;
             }
             // En Alpha, le premier recalcul pondéré se compare aussi au dernier relevé brut.
@@ -154,9 +154,27 @@ final class DailyLeaderboard
             }
             $rows = $viewer === null ? [] : $this->scores->forUniverse($viewer);
             $guildRows = $viewer === null ? [] : $this->scores->guildsForUniverse($viewer, $rows);
+            // Les crédits sont relevés avec le classement, sous le même verrou que les échanges.
+            $credits = $this->em->getConnection()->fetchAllKeyValue(
+                'SELECT a.membership_id, a.cents FROM market_account a
+                 JOIN player_universe m ON m.id = a.membership_id
+                 WHERE m.universe_id = ? AND m.player_id IS NOT NULL AND m.forgotten_at IS NULL',
+                [$universe->id],
+            );
+            $byWealth = $rows;
+            usort($byWealth, static fn (array $a, array $b): int =>
+                ($credits[$b['membership']->id] ?? 0) <=> ($credits[$a['membership']->id] ?? 0)
+                ?: strcasecmp($a['membership']->player->username, $b['membership']->player->username)
+            );
+            $wealthRanks = [];
+            foreach ($byWealth as $index => $entry) {
+                $wealthRanks[$entry['membership']->id] = $index + 1;
+            }
             $players = [];
             foreach ($rows as $row) {
                 $id = $row['membership']->id;
+                $row['credit_cents'] = (int) ($credits[$id] ?? 0);
+                $row['ranks']['credits'] = $wealthRanks[$id];
                 unset($row['membership'], $row['protection']);
                 $old = $previousPlayers[$id] ?? null;
                 foreach ([
@@ -165,8 +183,9 @@ final class DailyLeaderboard
                     'research' => 'research_points',
                     'fleet' => 'fleet_points',
                     'planets' => 'planets',
+                    'credits' => 'credit_cents',
                 ] as $sort => $field) {
-                    $row['score_changes'][$sort] = $old === null ? null : $row[$field] - $old[$field];
+                    $row['score_changes'][$sort] = !isset($old[$field]) ? null : $row[$field] - $old[$field];
                     $row['rank_changes'][$sort] = !isset($old['ranks'][$sort]) ? null : $old['ranks'][$sort] - $row['ranks'][$sort];
                 }
                 $players[] = $row + ['membership_id' => $id];
@@ -192,15 +211,16 @@ final class DailyLeaderboard
         });
     }
 
-    private function isCurrent(?LeaderboardSnapshot $snapshot, \DateTimeImmutable $midnight): bool
+    private function isCurrent(?LeaderboardSnapshot $snapshot, \DateTimeImmutable $periodStart): bool
     {
         return $snapshot !== null
             && $snapshot->scoreVersion === LeaderboardService::SCORE_VERSION
-            && $snapshot->updatedAt >= $midnight;
+            && $snapshot->updatedAt >= $periodStart;
     }
 
-    private static function midnight(\DateTimeImmutable $at): \DateTimeImmutable
+    private static function periodStart(\DateTimeImmutable $at): \DateTimeImmutable
     {
-        return $at->setTimezone(new \DateTimeZone(self::TIMEZONE))->setTime(0, 0);
+        $local = $at->setTimezone(new \DateTimeZone(self::TIMEZONE));
+        return $local->setTime((int) $local->format('G') >= 12 ? 12 : 0, 0);
     }
 }

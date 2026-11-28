@@ -1,6 +1,18 @@
 {% import 'ui/macros.html.twig' as ui %}
 <aside class="core-fleet-recap panel" aria-labelledby="core-fleet-recap-title-{{ fleetId }}" data-fleet-wizard-target="recap" hidden>
     <h2 id="core-fleet-recap-title-{{ fleetId }}">{{ ui.icon('overview') }} Récapitulatif de mission</h2>
+    {% if conquestEnabled %}
+        <div role="status" aria-atomic="true">
+            <div class="fleet-conquest-warning" data-fleet-wizard-target="conquestWarning" hidden>
+                <strong>{{ ui.icon('clock') }} Attention · Conquête JcE</strong>
+                {% if occupationHours %}
+                    <span>Après la victoire, gardez le contrôle de la planète pendant <b>{{ occupationHours }} h</b> pour la capturer.</span>
+                {% else %}
+                    <span>La capture peut avoir lieu <b>dès la victoire</b>.</span>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
     <p class="core-fleet-recap-total"><strong data-fleet-wizard-target="recapCount">0</strong> vaisseaux sélectionnés</p>
     <p class="core-fleet-recap-ranks" data-fleet-wizard-target="recapRanks" hidden></p>
     <ul class="core-fleet-recap-ships" data-fleet-wizard-target="recapShips" hidden></ul>
@@ -11,6 +23,7 @@
         <div><dt>Durée du trajet</dt><dd data-fleet-preview-target="duration">—</dd></div>
         <div><dt>Arrivée estimée</dt><dd data-fleet-preview-target="arrival">—</dd></div>
     </dl>
+    <p hidden data-fleet-wizard-target="settlement"><strong>Durée de colonisation</strong> · À l’arrivée sur la planète vierge</p>
     <div class="core-fleet-recap-quote" data-fleet-wizard-target="recapQuoteSlot"></div>
     <div class="core-fleet-recap-actions" data-fleet-wizard-target="recapActions"></div>
     <p class="core-fleet-recap-notice" data-fleet-wizard-target="recapNotice">Aucun départ n’est lancé à cette étape.</p>

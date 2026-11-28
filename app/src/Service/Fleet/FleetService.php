@@ -18,6 +18,8 @@ use App\Service\Player\VacationCalendar;
 use App\Service\Boost\TimedBoostEffects;
 final class FleetService
 {
+    public const QUICK_SPY_LIMIT = 100;
+
     public function __construct(private GameRepository $repo,private GameManager $manager,private ActionGuard $guard,private ResourceService $resources,private GameCatalog $catalog,private MovementCalculator $calculator,private NotificationService $notifications,private ClockInterface $clock,private \App\Service\Queue\QueueService $queues,private \App\Service\Combat\CombatEventService $combats,private EspionageService $espionage,private BoostGrantService $boostGrants,private BoostEventService $boostEvents,private \App\Service\Universe\PlanetNameGenerator $planetNames,private \App\Service\Combat\TechnologyEffectCalculator $technologyEffects,private TransportService $transports,private VacationCalendar $vacations,private \App\Service\Combat\OccupationService $occupations, private \App\Service\Admin\FleetMissionTraceService $traces,private FleetNavigation $navigation,private OrbitPolicy $orbitPolicy,private OrbitRequestState $orbitRequests,private FleetRecallPlanner $recallPlanner,private \App\Service\Colony\ColonizationKitPolicy $colonizationKits,private FleetHold $hold,private FleetDispatch $dispatch,private FleetStationing $stationing,private \App\Service\Colony\EconomicUnitCapacity $economicUnits,private \App\Service\Colony\EconomicUnitDeployment $economicDeployment, private FirstSteps $firstSteps, private DiplomaticReportWriter $diplomaticReports, private FleetFuelExpenseRecorder $fuelExpenses, private TimedBoostEffects $timedBoosts, private GuildHallConvoyWorker $hallConvoys, private GuildJumpLink $jumps) {}
     private function coords(SolarSystem $s,?int $position): array { return [$s->id,$s->galaxy->id,$s->coordX,$s->coordY,$position]; }
     public function quote(PlayerUniverse $m,Planet $origin,string $mission,int $targetId,array $composition,float $ratio,array $cargo=[],float $orbitHours=0, bool $requireUnexplored = false, bool $jumpPoint = false): array
@@ -68,7 +70,7 @@ final class FleetService
         if($mission==='spy' && (empty($valid['probe']) || count(array_filter($valid,static fn($ranks)=>array_sum($ranks)>0))!==1)) throw new \DomainException('Une mission d’espionnage exige une ou plusieurs sondes, sans escorte.');
         if(in_array($mission,['colonize','conquer'],true) && !$hasSlug('colony_ship')) throw new \DomainException('Un vaisseau colonie survivant est nécessaire à cette mission.');
         $reinforcement=$mission==='defend' && $target instanceof Planet && $this->occupations->activeFor($target)!==null;
-        $windowHours=$reinforcement?$this->occupations->reinforcementHours($target):($mission==='conquer' && $this->occupations->isEnabled()?24:(in_array($mission,['attack','conquer','defend'],true)?((int)($this->catalog->rules()['combat_window_seconds']??600)/3600):($mission==='orbit'?$orbitHours:0)));
+        $windowHours=$reinforcement?$this->occupations->reinforcementHours($target):($mission==='conquer' && $this->occupations->isEnabled()?\App\Service\Combat\OccupationPolicy::DURATION_SECONDS/3600:(in_array($mission,['attack','conquer','defend'],true)?((int)($this->catalog->rules()['combat_window_seconds']??600)/3600):($mission==='orbit'?$orbitHours:0)));
         $techLevels=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$m]);
         $ships=$this->technologyEffects->applyToShips($ships,$techLevels,$m->universe);
         // Les missions ordinaires figent le tarif de l’aller dans la navigation.
@@ -161,6 +163,12 @@ final class FleetService
             if($q['idle']) $q['idle']->storedFuel = 0;
             $cargo=$q['freight'];$cargo['hydrogen']=($cargo['hydrogen']??0)+$q['total_fuel'];
             $f=new Fleet();$f->playerUniverse=$m;$f->homePlanet=$origin;$f->destination=$q['target'] instanceof Planet?$q['target']:null;$f->destinationSystem=$q['system'];$f->status='traveling';$f->mission=$mission;$f->speedRatio=$ratio;$f->cargo=$cargo;$f->reservedFuel=$q['total_fuel'];$f->orbitFuel=$q['orbit_fuel'];$f->orbitDurationSeconds=$mission==='defend' && $q['target'] instanceof Planet && $this->occupations->activeFor($q['target'])!==null?(int)round($this->occupations->reinforcementHours($q['target'])*3600):($mission==='conquer' && $this->occupations->isEnabled()?\App\Service\Combat\OccupationPolicy::DURATION_SECONDS:(int)round($orbitHours*3600));$f->travelSeconds=$q['seconds'];$f->departureAt=$this->clock->now();$f->arrivalAt=$this->clock->now()->modify('+'.$f->travelSeconds.' seconds');$f->navigation=$this->navigation->freeze($this->coords($origin->solarSystem,$origin->position),$this->coords($q['system'],$q['target'] instanceof Planet?$q['target']->position:null),$q['movement_ships'],$ratio,$this->catalog->rules()['fuel_ratio_policy'],$q,$f->departureAt);$this->manager->save($f);$this->manager->flush();
+            if ($mission === 'attack' && $f->destination?->owner?->isPlayerControlled()) {
+                if (!$this->combats->canAttack($m, $f->destination)) {
+                    throw new \DomainException('Cette planète ne peut plus être attaquée.');
+                }
+                $m->recoveryProtectedUntil = null;
+            }
             $f->firstStepsSpy = $tutorialSpy;
             if ($jumpPoint) {
                 $f->navigation['jump_point'] = true;

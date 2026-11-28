@@ -39,6 +39,9 @@ final class CombatSimulationController extends AbstractController
         $result = $error = $intel = $pirateIntel = $simulationJob = null;
         $seed = '42';
         $ownSource = 0;
+        $ownCamp = 'attacker';
+        $intelCamp = 'defender';
+        $garrison = [];
         $status = 200;
         $step = 'ships';
 
@@ -49,16 +52,25 @@ final class CombatSimulationController extends AbstractController
                 }
                 $submitted = $request->request;
                 $forces = $submitted->all('forces');
+                foreach ($forces as $side) {
+                    if (!is_array($side)) throw new \DomainException('Forces invalides.');
+                }
                 $seed = $submitted->getString('seed');
                 $step = $submitted->getString('wizard_step');
                 $step = in_array($step, ['ships', 'defenses', 'research', 'simulation'], true) ? $step : 'ships';
                 $ownSource = $submitted->getInt('own_source');
+                $ownCamp = $submitted->getString('own_camp') === 'defender' ? 'defender' : 'attacker';
+                $intelCamp = $ownCamp === 'attacker' ? 'defender' : 'attacker';
+                $saved = json_decode($submitted->getString('garrison'), true, 12);
+                $garrison = is_array($saved) ? $saved : [];
                 $reportId = $submitted->getInt('report');
                 $pirateReportId = $submitted->getInt('pirate_report');
                 $action = $submitted->getString('wizard_action', 'simulate');
 
                 // Les imports ne calculent rien, ne sauvegardent rien et préservent l'autre camp.
                 if ($pirateReportId > 0 && !in_array($action, ['manual_intel', 'load_intel'], true)) {
+                    $ownCamp = 'attacker';
+                    $intelCamp = 'defender';
                     $pirateIntel = $this->pirateIntel($pirateReports, $owner, $pirateReportId);
                     $forces['defender'] = $pirateIntel['forces'];
                     if (is_array($forces['attacker'] ?? null)) {
@@ -68,23 +80,35 @@ final class CombatSimulationController extends AbstractController
                     $intel = $simulation->intel($owner, $reportId);
                 }
                 switch ($action) {
+                    case 'swap':
+                        if ($pirateIntel !== null) throw new \DomainException('Le camp pirate est fixé par le rapport.');
+                        [$forces['attacker'], $forces['defender']] = [$forces['defender'] ?? [], $forces['attacker'] ?? []];
+                        // Les défenses et unités fixes suivent leur propriétaire lors d’une double inversion.
+                        $forces['defender'] = array_replace_recursive($forces['defender'], $garrison);
+                        $ownCamp = $intelCamp;
+                        $intelCamp = $ownCamp === 'defender' ? 'attacker' : 'defender';
+                        $garrison = $this->extractGarrison($forces['attacker'], $choices);
+                        break;
                     case 'load_own':
                         $planetId = $submitted->getInt('own_planet');
-                        $loaded = $simulation->own($owner, $planetId);
-                        $arrival = $forces['attacker']['arrival'] ?? null;
-                        $forces['attacker'] = $loaded;
+                        $loaded = $simulation->own($owner, $planetId, true);
+                        $arrival = $forces[$ownCamp]['arrival'] ?? null;
+                        $forces[$ownCamp] = $loaded;
                         if ($pirateIntel === null && $arrival !== null) {
-                            $forces['attacker']['arrival'] = $arrival;
+                            $forces[$ownCamp]['arrival'] = $arrival;
                         }
+                        if ($ownCamp === 'attacker') $garrison = $this->extractGarrison($forces[$ownCamp], $choices);
                         $ownSource = $planetId;
                         break;
                     case 'load_intel':
                         $intel = $simulation->intel($owner, $submitted->getInt('report_choice'));
-                        $forces['defender'] = $this->replaceDefender($forces, $intel['forces']);
+                        $forces[$intelCamp] = $this->replaceIntel($forces[$intelCamp] ?? [], $intel['forces']);
+                        if ($intelCamp === 'attacker') $garrison = $this->extractGarrison($forces[$intelCamp], $choices);
                         break;
                     case 'manual_intel':
                         $intel = null;
-                        $forces['defender'] = $this->replaceDefender($forces, []);
+                        if ($intelCamp === 'attacker') $garrison = [];
+                        $forces[$intelCamp] = $this->replaceIntel($forces[$intelCamp] ?? [], []);
                         break;
                     case 'simulate':
                         if (!$limiter->create((string) $owner->player->id)->consume()->isAccepted()) {
@@ -97,7 +121,7 @@ final class CombatSimulationController extends AbstractController
                         if ($number === false) {
                             throw new \DomainException('Graine invalide.');
                         }
-                        $calculation = $simulation->withConfirmedUnknownAssumptions($forces, $intel, $choices);
+                        $calculation = $simulation->withConfirmedUnknownAssumptions($forces, $intel, $choices, $intelCamp);
                         $prepared = $simulation->prepare($owner, $calculation, $number, $pirateIntel['scenario'] ?? null);
                         if (!$prepared['inline']) {
                             $job = $simulationQueue->enqueue(
@@ -108,6 +132,7 @@ final class CombatSimulationController extends AbstractController
                                 $intel['id'] ?? 0,
                                 in_array($ownSource, $planetIds, true) ? $ownSource : 0,
                                 $pirateIntel['id'] ?? 0,
+                                $ownCamp,
                             );
                             $response = $this->redirectToRoute('app_combat_simulation', ['job' => $job->publicKey, '_fragment' => 'simulation-result'], Response::HTTP_SEE_OTHER);
                             $response->headers->set('Cache-Control', 'private, no-store');
@@ -129,6 +154,8 @@ final class CombatSimulationController extends AbstractController
                 $forces = $job->scenario['prepared']['forces'];
                 $seed = (string) $job->scenario['seed'];
                 $ownSource = $job->scenario['own_source'];
+                $ownCamp = $job->scenario['own_camp'] ?? 'attacker';
+                $intelCamp = $ownCamp === 'attacker' ? 'defender' : 'attacker';
                 if (($job->scenario['pirate_report'] ?? 0) > 0) {
                     $pirateIntel = $pirateReports->read($owner, $job->scenario['pirate_report'], forSimulation: true);
                     if ($pirateIntel === null) {
@@ -158,7 +185,8 @@ final class CombatSimulationController extends AbstractController
                 }
                 $planetId = $request->query->getInt('own_planet');
                 if ($planetId > 0) {
-                    $forces['attacker'] = $simulation->own($owner, $planetId);
+                    $forces['attacker'] = $simulation->own($owner, $planetId, true);
+                    $garrison = $this->extractGarrison($forces['attacker'], $choices);
                     $ownSource = $planetId;
                 }
             }
@@ -181,11 +209,14 @@ final class CombatSimulationController extends AbstractController
             'error' => $error,
             'intel' => $intel,
             'pirate_intel' => $pirateIntel,
-            'sources' => $intel ? $simulation->provenance($owner, $forces, $intel) : [],
+            'sources' => $intel ? $simulation->provenance($owner, $forces, $intel, $intelCamp) : [],
             'report_options' => $repo->recentEspionageReportOptions($owner),
             'planets' => $planets,
             'active_planet' => $activePlanet,
             'own_source' => $ownSource,
+            'own_camp' => $ownCamp,
+            'intel_camp' => $intelCamp,
+            'garrison' => $garrison,
             'step' => $step,
             'fleet_limit' => $simulation->fleetLimit($owner),
             'defense_limit' => PlayerCombatSimulation::MAX_DEFENSE_QUANTITY,
@@ -202,9 +233,22 @@ final class CombatSimulationController extends AbstractController
             ?? throw new \DomainException('Rapport pirate inaccessible ou non importable.');
     }
 
-    private function replaceDefender(array $forces, array $replacement): array
+    private function extractGarrison(array &$forces, array $choices): array
     {
-        $arrival = $forces['defender']['arrival'] ?? null;
+        $garrison = array_intersect_key($forces, ['defenses' => true, 'fortress' => true]);
+        unset($forces['defenses'], $forces['fortress']);
+        foreach ($choices['ships'] as $slug => $definition) {
+            if (isset($definition['economic_unit'], $forces['ships'][$slug])) {
+                $garrison['ships'][$slug] = $forces['ships'][$slug];
+                unset($forces['ships'][$slug]);
+            }
+        }
+        return $garrison;
+    }
+
+    private function replaceIntel(array $forces, array $replacement): array
+    {
+        $arrival = $forces['arrival'] ?? null;
         if ($arrival !== null) {
             $replacement['arrival'] = $arrival;
         }

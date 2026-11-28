@@ -1,5 +1,29 @@
 # Roadmap Genesis Reborn
 
+## Galaxie — colonie active et sondes par rang
+
+La fiche planète regroupe la sélection des sondes et leur envoi dans un tableau, utilisable également depuis la liste des systèmes. Le raccourci « Ma colonie » retrouve la planète active depuis la galaxie consultée. La recette couvre deux colonies, la saisie et Max, les rangs mélangés et le refus du départ si le stock a changé.
+
+## Rapports d’espionnage et préparation de la conquête — 28 novembre 2026
+
+La liste et le détail des renseignements présentent le propriétaire de la planète. Les coordonnées du détail ouvrent le système sur la carte. Le récapitulatif existant de Flottes indique le délai de colonisation dès le choix de la mission et à sa confirmation. La migration `Version20261128170000` conserve les noms observés dans les nouveaux rapports. Son application sur une base existante nécessite une sauvegarde vérifiée et l’accord d’exploitation.
+
+## Marché en crédits — 28 novembre 2026
+
+Deux pages sous la même station séparent le devis et les vols du comptoir des offres entre joueurs. Le comptoir conserve son URL et regroupe Composition, Mission et Destination dans un seul formulaire pour garder la saisie au retour entre étapes. Il réutilise le tableau des flottes et affiche le récapitulatif du convoi. Le nouveau marché utilise un dépôt privé en station et les convois du troc pour les apports et rapatriements. La recette couvre la taxe préalable, le refus pour solde insuffisant, l’achat partiel, le retrait, le rejeu et deux achats concurrents des dernières unités. La migration `Version20261128160000` doit être appliquée avec sauvegarde vérifiée et accord d’exploitation avant activation sur une base existante. [Parcours et exploitation](BOURSE_DE_RESSOURCES.md).
+
+## Reconnaissance pirate — 28 novembre 2026
+
+Le dossier de campagne indique le rang de la sonde avant son envoi et Flottes affiche le rang engagé. La recette couvre la priorité des trois rangs, le hangar vide et la confirmation après changement du stock. [Règle de départ](REGLES.md#rapports-de-campagne-et-fret-des-convois-pirates).
+
+## Consommation électrique des extracteurs — 28 novembre 2026
+
+Le bilan de colonie et le calcul des stocks appliquent les [taux électriques par rang](REGLES.md#progression-économique-par-rang). La vérification compare la consommation affichée d’une mine de métal à 25/25/25 au débit du stock après une minute à plein rendement.
+
+## Retours joueurs du 28 novembre 2026
+
+Lot préparé pour relecture vers `dev`. Les protections et la riposte, les rapports de détection, les boîtes et les deux relevés quotidiens suivent les [décisions du lot](DECISIONS.md). Le devis de Bourse et l’inversion des camps prolongent les pages existantes. La migration `Version20261128120000` conserve le propriétaire espionné au moment de la détection ; les anciens rapports gardent leur audience. Avant déploiement sur une base existante, vérifier la sauvegarde et obtenir l’accord d’application.
+
 ## Carburant à quai — 27 novembre 2026
 
 Lot proposé pour `dev`. La colonie paie chaque départ et le reliquat de vol est perdu à quai.

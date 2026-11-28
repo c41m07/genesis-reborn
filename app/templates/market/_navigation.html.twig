@@ -1,0 +1,5 @@
+<nav class="alliance-tabs ui-tabs" aria-label="Bourse de ressources">
+    {% for route, label in {app_market:'Comptoir de la station', app_player_market:'Marché des joueurs'} %}
+        <a href="{{ path(route) }}" {% if app.request.attributes.get('_route') == route %}class="active" aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+</nav>

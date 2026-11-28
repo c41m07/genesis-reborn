@@ -1,13 +1,32 @@
 {% extends report_layout|default('base.html.twig') %}
+{% from 'ui/espionage_report_title.html.twig' import commander as espionageCommander %}
 {% block title %}Rapport d’espionnage · Genesis Reborn{% endblock %}
 {% block body %}
 {% set playerBoard = not monitoring_context|default(null) %}
 <div class="mission-report report-workspace{{ playerBoard ? ' player-report-detail' : '' }}">
 {% if monitoring_context|default(null) %}<p class="admin-monitor-note">{{ monitoring_context }}</p>{% endif %}
 {% include 'ui/report_back_link.html.twig' %}
-{% block intel_heading %}<header class="report-heading"><p class="report-eyebrow">RENSEIGNEMENTS · N° {{ report.id }}</p><h1>Rapport d’espionnage</h1><p>{{ report.target.name }} · {{ report.target.coordinates() }} · {{ report.createdAt|date('d/m/Y H:i') }}</p></header>{% endblock %}
+{% block intel_heading %}
+<header class="report-heading">
+    <p class="report-eyebrow">RENSEIGNEMENTS · N° {{ report.id }}</p>
+    <h1>Rapport d’espionnage</h1>
+    {% set coordinates = report.target.coordinates() %}
+    <p>{{ report.target.name }} ·
+        {% if playerBoard %}
+            <a href="{{ path('app_map_v2', {galaxy: report.target.solarSystem.galaxy.id, system: report.target.solarSystem.id}) }}" aria-label="{{ coordinates }} · ouvrir le système dans la galaxie">{{ coordinates }}</a>
+        {% else %}
+            {{ coordinates }}
+        {% endif %}
+        · {{ report.createdAt|date('d/m/Y H:i', preferences.timezone|default('Europe/Paris')) }}
+    </p>
+    <p>{{ espionageCommander(report, incoming_detection|default(false)) }}</p>
+</header>
+{% endblock %}
 {% if campaign_report_id|default(null) %}{% include 'ui/report_notice_form.html.twig' with {report_notice_kind:'campaign'} %}{% elseif app.request.attributes.get('_route') == 'app_espionage_report' %}{% include 'ui/report_notice_form.html.twig' with {report_notice_kind:'espionage'} %}{% endif %}
 {% block intel_content %}
+{% if incoming_detection|default(false) %}
+<section class="panel report-summary report-summary--detected"><h2>Sonde adverse aperçue</h2><p>Votre colonie a détecté une mission d’espionnage. Les sondes adverses n’ont obtenu aucun renseignement.</p></section>
+{% else %}
 <section class="panel report-summary {{ report.result == 'detected' ? 'report-summary--detected' : '' }}" role="status"><h2>{{ report.result == 'detected' ? 'Sondes détectées' : 'Renseignements obtenus' }}</h2>
 {% if report.result == 'detected' %}<p>Le propriétaire a été averti et aucun renseignement n’a été obtenu.</p>{% else %}<p>{{ report.intelCategories }} catégorie(s) de renseignements obtenue(s).</p>{% endif %}<p class="muted">{{ report.probesSent|quantity }} sonde(s) envoyée(s) · Risque de détection estimé : {{ report.detectionChance }} %</p></section>
 {% if report.result == 'detected' %}{% if not monitoring_context|default(null) %}<p><a class="secondary" href="{{ path('app_combat_simulation',{report:report.id}) }}">Reprendre ces renseignements dans le simulateur</a></p>{% endif %}
@@ -54,6 +73,7 @@
 {% if not monitoring_context|default(null) %}<p><a class="secondary" href="{{ path('app_combat_simulation',{report:report.id}) }}">Reprendre ces renseignements dans le simulateur</a></p>{% endif %}
 </aside>
 </div>
+{% endif %}
 {% endif %}
 {% endblock %}
 </div>

@@ -11,7 +11,18 @@ export default class extends Controller {
     connect() {
         this.stateKey = `${location.pathname}:${this.element.id}`;
         const previous = catalogStates.get(this.stateKey);
+        this.tiersKey = `catalog-tiers:${this.element.id}`;
         this.state = previous ?? { showLocked: this.showLockedValue, tiers: {}, category: 'all' };
+        if (!previous) {
+            try {
+                const savedVisibility = localStorage.getItem(`${this.tiersKey}:locked`);
+                if (savedVisibility !== null && !new URLSearchParams(location.search).has('showLockedItems')) {
+                    this.state.showLocked = savedVisibility === 'true';
+                }
+                const tiers = JSON.parse(localStorage.getItem(this.tiersKey));
+                if (tiers && typeof tiers === 'object' && !Array.isArray(tiers)) this.state.tiers = tiers;
+            } catch { /* Les rangs restent utilisables si le stockage est indisponible. */ }
+        }
         if (!this.element.querySelector(`[data-category="${this.state.category}"][aria-pressed]`)) this.state.category = 'all';
         this.showLockedValue = this.state.showLocked;
         try { this.state.compact = localStorage.getItem(`catalog-compact:${this.element.id}`) === 'true'; } catch { this.state.compact ??= false; }
@@ -37,6 +48,7 @@ export default class extends Controller {
     toggleLocked(event) {
         event.preventDefault();
         this.showLockedValue = !this.showLockedValue;
+        try { localStorage.setItem(`${this.tiersKey}:locked`, String(this.showLockedValue)); } catch { /* Stockage facultatif. */ }
         this.update();
     }
 
@@ -58,6 +70,9 @@ export default class extends Controller {
         }
         const family = tab.closest('[data-slug]');
         this.state.tiers[family.dataset.slug] = tab.dataset.tier;
+        if (remember) {
+            try { localStorage.setItem(this.tiersKey, JSON.stringify(this.state.tiers)); } catch { /* Stockage facultatif. */ }
+        }
         this.update();
     }
 

@@ -1,2 +1,11 @@
 {# Même intitulé pour retrouver un renseignement dans Rapports et dans le simulateur. #}
 {% macro title(targetName) %}Renseignements · {{ targetName }}{% endmacro %}
+
+{% macro commander(report, incoming) -%}
+    {%- if incoming -%}
+        {{ report.identifiedSenderName ? 'Sondes de ' ~ report.identifiedSenderName : 'Expéditeur non identifié' }}
+    {%- else -%}
+        {% set owner = report.targetOwnerName ?? report.target.confirmedOwnerNameAt(report.createdAt) %}
+        {{- owner ? 'Propriétaire : ' ~ owner : 'Propriétaire non consigné' -}}
+    {%- endif -%}
+{%- endmacro %}

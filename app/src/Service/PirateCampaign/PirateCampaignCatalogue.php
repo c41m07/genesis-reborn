@@ -225,7 +225,7 @@ final class PirateCampaignCatalogue
         return [
             'title' => $content['title'],
             'message' => $content['signal'],
-            'guidance' => 'Envoyez une seule sonde basique vers le poste civil. Elle sera perdue, mais son rapport révélera la flotte pirate à l’arrivée, même si la sonde est détectée.',
+            'guidance' => 'Envoyez une seule sonde vers le poste civil. La colonie utilise le premier rang disponible, du Basique au Supérieur. Elle sera perdue, mais son rapport révélera la flotte pirate à l’arrivée, même si la sonde est détectée.',
         ];
     }
 

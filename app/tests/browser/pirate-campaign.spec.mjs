@@ -29,8 +29,8 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
   expect(universe).toBeGreaterThan(0);
   // Une nouvelle colonie n’a pas forcément encore de hangar matérialisé.
   runIsolatedSql(project, "INSERT INTO fleet (player_universe_id,home_planet_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token) SELECT owner_id,id,'idle','idle',1,'{}',0,0,0,0,'' FROM planet WHERE id=" + origin + " AND NOT EXISTS (SELECT 1 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle')");
-  for (const slug of ['probe', 'fighter']) {
-    runIsolatedSql(project, "INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'" + slug + "','basic',1 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle' ON DUPLICATE KEY UPDATE quantity=1");
+  for (const [slug, tier] of [['probe', 'intermediate'], ['fighter', 'basic']]) {
+    runIsolatedSql(project, "INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'" + slug + "','" + tier + "',1 FROM fleet WHERE home_planet_id=" + origin + " AND status='idle' ON DUPLICATE KEY UPDATE quantity=1");
   }
   runIsolatedSql(project, "UPDATE planet_resource SET current_stock=5000 WHERE planet_id=" + origin + " AND resource_type='hydrogen'");
 
@@ -73,6 +73,7 @@ test('Campagne pirate : navigation, briefing discret et reconnaissance sans Java
   await expect(page.getByText('Flotte pirate révélée', { exact: true })).toHaveCount(0);
   await expect(page.locator('.pirate-campaign-intel--embedded')).toHaveCount(0);
   const shipForm = page.getByRole('region', { name: 'Préparer la reconnaissance', exact: true });
+  await expect(shipForm).toContainText('Drone d’observation');
   await expect(shipForm.getByRole('button', { name: 'Envoyer la sonde', exact: true })).toBeVisible();
   for (const width of [1440, 768, 390, 360]) {
     await page.setViewportSize({ width, height: 900 });

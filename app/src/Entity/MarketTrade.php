@@ -36,6 +36,12 @@ final class MarketTrade
     #[ORM\Column(length: 18)]
     public string $status = 'outbound';
 
+    #[ORM\Column(length: 12, options: ['default' => 'barter'])]
+    public string $operation = 'barter';
+
+    #[ORM\Column(type: 'bigint', options: ['default' => 0])]
+    public int $creditCents = 0;
+
     #[ORM\Column(length: 12)]
     public string $payResource;
 

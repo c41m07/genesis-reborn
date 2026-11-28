@@ -1,0 +1,71 @@
+{% extends 'base.html.twig' %}
+{% block title %}Marché des joueurs · Genesis Reborn{% endblock %}
+{% macro order(member, key, action) %}
+    <input type="hidden" name="key" value="{{ key }}">
+    <input type="hidden" name="_token" value="{{ csrf_token('exchange_' ~ member.id ~ '_' ~ key) }}">
+    <input type="hidden" name="action" value="{{ action }}">
+{% endmacro %}
+{% block body %}
+<div class="market-space">
+    <header class="panel market-hero"><div><p>Station A:0:0 · {{ member.universe.name }}</p><h1>Marché des joueurs</h1>
+        <p>Votre solde : <strong>{{ ((account.cents|default(0)) / 100)|number_format(2, ',', ' ') }} crédits</strong></p></div></header>
+    {% include 'market/_navigation.html.twig' %}
+    {% if not market or not market.enabled %}
+        <p class="panel">La station est fermée dans cet univers.</p>
+    {% else %}
+        <section class="panel">
+            <h2>Votre dépôt à la station</h2>
+            <dl class="market-data">{% for slug, label in labels %}<div><dt>{{ label }}</dt><dd>{{ account.goods[slug]|default(0)|quantity(0) }}</dd></div>{% endfor %}</dl>
+            <a href="{{ path('app_market', {operation:'deposit', resource:resource}) }}">Déposer des ressources par cargo</a> ·
+            <a href="{{ path('app_market', {operation:'collect', resource:resource}) }}">Rapatrier par cargo</a>
+        </section>
+        <nav class="ui-tabs" aria-label="Ressource du marché">{% for slug, label in labels %}<a href="{{ path('app_player_market', {resource:slug}) }}" {% if slug == resource %}aria-current="page" class="active"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+        <section class="panel">
+            <h2>Vendre · {{ labels[resource] }}</h2>
+            <p>Prix conseillé : {{ rows[resource].index|number_format(2, ',', ' ') }} crédits par unité.
+               La station rachète à environ {{ (rows[resource].bid / 100)|number_format(2, ',', ' ') }} et vend à environ {{ (rows[resource].ask / 100)|number_format(2, ',', ' ') }} crédits. Stock disponible : {{ rows[resource].available|quantity(0) }}.</p>
+            <p>Dernier prix payé entre joueurs : {% if market.lastPlayerPrices[resource] is defined %}{{ (market.lastPlayerPrices[resource] / 100)|number_format(2, ',', ' ') }} crédits{% else %}aucune vente{% endif %}.</p>
+            {% if draft %}
+                <p><strong>{{ draft.quantity|quantity(0) }} unités à {{ (draft.unit / 100)|number_format(2, ',', ' ') }} crédits chacune.</strong>
+                    Si tout le lot se vend, vous recevrez {{ (draft.gross / 100)|number_format(2, ',', ' ') }} crédits.</p>
+                <p>Taxe à payer maintenant : <strong>{{ (draft.fee / 100)|number_format(2, ',', ' ') }} crédits</strong>.
+                    Elle reste acquise à la station si vous retirez vos invendus.</p>
+                {% if account.cents|default(0) < draft.fee %}
+                    <p>Votre solde ne couvre pas la taxe. <a href="{{ path('app_market', {operation:'sell', resource:resource}) }}">Vendre à la station pour obtenir des crédits</a></p>
+                {% elseif account.goods[resource]|default(0) < draft.quantity %}
+                    <p>Votre dépôt ne contient plus assez de ressources pour ce lot.</p>
+                {% else %}
+                    <form method="post">{{ _self.order(member, draft.key, 'list') }}<button class="primary">Payer la taxe et publier</button></form>
+                {% endif %}
+                <form method="post">{{ _self.order(member, key, 'discard') }}<button class="secondary">Revenir à la saisie</button></form>
+            {% elseif account.goods[resource]|default(0) > 0 %}
+                <form method="post" class="market-options">{{ _self.order(member, key, 'preview') }}
+                    <label>Quantité à mettre en vente <input type="number" name="quantity" min="1" max="{{ min(maxLot, account.goods[resource]) }}" required></label>
+                    <label>Prix par unité en crédits <input type="number" name="price" min="0.01" step="0.01" max="21474836.47" value="{{ rows[resource].index|number_format(2, '.', '') }}" required></label>
+                    <p>La mise en vente coûte {{ fee }} % de la valeur totale du lot. Chaque unité vendue vous rapporte son prix intégral.</p>
+                    <button type="submit" class="primary">Vérifier la taxe et le produit de la vente</button>
+                </form>
+            {% else %}<p>Déposez cette ressource à la station pour publier une offre.</p>{% endif %}
+        </section>
+        <section class="panel"><h2>Offres de {{ labels[resource]|lower }}</h2>
+            {% for offer in offers %}
+                <article class="market-trip"><div><strong>{{ (offer.unitCents / 100)|number_format(2, ',', ' ') }} crédits par unité</strong>
+                    <span>{{ offer.remaining|quantity(0) }} disponibles{% if offer.seller.id == member.id %} · Votre offre{% endif %}</span></div>
+                    <form method="post" class="market-options">
+                        <input type="hidden" name="offer" value="{{ offer.id }}">
+                        {% if offer.seller.id == member.id %}
+                            {{ _self.order(member, offerKeys[offer.id], 'cancel') }}<button class="secondary">Retirer les invendus</button>
+                        {% else %}
+                            {{ _self.order(member, offerKeys[offer.id], 'purchase') }}
+                            <label>Quantité à acheter <input type="number" name="quantity" min="1" max="{{ offer.remaining }}" required></label>
+                            <button class="primary">Acheter pour mon dépôt</button>
+                        {% endif %}
+                    </form>
+                </article>
+            {% else %}<p>Aucune offre sur cette page.</p>{% endfor %}
+            {% if page > 1 %}<a href="{{ path('app_player_market', {resource:resource,page:page-1}) }}">Page précédente</a>{% endif %}
+            {% if more %}<a href="{{ path('app_player_market', {resource:resource,page:page+1}) }}">Page suivante</a>{% endif %}
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\Service\Boost\InventoryGiftNotices;
 use App\Service\Boost\ResourceBoxUseService;
+use App\Service\Boost\BoxOverflowConfirmation;
 use App\Service\Boost\BoostGrantService;
 use App\Service\Boost\BoostUseService;
 use App\Service\Universe\UniverseContext;
@@ -24,6 +25,7 @@ final class BoostController extends AbstractController
         $queues->synchronize($membership);
         $data = $view->prepare($membership, $request->attributes->getString('inventory_page'), $request->query->getInt('page', 1));
         if (isset($data['displayed_unread_boxes']) && $request->isMethod('GET')) {
+            $data['overflow'] = $request->getSession()->get('box_overflow_'.$membership->id);
             $notices->acknowledgeDisplayedBoxes($membership, $data['displayed_unread_boxes']);
         }
 
@@ -34,11 +36,25 @@ final class BoostController extends AbstractController
     public function openBox(int $id, Request $request, UniverseContext $context, ResourceBoxUseService $boxes): Response
     {
         if (!$this->isCsrfTokenValid('box_open_'.$id,$request->request->get('_token'))) throw $this->createAccessDeniedException('Formulaire expiré.');
+        $membership = $context->membership();
+        $planet = $request->request->getInt('planet_id');
+        $key = $request->request->getString('request_key');
+        $session = $request->getSession();
+        $slot = 'box_overflow_'.$membership->id;
+        $preview = $session->get($slot);
+        $confirmed = $request->request->getString('confirm_loss') === '1'
+            && $preview !== null && $preview['id'] === $id && $preview['planet'] === $planet && $preview['key'] === $key;
         try {
-            $changed=$boxes->open($context->membership(),$id,$request->request->getInt('planet_id'),(string)$request->request->get('request_key'));
-            $this->addFlash('success',$changed ? 'Boîte ouverte : toutes les ressources ont été déposées sur la colonie choisie.' : 'Cette ouverture a déjà été traitée.');
-        } catch (\DomainException $error) { $this->addFlash('error',$error->getMessage()); }
-        return $this->redirectToRoute('app_inventory_boxes');
+            $changed = $boxes->open($membership, $id, $planet, $key, $confirmed ? $preview['loss'] : []);
+            $session->remove($slot);
+            $this->addFlash('success', $changed ? 'Boîte ouverte. Les ressources pouvant être stockées ont été déposées.' : 'Cette ouverture a déjà été traitée.');
+        } catch (BoxOverflowConfirmation $warning) {
+            $session->set($slot, ['id' => $id, 'planet' => $planet, 'key' => $key, 'estimate' => $warning->estimate, 'loss' => $warning->loss, 'colony' => $warning->colony]);
+        } catch (\DomainException $error) {
+            $session->remove($slot);
+            $this->addFlash('error', $error->getMessage());
+        }
+        return $this->redirectToRoute('app_inventory_boxes', status: Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/boosts/temporaires/{id}/activer', name: 'app_timed_boost_activate', requirements: ['id' => '\d+'], methods: ['POST'])]

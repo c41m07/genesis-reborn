@@ -20,6 +20,7 @@
 
 ## Renseignement et simulation
 
+- La reconnaissance propose la sonde de plus bas rang disponible sur la colonie active (T1, puis T2, puis T3). Si ce rang change avant confirmation, le joueur doit confirmer le devis actualisé.
 - À partir de la remise effective par le worker, ouvrir **Ouvrir le rapport d’espionnage** dans le
   dossier. La sonde reste perdue, qu’elle ait été repérée ou non. Le rapport reste privé à la
   participation active : un autre commandant ou un univers désactivé ne peut pas le consulter.

@@ -64,7 +64,7 @@ final class CombatEventService
         private TimedBoostEffects $timedBoosts,
     ) {}
 
-    public function canAttack(PlayerUniverse $attacker, Planet $target): bool
+    public function canAttack(PlayerUniverse $attacker, Planet $target, ?\DateTimeImmutable $departedAt = null): bool
     {
         $defender = $target->owner;
         if(!$attacker->isPlayerControlled() || $target->solarSystem->galaxy->universe->id!==$attacker->universe->id) return false;
@@ -89,7 +89,8 @@ final class CombatEventService
         $protection = $rules['new_player_protection'] ?? [];
         if ($this->playerProtection->status($defender, $defenderScore)['active']) return false;
         $ratio = max(1.0, (float) ($protection['attacker_score_ratio'] ?? 5));
-        return $attackerScore <= max(1, $defenderScore) * $ratio;
+        return $attackerScore <= max(1, $defenderScore) * $ratio
+            || $this->repo->hasRecentAttack($defender, $attacker, $departedAt ?? $this->clock->now());
     }
 
     public function canConquer(PlayerUniverse $attacker, ?Planet $target): bool
@@ -272,14 +273,14 @@ final class CombatEventService
         if ($fleet->mission === 'conquer') {
             if(!$this->occupations->isEnabled() && $fleet->orbitDurationSeconds===OccupationPolicy::DURATION_SECONDS) return false;
             if (!$this->canConquer($fleet->playerUniverse, $planet)) return false;
-        } elseif (!$this->canAttack($fleet->playerUniverse, $planet)) {
+        } elseif (!$this->canAttack($fleet->playerUniverse, $planet, $fleet->departureAt)) {
             return false;
         }
 
         $this->manager->lock($planet);
         if ($fleet->mission === 'conquer') {
             if (!$this->canConquer($fleet->playerUniverse, $planet)) return false;
-        } elseif(!$this->canAttack($fleet->playerUniverse,$planet)) {
+        } elseif(!$this->canAttack($fleet->playerUniverse, $planet, $fleet->departureAt)) {
             return false;
         }
         if($planet->owner===null && $planet->npcPlanet) $this->npcSeeder->seed($planet);
@@ -605,7 +606,9 @@ final class CombatEventService
             // Les unités civiles de la garnison produisent jusqu'à la perte effective, à la clôture.
             $this->resources->materialize($event->planet, $this->clock->now());
             $defenseRebuilt = $this->persistLosses($participants, $defenseSnapshots, $result['losses'], $event->planet);
-            $recoveryProtection = $this->applyRecoveryProtection($snapshot, $result['losses'], $participants);
+            $recoveryProtection = $result['outcome'] === 'attacker_wins' && $event->planet->owner !== null
+                ? $this->applyRecoveryProtection($snapshot, $result['losses'], $event->planet->owner)
+                : [];
             $loot = $this->collectLoot($participants, $result['outcome'], $event);
             $capture = $occupationContext!==null?$this->resolveOccupationBattle($participants,$result,$event):$this->capturePlanet($participants, $result['outcome'], $event, $result['losses']);
             $winningAttackerCamps = [];
@@ -976,23 +979,22 @@ final class CombatEventService
         return $rebuilt;
     }
 
-    private function applyRecoveryProtection(array $snapshot, array $losses, array $participants): array
+    private function applyRecoveryProtection(array $snapshot, array $losses, PlayerUniverse $defender): array
     {
-        $memberships = [];
-        foreach ($participants as $participant) $memberships[$participant->playerUniverse->id] = $participant->playerUniverse;
-        $engaged = [];
-        $lost = [];
+        if (!$defender->isPlayerControlled() || $this->playerProtection->suspendedForInactivity($defender)) return [];
+        $engaged = 0;
+        $lost = 0;
         foreach ($snapshot as $entry) {
-            $membershipId = $entry['player_universe_id'] ?? null;
             $fleetId = $entry['fleet_id'] ?? null;
-            if ($membershipId === null || $fleetId === null || !isset($memberships[$membershipId])) continue;
+            if ($entry['role'] !== 'defender' || $entry['player_universe_id'] !== $defender->id || $fleetId === null) continue;
             foreach ($entry['units'] ?? [] as $unit) {
                 $slug = (string) ($unit['slug'] ?? '');
-                $unitTier=(string)($unit['tier']??'basic');$definition = $this->catalog->getTierForUniverse($memberships[$membershipId]->universe, 'ships', $slug, $unitTier);
+                $tier = (string) ($unit['tier'] ?? 'basic');
+                $definition = $this->catalog->getTierForUniverse($defender->universe, 'ships', $slug, $tier);
                 if ((float) ($definition['base_attack'] ?? 0) <= 0) continue;
-                $quantity = (int) ($unit['quantity'] ?? 0);
-                $engaged[$membershipId] = ($engaged[$membershipId] ?? 0) + $quantity;
-                $lost[$membershipId] = ($lost[$membershipId] ?? 0) + (int) ($losses[$fleetId . ':' . $slug . ((($unit['tier']??'basic')==='basic')?'':':'.$unit['tier'])] ?? 0);
+                $engaged += (int) ($unit['quantity'] ?? 0);
+                $lossKey = $fleetId.':'.$slug.($tier === 'basic' ? '' : ':'.$tier);
+                $lost += (int) ($losses[$lossKey] ?? 0);
             }
         }
         $rules = $this->catalog->rules()['recovery_protection'] ?? [];
@@ -1000,19 +1002,12 @@ final class CombatEventService
         $duration = max(0, (int) ($rules['duration_seconds'] ?? 86400));
         $cooldown = max(0, (int) ($rules['cooldown_seconds'] ?? 604800));
         $now = $this->clock->now();
-        $protected = [];
-        foreach ($engaged as $id => $quantity) {
-            $membership = $memberships[$id];
-            if (!$membership->isPlayerControlled() || $this->playerProtection->suspendedForInactivity($membership)) continue;
-            if ($quantity < 1 || ($lost[$id] ?? 0) / $quantity < $threshold) continue;
-            if ($membership->lastRecoveryProtectionAt !== null && $membership->lastRecoveryProtectionAt->modify('+' . $cooldown . ' seconds') > $now) continue;
-            $membership->lastRecoveryProtectionAt = $now;
-            $membership->recoveryProtectedUntil = $now->modify('+' . $duration . ' seconds');
-            $protected[] = (int) $id;
-            $this->notifications->enqueue($membership, 'Protection de récupération activée pendant 24 heures après de lourdes pertes.',journalKind:'combat');
-        }
-        sort($protected);
-        return $protected;
+        if ($engaged < 1 || $lost / $engaged < $threshold) return [];
+        if ($defender->lastRecoveryProtectionAt !== null && $defender->lastRecoveryProtectionAt->modify('+' . $cooldown . ' seconds') > $now) return [];
+        $defender->lastRecoveryProtectionAt = $now;
+        $defender->recoveryProtectedUntil = $now->modify('+' . $duration . ' seconds');
+        $this->notifications->enqueue($defender, 'Protection après pertes activée pour 24 heures. Attaquer un joueur y met fin.', journalKind: 'combat');
+        return [$defender->id];
     }
 
     private function consumeOrbitFuel(Fleet $fleet): void

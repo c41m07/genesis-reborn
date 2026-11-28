@@ -1,11 +1,15 @@
 {% if chrome.planet %}
     {% set currentRoute = app.request.attributes.get('_route') %}
     {% set onFleetPage = currentRoute in ['app_fleets', 'app_fleet_prepare', 'app_fleet_orbits', 'app_fleet_holds'] %}
+    {% set onMapPage = currentRoute in ['app_map', 'app_map_v2'] %}
     <div class="sidebar-colonies" data-live-region="colony-selector">
         <label for="sidebar-colony">VOS COLONIES <span>{{ chrome.planets|length }}/{{ chrome.colonyLimit }}</span></label>
         {# Sur Flottes, « origin » choisit la colonie sans activer l’ancienne redirection « colony » vers les orbites. #}
-        <form action="{{ path(onFleetPage ? currentRoute : 'app_home') }}" method="get">
-            {% if not onFleetPage %}<input type="hidden" name="section" value="{{ section }}">{% endif %}
+        <form action="{{ path(onFleetPage or onMapPage ? currentRoute : 'app_home') }}" method="get">
+            {% if onMapPage %}
+                {% if selected_galaxy %}<input type="hidden" name="galaxy" value="{{ selected_galaxy.id }}">{% endif %}
+                {% if selected_system_id %}<input type="hidden" name="system" value="{{ selected_system_id }}">{% endif %}
+            {% elseif not onFleetPage %}<input type="hidden" name="section" value="{{ section }}">{% endif %}
             <div class="sidebar-colony-choice">
                 <span class="tiny-planet" aria-hidden="true"></span>
                 <select id="sidebar-colony" name="{{ onFleetPage ? 'origin' : 'colony' }}" data-controller="colony-switch" data-action="change->colony-switch#change" aria-label="Choisir une colonie">

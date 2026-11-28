@@ -1251,6 +1251,7 @@ final class GamePersistenceTest extends KernelTestCase
         $report = $this->em->getRepository(\App\Entity\EspionageReport::class)->findOneBy(['sender' => $sender->currentPlayerUniverse]);
         self::assertNotNull($report);
         self::assertSame('success', $report->result);
+        self::assertSame('Planète libre', $report->targetOwnerName);
         self::assertSame(1, $this->em->getRepository(\App\Entity\PlayerBoost::class)->count(['playerUniverse' => $sender->currentPlayerUniverse, 'sourceType' => 'risk_mission']));
         self::assertSame(5, $report->detectionChance);
         self::assertSame(1, $report->probesSent);
@@ -1384,9 +1385,16 @@ final class GamePersistenceTest extends KernelTestCase
         $report = $this->em->getRepository(\App\Entity\EspionageReport::class)->findOneBy(['sender' => $sender->currentPlayerUniverse]);
         self::assertNotNull($report);
         self::assertSame('detected',$report->result);
+        self::assertSame($targetOwner->username, $report->targetOwnerName);
+        $discovered = $this->em->getRepository(\App\Entity\PlayerDiscovery::class)->findOneBy(['playerUniverse' => $targetOwner->currentPlayerUniverse, 'solarSystem' => $origin->solarSystem]);
+        self::assertSame($discovered ? $sender->username : null, $report->identifiedSenderName);
         $unread = self::getContainer()->get(\App\Repository\ReportNoticeRepository::class);
         self::assertSame(1, $unread->count($sender->currentPlayerUniverse));
-        self::assertSame(0, $unread->count($targetOwner->currentPlayerUniverse), 'L’alerte détectée ne crée pas un rapport pour la cible.');
+        self::assertSame(1, $unread->count($targetOwner->currentPlayerUniverse));
+        $reader = self::getContainer()->get(\App\Service\Fleet\EspionageReportReader::class);
+        self::assertSame($report, $reader->findVisible($targetOwner->currentPlayerUniverse, $report->id));
+        $service->arrive($spyFleet->id, $spyFleet->dispatchToken);
+        self::assertSame(1, $unread->count($targetOwner->currentPlayerUniverse));
         self::assertSame(95, $report->detectionChance);
         self::assertSame(2, $report->probesSent);
         if ($report->result === 'detected') {
@@ -1708,7 +1716,7 @@ final class GamePersistenceTest extends KernelTestCase
         self::assertSame(1,$this->em->getRepository(PlayerTechnology::class)->findOneBy(['playerUniverse'=>$membership,'slug'=>'colonial_expansion'])->level);
     }
 
-    public function testFreshEmpireCanReachASecondPlanetAfterSixEightHourIntervals(): void
+    public function testFreshEmpireCanColonizeWithThreeHalfHourSessionsPerDay(): void
     {
         $clock = $this->clock();
         $started = $clock->now();
@@ -1759,23 +1767,24 @@ final class GamePersistenceTest extends KernelTestCase
             [1032, 'buildings', 'mine_nano'],
             [1100, 'buildings', 'mine_nano'],
             [28800, 'buildings', 'lab'],
-            [29040, 'buildings', 'lab'],
-            [29040, 'technologies', 'engineering_foundations'],
-            [29634, 'technologies', 'engineering_foundations'],
-            [30426, 'technologies', 'naval_engineering'],
-            [57600, 'buildings', 'shipyard'],
-            [59353, 'buildings', 'storage_electricity'],
+            [30600, 'technologies', 'engineering_foundations'],
+            [57600, 'buildings', 'lab'],
+            [57600, 'technologies', 'engineering_foundations'],
+            [86400, 'technologies', 'naval_engineering'],
             [86400, 'buildings', 'shipyard'],
-            [115200, 'technologies', 'colonial_expansion'],
-            [144000, 'ships', 'colony_ship'],
+            [88163, 'buildings', 'storage_electricity'],
+            [115200, 'buildings', 'shipyard'],
+            [144000, 'technologies', 'colonial_expansion'],
+            [172800, 'ships', 'colony_ship'],
         ];
         $queues = self::getContainer()->get(QueueService::class);
         foreach ($schedule as $index => [$second, $group, $slug]) {
+            self::assertLessThanOrEqual(1800, $second % (8 * 3600), 'Chaque achat doit avoir lieu pendant une session de 30 minutes.');
             $clock->sleep($started->getTimestamp() + $second - $clock->now()->getTimestamp());
             $queues->add($membership, $origin, $group, $slug, 1, md5('colonization-' . $index));
         }
 
-        $clock->sleep($started->getTimestamp() + 48 * 3600 - $clock->now()->getTimestamp());
+        $clock->sleep($started->getTimestamp() + 56 * 3600 - $clock->now()->getTimestamp());
         $fleets = self::getContainer()->get(\App\Service\Fleet\FleetService::class);
         $fleets->send($membership, $origin, 'colonize', $target->id, ['colony_ship' => ['basic' => 1]], 1, [], str_repeat('f', 32));
         $mission = $this->em->getRepository(Fleet::class)->findOneBy(['playerUniverse' => $membership, 'status' => 'traveling']);
@@ -1785,7 +1794,7 @@ final class GamePersistenceTest extends KernelTestCase
         $fleets->arrive($mission->id, $mission->dispatchToken);
         $this->em->refresh($target);
         self::assertSame($membership, $target->owner);
-        self::assertEquals($started->modify('+48 hours 375 seconds'), $target->acquiredAt);
+        self::assertEquals($started->modify('+56 hours 375 seconds'), $target->acquiredAt);
         self::assertSame(2, $this->em->getRepository(Planet::class)->count(['owner' => $membership]));
     }
 

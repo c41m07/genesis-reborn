@@ -444,13 +444,16 @@ final class ColonyController extends AbstractController
         }
         $galaxies = array_values($galaxiesById);
         $ownedPlanets = $this->repo->planets($m->universe, $m);
-        $originId = (int) $request->getSession()->get('selected_planet_' . $m->id, 0);
+        $originId = $request->query->getInt('colony', (int) $request->getSession()->get('selected_planet_' . $m->id, 0));
         $mapOrigin = null;
         foreach ($ownedPlanets as $ownedPlanet) {
             if ($ownedPlanet->id === $originId) {
                 $mapOrigin = $ownedPlanet;
                 break;
             }
+        }
+        if ($request->query->has('colony') && !$mapOrigin) {
+            throw $this->createNotFoundException('Planète de départ inaccessible.');
         }
         $mapOrigin ??= $ownedPlanets[0] ?? null;
         $defaultGalaxyId = $interactive ? $mapOrigin?->solarSystem->galaxy->id : null;
@@ -509,7 +512,7 @@ final class ColonyController extends AbstractController
             foreach (GameCatalog::TIERS as $tier) {
                 $quantity = $mapStock[$slug][$tier] ?? 0;
                 if ($quantity > 0) {
-                    $mapMissionShips[$slug][] = [
+                    $mapMissionShips[$slug][$tier] = [
                         'tier' => $tier,
                         'label' => $catalog->getTierForUniverse($m->universe, 'ships', $slug, $tier)['label'],
                         'quantity' => $quantity,
@@ -617,6 +620,7 @@ final class ColonyController extends AbstractController
                 'systems' => $mapSystems,
                 'selectedSystemId' => $selectedId > 0 ? $selectedSystem['system']->id : null,
                 'origin' => $mapOrigin ? [
+                    'planetId' => $mapOrigin->id,
                     'planetName' => $mapOrigin->name,
                     'planetCoordinates' => $mapOrigin->coordinates(),
                     'galaxyId' => $mapOrigin->solarSystem->galaxy->id,
@@ -639,7 +643,9 @@ final class ColonyController extends AbstractController
         $hasColonySlot = count($ownedPlanets) + $this->occupations->reservedSlots($m) < $this->occupations->colonyLimit($m);
         return [
             'membership' => $m,
+            'planet' => $request->query->has('colony') ? $mapOrigin : null,
             'map_origin' => $mapOrigin,
+            'map_tiers' => $catalog->tiers(),
             'map_mission_ships' => $mapMissionShips,
             'map_fleet_limit' => $mapFleetLimit,
             'systems' => $systems,

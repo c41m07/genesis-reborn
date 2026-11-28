@@ -29,9 +29,11 @@ final readonly class PiratePilotEncounterForms
             return null;
         }
 
+        $probe = $this->catalog->getTierForUniverse($origin->solarSystem->galaxy->universe, 'ships', 'probe', $plan['quote']['tier']);
+
         return self::confirmationCard(PiratePilotCommandAction::Reconnaissance, $plan['quote'],
             $this->csrf->getToken($plan['intent']->csrfId())->getValue()) + [
-                'notice' => 'Une Sonde de reconnaissance basique et son carburant sont consommés par la mission.',
+                'notice' => sprintf('Vous perdrez une sonde de rang %s (%s) lors de cette reconnaissance.', $probe['_tier_label'], $probe['label']),
             ];
     }
 

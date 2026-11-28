@@ -58,7 +58,7 @@ Partir des cibles du [Makefile](Makefile). Choisir les lignes qui correspondent 
 - Afficher les heures dans le fuseau choisi dans les préférences du joueur. Pour un courriel ou une notification différée, utiliser le fuseau du destinataire et le repli prévu par l’application si sa préférence manque. Valider tout identifiant de fuseau reçu du client.
 - Avant de formater une date déjà chargée, appliquer explicitement le fuseau d’affichage. Préférer un objet immuable ou convertir une copie pour préserver la valeur de l’entité. Si un traitement change temporairement le fuseau de PHP ou de Twig, le rétablir dans un bloc `finally`, y compris dans les workers.
 - Pour filtrer les événements d’un jour, calculer le début de ce jour et le début du jour suivant dans le fuseau concerné, puis convertir les deux bornes en UTC pour la requête SQL ou DQL. Exclure la borne de fin. Lors d’un changement d’heure, deux minuits locaux peuvent être séparés de 23 ou 25 heures.
-- Pour une échéance de jeu, appliquer le fuseau fixé par la règle métier. Par exemple, le classement quotidien suit minuit en `Europe/Paris`, quel que soit le fuseau d’affichage du joueur. Préserver le format des API existantes et, pour tout nouvel horodatage textuel échangé, utiliser ISO 8601 avec `Z` ou un décalage explicite.
+- Pour une échéance de jeu, appliquer le fuseau fixé par la règle métier. Par exemple, le classement suit minuit et midi en `Europe/Paris`, quel que soit le fuseau d’affichage du joueur. Préserver le format des API existantes et, pour tout nouvel horodatage textuel échangé, utiliser ISO 8601 avec `Z` ou un décalage explicite.
 - Dans les tests concernés, fixer l’instant et le fuseau. Vérifier que deux joueurs dans des fuseaux différents voient le même événement à leur heure locale et que l’instant stocké reste identique. Couvrir les changements d’heure pour les règles fondées sur le jour civil.
 
 ## Performances et protections contre les régressions
@@ -92,6 +92,9 @@ Partir des cibles du [Makefile](Makefile). Choisir les lignes qui correspondent 
 - Distinguer clairement une note proposée d’une version déjà publiée ; ne pas annoncer un déploiement sans en avoir vérifié le résultat.
 
 ## Organisation des pages et de la navigation
+
+- Pour planifier une tâche courante, viser 4 à 5 clics maximum depuis l’écran où le joueur commence jusqu’à la validation, sur ordinateur comme sur mobile. Au-delà de 5, chercher d’abord les détours à supprimer. Conserver les confirmations nécessaires, notamment pour les actions irréversibles.
+- Dans tous les menus du jeu, permettre de changer de planète en 2 à 3 clics maximum, sélecteur compris. Garder la rubrique et l’onglet actifs en affichant les données de la nouvelle colonie, sans redirection automatique vers la vue générale. Si une fiche est propre à l’ancienne planète, ouvrir la liste correspondante de la même rubrique.
 
 - Pour tout ajout ou changement d’interface, choisir explicitement entre page dédiée, onglet, filtre, ancre et contenu dépliable selon l’objectif du joueur, le volume de contenu, la fréquence d’utilisation et les besoins sur mobile. Expliquer brièvement les choix structurants dans le suivi du lot.
 - Privilégier une page dédiée pour une tâche autonome, une gestion comportant ses propres formulaires ou un contenu conséquent consulté indépendamment. Lui donner une URL stable, un titre précis et une navigation cohérente ; vérifier l’accès direct, le rechargement et le retour arrière. Ne pas simuler cette séparation en masquant simplement les sections d’une grande page avec JavaScript.

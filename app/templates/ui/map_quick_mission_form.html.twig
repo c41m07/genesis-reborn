@@ -1,14 +1,20 @@
 {% import 'ui/macros.html.twig' as ui %}
-<form class="map-quick-mission" method="post" action="{{ path('app_fleet_quick_send') }}">
+{% set isSpy = quick_mission == 'spy' %}
+{% set probeLimit = min(map_fleet_limit, constant('App\\Service\\Fleet\\FleetService::QUICK_SPY_LIMIT')) %}
+<form class="map-quick-mission{{ isSpy ? ' map-probe-picker' : '' }}"
+      {% if isSpy %}data-controller="fleet-quantity" data-fleet-quantity-limit-value="{{ probeLimit }}"{% endif %} method="post" action="{{ path('app_fleet_quick_send') }}">
     <input type="hidden" name="_token" value="{{ csrf_token('map-mission-'~quick_mission~'-'~quick_target) }}">
     <input type="hidden" name="request_key" value="{{ request_key() }}">
     <input type="hidden" name="return_to" value="{{ quick_return_to|default('app_map') }}">
     <input type="hidden" name="origin" value="{{ map_origin.id }}">
     <input type="hidden" name="mission" value="{{ quick_mission }}">
     <input type="hidden" name="target" value="{{ quick_target }}">
-    <input type="hidden" name="ship_tier" value="{{ ship.tier }}">
-    <small>{{ ship.label }} · {{ ship.quantity }} disponible{{ ship.quantity > 1 ? 's' : '' }}</small>
-    {% if quick_mission=='spy' %}<label class="map-probe-count">Sondes <input name="probe_quantity" aria-label="Sondes · {{ ship.label }}" type="number" min="1" max="{{ min(ship.quantity, map_fleet_limit, 100) }}" value="1" required></label>{% endif %}
+    {% if isSpy %}
+        {% include 'ui/map_probe_selection.html.twig' with {ranks:ranks, tiers:map_tiers, target:quick_target, limit:probeLimit} only %}
+    {% else %}
+        <input type="hidden" name="ship_tier" value="{{ ship.tier }}">
+        <small>{{ ship.label }} · {{ ship.quantity }} disponible{{ ship.quantity > 1 ? 's' : '' }}</small>
+    {% endif %}
     <button class="{{ quick_mission=='colonize'?'primary':'secondary' }}">{{ quick_mission=='explore'?'Envoyer 1 sonde':(quick_mission=='spy'?'Envoyer les sondes d’espionnage':'Envoyer le vaisseau colonie') }} {{ ui.icon('arrow') }}</button>
-    {% if quick_mission=='spy' %}<small>Vitesse appliquée : {{ ((preferences.galaxySpySpeed|default(1))*100)|round }} %</small>{% elseif quick_mission=='colonize' %}<small>Vitesse appliquée : {{ ((preferences.galaxyColonizeSpeed|default(1))*100)|round }} %</small>{% endif %}
+    {% if isSpy %}<span class="map-probe-speed">Vitesse · {{ ((preferences.galaxySpySpeed|default(1))*100)|round }} %</span>{% elseif quick_mission=='colonize' %}<small>Vitesse appliquée : {{ ((preferences.galaxyColonizeSpeed|default(1))*100)|round }} %</small>{% endif %}
 </form>

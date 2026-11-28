@@ -463,6 +463,14 @@ body.authenticated .fleet-redesign .core-fleet-side .fleet-mission-summary-card 
 .core-fleet-recap { padding:18px; min-width:0; align-self:start; }
 .core-fleet-recap h2 { display:flex; align-items:center; gap:7px; margin:0 0 12px; font-size:19px; }
 .core-fleet-recap h2 .icon { width:18px; height:18px; color:var(--accent); }
+.fleet-conquest-warning:not([hidden]) {
+    display:grid; gap:5px; margin-bottom:12px; padding:10px 12px;
+    border:1px solid var(--gold); border-inline-start-width:4px; border-radius:5px;
+    background:color-mix(in srgb,var(--gold) 12%,var(--panel)); color:var(--text);
+    font-size:15px; line-height:1.45; overflow-wrap:anywhere;
+}
+.fleet-conquest-warning > strong { display:flex; align-items:center; gap:6px; }
+.fleet-conquest-warning .icon { width:18px; height:18px; flex:none; }
 .core-fleet-recap-total {
     display:flex;
     align-items:baseline;

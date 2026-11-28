@@ -1,5 +1,11 @@
 # Synthèse de conception
 
+## Protection après pertes et riposte
+
+Lorsque l’attaque gagne, le propriétaire de la colonie défendue reçoit 24 h de protection s’il perd au moins 70 % de ses vaisseaux militaires engagés. Le délai entre deux activations est de sept jours et la suspension pour inactivité s’applique. La protection prend fin dès le départ d’une attaque contre un autre joueur. Un devis, une mission d’espionnage ou une attaque de PNJ la préserve.
+
+Chaque départ d’attaque entre joueurs ouvre à sa cible un droit de riposte contre cet agresseur pendant 24 h dans le même univers. Le rapport de points est levé pour un départ de riposte dans ce délai. Diplomatie, vacances et protections de la cible restent vérifiées. Une sonde détectée donne également un rapport d’observation privé au propriétaire espionné. Ce rapport ne révèle aucune composition ennemie.
+
 ## Répartition des prix courante
 
 Les 156 profils par défaut utilisent des recettes propres à chaque fiche et à chaque rang, sans parts de valeur imposées par rang. Voir [les raisons des recettes RP](CATALOGUE_COUTS_RP.md) et [les anciens prix](SAUVEGARDE_CATALOGUE_COUTS_AVANT_RP.md).
@@ -26,7 +32,7 @@ Les matériaux des recherches progressent de 35 % par niveau. Les durées progre
 
 Pour les quatre extracteurs, la centrale, les cinq dépôts, le laboratoire, le chantier et le bunker, la hausse des matériaux est de 10 % aux niveaux 2–10, puis 9 %, 8 %, 7 %, 6 %, 5 %, 4 %, 3 % et 2 % par tranches de dix niveaux. Dès le niveau 91, elle vaut 1 %. La durée de construction suit sa courbe propre.
 
-Pour chaque rang, la contribution de L niveaux vaut sa base par niveau × L × (1 + taux)^L. Les taux T1/T2/T3 valent 0,25 %, 0,5 % et 1 %. La production industrielle additionne les contributions, avec les facteurs de production 1 / 1,5 / 2,25. Les consommations électriques dépendent des niveaux installés et l’hydrogène du réacteur dépend de l’antimatière produite. La capacité additionne les contributions des dépôts (poids 1 / 1,25 / 1,5625) aux 10 000 places initiales de la colonie.
+Pour chaque rang, la contribution de L niveaux vaut sa base par niveau × L × (1 + taux)^L. Les taux T1/T2/T3 valent 0,25 %, 0,5 % et 1 %. La production industrielle additionne les contributions, avec les facteurs de production 1 / 1,5 / 2,25. Pour l’électricité des quatre extracteurs, on applique la même formule à la consommation de base, avec les mêmes facteurs de rang et des taux propres de 0,125 % en Basique, 0,0625 % en Intermédiaire et 0,03125 % en Supérieur. Les trois consommations s’additionnent. Le piège consomme 4 hydrogènes par antimatière effectivement produite. La capacité additionne les contributions des dépôts (poids 1 / 1,25 / 1,5625) aux 10 000 places initiales de la colonie.
 
 Pour le laboratoire, le chantier et le bunker, les poids sont 1 / 1,25 / 1,5625. On divise la somme des contributions par celle obtenue aux trois maxima. Pour cette proportion p, l’effet vaut plafond × ln(1 + 2p) / ln(3). Le laboratoire et le chantier atteignent **89,5 % à 25/25/25** pour les recherches lancées sur cette colonie et ses constructions de vaisseaux respectivement. Une durée nominale de 10 h passe à 1 h 03 min. Aucun cumul entre ces deux effets : chaque opération utilise sa propre infrastructure. Le bunker atteint +25 % de structure des défenses à 10/10/10, en composition avec le blindage.
 
@@ -176,9 +182,9 @@ Les opérations en retard sont rejouées à leurs dates théoriques avant dépen
 
 Guildes : candidature depuis la recherche ou la présentation, à accepter par le commandant ou un grade autorisé ; invitation d’un commandant sans guilde, à accepter par le destinataire. Adhésion exclusive dans chaque univers, transfert du commandement à un autre membre, départ après transfert, dissolution par le dirigeant. Alliances personnelles et alliances de guildes exigent le consentement réciproque. Une hostilité de guilde invalide les contrats personnels incompatibles.
 
-PNJ : les planètes PNJ découvertes du même univers peuvent être combattues par la mission Attaque, sans capture ni butin de ressources PNJ. Leur capture reste réservée à Conquête JcE, avec vaisseau colonie survivant, place disponible et règles d’occupation existantes (24 heures lorsque ce mécanisme est activé). Les bâtiments et stocks suivent les règles de conservation de la capture. Les planètes vierges restent colonisables ; les joueurs actifs ou simplement inactifs ne sont pas conquérables. Les empires déjà oubliés suivent les règles spécifiques détaillées ci-dessous.
+PNJ : les planètes PNJ découvertes du même univers peuvent être combattues par la mission Attaque, sans capture ni butin de ressources PNJ. Leur capture reste réservée à Conquête JcE, avec vaisseau colonie survivant, place disponible et règles d’occupation existantes (24 heures lorsque ce mécanisme est activé). Le récapitulatif de mission affiche le délai de capture après la victoire séparément de la durée du trajet. Les bâtiments et stocks suivent les règles de conservation de la capture. Les planètes vierges restent colonisables ; les joueurs actifs ou simplement inactifs ne sont pas conquérables. Les empires déjà oubliés suivent les règles spécifiques détaillées ci-dessous.
 
-Espionnage : une mission cible une planète connue du même univers autre que celles de l’émetteur. Elle transporte uniquement des sondes, détruites à l’arrivée. La détection avertit le propriétaire et bloque le rapport; les règles de détection actuelles sont décrites dans la section [Espionnage](#espionnage), les archives conservant les décisions initiales.
+Espionnage : une mission cible une planète connue du même univers autre que celles de l’émetteur. Elle transporte uniquement des sondes, détruites à l’arrivée. La détection avertit le propriétaire, lui donne un rapport d’observation et empêche la collecte de renseignements ; les règles de détection actuelles sont décrites dans la section [Espionnage](#espionnage), les archives conservant les décisions initiales.
 
 Les classements, l’administration, les combats, les missions avancées et l’espionnage sont livrés. Les choix chiffrés de base figurent dans docs/archives/CHOIX_EQUILIBRAGE_2026-11-02.md; leur effet sur le rythme et la difficulté sera mesuré avec les joueurs Alpha.
 
@@ -352,9 +358,11 @@ initiales :
 
 Les plafonds initiaux par boîte correspondent au grand format. Le joueur ouvre
 manuellement la boîte sur une colonie lui appartenant dans le même univers.
-L’ouverture est refusée pendant les vacances ou si un seul des entrepôts manque
-de place ; aucune ressource n’est déposée et la boîte est conservée intacte.
-Une même ouverture ne peut pas être appliquée deux fois.
+Les vacances bloquent l’ouverture. Si un entrepôt manque de place, le joueur voit
+les pertes maximales par ressource et peut changer de colonie ou confirmer. Après
+confirmation, chaque stock reçoit ce qui tient et le surplus est perdu. Une perte
+supérieure à l’avertissement demande une nouvelle validation.
+La confirmation indique la perte estimée à l’ouverture de l’avertissement et, si la production la fait évoluer, le plafond calculé une minute plus tard. Ce plafond reste opposable à la confirmation. Une même ouverture ne peut pas être appliquée deux fois.
 
 Un événement attribue au maximum un objet par participant éligible : un boost
 ou une boîte. Le plafond quotidien des boosts de missions à risque est conservé.
@@ -460,7 +468,7 @@ Les recherches historiquement actives en parallèle terminent leur travail sans 
 
 ## Classements quotidiens — 10 novembre 2026
 
-Tous les classements (points totaux des joueurs, bâtiments, recherche, flotte, nombre de colonies et guildes) sont figés entre deux calculs quotidiens, à 00 h en Europe/Paris, en tenant compte des changements d’heure. Les points affichés dans l’aperçu de colonie et l’API utilisent le même instantané. Les points sont la valeur des biens actuellement possédés aux prix catalogue courants : (H + 2 M + 4 N + 8 A) / 200, hors électricité, arrondie à l’inférieur séparément pour bâtiments, recherches et militaire (vaisseaux et défenses). En Alpha, le premier calcul pondéré se compare au dernier classement disponible, même établi avec l’ancienne formule. Les scores utilisés pour les protections et combats restent en temps réel : ratio d’attaque 5:1 inchangé ; protection débutant tant que les 7 jours ne sont pas écoulés et que le score reste inférieur à 7 500.
+Tous les classements (points totaux des joueurs, bâtiments, recherche, flotte, nombre de colonies et guildes) sont figés entre deux calculs quotidiens, à 00 h et 12 h en Europe/Paris, en tenant compte des changements d’heure. Les points affichés dans l’aperçu de colonie et l’API utilisent le même instantané. Les points sont la valeur des biens actuellement possédés aux prix catalogue courants : (H + 2 M + 4 N + 8 A) / 200, hors électricité, arrondie à l’inférieur séparément pour bâtiments, recherches et militaire (vaisseaux et défenses). En Alpha, le premier calcul pondéré se compare au dernier classement disponible, même établi avec l’ancienne formule. Les scores utilisés pour les protections et combats restent en temps réel : ratio d’attaque 5:1 inchangé ; protection débutant tant que les 7 jours ne sont pas écoulés et que le score reste inférieur à 7 500.
 
 Les évolutions comparent les deux derniers calculs persistés : points actuels moins points précédents ; rang précédent moins rang actuel (une place gagnée est positive). Dans le tableau joueur, gains et pertes sont signés et entre parenthèses sur la même ligne que la valeur ; une valeur inchangée s’affiche « (=) ». Sans référence précédente, l’évolution s’affiche « (—) ». La présentation des guildes et de l’aperçu conserve ses marqueurs existants. Les nouveaux inscrits et guildes entrent au prochain calcul. Les noms, relations diplomatiques et protections restent actuels ; les joueurs supprimés ou devenus empires oubliés et les guildes archivées ne sont plus affichés, sans renuméroter les rangs avant l’échéance suivante.
 
@@ -913,6 +921,10 @@ absent. Les résultats sont paginés par 50 et les dates utilisent le fuseau cho
 
 Décision du 14 novembre 2026 : ces valeurs sont une base d’essais Alpha, pas un équilibrage confirmé par les joueurs. Configuration : `app/config/game/espionage.yaml`.
 
+Dans la liste des renseignements et dans le rapport, l’expéditeur voit le propriétaire observé à l’arrivée. Pour les anciens rapports, le nom est affiché lorsque la date d’acquisition confirme la possession de la planète. Les coordonnées du rapport ouvrent son système sur la carte. Dans un nouveau rapport de détection reçu, le défenseur voit le nom de l’expéditeur si le système d’origine lui était connu lors de la détection.
+
+Depuis les deux vues de Galaxie, l’envoi rapide permet de combiner les rangs dans la limite de 100 sondes au total et de la taille de flotte autorisée. Le stock de la colonie de départ est vérifié pour chaque rang au départ.
+
 Le risque de détection de base vaut 50 % pour une sonde Basique, 40 % pour une Intermédiaire et 30 % pour une Supérieure. Pour plusieurs rangs, prendre la moyenne pondérée par leurs quantités, sans arrondi intermédiaire. Le rang n’ajoute aucun renseignement.
 
 Le bonus défensif vaut `min(20, floor(sondes présentes / 5))` points : 0 à 4 sondes donnent 0 point ; 5 donnent 1 ; 99 donnent 19 ; 100 ou davantage donnent 20. Chaque sonde compte pour une unité, quel que soit son rang. Le périmètre reste celui du moteur : sondes dans les flottes inactives de la planète, en défense ou en orbite sur elle ; les trajets ne sont pas ajoutés. Une planète PNJ sans propriétaire conserve le décompte de sa garnison de sondes et ses recherches PNJ.
@@ -975,7 +987,11 @@ L’administration choisit la période de visibilité dans chaque univers. Les p
 
 ## Bourse de ressources
 
-La station commerciale A:0:0, ouverte par univers, échange les quatre matériaux sans électricité. Le lot voyage sur les propres cargos du joueur, protégés en mission commerciale. Il est échangé en station après 30 minutes, puis livré après les 30 minutes du retour. Au déchargement, le surplus est placé dans une boîte de ressources de l’empire, y compris après un rappel. Si l’inventaire est plein, la boîte attend une place. Les frais d’essai sont de 2 %. Vendredi à 9 h à Paris, les marchands réapprovisionnent jusqu’à la moitié des ventes réelles hebdomadaires de la station, sans dépasser la cible ni modifier les cours. [Détail du parcours et du stock](BOURSE_DE_RESSOURCES.md).
+La station commerciale A:0:0, ouverte par univers, échange les quatre matériaux sans électricité. Le lot voyage sur les propres cargos du joueur, protégés en mission commerciale. Un même convoi peut réunir les rangs Basique, Intermédiaire et Supérieur dans la limite de flotte de l’univers. Il est échangé en station après 30 minutes, puis livré après les 30 minutes du retour. Au déchargement, le surplus est placé dans une boîte de ressources de l’empire, y compris après un rappel. Si l’inventaire est plein, la boîte attend une place. Les frais d’essai sont de 2 %. Vendredi à 9 h à Paris, les marchands réapprovisionnent jusqu’à la moitié des ventes réelles hebdomadaires de la station, sans dépasser la cible. Leur livraison réduit la rareté des ressources livrées. [Détail du parcours et du stock](BOURSE_DE_RESSOURCES.md).
+
+Les cours partent de 1 crédit pour l’hydrogène, 2 pour le métal, 4 pour le nano et 8 pour l’antimatière. Ils augmentent sous la réserve cible et diminuent au-dessus, entre 50 et 150 % du cours initial. Le comptoir délivre un devis pour le lot entier. Le troc applique 2 % de frais. La station paie les ventes en crédits après déduction de 2 % et facture les achats avec 2 % de frais. Chaque empire dispose de son propre solde par univers. Le classement affiche les crédits disponibles lors du relevé de minuit ou midi à Paris. Les crédits sont distincts des points de protection.
+
+Sur le marché des joueurs, le vendeur dépose sa cargaison à A:0:0 et fixe le prix unitaire en crédits. La taxe exigible à la publication vaut 2 % de la quantité offerte multipliée par ce prix, arrondis au centime supérieur. Elle est détruite immédiatement. Un solde insuffisant empêche la publication. Le vendeur reçoit le prix intégral des unités effectivement achetées. Les achats partiels et le retrait des invendus se règlent en station. Retirer une offre ne rembourse pas sa taxe. Chaque rapatriement vers une colonie nécessite un convoi.
 
 ## Bonus quotidiens temporaires
 
@@ -995,7 +1011,9 @@ L’effet combat est figé à l’ouverture du combat et ne s’applique pas aux
 
 ## Rapports de campagne et fret des convois pirates
 
-Les rapports privés de reconnaissance et de combat de la campagne rejoignent les rubriques Espionnage et Combats. Chaque trajet du convoi produit un rapport de transport dans Économie. À la livraison, une boîte de ressources contient la totalité du fret annoncé, demi-unités comprises. Le joueur choisit une colonie de son univers à l’ouverture. Elle doit pouvoir accueillir tout le contenu. Une livraison déjà créditée avant cette évolution reste acquise et ne donne aucune boîte supplémentaire.
+La reconnaissance pirate envoie une seule sonde de la colonie de départ, du premier rang disponible dans l’ordre Basique, Intermédiaire, Supérieur. Le devis indique le rang qui sera perdu. La durée et le carburant aller-retour dépendent de la sonde retenue. Sans sonde à quai, le départ est indisponible.
+
+Les rapports privés de reconnaissance et de combat de la campagne rejoignent les rubriques Espionnage et Combats. Chaque trajet du convoi produit un rapport de transport dans Économie. À la livraison, une boîte de ressources contient la totalité du fret annoncé, demi-unités comprises. Le joueur choisit une colonie de son univers à l’ouverture. Le joueur peut confirmer la perte du surplus si les entrepôts manquent de place. Une livraison déjà créditée avant cette évolution reste acquise et ne donne aucune boîte supplémentaire.
 
 ## Notifications des boîtes et des demandes d’orbite
 

@@ -58,7 +58,7 @@
                                        {% if quantity > 0 %}name="{{ inputName }}"{% else %}disabled{% endif %}>
                                 <button type="button" class="secondary fleet-composition-maximum" aria-label="Max : sélectionner le maximum de {{ label }} · {{ rank }}"
                                         data-action="fleet-quantity#maximumShip" data-input-id="{{ inputId }}"
-                                        {% if isEscort %}hidden data-fleet-quantity-target="progressiveMax"{% endif %}
+                                        {% if isEscort or progressiveMax|default(false) %}hidden data-fleet-quantity-target="progressiveMax"{% endif %}
                                         {% if quantity == 0 %}disabled{% endif %}><span aria-hidden="true">Max</span></button>
                             </div>
                         </td>

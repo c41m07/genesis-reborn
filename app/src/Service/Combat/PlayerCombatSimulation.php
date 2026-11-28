@@ -2,7 +2,7 @@
 
 namespace App\Service\Combat;
 
-use App\Entity\{Planet, PlayerTechnology, PlayerUniverse, Fleet, FleetShip};
+use App\Entity\{Planet, PlanetBuilding, PlanetDefense, PlayerTechnology, PlayerUniverse, Fleet, FleetShip};
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Fleet\EspionageReportReader;
@@ -36,7 +36,7 @@ final class PlayerCombatSimulation
         return (int) $this->catalog->forUniverse($owner->universe)['limits']['max_fleet_size'];
     }
 
-    public function own(PlayerUniverse $owner, int $planetId): array
+    public function own(PlayerUniverse $owner, int $planetId, bool $includeGarrison = false): array
     {
         $planet = $this->repo->find(Planet::class, $planetId);
         if (!$planet || $planet->owner?->id !== $owner->id || $planet->solarSystem->galaxy->universe->id !== $owner->universe->id) {
@@ -46,18 +46,27 @@ final class PlayerCombatSimulation
         $definitions = $this->choices($owner)['ships'];
         $fleets = $this->repo->all(Fleet::class, ['playerUniverse' => $owner, 'homePlanet' => $planet, 'status' => 'idle']);
         foreach ($fleets === [] ? [] : $this->repo->all(FleetShip::class, ['fleet' => $fleets]) as $ship) {
-            if ($ship->quantity <= 0 || isset($definitions[$ship->slug]['economic_unit'])) {
+            if ($ship->quantity <= 0 || (!$includeGarrison && isset($definitions[$ship->slug]['economic_unit']))) {
                 continue;
             }
             $ships[$ship->slug][$ship->tier] = ($ships[$ship->slug][$ship->tier] ?? 0) + $ship->quantity;
         }
-        return ['ships' => $ships, 'research' => $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $owner])];
+        $forces = ['ships' => $ships, 'research' => $this->repo->levelsByTier(PlayerTechnology::class, ['playerUniverse' => $owner])];
+        if ($includeGarrison) {
+            foreach ($this->repo->all(PlanetDefense::class, ['planet' => $planet]) as $defense) {
+                $forces['defenses'][$defense->slug][$defense->tier] = $defense->quantity;
+            }
+            foreach ($this->repo->all(PlanetBuilding::class, ['planet' => $planet, 'slug' => 'fortress']) as $building) {
+                $forces['fortress'][$building->tier] = $building->level;
+            }
+        }
+        return $forces;
     }
 
     public function intel(PlayerUniverse $owner, int $reportId): array
     {
         $report = $this->reports->findVisible($owner, $reportId);
-        if (!$report || $report->sender->universe->id !== $owner->universe->id) {
+        if (!$report || $report->sender->id !== $owner->id || $report->sender->universe->id !== $owner->universe->id) {
             throw new \DomainException('Rapport inaccessible dans cet univers.');
         }
         // Une catégorie absente reste inconnue ; une catégorie présente et vide confirme l’absence de forces.
@@ -101,7 +110,7 @@ final class PlayerCombatSimulation
         ];
     }
 
-    public function provenance(PlayerUniverse $owner, array $forces, array $intel): array
+    public function provenance(PlayerUniverse $owner, array $forces, array $intel, string $camp = 'defender'): array
     {
         $result = [];
         $choices = $this->choices($owner);
@@ -116,7 +125,7 @@ final class PlayerCombatSimulation
                 continue;
             }
             $before = $intel['forces'][$group];
-            $after = $forces['defender'][$group] ?? [];
+            $after = $forces[$camp][$group] ?? [];
             if ($group === 'research') {
                 $before = array_intersect_key($before, $choices['research']);
             }
@@ -129,31 +138,31 @@ final class PlayerCombatSimulation
      * Projette les champs non révélés laissés vides en zéros pour cet essai,
      * uniquement après confirmation. Les valeurs invalides restent au moteur.
      */
-    public function withConfirmedUnknownAssumptions(array $forces, ?array $intel, array $choices): array
+    public function withConfirmedUnknownAssumptions(array $forces, ?array $intel, array $choices, string $camp = 'defender'): array
     {
-        if ($intel === null || !is_array($forces['defender'] ?? null)) {
+        if ($intel === null || !is_array($forces[$camp] ?? null)) {
             return $forces;
         }
 
         foreach (['ships', 'defenses', 'research', 'fortress'] as $group) {
-            if (array_key_exists($group, $intel['forces']) || !is_array($forces['defender'][$group] ?? null)) {
+            if (array_key_exists($group, $intel['forces']) || !is_array($forces[$camp][$group] ?? null)) {
                 continue;
             }
             if ($group === 'fortress') {
                 foreach (GameCatalog::TIERS as $tier) {
-                    if (($forces['defender'][$group][$tier] ?? null) === '') {
-                        $forces['defender'][$group][$tier] = 0;
+                    if (($forces[$camp][$group][$tier] ?? null) === '') {
+                        $forces[$camp][$group][$tier] = 0;
                     }
                 }
                 continue;
             }
-            foreach ($forces['defender'][$group] as $slug => $tiers) {
+            foreach ($forces[$camp][$group] as $slug => $tiers) {
                 if (!isset($choices[$group][$slug]) || !is_array($tiers)) {
                     continue;
                 }
                 foreach (GameCatalog::TIERS as $tier) {
                     if (($tiers[$tier] ?? null) === '') {
-                        $forces['defender'][$group][$slug][$tier] = 0;
+                        $forces[$camp][$group][$slug][$tier] = 0;
                     }
                 }
             }

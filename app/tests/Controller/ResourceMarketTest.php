@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
-use App\Entity\{Fleet, FleetShip, MarketTrade, Planet, PlanetResource, Player, PlayerBoost, Universe};
+use App\Entity\{Fleet, FleetShip, MarketAccount, MarketOffer, PlayerUniverse, MarketTrade, Planet, PlanetResource, Player, PlayerBoost, Universe};
 use App\Message\MarketConvoyDue;
 use App\MessageHandler\MarketConvoyDueHandler;
 use App\Repository\ResourceMarketRepository;
 use App\Service\Colony\ResourceService;
-use App\Service\Market\{MarketConvoys, MarketPricing, WeeklyMerchantDelivery};
+use App\Service\Market\{MarketConvoys, MarketPresentation, MarketPricing, PlayerMarket, WeeklyMerchantDelivery};
 use App\Service\Notification\OutboxRelay;
 use App\Service\Player\{LeaderboardService, RegistrationService};
 use App\Service\Universe\{UniverseImporter, UniverseService};
@@ -62,6 +62,13 @@ final class ResourceMarketTest extends WebTestCase
     public function testAdminOpeningAndPlayerRoundTripThroughOutboxAndHandler(): void
     {
         [$admin, $home, $transport] = $this->fixture('MarketAdmin', true);
+        $advanced = new FleetShip();
+        $advanced->fleet = $transport->fleet;
+        $advanced->slug = 'transport';
+        $advanced->tier = 'intermediate';
+        $advanced->quantity = 1;
+        $this->em->persist($advanced);
+        $this->em->flush();
         $member = $admin->currentPlayerUniverse;
         $universe = $member->universe;
         $this->client->loginUser($admin);
@@ -78,10 +85,27 @@ final class ResourceMarketTest extends WebTestCase
 
         $crawler = $this->client->request('GET', '/bourse?planet='.$home->id);
         self::assertResponseIsSuccessful();
-        $quote = $crawler->selectButton('Calculer le devis')->form(['quantity' => '2000']);
+        $quote = $crawler->selectButton('Calculer le devis')->form([
+            'quantity' => '2000', 'ships[transport][basic]' => 1, 'ships[transport][intermediate]' => 1,
+        ]);
         $beforeMetal = $this->stock($home->id, 'metal');
         $beforePoints = self::getContainer()->get(LeaderboardService::class)->forUniverse($member)[0]['fleet_points'];
         $beforeNano = $this->stock($home->id, 'nano');
+        $estimate = $quote->getPhpValues();
+        $estimate['action'] = 'estimate';
+        foreach ([
+            ['planet' => -1], ['ships' => ['fighter' => ['basic' => 1]]],
+            ['ships' => ['transport' => ['superior' => 1]]], ['ships' => ['transport' => ['basic' => -1]]],
+        ] as $invalid) {
+            $this->client->request('POST', '/bourse', $invalid + $estimate);
+            self::assertResponseStatusCodeSame(422);
+        }
+        $this->client->request('POST', '/bourse', $estimate);
+        self::assertResponseIsSuccessful();
+        $live = json_decode($this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame(['basic' => 1, 'intermediate' => 1], $live['composition']);
+        self::assertGreaterThan(0, $live['planetFuel']);
+        self::assertSame(0, $this->em->getRepository(MarketTrade::class)->count([]));
         $this->client->submit($quote);
         self::assertResponseRedirects('/bourse', 303);
         $crawler = $this->client->followRedirect();
@@ -94,6 +118,8 @@ final class ResourceMarketTest extends WebTestCase
         $this->client->followRedirect();
         self::assertSelectorTextContains('.market-trip', 'Vers la station');
         $first = $this->em->getRepository(MarketTrade::class)->findOneBy(['membershipId' => $member->id]);
+        self::assertSame($live['composition'], $first->ships);
+        self::assertEqualsWithDelta($live['planetFuel'], $first->reservedFuel, 0.00001);
         $this->client->request('GET', '/flottes/empire');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextSame('.fleet-composition-table td', '2');
@@ -154,6 +180,7 @@ final class ResourceMarketTest extends WebTestCase
         self::assertSelectorNotExists('[data-market-trade]');
         self::assertEqualsWithDelta($beforeDelivery + $closed->receiveQuantity, $this->stock($home->id, 'nano'), .0001);
         self::assertSame(2, $this->em->find(FleetShip::class, $transport->id)->quantity);
+        self::assertSame(1, $this->em->find(FleetShip::class, $advanced->id)->quantity);
     }
 
     public function testTradeCanIncreaseStationStockPastTheMaximumMerchantTarget(): void
@@ -296,6 +323,8 @@ final class ResourceMarketTest extends WebTestCase
         $market->stock['nano'] = 49000;
         $market->stock['antimatter'] = 40000;
         $market->pressure = ['nano' => 2000];
+        $presentation = self::getContainer()->get(MarketPresentation::class);
+        $previousIndex = $presentation->rows($market)['nano']['index'];
         $exchangeTimes = [
             ['2026-11-27T07:59:59Z', 'nano', 20000, 'completed'],
             ['2026-11-27T08:00:00Z', 'antimatter', 6000, 'completed'],
@@ -332,6 +361,7 @@ final class ResourceMarketTest extends WebTestCase
         self::assertSame(50000, $market->stock['nano']);
         self::assertSame(40000, $market->stock['antimatter']);
         self::assertSame(['nano' => 2000], $market->pressure);
+        self::assertLessThan($previousIndex, $presentation->rows($market)['nano']['index']);
         self::assertSame(10000, $marketRepo->reserved($universe)['outgoing']['nano']);
         $log = $marketRepo->merchantLog($universe);
         self::assertCount(1, $log);
@@ -392,21 +422,61 @@ final class ResourceMarketTest extends WebTestCase
         $markets = self::getContainer()->get(ResourceMarketRepository::class);
         $convoys = self::getContainer()->get(MarketConvoys::class);
         $input = ['pay' => 'metal', 'receive' => 'nano', 'quantity' => 1000, 'rank' => 'basic', 'cargos' => 1];
-        $quotes = [$convoys->preview($firstMember, $firstPlanet, $input), $convoys->preview($secondMember, $secondPlanet, $input)];
         $market = $markets->find($universe);
-        $market->stock['nano'] = $quotes[0]['received'];
+        // À ce niveau de rareté, 400 unités couvrent un seul des deux convois.
+        $market->stock['nano'] = 400;
         $this->em->flush();
+        $quotes = [$convoys->preview($firstMember, $firstPlanet, $input), $convoys->preview($secondMember, $secondPlanet, $input)];
+        self::assertGreaterThan(200, $quotes[0]['received']);
 
+        $answers = $this->raceMarketOrders([
+            ['member' => $firstMember->id, 'planet' => $firstPlanet->id, 'quote' => $quotes[0]],
+            ['member' => $secondMember->id, 'planet' => $secondPlanet->id, 'quote' => $quotes[1]],
+        ]);
+        self::assertSame(['Le stock disponible de la station ne couvre pas ce lot. Réduisez votre échange.', 'accepted'], $answers);
+        self::assertCount(1, $this->em->getRepository(MarketTrade::class)->findAll());
+        self::assertSame($quotes[0]['received'], $markets->reserved($universe)['outgoing']['nano']);
+        $paid = [$this->stock($firstPlanet->id, 'metal'), $this->stock($secondPlanet->id, 'metal')];
+        self::assertLessThan(10000, min($paid), 'Un seul acheteur a payé son lot.');
+        self::assertSame(10000.0, max($paid), 'L’acheteur refusé garde tout son fret.');
+    }
+
+    public function testTwoBuyersCompeteForTheSameLastUnits(): void
+    {
+        [$seller] = $this->fixture('RaceSeller');
+        [$first] = $this->fixture('RaceBuyerOne');
+        [$second] = $this->fixture('RaceBuyerTwo');
+        $member = $seller->currentPlayerUniverse;
+        self::getContainer()->get(WeeklyMerchantDelivery::class)->configure($seller, $member->universe, true, $this->targets());
+        $this->fundMarketAccount($member, 100, 5);
+        $this->fundMarketAccount($first->currentPlayerUniverse, 1000);
+        $this->fundMarketAccount($second->currentPlayerUniverse, 1000);
+        self::getContainer()->get(PlayerMarket::class)->order($member, bin2hex(random_bytes(16)), 'list', 'metal', 5, '2.00', 0);
+        $offer = $this->em->getRepository(MarketOffer::class)->findOneBy(['seller' => $member]);
+        $answers = $this->raceMarketOrders([
+            ['member' => $first->currentPlayerUniverse->id, 'offer' => $offer->id],
+            ['member' => $second->currentPlayerUniverse->id, 'offer' => $offer->id],
+        ]);
+        self::assertSame(['Offre indisponible.', 'accepted'], $answers);
+        $this->em->clear();
+        $firstAccount = $this->em->find(MarketAccount::class, $first->currentPlayerUniverse->id);
+        $secondAccount = $this->em->find(MarketAccount::class, $second->currentPlayerUniverse->id);
+        self::assertSame(5, $firstAccount->goods['metal'] + $secondAccount->goods['metal']);
+        self::assertSame(1000, $firstAccount->cents + $secondAccount->cents);
+        self::assertSame(1080, $this->em->find(MarketAccount::class, $member->id)->cents);
+    }
+
+    private function raceMarketOrders(array $orders): array
+    {
         $barrier = tempnam(sys_get_temp_dir(), 'market-race-');
         unlink($barrier);
         $ready = [$barrier.'.first', $barrier.'.second'];
         $processes = [];
         try {
-            foreach ([[$firstMember, $firstPlanet], [$secondMember, $secondPlanet]] as $i => [$member, $planet]) {
+            foreach ($orders as $i => $order) {
                 $process = new Process([
                     PHP_BINARY, dirname(__DIR__).'/Support/concurrent_market_departure.php',
-                    json_encode([
-                        'member' => $member->id, 'planet' => $planet->id, 'quote' => $quotes[$i],
+                    json_encode($order + [
                         'key' => str_repeat((string) ($i + 1), 32), 'ready' => $ready[$i], 'barrier' => $barrier,
                     ], JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION),
                 ], timeout: 20);
@@ -429,12 +499,7 @@ final class ResourceMarketTest extends WebTestCase
                 $answers[] = trim($process->getOutput());
             }
             sort($answers);
-            self::assertSame(['Le stock disponible de la station ne couvre pas ce lot. Réduisez votre échange.', 'accepted'], $answers);
-            self::assertCount(1, $this->em->getRepository(MarketTrade::class)->findAll());
-            self::assertSame($quotes[0]['received'], $markets->reserved($universe)['outgoing']['nano']);
-            $paid = [$this->stock($firstPlanet->id, 'metal'), $this->stock($secondPlanet->id, 'metal')];
-            self::assertLessThan(10000, min($paid), 'Un seul acheteur a payé son lot.');
-            self::assertSame(10000.0, max($paid), 'L’acheteur refusé garde tout son fret.');
+            return $answers;
         } finally {
             foreach ($processes as $process) {
                 $process->stop(0.5);
@@ -445,6 +510,182 @@ final class ResourceMarketTest extends WebTestCase
                 }
             }
         }
+    }
+
+    public function testStationCargoSalesPurchasesAndPrivateDepositsUseTheirOwnAssets(): void
+    {
+        [$seller, $home] = $this->fixture('MarketCredits');
+        $member = $seller->currentPlayerUniverse;
+        self::getContainer()->get(WeeklyMerchantDelivery::class)->configure($seller, $member->universe, true, $this->targets());
+        $playerMarket = self::getContainer()->get(PlayerMarket::class);
+        $convoys = self::getContainer()->get(MarketConvoys::class);
+        $station = self::getContainer()->get(ResourceMarketRepository::class)->find($member->universe);
+
+        foreach (['sell', 'buy', 'deposit', 'collect'] as $operation) {
+            $quantity = match ($operation) {
+                'sell' => 200, 'buy' => 30, 'deposit' => 17, 'collect' => 5,
+            };
+            $input = ['operation' => $operation, 'pay' => 'metal', 'receive' => 'metal', 'quantity' => $quantity, 'rank' => 'basic', 'cargos' => 1];
+            $quote = $convoys->preview($member, $home, $input);
+            $beforeStock = $station->stock['metal'];
+            $beforeCredits = $playerMarket->account($member)?->cents ?? 0;
+            $beforeDepot = $playerMarket->account($member)?->goods['metal'] ?? 0;
+            $this->clock->sleep(1);
+            $key = bin2hex(random_bytes(16));
+            $convoys->depart($member, $home, $quote, $key);
+            $trade = $this->em->getRepository(MarketTrade::class)->findOneBy(['requestKey' => $key]);
+            self::assertSame($beforeStock, $station->stock['metal']);
+            self::assertSame($beforeCredits - ($operation === 'buy' ? $quote['creditCents'] : 0), $playerMarket->account($member)?->cents ?? 0);
+            $this->clock->sleep(1800);
+            $token = $trade->token;
+            $convoys->processDue($trade->id, $token);
+            $convoys->processDue($trade->id, $token);
+            self::assertSame($beforeStock + match ($operation) { 'sell' => $quantity, 'buy' => -$quantity, default => 0 }, $station->stock['metal']);
+            self::assertSame($beforeCredits + match ($operation) {
+                'sell' => $quote['creditCents'], 'buy' => -$quote['creditCents'], default => 0,
+            }, $playerMarket->account($member)->cents);
+            self::assertSame($beforeDepot + match ($operation) { 'deposit' => $quantity, 'collect' => -$quantity, default => 0 },
+                $playerMarket->account($member)->goods['metal'] ?? 0);
+            $this->clock->sleep(1800);
+            $convoys->processDue($trade->id, $trade->token);
+            self::assertSame('completed', $trade->status);
+        }
+
+        foreach (['buy', 'collect'] as $operation) {
+            $account = $playerMarket->account($member);
+            $balance = $account->cents;
+            $goods = $account->goods;
+            $quote = $convoys->preview($member, $home, ['operation' => $operation, 'pay' => 'metal', 'receive' => 'metal',
+                'quantity' => 1, 'rank' => 'basic', 'cargos' => 1]);
+            $key = bin2hex(random_bytes(16));
+            $convoys->depart($member, $home, $quote, $key);
+            $trade = $this->em->getRepository(MarketTrade::class)->findOneBy(['requestKey' => $key]);
+            $convoys->recall($member, $trade->id);
+            $this->clock->sleep(2);
+            $convoys->processDue($trade->id, $trade->token);
+            self::assertSame($balance, $account->cents);
+            self::assertSame($goods, $account->goods);
+        }
+    }
+
+    public function testPublicListingChargesBeforePublicationThenPaysEveryPurchasedUnitInFull(): void
+    {
+        [$seller] = $this->fixture('MarketListingSeller');
+        [$buyer] = $this->fixture('MarketListingBuyer');
+        $seller->emailVerifiedAt = $this->clock->now();
+        $this->em->flush();
+        $member = $seller->currentPlayerUniverse;
+        self::getContainer()->get(WeeklyMerchantDelivery::class)->configure($seller, $member->universe, true, $this->targets());
+        $sellerAccount = $this->fundMarketAccount($member, 2000, 100);
+        $buyerAccount = $this->fundMarketAccount($buyer->currentPlayerUniverse, 50000);
+        $this->client->loginUser($seller);
+        $page = $this->client->request('GET', '/bourse/joueurs?resource=metal');
+        self::assertResponseIsSuccessful();
+        $this->client->submit($page->selectButton('Vérifier la taxe et le produit de la vente')->form(['quantity' => 100, 'price' => '3.50']));
+        $page = $this->client->followRedirect();
+        self::assertSelectorTextContains('main', '350,00 crédits');
+        self::assertSelectorTextContains('main', '7,00 crédits');
+        self::assertSame(2000, $sellerAccount->cents);
+        $this->client->submit($page->selectButton('Payer la taxe et publier')->form());
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('main', 'Retirer les invendus');
+        $sellerAccount = $this->em->find(MarketAccount::class, $member->id);
+        self::assertSame(1300, $sellerAccount->cents);
+        self::assertSame(0, $sellerAccount->goods['metal']);
+
+        $this->client->loginUser($buyer);
+        $page = $this->client->request('GET', '/bourse/joueurs?resource=metal');
+        $buy = $page->selectButton('Acheter pour mon dépôt')->form(['quantity' => 30]);
+        $this->client->submit($buy);
+        $this->client->submit($buy);
+        $this->client->followRedirect();
+        $sellerAccount = $this->em->find(MarketAccount::class, $member->id);
+        $buyerAccount = $this->em->find(MarketAccount::class, $buyer->currentPlayerUniverse->id);
+        self::assertSame(1300 + 10500, $sellerAccount->cents);
+        self::assertSame(39500, $buyerAccount->cents);
+        self::assertSame(30, $buyerAccount->goods['metal']);
+        $this->client->loginUser($seller);
+        $page = $this->client->request('GET', '/bourse/joueurs?resource=metal');
+        $this->client->submit($page->selectButton('Retirer les invendus')->form());
+        $this->client->followRedirect();
+        $sellerAccount = $this->em->find(MarketAccount::class, $member->id);
+        self::assertSame(70, $sellerAccount->goods['metal']);
+        self::assertSame(11800, $sellerAccount->cents);
+        self::assertSame(0, $this->em->getRepository(MarketOffer::class)->count([]));
+        $this->clock->sleep(6 * 3600);
+        $this->client->loginUser($seller);
+        $this->client->request('GET', '/classement?category=credits');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('.ranking-table--players tbody tr:first-child', 'MarketListingBuyer');
+        self::assertSelectorTextContains('[data-category="credits"]', '395,00');
+    }
+
+    public function testInsufficientListingCreditsLeaveGoodsAndOrdersIntact(): void
+    {
+        [$seller] = $this->fixture('MarketListingRefused');
+        $member = $seller->currentPlayerUniverse;
+        self::getContainer()->get(WeeklyMerchantDelivery::class)->configure($seller, $member->universe, true, $this->targets());
+        $this->fundMarketAccount($member, 699, 100);
+        $db = $this->em->getConnection();
+        try {
+            self::getContainer()->get(PlayerMarket::class)->order($member, bin2hex(random_bytes(16)), 'list', 'metal', 100, '3.50', 0);
+            self::fail('Le paiement des frais doit précéder la publication.');
+        } catch (\DomainException $error) {
+            self::assertStringContainsString('crédits', $error->getMessage());
+        }
+        self::assertSame(699, (int) $db->fetchOne('SELECT cents FROM market_account WHERE membership_id = ?', [$member->id]));
+        self::assertSame(100, json_decode($db->fetchOne('SELECT goods FROM market_account WHERE membership_id = ?', [$member->id]), true)['metal']);
+        self::assertSame(0, (int) $db->fetchOne('SELECT COUNT(*) FROM market_offer'));
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('forbiddenOrders')]
+    public function testOfferOwnershipAndUniverseAreChecked(string $action, bool $foreignUniverse): void
+    {
+        [$seller] = $this->fixture('OrderSeller');
+        [$other] = $this->fixture('OrderVisitor');
+        $member = $seller->currentPlayerUniverse;
+        $stations = self::getContainer()->get(WeeklyMerchantDelivery::class);
+        $stations->configure($seller, $member->universe, true, $this->targets());
+        $this->fundMarketAccount($member, 100, 5);
+        $players = self::getContainer()->get(PlayerMarket::class);
+        $players->order($member, bin2hex(random_bytes(16)), 'list', 'metal', 5, '2.00', 0);
+        $markets = self::getContainer()->get(ResourceMarketRepository::class);
+        $offer = $markets->offers($member, 'metal', 1)[0];
+        if ($foreignUniverse) {
+            $world = $this->em->getRepository(Universe::class)->findOneBy(['slug' => 'turbo-1']);
+            $world->startsAt = $world->endsAt = null;
+            $this->em->flush();
+            self::getContainer()->get(UniverseService::class)->select($other, $world->id);
+            $stations->configure($other, $world, true, $this->targets());
+            self::assertSame([], $markets->offers($other->currentPlayerUniverse, 'metal', 1));
+        }
+        $visitor = $other->currentPlayerUniverse;
+        $this->fundMarketAccount($visitor, 1000);
+        $db = $this->em->getConnection();
+        try {
+            $players->order($visitor, bin2hex(random_bytes(16)), $action, 'metal', 1, '', $offer->id);
+            self::fail('L’ordre aurait dû être refusé.');
+        } catch (\DomainException $error) {
+            self::assertStringContainsString('indisponible', $error->getMessage());
+        }
+        self::assertSame(5, (int) $db->fetchOne('SELECT remaining FROM market_offer WHERE id = ?', [$offer->id]));
+        self::assertSame(1000, (int) $db->fetchOne('SELECT cents FROM market_account WHERE membership_id = ?', [$visitor->id]));
+    }
+
+    public static function forbiddenOrders(): array
+    {
+        return [['cancel', false], ['purchase', true]];
+    }
+
+    private function fundMarketAccount(PlayerUniverse $member, int $cents, int $metal = 0): MarketAccount
+    {
+        $account = new MarketAccount();
+        $account->membership = $member;
+        $account->cents = $cents;
+        $account->goods = ['metal' => $metal];
+        $this->em->persist($account);
+        $this->em->flush();
+        return $account;
     }
 
     private function targets(): array

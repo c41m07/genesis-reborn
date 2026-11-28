@@ -723,7 +723,8 @@ final class GameRepository
     {
         return $this->em->createQueryBuilder()
             ->select('r')->from(\App\Entity\EspionageReport::class, 'r')
-            ->where('r.sender = :membership')
+            ->where("(r.sender = :membership OR (r.detectedBy = :membership AND r.result = 'detected'))")
+            ->join('r.sender', 'sender')->andWhere('sender.universe = :universe')->setParameter('universe', $membership->universe)
             ->andWhere(ReportArchiveRepository::notRemovedDql('r.id', 'espionage', ':membership'))
             ->setParameter('membership', $membership)
             ->orderBy('r.createdAt', 'DESC')
@@ -770,6 +771,20 @@ final class GameRepository
             ->where('resource.planet = :planet')->setParameter('planet', $planet)->orderBy('resource.id', 'ASC')
             ->getQuery()->setLockMode(\Doctrine\DBAL\LockMode::PESSIMISTIC_WRITE)
             ->setHint(\Doctrine\ORM\Query::HINT_REFRESH, true)->getResult();
+    }
+
+    /** La trace fige la cible au départ, même après un rappel ou un changement de propriétaire. */
+    public function hasRecentAttack(PlayerUniverse $sender, PlayerUniverse $recipient, \DateTimeImmutable $at): bool
+    {
+        return (bool) $this->em->createQueryBuilder()
+            ->select('t.id')->from(\App\Entity\FleetMissionTrace::class, 't')
+            ->where('t.universe = :universe AND t.sender = :sender AND t.recipient = :recipient')
+            ->andWhere('t.mission = :mission AND t.targetWasPlayer = true')
+            ->andWhere('t.departedAt > :start AND t.departedAt <= :end')
+            ->setParameter('universe', $recipient->universe)->setParameter('sender', $sender)
+            ->setParameter('recipient', $recipient)->setParameter('mission', 'attack')
+            ->setParameter('start', $at->modify('-86400 seconds'))->setParameter('end', $at)
+            ->setMaxResults(1)->getQuery()->getOneOrNullResult();
     }
 
     public function planets(Universe $u, ?PlayerUniverse $owner = null, bool $freeOnly = false): array

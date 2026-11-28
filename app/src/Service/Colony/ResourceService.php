@@ -146,12 +146,12 @@ final class ResourceService
                 $level = $this->tierLevel($levels[$building['slug']] ?? 0, $tier);
                 $factor = $this->catalog->productionTierFactor($tier);
                 $outputLevels += GameCatalog::compoundedLevels($level, $tier, $rules['building_level_growth'] ?? []) * $factor;
-                $powerLevels += $level * $factor;
+                $powerLevels += GameCatalog::compoundedLevels($level, $tier, $rules['extractor_electricity_level_growth'] ?? []) * $factor;
             }
             if ($outputLevels <= 0) {
                 continue;
             }
-            // La consommation électrique dépend des niveaux installés, l’hydrogène du débit produit.
+            // L’électricité dépend des niveaux de chaque rang. Le réacteur prélève son hydrogène selon le débit produit.
             $location = $this->positionFactor($planet, $resource) * $mult;
             $rate = $outputLevels * ($building['production_per_level'] ?? $rules['mine_production_per_level']) * $location * $eventMultiplier;
             $electricity = $resource === 'electricity' ? 0.0 : $powerLevels * ($building['electricity_use_per_level'] ?? $rules['factory_electricity_use_per_level']) * $location;
@@ -365,10 +365,10 @@ final class ResourceService
      * Dépose les ressources dans la capacité existante. Pour un dépôt indivisible, overflow
      * indique la place manquante et aucune ressource du lot n’est créditée si elle est insuffisante.
      */
-    public function deposit(Planet $planet, array $cargo, bool $allOrNothing = false): array
+    public function deposit(Planet $planet, array $cargo, bool $allOrNothing = false, ?array $acceptedOverflow = null): array
     {
         // Le retrait indivisible est transactionnel et doit s’appuyer sur les stocks courants.
-        $rows = $this->materialize($planet, lockStocks: $allOrNothing);
+        $rows = $this->materialize($planet, lockStocks: $allOrNothing || $acceptedOverflow !== null);
         $levels = $this->repo->levelsByTier(PlanetBuilding::class, ['planet' => $planet]);
         $delivered = [];
         $overflow = [];
@@ -380,8 +380,13 @@ final class ResourceService
             $delivered[$slug] = min((float) $amount, $room);
             $overflow[$slug] = max(0.0, (float) $amount - $delivered[$slug]);
         }
-        if ($allOrNothing && max([0.0, ...array_values($overflow)]) > 0.0) {
-            return ['delivered' => array_fill_keys(array_keys($delivered), 0.0), 'overflow' => $overflow];
+        if ($allOrNothing || $acceptedOverflow !== null) {
+            foreach ($overflow as $slug => $amount) {
+                $limit = $allOrNothing ? 0.0 : ($acceptedOverflow[$slug] ?? 0.0);
+                if ($amount > $limit) {
+                    return ['delivered' => array_fill_keys(array_keys($delivered), 0.0), 'overflow' => $overflow];
+                }
+            }
         }
         foreach ($delivered as $slug => $amount) {
             $rows[$slug]->currentStock += $amount;

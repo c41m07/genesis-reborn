@@ -161,14 +161,8 @@ final class FleetController extends AbstractController
                 throw new \DomainException('Rang de vaisseau invalide.');
             }
             $shipSlug = $mission === 'colonize' ? 'colony_ship' : 'probe';
-            $quantity = 1;
-            if ($mission === 'spy') {
-                $quantity = filter_var($request->request->get('probe_quantity'), FILTER_VALIDATE_INT);
-                if ($quantity === false || $quantity < 1 || $quantity > 100) {
-                    throw new \DomainException('Choisissez entre 1 et 100 sondes.');
-                }
-            }
-            $composition = [$shipSlug => [$tier => $quantity]];
+            $ranks = $mission === 'spy' ? $this->quickProbeRanks($request, $tier) : [$tier => 1];
+            $composition = [$shipSlug => $ranks];
             $savedPreferences = $preferences->for($membership->player);
             $defaultSpeed = match ($mission) {
                 'spy' => (float) $savedPreferences['galaxySpySpeed'],
@@ -186,10 +180,10 @@ final class FleetController extends AbstractController
                 (string) $request->request->get('request_key'),
                 requireExactComposition: true,
             );
-            $shipLabel = $catalog->getTierForUniverse($membership->universe, 'ships', $shipSlug, $tier)['label'];
+            $shipLabel = $catalog->getTierForUniverse($membership->universe, 'ships', $shipSlug, array_key_first($ranks))['label'];
             $this->addFlash('success', match ($mission) {
                 'explore' => $shipLabel . ' envoyée en exploration.',
-                'spy' => $shipLabel . ' envoyée en espionnage.',
+                'spy' => array_sum($ranks) === 1 ? $shipLabel . ' envoyée en espionnage.' : array_sum($ranks) . ' sondes envoyées en espionnage.',
                 'colonize' => $shipLabel . ' envoyé.',
             });
         } catch (\DomainException $e) {
@@ -203,6 +197,31 @@ final class FleetController extends AbstractController
         }
         return $this->redirectToRoute($returnRoute, $parameters);
     }
+
+    /** @return array<string, int> */
+    private function quickProbeRanks(Request $request, string $legacyTier): array
+    {
+        // Un formulaire ouvert avant le tableau des rangs contient une seule quantité.
+        $submitted = $request->request->all()['probes'] ?? [$legacyTier => $request->request->get('probe_quantity')];
+        if (!is_array($submitted) || array_diff(array_keys($submitted), GameCatalog::TIERS)) {
+            throw new \DomainException('Rang de sonde invalide.');
+        }
+        $ranks = [];
+        foreach ($submitted as $tier => $raw) {
+            $quantity = $raw === '' ? 0 : filter_var($raw, FILTER_VALIDATE_INT);
+            if ($quantity === false || $quantity < 0 || $quantity > FleetService::QUICK_SPY_LIMIT) {
+                throw new \DomainException('Quantité de sondes invalide.');
+            }
+            if ($quantity > 0) {
+                $ranks[$tier] = $quantity;
+            }
+        }
+        if (!$ranks || array_sum($ranks) > FleetService::QUICK_SPY_LIMIT) {
+            throw new \DomainException(sprintf('Choisissez entre 1 et %d sondes au total.', FleetService::QUICK_SPY_LIMIT));
+        }
+        return $ranks;
+    }
+
     #[Route('/flottes/estimer', name: 'app_fleet_preview', methods: ['POST'])]
     public function preview(
         Request $request,

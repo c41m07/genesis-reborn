@@ -7,6 +7,7 @@ use App\Entity\{Fleet, FleetShip, GuildHallConvoy, Planet, PlayerUniverse, Solar
 use App\Repository\GameRepository;
 use App\Service\Catalog\GameCatalog;
 use App\Service\Colony\EmpireDetails;
+use App\Service\Combat\{OccupationPolicy, OccupationService};
 
 /** Lectures propres à chaque page ; les envois et leurs validations restent dans FleetService. */
 final class FleetPageView
@@ -19,6 +20,7 @@ final class FleetPageView
         private OrbitRequestView $orbits,
         private \App\Service\Market\MarketTraffic $marketTraffic,
         private FleetCompositionService $compositions,
+        private OccupationService $occupations,
     ) {
     }
 
@@ -59,6 +61,7 @@ final class FleetPageView
             'conquest_enabled' => (bool) ($config['features']['planet_conquest'] ?? false),
         ];
         if ($page === 'prepare') {
+            $data['conquest_occupation_hours'] = $this->occupations->isEnabled() ? OccupationPolicy::DURATION_SECONDS / 3600 : 0;
             $mission = $parameters['mission'];
             if (!in_array($mission, DestinationCatalogue::MISSIONS, true)) {
                 throw new \DomainException('Mission indisponible.');

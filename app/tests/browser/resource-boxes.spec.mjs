@@ -50,6 +50,8 @@ test('Boîte : contenu annoncé, choix de colonie, protection et ouverture uniqu
     for(const width of [1440,390]) {await page.setViewportSize({width,height:900});await page.reload();await expect(page.locator('body')).toHaveAttribute('data-theme',theme);expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations).toEqual([]);await page.screenshot({path:testInfo.outputPath(`box-${theme}-${width}.png`),fullPage:true});}
   }
   await card.getByRole('button').click();expect(queryIsolatedSql(project,`SELECT status FROM player_boost WHERE id=${id}`)).toBe('available');
+  const colonyIds = await page.locator('#sidebar-colony option').evaluateAll(options => options.map(option => option.value));
+  expect(await card.locator('select[name="planet_id"] option[value]:not([value=""])').evaluateAll(options => options.map(option => option.value))).toEqual(colonyIds);
   await card.getByLabel('Colonie de destination').selectOption(String(second));const form=card.locator('form');const action=await form.getAttribute('action');const data=await form.evaluate(f=>Object.fromEntries(new FormData(f)));
   expect(await post(page,action,{...data,_token:'invalid'})).toBe(403);
   await post(page,action,{...data,planet_id:String(other.planetId)});expect(queryIsolatedSql(project,`SELECT status FROM player_boost WHERE id=${id}`)).toBe('available');
@@ -71,10 +73,28 @@ test('Boîte : stockage insuffisant et vacances conservent objet et ressources',
   await page.goto('/inventaire/boites');const card=page.locator('.resource-box-card');await card.getByLabel('Colonie de destination').selectOption(String(own.planetId));
   const data=await card.locator('form').evaluate(f=>Object.fromEntries(new FormData(f)));const action=await card.locator('form').getAttribute('action');
   const before=queryIsolatedSql(project,`SELECT current_stock FROM planet_resource WHERE planet_id=${own.planetId} ORDER BY resource_type`);
-  await card.getByRole('button').click();await page.getByRole('dialog').getByRole('button',{name:'Ouvrir cette boîte'}).click();await expect(page.locator('.flash.error')).toContainText('La boîte reste intacte');expect(queryIsolatedSql(project,`SELECT status FROM player_boost WHERE id=${id}`)).toBe('available');expect(queryIsolatedSql(project,`SELECT current_stock FROM planet_resource WHERE planet_id=${own.planetId} ORDER BY resource_type`)).toBe(before);
+  await card.getByRole('button').click();await page.getByRole('dialog').getByRole('button',{name:'Ouvrir cette boîte'}).click();await expect(card.locator('.resource-box-warning')).toContainText('Métal · 4 000');expect(queryIsolatedSql(project,`SELECT status FROM player_boost WHERE id=${id}`)).toBe('available');expect(queryIsolatedSql(project,`SELECT current_stock FROM planet_resource WHERE planet_id=${own.planetId} ORDER BY resource_type`)).toBe(before);
   runIsolatedSql(project,`INSERT INTO vacation_period (membership_id,started_at,scheduled_end_at,ended_at) VALUES (${own.memberId},UTC_TIMESTAMP()-INTERVAL 1 MINUTE,UTC_TIMESTAMP()+INTERVAL 1 DAY,NULL)`);
   await page.reload();await expect(card).toContainText('Ouverture bloquée pendant les vacances');await expect(card.getByRole('button')).toHaveCount(0);
   await post(page,action,data);expect(queryIsolatedSql(project,`SELECT status FROM player_boost WHERE id=${id}`)).toBe('available');expect(queryIsolatedSql(project,`SELECT current_stock FROM planet_resource WHERE planet_id=${own.planetId} ORDER BY resource_type`)).toBe(before);
+});
+
+test('Boîte : accepter le surplus remplit la colonie et consomme une seule boîte', async ({page}) => {
+  const own = await enter(page);
+  const project = process.env.BROWSER_ROUTER;
+  const id = addBox(project, own);
+  runIsolatedSql(project, `UPDATE planet_resource SET current_stock=IF(resource_type='metal',200000,0),last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${own.planetId}`);
+  await page.goto('/inventaire/boites');
+  const card = page.locator(`.resource-box-card[data-box-id="${id}"]`);
+  await card.getByLabel('Colonie de destination').selectOption(String(own.planetId));
+  await card.getByRole('button', {name:'Ouvrir cette boîte'}).click();
+  await page.getByRole('dialog').getByRole('button', {name:'Ouvrir cette boîte'}).click();
+  const warning = card.locator('.resource-box-warning');
+  await expect(warning).toContainText('Métal · 4 000');
+  await warning.getByRole('button', {name:'Ouvrir et perdre le surplus'}).click();
+  await expect(page.locator('.flash.success')).toContainText('Boîte ouverte');
+  expect(queryIsolatedSql(project, `SELECT status FROM player_boost WHERE id=${id}`)).toBe('used');
+  expect(Number(queryIsolatedSql(project, `SELECT current_stock FROM planet_resource WHERE planet_id=${own.planetId} AND resource_type='nano'`))).toBeGreaterThanOrEqual(1000);
 });
 
 test('Admin : formats plafonnés, saisie conservée et modification journalisée',async({page},testInfo)=>{

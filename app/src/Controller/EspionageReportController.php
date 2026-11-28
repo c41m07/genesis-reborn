@@ -12,8 +12,9 @@ final class EspionageReportController extends AbstractController
     #[Route('/rapports/espionnage/{id}', name: 'app_espionage_report', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function show(int $id, UniverseContext $context, EspionageReportReader $reader): Response
     {
-        $report = $reader->findVisible($context->membership(), $id);
+        $membership = $context->membership();
+        $report = $reader->findVisible($membership, $id);
         if (!$report) throw $this->createNotFoundException();
-        return $this->render('espionage/report.html.twig', ['report' => $report], new Response(headers: ['Cache-Control' => 'private, no-store']));
+        return $this->render('espionage/report.html.twig', ['report' => $report, 'incoming_detection' => $report->sender->id !== $membership->id], new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
 }

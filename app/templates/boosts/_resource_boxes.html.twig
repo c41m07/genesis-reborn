@@ -5,8 +5,18 @@
 <dl class="report-facts">{% for slug,amount in item.payload.resources|default({}) %}<div><dt>{{ box_resources[slug]|default(slug) }}</dt><dd>{{ amount|quantity(2) }}</dd></div>{% endfor %}</dl>
 </div><div class="resource-box-use">
 {% if vacation %}<p>Ouverture bloquée pendant les vacances.</p>{% elseif available_colonies is empty %}<p>Aucune colonie disponible dans cet univers.</p>{% else %}
-<form method="post" action="{{ path('app_resource_box_open',{id:item.id}) }}" class="resource-box-form" data-action="submit->inventory-review#review" data-review-title="Vérifier l’ouverture" data-review-copy="{{ item.payload.label|default('Boîte de ressources') }} : ouvrir une boîte contenant {% for slug,amount in item.payload.resources|default({}) %}{{ box_resources[slug]|default(slug) }} : {{ amount|quantity(2) }}{{ not loop.last ? ' ; ' : '.' }}{% endfor %} La totalité sera déposée sur la colonie choisie." data-review-confirm="Ouvrir cette boîte"><input type="hidden" name="_token" value="{{ csrf_token('box_open_'~item.id) }}"><input type="hidden" name="request_key" value="{{ request_key() }}">
+{% if overflow and overflow.id == item.id %}
+<form method="post" class="panel resource-box-warning" action="{{ path('app_resource_box_open',{id:item.id}) }}">
+    <h4>Surplus perdu à l’ouverture</h4><p>La boîte remplira les stocks disponibles sur {{ overflow.colony }}. La liste indique les quantités perdues et le maximum que vous acceptez.</p>
+    <ul>{% for resource,amount in overflow.loss %}<li>{{ box_resources[resource] }} · {{ overflow.estimate[resource]|default(amount)|number_format(2, ',', ' ')|trim('0', 'right')|trim(',', 'right') }}{% if overflow.estimate[resource] is defined and overflow.estimate[resource] < amount %} actuellement, jusqu’à {{ amount|number_format(2, ',', ' ')|trim('0', 'right')|trim(',', 'right') }} avec la production{% endif %}</li>{% endfor %}</ul>
+    <input type="hidden" name="_token" value="{{ csrf_token('box_open_'~item.id) }}">
+    <input type="hidden" name="planet_id" value="{{ overflow.planet }}">
+    <input type="hidden" name="request_key" value="{{ overflow.key }}">
+    <button type="submit" name="confirm_loss" value="1" class="primary">Ouvrir et perdre le surplus</button>
+</form>
+{% endif %}
+<form method="post" action="{{ path('app_resource_box_open',{id:item.id}) }}" class="resource-box-form" data-action="submit->inventory-review#review" data-review-title="Vérifier l’ouverture" data-review-copy="{{ item.payload.label|default('Boîte de ressources') }} : ouvrir une boîte contenant {% for slug,amount in item.payload.resources|default({}) %}{{ box_resources[slug]|default(slug) }} : {{ amount|quantity(2) }}{{ not loop.last ? ' ; ' : '.' }}{% endfor %}" data-review-confirm="Ouvrir cette boîte"><input type="hidden" name="_token" value="{{ csrf_token('box_open_'~item.id) }}"><input type="hidden" name="request_key" value="{{ request_key() }}">
 <label for="box-planet-{{ item.id }}">Colonie de destination</label><select id="box-planet-{{ item.id }}" name="planet_id" required><option value="">Choisir une colonie du même univers</option>{% for colony in available_colonies %}<option value="{{ colony.id }}">{{ colony.name }} · {{ colony.coordinates() }}</option>{% endfor %}</select>
-<p>Il faut assez de place pour toutes les ressources. Sinon, l’ouverture est refusée et la boîte reste intacte.</p><button class="primary"{% if item.payload.expires_at is defined %} data-countdown-target="disable"{% endif %}>Ouvrir cette boîte</button></form>{% endif %}
+<p>Si les entrepôts manquent de place, vous pourrez vérifier le surplus avant de le perdre ou choisir une autre colonie.</p><button class="primary"{% if item.payload.expires_at is defined %} data-countdown-target="disable"{% endif %}>Ouvrir cette boîte</button></form>{% endif %}
 </div></article>
 {% endfor %}
