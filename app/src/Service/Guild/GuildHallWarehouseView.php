@@ -12,6 +12,7 @@ final readonly class GuildHallWarehouseView
     public const STRUCTURES = [
         GuildHallBuilding::ATELIER => 'Atelier d’assemblage',
         GuildHallBuilding::DOCK => 'Dock de modernisation',
+        GuildHallBuilding::RELAY => 'Relais de surveillance',
     ];
 
     private const MATERIALS = ['metal' => 'Métal', 'nano' => 'Nano', 'antimatter' => 'Antimatière', 'hydrogen' => 'Hydrogène'];
@@ -24,9 +25,11 @@ final readonly class GuildHallWarehouseView
     public function describe(GuildHall $hall): array
     {
         $stock = $this->repository->one(GuildHallStock::class, ['hall' => $hall]);
-        $warehouse = $this->repository->one(GuildHallBuilding::class, ['hall' => $hall, 'slug' => GuildHallBuilding::WAREHOUSE]);
-        $atelier = $this->repository->one(GuildHallBuilding::class, ['hall' => $hall, 'slug' => GuildHallBuilding::ATELIER]);
-        $dock = $this->repository->one(GuildHallBuilding::class, ['hall' => $hall, 'slug' => GuildHallBuilding::DOCK]);
+        $buildings = [];
+        foreach ($this->repository->all(GuildHallBuilding::class, ['hall' => $hall]) as $building) {
+            $buildings[$building->slug] = $building;
+        }
+        $warehouse = $buildings[GuildHallBuilding::WAREHOUSE] ?? null;
         $level = $warehouse?->level ?? 0;
         $schedule = $this->schedules->schedule();
         $capacity = $schedule?->capacity($level) ?? [];
@@ -44,7 +47,7 @@ final readonly class GuildHallWarehouseView
 
         $structures = [];
         foreach (self::STRUCTURES as $slug => $name) {
-            $building = $slug === GuildHallBuilding::ATELIER ? $atelier : $dock;
+            $building = $buildings[$slug] ?? null;
             $current = $building?->level ?? 0;
             if ($schedule === null || $schedule->maximumLevel($slug) === 0) {
                 continue;
@@ -73,8 +76,8 @@ final readonly class GuildHallWarehouseView
         return [
             'structures' => $structures,
             'enabled' => $schedule !== null,
-            'dock_built' => ($dock?->level ?? 0) > 0,
-            'atelier_built' => ($atelier?->level ?? 0) > 0,
+            'dock_built' => ($buildings[GuildHallBuilding::DOCK]->level ?? 0) > 0,
+            'atelier_built' => ($buildings[GuildHallBuilding::ATELIER]->level ?? 0) > 0,
             'level' => $level,
             'finishes_at' => $warehouse?->finishesAt,
             'quote' => $quote,

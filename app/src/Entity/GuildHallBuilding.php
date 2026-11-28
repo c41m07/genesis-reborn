@@ -12,6 +12,7 @@ final class GuildHallBuilding
 {
     public const ATELIER = 'atelier';
     public const DOCK = 'dock';
+    public const RELAY = 'relay';
     public const WAREHOUSE = 'warehouse';
 
     #[ORM\Id, ORM\GeneratedValue, ORM\Column]

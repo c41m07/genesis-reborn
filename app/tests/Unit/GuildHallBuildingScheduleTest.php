@@ -46,6 +46,21 @@ final class GuildHallBuildingScheduleTest extends TestCase
         ], $capacity, 900);
     }
 
+    public function testRelayUsesConfiguredMaterialsAndCannotExceedHallCapacity(): void
+    {
+        $level = ['cost' => ['metal' => 40, 'nano' => 10], 'duration' => 420];
+        $levels = [
+            GuildHallBuilding::WAREHOUSE => [1 => ['cost' => ['metal' => 20], 'duration' => 60]],
+            GuildHallBuilding::RELAY => [1 => $level],
+        ];
+        $schedule = new GuildHallBuildingSchedule($levels, [1 => ['metal' => 60, 'nano' => 10]]);
+        self::assertSame($level + ['maxLevel' => 1], $schedule->quote(GuildHallBuilding::RELAY, 0));
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Le chantier ne peut pas tenir dans le stock du Hall.');
+        new GuildHallBuildingSchedule($levels, [1 => ['metal' => 60, 'nano' => 9]]);
+    }
+
     public function testCatalogueRejectsAnUnreachableWarehouseUpgrade(): void
     {
         $this->expectException(\DomainException::class);
