@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+{% block title %}Mes modernisations · Genesis Reborn{% endblock %}
+{% block incoming_fleets %}{% endblock %}
+{% block body %}
+{% set ranks = {basic: 'Basique', intermediate: 'Intermédiaire', superior: 'Supérieur'} %}
+<div class="fleet-page-layout fleet-space fleet-redesign fleet-harbour">
+    <div class="page-heading"><div><h1>Mes modernisations</h1>
+    <p>Les vaisseaux immobilisés restent à vous, même après un départ de guilde.</p></div>
+    <a href="{{ path('app_fleet_holds') }}">Retour à « À quai et stationnements »</a></div>
+    <section class="panel" aria-labelledby="dock-orders-pending">
+        <h2 id="dock-orders-pending">Lots en cours ou à récupérer</h2>
+        {% if pending is empty %}<p>Aucun lot en attente.</p>{% else %}
+            <ul>
+            {% for order in pending %}
+                <li>
+                    <h3>{{ order.quantity|number_format(0, ',', ' ') }} × {{ ships[order.shipSlug].name|default(order.shipSlug) }} · {{ ranks[order.sourceTier] }} → {{ ranks[order.targetTier] }}</h3>
+                    {% if order.dueAt > now %}
+                        <p>En travaux jusqu’au <time datetime="{{ order.dueAt|date('c', 'UTC') }}">{{ order.dueAt|date('d/m/Y H:i:s', 'UTC') }} UTC</time>.</p>
+                    {% else %}
+                        <p>Échéance atteinte. Si la remise automatique n’a pas abouti, récupérez ce lot sans repayer.</p>
+                        {% if colonies is empty %}<p>Aucune colonie personnelle disponible.</p>{% else %}
+                            <form method="post" action="{{ path('app_dock_recover', {id: order.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('dock_recover_' ~ owner_id ~ '_' ~ order.id) }}">
+                                <label for="dock-recovery-{{ order.id }}">Colonie de récupération</label>
+                                <select id="dock-recovery-{{ order.id }}" name="colony" required>
+                                    <option value="">Choisir une colonie</option>
+                                    {% for colony in colonies %}<option value="{{ colony.id }}">{{ colony.name }} · {{ colony.coordinates() }}</option>{% endfor %}
+                                </select>
+                                <button type="submit" class="primary">Récupérer le lot</button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+    <section class="panel" aria-labelledby="dock-orders-completed">
+        <h2 id="dock-orders-completed">Derniers lots remis</h2>
+        {% if completed is empty %}<p>Aucun lot remis.</p>{% else %}
+            <ul>
+            {% for order in completed %}
+                <li>{{ order.quantity|number_format(0, ',', ' ') }} × {{ ships[order.shipSlug].name|default(order.shipSlug) }} · {{ ranks[order.targetTier] }} ·
+                    <time datetime="{{ order.completedAt|date('c', 'UTC') }}">{{ order.completedAt|date('d/m/Y H:i:s', 'UTC') }} UTC</time>
+                </li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
