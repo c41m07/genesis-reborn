@@ -86,19 +86,29 @@ final readonly class GuildHallAccess
     /** Les dépôts des membres suivent lockPlaced, sans exiger la délégation de livrer le stock commun. */
     public function lockAtelierDelivery(PlayerUniverse $actor, int $guildId, int $hallId): GuildHall
     {
+        return $this->lockWithPermission($actor, $guildId, $hallId, DiplomacyAccessPolicy::ATELIER_DELIVERY, 'La permission de livrer les vaisseaux de l’Atelier est requise.');
+    }
+
+    public function lockCommandSortie(PlayerUniverse $actor, int $guildId, int $hallId): GuildHall
+    {
+        return $this->lockWithPermission($actor, $guildId, $hallId, DiplomacyAccessPolicy::COMMAND_SORTIE, 'La permission de lancer une sortie du Centre est requise.');
+    }
+
+    private function lockWithPermission(PlayerUniverse $actor, int $guildId, int $hallId, string $permission, string $error): GuildHall
+    {
         $hall = $this->lockPlaced($actor, $guildId, $hallId);
         $member = $this->repository->one(GuildMember::class, ['playerUniverse' => $actor, 'guild' => $hall->guild]);
         if (!$member instanceof GuildMember) {
             throw new \DomainException('Guilde inaccessible.');
         }
         // Un ancien formulaire ne vaut pas autorisation : relire le grade sous le verrou univers
-        // commun au service qui modifie les permissions, avant de toucher au stock.
+        // commun au service qui modifie les permissions, avant toute mutation.
         $this->manager->lockCurrent($member);
         if ($member->rank !== null) {
             $this->manager->lockCurrent($member->rank);
         }
-        if (!$this->diplomacy->allows($member, DiplomacyAccessPolicy::ATELIER_DELIVERY)) {
-            throw new \DomainException('La permission de livrer les vaisseaux de l’Atelier est requise.');
+        if (!$this->diplomacy->allows($member, $permission)) {
+            throw new \DomainException($error);
         }
 
         return $hall;

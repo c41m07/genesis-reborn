@@ -7,11 +7,13 @@ final class DiplomacyAccessPolicy
 {
     public const RECRUIT = 'members.recruit';
     public const ATELIER_DELIVERY = 'hall.atelier_deliver';
+    public const COMMAND_SORTIE = 'hall.command_sortie';
 
     public const PERMISSIONS = [
         'projects.start' => 'Lancer les projets collectifs de guilde',
         self::RECRUIT => 'Gérer les candidatures et inviter des commandants',
         self::ATELIER_DELIVERY => 'Autoriser les livraisons de vaisseaux de l’Atelier du Hall',
+        self::COMMAND_SORTIE => 'Préparer et lancer les attaques groupées du Centre de commandement',
         'members.assign_rank' => 'Attribuer les grades inférieurs',
         'diplomacy.alliance' => 'Proposer et accepter les alliances de guilde',
         'diplomacy.non_aggression' => 'Proposer et signer les pactes de non-agression',

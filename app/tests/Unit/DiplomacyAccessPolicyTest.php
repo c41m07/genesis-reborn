@@ -142,4 +142,33 @@ final class DiplomacyAccessPolicyTest extends TestCase
         $member->rank->guild->id = 2;
         self::assertFalse($policy->allows($member, 'diplomacy.alliance'));
     }
+
+    public function testCommandSortiePermissionIsSeparateFromDeclaringWarAndAtelierDelivery(): void
+    {
+        $policy = new DiplomacyAccessPolicy();
+        $leader = $this->membership(1);
+        $guild = new Guild();
+        $guild->id = 7;
+        $guild->leader = $leader;
+        $guild->universe = $leader->universe;
+        $member = new GuildMember();
+        $member->guild = $guild;
+        $member->playerUniverse = $this->membership(2);
+        $member->rank = new GuildRank();
+        $member->rank->guild = $guild;
+        $member->rank->permissions = ['diplomacy.hostility', DiplomacyAccessPolicy::ATELIER_DELIVERY];
+
+        self::assertFalse($policy->allows($member, DiplomacyAccessPolicy::COMMAND_SORTIE));
+        $member->rank->permissions[] = DiplomacyAccessPolicy::COMMAND_SORTIE;
+        self::assertTrue($policy->allows($member, DiplomacyAccessPolicy::COMMAND_SORTIE));
+        $member->rank->guild = clone $guild;
+        $member->rank->guild->id = 8;
+        self::assertFalse($policy->allows($member, DiplomacyAccessPolicy::COMMAND_SORTIE));
+
+        $member->playerUniverse = $leader;
+        $member->rank = null;
+        self::assertTrue($policy->allows($member, DiplomacyAccessPolicy::COMMAND_SORTIE));
+        $guild->archivedAt = new \DateTimeImmutable('2026-11-28T00:00:00Z');
+        self::assertFalse($policy->allows($member, DiplomacyAccessPolicy::COMMAND_SORTIE));
+    }
 }
