@@ -41,6 +41,29 @@
     </ul>
 </section>
 
+{% if command_berthed %}
+    <section class="panel fleet-hold" aria-labelledby="hall-berthed-title">
+        <h2 id="hall-berthed-title">Vos flottes au Centre de commandement</h2>
+        <ul class="fleet-held-list">
+            {% for fleet in command_berthed %}
+                <li data-command-berthed="{{ fleet.id }}">
+                    <h3>Flotte {{ fleet.id }}</h3>
+                    <p>Colonie d’origine : {{ fleet.homePlanet.name }}. Hydrogène réservé au retour : {{ fleet.reservedFuel|quantity(2) }}.</p>
+                    <details>
+                        <summary>Composition</summary>
+                        <ul>{% for ship in held_details[fleet.id].ships %}<li>{{ ship.quantity|quantity }} × {{ ship.label }} · {{ ship.tier }}</li>{% endfor %}</ul>
+                    </details>
+                    <form method="post" action="{{ path('app_fleet_return_hall_station', {id: fleet.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('hall_station_return_' ~ fleet.id) }}">
+                        <input type="hidden" name="request_key" value="{{ request_key() }}">
+                        <button type="submit" name="confirm" value="1" class="secondary">Rappeler vers {{ fleet.homePlanet.name }}</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+{% endif %}
+
 {% if held_hall_convoys %}
     <section class="panel fleet-hold fleet-hold-waiting" aria-labelledby="hall-convoys-waiting-title">
         <h2 id="hall-convoys-waiting-title">Convois du Hall en attente · tout l’empire</h2>

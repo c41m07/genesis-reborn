@@ -17,7 +17,7 @@ final readonly class GuildHallConvoyView
     ) {
     }
 
-    public function describe(PlayerUniverse $member, int $requestedOrigin): array
+    public function describe(PlayerUniverse $member, int $requestedOrigin, bool $withoutFreight = false): array
     {
         $colonies = $this->repository->planets($member->universe, $member);
         $origin = $colonies[0] ?? null;
@@ -36,7 +36,8 @@ final readonly class GuildHallConvoyView
                     continue;
                 }
                 $ship = $this->catalog->getTierForUniverse($member->universe, 'ships', $stock->slug, $stock->tier);
-                if (($ship['mobile'] ?? true) && (!isset($ship['allowed_missions']) || in_array('transport', $ship['allowed_missions'], true))) {
+                if (($ship['mobile'] ?? true) && ($withoutFreight ? !isset($ship['economic_unit'])
+                    : (!isset($ship['allowed_missions']) || in_array('transport', $ship['allowed_missions'], true)))) {
                     $available[$stock->slug][$stock->tier] = $stock->quantity;
                 }
             }

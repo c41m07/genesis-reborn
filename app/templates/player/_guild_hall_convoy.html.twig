@@ -1,16 +1,24 @@
 {% set donation = convoy.ship_donation|default(false) %}
-{% set purpose = donation ? 'donation' : 'materials' %}
-{% set submit_route = donation ? 'app_guild_hall_donate_ships' : 'app_guild_hall_send_convoy' %}
-{% set token_scope = donation ? 'guild_hall_atelier_donation_' : 'guild_hall_convoy_' %}
+{% set station = convoy.command_station|default(false) %}
+{% set purpose = station ? 'station' : (donation ? 'donation' : 'materials') %}
+{% set submit_route = station ? 'app_guild_hall_station_fleet' : (donation ? 'app_guild_hall_donate_ships' : 'app_guild_hall_send_convoy') %}
+{% set token_scope = station ? 'guild_hall_station_' : (donation ? 'guild_hall_atelier_donation_' : 'guild_hall_convoy_') %}
 <section class="panel" aria-labelledby="hall-convoy-title">
-    <h2 id="hall-convoy-title">{{ donation ? 'Donner des vaisseaux à l’Atelier' : 'Ravitailler le Hall' }}</h2>
-    {% if convoy.donation_available|default(false) %}
+    <h2 id="hall-convoy-title">{{ station ? 'Stationner des vaisseaux au Centre' : (donation ? 'Donner des vaisseaux à l’Atelier' : 'Ravitailler le Hall') }}</h2>
+    {% if convoy.donation_available or convoy.station_available %}
         <nav aria-label="Type de convoi">
-            <a href="{{ path('app_guild_hall', {convoy_origin: convoy.origin.id|default(0)}) }}#hall-convoy-title"{% if not donation %} aria-current="page"{% endif %}>Livrer des matériaux</a>
-            <a href="{{ path('app_guild_hall', {convoy_origin: convoy.origin.id|default(0), convoy_purpose: 'donation'}) }}#hall-convoy-title"{% if donation %} aria-current="page"{% endif %}>Donner des vaisseaux</a>
+            <a href="{{ path('app_guild_hall', {convoy_origin: convoy.origin.id|default(0)}) }}#hall-convoy-title"{% if not donation and not station %} aria-current="page"{% endif %}>Livrer des matériaux</a>
+            {% if convoy.donation_available %}
+                <a href="{{ path('app_guild_hall', {convoy_origin: convoy.origin.id|default(0), convoy_purpose: 'donation'}) }}#hall-convoy-title"{% if donation %} aria-current="page"{% endif %}>Donner des vaisseaux</a>
+            {% endif %}
+            {% if convoy.station_available %}
+                <a href="{{ path('app_guild_hall', {convoy_origin: convoy.origin.id|default(0), convoy_purpose: 'station'}) }}#hall-convoy-title"{% if station %} aria-current="page"{% endif %}>Stationner au Centre</a>
+            {% endif %}
         </nav>
     {% endif %}
-    {% if donation %}
+    {% if station %}
+        <p>Vous gardez vos vaisseaux. Aucun fret n’est embarqué. Une fois au Centre, retrouvez la flotte et son rappel dans <a href="{{ path('app_fleet_holds') }}">Flottes → À quai</a>.</p>
+    {% elseif donation %}
         <p>Le don est définitif à l’arrivée : les vaisseaux deviennent propriété de la guilde. Si le Hall refuse le don, ils repartent vers votre colonie. Aucun fret n’est embarqué.</p>
     {% else %}
         <p>Les matériaux sont livrés au Hall par vos vaisseaux. Tout ce que l’entrepôt ne peut pas accepter revient avec la flotte.</p>
@@ -38,7 +46,7 @@
                 {% set minutes = (review.quote.seconds % 3600) // 60 %}
                 <p>Trajet aller : {% if hours %}{{ hours }} h {% endif %}{{ minutes }} min {{ review.quote.seconds % 60 }} s.</p>
                 <p>Hydrogène aller-retour : {{ review.quote.total_fuel|number_format(2, ',', ' ') }} H,
-                    dont {{ review.quote.planet_fuel|number_format(2, ',', ' ') }} H prélevés sur la colonie{% if not donation %} en plus du fret{% endif %}.</p>
+                    dont {{ review.quote.planet_fuel|number_format(2, ',', ' ') }} H prélevés sur la colonie{% if not donation and not station %} en plus du fret{% endif %}.</p>
                 <ul>
                     {% for ship in convoy.ships %}
                         {% for rank, quantity in review.ships[ship.slug]|default({}) %}
@@ -55,7 +63,7 @@
                     <input type="hidden" name="request_key" value="{{ review.key }}">
                     <input type="hidden" name="confirm" value="1">
                     <input type="hidden" name="_token" value="{{ csrf_token(token_scope ~ guild.id ~ '_' ~ hall.id) }}">
-                    <button type="submit" class="primary">{{ donation ? 'Confirmer le don de vaisseaux' : 'Confirmer et envoyer le convoi' }}</button>
+                    <button type="submit" class="primary">{{ station ? 'Confirmer le stationnement au Centre' : (donation ? 'Confirmer le don de vaisseaux' : 'Confirmer et envoyer le convoi') }}</button>
                     <a href="{{ path('app_guild_hall', {convoy_origin: convoy.origin.id, convoy_purpose: purpose}) }}#hall-convoy-title">Revenir au formulaire</a>
                 </form>
             </div>
@@ -93,7 +101,7 @@
                         </tbody>
                     </table>
                 </fieldset>
-                {% if not donation %}
+                {% if not donation and not station %}
                     <fieldset>
                         <legend>Matériaux à livrer</legend>
                         <div class="hall-resource-fields">
@@ -110,7 +118,7 @@
                         {% for speed in range(100, 10, -10) %}<option value="{{ speed }}">{{ speed }} %</option>{% endfor %}
                     </select>
                 </label>
-                <p>{{ donation ? 'Votre colonie paie le carburant aller-retour au départ, même si les vaisseaux restent au Hall.' : 'L’hydrogène du trajet aller-retour est réservé au départ, en plus du fret.' }}</p>
+                <p>{{ station ? 'Le carburant du retour est mis de côté dès le départ.' : (donation ? 'Votre colonie paie le carburant aller-retour au départ, même si les vaisseaux restent au Hall.' : 'L’hydrogène du trajet aller-retour est réservé au départ, en plus du fret.') }}</p>
                 <button type="submit" class="primary">Vérifier le trajet et le carburant</button>
             </form>
         {% endif %}

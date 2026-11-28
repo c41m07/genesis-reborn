@@ -78,6 +78,7 @@ final readonly class GuildHallWarehouseView
             'structures' => $structures,
             'enabled' => $schedule !== null,
             'dock_built' => ($buildings[GuildHallBuilding::DOCK]->level ?? 0) > 0,
+            'command_built' => ($buildings[GuildHallBuilding::COMMAND]->level ?? 0) > 0,
             'atelier_built' => ($buildings[GuildHallBuilding::ATELIER]->level ?? 0) > 0,
             'level' => $level,
             'finishes_at' => $warehouse?->finishesAt,
