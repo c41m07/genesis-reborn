@@ -19,7 +19,7 @@ final readonly class GuildHallBuildingSchedule
      * @param array<string, array<int, array{cost:array<string,int>,duration:int}>> $levels
      * @param array<int, array<string,int>> $capacities
      */
-    public function __construct(private array $levels, private array $capacities)
+    public function __construct(private array $levels, private array $capacities, public ?int $jumpInstabilitySeconds = null)
     {
         foreach ($levels as $slug => $rows) {
             if (!in_array($slug, [GuildHallBuilding::WAREHOUSE, GuildHallBuilding::DOCK, GuildHallBuilding::ATELIER, GuildJumpPoint::SCHEDULE_SLUG], true)
@@ -34,6 +34,10 @@ final readonly class GuildHallBuildingSchedule
                 }
                 $this->assertMaterials($row['cost']);
             }
+        }
+        if (isset($levels[GuildJumpPoint::SCHEDULE_SLUG])
+            && ($jumpInstabilitySeconds === null || $jumpInstabilitySeconds < 1 || $jumpInstabilitySeconds > 2147483647)) {
+            throw new \DomainException('Renseignez la durée d’instabilité du Jump Point avant d’activer le chantier.');
         }
         $warehouses = $levels[GuildHallBuilding::WAREHOUSE] ?? [];
         if ($warehouses === [] || array_keys($warehouses) !== array_keys($capacities)) {

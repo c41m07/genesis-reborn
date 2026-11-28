@@ -36,14 +36,14 @@ final class GuildHallBuildingScheduleTest extends TestCase
         $catalogue = new GuildHallBuildingSchedule([
             GuildHallBuilding::WAREHOUSE => $warehouse,
             GuildJumpPoint::SCHEDULE_SLUG => [1 => $jump],
-        ], $capacity);
+        ], $capacity, 900);
         self::assertSame($jump + ['maxLevel' => 1], $catalogue->quote(GuildJumpPoint::SCHEDULE_SLUG, 0));
 
         $this->expectException(\DomainException::class);
         new GuildHallBuildingSchedule([
             GuildHallBuilding::WAREHOUSE => $warehouse,
             GuildJumpPoint::SCHEDULE_SLUG => [1 => $jump, 2 => $jump],
-        ], $capacity);
+        ], $capacity, 900);
     }
 
     public function testCatalogueRejectsAnUnreachableWarehouseUpgrade(): void

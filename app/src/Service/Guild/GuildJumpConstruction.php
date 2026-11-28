@@ -24,22 +24,22 @@ final readonly class GuildJumpConstruction
     ) {
     }
 
-    /** @return array{cost:array<string,int>,duration:int,maxLevel:int}|null */
+    /** @return array{cost:array<string,int>,duration:int,maxLevel:int,instability:int}|null */
     public function quote(): ?array
     {
         $schedule = $this->schedules->schedule();
 
         return $schedule?->maximumLevel(GuildJumpPoint::SCHEDULE_SLUG) === 1
-            ? $schedule->quote(GuildJumpPoint::SCHEDULE_SLUG, 0) : null;
+            ? $schedule->quote(GuildJumpPoint::SCHEDULE_SLUG, 0) + ['instability' => $schedule->jumpInstabilitySeconds] : null;
     }
 
-    /** @param array{cost:array<string,int>,duration:int,maxLevel:int} $quote */
+    /** @param array{cost:array<string,int>,duration:int,maxLevel:int,instability:int} $quote */
     public static function fingerprint(array $quote): string
     {
         $cost = $quote['cost'];
         ksort($cost);
 
-        return hash('sha256', json_encode([$quote['duration'], $cost], JSON_THROW_ON_ERROR));
+        return hash('sha256', json_encode([$quote['duration'], $quote['instability'], $cost], JSON_THROW_ON_ERROR));
     }
 
     public function start(PlayerUniverse $actor, int $guildId, int $hallId, int $colonyId, string $reviewed): GuildJumpPoint
@@ -71,10 +71,14 @@ final readonly class GuildJumpConstruction
                 throw new \DomainException('Cette colonie n’appartient plus à la guilde.');
             }
 
+            $now = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
             $point = $this->repository->one(GuildJumpPoint::class, ['planet' => $colony]);
             if ($point instanceof GuildJumpPoint) {
                 $this->manager->lockCurrent($point);
-                if ($point->hall->id === $hall->id && $point->member->id === $member->id
+                if ($point->isUnstableAt($now)) {
+                    throw new \DomainException('Attendez la disparition du Jump Point instable avant d’en installer un autre.');
+                }
+                if ($point->hall->id === $hall->id && $point->member?->id === $member->id
                     && $point->acquisitionAt?->getTimestamp() === $colony->acquiredAt?->getTimestamp()) {
                     throw new \DomainException('Cette colonie a déjà un Jump Point ou un chantier en cours.');
                 }
@@ -86,9 +90,12 @@ final readonly class GuildJumpConstruction
             $this->stocks->consumeLocked($hall, $quote['cost']);
             $point->hall = $hall;
             $point->member = $member;
+            $point->originalOwnerId = $owner->id;
+            $point->instabilitySeconds = $quote['instability'];
+            $point->unstableUntil = null;
             $point->acquisitionAt = $colony->acquiredAt;
             // Aucun effet à publier à l’échéance : l’éligibilité relit la date et l’adhésion.
-            $point->readyAt = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'))->modify('+'.$quote['duration'].' seconds');
+            $point->readyAt = $now->modify('+'.$quote['duration'].' seconds');
             $this->manager->save($point);
 
             return $point;

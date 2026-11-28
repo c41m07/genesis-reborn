@@ -23,6 +23,11 @@ final readonly class GuildHallScheduleProvider
             throw new \DomainException('Barème des chantiers du Hall invalide.');
         }
 
-        return new GuildHallBuildingSchedule($data['levels'], $data['capacities']);
+        $instability = $data['jump_instability_seconds'] ?? null;
+        if ($instability !== null && !is_int($instability)) {
+            throw new \DomainException('La durée d’instabilité du Jump Point doit être exprimée en secondes entières.');
+        }
+
+        return new GuildHallBuildingSchedule($data['levels'], $data['capacities'], $instability);
     }
 }

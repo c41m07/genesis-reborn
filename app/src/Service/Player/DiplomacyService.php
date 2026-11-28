@@ -1,6 +1,6 @@
 <?php
 namespace App\Service\Player;
-use App\Entity\{PlayerUniverse,Guild,GuildMember,GuildRelation,AllianceContract,GuildRecruitment};
+use App\Entity\{PlayerUniverse,Guild,GuildMember,GuildRelation,AllianceContract,GuildRecruitment,GuildJumpPoint};
 use App\Repository\{GameRepository,GuildHallRepository};
 use App\Manager\GameManager;
 use App\Service\Catalog\GameCatalog;
@@ -187,6 +187,11 @@ final class DiplomacyService
             $this->lock($m,true);$member=$this->repo->one(GuildMember::class,['playerUniverse'=>$m]);
             if(!$member) return;
             if($member->guild->leader->id===$m->id) throw new \DomainException('Transférez le commandement ou dissolvez la guilde avant de la quitter.');
+            // L’effet cesse immédiatement ; garder la trace sur la colonie jusqu’à son échéance.
+            $now = $this->clock->now();
+            foreach ($this->repo->all(GuildJumpPoint::class, ['member' => $member]) as $point) {
+                $point->destabilize($now);
+            }
             $this->manager->remove($member);
         });
     }

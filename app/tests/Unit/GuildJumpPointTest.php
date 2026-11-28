@@ -36,12 +36,21 @@ final class GuildJumpPointTest extends TestCase
         $point = new GuildJumpPoint();
         $point->hall = $hall;
         $point->member = $member;
+        $point->originalOwnerId = $owner->id;
+        $point->instabilitySeconds = 120;
         $point->planet = $colony;
         $point->acquisitionAt = $colony->acquiredAt;
         $point->readyAt = $now->modify('+60 seconds');
 
         self::assertFalse($point->isUsableAt($now->modify('+59 seconds')));
         self::assertTrue($point->isUsableAt($point->readyAt));
+        $point->destabilize($point->readyAt);
+        self::assertFalse($point->isUsableAt($point->readyAt));
+        self::assertTrue($point->isUnstableAt($now->modify('+179 seconds')));
+        self::assertFalse($point->isUnstableAt($now->modify('+180 seconds')));
+        // Un autre essai indépendant simule une capture tant que le jeu de départ est intact.
+        $point->unstableUntil = null;
+        $point->member = $member;
         $rival = new PlayerUniverse();
         $rival->id = 9;
         $colony->acquireBy($rival, $point->readyAt);

@@ -33,9 +33,32 @@ final class GuildJumpPoint
     #[ORM\Column]
     public \DateTimeImmutable $readyAt;
 
+    #[ORM\Column]
+    public int $originalOwnerId;
+
+    /** Durée issue du barème de l’installation, jamais de la requête de départ. */
+    #[ORM\Column]
+    public int $instabilitySeconds;
+
+    #[ORM\Column(nullable: true)]
+    public ?\DateTimeImmutable $unstableUntil = null;
+
+    public function destabilize(\DateTimeImmutable $now): void
+    {
+        $this->unstableUntil ??= $now->setTimezone(new \DateTimeZone('UTC'))->modify('+'.$this->instabilitySeconds.' seconds');
+        $this->member = null;
+    }
+
+    public function isUnstableAt(\DateTimeImmutable $now): bool
+    {
+        return $this->member === null && $this->unstableUntil !== null && $now < $this->unstableUntil
+            && $this->planet->owner?->id === $this->originalOwnerId
+            && $this->planet->acquiredAt?->getTimestamp() === $this->acquisitionAt?->getTimestamp();
+    }
+
     public function isUsableAt(\DateTimeImmutable $now): bool
     {
-        return $this->readyAt <= $now
+        return $this->member !== null && $this->unstableUntil === null && $this->readyAt <= $now
             && $this->hall->placedAt !== null
             && $this->hall->solarSystem !== null
             && $this->hall->guild->archivedAt === null
