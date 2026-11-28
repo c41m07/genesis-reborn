@@ -49,7 +49,7 @@ async function capture(page, info, key, theme, width, audit = true) {
   }
 }
 
-test('L7A A : colonies, renommage, comparaison et bilan complets sur quatre formats', async ({ page, browser, baseURL }, info) => {
+test('L7A A : colonies, renommage, stocks et bilan complets sur quatre formats', async ({ page, browser, baseURL }, info) => {
   test.setTimeout(240000);
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -124,8 +124,8 @@ test('L7A A : colonies, renommage, comparaison et bilan complets sur quatre form
         await assertGuideBelowAction(page, manage);
         await assertGuideBelowAction(page, page.locator('.colony-comparison tbody td[data-comparison-queue="shipyard"]').last());
       }
-      if (width === 1440) await expect(page.locator('.colony-comparison td[data-resource="nano"]').first()).toBeVisible();
-      else await expect(page.locator('.colony-comparison td[data-resource="nano"]').first()).toBeHidden();
+      await expect(page.locator('.colony-comparison tbody tr').first().locator('td[data-resource]:visible')).toHaveCount(5);
+      await expect(page.locator('.colony-storage-estimate')).toHaveCount(10);
       const horizonWork = page.locator('.colony-comparison tbody tr')
         .filter({ has: page.getByRole('link', { name: 'Horizon', exact: true }) })
         .locator('[data-comparison-queue="building"]');
@@ -133,15 +133,6 @@ test('L7A A : colonies, renommage, comparaison et bilan complets sur quatre form
       await expect(horizonWork).toContainText('Niveau 5');
       await expect(horizonWork).toContainText('En cours');
       await expect(horizonWork.locator('time')).toHaveAttribute('datetime', /T/);
-      if (width === 390) {
-        const resource = page.getByLabel('Ressource à comparer');
-        await resource.focus();
-        await assertGuideBelowAction(page, resource);
-        await page.keyboard.press('Tab');
-        const compare = page.getByRole('button', { name: 'Comparer cette ressource' });
-        await expect(compare).toBeFocused();
-        await assertGuideBelowAction(page, compare);
-      }
       await capture(page, info, 'comparaison', theme, width);
       await page.goto(abandon);
       for (const title of ['Un abandon définitif', 'Bilan des pertes', 'Ressources', 'Bâtiments', 'Défenses', 'Vaisseaux présents', 'Ressources embarquées présentes', 'Commandes annulées sans remboursement', 'Confirmer l’abandon']) {
@@ -185,15 +176,8 @@ test('L7A A : colonies, renommage, comparaison et bilan complets sur quatre form
   try {
     const fallback = await native.newPage();
     await fallback.goto('/planetes?view=table&resource=metal');
-    const select = fallback.getByLabel('Ressource à comparer');
-    await select.selectOption('nano');
-    await select.focus();
-    await fallback.keyboard.press('Tab');
-    await expect(fallback.getByRole('button', { name: 'Comparer cette ressource' })).toBeFocused();
-    await fallback.keyboard.press('Enter');
-    await expect(fallback).toHaveURL(/resource=nano/);
-    await expect(fallback.locator('th[data-resource="nano"]')).toBeVisible();
-    await expect(fallback.locator('th[data-resource="metal"]')).toBeHidden();
+    await expect(fallback.locator('th[data-resource]:visible')).toHaveCount(5);
+    await expect(fallback.locator('.colony-storage-percent').first()).toContainText('% du stockage');
     await expect(fallback.locator('.colony-comparison tbody tr')).toHaveCount(2);
     await expect(fallback.locator('[data-comparison-queue="building"]').filter({ hasText: 'Mine à ciel ouvert' })).toHaveCount(1);
   } finally {
@@ -228,19 +212,14 @@ test('L7A A : clavier, toucher, historique et formulaires sans JavaScript', asyn
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(new RegExp(`/planetes#planet-${user.planet}$`));
   await expect(page.locator('#planet-' + user.planet + ' h2')).toHaveText('Horizon renommé');
-  await page.getByRole('link', { name: 'Comparer les colonies', exact: true }).click();
+  await page.getByRole('link', { name: 'Suivi des colonies', exact: true }).click();
   await page.setViewportSize({ width: 768, height: 900 });
-  await expect(page.locator('[data-controller~="colony-comparison"]')).toHaveClass(/comparison-ready/);
-  const select = page.getByLabel('Ressource à comparer');
-  for (const resource of ['nano', 'hydrogen', 'antimatter', 'electricity']) {
-    await select.selectOption(resource);
-    await expect(page).toHaveURL(new RegExp('resource=' + resource));
-    await expect(page.locator(`.colony-comparison td[data-resource="${resource}"]`)).toBeVisible();
-  }
-  await page.goBack();
-  await expect(select).toHaveValue('antimatter');
+  const table = page.locator('.colony-comparison');
+  await expect(table.locator('td[data-resource]:visible')).toHaveCount(5);
+  await expect(page.getByLabel('Ressource à comparer')).toHaveCount(0);
+  await expect(table.locator('.colony-storage-percent')).toHaveCount(5);
   await page.reload();
-  await expect(select).toHaveValue('antimatter');
+  await expect(table.locator('td[data-resource]:visible')).toHaveCount(5);
   const link = page.locator('.colony-comparison th[scope="row"] a');
   await link.focus();
   await page.keyboard.press('Enter');
@@ -264,9 +243,6 @@ test('L7A A : clavier, toucher, historique et formulaires sans JavaScript', asyn
     const plain = await context.newPage();
     plain.setDefaultTimeout(15000);
     await plain.goto('/planetes?view=table&resource=metal');
-    await plain.getByLabel('Ressource à comparer').selectOption('electricity');
-    await plain.getByRole('button', { name: 'Comparer cette ressource', exact: true }).tap();
-    await expect(plain).toHaveURL(/view=table&resource=electricity/);
     await expect(plain.locator('.colony-comparison td[data-resource="electricity"]')).toBeVisible();
     const cards = plain.getByRole('navigation', { name: 'Présentation des colonies' }).getByRole('link', { name: 'Mes colonies', exact: true });
     await expect(cards).toHaveAttribute('href', '/planetes');
@@ -289,7 +265,32 @@ test('L7A A : clavier, toucher, historique et formulaires sans JavaScript', asyn
 });
 
 
-test('Comparateur : trois files privées lisibles au clavier et sans JavaScript', async ({ page, browser, baseURL }) => {
+test('Stocks des colonies : remplissage, solde net et décompte au rythme actuel', async ({ page }) => {
+  const user = await enter(page);
+  const sql = statement => runIsolatedSql(user.project, statement);
+  sql(`UPDATE planet_building SET level=0 WHERE planet_id=${user.planet} AND slug IN ('power_plant','mine_antimatter','mine_hydrogen')`);
+  sql(`INSERT INTO planet_building(planet_id,slug,tier,level) VALUES(${user.planet},'mine_metal','basic',2)
+    ON DUPLICATE KEY UPDATE level=VALUES(level)`);
+  sql(`UPDATE planet_resource SET current_stock=5000,last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${user.planet}`);
+  await page.goto('/planetes?view=table');
+  const cell = slug => page.locator(`.colony-comparison td[data-resource="${slug}"]`);
+  await expect(cell('metal').locator('.colony-storage-percent')).toContainText('% du stockage');
+  await expect(cell('metal').locator('.colony-comparison-rate')).toHaveAttribute('data-trend', '1');
+  await expect(cell('electricity').locator('.colony-comparison-rate')).toHaveAttribute('data-trend', '-1');
+  await expect(cell('electricity').getByRole('timer')).toContainText('Vide dans');
+  await expect(cell('antimatter').getByRole('timer')).toHaveText('Stock stable');
+  const timer = cell('metal').getByRole('timer');
+  await expect(timer).toContainText('Plein dans');
+  const initial = await timer.textContent();
+  await expect(timer).not.toHaveText(initial);
+  const capacity = Number(await cell('metal').getAttribute('data-resource-cap-value'));
+  sql(`UPDATE planet_resource SET current_stock=${capacity},last_updated_at=UTC_TIMESTAMP() WHERE planet_id=${user.planet} AND resource_type='metal'`);
+  await page.reload();
+  await expect(cell('metal').locator('.colony-storage-percent')).toHaveText('100 % du stockage');
+  await expect(timer).toHaveText('Stockage plein');
+});
+
+test('Suivi des colonies : trois files privées lisibles au clavier et sans JavaScript', async ({ page, browser, baseURL }) => {
   const user = await enter(page);
   const other = await revealVirginPlanet(user.project, user.email);
   runIsolatedSql(user.project, `UPDATE planet SET owner_id=${user.member},name='Boréal comparaison' WHERE id=${other.id}`);
@@ -309,7 +310,7 @@ test('Comparateur : trois files privées lisibles au clavier et sans JavaScript'
   try {
     const mobile = await plain.newPage();
     await mobile.goto('/planetes?view=table&resource=hydrogen');
-    const region = mobile.getByRole('region', { name: 'Comparaison des colonies, défilement horizontal' });
+    const region = mobile.getByRole('region', { name: 'Stocks et activités des colonies, défilement horizontal' });
     const table = region.getByRole('table');
     for (const name of ['Bâtiments', 'Recherche', 'Chantier spatial']) {
       await expect(table.getByRole('columnheader', { name, exact: true })).toBeVisible();
@@ -329,11 +330,7 @@ test('Comparateur : trois files privées lisibles au clavier et sans JavaScript'
     await expect(region).toBeFocused();
     await mobile.keyboard.press('ArrowRight');
     await expect.poll(() => region.evaluate(element => element.scrollLeft)).toBeGreaterThan(0);
-    await mobile.getByLabel('Ressource à comparer').selectOption('electricity');
-    await mobile.getByRole('button', { name: 'Comparer cette ressource', exact: true }).click();
-    await expect(mobile).toHaveURL(/view=table&resource=electricity$/);
-    await expect(mobile.locator('th[data-resource="electricity"]')).toBeVisible();
-    await expect(mobile.locator('th[data-resource="hydrogen"]')).toBeHidden();
+    await expect(table.locator('th[data-resource]:visible')).toHaveCount(5);
   } finally {
     await plain.close();
   }
@@ -343,6 +340,7 @@ test('Comparateur : trois files privées lisibles au clavier et sans JavaScript'
   runIsolatedSql(user.project, `INSERT INTO vacation_period(membership_id,started_at,scheduled_end_at) VALUES
     (${user.member},DATE_SUB(UTC_TIMESTAMP(),INTERVAL 1 MINUTE),DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 HOUR))`);
   await page.reload();
+  await expect(page.locator('.colony-storage-estimate').first()).toHaveText('Production suspendue');
   const pausedResearch = page.locator('td[data-comparison-queue="research"]').filter({ hasText: 'départ de cette colonie' });
   await expect(pausedResearch).toContainText('Suspendue');
   await expect(pausedResearch).toContainText('+1 déjà lancée');

@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\{Planet, PlanetBuilding, PlayerTechnology, PlayerDiscovery, Fleet, FleetShip};
-use App\Repository\{GameRepository, GuildHallRepository, ResourceMarketRepository};
+use App\Repository\{EmpireFleetRepository, GameRepository, GuildHallRepository, ResourceMarketRepository};
 use App\Service\Universe\UniverseContext;
 use App\Service\Notification\JournalService;
 use App\Service\Colony\{CatalogueInsights, CatalogueItemLink, ColonyComparisonActivities, ColonyView, GameShell, ResourceService, LiveRegionResponse};
@@ -90,21 +90,31 @@ final class ColonyController extends AbstractController
             }
         }
         return $this->render('colony/planets.html.twig', [
+            'planet' => $request->query->has('colony') ? $this->owned($request->query->getInt('colony')) : null,
             'membership' => $membership,
             'planets' => $planets,
             'position_modifiers' => $positionModifiers,
             'comparison_activities' => $tableView ? $comparison->forPlanets($membership, $planets) : null,
             'table_view' => $tableView,
-            'comparison_resource' => in_array($request->query->getString('resource'), [
-                'metal',
-                'nano',
-                'hydrogen',
-                'antimatter',
-                'electricity',
-            ], true) ? $request->query->getString('resource') : 'metal',
             'planet_details' => $details->planets($membership),
         ]);
     }
+    #[Route('/planetes/flotte', name: 'app_planets_fleet', methods: ['GET'])]
+    public function empireFleet(Request $request, EmpireFleetRepository $fleets, GameCatalog $catalog): Response
+    {
+        $member = $this->context->membership();
+        $planet = $request->query->has('colony') ? $this->owned($request->query->getInt('colony')) : null;
+        $ships = $fleets->ships($member);
+
+        return $this->render('colony/empire_fleet.html.twig', [
+            'membership' => $member,
+            'planet' => $planet,
+            'ships' => $ships,
+            'total' => array_sum(array_column($ships, 'quantity')),
+            'catalog' => $catalog->forUniverse($member->universe)['catalog']['ships'],
+        ], new Response(headers: ['Cache-Control' => 'private, no-store']));
+    }
+
     #[Route('/planetes/{id}', name: 'app_colony', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(
         int $id,

@@ -51,6 +51,16 @@ body[data-ui-page="catalogues"] .catalog-workspace .catalog-operations-rail {
 .catalog-follow-summary>span { color:var(--muted); font-size:11px; overflow-wrap:anywhere; }
 .catalog-follow-summary .operation-progress { margin:0; }
 .catalog-follow-summary .progress-track { height:3px; }
+.catalog-workspace .catalog-queue-ribbon .catalog-follow-summary .progress-times {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 2px 8px;
+}
+.catalog-queue-ribbon .catalog-follow-summary .progress-times > span:last-child {
+    margin-inline-start: auto;
+    text-align: end;
+}
 .catalog-follow-summary .progress-times { font-size:10px; margin-top:3px; }
 .catalog-follow-summary .progress-times strong { font-size:10px; }
 .catalog-disclosure[open]>.catalog-follow-summary { border-color:var(--accent); }
@@ -804,7 +814,6 @@ body[data-theme="light"] .catalogue-cancel { --catalogue-decision-danger: #a92f4
         min-height: 44px;
         padding: 5px 7px;
     }
-    .catalog-workspace .catalog-queue-ribbon .catalog-follow-summary .progress-times { display: block; }
     .catalog-workspace .catalog-follow-summary .progress-times strong { font-size: 10px; }
     .catalog-workspace .catalog-flight-followups .catalog-follow-summary {
         min-height: 44px;

@@ -82,17 +82,9 @@ final class FleetController extends AbstractController
         return $this->render('fleet/index.html.twig', $data, new Response(headers: ['Cache-Control' => 'private, no-store']));
     }
     #[Route('/flottes/empire', name: 'app_fleet_empire', methods: ['GET'])]
-    public function empire(UniverseContext $context, \App\Repository\EmpireFleetRepository $fleets, GameCatalog $catalog): Response
+    public function empire(): Response
     {
-        $member = $context->membership();
-        $ships = $fleets->ships($member);
-
-        return $this->render('fleet/empire.html.twig', [
-            'membership' => $member,
-            'ships' => $ships,
-            'total' => array_sum(array_column($ships, 'quantity')),
-            'catalog' => $catalog->forUniverse($member->universe)['catalog']['ships'],
-        ], new Response(headers: ['Cache-Control' => 'private, no-store']));
+        return $this->redirectToRoute('app_planets_fleet', [], Response::HTTP_MOVED_PERMANENTLY);
     }
 
     #[Route('/flottes/destinations', name: 'app_fleet_destinations', methods: ['GET'])]

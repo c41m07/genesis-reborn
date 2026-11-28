@@ -74,13 +74,17 @@ final class EmpireDetailsTest extends WebTestCase
         self::assertSelectorTextContains('.fleet-composition-table', 'Chasseur de patrouille');
         self::assertSelectorTextNotContains('.fleet-composition-table', 'Bombardier');
         self::assertSelectorNotExists('.fleet-composition-table input');
+        $client->request('GET', '/planetes/flotte?colony='.$away->id);
+        self::assertResponseStatusCodeSame(404);
         $client->request('GET','/planetes/'.$away->id);
         self::assertResponseStatusCodeSame(404);
         $secondUniverse = $em->getRepository(Universe::class)->findOneBy(['slug' => 'turbo-1']);
         $player = $em->find(\App\Entity\Player::class, $owner->player->id);
         static::getContainer()->get(UniverseService::class)->select($player, $secondUniverse->id);
         $client->loginUser($player);
-        $client->request('GET', '/flottes/empire?membership='.$owner->id);
+        $client->request('GET', '/flottes/empire');
+        self::assertResponseRedirects('/planetes/flotte', 301);
+        $client->request('GET', '/planetes/flotte?membership='.$owner->id);
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('main', 'Votre empire ne possède encore aucune unité.');
         self::assertSelectorNotExists('.fleet-composition-table');

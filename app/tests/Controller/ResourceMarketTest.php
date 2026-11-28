@@ -120,7 +120,7 @@ final class ResourceMarketTest extends WebTestCase
         $first = $this->em->getRepository(MarketTrade::class)->findOneBy(['membershipId' => $member->id]);
         self::assertSame($live['composition'], $first->ships);
         self::assertEqualsWithDelta($live['planetFuel'], $first->reservedFuel, 0.00001);
-        $this->client->request('GET', '/flottes/empire');
+        $this->client->request('GET', '/planetes/flotte');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextSame('.fleet-composition-table td', '2');
         self::assertSame(1800, $first->dueAt->getTimestamp() - $first->departedAt->getTimestamp());

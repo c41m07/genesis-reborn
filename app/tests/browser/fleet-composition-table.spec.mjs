@@ -249,7 +249,11 @@ test('Flotte de l’empire : effectifs cumulés par famille et par rang en lectu
     const link = page.getByRole('link', { name: 'Flotte de l’empire', exact: true });
     await link.focus();
     await page.keyboard.press('Enter');
-    await expect(page).toHaveURL(/\/flottes\/empire$/);
+    await expect(page).toHaveURL(/\/planetes\/flotte$/);
+    await expect(link).toHaveAttribute('aria-current', 'page');
+    await expect(page.locator('.sidebar nav a.active')).toHaveText('Planètes');
+    await expect(page.locator('.mobile-bottom-nav a[aria-current="page"]')).toHaveText('Planètes');
+    await expect(page.getByRole('navigation', { name: 'Navigation des flottes' })).toHaveCount(0);
     const table = page.getByRole('table', { name: 'Effectifs par rang' });
     for (const width of [1920, 768, 390, 320]) {
         await page.setViewportSize({ width, height: 900 });
@@ -264,4 +268,12 @@ test('Flotte de l’empire : effectifs cumulés par famille et par rang en lectu
     await expect(page.getByText('36 unités au total')).toBeVisible();
     await page.goBack();
     await expect(page).toHaveURL(/\/planetes\?view=table$/);
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await link.click();
+    await page.getByLabel('Choisir une colonie').selectOption(String(second));
+    await expect(page).toHaveURL(new RegExp('/planetes/flotte\\?colony=' + second + '$'));
+    await expect(page.getByLabel('Choisir une colonie')).toHaveValue(String(second));
+    await expect(page.getByText('36 unités au total')).toBeVisible();
+    await page.goto('/flottes');
+    await expect(page.locator('nav[aria-label="Navigation des flottes"] a', { hasText: 'Flotte de l’empire' })).toHaveCount(0);
 });

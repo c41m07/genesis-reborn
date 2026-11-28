@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 import { exactNumber, displayQuantity } from '../quantity.js';
 
 export default class extends Controller {
-    static targets = ['stock', 'capacity', 'rate', 'productivity', 'meter', 'fill', 'protectedFill', 'protectedLimit', 'economyStock', 'economyCapacity', 'gross', 'net', 'estimate', 'potential', 'inputsGross', 'inputsActual', 'consumers', 'consumerGrossTotal', 'consumerActualTotal'];
+    static targets = ['stock', 'capacity', 'rate', 'productivity', 'meter', 'fill', 'protectedFill', 'protectedLimit', 'economyStock', 'economyCapacity', 'gross', 'net', 'estimate', 'percent', 'storageEstimate', 'overflow', 'potential', 'inputsGross', 'inputsActual', 'consumers', 'consumerGrossTotal', 'consumerActualTotal'];
     static values = { stock: Number, rate: Number, cap: Number, protectedCap: Number, estimateSeconds: { type: Number, default: -1 }, vacation: Boolean, sourceLabels: Object };
     connect() { this.started = Date.now(); this.tick(); this.timer = setInterval(() => this.tick(), 1000); }
     disconnect() { clearInterval(this.timer); }
@@ -56,6 +56,18 @@ export default class extends Controller {
         if (!rows.length) { const row = document.createElement('tr');const cell = document.createElement('td');cell.colSpan = 3;cell.textContent = 'Aucune usine consommatrice.';row.append(cell);rows.push(row); }
         this.consumersTarget.replaceChildren(...rows);
     }
+    storageEstimate(stock, depleted) {
+        if (this.vacationValue) return 'Production suspendue';
+        if (this.capValue <= 0) return 'Sans stockage';
+        if (stock >= this.capValue && this.rateValue >= 0) return 'Stockage plein';
+        if (depleted) return 'Stock épuisé';
+        if (this.estimateSecondsValue < 0) return 'Stock stable';
+        return `${this.rateValue > 0 ? 'Plein dans' : 'Vide dans'} ${this.remainingDuration()}`;
+    }
+    remainingDuration() {
+        const seconds = Math.max(0, Math.ceil(this.estimateSecondsValue - (Date.now() - this.started) / 1000));
+        return `${seconds >= 3600 ? Math.floor(seconds / 3600) + ' h ' : ''}${seconds >= 60 ? Math.floor(seconds % 3600 / 60) + ' min ' : ''}${seconds % 60} s`;
+    }
     tick() {
         const stock = Math.max(0, Math.min(Math.max(this.capValue, this.stockValue), this.stockValue + Math.max(0, Date.now() - this.started) / 1000 * this.rateValue));
         const saturated = stock >= this.capValue && this.rateValue > 0;
@@ -63,8 +75,13 @@ export default class extends Controller {
         const bounded = saturated || depleted;
         const storedRate = bounded ? 0 : this.rateValue;
         if (this.displayedRate !== storedRate) {
-            displayQuantity(this.rateTarget, Math.round(storedRate * 3600));
-            this.rateTarget.textContent = `${storedRate >= 0 ? '+' : ''}${this.rateTarget.textContent} / h`;
+            if (this.hasStorageEstimateTarget) {
+                displayQuantity(this.rateTarget, storedRate * 3600, 2);
+                this.rateTarget.dataset.trend = String(Math.sign(storedRate));
+            } else {
+                displayQuantity(this.rateTarget, Math.round(storedRate * 3600));
+            }
+            this.rateTarget.textContent = `${storedRate > 0 || (storedRate === 0 && !this.hasStorageEstimateTarget) ? '+' : ''}${this.rateTarget.textContent} / h`;
             this.rateTarget.title += ' / h';this.rateTarget.setAttribute('aria-label', this.rateTarget.title);
             this.displayedRate = storedRate;
         }
@@ -72,6 +89,12 @@ export default class extends Controller {
         if (!bounded) this.boundaryNotified = false;
         const format = value => exactNumber(Math.floor(value));
         displayQuantity(this.stockTarget, Math.floor(stock));
+        if (this.hasStorageEstimateTarget) {
+            if (this.hasPercentTarget) this.percentTarget.textContent = exactNumber(Math.floor(100 * stock / this.capValue));
+            if (this.hasOverflowTarget) this.overflowTarget.hidden = stock <= this.capValue;
+            this.storageEstimateTarget.textContent = this.storageEstimate(stock, depleted);
+            return;
+        }
         this.dispatch('stock', { detail: { slug: this.element.dataset.resourceSlug, stock, deficit: this.element.classList.contains('resource--deficit') } });
         if (this.hasEconomyStockTarget) {
             this.economyStockTarget.textContent = format(stock);
@@ -82,9 +105,7 @@ export default class extends Controller {
             else if (stock >= this.capValue && this.rateValue >= 0) estimate = 'Stockage plein';
             else if (depleted) estimate = 'Stock épuisé';
             else if (this.estimateSecondsValue >= 0) {
-                const seconds = Math.max(0, Math.ceil(this.estimateSecondsValue - (Date.now() - this.started) / 1000));
-                const duration = `${seconds >= 3600 ? Math.floor(seconds / 3600) + ' h ' : ''}${seconds >= 60 ? Math.floor(seconds % 3600 / 60) + ' min ' : ''}${seconds % 60} s`;
-                estimate = `${this.rateValue > 0 ? 'Saturation' : 'Épuisement'} estimé dans ${duration} au rythme actuel`;
+                estimate = `${this.rateValue > 0 ? 'Saturation' : 'Épuisement'} estimé dans ${this.remainingDuration()} au rythme actuel`;
             }
             this.estimateTarget.textContent = estimate;
         }

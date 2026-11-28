@@ -15,6 +15,16 @@
 {% endif %}
 {% for type in queueTypes %}{% set label = queueLabels[type] %}
 {% set items=queues[type]|default([]) %}{% set head=items|first %}
+{% set queueProgress %}
+{% if head %}
+{% if vacation %}
+{% set elapsed=max(0,vacation.scheduledEndAt|date('U')-head.progress.start|date('U')) %}
+{% set span=max(1,head.finish|date('U')-head.progress.start|date('U')) %}
+{% set percent=max(0,min(100,head.progress.percent + elapsed/span*(100-head.progress.percent))) %}
+<div class="operation-progress" data-vacation-paused="true"><div class="progress-track" role="progressbar" aria-label="Progression suspendue : {{ label }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ percent|round }}" aria-valuetext="{{ percent|round }} %, en pause pendant les vacances"><span style="width:{{ percent }}%"></span></div><div class="progress-times"><span>En pause · <strong>{{ duration_label(max(0,head.finish|date('U')-vacation.scheduledEndAt|date('U'))) }}</strong> de travail restant</span><span>File complète · <strong>{{ duration_label(max(0,(items|last).finish|date('U')-vacation.scheduledEndAt|date('U'))) }}</strong> de travail restant</span></div></div>
+{% else %}{{ ui.progress(head.progress.start,head.finish,'Progression : '~label,(items|last).finish,head.progress.percent) }}{% endif %}
+{% endif %}
+{% endset %}
 {% if catalogue %}
 <details class="scene-operation catalog-disclosure{{ type == selectedQueue ? ' catalog-queue-current' : '' }}" data-queue-type="{{ type }}" data-catalog-disclosure="queue-{{ type }}" data-queue-occupied="{{ head ? 'true' : 'false' }}">
     <summary class="catalog-follow-summary">
@@ -25,7 +35,7 @@
             {% if items|length > runningCount and runningCount %} · {{ items|length - runningCount }} en attente{% endif %}
         </small>{% endif %}
         <span>{% if head %}{{ head.label }}{% if head.item.itemLevel %} · niv. {{ head.item.itemLevel }}{% else %} × {{ head.item.quantity|quantity }}{% endif %}{% else %}File disponible{% endif %} <span aria-hidden="true">⌄</span></span>
-        {% if head and head.item.startedAt and not vacation %}{{ ui.progress(head.progress.start,head.finish,'Progression : '~label,null,head.progress.percent) }}{% endif %}
+        {% if head and head.item.startedAt %}{{ queueProgress }}{% endif %}
     </summary>
     <div class="catalog-follow-panel">
 {% else %}<div class="scene-operation" data-queue-type="{{ type }}">{% endif %}
@@ -33,12 +43,7 @@
 {% if catalogue and items|length > orderLimit %}<p class="muted">Les commandes déjà lancées sont conservées. Attendez qu’il reste moins de {{ orderLimit }} commandes pour en ajouter.</p>{% endif %}
 {% if type=='research' %}<p class="muted">File commune à vos colonies de cet univers.{% if head %} Recherche en cours depuis {{ head.item.planet.name }}.{% endif %}</p>{% if research_parallel_count|default(0)>1 %}<p role="status">Les recherches déjà commencées se terminent. Les suivantes attendent dans la file commune.</p>{% endif %}{% endif %}
 {% if head %}<div class="operation-name"><strong>{{ head.label }}</strong><small>{% if head.item.itemLevel %}Niveau {{ head.item.itemLevel }}{% else %}× {{ head.item.quantity|quantity }}{% endif %}</small></div>
-{% if vacation %}
-{% set elapsed=max(0,vacation.scheduledEndAt|date('U')-head.progress.start|date('U')) %}
-{% set span=max(1,head.finish|date('U')-head.progress.start|date('U')) %}
-{% set percent=max(0,min(100,head.progress.percent + elapsed/span*(100-head.progress.percent))) %}
-<div class="operation-progress" data-vacation-paused="true"><div class="progress-track" role="progressbar" aria-label="Progression suspendue : {{ label }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ percent|round }}" aria-valuetext="{{ percent|round }} %, en pause pendant les vacances"><span style="width:{{ percent }}%"></span></div><div class="progress-times"><span>En pause · <strong>{{ duration_label(max(0,head.finish|date('U')-vacation.scheduledEndAt|date('U'))) }}</strong> de travail restant</span><span>File complète · <strong>{{ duration_label(max(0,(items|last).finish|date('U')-vacation.scheduledEndAt|date('U'))) }}</strong> de travail restant</span></div></div>
-{% else %}{{ ui.progress(head.progress.start,head.finish,'Progression : '~label,(items|last).finish,head.progress.percent) }}{% endif %}
+{{ queueProgress }}
 <details class="queue-details"{% if catalogue %} open{% endif %}><summary>{{ vacation?'Consulter':'Gérer' }} la file <span>({{ items|length }})</span></summary><div class="queue-detail-list">{% for row in items %}{% set q=row.item %}<div class="queue-detail-item"><span><strong>{{ row.label }}</strong><small>{% if q.itemLevel %}Niveau {{ q.itemLevel }}{% else %}× {{ q.quantity|quantity }}{% endif %} · {{ q.startedAt?(vacation?'En pause':'En cours'):'En attente' }}{% if not q.startedAt %} · {{ duration_label(row.duration) }} estimé{% endif %}{% if type=='research' %} · {{ q.planet.name }}{% endif %}</small></span>{% if not vacation %}<a class="text-button" href="{{ path('app_queue_cancel_preview',{id:planet.id,itemId:q.id,section:section}) }}" aria-label="Préparer l’annulation de {{ row.label }} et ses dépendances">Préparer l’annulation</a>{% endif %}</div>{% endfor %}<p>{{ vacation?'Les annulations et accélérations sont indisponibles pendant les vacances.':'Les annulations suppriment les niveaux dépendants, avec remboursement de 25 % des ressources de chaque commande annulée, dans la limite du stockage.' }}</p></div></details>
 {% else %}
     <p class="operation-idle">{{ catalogue and type == 'research' ? 'Aucune recherche en cours' : 'Aucune commande en cours' }}</p>

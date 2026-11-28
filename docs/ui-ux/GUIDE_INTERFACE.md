@@ -329,13 +329,11 @@ résumé utilisé par l’administration sont conservés. Styles limités à
 
 ## Colonies — proposition A du lot L7A
 
-Planètes conserve deux présentations du même ensemble : cartes et comparaison,
-avec `view=table` et `resource`. Cartes horizontales sur grand écran : illustration
+Planètes conserve deux présentations du même ensemble : cartes et suivi des colonies
+(`view=table`). La flotte de l’empire possède sa page dans ce même menu. Cartes horizontales sur grand écran : illustration
 existante, identité et informations, puis actions ; une colonne sur tablette/mobile.
 Renommage et bonus/malus restent dépliables, stocks/vaisseaux dans le panneau
-existant utilisable au clavier et au toucher. Comparatif sémantique à cinq ressources
-sur grand écran, à une ressource sélectionnée sur format étroit, avec formulaire
-GET de repli sans JavaScript.
+existant utilisable au clavier et au toucher. Le suivi affiche les cinq ressources, leur taux de remplissage, le solde net signé et le délai estimé avant saturation ou épuisement. Sur écran étroit, le tableau défile horizontalement. Les valeurs initiales restent lisibles sans JavaScript.
 
 L’abandon garde une page dédiée, son bilan complet et ses refus sans divulgation.
 Confirmation à droite sur grand écran, sous le bilan sinon ; aucune information

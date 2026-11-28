@@ -285,8 +285,8 @@ final class ResourceService
         $result=[];
         foreach($this->catalog->rules()['resources'] as $slug=>$label){
             $capacity=$this->capacity($planet,$slug,$levels);
-            $result[$slug]=['label'=>$label,'stock'=>0.0,'rate'=>0.0,'capacity'=>$capacity,'protectedCapacity'=>$capacity*$protectedRatio,'productivity'=>null];
-            if($includeEconomy) $result[$slug]+= ['gross'=>0.0,'consumption'=>0.0,'uncredited'=>0.0,'sources'=>[],'consumptionSources'=>[],'estimateSeconds'=>null,'potentialGross'=>0.0,'potentialSources'=>[],'productionInputs'=>[],'consumptionPotential'=>0.0,'consumerSources'=>[]];
+            $result[$slug]=['label'=>$label,'stock'=>0.0,'rate'=>0.0,'capacity'=>$capacity,'protectedCapacity'=>$capacity*$protectedRatio,'productivity'=>null,'estimateSeconds'=>null];
+            if($includeEconomy) $result[$slug]+= ['gross'=>0.0,'consumption'=>0.0,'uncredited'=>0.0,'sources'=>[],'consumptionSources'=>[],'potentialGross'=>0.0,'potentialSources'=>[],'productionInputs'=>[],'consumptionPotential'=>0.0,'consumerSources'=>[]];
         }
         if($rows===[])return $result;
         $stocks = [];
@@ -297,6 +297,12 @@ final class ResourceService
         foreach($this->catalog->rules()['resources'] as $slug=>$label){
             $result[$slug]['stock']=max(0.0,(float)($simulation['stocks'][$slug]??0));
             $result[$slug]['rate']=(float)($simulation['rates'][$slug]??0.0);
+            $rate = $result[$slug]['rate'];
+            if (abs($rate) > 1e-9) {
+                $stock = $result[$slug]['stock'];
+                $remaining = $rate > 0 ? max(0.0, $result[$slug]['capacity'] - $stock) : $stock;
+                $result[$slug]['estimateSeconds'] = (int) ceil($remaining / abs($rate));
+            }
             if($includeEconomy) {
                 foreach(['gross'=>'production','consumption'=>'consumption','uncredited'=>'uncredited'] as $field=>$key) $result[$slug][$field]=(float)($simulation[$key][$slug]??0.0);
                 $result[$slug]['sources']=$simulation['sources'][$slug]??[];
@@ -320,8 +326,6 @@ final class ResourceService
                 }
                 $result[$slug]['consumerSources']=$consumerSources;
                 $result[$slug]['consumptionPotential']=array_sum(array_column($consumerSources,'gross'));
-                $rate=$result[$slug]['rate'];$stock=$result[$slug]['stock'];
-                if(abs($rate)>1e-9) $result[$slug]['estimateSeconds']=(int)ceil(($rate>0?max(0.0,$result[$slug]['capacity']-$stock):$stock)/abs($rate));
             }
             if($slug!=='electricity'&&in_array($slug,$producedResources,true)){
                 $efficiency=(float)$simulation[$slug==='antimatter'?'antimatter_efficiency':'efficiency'];

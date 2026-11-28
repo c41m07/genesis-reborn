@@ -246,20 +246,6 @@ body.authenticated.ui-refined .colony-redesign .planet-index-shortcuts a {
     width: 100%;
 }
 
-body.authenticated.ui-refined .colony-redesign .colony-resource-picker {
-    display: grid;
-    gap: 12px;
-    width: 330px;
-    max-width: 100%;
-    margin: 24px 0;
-}
-
-.colony-redesign .colony-resource-picker select {
-    width: 100%;
-    min-height: 44px;
-    margin: 0;
-}
-
 body.authenticated.ui-refined .colony-redesign .colony-comparison {
     width: 100%;
     min-width: 0;
@@ -403,21 +389,6 @@ body.authenticated.ui-refined .colony-redesign .abandon-actions > * {
     }
 }
 
-/* Le même filtre reste utilisable avec son formulaire GET, même sans JavaScript. */
-@media (max-width: 1200px) {
-    body.authenticated.ui-refined .colony-redesign .colony-comparison [data-resource]:not(.is-selected-resource) {
-        display: none;
-    }
-
-    body.authenticated.ui-refined .colony-redesign .colony-comparison th:first-child {
-        width: 30%;
-    }
-
-    .colony-redesign .colony-comparison th[data-resource] {
-        width: 44%;
-    }
-}
-
 @media (max-width: 600px) {
     body.authenticated.ui-refined .colony-redesign .panel {
         padding: 18px;
@@ -454,9 +425,9 @@ body.authenticated.ui-refined .colony-redesign .colony-comparison th[data-compar
 }
 
 @media (max-width: 1200px) {
-    /* Conserver le filtre d’une ressource et le défilement dans le tableau, pas dans la page. */
+    /* Les cinq stocks et les files se parcourent dans le tableau sur écran étroit. */
     body.authenticated.ui-refined .colony-redesign .colony-comparison {
-        min-width: 650px;
+        min-width: 1155px;
     }
 
     body.authenticated.ui-refined .colony-redesign .colony-comparison th:is(:first-child, [data-resource]) {
@@ -498,7 +469,6 @@ body.authenticated.ui-refined .colony-redesign .colony-comparison th[data-compar
     .core-overview-top { grid-template-columns:minmax(0,2fr) minmax(0,1fr); }
 }
 
-/* Les commandes restent dans l’ordre de lecture natif, le filtre GET sert aussi sans JS. */
 @media (min-width: 1201px) {
     .colony-redesign .colony-comparison-toolbar {
         display: flex;
@@ -509,17 +479,6 @@ body.authenticated.ui-refined .colony-redesign .colony-comparison th[data-compar
         margin-block: 0 16px;
     }
 
-    body.authenticated.ui-refined .colony-redesign .colony-comparison-panel .colony-resource-picker {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px;
-        width: auto;
-        margin-block: .9rem 1.1rem;
-    }
-
-    .colony-redesign .colony-comparison-panel .colony-resource-picker label { flex-basis: 100%; margin: 0; }
-    .colony-redesign .colony-comparison-panel .colony-resource-picker select { width: auto; }
 }
 .colony-redesign .colony-comparison [data-resource] { text-align: end; font-variant-numeric: tabular-nums; }
 
@@ -542,7 +501,12 @@ body.authenticated.ui-refined .colony-redesign.player-planets-board .empty-state
 @media(max-width:1000px) {
     body.authenticated.ui-refined .colony-redesign.player-planets-board .planet-index-grid { grid-template-columns:minmax(0,1fr); }
 }
-.player-planets-board .colony-comparison-percent { display:block; margin-top:.25rem; color:var(--accent); }
+.player-planets-board .colony-storage-percent { display:block; margin-top:.25rem; color:var(--text); }
+.player-planets-board .colony-storage-estimate { display:block; color:var(--muted); }
+.player-planets-board .colony-comparison-rate[data-trend="1"] { color:var(--green); }
+.player-planets-board .colony-comparison-rate[data-trend="-1"] { color:#ffabab; }
+body[data-theme="light"] .player-planets-board .colony-comparison-rate[data-trend="-1"] { color:#9b2839; }
+body[data-theme="light"] .player-planets-board .colony-comparison-rate[data-trend="1"] { color:#236642; }
 .player-planets-board .colony-comparison-quick { margin-top:1.2rem; }
 .player-planets-board .colony-comparison-cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
 /* P10 : les cartes d’accès restent des raccourcis. La table conserve chaque ressource et chaque file. */
@@ -552,5 +516,4 @@ body.authenticated.ui-refined .colony-redesign.player-planets-board .empty-state
 .player-planets-board .colony-comparison-card .planet-board-hero p { margin:.3rem 0 0; color:var(--muted); }
 .player-planets-board .colony-comparison-card-activity p { margin:0; }
 .player-planets-board .colony-comparison-card-actions { display:flex; flex-wrap:wrap; align-self:end; gap:.55rem; }
-.player-planets-board .colony-comparison [data-resource].is-selected-resource { background:color-mix(in srgb,var(--accent) 7%,var(--panel)); }
 @media(max-width:850px) { .player-planets-board .colony-comparison-cards { grid-template-columns:minmax(0,1fr); } }

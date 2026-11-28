@@ -1,0 +1,7 @@
+<div class="colony-comparison-toolbar">
+    <nav class="ui-tabs" aria-label="Présentation des colonies">
+        <a href="{{ path('app_planets') }}" {% if active == 'colonies' %}class="active" aria-current="page"{% endif %}>Mes colonies</a>
+        <a href="{{ path('app_planets',{view:'table'}) }}" {% if active == 'comparison' %}class="active" aria-current="page"{% endif %}>Suivi des colonies</a>
+        <a href="{{ path('app_planets_fleet') }}"{% if active == 'fleet' %} class="active" aria-current="page"{% endif %}>Flotte de l’empire</a>
+    </nav>
+</div>

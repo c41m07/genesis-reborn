@@ -212,9 +212,8 @@ body:has(#daily-reward-dialog[open]) .first-steps-popup--preview { visibility: h
     }
 }
 
-/* Le comparateur peut afficher des contrôles et des cartes sur toute sa largeur.
-   Garder l’aide ouverte après le contenu, sans changer la vue Cartes. */
-.app-frame:has(> .shell .player-planets-board .colony-resource-picker) > .first-steps-popup-enhanced {
+/* Garder l’aide sous le tableau de suivi et ses accès rapides. */
+.app-frame:has(> .shell .player-planets-board .colony-comparison) > .first-steps-popup-enhanced {
     position: relative;
     inset: auto;
     margin: 0 0 8px auto;
