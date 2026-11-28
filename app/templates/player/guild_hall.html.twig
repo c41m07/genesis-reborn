@@ -55,6 +55,9 @@
         {% if atelier_delivery is not null %}
             {% include 'player/_guild_atelier_delivery.html.twig' with {hall: hall, guild: guild, delivery: atelier_delivery} only %}
         {% endif %}
+        {% if atelier_manufacturing is not null %}
+            {% include 'player/_guild_atelier_manufacturing.html.twig' with {hall: hall, guild: guild, manufacturing: atelier_manufacturing} only %}
+        {% endif %}
         {% if dock is not null %}
             {% include 'player/_guild_dock.html.twig' with {hall: hall, guild: guild, dock: dock} only %}
         {% endif %}

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\{Guild, GuildMember, GuildHallBuilding, PlayerUniverse};
+use App\Entity\{Guild, GuildAtelierManufacturingOrder, GuildMember, GuildHallBuilding, PlayerUniverse};
 use App\Repository\{GameRepository, GuildHallRepository};
-use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildAtelierDeliveryView, GuildDockService, GuildDockView, GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyView, GuildHallFunding, GuildHallService, GuildHallWarehouseView, GuildJumpConstruction, GuildJumpView, GuildRelayTraffic};
+use App\Service\Catalog\GameCatalog;
+use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildAtelierDeliveryView, GuildAtelierManufacturing, GuildDockService, GuildDockView, GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyView, GuildHallFunding, GuildHallService, GuildHallWarehouseView, GuildJumpConstruction, GuildJumpView, GuildRelayTraffic};
 use App\Service\Player\{DiplomacyAccessPolicy, RelationResolver, VacationCalendar};
 use App\Service\Universe\UniverseContext;
 use Psr\Clock\ClockInterface;
@@ -26,6 +27,7 @@ final class GuildHallController extends AbstractController
 
     private const CONVOY_REVIEW = 'guild_hall_convoy_review';
     private const DOCK_REVIEW = 'guild_dock_review';
+    private const MANUFACTURING_REVIEW = 'guild_atelier_manufacturing_review';
     private const DELIVERY_REVIEW = 'guild_atelier_delivery_review';
 
     #[Route('/guildes/hall', name: 'app_guild_hall', methods: ['GET'])]
@@ -41,6 +43,7 @@ final class GuildHallController extends AbstractController
         GuildDockView $dock,
         GuildJumpView $jumps,
         GuildRelayTraffic $relay,
+        GameCatalog $catalog,
     ): Response
     {
         [$actor, $guild, $target] = $this->contextForHall();
@@ -79,9 +82,31 @@ final class GuildHallController extends AbstractController
         }
 
         $deliveryData = null;
+        $manufacturing = null;
         if ($mayAct && ($warehouseData['enabled'] ?? false) && ($warehouseData['atelier_built'] ?? false)
             && $policy->allows($game->one(GuildMember::class, ['guild' => $guild, 'playerUniverse' => $actor]), DiplomacyAccessPolicy::ATELIER_DELIVERY)) {
             $deliveryData = $delivery->describe($actor, $hall);
+            $manufacturing = [
+                'colonies' => $game->planets($actor->universe, $actor),
+                'active' => $game->one(GuildAtelierManufacturingOrder::class, ['hall' => $hall, 'completedAt' => null]),
+                'choices' => [],
+            ];
+            $config = $catalog->forUniverse($actor->universe);
+            $manufacturing['maximum'] = min(100_000_000, (int) $config['limits']['max_fleet_size']);
+            foreach ($config['catalog']['ships'] as $slug => $definition) {
+                foreach (GameCatalog::TIERS as $tier) {
+                    $ship = $catalog->withTier($definition, $tier);
+                    if (($ship['mobile'] ?? true) !== false && !isset($ship['economic_unit'])) {
+                        $manufacturing['choices'][$slug.':'.$tier] = $ship['label'] ?? $slug;
+                    }
+                }
+            }
+            $proposal = $request->getSession()->get(self::MANUFACTURING_REVIEW);
+            if (is_array($proposal) && $proposal['actor'] === $actor->id && $proposal['guild'] === $guild->id
+                && $proposal['hall'] === $hall->id && $proposal['expires'] >= $clock->now()->getTimestamp()
+                && hash_equals($proposal['key'], $request->query->getString('manufacturing_review'))) {
+                $manufacturing['review'] = $proposal;
+            }
             $saved = $request->getSession()->get(self::DELIVERY_REVIEW);
             if (is_array($saved) && $saved['actor'] === $actor->id && $saved['guild'] === $guild->id
                 && $saved['hall'] === $hall->id && $saved['expires'] >= $clock->now()->getTimestamp()
@@ -109,6 +134,7 @@ final class GuildHallController extends AbstractController
             'warehouse' => $warehouseData,
             'convoy' => $convoyData,
             'atelier_delivery' => $deliveryData,
+            'atelier_manufacturing' => $manufacturing,
             'dock' => $dockData,
             'received_donations' => $hall?->placedAt !== null ? $convoy->receivedDonations($actor, $hall) : [],
             'may_build_at_hall' => $mayBuild,
@@ -328,6 +354,52 @@ final class GuildHallController extends AbstractController
                     'fuel' => $plan->fuel, 'fingerprint' => $plan->fingerprint(),
                 ]);
                 $redirect['delivery_review'] = $key;
+            }
+        } catch (\DomainException $error) {
+            $this->addFlash('error', $error->getMessage());
+        }
+
+        return $this->redirectToRoute('app_guild_hall', $redirect, Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/guildes/hall/atelier/fabriquer', name: 'app_guild_hall_atelier_manufacturing', methods: ['POST'])]
+    public function manufacture(Request $request, GuildAtelierManufacturing $atelier, ClockInterface $clock): Response
+    {
+        [$actor, $guild] = $this->contextForHall();
+        $input = $request->request;
+        $hallId = $input->getInt('hall_id');
+        if (!$this->isCsrfTokenValid('guild_hall_atelier_manufacturing_'.$guild->id.'_'.$hallId, $input->getString('_token'))) {
+            throw $this->createAccessDeniedException('Formulaire expiré. Rouvrez le Hall.');
+        }
+
+        $session = $request->getSession();
+        $redirect = ['_fragment' => 'hall-atelier-manufacturing'];
+        try {
+            if ($input->getString('confirm') === '1') {
+                $review = $session->get(self::MANUFACTURING_REVIEW);
+                if (!is_array($review) || $review['actor'] !== $actor->id || $review['guild'] !== $guild->id
+                    || $review['hall'] !== $hallId || $review['expires'] < $clock->now()->getTimestamp()
+                    || !hash_equals($review['key'], $input->getString('request_key'))) {
+                    throw new \DomainException('Le devis a expiré. Recalculez-le avant de confirmer.');
+                }
+                $atelier->start(
+                    $actor, $guild->id, $hallId, $review['colony'], $review['slug'], $review['tier'],
+                    $review['quantity'], $review['key'], $review['quote']['confirmation'],
+                );
+                $session->remove(self::MANUFACTURING_REVIEW);
+                $this->addFlash('success', 'Fabrication lancée. Les vaisseaux seront ajoutés au stock commun.');
+            } else {
+                $colony = $input->getInt('colony');
+                [$slug, $tier] = array_pad(explode(':', $input->getString('hull'), 2), 2, '');
+                $quantity = self::convoyQuantity($input->getString('quantity'));
+                $quote = $atelier->preview($actor, $guild->id, $hallId, $colony, $slug, $tier, $quantity);
+                $key = bin2hex(random_bytes(16));
+                $session->set(self::MANUFACTURING_REVIEW, [
+                    'key' => $key, 'expires' => $clock->now()->getTimestamp() + 300,
+                    'actor' => $actor->id, 'guild' => $guild->id, 'hall' => $hallId,
+                    'colony' => $colony, 'slug' => $slug, 'tier' => $tier, 'quantity' => $quantity, 'quote' => $quote,
+                ]);
+                $redirect['manufacturing_review'] = $key;
             }
         } catch (\DomainException $error) {
             $this->addFlash('error', $error->getMessage());

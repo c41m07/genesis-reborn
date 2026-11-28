@@ -28,6 +28,24 @@ final readonly class GuildAtelierManufacturing
     ) {
     }
 
+    /** Le devis ne réserve rien et exige le même périmètre que la confirmation. */
+    public function preview(
+        PlayerUniverse $sponsor,
+        int $guildId,
+        int $hallId,
+        int $colonyId,
+        string $slug,
+        string $tier,
+        int $quantity,
+    ): array {
+        return $this->manager->transaction(function () use ($sponsor, $guildId, $hallId, $colonyId, $slug, $tier, $quantity): array {
+            $hall = $this->access->lockAtelierDelivery($sponsor, $guildId, $hallId);
+            $this->assertCanManufactureLocked($hall);
+
+            return $this->quotes->forColony($sponsor, $this->lockColony($sponsor, $colonyId), $hallId, $slug, $tier, $quantity);
+        });
+    }
+
     public function start(
         PlayerUniverse $sponsor,
         int $guildId,
@@ -55,18 +73,8 @@ final readonly class GuildAtelierManufacturing
 
                 return $existing;
             }
-            if (!$this->atelier->isBuiltLocked($hall)) {
-                throw new \DomainException('Construisez l’Atelier avant de lancer un lot.');
-            }
-            if ($this->repository->one(GuildAtelierManufacturingOrder::class, ['hall' => $hall, 'completedAt' => null]) !== null) {
-                throw new \DomainException('Un lot est déjà en fabrication dans cet Atelier.');
-            }
-            $colony = $this->repository->find(Planet::class, $colonyId);
-            if (!$colony instanceof Planet || $colony->owner?->id !== $sponsor->id
-                || $colony->solarSystem->galaxy->universe->id !== $sponsor->universe->id) {
-                throw new \DomainException('Sélectionnez une colonie de votre empire.');
-            }
-            $this->manager->lockCurrent($colony);
+            $this->assertCanManufactureLocked($hall);
+            $colony = $this->lockColony($sponsor, $colonyId);
             $quote = $this->quotes->forColony($sponsor, $colony, $hallId, $slug, $tier, $quantity);
             if (!hash_equals($quote['confirmation'], $confirmation)) {
                 throw new \DomainException('Le devis a changé. Vérifiez les nouveaux montants avant de confirmer.');
@@ -102,6 +110,28 @@ final readonly class GuildAtelierManufacturing
 
             return $order;
         });
+    }
+
+    private function assertCanManufactureLocked(GuildHall $hall): void
+    {
+        if (!$this->atelier->isBuiltLocked($hall)) {
+            throw new \DomainException('Construisez l’Atelier avant de lancer un lot.');
+        }
+        if ($this->repository->one(GuildAtelierManufacturingOrder::class, ['hall' => $hall, 'completedAt' => null]) !== null) {
+            throw new \DomainException('Un lot est déjà en fabrication dans cet Atelier.');
+        }
+    }
+
+    private function lockColony(PlayerUniverse $sponsor, int $colonyId): Planet
+    {
+        $colony = $this->repository->find(Planet::class, $colonyId);
+        if (!$colony instanceof Planet || $colony->owner?->id !== $sponsor->id
+            || $colony->solarSystem->galaxy->universe->id !== $sponsor->universe->id) {
+            throw new \DomainException('Sélectionnez une colonie de votre empire.');
+        }
+        $this->manager->lockCurrent($colony);
+
+        return $colony;
     }
 
     public function complete(int $orderId, string $token): bool

@@ -1,0 +1,69 @@
+{% set endpoint = path('app_guild_hall_atelier_manufacturing') %}
+{% set scope = 'guild_hall_atelier_manufacturing_' ~ guild.id ~ '_' ~ hall.id %}
+{% set ranks = {basic: 'Basique', intermediate: 'Intermédiaire', superior: 'Supérieur'} %}
+{% set resources = {metal: 'Métal', nano: 'Nano', antimatter: 'Antimatière', hydrogen: 'Hydrogène'} %}
+<section class="panel" aria-labelledby="hall-atelier-manufacturing">
+    <h2 id="hall-atelier-manufacturing">Fabriquer des vaisseaux à l’Atelier</h2>
+    <p>Le Hall paie les matériaux. Vous choisissez laquelle de vos colonies fournit l’électricité. Le lot rejoint le stock de la guilde, pas le chantier de votre colonie.</p>
+    {% if manufacturing.active is not null %}
+        {% set active = manufacturing.active %}
+        {% set hull = active.shipSlug ~ ':' ~ active.tier %}
+        <p>En cours : {{ active.quantity }} × {{ manufacturing.choices[hull]|default(active.shipSlug) }} · {{ ranks[active.tier]|default(active.tier) }}.
+            Fin prévue le <time datetime="{{ active.dueAt|date('c', 'UTC') }}">{{ active.dueAt|date('d/m/Y à H:i', 'UTC') }} UTC</time>.</p>
+        <p>L’Atelier ne fabrique qu’un lot à la fois.</p>
+    {% elseif manufacturing.review is defined %}
+        {% set review = manufacturing.review %}
+        {% set hull = review.slug ~ ':' ~ review.tier %}
+        {% set name = '' %}
+        {% for colony in manufacturing.colonies %}
+            {% if colony.id == review.colony %}{% set name = colony.name %}{% endif %}
+        {% endfor %}
+        {% if name is not empty %}
+            <h3>Vérifier et accepter la dépense</h3>
+            <p>{{ review.quantity }} × {{ manufacturing.choices[hull]|default(review.slug) }} · {{ ranks[review.tier] }}.
+                Durée : {{ review.quote.duration // 3600 }} h {{ (review.quote.duration % 3600) // 60 }} min {{ review.quote.duration % 60 }} s.</p>
+            <dl>
+                <dt>Matériaux du Hall</dt>
+                <dd>
+                    {% for slug, label in resources %}
+                        {% if review.quote.materials[slug] is defined %}{{ review.quote.materials[slug]|number_format(0, ',', ' ') }} {{ label }}<br>{% endif %}
+                    {% endfor %}
+                </dd>
+                <dt>Électricité prélevée sur {{ name }}</dt>
+                <dd>{{ review.quote.electricity|number_format(0, ',', ' ') }} électricité</dd>
+            </dl>
+            <form method="post" action="{{ endpoint }}">
+                <input type="hidden" name="hall_id" value="{{ hall.id }}">
+                <input type="hidden" name="_token" value="{{ csrf_token(scope) }}">
+                <input type="hidden" name="request_key" value="{{ review.key }}">
+                <button type="submit" name="confirm" value="1" class="primary">Payer l’électricité et lancer le lot</button>
+            </form>
+        {% else %}
+            <p>La colonie du devis ne vous appartient plus.</p>
+        {% endif %}
+        <a href="{{ path('app_guild_hall') }}#hall-atelier-manufacturing">Revenir au formulaire</a>
+    {% elseif manufacturing.colonies is empty or manufacturing.choices is empty or manufacturing.maximum < 1 %}
+        <p>Aucun lot ne peut être créé pour l’instant.</p>
+    {% else %}
+        <form method="post" action="{{ endpoint }}">
+            <input type="hidden" name="hall_id" value="{{ hall.id }}">
+            <input type="hidden" name="_token" value="{{ csrf_token(scope) }}">
+            <label for="atelier-mfg-colony">Votre colonie qui fournit l’électricité</label>
+            <select id="atelier-mfg-colony" name="colony" required>
+                <option value="">Choisir une colonie</option>
+                {% for colony in manufacturing.colonies %}<option value="{{ colony.id }}">{{ colony.name }}</option>{% endfor %}
+            </select>
+            <label for="atelier-mfg-hull">Vaisseau et rang</label>
+            <select id="atelier-mfg-hull" name="hull" required>
+                <option value="">Choisir un vaisseau</option>
+                {% for key, label in manufacturing.choices %}
+                    {% set rank = (key|split(':'))[1] %}
+                    <option value="{{ key }}">{{ label }} · {{ ranks[rank] }}</option>
+                {% endfor %}
+            </select>
+            <label for="atelier-mfg-quantity">Quantité</label>
+            <input id="atelier-mfg-quantity" type="number" inputmode="numeric" name="quantity" min="1" max="{{ manufacturing.maximum }}" step="1" value="1" required>
+            <button type="submit" class="primary">Calculer le coût et la durée</button>
+        </form>
+    {% endif %}
+</section>

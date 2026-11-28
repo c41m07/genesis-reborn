@@ -598,6 +598,69 @@ final class GuildHallTest extends KernelTestCase
         }
     }
 
+    public function testAtelierChargesOnlyTheVoluntaryColonysElectricityAndCreditsTheHallOnce(): void
+    {
+        $clock = new MockClock('now', new \DateTimeZone('UTC'));
+        $container = self::getContainer();
+        $container->set('clock', $clock);
+        [$owner, $origin, $guild] = $this->guild('AtelierBuild', 'ATB');
+        $halls = GuildHallFixture::enable($container);
+        $hall = $halls->contribute($owner, $guild->id, $origin->id, 0, ['hydrogen' => 32]);
+        $hall = $halls->place($owner, $guild->id, $origin->solarSystem->id, $hall->revision);
+        $building = new GuildHallBuilding();
+        $building->hall = $hall;
+        $building->slug = GuildHallBuilding::ATELIER;
+        $building->level = 1;
+        $yard = $this->em->getRepository(PlanetBuilding::class)->findOneBy(['planet' => $origin, 'slug' => 'shipyard', 'tier' => 'basic'])
+            ?? new PlanetBuilding();
+        $yard->planet = $origin;
+        $yard->slug = 'shipyard';
+        $yard->tier = 'basic';
+        $yard->level = 25;
+        $funds = new GuildHallStock();
+        $funds->hall = $hall;
+        $funds->materials = array_fill_keys(['metal', 'nano', 'antimatter', 'hydrogen'], 1000000);
+        foreach ([$building, $yard, $funds] as $fixture) {
+            $this->em->persist($fixture);
+        }
+        $this->em->flush();
+        foreach ($container->get(ResourceService::class)->materialize($origin) as $row) {
+            $row->currentStock = 5000;
+        }
+        $this->em->flush();
+
+        $beforeElectricity = $this->stock($origin, 'electricity');
+        $beforeMetal = $this->stock($origin, 'metal');
+        $common = $funds->materials;
+        $beforePersonal = $this->dockHullCount($owner->id, $origin->id, 'fighter', 'basic');
+        $atelier = $container->get(\App\Service\Guild\GuildAtelierManufacturing::class);
+        $args = [$owner, $guild->id, $hall->id, $origin->id, 'fighter', 'basic', 1];
+        $quote = $atelier->preview(...$args);
+        self::assertGreaterThan(0, $quote['electricity']);
+        self::assertArrayNotHasKey('electricity', $quote['materials']);
+        self::assertSame($beforeElectricity, $this->stock($origin, 'electricity'));
+        self::assertSame($common, $funds->materials);
+
+        $order = $atelier->start(...[...$args, str_repeat('c', 32), $quote['confirmation']]);
+        self::assertSame($order->id, $atelier->start(...[...$args, str_repeat('c', 32), $quote['confirmation']])->id);
+        self::assertSame($beforeMetal, $this->stock($origin, 'metal'));
+        self::assertEqualsWithDelta($beforeElectricity - $quote['electricity'], $this->stock($origin, 'electricity'), 0.000001);
+        foreach ($quote['materials'] as $resource => $amount) {
+            self::assertSame($common[$resource] - $amount, $funds->materials[$resource]);
+        }
+
+        $inventory = $this->em->find(GuildAtelierStock::class, $hall->id);
+        self::assertSame([], $inventory->ships);
+        self::assertSame(['fighter' => ['basic' => 1]], $inventory->returnCapacity);
+        self::assertFalse($atelier->complete($order->id, $order->dispatchToken));
+        $clock->sleep($quote['duration']);
+        self::assertTrue($atelier->complete($order->id, $order->dispatchToken));
+        self::assertFalse($atelier->complete($order->id, $order->dispatchToken));
+        self::assertSame(['fighter' => ['basic' => 1]], $inventory->ships);
+        self::assertSame([], $inventory->returnCapacity);
+        self::assertSame($beforePersonal, $this->dockHullCount($owner->id, $origin->id, 'fighter', 'basic'));
+    }
+
     public function testAtelierKeepsReturnCapacitySeparateFromAvailableStock(): void
     {
         [$owner, $origin, $guild] = $this->guild('AtelierCapacity', 'ATC');
