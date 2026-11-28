@@ -23,10 +23,11 @@ final class GuildRelayProjectionTest extends TestCase
         ]];
         $halfway = new \DateTimeImmutable('@1900000050');
         $row = GuildRelayProjection::contact($fleet, 11, $halfway);
-        self::assertSame(['direction', 'from', 'to', 'observedAt', 'until'], array_keys($row));
+        self::assertSame(['direction', 'from', 'to', 'segmentStart', 'observedAt', 'until'], array_keys($row));
         self::assertSame('outbound', $row['direction']);
         self::assertEqualsWithDelta(6.0, $row['from'], 0.00001);
         self::assertSame(10.0, $row['to']);
+        self::assertSame(2.0, $row['segmentStart']);
         self::assertSame(1900000100, $row['until']);
         self::assertNull(GuildRelayProjection::contact($fleet, 99, $halfway));
         self::assertNull(GuildRelayProjection::contact($fleet, 11, new \DateTimeImmutable('@1900000150')));

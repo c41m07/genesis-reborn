@@ -58,6 +58,7 @@ export default class extends Controller {
         }));
         this.setMarketTraffic(this.gameMap.marketTraffic);
         this.setCampaignTraffic(this.gameMap.campaignTraffic);
+        this.relayTraffic = this.gameMap.relayTraffic ?? null;
         this.showGuildFlights = true;
         this.updateGuildFlightFilter(this.gameMap.guildFilterAvailable);
         this.serverClockOffset = Date.parse(this.gameMap.serverNow || new Date().toISOString()) - Date.now();
@@ -146,6 +147,7 @@ export default class extends Controller {
         }));
         this.setMarketTraffic(data.marketTraffic);
         this.setCampaignTraffic(data.campaignTraffic);
+        this.relayTraffic = data.relayTraffic ?? null;
         this.fleetLogTarget.innerHTML = data.fleetLog;
         this.updateGuildFlightFilter(data.guildFilterAvailable);
         this.applyFleetFilter();
@@ -229,6 +231,7 @@ export default class extends Controller {
     clearPrivateTraffic() {
         this.setMarketTraffic();
         this.setCampaignTraffic();
+        this.relayTraffic = null;
         this.flights = this.flights.filter(flight => !flight.guildFlight);
         for (const row of this.fleetLogTarget.querySelectorAll('[data-campaign-kind], [data-guild-flight], [data-market-trade]')) row.remove();
         this.updateGuildFlightFilter(false);
@@ -707,6 +710,17 @@ export default class extends Controller {
         }
 
         this.drawFlights(ctx);
+        const relaySystem = this.systemById.get(Number(this.relayTraffic?.systemId));
+        if (relaySystem?.known && this.activeRelayContacts(relaySystem).length > 0) {
+            const point = this.galaxyPoint(relaySystem);
+            ctx.save();
+            ctx.strokeStyle = '#f5cd82';
+            ctx.setLineDash([3, 4]);
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 13, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
         if (this.hoveredSystem) this.drawSelection(ctx, this.hoveredSystem, '#00d4ff');
         if (this.selectedSystem) this.drawSelection(ctx, this.selectedSystem, '#77d5e9');
     }
@@ -1910,7 +1924,9 @@ export default class extends Controller {
             const marker = mapMarkers[planet.relation] || mapMarkers.uninhabited;
             this.drawMarkers(ctx, [{ ...marker, symbol: marker.symbol + (planet.relation === 'npc' ? ' ' + planet.conquestLevel : '') }], x, y - planetRadius - 10);
         }
-        this.drawLocalFlights(ctx, system, { x: centerX + (this.solarLayoutCache.radiusX + 24) * this.systemScale, y: centerY });
+        const entry = { x: centerX + (this.solarLayoutCache.radiusX + 24) * this.systemScale, y: centerY };
+        this.drawLocalFlights(ctx, system, entry);
+        this.drawRelayContacts(ctx, system, entry, { x: centerX, y: centerY });
         if (this.mode === 'system') this.layoutStations(system, centerX, centerY, mobile);
     }
 
@@ -2058,6 +2074,40 @@ export default class extends Controller {
             const alpha = star.alpha * (.6 + .4 * Math.sin(this.elapsed + star.phase));
             ctx.fillStyle = 'rgba(201,216,239,' + alpha + ')';
             ctx.fillRect(star.x * this.width, star.y * this.height, star.size, star.size);
+        }
+    }
+
+    activeRelayContacts(system, now = (Date.now() + this.serverClockOffset) / 1000) {
+        if (Number(this.relayTraffic?.systemId) !== Number(system.id)) return [];
+        return this.relayTraffic.contacts.filter(contact => contact.observedAt <= now && now < contact.until);
+    }
+
+    drawRelayContacts(ctx, system, entryPoint, stationPoint) {
+        if (!system.known) return;
+        const now = (Date.now() + this.serverClockOffset) / 1000;
+        const pointAt = position => {
+            if (position === 0) return stationPoint;
+            if (position === 10) return entryPoint;
+            const visual = system.planets.find(planet => planet.position === position)?.visual;
+            return visual && { x: visual.sx, y: visual.sy };
+        };
+        for (const contact of this.activeRelayContacts(system, now)) {
+            const start = pointAt(contact.segmentStart);
+            const end = pointAt(contact.to);
+            if (!start || !end || contact.to === contact.segmentStart) continue;
+            const fraction = clamp((contact.from - contact.segmentStart) / (contact.to - contact.segmentStart), 0, 1);
+            const progress = fraction + (1 - fraction) * (now - contact.observedAt) / (contact.until - contact.observedAt);
+            const dx = end.x - start.x, dy = end.y - start.y;
+            const x = start.x + dx * progress, y = start.y + dy * progress;
+            ctx.save();
+            ctx.strokeStyle = '#f5cd82a8';
+            ctx.setLineDash([3, 5]);
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(end.x, end.y);
+            ctx.stroke();
+            ctx.restore();
+            this.drawFlightArrow(ctx, x, y, dx, dy, '#f5cd82');
         }
     }
 

@@ -11,7 +11,7 @@ final class GuildRelayProjection
 {
     public const MISSIONS = ['explore', 'colonize', 'transport', 'attack', 'conquer', 'defend', 'orbit', 'station'];
 
-    /** @return array{direction:string,from:float,to:float,observedAt:int,until:int}|null */
+    /** @return array{direction:string,from:float,to:float,segmentStart:float,observedAt:int,until:int}|null */
     public static function contact(Fleet $fleet, int $system, \DateTimeImmutable $now): ?array
     {
         if (!in_array($fleet->mission, self::MISSIONS, true)
@@ -71,6 +71,7 @@ final class GuildRelayProjection
                 'direction' => $destination === 10.0 ? 'outbound' : ($departure === 10.0 ? 'inbound' : 'local'),
                 'from' => $current,
                 'to' => $destination,
+                'segmentStart' => $departure,
                 'observedAt' => $instant,
                 'until' => $until,
             ];
