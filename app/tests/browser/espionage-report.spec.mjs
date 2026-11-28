@@ -60,7 +60,7 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
 
   await page.getByRole('link', { name: 'Rapports', exact: true }).click();
   const reportLink = page.locator('a[href*="/rapports/espionnage/"]').first();
-  await expect(reportLink).toBeVisible();
+  await expect(reportLink).toContainText('Propriétaire : PNJ');
 
   const reportTitle = (await reportLink.locator('.report-copy strong').textContent()).trim();
   const reportName = reportTitle.replace('Renseignements · ', '');
@@ -74,6 +74,16 @@ test('Espionnage PNJ : envoyer une sonde et consulter le rapport privé', async 
   await expect(page.getByRole('link', { name: 'Retour aux rapports' })).toBeVisible();
 
   const reportUrl = page.url();
+  await expect(page.locator('.report-heading')).toContainText('Propriétaire : PNJ');
+  const location = page.locator('.report-heading').getByRole('link', { name: /ouvrir le système/ });
+  await expect(location).toHaveText(target.coordinates);
+  await location.focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/carte-v2/);
+  const map = JSON.parse(await page.locator('[data-galaxy-v2-map-value]').getAttribute('data-galaxy-v2-map-value'));
+  expect(map.selectedSystemId).toBe(Number(new URL(page.url()).searchParams.get('system')));
+  await page.goBack();
+  await expect(page).toHaveURL(reportUrl);
   await page.getByRole('link', { name: 'Reprendre ces renseignements dans le simulateur' }).click();
   const source = page.locator('.simulation-wizard-sources summary');
   await expect(source).toContainText(reportTitle);

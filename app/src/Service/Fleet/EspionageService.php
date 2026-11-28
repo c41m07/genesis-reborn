@@ -37,6 +37,7 @@ final class EspionageService
         $report = new EspionageReport();
         $report->sender = $fleet->playerUniverse;
         $report->target = $target;
+        $report->targetOwnerName = $target->owner?->getDisplayName() ?? ($target->npcPlanet ? 'PNJ' : 'Planète libre');
         $report->createdAt = $this->clock->now();
         $report->probesSent = $probeCount;
         $report->detectionChance = $detectionChance;
@@ -46,7 +47,7 @@ final class EspionageService
         $report->result = $detected ? 'detected' : 'success';
         if ($detected) {
             $report->detectedBy = $target->owner?->isPlayerControlled() ? $target->owner : null;
-            if ($target->owner) $this->notifyTarget($fleet, $target);
+            $report->identifiedSenderName = $this->notifyTarget($fleet, $target);
             $this->notifications->enqueue($fleet->playerUniverse, 'Vos sondes ont été détectées sur ' . $target->name . '. Aucun renseignement n’a été obtenu.',journalKind:'spy');
         } else {
             $categories = $settings['intel_categories'] ?? ['resources', 'buildings', 'research', 'fleets', 'defenses'];
@@ -118,12 +119,14 @@ final class EspionageService
         return ['resources' => $this->resources->snapshot($planet), 'buildings' => $buildings, 'research' => $research, 'fleets' => $fleets, 'defenses' => $defenses];
     }
 
-    private function notifyTarget(Fleet $fleet, Planet $target): void
+    private function notifyTarget(Fleet $fleet, Planet $target): ?string
     {
         $owner = $target->owner;
-        if (!$owner) return;
+        if (!$owner) return null;
         $known = (bool) $this->repo->one(PlayerDiscovery::class, ['playerUniverse' => $owner, 'solarSystem' => $fleet->homePlanet->solarSystem]);
-        $identity = $known ? ' par ' . $fleet->playerUniverse->getDisplayName() : '';
+        $name = $known ? $fleet->playerUniverse->getDisplayName() : null;
+        $identity = $name !== null ? ' par ' . $name : '';
         $this->notifications->enqueue($owner, 'Sondes d’espionnage détectées sur ' . $target->name . ' depuis ' . $fleet->homePlanet->coordinates() . $identity . '.',journalKind:'spy');
+        return $name;
     }
 }

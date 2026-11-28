@@ -215,6 +215,34 @@ final class ReportArchiveTest extends WebTestCase
         self::assertSame(50,$service->page($member,'economy',true,1)['report_count']);
     }
 
+    #[\PHPUnit\Framework\Attributes\TestWith(['-1 day', 'Propriétaire : ArchiveRecipient'])]
+    #[\PHPUnit\Framework\Attributes\TestWith(['+1 day', 'Propriétaire non consigné'])]
+    public function testLegacySpyReportUsesOnlyConfirmedOwnership(string $acquisition, string $label): void
+    {
+        $report = $this->em->find(EspionageReport::class, (int) explode(':', $this->keys[1])[1]);
+        $report->target->acquiredAt = $report->createdAt->modify($acquisition);
+        $this->em->flush();
+        $list = $this->client->request('GET', '/rapports?type=espionage');
+        self::assertSelectorTextContains('.report-copy', $label);
+        $this->client->click($list->filter('a.report-row')->link());
+        self::assertSelectorTextContains('.report-heading', $label);
+    }
+
+    public function testSpyReportKeepsObservedOwnerAfterTransferAndLinksToItsSystem(): void
+    {
+        $id = (int) explode(':', $this->keys[1])[1];
+        $report = $this->em->find(EspionageReport::class, $id);
+        $report->targetOwnerName = $this->recipient->username;
+        $report->target->acquireBy($this->outsider->currentPlayerUniverse, $report->createdAt->modify('+1 day'));
+        $this->em->flush();
+        $system = $report->target->solarSystem;
+        $list = $this->client->request('GET', '/rapports?type=espionage');
+        self::assertSelectorTextContains('.report-copy', 'Propriétaire : ArchiveRecipient');
+        $this->client->click($list->filter('a.report-row')->link());
+        self::assertSelectorTextContains('.report-heading', 'Propriétaire : ArchiveRecipient');
+        self::assertSelectorExists('.report-heading a[href="/carte-v2?galaxy='.$system->galaxy->id.'&system='.$system->id.'"]');
+    }
+
     public function testDetectedProbeAppearsInVictimsReportsAndSelectionIsPrivate(): void
     {
         $id = (int) explode(':', $this->keys[1])[1];
@@ -226,6 +254,7 @@ final class ReportArchiveTest extends WebTestCase
         $this->client->loginUser($this->recipient);
         $page = $this->client->request('GET', '/rapports?type=espionage');
         self::assertSelectorTextContains('.report-row', 'Sonde adverse aperçue');
+        self::assertSelectorTextContains('.report-copy', 'Expéditeur non identifié');
         $form = $page->selectButton('Marquer la sélection comme lue')->form();
         $this->client->submit($form, ['selected' => [$this->keys[1]]]);
         self::assertResponseRedirects();
@@ -234,6 +263,7 @@ final class ReportArchiveTest extends WebTestCase
         self::assertSame(1, $notices->count($this->player->currentPlayerUniverse));
         $this->client->request('GET', '/rapports/espionnage/'.$id);
         self::assertSelectorTextContains('.report-summary', 'Sonde adverse aperçue');
+        self::assertSelectorTextContains('.report-heading', 'Expéditeur non identifié');
         self::assertSelectorNotExists('a[href^="/simulateur?report="]');
         $this->client->loginUser($this->outsider);
         $this->client->request('GET', '/rapports/espionnage/'.$id);

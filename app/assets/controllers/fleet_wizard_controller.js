@@ -4,7 +4,7 @@ import { exactNumber } from '../quantity.js';
 const rankLabels = { basic: 'Basique', intermediate: 'Intermédiaire', superior: 'Supérieur' };
 
 export default class extends Controller {
-    static targets = ['step', 'indicator', 'counter', 'quantity', 'error', 'summary', 'recap', 'recapCount', 'recapRanks', 'recapShips', 'recapDestination', 'recapCargo', 'recapActions', 'recapNotice', 'stageActions', 'quotePanel', 'recapQuoteSlot'];
+    static targets = ['step', 'indicator', 'counter', 'quantity', 'error', 'summary', 'recap', 'recapCount', 'recapRanks', 'recapShips', 'recapDestination', 'recapCargo', 'recapActions', 'recapNotice', 'stageActions', 'quotePanel', 'recapQuoteSlot', 'settlement', 'settlementDuration'];
 
     static values = { origin: String };
 
@@ -152,6 +152,9 @@ export default class extends Controller {
 
         const field = this.destinationField();
         const missionField = this.element.querySelector('[name="mission"]');
+        const settlement = missionField?.selectedOptions[0]?.dataset.settlement;
+        this.settlementTarget.hidden = !settlement;
+        this.settlementDurationTarget.textContent = settlement || '';
         const option = field?.selectedOptions?.[0];
         this.recapDestinationTarget.textContent = this.hasDestination()
             ? ((option ? (missionField?.value === 'explore' ? option.dataset.systemCoordinates : option.textContent.trim()) : field.value.trim()) || 'À choisir')

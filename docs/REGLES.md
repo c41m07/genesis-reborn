@@ -182,7 +182,7 @@ Les opérations en retard sont rejouées à leurs dates théoriques avant dépen
 
 Guildes : candidature depuis la recherche ou la présentation, à accepter par le commandant ou un grade autorisé ; invitation d’un commandant sans guilde, à accepter par le destinataire. Adhésion exclusive dans chaque univers, transfert du commandement à un autre membre, départ après transfert, dissolution par le dirigeant. Alliances personnelles et alliances de guildes exigent le consentement réciproque. Une hostilité de guilde invalide les contrats personnels incompatibles.
 
-PNJ : les planètes PNJ découvertes du même univers peuvent être combattues par la mission Attaque, sans capture ni butin de ressources PNJ. Leur capture reste réservée à Conquête JcE, avec vaisseau colonie survivant, place disponible et règles d’occupation existantes (24 heures lorsque ce mécanisme est activé). Les bâtiments et stocks suivent les règles de conservation de la capture. Les planètes vierges restent colonisables ; les joueurs actifs ou simplement inactifs ne sont pas conquérables. Les empires déjà oubliés suivent les règles spécifiques détaillées ci-dessous.
+PNJ : les planètes PNJ découvertes du même univers peuvent être combattues par la mission Attaque, sans capture ni butin de ressources PNJ. Leur capture reste réservée à Conquête JcE, avec vaisseau colonie survivant, place disponible et règles d’occupation existantes (24 heures lorsque ce mécanisme est activé). Le récapitulatif de mission affiche le délai de capture après la victoire séparément de la durée du trajet. Les bâtiments et stocks suivent les règles de conservation de la capture. Les planètes vierges restent colonisables ; les joueurs actifs ou simplement inactifs ne sont pas conquérables. Les empires déjà oubliés suivent les règles spécifiques détaillées ci-dessous.
 
 Espionnage : une mission cible une planète connue du même univers autre que celles de l’émetteur. Elle transporte uniquement des sondes, détruites à l’arrivée. La détection avertit le propriétaire, lui donne un rapport d’observation et empêche la collecte de renseignements ; les règles de détection actuelles sont décrites dans la section [Espionnage](#espionnage), les archives conservant les décisions initiales.
 
@@ -920,6 +920,8 @@ absent. Les résultats sont paginés par 50 et les dates utilisent le fuseau cho
 ## Espionnage
 
 Décision du 14 novembre 2026 : ces valeurs sont une base d’essais Alpha, pas un équilibrage confirmé par les joueurs. Configuration : `app/config/game/espionage.yaml`.
+
+Dans la liste des renseignements et dans le rapport, l’expéditeur voit le propriétaire observé à l’arrivée. Pour les anciens rapports, le nom est affiché lorsque la date d’acquisition confirme la possession de la planète. Les coordonnées du rapport ouvrent son système sur la carte. Dans un nouveau rapport de détection reçu, le défenseur voit le nom de l’expéditeur si le système d’origine lui était connu lors de la détection.
 
 Le risque de détection de base vaut 50 % pour une sonde Basique, 40 % pour une Intermédiaire et 30 % pour une Supérieure. Pour plusieurs rangs, prendre la moyenne pondérée par leurs quantités, sans arrondi intermédiaire. Le rang n’ajoute aucun renseignement.
 

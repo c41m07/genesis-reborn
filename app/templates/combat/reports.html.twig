@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 {% import 'ui/macros.html.twig' as ui %}
-{% from 'ui/espionage_report_title.html.twig' import title as espionageTitle %}
+{% from 'ui/espionage_report_title.html.twig' import title as espionageTitle, commander as espionageCommander %}
 {% block title %}{{ archived ? 'Archives des rapports' : 'Rapports' }} · Genesis Reborn{% endblock %}
 {% block body %}
 <div class="reports-workspace player-report-board">
@@ -65,7 +65,7 @@
     {% set occurredAt = report.createdAt %}
     {% set state = report.detectorId == membership.id ? 'Sonde adverse aperçue' : (report.result == 'detected' ? 'Sondes détectées' : report.intelCategories~' catégorie(s)') %}
     {% set stateClass = report.result == 'detected' ? 'is-risk' : '' %}
-    {% set extra = '' %}
+    {% set extra = espionageCommander(report, report.detectorId == membership.id) %}
 {% elseif entry.kind == 'diplomatic' %}
     {% set routeName = 'app_diplomatic_report' %}
     {% set title = report.subjectLabel %}

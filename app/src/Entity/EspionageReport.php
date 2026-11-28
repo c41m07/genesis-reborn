@@ -15,6 +15,11 @@ class EspionageReport
     public ?PlayerUniverse $detectedBy = null;
     #[ORM\ManyToOne, ORM\JoinColumn(nullable: false)]
     public Planet $target;
+    /** Libellés publics observés à l’arrivée, indépendants des renseignements techniques. */
+    #[ORM\Column(length: 80, nullable: true)]
+    public ?string $targetOwnerName = null;
+    #[ORM\Column(length: 80, nullable: true)]
+    public ?string $identifiedSenderName = null;
     #[ORM\Column(length: 16)]
     public string $result = 'success';
     #[ORM\Column]

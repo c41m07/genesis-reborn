@@ -67,7 +67,7 @@ final class FleetService
         if($mission==='spy' && (empty($valid['probe']) || count(array_filter($valid,static fn($ranks)=>array_sum($ranks)>0))!==1)) throw new \DomainException('Une mission d’espionnage exige une ou plusieurs sondes, sans escorte.');
         if(in_array($mission,['colonize','conquer'],true) && !$hasSlug('colony_ship')) throw new \DomainException('Un vaisseau colonie survivant est nécessaire à cette mission.');
         $reinforcement=$mission==='defend' && $target instanceof Planet && $this->occupations->activeFor($target)!==null;
-        $windowHours=$reinforcement?$this->occupations->reinforcementHours($target):($mission==='conquer' && $this->occupations->isEnabled()?24:(in_array($mission,['attack','conquer','defend'],true)?((int)($this->catalog->rules()['combat_window_seconds']??600)/3600):($mission==='orbit'?$orbitHours:0)));
+        $windowHours=$reinforcement?$this->occupations->reinforcementHours($target):($mission==='conquer' && $this->occupations->isEnabled()?\App\Service\Combat\OccupationPolicy::DURATION_SECONDS/3600:(in_array($mission,['attack','conquer','defend'],true)?((int)($this->catalog->rules()['combat_window_seconds']??600)/3600):($mission==='orbit'?$orbitHours:0)));
         $techLevels=$this->repo->levelsByTier(PlayerTechnology::class,['playerUniverse'=>$m]);
         $ships=$this->technologyEffects->applyToShips($ships,$techLevels,$m->universe);
         // Les missions ordinaires figent le tarif de l’aller dans la navigation.

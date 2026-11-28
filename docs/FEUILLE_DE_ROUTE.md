@@ -1,5 +1,9 @@
 # Roadmap Genesis Reborn
 
+## Rapports d’espionnage et préparation de la conquête — 28 novembre 2026
+
+La liste et le détail des renseignements présentent le propriétaire de la planète. Les coordonnées du détail ouvrent le système sur la carte. Le récapitulatif existant de Flottes indique le délai de colonisation dès le choix de la mission et à sa confirmation. La migration `Version20261128170000` conserve les noms observés dans les nouveaux rapports. Son application sur une base existante nécessite une sauvegarde vérifiée et l’accord d’exploitation.
+
 ## Marché en crédits — 28 novembre 2026
 
 Deux pages sous la même station séparent le devis et les vols du comptoir des offres entre joueurs. Le comptoir conserve son URL et regroupe Composition, Mission et Destination dans un seul formulaire pour garder la saisie au retour entre étapes. Il réutilise le tableau des flottes et affiche le récapitulatif du convoi. Le nouveau marché utilise un dépôt privé en station et les convois du troc pour les apports et rapatriements. La recette couvre la taxe préalable, le refus pour solde insuffisant, l’achat partiel, le retrait, le rejeu et deux achats concurrents des dernières unités. La migration `Version20261128160000` doit être appliquée avec sauvegarde vérifiée et accord d’exploitation avant activation sur une base existante. [Parcours et exploitation](BOURSE_DE_RESSOURCES.md).

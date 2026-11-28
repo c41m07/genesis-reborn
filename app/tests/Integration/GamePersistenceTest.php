@@ -1251,6 +1251,7 @@ final class GamePersistenceTest extends KernelTestCase
         $report = $this->em->getRepository(\App\Entity\EspionageReport::class)->findOneBy(['sender' => $sender->currentPlayerUniverse]);
         self::assertNotNull($report);
         self::assertSame('success', $report->result);
+        self::assertSame('Planète libre', $report->targetOwnerName);
         self::assertSame(1, $this->em->getRepository(\App\Entity\PlayerBoost::class)->count(['playerUniverse' => $sender->currentPlayerUniverse, 'sourceType' => 'risk_mission']));
         self::assertSame(5, $report->detectionChance);
         self::assertSame(1, $report->probesSent);
@@ -1384,6 +1385,9 @@ final class GamePersistenceTest extends KernelTestCase
         $report = $this->em->getRepository(\App\Entity\EspionageReport::class)->findOneBy(['sender' => $sender->currentPlayerUniverse]);
         self::assertNotNull($report);
         self::assertSame('detected',$report->result);
+        self::assertSame($targetOwner->username, $report->targetOwnerName);
+        $discovered = $this->em->getRepository(\App\Entity\PlayerDiscovery::class)->findOneBy(['playerUniverse' => $targetOwner->currentPlayerUniverse, 'solarSystem' => $origin->solarSystem]);
+        self::assertSame($discovered ? $sender->username : null, $report->identifiedSenderName);
         $unread = self::getContainer()->get(\App\Repository\ReportNoticeRepository::class);
         self::assertSame(1, $unread->count($sender->currentPlayerUniverse));
         self::assertSame(1, $unread->count($targetOwner->currentPlayerUniverse));

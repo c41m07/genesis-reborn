@@ -1,11 +1,27 @@
 {% extends report_layout|default('base.html.twig') %}
+{% from 'ui/espionage_report_title.html.twig' import commander as espionageCommander %}
 {% block title %}Rapport d’espionnage · Genesis Reborn{% endblock %}
 {% block body %}
 {% set playerBoard = not monitoring_context|default(null) %}
 <div class="mission-report report-workspace{{ playerBoard ? ' player-report-detail' : '' }}">
 {% if monitoring_context|default(null) %}<p class="admin-monitor-note">{{ monitoring_context }}</p>{% endif %}
 {% include 'ui/report_back_link.html.twig' %}
-{% block intel_heading %}<header class="report-heading"><p class="report-eyebrow">RENSEIGNEMENTS · N° {{ report.id }}</p><h1>Rapport d’espionnage</h1><p>{{ report.target.name }} · {{ report.target.coordinates() }} · {{ report.createdAt|date('d/m/Y H:i') }}</p></header>{% endblock %}
+{% block intel_heading %}
+<header class="report-heading">
+    <p class="report-eyebrow">RENSEIGNEMENTS · N° {{ report.id }}</p>
+    <h1>Rapport d’espionnage</h1>
+    {% set coordinates = report.target.coordinates() %}
+    <p>{{ report.target.name }} ·
+        {% if playerBoard %}
+            <a href="{{ path('app_map_v2', {galaxy: report.target.solarSystem.galaxy.id, system: report.target.solarSystem.id}) }}" aria-label="{{ coordinates }} · ouvrir le système dans la galaxie">{{ coordinates }}</a>
+        {% else %}
+            {{ coordinates }}
+        {% endif %}
+        · {{ report.createdAt|date('d/m/Y H:i', preferences.timezone|default('Europe/Paris')) }}
+    </p>
+    <p>{{ espionageCommander(report, incoming_detection|default(false)) }}</p>
+</header>
+{% endblock %}
 {% if campaign_report_id|default(null) %}{% include 'ui/report_notice_form.html.twig' with {report_notice_kind:'campaign'} %}{% elseif app.request.attributes.get('_route') == 'app_espionage_report' %}{% include 'ui/report_notice_form.html.twig' with {report_notice_kind:'espionage'} %}{% endif %}
 {% block intel_content %}
 {% if incoming_detection|default(false) %}

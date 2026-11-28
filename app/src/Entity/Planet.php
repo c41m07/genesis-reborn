@@ -37,6 +37,17 @@ class Planet
         $this->acquiredAt=$at->setTimezone(new \DateTimeZone('UTC'));
     }
 
+    /** Pour un rapport ancien, seule une possession continue depuis le relevé identifie le joueur. */
+    public function confirmedOwnerNameAt(\DateTimeImmutable $at): ?string
+    {
+        if (!$this->acquiredAt || $this->acquiredAt > $at || !$this->owner?->isPlayerControlled()
+            || $this->owner->universe->id !== $this->solarSystem->galaxy->universe->id) {
+            return null;
+        }
+
+        return $this->owner->player->username;
+    }
+
     public function coordinates(): string
     {
         return $this->solarSystem->galaxy->coordinateCode().':'.$this->solarSystem->number().':'.$this->position;
