@@ -8,7 +8,9 @@
 {% block body %}
 <div class="market-space">
     <header class="panel market-hero"><div><p>Station A:0:0 · {{ member.universe.name }}</p><h1>Marché des joueurs</h1>
-        <p>Votre solde : <strong>{{ ((account.cents|default(0)) / 100)|number_format(2, ',', ' ') }} crédits</strong></p></div></header>
+        <p>Votre solde : <strong>{{ ((account.cents|default(0)) / 100)|number_format(2, ',', ' ') }} crédits</strong></p></div>
+        <img class="market-station-art" src="{{ asset('images/map/bourse.png') }}" width="192" height="192" alt="">
+    </header>
     {% include 'market/_navigation.html.twig' %}
     {% if not market or not market.enabled %}
         <p class="panel">La station est fermée dans cet univers.</p>

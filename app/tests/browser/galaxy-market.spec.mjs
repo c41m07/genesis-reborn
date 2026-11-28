@@ -75,6 +75,10 @@ test('Station commerciale : le noyau ouvre la Bourse et ne devient pas un systè
     await expect(marker).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/\/bourse$/);
+    const hero = page.locator('.market-hero');
+    const stationArt = hero.locator('img[alt=""]');
+    await expect(stationArt).toHaveAttribute('src', /images\/map\/bourse\.png$/);
+    await expect.poll(() => stationArt.evaluate(img => img.naturalWidth)).toBeGreaterThan(0);
     await expect(page.getByRole('heading', { name: 'Cours et stock disponible' })).toBeVisible();
 
     await page.goto('/carte-v2');
@@ -123,6 +127,10 @@ test('Station commerciale : le noyau ouvre la Bourse et ne devient pas un systè
     await expect(page.getByText(/Taxe à payer maintenant/)).toContainText('7,00 crédits');
     for (const width of [1920, 768, 390, 320]) {
         await page.setViewportSize({width, height:900});
+        await expect(stationArt).toBeVisible();
+        const [title, illustration] = await Promise.all([hero.getByRole('heading').boundingBox(), stationArt.boundingBox()]);
+        expect(illustration.x).toBeGreaterThanOrEqual(title.x + title.width);
+        expect(illustration.x + illustration.width).toBeLessThanOrEqual(width);
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     }
     await page.getByRole('button', {name:'Payer la taxe et publier'}).focus();

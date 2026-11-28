@@ -7,8 +7,9 @@
             <p class="market-kicker">Station commerciale · A:0:0</p>
             <h1>Bourse de ressources</h1>
             <p>Vos cargos relient votre colonie à la station.</p>
+            <ul aria-label="Conditions du trajet"><li>Convoi protégé</li><li>30 min aller · 30 min retour</li></ul>
         </div>
-        <ul aria-label="Conditions du trajet"><li>Convoi protégé</li><li>30 min aller · 30 min retour</li></ul>
+        <img class="market-station-art" src="{{ asset('images/map/bourse.png') }}" width="192" height="192" alt="">
     </header>
     {% include 'market/_navigation.html.twig' %}
     <p class="panel">Votre solde : <strong>{{ (account.cents|default(0) / 100)|number_format(2, ',', ' ') }} crédits</strong></p>

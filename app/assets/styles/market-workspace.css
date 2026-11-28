@@ -1,13 +1,13 @@
 .market-space { display: grid; gap: 1rem; min-width: 0; }
 .market-space .panel { min-width: 0; }
 .market-hero {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(64px, 13vw, 148px);
+    align-items: center;
+    gap: clamp(.5rem, 2vw, 2rem);
     background: radial-gradient(ellipse at 84% 30%, color-mix(in srgb, var(--accent) 17%, var(--panel)), var(--panel) 65%);
 }
+.market-station-art { display: block; width: 100%; height: auto; }
 .market-kicker { color: var(--accent); font-size: .875rem; font-weight: 700; letter-spacing: .075em; text-transform: uppercase; margin: 0 0 .45rem; }
 .market-hero h1, .market-space h2 { margin-top: 0; }
 .market-hero ul, .market-timeline { list-style: none; margin: 0; padding: 0; }
