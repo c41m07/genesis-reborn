@@ -52,6 +52,13 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
    const shipsStep=page.getByRole('region',{name:'Vaisseaux',exact:true});
    const cards=shipsStep.locator('.simulation-wizard-camp');
    await expect(cards).toHaveCount(2);
+   const classes = ['Légers', 'Bombardiers', 'Escorteurs', 'Lourds', 'Capitaux', 'Transport', 'Colonisation', 'Espionnage'];
+   await expect(cards.first().locator('th[scope="rowgroup"]')).toHaveText(classes);
+   await expect(cards.last().locator('th[scope="rowgroup"]')).toHaveText([...classes, 'Utilitaires']);
+   for (const card of await cards.all()) {
+    const light = card.locator('tbody').filter({ has: page.getByRole('rowheader', { name: 'Chasseur de patrouille', exact: true }) });
+    await expect(light.locator('th[scope="row"]')).toHaveText(['Chasseur de patrouille', 'Intercepteur atmosphérique', 'Chasseur furtif']);
+   }
    // Lire les deux rectangles au même instant même si le navigateur vient de défiler.
    const [left,right]=await cards.evaluateAll(elements=>elements.map(el=>el.getBoundingClientRect().toJSON()));
    if (viewport.width===1920) {
@@ -67,7 +74,7 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
    }
    await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
    for (const card of await cards.all()) {
-    expect(await card.evaluate(el => el.querySelector('tbody tr:last-child').getBoundingClientRect().bottom <= el.getBoundingClientRect().bottom)).toBe(true);
+    expect(await card.evaluate(el => el.querySelector('tbody:last-of-type tr:last-child').getBoundingClientRect().bottom <= el.getBoundingClientRect().bottom)).toBe(true);
    }
    await page.screenshot({path:testInfo.outputPath('P13-wizard-ships-'+theme+'-'+viewport.width+'.png'),scale:'css',animations:'disabled'});
    await next.focus();
@@ -76,8 +83,12 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
    await expect(page.getByText('Non applicable',{exact:true})).toBeVisible();
    await expect(page.locator('[name^="forces[attacker][defenses]"]')).toHaveCount(0);
    await expect(page.locator('[name^="forces[defender][defenses]"]').first()).toBeVisible();
+   await expect(page.getByRole('region', { name: 'Défenses', exact: true }).locator('th[scope="rowgroup"]')).toHaveText(['Anti-légers', 'Anti-escorteurs', 'Anti-lourds', 'Anti-capitaux']);
    await page.getByRole('link',{name:'Continuer : recherches'}).click();
    await expect(page.getByRole('heading',{name:'Recherches',exact:true})).toBeFocused();
+   for (const table of await page.getByRole('region', { name: 'Recherches', exact: true }).getByRole('table').all()) {
+    await expect(table.locator('th[scope="rowgroup"]')).toHaveText(['Logistique', 'Propulsion', 'Combat']);
+   }
    await expect(page.locator('[name^="forces[attacker][research]"]').first()).toBeVisible();
    await expect(page.locator('[name^="forces[defender][research]"]').first()).toBeVisible();
    await page.getByRole('link',{name:'Continuer : simulation'}).click();

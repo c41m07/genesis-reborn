@@ -143,6 +143,8 @@ implémentés sont les suivants :
   sans prétendre reconstituer leur historique. Le retour et l’archivage gardent
   les filtres. Les bornes de dates suivent le fuseau des préférences.
 
+Les tableaux de saisie suivent les catégories de la préparation de mission pour les vaisseaux et celles des catalogues pour les défenses et les recherches applicables au combat.
+
 Le simulateur réutilise `CombatSimulator` et la fabrique de statistiques commune
 `CombatUnitFactory` avec le résolveur réel. Le calcul ne passe pas par la
 résolution qui paie les pertes et récompenses. Les informations ennemies sont

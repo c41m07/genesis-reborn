@@ -270,6 +270,11 @@ body[data-theme=light] .player-simulation-board .simulation-outcome--defender_wi
 .player-simulation-board .simulation-wizard-camp .data-table td:last-child {
     min-width: 0;
 }
+.simulation-wizard-camp .simulation-category {
+    background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+    color: var(--text);
+    text-align: start;
+}
 .simulation-wizard-camp th:first-child {
     width: 42%;
     white-space: normal;

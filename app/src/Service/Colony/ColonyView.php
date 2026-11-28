@@ -145,43 +145,24 @@ final class ColonyView
             $groupDefinitions = $definitions[$group];
             $filterOptions[$group] = $this->filters->options($group, $groupDefinitions);
             $categoryOrder = array_flip(array_keys($filterOptions[$group]));
-            if (in_array($group, ['buildings', 'technologies'], true)) {
-                $order = match ($group) {
-                    'buildings' => array_flip([
-                        'power_plant',
-                        'mine_metal',
-                        'mine_nano',
-                        'mine_hydrogen',
-                        'mine_antimatter',
-                        'storage_metal',
-                        'storage_nano',
-                        'storage_hydrogen',
-                        'storage_electricity',
-                        'storage_antimatter',
-                        'lab',
-                        'shipyard',
-                        'fortress',
-                    ]),
-                    'technologies' => array_flip([
-                        'engineering_foundations',
-                        'naval_engineering',
-                        'automated_defense_repair',
-                        'nanomaterial_synthesis',
-                        'vector_propulsion',
-                        'weapon_calibration',
-                        'target_acquisition',
-                        'structural_armor',
-                        'shield_harmonics',
-                        'evasive_navigation',
-                        'signature_reduction',
-                        'rapid_fire_cycle',
-                        'cryogenic_reserves',
-                        'modular_cargo_bays',
-                        'tactical_intelligence',
-                        'intelligence_countermeasures',
-                        'signature_masking',
-                    ]),
-                };
+            if ($group === 'technologies') {
+                $groupDefinitions = array_merge(...array_values($this->filters->groupedDefinitions($group, $groupDefinitions)));
+            } elseif ($group === 'buildings') {
+                $order = array_flip([
+                    'power_plant',
+                    'mine_metal',
+                    'mine_nano',
+                    'mine_hydrogen',
+                    'mine_antimatter',
+                    'storage_metal',
+                    'storage_nano',
+                    'storage_hydrogen',
+                    'storage_electricity',
+                    'storage_antimatter',
+                    'lab',
+                    'shipyard',
+                    'fortress',
+                ]);
                 uksort($groupDefinitions, fn(string $a, string $b): int => $categoryOrder[$this->filters->category($group, $groupDefinitions[$a])] <=> $categoryOrder[$this->filters->category($group, $groupDefinitions[$b])] ?: ($order[$a] ?? PHP_INT_MAX) <=> ($order[$b] ?? PHP_INT_MAX));
             } elseif ($group === 'ships') {
                 $shipCategory = fn(array $ship): string => $this->filters->category('ships', $ship);

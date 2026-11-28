@@ -19,24 +19,29 @@
         </th>
     {% endfor %}
     </tr></thead>
+    {% set available = definitions|filter(definition => camp == 'defender' or definition.economic_unit is not defined) %}
+    {% set groups = group == 'fortress' ? {'': available} : catalog_table_groups(group == 'research' ? 'technologies' : group, available) %}
+    {% for category, families in groups %}
     <tbody>
-    {% for slug, definition in definitions|filter(definition => camp == 'defender' or definition.economic_unit is not defined) %}
-        <tr><th scope="row">{{ definition.label }}</th>
-        {% for tier, label in tiers %}
-            {% set inputId = 'sim-' ~ camp ~ '-' ~ group ~ '-' ~ slug ~ '-' ~ tier %}
-            {% set name = group == 'fortress' ? 'forces[defender][fortress][' ~ tier ~ ']' : 'forces[' ~ camp ~ '][' ~ group ~ '][' ~ slug ~ '][' ~ tier ~ ']' %}
-            {% set value = group == 'fortress' ? (forces[camp].fortress[tier] is defined ? forces[camp].fortress[tier] : (unknown ? '' : 0)) : (forces[camp][group][slug][tier] is defined ? forces[camp][group][slug][tier] : (unknown ? '' : 0)) %}
-            <td>
-                <label class="visually-hidden" for="{{ inputId }}">{{ title }} · {{ definition.label }} · {{ label }}</label>
-                <input id="{{ inputId }}" name="{{ name }}" type="number" min="0"
-                       max="{{ group in ['research', 'fortress'] ? definition.max_level|default(25) : (group == 'defenses' ? defense_limit : fleet_limit) }}"
-                       value="{{ value }}" {% if unknown %}placeholder="?"{% else %}required{% endif %}
-                       {% if intel and camp == intel_camp or camp == own_camp and own_source %}aria-describedby="{{ infoId }}"{% endif %}>
-            </td>
+        {% if category %}<tr><th class="simulation-category" scope="rowgroup" colspan="4">{{ category }}</th></tr>{% endif %}
+        {% for slug, definition in families %}
+            <tr><th scope="row">{{ definition.label }}</th>
+            {% for tier, label in tiers %}
+                {% set inputId = 'sim-' ~ camp ~ '-' ~ group ~ '-' ~ slug ~ '-' ~ tier %}
+                {% set name = group == 'fortress' ? 'forces[defender][fortress][' ~ tier ~ ']' : 'forces[' ~ camp ~ '][' ~ group ~ '][' ~ slug ~ '][' ~ tier ~ ']' %}
+                {% set value = group == 'fortress' ? (forces[camp].fortress[tier] is defined ? forces[camp].fortress[tier] : (unknown ? '' : 0)) : (forces[camp][group][slug][tier] is defined ? forces[camp][group][slug][tier] : (unknown ? '' : 0)) %}
+                <td>
+                    <label class="visually-hidden" for="{{ inputId }}">{{ title }} · {{ definition.label }} · {{ label }}</label>
+                    <input id="{{ inputId }}" name="{{ name }}" type="number" min="0"
+                           max="{{ group in ['research', 'fortress'] ? definition.max_level|default(25) : (group == 'defenses' ? defense_limit : fleet_limit) }}"
+                           value="{{ value }}" {% if unknown %}placeholder="?"{% else %}required{% endif %}
+                           {% if intel and camp == intel_camp or camp == own_camp and own_source %}aria-describedby="{{ infoId }}"{% endif %}>
+                </td>
+            {% endfor %}
+            </tr>
         {% endfor %}
-        </tr>
-    {% endfor %}
     </tbody>
+    {% endfor %}
 </table>
 {% if unknown %}
     <p class="simulation-wizard-unknown">« ? » signifie non révélé, pas zéro. Vous pouvez formuler une hypothèse ici.</p>
