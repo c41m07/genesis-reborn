@@ -153,6 +153,7 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
    await page.keyboard.press('Enter');
    await expect(attacker).toHaveValue('18');
    await expect(defender).toHaveValue('24');
+   await page.waitForLoadState('load');
    const sources = page.locator('.simulation-wizard-sources');
    if (!await sources.evaluate(element => element.open)) await sources.locator('summary').click();
    const panels = sources.locator('.simulation-wizard-source');
