@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace App\Tests\Integration;
 
 use App\Entity\{Guild, GuildHall, Planet, PlayerDiscovery, PlayerUniverse, SolarSystem, Universe};
-use App\Entity\{Fleet, FleetFuelExpense, FleetShip, GuildAtelierShipment, GuildAtelierStock, GuildDockOrder, GuildHallBuilding, GuildHallConvoy, GuildHallStock, OutboxMessage, PlanetResource};
+use App\Entity\{Fleet, FleetFuelExpense, FleetShip, GuildAtelierShipment, GuildAtelierStock, GuildDockOrder, GuildHallBuilding, GuildHallConvoy, GuildHallStock, OutboxMessage, PlanetBuilding, PlanetResource};
 use App\Message\{FleetArrived, GuildAtelierShipmentDue, GuildDockOrderDue, GuildHallConstructionDue};
 use App\MessageHandler\{FleetArrivedHandler, GuildAtelierShipmentDueHandler, GuildDockOrderDueHandler, GuildHallConstructionDueHandler};
 use App\Repository\{GuildHallConvoyRepository, GuildHallRepository};
 use App\Service\Notification\OutboxRelay;
 use App\Service\Colony\ResourceService;
 use App\Service\Fleet\FleetRecallService;
-use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildDockSettlement, GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyRecovery, GuildHallFunding, GuildHallScheduleProvider, GuildHallService};
+use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildDockService, GuildDockSettlement, GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyRecovery, GuildHallFunding, GuildHallScheduleProvider, GuildHallService};
 use App\Service\Player\{DiplomacyService, RegistrationService, RelationResolver};
 use App\Service\Universe\{UniverseImporter, UniverseService};
 use App\Tests\Support\GuildHallFixture;
@@ -651,6 +651,87 @@ final class GuildHallTest extends KernelTestCase
         }
 
         return $messages;
+    }
+
+    public function testBuiltDockUsesTheReviewedQuoteOnceAndReturnsThePersonalLot(): void
+    {
+        $clock = new MockClock('now', new \DateTimeZone('UTC'));
+        $container = self::getContainer();
+        $container->set('clock', $clock);
+        $container->set(GuildHallScheduleProvider::class, new GuildHallScheduleProvider(
+            '{"levels":{"warehouse":{"1":{"cost":{"metal":15},"duration":60}},"dock":{"1":{"cost":{"metal":25},"duration":60}}},"capacities":{"1":{"metal":100}}}',
+        ));
+        [$owner, $origin, $guild] = $this->guild('DockJourney', 'DJK');
+        $halls = GuildHallFixture::enable($container);
+        $hall = $halls->contribute($owner, $guild->id, $origin->id, 0, ['hydrogen' => 32]);
+        $hall = $halls->place($owner, $guild->id, $origin->solarSystem->id, $hall->revision);
+
+        // Préconditions de la recette : déblocage du rang cible et deux chasseurs à quai.
+        $buildings = $this->em->getRepository(PlanetBuilding::class);
+        $shipyard = $buildings->findOneBy(['planet' => $origin, 'slug' => 'shipyard', 'tier' => 'intermediate']) ?? new PlanetBuilding();
+        $shipyard->planet = $origin;
+        $shipyard->slug = 'shipyard';
+        $shipyard->tier = 'intermediate';
+        $shipyard->level = 1;
+        $idle = $this->em->getRepository(Fleet::class)->findOneBy(['playerUniverse' => $owner, 'homePlanet' => $origin, 'status' => 'idle']);
+        if ($idle === null) {
+            $idle = new Fleet();
+            $idle->playerUniverse = $owner;
+            $idle->homePlanet = $origin;
+        }
+        $this->em->persist($idle);
+        $hull = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $idle, 'slug' => 'fighter', 'tier' => 'basic']) ?? new FleetShip();
+        $hull->fleet = $idle;
+        $hull->slug = 'fighter';
+        $hull->quantity = 2;
+        $funds = new GuildHallStock();
+        $funds->hall = $hall;
+        $funds->materials = ['metal' => 25];
+        foreach ([$shipyard, $hull, $funds] as $fixture) {
+            $this->em->persist($fixture);
+        }
+        $this->em->flush();
+
+        $work = $container->get(GuildHallBuildingOrders::class)->start($owner, $guild->id, $hall->id, GuildHallBuilding::DOCK, 0);
+        $clock->sleep(61);
+        ($container->get(GuildHallConstructionDueHandler::class))(new GuildHallConstructionDue($work->id, $work->dispatchToken));
+        self::assertSame(1, $work->level);
+        $rows = $container->get(ResourceService::class)->materialize($origin);
+        foreach ($rows as $row) {
+            $row->currentStock = 5000;
+        }
+        $this->em->flush();
+        $before = $this->stock($origin, 'metal');
+
+        $dock = $container->get(GuildDockService::class);
+        $quote = $dock->preview($owner, $guild->id, $hall->id, $origin->id, 'fighter', 'basic', 1);
+        self::assertSame('intermediate', $quote['target_tier']);
+        self::assertGreaterThan(0, $quote['costs']['metal']);
+        self::assertSame($before, $this->stock($origin, 'metal'));
+        self::assertSame(2, $this->dockHullCount($owner->id, $origin->id, 'fighter', 'basic'));
+        self::assertSame(0, $this->em->getRepository(GuildDockOrder::class)->count(['membershipId' => $owner->id]));
+
+        $args = [$owner, $guild->id, $hall->id, $origin->id, str_repeat('d', 32), 'fighter', 'basic', 1];
+        $order = $dock->reserve(...[...$args, $quote]);
+        self::assertSame($order->id, $dock->reserve(...[...$args, $quote])->id);
+        self::assertSame(1, $this->dockHullCount($owner->id, $origin->id, 'fighter', 'basic'));
+        self::assertEqualsWithDelta($before - $quote['costs']['metal'], $this->stock($origin, 'metal'), 0.000001);
+        self::assertSame($quote['costs'], $order->paidCosts);
+        self::assertSame($quote['duration'], $order->dueAt->getTimestamp() - $order->startedAt->getTimestamp());
+        self::assertNotNull($this->em->getRepository(OutboxMessage::class)->findOneBy([
+            'kind' => GuildDockOrderDue::KIND, 'targetId' => $order->id, 'token' => $order->dispatchToken,
+        ]));
+
+        $beforeTarget = $this->dockHullCount($owner->id, $origin->id);
+        $due = new GuildDockOrderDue($order->id, $order->dispatchToken);
+        $handler = $container->get(GuildDockOrderDueHandler::class);
+        $handler($due);
+        self::assertSame($beforeTarget, $this->dockHullCount($owner->id, $origin->id));
+        $clock->sleep($quote['duration']);
+        $handler($due);
+        $handler($due);
+        self::assertSame($beforeTarget + 1, $this->dockHullCount($owner->id, $origin->id));
+        self::assertNotNull($order->completedAt);
     }
 
     public function testDockOutboxWaitsAndReplaysWithoutDoubleCredit(): void
