@@ -36,6 +36,8 @@ mesurer avant de fixer les montants.
 
 Avec le laboratoire Basique à 4 800 métal, 2 600 nano et 30 minutes au niveau 1, le scénario de première colonisation en Omega ×1 atteint la position 6 en 37 h 47 min 23 s si chaque action démarre dès que possible. Avec trois connexions par jour, l’arrivée a lieu après 56 h 06 min 15 s, aussi bien pour des sessions de 15 minutes que de 30 minutes.
 
+Le test d’intégration `testFreshEmpireCanColonizeWithThreeHalfHourSessionsPerDay` rejoue les sessions de 30 minutes depuis l’inscription, avec le kit réel et les services de jeu. Le joueur lance Protocoles de colonisation à 40 h, commande le colonisateur à 48 h et l’envoie à 56 h. L’horloge du test vérifie l’acquisition de la deuxième planète à 56 h 06 min 15 s.
+
 ## Rejeu du 25 novembre 2026
 
 Avec les nouveaux prix et productions, le scénario de première colonisation ci-dessous atteint la position 6 en 33 h 11 min 59 s lorsque chaque action est lancée dès que possible. À trois sessions de 30 minutes par jour, le laboratoire de niveau 2 permet de lancer Protocoles de colonisation à 32 h, pour 28 154 secondes et 47 000 électricité. L’arrivée a lieu à 48 h 06 min 15 s. Les résultats du 19 novembre qui suivent décrivent l’ancienne grille.
@@ -73,13 +75,9 @@ ce qui peut raccourcir certaines attentes. Les choix de construction sont fixes.
 est lancé à 48 h et l’arrivée suit la connexion de 56 h. La cible est compatible
 avec le scénario de 30 min, avec huit heures d’écart selon la fenêtre de présence.
 
-Le test d’intégration `testFreshEmpireCanReachASecondPlanetAfterSixEightHourIntervals`
-rejoue le planning de 30 min avec les services persistants, depuis l’inscription
-jusqu’à l’acquisition de la seconde planète à 48 h 06 min 15 s. Il utilise une
-carte minimale en univers ×1 et une horloge contrôlée. Le parcours navigateur
-de colonisation couvre un compte déjà équipé. Les autres cadences restent des
-estimations, et la mise en file anticipée, la concurrence et des horaires
-de connexion plus réalistes restent à comparer.
+Le parcours navigateur de colonisation couvre un compte déjà équipé. La mise en
+file anticipée, la concurrence et des horaires de connexion plus réalistes
+restent à comparer.
 
 ## Équilibrage des prix Basiques et Intermédiaires
 
