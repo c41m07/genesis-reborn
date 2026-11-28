@@ -119,7 +119,7 @@ final class OccupationStartTest extends WebTestCase
         $this->client->loginUser($this->player);
         $this->client->request('GET', '/flottes/preparer?mission=conquer');
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists('option[value="conquer"][data-settlement="24 h d’occupation après la victoire"]');
+        self::assertSelectorTextContains('.fleet-conquest-warning', 'Après la victoire, gardez le contrôle de la planète pendant 24 h pour la capturer.');
         $quote=static::getContainer()->get(FleetService::class)->quote($this->player->currentPlayerUniverse,$this->origin,'conquer',$this->target->id,['colony_ship'=>1,'transport'=>1],1);
         $catalog=static::getContainer()->get(\App\Service\Catalog\GameCatalog::class);
         $hourly=0;foreach(['colony_ship','transport'] as $slug) $hourly+=$catalog->getTierForUniverse($this->player->currentPlayerUniverse->universe,'ships',$slug,'basic')['fuel_orbit'];
