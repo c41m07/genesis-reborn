@@ -8,7 +8,7 @@
             {% set id = 'map-probe-' ~ target ~ '-' ~ tier %}
             {% set rankLabel = 'T' ~ loop.index ~ ' · ' ~ rank.label %}
             <tr>
-                <th scope="row"><strong>{{ rankLabel }}</strong>{% if ship %}<span class="map-probe-name">{{ ship.label }}</span>{% endif %}</th>
+                <th scope="row"><strong>{{ rankLabel }}</strong></th>
                 <td id="{{ id }}-stock"><strong>{{ quantity|number_format(0, ',', ' ') }}</strong><span class="map-probe-stock-label" aria-hidden="true"> en stock</span><span class="visually-hidden"> sondes disponibles</span></td>
                 <td><div class="fleet-composition-control">
                     <input id="{{ id }}" name="probes[{{ tier }}]" type="number" min="0" max="{{ min(quantity, limit) }}" step="1"

@@ -312,7 +312,6 @@ body.authenticated .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a:not([
 .map-probe-table th { text-align:left; }
 .map-probe-table thead th:nth-child(2), .map-probe-table td { text-align:center; }
 .map-probe-table thead th:last-child { width:102px; text-align:center; }
-.map-probe-table .map-probe-name { display:block; font-weight:400; color:var(--muted); }
 .map-probe-table td strong { font-size:max(18px, 1.125rem); font-variant-numeric:tabular-nums; }
 .map-probe-picker .fleet-composition-control { display:flex; gap:.2rem; justify-content:center; align-items:center; }
 .map-probe-picker .fleet-composition-control input[type=number] {
@@ -340,5 +339,4 @@ body.authenticated .map-probe-picker button { font-size:14px; }
     .map-probe-table tbody th { grid-column:1/-1; }
     .map-probe-table tbody td { text-align:start; align-self:center; }
     .map-probe-stock-label { display:inline; font-size:13px; }
-    .map-probe-table .map-probe-name { font-size:13px; }
 }
