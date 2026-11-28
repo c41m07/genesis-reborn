@@ -4,12 +4,13 @@ use App\Entity\{PlayerUniverse,Guild,GuildMember,GuildRelation,AllianceContract,
 use App\Repository\{GameRepository,GuildHallRepository};
 use App\Manager\GameManager;
 use App\Service\Catalog\GameCatalog;
+use App\Service\Guild\GuildCommandReturn;
 use Psr\Clock\ClockInterface;
 use App\Service\Report\DiplomaticReportWriter;
 use App\Service\Notification\NotificationService;
 final class DiplomacyService
 {
-    public function __construct(private GameRepository $repo,private GameManager $manager,private RelationResolver $relations,private GameCatalog $catalog,private ClockInterface $clock,private EmpireActivityService $activity,private DiplomacyAccessPolicy $access,private GuildProjectService $projects,private GuildHallRepository $guildHalls, private DiplomaticReportWriter $diplomaticReports, private NotificationService $notifications) {}
+    public function __construct(private GameRepository $repo,private GameManager $manager,private RelationResolver $relations,private GameCatalog $catalog,private ClockInterface $clock,private EmpireActivityService $activity,private DiplomacyAccessPolicy $access,private GuildProjectService $projects,private GuildHallRepository $guildHalls, private DiplomaticReportWriter $diplomaticReports, private NotificationService $notifications, private GuildCommandReturn $hallReturns) {}
     private function lock(PlayerUniverse $m,bool $guildFeature=false): void
     {
         // Verrouiller avec des lectures courantes : une lecture ordinaire avant l’univers
@@ -192,6 +193,7 @@ final class DiplomacyService
             foreach ($this->repo->all(GuildJumpPoint::class, ['member' => $member]) as $point) {
                 $point->destabilize($now);
             }
+            $this->hallReturns->evacuateLocked($member->guild, $m, $now);
             $this->manager->remove($member);
         });
     }
@@ -208,6 +210,7 @@ final class DiplomacyService
         $this->manager->transaction(function()use($m){
             $this->lock($m,true);$g=$this->relations->guild($m);
             if(!$this->access->canCommand($m,$g)) throw new \DomainException('Seul le fondateur peut dissoudre la guilde.');
+            $this->hallReturns->evacuateLocked($g, null, $this->clock->now());
             foreach($this->repo->all(GuildRelation::class) as $r) if($r->guildA->id===$g->id || $r->guildB->id===$g->id) $this->manager->remove($r);
             foreach($this->repo->all(GuildMember::class,['guild'=>$g]) as $member) $this->manager->remove($member);
             $this->projects->abandonForGuild($g);

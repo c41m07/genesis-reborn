@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\{GuildHall, GuildHallConvoy, PlayerUniverse};
+use App\Entity\{Guild, GuildHall, GuildHallConvoy, PlayerUniverse};
+use App\Service\Guild\GuildCommandBerth;
 use Doctrine\ORM\EntityManagerInterface;
 
 final readonly class GuildHallConvoyRepository
@@ -30,5 +31,28 @@ final readonly class GuildHallConvoyRepository
             ->addOrderBy('fleet.id', 'DESC')
             ->setMaxResults(10)
             ->getQuery()->getResult();
+    }
+
+    /** @return list<GuildHallConvoy> Stationnements privés, pas les dons ni les vols en approche. */
+    public function commandBerths(Guild $guild, ?PlayerUniverse $owner): array
+    {
+        $query = $this->entityManager->createQueryBuilder()
+            ->select('receipt', 'fleet')
+            ->from(GuildHallConvoy::class, 'receipt')
+            ->join('receipt.fleet', 'fleet')
+            ->join('fleet.playerUniverse', 'participant')
+            ->where('receipt.guildId = :guild AND participant.universe = :universe')
+            ->andWhere('receipt.commandStation = true AND receipt.shipDonation = false AND receipt.settledAt IS NOT NULL')
+            ->andWhere('fleet.mission = :mission AND fleet.status = :docked')
+            ->setParameter('guild', $guild->id)
+            ->setParameter('universe', $guild->universe)
+            ->setParameter('mission', GuildHallConvoy::MISSION)
+            ->setParameter('docked', GuildCommandBerth::DOCKED)
+            ->orderBy('fleet.id', 'ASC');
+        if ($owner !== null) {
+            $query->andWhere('fleet.playerUniverse = :owner')->setParameter('owner', $owner);
+        }
+
+        return $query->getQuery()->getResult();
     }
 }

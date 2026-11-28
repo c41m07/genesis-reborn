@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Service\Guild;
 
-use App\Entity\{Fleet, GuildHallConvoy, PlayerUniverse};
+use App\Entity\{Fleet, Guild, GuildHallConvoy, PlayerUniverse};
 use App\Manager\GameManager;
-use App\Repository\GameRepository;
+use App\Repository\{GameRepository, GuildHallConvoyRepository};
 use App\Service\Colony\ActionGuard;
 use App\Service\Fleet\{FleetDispatch, FleetNavigation};
 use App\Service\Player\VacationCalendar;
@@ -18,6 +18,7 @@ final readonly class GuildCommandReturn
     public function __construct(
         private GameManager $manager,
         private GameRepository $repository,
+        private GuildHallConvoyRepository $convoys,
         private ActionGuard $guard,
         private VacationCalendar $vacations,
         private FleetNavigation $navigation,
@@ -44,14 +45,44 @@ final readonly class GuildCommandReturn
                 || $receipt->settledAt === null || $fleet->status !== GuildCommandBerth::DOCKED) {
                 throw new \DomainException('La flotte n’est plus stationnée au Centre.');
             }
+            $this->assertRoute($fleet);
             $this->startLocked($fleet, $this->clock->now());
 
             return true;
         });
     }
 
-    /** L'appelant possède la transaction et a attesté la flotte stationnée. */
-    private function startLocked(Fleet $fleet, \DateTimeImmutable $clock): void
+    /**
+     * Sous le verrou de l’univers pris par la sortie de guilde.
+     * Ne pas prendre les verrous des autres participations après l’univers : leurs ordres
+     * peuvent déjà les détenir en attendant ce même verrou.
+     *
+     * @return list<int> Flottes qui ont effectivement pris le chemin du retour.
+     */
+    public function evacuateLocked(Guild $guild, ?PlayerUniverse $owner, \DateTimeImmutable $now): array
+    {
+        $departed = [];
+        foreach ($this->convoys->commandBerths($guild, $owner) as $receipt) {
+            $fleet = $receipt->fleet;
+            $this->manager->lockCurrent($fleet);
+            if ($fleet->status !== GuildCommandBerth::DOCKED) {
+                continue;
+            }
+            try {
+                $this->assertRoute($fleet);
+            } catch (\DomainException) {
+                // Un ancien trajet incohérent reste visible à son propriétaire.
+                // Il ne doit pas retenir les autres flottes ni empêcher la sortie.
+                continue;
+            }
+            $this->startLocked($fleet, $now);
+            $departed[] = $fleet->id;
+        }
+
+        return $departed;
+    }
+
+    private function assertRoute(Fleet $fleet): void
     {
         $origin = $fleet->navigation['origin'] ?? [];
         $target = $fleet->navigation['target'] ?? [];
@@ -66,6 +97,11 @@ final readonly class GuildCommandReturn
             || $fuel < 0 || $hydrogen < $fuel - 1.0e-8 || abs($fuel - $oneWay) > max(1.0e-8, $oneWay * PHP_FLOAT_EPSILON * 64)) {
             throw new \DomainException('La réserve ou la route d’origine est incohérente. La flotte reste à quai.');
         }
+    }
+
+    /** L'appelant détient les verrous et a vérifié la route avant toute mutation. */
+    private function startLocked(Fleet $fleet, \DateTimeImmutable $clock): void
+    {
         // Ne pas réutiliser l’ETA aller : le joueur a pu rester à quai longtemps.
         // Si la colonie change de propriétaire, le worker garde les vaisseaux à la
         // position exacte, sans les transférer au nouveau propriétaire.

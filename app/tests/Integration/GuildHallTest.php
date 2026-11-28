@@ -598,6 +598,112 @@ final class GuildHallTest extends KernelTestCase
         }
     }
 
+    #[DataProvider('commandReturnTriggers')]
+    public function testPrivateFleetReturnsFromTheCommandCentre(string $trigger): void
+    {
+        $clock = new MockClock('now', new \DateTimeZone('UTC'));
+        $container = self::getContainer();
+        $container->set('clock', $clock);
+        $container->set(GuildHallScheduleProvider::class, new GuildHallScheduleProvider(
+            '{"levels":{"warehouse":{"1":{"cost":{"metal":15},"duration":60}},"command":{"1":{"cost":{"metal":25},"duration":60}}},"capacities":{"1":{"metal":100}}}',
+        ));
+        [$leader, $leaderPlanet, $guild] = $this->guild('CentreLeader', 'CTL');
+        [$owner, $origin] = $this->player('CentrePilot');
+        $diplomacy = $container->get(DiplomacyService::class);
+        GuildRecruitmentFixture::enrol($diplomacy, $container->get(\App\Repository\GameRepository::class), $owner, $guild->id);
+        $halls = GuildHallFixture::enable($container);
+        $hall = $halls->contribute($leader, $guild->id, $leaderPlanet->id, 0, ['hydrogen' => 32]);
+        $hall = $halls->place($leader, $guild->id, $leaderPlanet->solarSystem->id, $hall->revision);
+        $building = new GuildHallBuilding();
+        $building->hall = $hall;
+        $building->slug = GuildHallBuilding::COMMAND;
+        $building->level = 1;
+        $this->em->persist($building);
+        $idle = $this->em->getRepository(Fleet::class)->findOneBy(['playerUniverse' => $owner, 'homePlanet' => $origin, 'status' => 'idle']);
+        if ($idle === null) {
+            $idle = new Fleet();
+            $idle->playerUniverse = $owner;
+            $idle->homePlanet = $origin;
+            $this->em->persist($idle);
+        }
+        $ship = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $idle, 'slug' => 'transport', 'tier' => 'basic']);
+        if ($ship === null) {
+            $ship = new FleetShip();
+            $ship->fleet = $idle;
+            $ship->slug = 'transport';
+            $ship->tier = 'basic';
+            $this->em->persist($ship);
+        }
+        $ship->quantity = 1;
+        $this->em->flush();
+
+        $composition = ['transport' => ['basic' => 1]];
+        $departure = $container->get(GuildHallConvoyDeparture::class);
+        $quote = $departure->preview($owner, $guild->id, $hall->id, $origin->id, $composition, 1.0, [], commandStation: true);
+        $convoy = $departure->send(
+            $owner, $guild->id, $hall->id, $origin->id, $composition, 1.0, [], str_repeat('b', 32), $quote['fingerprint'], commandStation: true,
+        );
+        self::assertInstanceOf(GuildHallConvoy::class, $convoy);
+        $fleetId = $convoy->fleet->id;
+        $guildId = $guild->id;
+        $leaderId = $leader->id;
+        $ownerId = $owner->id;
+        $originId = $origin->id;
+        $duration = $convoy->fleet->travelSeconds;
+        $outbound = new FleetArrived($fleetId, $convoy->outboundToken);
+        $handler = $container->get(FleetArrivedHandler::class);
+        $clock->sleep($duration + 1);
+        $handler($outbound);
+        $this->em->clear();
+
+        $fleet = $this->em->find(Fleet::class, $fleetId);
+        self::assertSame('hall_stationed', $fleet->status);
+        self::assertNull($fleet->arrivalAt);
+        self::assertSame($ownerId, $fleet->playerUniverse->id);
+        self::assertSame(0, $this->dockHullCount($ownerId, $originId, 'transport', 'basic'));
+
+        $clock->sleep(3600);
+        if ($trigger === 'leave') {
+            $owner = $this->em->find(PlayerUniverse::class, $ownerId);
+            $diplomacy->leave($owner);
+            $diplomacy->leave($owner);
+            self::assertNull($container->get(RelationResolver::class)->guild($owner));
+            self::assertNotNull($this->em->find(Guild::class, $guildId));
+        } elseif ($trigger === 'disband') {
+            $diplomacy->disband($this->em->find(PlayerUniverse::class, $leaderId));
+            self::assertNull($this->em->find(Guild::class, $guildId));
+        } else {
+            $recall = $container->get(\App\Service\Guild\GuildCommandReturn::class);
+            $owner = $this->em->find(PlayerUniverse::class, $ownerId);
+            self::assertTrue($recall->depart($owner, $fleetId, str_repeat('c', 32)));
+            self::assertFalse($recall->depart($owner, $fleetId, str_repeat('c', 32)));
+        }
+        $this->em->clear();
+        $handler($outbound);
+        $this->em->clear();
+        $fleet = $this->em->find(Fleet::class, $fleetId);
+        self::assertSame('returning', $fleet->status);
+        self::assertSame($clock->now()->getTimestamp(), $fleet->departureAt->getTimestamp());
+        self::assertSame($clock->now()->getTimestamp() + $duration, $fleet->arrivalAt->getTimestamp());
+        self::assertSame(2, $this->em->getRepository(OutboxMessage::class)->count(['kind' => 'fleet', 'targetId' => $fleetId]));
+
+        $return = new FleetArrived($fleetId, $fleet->dispatchToken);
+        $clock->sleep($duration + 1);
+        $handler($return);
+        $this->em->clear();
+        $handler($return);
+        $this->em->clear();
+        self::assertSame(1, $this->dockHullCount($ownerId, $originId, 'transport', 'basic'));
+        self::assertSame(2, $this->em->getRepository(FleetFuelExpense::class)->count(['fleetId' => $fleetId]));
+    }
+
+    public static function commandReturnTriggers(): iterable
+    {
+        yield 'rappel propriétaire' => ['manual'];
+        yield 'départ de la guilde' => ['leave'];
+        yield 'dissolution' => ['disband'];
+    }
+
     public function testAtelierChargesOnlyTheVoluntaryColonysElectricityAndCreditsTheHallOnce(): void
     {
         $clock = new MockClock('now', new \DateTimeZone('UTC'));
