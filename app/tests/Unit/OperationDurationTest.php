@@ -15,7 +15,7 @@ final class OperationDurationTest extends TestCase
         $groups = [
             'buildings' => ['mine_metal'=>60,'mine_nano'=>60,'mine_hydrogen'=>60,'power_plant'=>120,
                 'mine_antimatter'=>120,'storage_metal'=>180,'storage_nano'=>180,'storage_hydrogen'=>180,
-                'storage_electricity'=>180,'storage_antimatter'=>180,'lab'=>240,'fortress'=>360,'shipyard'=>1800],
+                'storage_electricity'=>180,'storage_antimatter'=>180,'lab'=>1800,'fortress'=>360,'shipyard'=>1800],
             'technologies' => ['engineering_foundations'=>600,'naval_engineering'=>900,'colonial_expansion'=>28800,
                 'nanomaterial_synthesis'=>1200,'weapons_engineering'=>1800,'tactical_intelligence'=>1200,
                 'modular_cargo_bays'=>1800,'vector_propulsion'=>2700,'weapon_calibration'=>2700,

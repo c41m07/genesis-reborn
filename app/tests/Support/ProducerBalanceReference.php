@@ -17,6 +17,9 @@ final class ProducerBalanceReference
         $catalog=ResourceCostReference::historicalCatalog($catalog);$fixture=self::fixture();
         $property=new \ReflectionProperty(GameCatalog::class,'data');$data=$property->getValue($catalog);
         foreach($fixture['historical_definitions'] as $slug=>$definition)$data['buildings'][$slug]=$definition;
+        // Le laboratoire des études de novembre précède l’alignement sur le chantier spatial.
+        $data['buildings']['lab']['base_build_time'] = 240;
+        $data['buildings']['lab']['economy_value_budget'] = 10000;
         $data['rules']=$fixture['historical_rules'];$property->setValue($catalog,$data);
         return $catalog;
     }

@@ -1,5 +1,9 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Construction du laboratoire — 28 novembre 2026
+
+Le premier laboratoire Basique coûte 4 800 métal et 2 600 nano. Sa durée de base passe de 4 à 30 minutes pour suivre celle du chantier spatial à rang et niveau égaux. Les profils avancés continuent de privilégier les instruments en nano et introduisent l’antimatière. Ces paramètres s’appliquent aux nouveaux devis du catalogue par défaut ; les commandes déjà payées gardent leur coût et leur durée enregistrés.
+
 ## Carburant perdu à quai — 27 novembre 2026
 
 Décision du propriétaire. Chaque nouveau départ paie la totalité de son devis

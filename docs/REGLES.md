@@ -95,6 +95,8 @@ Intermédiaire 25 et Planification industrielle intégrée 5. L’hydrogène
 utilise les mêmes seuils de bâtiments et exige sa recherche industrielle
 du même rang au niveau 3, dès le Basique.
 
+Le premier laboratoire Basique coûte 4 800 métal et 2 600 nano et se construit en 30 minutes à vitesse standard avant bonus. Au niveau 1, l’Intermédiaire demande 37 min 30 s et le Supérieur 46 min 53 s.
+
 Le laboratoire reste libre en Basique. Son Intermédiaire exige le laboratoire
 Basique 10 et Génie civil colonial 5. Son Supérieur exige les laboratoires
 Basique et Intermédiaire 10 et Ingénierie de chantier automatisée 5. La

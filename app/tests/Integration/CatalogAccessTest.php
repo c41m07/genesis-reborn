@@ -71,6 +71,19 @@ final class CatalogAccessTest extends KernelTestCase
         self::assertTrue(self::getContainer()->get(CatalogAccess::class)->acquired($this->membership,$this->planet,'buildings','fortress',$tier));
     }
 
+    public function testFirstLaboratoryConstructionPaysItsNewBasicQuote(): void
+    {
+        self::getContainer()->get(QueueService::class)->add(
+            $this->membership, $this->planet, 'buildings', 'lab', 1, str_repeat('a', 32), 'basic'
+        );
+        $item = $this->em->getRepository(QueueItem::class)->findOneBy(['planet' => $this->planet, 'itemSlug' => 'lab']);
+        self::assertNotNull($item);
+        self::assertSame(1800, $item->durationSeconds);
+        self::assertSame(4800, $item->paidCosts['metal']);
+        self::assertSame(2600, $item->paidCosts['nano']);
+        self::assertEquals(0, array_sum(array_diff_key($item->paidCosts, array_flip(['metal', 'nano']))));
+    }
+
     public static function bunkerTiers():array
     {
         return [['basic'],['intermediate'],['superior']];

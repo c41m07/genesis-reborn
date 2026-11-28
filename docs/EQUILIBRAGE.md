@@ -32,6 +32,10 @@ fenêtres de jeu changent le résultat. Aucun système saisonnier n’est livré
 par ce lot. Les effets compétitifs, le cumul J7 et les échanges restent à
 mesurer avant de fixer les montants.
 
+## Rejeu du 28 novembre 2026 — laboratoire
+
+Avec le laboratoire Basique à 4 800 métal, 2 600 nano et 30 minutes au niveau 1, le scénario de première colonisation en Omega ×1 atteint la position 6 en 37 h 47 min 23 s si chaque action démarre dès que possible. Avec trois connexions par jour, l’arrivée a lieu après 56 h 06 min 15 s, aussi bien pour des sessions de 15 minutes que de 30 minutes.
+
 ## Rejeu du 25 novembre 2026
 
 Avec les nouveaux prix et productions, le scénario de première colonisation ci-dessous atteint la position 6 en 33 h 11 min 59 s lorsque chaque action est lancée dès que possible. À trois sessions de 30 minutes par jour, le laboratoire de niveau 2 permet de lancer Protocoles de colonisation à 32 h, pour 28 154 secondes et 47 000 électricité. L’arrivée a lieu à 48 h 06 min 15 s. Les résultats du 19 novembre qui suivent décrivent l’ancienne grille.

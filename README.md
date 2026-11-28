@@ -4,7 +4,7 @@ Les [156 profils de prérequis](docs/DEBLOCAGES.md) utilisent une grille commune
 par rang, avec requalification explicite des accès existants. Les quatre producteurs
 de départ demandent Basique 25 et recherche industrielle Intermédiaire 5 pour
 l’Intermédiaire, puis Basique 50, Intermédiaire 25 et recherche Supérieure 5 pour
-le Supérieur. Le laboratoire utilise la recherche du rang précédent et demande les deux rangs précédents
+le Supérieur. Le premier laboratoire Basique coûte 4 800 métal et 2 600 nano pour 30 min de construction à vitesse standard. Le laboratoire utilise la recherche du rang précédent et demande les deux rangs précédents
 au niveau 10 pour son Supérieur ; les accès déjà acquis sont conservés. Le Piège à
 antimatière se débloque avec le producteur d’hydrogène niveau 5 et la recherche
 industrielle au niveau 5, tous deux du rang visé. Les [durées et
