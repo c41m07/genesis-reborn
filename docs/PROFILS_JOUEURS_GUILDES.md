@@ -10,8 +10,8 @@ La modification préexistante de `docs/PARCOURS_UI_UX.md` est conservée hors du
 
 ## Informations et accès validés
 
-- Joueurs connectés du même univers uniquement. Pseudo, guilde/tag et cinq scores/rangs déjà publics du classement quotidien ; aucune valeur recalculée en direct pour le profil. Un nouvel inscrit sans instantané reste non classé.
-- Aucun email, état d’activité précis, coordonnées, effectif militaire ou inventaire. Titres et trophées reportés, aucun nouveau système créé.
+- Joueurs connectés du même univers uniquement. Pseudo, guilde/tag et cinq scores/rangs déjà publics du relevé de minuit ou de midi (heure de Paris) ; aucune valeur recalculée en direct pour le profil. Un nouvel inscrit sans instantané reste non classé.
+- Aucun email, état d’activité précis, coordonnées, effectif militaire ou inventaire. Depuis Profil → Apparence du profil, le joueur choisit jusqu’à deux titres et une bannière parmi ses récompenses. Le classement et l’en-tête du profil public affichent cette sélection. Les attributions et les publications sont décrites dans le [guide des éditeurs](EDITEURS_ADMIN.md).
 - Liens depuis noms du classement, interlocuteur et auteurs de messages, équipage de la guilde. Les comptes détachés ou devenus empires oubliés n’ont pas de profil consultable.
 - Pages de guildes du même univers lorsque la fonctionnalité est activée ; nom/tag, présentation, commandant et nombre de membres. Accès depuis classement, centre de guilde et équipage. Aucun nouvel accès au canal privé ou aux projets n’est accordé.
 

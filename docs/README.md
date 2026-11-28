@@ -52,8 +52,8 @@ une seule référence par sujet ; les anciens bilans ne décrivent pas l’état
 | Recréer une illustration | [Prompts](ILLUSTRATIONS.md) |
 | Consulter une preuve ou décision historique | [Archives et liste de consolidation](archives/README.md) |
 
-`wiki.json` reste le contenu unique du manuel : accueil, chapitres et recherche
-servent des pages distinctes ; [navigation et compatibilité](NAVIGATION_PAGES_DEDIEES.md). `CATALOGUE_LABELS.csv` conserve les
+Le [manuel en jeu](wiki.json) couvre notamment le comptoir et le marché des joueurs, les étapes de campagne pirate, les protections, les classements et les récompenses. Son contenu est partagé entre ses trois entrées : accueil, chapitres et recherche
+servent des pages distinctes. À chaque changement visible en jeu, vérifier le chapitre, les exemples chiffrés et les textes d’aide concernés à partir du comportement livré sur `dev`. Les décisions datées gardent leur valeur historique. Voir [navigation et compatibilité](NAVIGATION_PAGES_DEDIEES.md). `CATALOGUE_LABELS.csv` conserve les
 156 libellés, descriptions et utilités de jeu ; la copie Markdown a été retirée.
 Les spécifications textuelles et PDF d’origine restent dans specifications/ et technic/.
 

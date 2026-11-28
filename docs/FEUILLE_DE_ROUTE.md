@@ -1,5 +1,9 @@
 # Roadmap Genesis Reborn
 
+## Manuel en jeu — revue du 28 novembre 2026
+
+Revue du manuel sur `dev` au commit `877d6819`. La Bourse, la campagne pirate, les protections et les récompenses ont chacune un chapitre accessible depuis le sommaire et la recherche. Les règles chiffrées et les guides du dépôt complètent ces parcours. Le guide des éditeurs utilise le même document depuis le wiki et le panneau admin. La recette vérifie chaque chapitre, la navigation au clavier et sur mobile, les anciennes adresses et le refus du guide administratif en accès direct pour un joueur.
+
 ## Galaxie — colonie active et sondes par rang
 
 La fiche planète regroupe la sélection des sondes et leur envoi dans un tableau, utilisable également depuis la liste des systèmes. Le raccourci « Ma colonie » retrouve la planète active depuis la galaxie consultée. La recette couvre deux colonies, la saisie et Max, les rangs mélangés et le refus du départ si le stock a changé.

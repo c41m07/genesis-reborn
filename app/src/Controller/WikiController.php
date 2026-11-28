@@ -51,6 +51,9 @@ final class WikiController extends AbstractController
     #[Route('/wiki/references/{source}', name: 'app_wiki_reference', methods: ['GET'])]
     public function reference(string $source): Response
     {
+        if ($source === 'editeurs' && !$this->isGranted('ROLE_ADMIN')) {
+            throw $this->createNotFoundException('Référence inconnue.');
+        }
         $reference = $this->manual->reference($source);
         if ($reference === null) throw $this->createNotFoundException('Référence inconnue.');
         return $this->render('wiki/reference.html.twig', array_replace($this->pageData(), $reference, ['source'=>$source]));

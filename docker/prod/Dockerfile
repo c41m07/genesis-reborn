@@ -29,7 +29,7 @@ COPY app/config ./config
 COPY app/migrations ./migrations
 COPY app/src ./src
 COPY app/templates ./templates
-COPY docs/REGLES.md docs/DECISIONS.md docs/wiki.json /docs/
+COPY docs/REGLES.md docs/DECISIONS.md docs/wiki.json docs/EDITEURS_ADMIN.md /docs/
 COPY app/public ./public
 COPY --from=assets /app/public/build ./public/build
 COPY docker/dev/apache.conf /etc/apache2/sites-available/000-default.conf

@@ -2,6 +2,7 @@
 {% block title %}Contenus du jeu · Administration{% endblock %}
 {% block body %}
 <h1>Contenus du jeu</h1>
+<a href="{{ path('app_wiki_reference', {source: 'editeurs'}) }}">Guide des éditeurs</a>
 <nav class="ui-tabs" aria-label="Créer un contenu">{% for key,label in kinds %}<a href="{{ path('app_admin_editorial',{type:key}) }}" {% if key == kind %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
 {% if source %}
 <section class="panel"><h2>Aperçu · {{ source.content.label }}</h2>

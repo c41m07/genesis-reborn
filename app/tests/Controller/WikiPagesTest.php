@@ -110,6 +110,27 @@ final class WikiPagesTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'Recherche');
     }
 
+    public function testEditorGuideIsOnlyAvailableToAdministrators(): void
+    {
+        $this->client->loginUser($this->player);
+        $this->client->request('GET', '/wiki');
+        self::assertSelectorNotExists('a[href="/wiki/references/editeurs"]');
+        $this->client->request('GET', '/wiki/references/editeurs');
+        self::assertResponseStatusCodeSame(404);
+
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $admin = $em->find(Player::class, $this->player->id);
+        $admin->roles = ['ROLE_ADMIN'];
+        $em->flush();
+        $this->client->loginUser($admin);
+        $page = $this->client->request('GET', '/wiki');
+        $this->client->click($page->selectLink('Guide des éditeurs')->link());
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextSame('h1', 'Guide des éditeurs');
+        self::assertSelectorTextContains('.wiki-reference-document', 'colonie de retour');
+        self::assertSelectorExists('a[href="/admin/contenus"]');
+    }
+
     public function testUnknownChaptersAndReferencePathsAreRejected(): void
     {
         $this->client->loginUser($this->player);
