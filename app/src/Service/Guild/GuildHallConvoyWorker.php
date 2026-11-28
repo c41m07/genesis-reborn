@@ -81,7 +81,18 @@ final readonly class GuildHallConvoyWorker
         // Départ = réservation ; l’Observatoire ne compte que les consommations réelles.
         $this->fuelExpenses->burnLocked($fleet, $oneWay, 'outbound');
         $fleet->reservedFuel -= $oneWay;
-        if ($receipt->shipDonation) {
+        if ($receipt->commandStation) {
+            if ($schedule !== null && GuildCommandBerth::built($this->repository, $hall)) {
+                if (!GuildCommandBerth::arrive($receipt, $hall, $token, $now)) {
+                    throw new \LogicException('Arrivée du stationnement incohérente.');
+                }
+                $this->notifications->enqueue($fleet->playerUniverse, 'Votre flotte est stationnée au Centre de commandement.', journalKind: 'arrival');
+
+                return;
+            }
+            $receipt->settle($token, $now, []);
+            $this->notifications->enqueue($fleet->playerUniverse, 'Centre indisponible : votre flotte revient à sa colonie.', journalKind: 'arrival');
+        } elseif ($receipt->shipDonation) {
             if ($schedule !== null && $this->donations->acceptLocked($receipt, $hall, $token, $now)) {
                 $this->notifications->enqueue($fleet->playerUniverse, 'Vos vaisseaux ont rejoint le stock de l’Atelier.', journalKind: 'arrival');
 

@@ -35,6 +35,10 @@ final class GuildHallConvoy
     #[ORM\Column(options: ['default' => false])]
     public bool $shipDonation = false;
 
+    // Un stationnement ne cède jamais les vaisseaux à l’Atelier.
+    #[ORM\Column(options: ['default' => false])]
+    public bool $commandStation = false;
+
     /** @var array<string,array<string,int>>|null */
     #[ORM\Column(type: 'json', nullable: true)]
     public ?array $deliveredShips = null;

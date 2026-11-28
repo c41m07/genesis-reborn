@@ -45,8 +45,9 @@ final readonly class GuildHallConvoyDeparture
         string $requestKey,
         ?string $reviewedQuote = null,
         bool $shipDonation = false,
+        bool $commandStation = false,
     ): ?GuildHallConvoy {
-        return $this->manager->transaction(function () use ($member, $guildId, $hallId, $originId, $composition, $ratio, $freight, $requestKey, $reviewedQuote, $shipDonation): ?GuildHallConvoy {
+        return $this->manager->transaction(function () use ($member, $guildId, $hallId, $originId, $composition, $ratio, $freight, $requestKey, $reviewedQuote, $shipDonation, $commandStation): ?GuildHallConvoy {
             $hall = $this->access->lockPlaced($member, $guildId, $hallId);
             if ($this->schedules->schedule() === null) {
                 throw new \DomainException('Les opérations du Hall ne sont pas encore configurées.');
@@ -60,7 +61,7 @@ final readonly class GuildHallConvoyDeparture
             if (!$this->guard->receipt($member, $requestKey)) {
                 return null;
             }
-            [$idle, $orders, $now, $route, $fuel, $costs] = $this->prepare($member, $origin, $hall, $composition, $ratio, $freight, $shipDonation);
+            [$idle, $orders, $now, $route, $fuel, $costs] = $this->prepare($member, $origin, $hall, $composition, $ratio, $freight, $shipDonation, $commandStation);
             $quote = $route['movement'];
             if ($reviewedQuote !== null && !hash_equals($reviewedQuote, self::fingerprint($quote, $fuel))) {
                 throw new \DomainException('Le trajet ou le carburant a changé. Demandez un nouveau devis.');
@@ -101,6 +102,7 @@ final readonly class GuildHallConvoyDeparture
             $receipt->hallId = $hallId;
             $receipt->guildId = $guildId;
             $receipt->shipDonation = $shipDonation;
+            $receipt->commandStation = $commandStation;
             $this->dispatch->schedule($fleet, $receipt);
             $this->manager->save($receipt);
 
@@ -114,9 +116,9 @@ final readonly class GuildHallConvoyDeparture
      * @param array<string,int> $freight
      * @return array{seconds:int,total_fuel:float,planet_fuel:float,freight_capacity:int,fingerprint:string}
      */
-    public function preview(PlayerUniverse $member, int $guildId, int $hallId, int $originId, array $composition, float $ratio, array $freight, bool $shipDonation = false): array
+    public function preview(PlayerUniverse $member, int $guildId, int $hallId, int $originId, array $composition, float $ratio, array $freight, bool $shipDonation = false, bool $commandStation = false): array
     {
-        return $this->manager->transaction(function () use ($member, $guildId, $hallId, $originId, $composition, $ratio, $freight, $shipDonation): array {
+        return $this->manager->transaction(function () use ($member, $guildId, $hallId, $originId, $composition, $ratio, $freight, $shipDonation, $commandStation): array {
             $hall = $this->access->lockPlaced($member, $guildId, $hallId);
             if ($this->schedules->schedule() === null) {
                 throw new \DomainException('Les opérations du Hall ne sont pas encore configurées.');
@@ -128,7 +130,7 @@ final readonly class GuildHallConvoyDeparture
             }
             $this->guard->lock($member, $origin, currentReads: true);
 
-            [, , $now, $route, $fuel, $costs] = $this->prepare($member, $origin, $hall, $composition, $ratio, $freight, $shipDonation);
+            [, , $now, $route, $fuel, $costs] = $this->prepare($member, $origin, $hall, $composition, $ratio, $freight, $shipDonation, $commandStation);
             $stocks = $this->resources->snapshot($origin, observedAt: $now);
             foreach ($costs as $slug => $amount) {
                 if (($stocks[$slug]['stock'] ?? 0) + 0.000001 < $amount) {
@@ -156,7 +158,11 @@ final readonly class GuildHallConvoyDeparture
         float $ratio,
         array $freight,
         bool $shipDonation,
+        bool $commandStation,
     ): array {
+        if ($commandStation && ($shipDonation || $freight !== [] || !GuildCommandBerth::built($this->repository, $hall))) {
+            throw new \DomainException('Le stationnement nécessite un Centre terminé et ne transporte pas de fret.');
+        }
         if ($shipDonation && ($freight !== [] || !$this->donations->isBuiltLocked($hall))) {
             throw new \DomainException('Le don nécessite un Atelier terminé et ne transporte pas de fret.');
         }
@@ -187,10 +193,10 @@ final readonly class GuildHallConvoyDeparture
                 }
                 $ship = $this->catalog->getTierForUniverse($member->universe, 'ships', $slug, $tier);
                 if (($ship['mobile'] ?? true) === false
-                    || ($shipDonation && isset($ship['economic_unit']))
-                    || (!$shipDonation && isset($ship['allowed_missions']) && !in_array('transport', $ship['allowed_missions'], true))) {
-                    throw new \DomainException($shipDonation
-                        ? 'Seuls les vaisseaux mobiles non plafonnés peuvent être donnés.'
+                    || (($shipDonation || $commandStation) && isset($ship['economic_unit']))
+                    || (!$shipDonation && !$commandStation && isset($ship['allowed_missions']) && !in_array('transport', $ship['allowed_missions'], true))) {
+                    throw new \DomainException(($shipDonation || $commandStation)
+                        ? 'Cette opération nécessite des vaisseaux mobiles non plafonnés.'
                         : 'Ce vaisseau ne peut pas transporter de fret.');
                 }
                 $ships[] = array_replace($ship, ['slug' => $slug, 'tier' => $tier, 'quantity' => $amount]);
@@ -203,7 +209,7 @@ final readonly class GuildHallConvoyDeparture
                 throw new \DomainException('Le convoi n’accepte que des quantités entières de matériaux.');
             }
         }
-        if (!$shipDonation && array_sum($freight) <= 0) {
+        if (!$shipDonation && !$commandStation && array_sum($freight) <= 0) {
             throw new \DomainException('Chargez au moins un matériau.');
         }
 
