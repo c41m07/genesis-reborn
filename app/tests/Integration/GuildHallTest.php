@@ -11,11 +11,11 @@ use App\MessageHandler\{FleetArrivedHandler, GuildAtelierShipmentDueHandler, Gui
 use App\Repository\{GuildHallConvoyRepository, GuildHallRepository};
 use App\Service\Notification\OutboxRelay;
 use App\Service\Colony\ResourceService;
-use App\Service\Fleet\FleetRecallService;
-use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildDockService, GuildDockSettlement, GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyRecovery, GuildHallFunding, GuildHallScheduleProvider, GuildHallService};
+use App\Service\Fleet\{FleetRecallService, FleetService};
+use App\Service\Guild\{GuildAtelierDeliveryDeparture, GuildAtelierDeliveryPlanning, GuildDockService, GuildDockSettlement, GuildHallBuildingOrders, GuildHallConvoyDeparture, GuildHallConvoyRecovery, GuildHallFunding, GuildHallScheduleProvider, GuildHallService, GuildJumpConstruction, GuildJumpLink, GuildJumpView};
 use App\Service\Player\{DiplomacyService, RegistrationService, RelationResolver};
 use App\Service\Universe\{UniverseImporter, UniverseService};
-use App\Tests\Support\GuildHallFixture;
+use App\Tests\Support\{GuildHallFixture, GuildRecruitmentFixture};
 use App\Validator\DTO\RegistrationData;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -853,6 +853,98 @@ final class GuildHallTest extends KernelTestCase
              AND ship.slug = ? AND ship.tier = ?",
             [$membershipId, $planetId, $slug, $tier],
         );
+    }
+
+    public function testBuiltJumpPointsUseRealFleetQuoteAndFreezeFlightWhenMemberLeaves(): void
+    {
+        $clock = new MockClock('now', new \DateTimeZone('UTC'));
+        $container = self::getContainer();
+        $container->set('clock', $clock);
+        $container->set(GuildHallScheduleProvider::class, new GuildHallScheduleProvider(
+            '{"jump_instability_seconds":120,"levels":{"warehouse":{"1":{"cost":{"metal":15},"duration":60}},"jump_point":{"1":{"cost":{"metal":25},"duration":60}}},"capacities":{"1":{"metal":100}}}',
+        ));
+        [$leader, $origin, $guild] = $this->guild('JumpLeader', 'JPL');
+        [$member, $target] = $this->player('JumpRecipient');
+        $diplomacy = $container->get(DiplomacyService::class);
+        $repository = $container->get(\App\Repository\GameRepository::class);
+        GuildRecruitmentFixture::enrol($diplomacy, $repository, $member, $guild->id);
+        $this->discover($leader, $target->solarSystem);
+        $halls = GuildHallFixture::enable($container);
+        $hall = $halls->contribute($leader, $guild->id, $origin->id, 0, ['hydrogen' => 32]);
+        $hall = $halls->place($leader, $guild->id, $origin->solarSystem->id, $hall->revision);
+        $funds = new GuildHallStock();
+        $funds->hall = $hall;
+        $funds->materials = ['metal' => 50];
+        $this->em->persist($funds);
+        // Le transport ordinaire doit rester accessible après le départ du membre :
+        // c'est la disparition du lien de saut, pas la diplomatie, qui doit bloquer.
+        $member->player->preferences['transportReception'] = 'all';
+        $idle = $this->em->getRepository(Fleet::class)->findOneBy(['playerUniverse' => $leader, 'homePlanet' => $origin, 'status' => 'idle']) ?? new Fleet();
+        $idle->playerUniverse = $leader;
+        $idle->homePlanet = $origin;
+        $this->em->persist($idle);
+        $ship = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $idle, 'slug' => 'transport', 'tier' => 'basic']) ?? new FleetShip();
+        $ship->fleet = $idle;
+        $ship->slug = 'transport';
+        $ship->quantity = 2;
+        $this->em->persist($ship);
+        $this->em->flush();
+
+        $build = $container->get(GuildJumpConstruction::class);
+        $quote = $build->quote();
+        self::assertNotNull($quote);
+        $hash = GuildJumpConstruction::fingerprint($quote);
+        $build->start($leader, $guild->id, $hall->id, $origin->id, $hash);
+        $build->start($leader, $guild->id, $hall->id, $target->id, $hash);
+        self::assertSame(0, $funds->materials['metal'] ?? 0);
+        $link = $container->get(GuildJumpLink::class);
+        self::assertFalse($link->available($leader, $origin, $target));
+        $clock->sleep(60);
+        self::assertTrue($link->available($leader, $origin, $target));
+
+        $fleets = $container->get(FleetService::class);
+        $units = ['transport' => ['basic' => 1]];
+        $cargo = ['metal' => 1];
+        $normal = $fleets->preview($leader, $origin, 'transport', $target->id, $units, 1.0, $cargo);
+        $jump = $fleets->preview($leader, $origin, 'transport', $target->id, $units, 1.0, $cargo, jumpPoint: true);
+        self::assertArrayNotHasKey('jump_point', $normal);
+        self::assertTrue($jump['jump_point']);
+        self::assertSame(max(60, (int) ceil($normal['seconds'] / 2)), $jump['seconds']);
+        self::assertGreaterThan(0.0, $normal['one_way_fuel']);
+        self::assertEqualsWithDelta(2.0 * $normal['one_way_fuel'], $jump['one_way_fuel'], 0.000001);
+        self::assertSame(1, $jump['freight']['metal']);
+        self::assertTrue($fleets->send($leader, $origin, 'transport', $target->id, $units, 1.0, $cargo, str_repeat('e', 32), jumpPoint: true));
+        $flight = $this->em->getRepository(Fleet::class)->findOneBy([
+            'playerUniverse' => $leader, 'homePlanet' => $origin, 'destination' => $target, 'status' => 'traveling', 'mission' => 'transport',
+        ]);
+        self::assertInstanceOf(Fleet::class, $flight);
+        self::assertTrue($flight->navigation['jump_point']);
+        self::assertSame($jump['seconds'], $flight->travelSeconds);
+        self::assertEqualsWithDelta($jump['total_fuel'], $flight->reservedFuel, 0.000001);
+        $arrival = $flight->arrivalAt->getTimestamp();
+        $frozenNavigation = $flight->navigation;
+
+        $diplomacy->leave($member);
+        self::assertFalse($link->available($leader, $origin, $target));
+        $personal = $container->get(GuildJumpView::class);
+        self::assertNull($personal->personalInstability($leader, $target));
+        self::assertSame($clock->now()->getTimestamp() + 120, $personal->personalInstability($member, $target)['expires']->getTimestamp());
+        $this->em->refresh($flight);
+        self::assertSame($arrival, $flight->arrivalAt->getTimestamp());
+        self::assertEquals($frozenNavigation, $flight->navigation);
+        self::assertEqualsWithDelta($jump['total_fuel'], $flight->reservedFuel, 0.000001);
+        self::assertArrayNotHasKey('jump_point', $fleets->preview($leader, $origin, 'transport', $target->id, $units, 1.0, $cargo));
+        GuildRecruitmentFixture::enrol($diplomacy, $repository, $member, $guild->id);
+        self::assertFalse($link->available($leader, $origin, $target));
+        $clock->sleep(120);
+        self::assertNull($personal->personalInstability($member, $target));
+        // Le refus transactionnel ferme le gestionnaire d’entités, comme les autres erreurs de devis.
+        try {
+            $fleets->preview($leader, $origin, 'transport', $target->id, $units, 1.0, $cargo, jumpPoint: true);
+            self::fail('Un nouveau devis Jump après le départ ne doit pas être accepté.');
+        } catch (\DomainException $exception) {
+            self::assertStringContainsString('lien Jump Point', $exception->getMessage());
+        }
     }
 
     public function testFixtureDoesNotActivateHallOnFreshKernel(): void
