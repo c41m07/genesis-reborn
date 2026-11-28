@@ -64,7 +64,7 @@
                 <button type="button" aria-label="Dézoomer" data-action="click->galaxy-v2#zoomOut">−</button>
                 <button type="button" aria-pressed="false" data-galaxy-v2-target="motionToggle" data-action="click->galaxy-v2#toggleMotion" title="Réduire ou rétablir les animations">◌</button>
                 <button type="button" data-action="click->galaxy-v2#fitView">Vue entière</button>
-                <button type="button" class="gv2-home" data-action="click->galaxy-v2#centerHome">Ma colonie</button>
+                <button type="button" class="gv2-home" {{ map_origin ? '' : 'disabled' }} data-action="click->galaxy-v2#centerHome">Ma colonie</button>
             </div>
             <div class="gv2-scene" data-galaxy-v2-target="scene"
                  data-action="pointerover->galaxy-v2#stationHover pointerout->galaxy-v2#stationLeave focusin->galaxy-v2#stationFocus focusout->galaxy-v2#stationBlur">

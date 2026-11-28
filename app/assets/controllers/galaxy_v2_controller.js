@@ -121,7 +121,8 @@ export default class extends Controller {
         this.privateTrafficUnavailableHandler = () => this.clearPrivateTraffic();
         window.addEventListener('genesis:private-map-traffic-unavailable', this.privateTrafficUnavailableHandler);
         const initialSystem = this.systemById.get(Number(this.gameMap.selectedSystemId));
-        if (initialSystem) this.previewSystem(initialSystem, false);
+        if (window.location.hash === '#ma-colonie' && this.systemById.has(Number(this.gameMap.origin?.systemId))) this.centerHome();
+        else if (initialSystem) this.previewSystem(initialSystem, false);
         this.startLoop();
     }
 
@@ -497,7 +498,7 @@ export default class extends Controller {
         let centerX = (bounds.minX + bounds.maxX) / 2;
         let centerY = (bounds.minY + bounds.maxY) / 2;
         if ((bounds.maxX - bounds.minX) * this.baseZoom > availableWidth * 1.15 || (bounds.maxY - bounds.minY) * this.baseZoom > availableHeight * 1.15) {
-            const home = points.find((system) => system.known && system.planets.some((planet) => planet.ownedByCurrentPlayer));
+            const home = this.systemById.get(Number(this.gameMap.origin?.systemId));
             if (home) { centerX = home.wx; centerY = home.wy; }
         }
         this.baseCamera = {
@@ -2505,9 +2506,18 @@ export default class extends Controller {
     }
 
     centerHome() {
-        if (this.mode !== 'galaxy') return;
-        const home = this.systems.find(system => system.planets.some(planet => planet.ownedByCurrentPlayer));
-        if (!home) return;
+        const origin = this.gameMap.origin;
+        if (this.mode !== 'galaxy' || !origin) return;
+        const home = this.systemById.get(Number(origin.systemId));
+        if (!home) {
+            const url = new URL(window.location.href);
+            url.search = new URLSearchParams({ galaxy: origin.galaxyId, system: origin.systemId });
+            url.hash = 'ma-colonie';
+            window.location.assign(url);
+            return;
+        }
+        this.previewSystem(home, false);
+        this.selectPlanetById(origin.planetId);
         this.camera = { x: home.wx, y: home.wy };
         this.zoom = this.targetZoom = Math.min(2.6, this.baseZoom * 2);
         this.hasUserCamera = true;

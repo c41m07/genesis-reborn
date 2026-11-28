@@ -1,5 +1,9 @@
 # Roadmap Genesis Reborn
 
+## Galaxie — colonie active et sondes par rang
+
+La fiche planète regroupe la sélection des sondes et leur envoi dans un tableau, utilisable également depuis la liste des systèmes. Le raccourci « Ma colonie » retrouve la planète active depuis la galaxie consultée. La recette couvre deux colonies, la saisie et Max, les rangs mélangés et le refus du départ si le stock a changé.
+
 ## Rapports d’espionnage et préparation de la conquête — 28 novembre 2026
 
 La liste et le détail des renseignements présentent le propriétaire de la planète. Les coordonnées du détail ouvrent le système sur la carte. Le récapitulatif existant de Flottes indique le délai de colonisation dès le choix de la mission et à sa confirmation. La migration `Version20261128170000` conserve les noms observés dans les nouveaux rapports. Son application sur une base existante nécessite une sauvegarde vérifiée et l’accord d’exploitation.

@@ -3,7 +3,7 @@
     <small>{% if ranks is empty %}Vaisseau colonie absent. {% if map_origin %}<a href="{{ path('app_colony',{id:map_origin.id,section:'ships'}) }}">Construire un colonisateur</a>{% endif %}{% else %}Limite de colonies atteinte. <a href="{{ path('app_technology_tree') }}#tech-colonial_expansion-basic">Consulter l’expansion coloniale</a>{% endif %}</small>
 {% elseif map_origin and ranks is not empty %}
     {% include 'ui/map_quick_mission_form.html.twig' with {ship:ranks|first} %}
-    {% if ranks|length > 1 %}
+    {% if quick_mission != 'spy' and ranks|length > 1 %}
         {# Une quantité est liée à un seul rang, y compris sans JavaScript. #}
         <details class="map-quick-ranks">
             <summary>Autres rangs disponibles</summary>

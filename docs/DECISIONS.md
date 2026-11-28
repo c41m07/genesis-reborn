@@ -1,5 +1,9 @@
 # Décisions et ambiguïtés — 21 octobre 2026
 
+## Espionnage depuis Galaxie — 28 novembre 2026
+
+La fiche de la cible reprend le choix des quantités par rang de Flottes, limité aux sondes présentes sur la colonie active. Un envoi peut réunir plusieurs rangs dans le plafond existant de 100 sondes. [Règles d’espionnage](REGLES.md#espionnage).
+
 ## Composition des convois de Bourse — 28 novembre 2026
 
 Le comptoir reprend la composition de Flottes demandée par le propriétaire. Les cargos disponibles se sélectionnent par quantité et par rang dans un même convoi. Le récapitulatif suit la préparation, puis le joueur valide la mission commerciale et le trajet vers la station avant de confirmer son devis. [Parcours du convoi](BOURSE_DE_RESSOURCES.md#cours-devis-et-trajet).

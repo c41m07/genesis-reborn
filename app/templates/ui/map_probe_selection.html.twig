@@ -1,0 +1,24 @@
+<table class="map-probe-table">
+    <caption>Espionnage · Sondes</caption>
+    <thead><tr><th scope="col">Rang</th><th scope="col">Disponibles</th><th scope="col">Quantité</th></tr></thead>
+    <tbody>
+        {% for tier, rank in tiers %}
+            {% set ship = ranks[tier]|default(null) %}
+            {% set quantity = ship.quantity|default(0) %}
+            {% set id = 'map-probe-' ~ target ~ '-' ~ tier %}
+            {% set rankLabel = 'T' ~ loop.index ~ ' · ' ~ rank.label %}
+            <tr>
+                <th scope="row"><strong>{{ rankLabel }}</strong>{% if ship %}<span class="map-probe-name">{{ ship.label }}</span>{% endif %}</th>
+                <td id="{{ id }}-stock"><strong>{{ quantity|number_format(0, ',', ' ') }}</strong><span class="map-probe-stock-label" aria-hidden="true"> en stock</span><span class="visually-hidden"> sondes disponibles</span></td>
+                <td><div class="fleet-composition-control">
+                    <input id="{{ id }}" name="probes[{{ tier }}]" type="number" min="0" max="{{ min(quantity, limit) }}" step="1"
+                           value="{{ tier == (ranks|first).tier ? 1 : 0 }}" aria-label="Quantité de sondes {{ rankLabel }}" aria-describedby="{{ id }}-stock"
+                           data-available="{{ quantity }}" data-fleet-quantity-target="ship" data-action="input->fleet-quantity#clampShip" {{ quantity ? '' : 'disabled' }}>
+                    <button type="button" class="secondary fleet-composition-maximum" hidden data-fleet-quantity-target="progressiveMax"
+                            aria-label="Max · Sondes {{ rankLabel }}" data-input-id="{{ id }}" data-action="fleet-quantity#maximumShip" {{ quantity ? '' : 'disabled' }}>Max</button>
+                </div></td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<span role="status" data-fleet-quantity-target="status"></span>

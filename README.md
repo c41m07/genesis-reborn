@@ -652,8 +652,10 @@ des consommateurs. Aucun déploiement Alpha de ce lot n’est annoncé.
 Destinations des flottes : les catégories suivent la mission. Exploration propose
 les coordonnées des systèmes non explorés, en liste ou par saisie, avec vérification
 au départ. Les missions déjà lancées suivent leur trajet normal. Dans Galaxie,
-les missions rapides affichent le rang et le stock de la colonie de départ ; les
-autres rangs disponibles se choisissent sans JavaScript. Colonisation propose les planètes neutres
+le sélecteur de colonie conserve la vue ouverte. « Ma colonie » centre la carte sur
+la planète active et ouvre sa fiche. Pour espionner, le tableau de la cible affiche le
+stock de sondes T1, T2 et T3. Les quantités de plusieurs rangs se saisissent dans
+un seul envoi, y compris depuis la liste des systèmes sans JavaScript. Colonisation propose les planètes neutres
 découvertes et colonisables ; transport, défense et orbite séparent mes planètes
 des planètes alliées. Attaque et espionnage séparent PNJ et ennemis déclarés ;
 Conquête JcE propose les PNJ et Stationnement mes planètes. Une destination

@@ -1,5 +1,5 @@
 import { test, expect } from './support/isolated-test.mjs';
-import { queryIsolatedSql, runIsolatedSql } from './support/game-fixtures.mjs';
+import { queryIsolatedSql, runIsolatedSql, revealNpcPlanet } from './support/game-fixtures.mjs';
 import AxeBuilder from '@axe-core/playwright';
 
 test.use({ hasTouch:true });
@@ -157,4 +157,67 @@ test('L7C : système et globe conservent clic, rotation, zoom, gestes tactiles e
     await expect(page.getByRole('link', {name:'Liste des systèmes',exact:true})).toBeVisible();
     expect((await new AxeBuilder({page}).include('.gv2-workspace .galaxy-view-tabs').withRules(['color-contrast']).analyze()).violations).toEqual([]);
     expect(errors).toEqual([]);
+});
+
+
+test('Ma colonie retrouve la planète active et la fiche espionnage sélectionne les sondes par rang', async ({page}, info) => {
+    await page.emulateMedia({reducedMotion:'reduce'});
+    const {project, galaxy, email} = await enter(page);
+    const home = Number(new URL(page.url()).pathname.split('/').pop());
+    const sql = statement => runIsolatedSql(project, statement);
+    const other = Number(queryIsolatedSql(project, `SELECT p.id FROM planet p JOIN solar_system s ON s.id=p.solar_system_id
+        WHERE s.galaxy_id=${galaxy} AND p.owner_id IS NULL AND p.npc_planet=0
+        AND s.id<>(SELECT solar_system_id FROM planet WHERE id=${home}) LIMIT 1`));
+    expect(other).toBeGreaterThan(0);
+    sql(`UPDATE planet p JOIN planet base ON base.id=${home} SET p.owner_id=base.owner_id WHERE p.id=${other}`);
+    sql(`INSERT IGNORE INTO player_discovery (player_universe_id,solar_system_id) SELECT owner_id,solar_system_id FROM planet WHERE id=${other}`);
+    sql(`INSERT INTO galaxy (universe_id,name) SELECT universe_id,'Galaxie témoin' FROM galaxy WHERE id=${galaxy}`);
+    const elsewhere = Number(queryIsolatedSql(project,`SELECT g.id FROM galaxy g JOIN galaxy base ON base.universe_id=g.universe_id WHERE base.id=${galaxy} AND g.name='Galaxie témoin'`));
+    sql(`INSERT INTO solar_system (galaxy_id,name,coord_x,coord_y) VALUES (${elsewhere},'Système témoin',0,0)`);
+    await page.goto('/carte-v2');
+    for (const active of [other, home]) {
+        await page.getByRole('combobox',{name:'Choisir une colonie'}).selectOption(String(active));
+        await expect(page).toHaveURL(url => url.pathname === '/carte-v2' && Number(url.searchParams.get('colony')) === active);
+        await page.getByRole('button',{name:'Ma colonie'}).click();
+        await expect(page.locator('.gv2-planet-panel').getByRole('link',{name:/Gérer cette planète/})).toHaveAttribute('href','/planetes/'+active);
+    }
+    await page.locator('#gv2-galaxy').selectOption(String(elsewhere));
+    await expect(page).toHaveURL(url => Number(url.searchParams.get('galaxy')) === elsewhere);
+    await page.getByRole('button',{name:'Ma colonie'}).click();
+    await expect(page.locator('.gv2-planet-panel').getByRole('link',{name:/Gérer cette planète/})).toHaveAttribute('href','/planetes/'+home);
+
+    const target = revealNpcPlanet(project,email);
+    const system = Number(queryIsolatedSql(project,`SELECT solar_system_id FROM planet WHERE id=${target.id}`));
+    sql(`INSERT INTO fleet (player_universe_id,home_planet_id,status,mission,speed_ratio,cargo,reserved_fuel,orbit_fuel,orbit_duration_seconds,travel_seconds,dispatch_token)
+        SELECT owner_id,id,'idle','idle',1,'{}',0,0,0,0,UUID() FROM planet WHERE id=${home}
+        AND NOT EXISTS (SELECT 1 FROM fleet WHERE home_planet_id=${home} AND status='idle')`);
+    for (const [rank, quantity] of [['basic',310],['superior',3]]) {
+        sql(`INSERT INTO fleet_ship (fleet_id,slug,tier,quantity) SELECT id,'probe','${rank}',${quantity} FROM fleet WHERE home_planet_id=${home} AND status='idle' ON DUPLICATE KEY UPDATE quantity=VALUES(quantity)`);
+    }
+    for (const [width, theme] of [[1440,'dark'],[390,'light'],[320,'light']]) {
+        sql(`UPDATE player SET preferences=JSON_SET(CASE WHEN JSON_TYPE(preferences)='OBJECT' THEN preferences ELSE JSON_OBJECT() END,'$.theme','${theme}') WHERE email='${email}'`);
+        await page.setViewportSize({width,height:900});
+        await page.goto('/carte-v2?system='+system);
+        await page.locator('.gv2-planet-choice[data-planet-id="'+target.id+'"]').click();
+        const form = page.locator('.gv2-planet-panel .map-probe-picker');
+        await expect(form.getByRole('row')).toHaveCount(4);
+        await expect(form.getByRole('row',{name:/T1 · Basique/})).toContainText('310');
+        await expect(form.getByRole('spinbutton',{name:/T2/})).toBeDisabled();
+        const basic = form.getByRole('spinbutton',{name:/T1/});
+        await basic.fill('291');
+        await expect(basic).toHaveValue('100');
+        await basic.fill('2');
+        await form.getByRole('button',{name:/Max .*T3/}).focus();
+        await page.keyboard.press('Enter');
+        await expect(form.getByRole('spinbutton',{name:/T3/})).toHaveValue('3');
+        await form.getByRole('button',{name:/Max .*T1/}).click();
+        await expect(basic).toHaveValue('97');
+        await expect(form.getByRole('button',{name:/Envoyer les sondes/})).toBeVisible();
+        await form.screenshot({path:info.outputPath('sondes-'+width+'.png')});
+        const stock = form.locator('tbody td strong').first();
+        expect(await stock.evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
+        expect((await form.boundingBox()).width).toBeGreaterThan(205);
+        expect(await form.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
+        expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    }
 });

@@ -299,3 +299,46 @@ body.authenticated .gv2-workspace .core-galaxy-toolbar .galaxy-view-tabs a:not([
 .gv2-station--market img { filter:drop-shadow(0 0 4px #030b14); }
 .gv2-market-legend a { display:inline-flex; align-items:center; gap:6px; }
 .gv2-market-legend img { flex:none; }
+
+/* Une ligne par rang laisse la quantité et le stock côte à côte dans la fiche étroite. */
+.map-quick-mission.map-probe-picker {
+    container-type:inline-size; display:flex; width:100%; min-width:0; flex-wrap:wrap; gap:.5rem;
+}
+.map-probe-picker .map-probe-table {
+    width:100%; border-collapse:collapse; table-layout:fixed; font-size:max(14px, .875rem); color:var(--text);
+}
+.map-probe-table caption { padding-block:.5rem; text-align:left; font-size:max(16px, 1rem); font-weight:700; }
+.map-probe-table :is(th,td) { padding:.4rem .2rem; border-block-end:1px solid var(--line); overflow-wrap:anywhere; }
+.map-probe-table th { text-align:left; }
+.map-probe-table thead th:nth-child(2), .map-probe-table td { text-align:center; }
+.map-probe-table thead th:last-child { width:102px; text-align:center; }
+.map-probe-table .map-probe-name { display:block; font-weight:400; color:var(--muted); }
+.map-probe-table td strong { font-size:max(18px, 1.125rem); font-variant-numeric:tabular-nums; }
+.map-probe-picker .fleet-composition-control { display:flex; gap:.2rem; justify-content:center; align-items:center; }
+.map-probe-picker .fleet-composition-control input[type=number] {
+    width:50px; min-width:0; min-height:44px; padding:.2rem; text-align:center; appearance:textfield;
+}
+.map-probe-picker input::-webkit-inner-spin-button { appearance:none; }
+.map-probe-picker .fleet-composition-control button { min-width:44px; min-height:44px; padding:.2rem; }
+.map-probe-picker [role=status]:empty { display:none; }
+.map-probe-picker .map-probe-speed { font-size:max(14px, .875rem); }
+body.authenticated .map-probe-picker button { font-size:14px; }
+.map-probe-table td strong { white-space:nowrap; }
+.map-probe-stock-label { display:none; }
+.gv2-workspace[data-view=galaxy] .gv2-planet-panel { margin:0; min-width:0; }
+.gv2-workspace[data-view=galaxy] .gv2-map-stage:has(.gv2-planet-panel:not([hidden])) .gv2-preview-placeholder { display:none; }
+@media(max-width:1000px) {
+    .gv2-workspace[data-view=galaxy] .gv2-map-stage:has(.gv2-planet-panel:not([hidden])) { grid-template-rows:auto auto auto; }
+    .gv2-workspace[data-view=galaxy] .gv2-planet-panel { grid-area:1/1/2/3; }
+}
+@container (max-width: 350px) {
+    .map-probe-table thead { position:absolute; clip-path:inset(50%); width:1px; height:1px; overflow:hidden; }
+    .map-probe-table tbody tr {
+        display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 8px; padding-block:8px; border-block-start:1px solid var(--line);
+    }
+    .map-probe-table tbody :is(th,td) { padding:0; border:0; }
+    .map-probe-table tbody th { grid-column:1/-1; }
+    .map-probe-table tbody td { text-align:start; align-self:center; }
+    .map-probe-stock-label { display:inline; font-size:13px; }
+    .map-probe-table .map-probe-name { font-size:13px; }
+}

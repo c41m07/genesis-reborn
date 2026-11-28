@@ -923,6 +923,8 @@ Décision du 14 novembre 2026 : ces valeurs sont une base d’essais Alpha, pas 
 
 Dans la liste des renseignements et dans le rapport, l’expéditeur voit le propriétaire observé à l’arrivée. Pour les anciens rapports, le nom est affiché lorsque la date d’acquisition confirme la possession de la planète. Les coordonnées du rapport ouvrent son système sur la carte. Dans un nouveau rapport de détection reçu, le défenseur voit le nom de l’expéditeur si le système d’origine lui était connu lors de la détection.
 
+Depuis les deux vues de Galaxie, l’envoi rapide permet de combiner les rangs dans la limite de 100 sondes au total et de la taille de flotte autorisée. Le stock de la colonie de départ est vérifié pour chaque rang au départ.
+
 Le risque de détection de base vaut 50 % pour une sonde Basique, 40 % pour une Intermédiaire et 30 % pour une Supérieure. Pour plusieurs rangs, prendre la moyenne pondérée par leurs quantités, sans arrondi intermédiaire. Le rang n’ajoute aucun renseignement.
 
 Le bonus défensif vaut `min(20, floor(sondes présentes / 5))` points : 0 à 4 sondes donnent 0 point ; 5 donnent 1 ; 99 donnent 19 ; 100 ou davantage donnent 20. Chaque sonde compte pour une unité, quel que soit son rang. Le périmètre reste celui du moteur : sondes dans les flottes inactives de la planète, en défense ou en orbite sur elle ; les trajets ne sont pas ajoutés. Une planète PNJ sans propriétaire conserve le décompte de sa garnison de sondes et ses recherches PNJ.

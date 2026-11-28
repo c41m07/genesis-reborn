@@ -82,6 +82,24 @@ final class FleetDestinationTest extends WebTestCase
         $discovery=new PlayerDiscovery();$discovery->playerUniverse=$criteria['playerUniverse'];$discovery->solarSystem=$planet->solarSystem;$this->em->persist($discovery);$this->em->flush();
     }
 
+    public function testMapSelectorKeepsTheChosenColonyAndRejectsInaccessibleOrigins(): void
+    {
+        foreach (['/carte', '/carte-v2'] as $url) {
+            $page = $this->client->request('GET', $url);
+            $form = $page->filter('[data-live-region="colony-selector"] form')->form();
+            self::assertSame($url, parse_url($form->getUri(), PHP_URL_PATH));
+            $this->client->submit($form, ['colony' => $this->own->id]);
+            self::assertResponseIsSuccessful();
+            self::assertSelectorExists('#sidebar-colony option[selected][value="'.$this->own->id.'"]');
+            foreach ([$this->ally, $this->foreign] as $inaccessible) {
+                $this->client->request('GET', $url, ['colony' => $inaccessible->id]);
+                self::assertResponseStatusCodeSame(404);
+            }
+            $this->client->request('GET', '/');
+            self::assertResponseRedirects('/planetes/'.$this->own->id);
+        }
+    }
+
     public function testQuickExplorationUsesTheOnlyAvailableIntermediateProbeFromEitherMap(): void
     {
         $probe = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $this->idle, 'slug' => 'probe']);
@@ -113,6 +131,24 @@ final class FleetDestinationTest extends WebTestCase
         self::assertSame(1, $this->quickMissionInventory($probe->id));
     }
 
+    public function testLegacyQuickSpyFormStillDispatchesItsChosenProbeRank(): void
+    {
+        $probe = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $this->idle, 'slug' => 'probe']);
+        $probe->tier = 'intermediate';
+        $this->em->flush();
+        $system = $this->enemy->solarSystem;
+        $map = $this->client->request('GET', '/carte', ['galaxy' => $system->galaxy->id, 'system' => $system->id, 'colony' => $this->home->id]);
+        $params = $this->quickMissionForms($map, 'spy', $this->enemy->id)->form()->getPhpValues();
+        self::assertSame('1', $params['probes']['intermediate']);
+        unset($params['probes']);
+        $this->client->request('POST', '/flottes/mission-rapide', $params + ['ship_tier' => 'intermediate', 'probe_quantity' => 2]);
+        self::assertResponseRedirects('/carte?galaxy='.$system->galaxy->id.'&system='.$system->id);
+        $sent = $this->em->getRepository(Fleet::class)->findOneBy(['mission' => 'spy', 'status' => 'traveling']);
+        self::assertNotNull($sent);
+        self::assertSame(2, $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $sent, 'tier' => 'intermediate'])->quantity);
+        self::assertSame(8, $this->quickMissionInventory($probe->id));
+    }
+
     public function testQuickEspionageKeepsIndependentRanksAndRejectsAStaleQuantityWithoutDebit(): void
     {
         $basic = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $this->idle, 'slug' => 'probe']);
@@ -128,10 +164,18 @@ final class FleetDestinationTest extends WebTestCase
         $url = '/carte?galaxy=' . $target->solarSystem->galaxy->id . '&system=' . $target->solarSystem->id;
         $forms = $this->quickMissionForms($this->client->request('GET', $url), 'spy', $target->id);
         self::assertResponseIsSuccessful();
-        self::assertCount(2, $forms);
-        self::assertSame(['basic', 'superior'], $forms->filter('input[name="ship_tier"]')->extract(['value']));
-        self::assertSame(['10', '3'], $forms->filter('input[name="probe_quantity"]')->extract(['max']));
-        $oldForm = $forms->last()->form(['probe_quantity' => 3]);
+        self::assertCount(1, $forms);
+        self::assertSame(['10', '0', '3'], $forms->filter('input[type="number"]')->extract(['max']));
+        self::assertCount(1, $forms->filter('input[name="probes[intermediate]"]:disabled'));
+        $before = $this->quickMissionFuel();
+        $params = $forms->form()->getPhpValues();
+        foreach ([['basic' => 100, 'superior' => 1], ['superior' => -1], ['basic' => 0], ['unknown' => 1]] as $invalid) {
+            $this->client->request('POST', '/flottes/mission-rapide', array_replace($params, ['probes' => $invalid]));
+            self::assertResponseRedirects($url);
+            self::assertSame(0, $this->em->getRepository(Fleet::class)->count(['mission' => 'spy', 'status' => 'traveling']));
+            self::assertSame($before, $this->quickMissionFuel());
+        }
+        $oldForm = $forms->form(['probes[basic]' => 2, 'probes[superior]' => 3]);
 
         // Une autre action peut consommer une sonde entre l’affichage du formulaire et le départ.
         // Doctrine détache les entités entre deux requêtes KernelBrowser : utiliser l'identifiant persistant.
@@ -145,16 +189,17 @@ final class FleetDestinationTest extends WebTestCase
         self::assertSame($before, $this->quickMissionFuel());
         self::assertSame(2, $this->quickMissionInventory($superior->id));
         $newForm = $this->quickMissionForms($updatedMap, 'spy', $target->id)->last();
-        self::assertSame('2', $newForm->filter('input[name="probe_quantity"]')->attr('max'));
-        $this->client->submit($newForm->form(['probe_quantity' => 1]));
+        self::assertSame('2', $newForm->filter('input[name="probes[superior]"]')->attr('max'));
+        $this->client->submit($newForm->form(['probes[basic]' => 2, 'probes[superior]' => 1]));
         self::assertResponseRedirects($url);
         $sent = $this->em->getRepository(Fleet::class)->findOneBy(['mission' => 'spy', 'status' => 'traveling']);
         self::assertNotNull($sent);
-        $ship = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $sent, 'slug' => 'probe']);
+        $ship = $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $sent, 'slug' => 'probe', 'tier' => 'superior']);
         self::assertSame('superior', $ship->tier);
         self::assertSame(1, $ship->quantity);
         self::assertSame(1, $this->quickMissionInventory($superior->id));
-        self::assertSame(10, $this->quickMissionInventory($basic->id));
+        self::assertSame(8, $this->quickMissionInventory($basic->id));
+        self::assertSame(2, $this->em->getRepository(FleetShip::class)->findOneBy(['fleet' => $sent, 'tier' => 'basic'])->quantity);
     }
 
     public function testExplorationChecksNewDiscoveryBeforeDispatchInBothFleetModesAndTheMap(): void
