@@ -34,4 +34,27 @@ final class GuildHallFuelBalance
 
         return ['whole' => $remainingWhole, 'fraction' => $remainingFraction];
     }
+
+    /**
+     * Réintègre du carburant non consommé sans convertir le stock entier en
+     * flottant. L’appelant doit garantir que la restitution ne se fait qu’une fois.
+     *
+     * @return array{whole: int, fraction: float}
+     */
+    public static function credit(int $whole, float $fraction, float $fuel): array
+    {
+        if ($whole < 0 || !is_finite($fraction) || $fraction < 0 || $fraction >= 1
+            || !is_finite($fuel) || $fuel < 0 || $fuel >= (float) PHP_INT_MAX) {
+            throw new \DomainException('Restitution d’hydrogène du Hall invalide.');
+        }
+
+        $fuelWhole = (int) floor($fuel);
+        $creditedFraction = $fraction + ($fuel - $fuelWhole);
+        $carry = $creditedFraction >= 1.0 ? 1 : 0;
+        if ($fuelWhole > PHP_INT_MAX - $whole - $carry) {
+            throw new \DomainException('Stock d’hydrogène du Hall trop élevé.');
+        }
+
+        return ['whole' => $whole + $fuelWhole + $carry, 'fraction' => $creditedFraction - $carry];
+    }
 }
