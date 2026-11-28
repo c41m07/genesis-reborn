@@ -1,64 +1,90 @@
 {% from 'ui/espionage_report_title.html.twig' import title as espionageTitle %}
 <details class="simulation-wizard-sources" data-simulation-wizard-target="sources" open>
-    <summary>Sources · {{ own_source ? 'colonie chargée' : (own_camp == 'attacker' ? 'attaquant manuel' : 'défenseur manuel') }} · {% if pirate_intel %}{{ espionageTitle(pirate_intel.targetName) }}{% elseif intel %}{{ espionageTitle(intel.targetName) }} · {{ intel.date|date('d/m à H:i', preferences.timezone) }}{% else %}{{ intel_camp == 'defender' ? 'défenseur manuel' : 'attaquant manuel' }}{% endif %}</summary>
-    <div class="simulation-wizard-source-grid">
-        <section class="panel simulation-wizard-source" aria-labelledby="simulation-source-own-title">
-            <h2 id="simulation-source-own-title"><span>{{ own_camp == 'attacker' ? 'Attaquant' : 'Défenseur' }}</span>{% if own_source %}{{ (planets|filter(planet => planet.id == own_source)|first).name }} · valeurs modifiables{% else %}Forces saisies manuellement{% endif %}</h2>
-            {% if planets %}
-                <label for="simulation-own">{{ own_camp == 'defender' ? 'Colonie à défendre' : 'Colonie de départ du scénario' }}</label>
-                <div class="simulation-wizard-source-actions">
-                    <select id="simulation-own" name="own_planet">
-                        {% for planet in planets %}
-                            <option value="{{ planet.id }}" {% if planet.id == (own_source ?: active_planet) %}selected{% endif %}>{{ planet.name }}{% if planet.id == active_planet %} · active{% endif %}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" class="secondary" name="wizard_action" value="load_own" formnovalidate
-                            formaction="{{ path('app_combat_simulation') }}"
-                            data-controller="confirmation" data-action="confirmation#confirm"
-                            data-confirmation-message-value="Remplacer les vaisseaux et recherches saisis pour votre camp ?">Charger mes forces</button>
-                </div>
-                <p>Cette copie remplace les vaisseaux et recherches de votre camp. Elle ne change rien en jeu.</p>
-            {% else %}
-                <p>Aucune colonie disponible à charger. Vous pouvez compléter ce scénario manuellement.</p>
-            {% endif %}
-        </section>
-        <section class="panel simulation-wizard-source" aria-labelledby="simulation-source-intel-title">
-            <h2 id="simulation-source-intel-title"><span>{{ intel_camp == 'defender' ? 'Défenseur' : 'Attaquant' }}</span>{% if pirate_intel %}{{ espionageTitle(pirate_intel.targetName) }}{% elseif intel %}{{ espionageTitle(intel.targetName) }}{% else %}Renseignements saisis manuellement{% endif %}</h2>
-            {% if pirate_intel %}
-                <p><time datetime="{{ pirate_intel.date|date('c') }}">{{ pirate_intel.date|date('d/m/Y à H:i', preferences.timezone) }}</time> · <a href="{{ path('app_pirate_recon_report', {id: pirate_intel.id}) }}">Relire le rapport source</a></p>
-                <p>Camp pirate verrouillé : mêmes vaisseaux, caractéristiques et réglages que lors de la préparation de la rencontre.</p>
+    <summary>
+        Sources
+        {% for camp, title in camps %}
+            · {{ title }}
+            {% if camp == own_camp %}
+                {{ own_source ? '· colonie chargée' : 'manuel' }}
+            {% elseif pirate_intel %}
+                · {{ espionageTitle(pirate_intel.targetName) }}
             {% elseif intel %}
-                <p><time datetime="{{ intel.date|date('c') }}">{{ intel.date|date('d/m/Y à H:i', preferences.timezone) }}</time> · {{ preferences.timezone }} · <a href="{{ path('app_espionage_report', {id: intel.id}) }}">Relire le rapport source</a></p>
-                <p>Instantané daté. Seules les catégories révélées sont importées.</p>
+                · {{ espionageTitle(intel.targetName) }} · {{ intel.date|date('d/m à H:i', preferences.timezone) }}
+            {% else %}
+                manuel
             {% endif %}
-            {% if report_options or intel %}
-                <label for="simulation-intel">Choisir un rapport d’espionnage</label>
-                <div class="simulation-wizard-source-actions">
-                    <select id="simulation-intel" name="report_choice">
-                        {% if not intel %}<option value="">Choisir un rapport</option>{% endif %}
-                        {% if intel and intel.id not in report_options|map(option => option.id) %}
-                            <option value="{{ intel.id }}" selected>{{ espionageTitle(intel.targetName) }} · {{ intel.date|date('d/m/Y à H:i', preferences.timezone) }}</option>
-                        {% endif %}
-                        {% for option in report_options %}
-                            <option value="{{ option.id }}" {% if intel and intel.id == option.id %}selected{% endif %}>{{ espionageTitle(option.targetName) }} · {{ option.createdAt|date('d/m/Y à H:i', preferences.timezone) }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" class="secondary" name="wizard_action" value="load_intel" formnovalidate
-                            formaction="{{ path('app_combat_simulation') }}"
-                            data-controller="confirmation" data-action="confirmation#confirm"
-                            data-confirmation-message-value="Remplacer les vaisseaux, défenses et recherches du camp adverse ?">Importer</button>
-                </div>
-            {% elseif not intel and not pirate_intel %}
-                <p>Aucun rapport disponible dans cet univers. Continuez en saisie manuelle.</p>
-            {% endif %}
-            {% if intel or pirate_intel %}
-                <button type="submit" class="secondary" name="wizard_action" value="manual_intel" formnovalidate
-                        formaction="{{ path('app_combat_simulation') }}"
-                        data-controller="confirmation" data-action="confirmation#confirm"
-                        data-confirmation-message-value="Retirer le rapport et remettre les forces du camp adverse à zéro pour une saisie manuelle ?">Repartir en saisie manuelle</button>
-            {% elseif report_options %}
-                <p>Importer un rapport remplace uniquement les renseignements du camp adverse.</p>
-            {% endif %}
-        </section>
+        {% endfor %}
+    </summary>
+    <div class="simulation-wizard-source-grid">
+        {% for camp, title in camps %}
+            {% set headingId = camp == own_camp ? 'simulation-source-own-title' : 'simulation-source-intel-title' %}
+            <section class="panel simulation-wizard-source" aria-labelledby="{{ headingId }}">
+                <h2 id="{{ headingId }}">
+                    <span>{{ title }}</span>
+                    {% if camp == own_camp %}
+                        {{ own_source ? (planets|filter(planet => planet.id == own_source)|first).name ~ ' · valeurs modifiables' : 'Forces saisies manuellement' }}
+                    {% elseif pirate_intel or intel %}
+                        {{ espionageTitle((pirate_intel ?: intel).targetName) }}
+                    {% else %}
+                        Renseignements saisis manuellement
+                    {% endif %}
+                </h2>
+                {% if camp == own_camp %}
+                    {% if planets %}
+                        <label for="simulation-own">{{ own_camp == 'defender' ? 'Colonie à défendre' : 'Colonie de départ du scénario' }}</label>
+                        <div class="simulation-wizard-source-actions">
+                            <select id="simulation-own" name="own_planet">
+                                {% for planet in planets %}
+                                    <option value="{{ planet.id }}" {% if planet.id == (own_source ?: active_planet) %}selected{% endif %}>{{ planet.name }}{% if planet.id == active_planet %} · active{% endif %}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="secondary" name="wizard_action" value="load_own" formnovalidate
+                                    formaction="{{ path('app_combat_simulation') }}"
+                                    data-controller="confirmation" data-action="confirmation#confirm"
+                                    data-confirmation-message-value="Remplacer les vaisseaux et recherches saisis pour votre camp ?">Charger mes forces</button>
+                        </div>
+                        <p>Cette copie remplace les vaisseaux et recherches de votre camp. Elle ne change rien en jeu.</p>
+                    {% else %}
+                        <p>Aucune colonie disponible à charger. Vous pouvez compléter ce scénario manuellement.</p>
+                    {% endif %}
+                {% else %}
+                    {% if pirate_intel %}
+                        <p><time datetime="{{ pirate_intel.date|date('c') }}">{{ pirate_intel.date|date('d/m/Y à H:i', preferences.timezone) }}</time> · <a href="{{ path('app_pirate_recon_report', {id: pirate_intel.id}) }}">Relire le rapport source</a></p>
+                        <p>Camp pirate verrouillé : mêmes vaisseaux, caractéristiques et réglages que lors de la préparation de la rencontre.</p>
+                    {% elseif intel %}
+                        <p><time datetime="{{ intel.date|date('c') }}">{{ intel.date|date('d/m/Y à H:i', preferences.timezone) }}</time> · {{ preferences.timezone }} · <a href="{{ path('app_espionage_report', {id: intel.id}) }}">Relire le rapport source</a></p>
+                        <p>Instantané daté. Seules les catégories révélées sont importées.</p>
+                    {% endif %}
+                    {% if report_options or intel %}
+                        <label for="simulation-intel">Choisir un rapport d’espionnage</label>
+                        <div class="simulation-wizard-source-actions">
+                            <select id="simulation-intel" name="report_choice">
+                                {% if not intel %}<option value="">Choisir un rapport</option>{% endif %}
+                                {% if intel and intel.id not in report_options|map(option => option.id) %}
+                                    <option value="{{ intel.id }}" selected>{{ espionageTitle(intel.targetName) }} · {{ intel.date|date('d/m/Y à H:i', preferences.timezone) }}</option>
+                                {% endif %}
+                                {% for option in report_options %}
+                                    <option value="{{ option.id }}" {% if intel and intel.id == option.id %}selected{% endif %}>{{ espionageTitle(option.targetName) }} · {{ option.createdAt|date('d/m/Y à H:i', preferences.timezone) }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="secondary" name="wizard_action" value="load_intel" formnovalidate
+                                    formaction="{{ path('app_combat_simulation') }}"
+                                    data-controller="confirmation" data-action="confirmation#confirm"
+                                    data-confirmation-message-value="Remplacer les vaisseaux, défenses et recherches du camp adverse ?">Importer</button>
+                        </div>
+                    {% elseif not intel and not pirate_intel %}
+                        <p>Aucun rapport disponible dans cet univers. Continuez en saisie manuelle.</p>
+                    {% endif %}
+                    {% if intel or pirate_intel %}
+                        <button type="submit" class="secondary" name="wizard_action" value="manual_intel" formnovalidate
+                                formaction="{{ path('app_combat_simulation') }}"
+                                data-controller="confirmation" data-action="confirmation#confirm"
+                                data-confirmation-message-value="Retirer le rapport et remettre les forces du camp adverse à zéro pour une saisie manuelle ?">Repartir en saisie manuelle</button>
+                    {% elseif report_options %}
+                        <p>Importer un rapport remplace uniquement les renseignements du camp adverse.</p>
+                    {% endif %}
+                {% endif %}
+            </section>
+        {% endfor %}
     </div>
 </details>

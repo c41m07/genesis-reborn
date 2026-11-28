@@ -141,6 +141,19 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
    await page.keyboard.press('Enter');
    await expect(attacker).toHaveValue('18');
    await expect(defender).toHaveValue('24');
+   const sources = page.locator('.simulation-wizard-sources');
+   if (!await sources.evaluate(element => element.open)) await sources.locator('summary').click();
+   const panels = sources.locator('.simulation-wizard-source');
+   await expect(panels.locator('h2 span')).toHaveText(['Attaquant', 'Défenseur']);
+   await expect(panels.first().locator('#simulation-source-intel-title')).toBeVisible();
+   await expect(panels.last().getByLabel('Colonie à défendre')).toBeVisible();
+   const [attackBox, defenseBox] = await panels.evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().toJSON()));
+   if (viewport.width === 1920) expect(defenseBox.left).toBeGreaterThanOrEqual(attackBox.right);
+   else expect(defenseBox.top).toBeGreaterThanOrEqual(attackBox.bottom);
+   await nav.getByRole('link',{name:'Simulation',exact:true}).click();
+   const recap = page.locator('.simulation-wizard-recap .simulation-wizard-camps > div');
+   await expect(recap.locator('strong')).toHaveText(['Attaquant','Défenseur']);
+   await expect(recap.last()).toContainText('Les défenses de votre colonie participent au combat.');
    await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
   }
  }
@@ -164,7 +177,14 @@ test('P13 : assistant face-à-face et contrôles natifs du simulateur', async ({
   await tab.getByRole('button', {name:'Inverser l’attaquant et le défenseur'}).click();
   await expect(tab.locator('#sim-attacker-ships-fighter-basic')).toHaveValue('18');
   await expect(tab.locator('#sim-defender-ships-fighter-basic')).toHaveValue('2');
-  await expect(tab.locator('#simulation-source-own-title')).toContainText('Défenseur');
+  const sourceTitles = tab.locator('.simulation-wizard-source h2');
+  await expect(sourceTitles.nth(0)).toHaveAttribute('id', 'simulation-source-intel-title');
+  await expect(sourceTitles.nth(1)).toContainText('Défenseur');
+  await tab.getByRole('button', {name:'Inverser l’attaquant et le défenseur'}).click();
+  await expect(sourceTitles.nth(0)).toHaveAttribute('id', 'simulation-source-own-title');
+  await expect(sourceTitles.nth(0)).toContainText('Attaquant');
+  await expect(tab.locator('#sim-attacker-ships-fighter-basic')).toHaveValue('2');
+  await expect(tab.locator('#sim-defender-ships-fighter-basic')).toHaveValue('18');
   await expect(tab.locator('#simulation-research')).toBeVisible();
   await expect(tab.locator('#simulation-defenses')).toBeVisible();
   await expect(tab.locator('#simulation-result')).toHaveCount(0);
@@ -194,6 +214,18 @@ test('Simulateur : sources datées, champs inconnus éditables et brouillon cons
  await page.getByRole('button',{name:'Importer',exact:true}).click();
  await expect(page.locator('#sim-attacker-ships-fighter-basic')).toHaveValue('12');
  await expect(page.locator('#sim-defender-ships-fighter-basic')).toHaveValue('8');
+ const swap = page.getByRole('button', {name:'Inverser l’attaquant et le défenseur'});
+ await swap.click();
+ const attackSource = page.locator('.simulation-wizard-source').first();
+ await expect(attackSource.getByRole('link', {name:'Relire le rapport source'})).toBeVisible();
+ await expect(attackSource.getByLabel('Choisir un rapport d’espionnage')).toHaveValue(String(reportId));
+ await page.locator('#sim-attacker-ships-fighter-basic').fill('6');
+ page.once('dialog', dialog => dialog.accept());
+ await attackSource.getByRole('button', {name:'Importer', exact:true}).click();
+ await expect(page.locator('#sim-attacker-ships-fighter-basic')).toHaveValue('8');
+ await expect(page.locator('#sim-defender-ships-fighter-basic')).toHaveValue('12');
+ await swap.click();
+ await expect(page.locator('#sim-attacker-ships-fighter-basic')).toHaveValue('12');
  const reportLink=page.getByRole('link',{name:'Relire le rapport source'});
  await expect(reportLink).toBeVisible();
  expect(await reportLink.evaluate(link=>new URL(link.href).pathname)).toBe('/rapports/espionnage/'+reportId);

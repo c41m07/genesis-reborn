@@ -10,6 +10,7 @@
   simulation: {title: 'Simulation', help: 'Vérifiez vos hypothèses avant de lancer le calcul.'}
 } %}
 {% set keys = steps|keys %}
+{% set camps = {attacker: 'Attaquant', defender: 'Défenseur'} %}
 <div class="strategic-page simulation-workspace player-simulation-board player-simulation-board--scenario"
      data-controller="simulation-wizard" data-simulation-wizard-step-value="{{ step }}">
     <div class="page-heading"><div><p class="simulation-board-eyebrow">Opérations · outil stratégique</p><h1>Simulateur de combat</h1>
@@ -58,7 +59,7 @@
                 </header>
                 {% if key != 'simulation' %}
                     <div class="simulation-wizard-camps">
-                    {% for camp, title in {attacker: 'Attaquant', defender: 'Défenseur'} %}
+                    {% for camp, title in camps %}
                         <section class="simulation-wizard-camp panel" aria-labelledby="simulation-{{ key }}-{{ camp }}">
                             <p class="simulation-board-eyebrow">{{ title }}</p>
                             <h3 id="simulation-{{ key }}-{{ camp }}">{{ item.title }} · {{ title }}</h3>
@@ -102,8 +103,23 @@
                     <section class="panel simulation-wizard-recap" aria-labelledby="simulation-recap-title">
                         <h3 id="simulation-recap-title">Récapitulatif des deux camps</h3>
                         <div class="simulation-wizard-camps">
-                            <div><strong>{{ own_camp == 'attacker' ? 'Attaquant' : 'Défenseur' }}</strong><p>{{ own_source ? 'Vaisseaux et recherches repris de votre empire, avec vos ajustements.' : 'Vaisseaux et recherches saisis manuellement.' }} {{ own_camp == 'attacker' ? 'Les défenses fixes ne s’appliquent pas.' : 'Les défenses de votre colonie participent au combat.' }}</p></div>
-                            <div><strong>{{ intel_camp == 'defender' ? 'Défenseur' : 'Attaquant' }}</strong><p>{% if pirate_intel %}Camp pirate figé par le rapport · {{ pirate_intel.rounds }} rounds au maximum · Recharge des boucliers : {{ pirate_intel.recharge }} % par round.{% elseif intel %}{{ espionageTitle(intel.targetName) }} ; les données non révélées et vos ajustements restent des hypothèses.{% else %}Vaisseaux, défenses et recherches saisis manuellement.{% endif %}</p></div>
+                            {% for camp, title in camps %}
+                                <div>
+                                    <strong>{{ title }}</strong>
+                                    <p>
+                                        {% if camp == own_camp %}
+                                            {{ own_source ? 'Vaisseaux et recherches repris de votre empire, avec vos ajustements.' : 'Vaisseaux et recherches saisis manuellement.' }}
+                                            {{ camp == 'attacker' ? 'Les défenses fixes ne s’appliquent pas.' : 'Les défenses de votre colonie participent au combat.' }}
+                                        {% elseif pirate_intel %}
+                                            Camp pirate figé par le rapport · {{ pirate_intel.rounds }} rounds au maximum · Recharge des boucliers : {{ pirate_intel.recharge }} % par round.
+                                        {% elseif intel %}
+                                            {{ espionageTitle(intel.targetName) }} ; les données non révélées et vos ajustements restent des hypothèses.
+                                        {% else %}
+                                            Vaisseaux, défenses et recherches saisis manuellement.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            {% endfor %}
                         </div>
                     </section>
                     <div class="simulation-board-options simulation-wizard-options">
